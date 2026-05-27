@@ -1,0 +1,27 @@
+@page "/account"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject HttpClient Http
+@inject ISnackbar Snack
+@inject NavigationManager Nav
+
+<PageTitle>Account</PageTitle>
+<MudText Typo="Typo.h5" Class="mb-3">Change Password</MudText>
+
+<MudTextField @bind-Value="_cur" Label="Current" InputType="InputType.Password" />
+<MudTextField @bind-Value="_new" Label="New" InputType="InputType.Password" Class="mt-2" />
+<MudButton OnClick="Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-2">Update</MudButton>
+<MudButton OnClick="Logout" Variant="Variant.Outlined" Class="mt-2 ml-2">Logout</MudButton>
+
+@code {
+    private string _cur = "", _new = "";
+    private async Task Submit()
+    {
+        var r = await Http.PostAsJsonAsync("/api/auth/change-password", new { CurrentPassword = _cur, NewPassword = _new });
+        Snack.Add(r.IsSuccessStatusCode ? "Updated" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+    }
+    private async Task Logout()
+    {
+        await Http.PostAsync("/api/auth/logout", null);
+        Nav.NavigateTo("/login", true);
+    }
+}

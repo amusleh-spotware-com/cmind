@@ -1,0 +1,62 @@
+@page "/run"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@inject HttpClient Http
+@inject ISnackbar Snack
+@inject NavigationManager Nav
+
+<PageTitle>Run</PageTitle>
+<MudText Typo="Typo.h5" Class="mb-3">Run cBot</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="6">
+        <MudSelect T="Guid?" @bind-Value="_cbotId" Label="cBot">
+            @foreach (var c in _cbots) { <MudSelectItem T="Guid?" Value="@((Guid?)c.id)">@c.name</MudSelectItem> }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12" md="6">
+        <MudSelect T="Guid?" @bind-Value="_acctId" Label="Trading account">
+            @foreach (var a in _accts) { <MudSelectItem T="Guid?" Value="@((Guid?)a.id)">@a.accountNumber - @a.broker</MudSelectItem> }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="6" md="3"><MudTextField @bind-Value="_symbol" Label="Symbol" /></MudItem>
+    <MudItem xs="6" md="3"><MudTextField @bind-Value="_timeframe" Label="Timeframe" /></MudItem>
+    <MudItem xs="12" md="6">
+        <MudSelect T="Guid?" @bind-Value="_psId" Label="Parameter set">
+            @foreach (var p in _paramsets) { <MudSelectItem T="Guid?" Value="@((Guid?)p.id)">@p.name</MudSelectItem> }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12" md="6"><MudTextField @bind-Value="_image" Label="Image tag" /></MudItem>
+</MudGrid>
+
+<MudButton OnClick="Start" Color="Color.Primary" Variant="Variant.Filled" Class="mt-3">Start</MudButton>
+
+<MudText Typo="Typo.h6" Class="mt-4">Instances</MudText>
+<InstanceTable Type="Run" />
+
+@code {
+    private dynamic[] _cbots = [], _accts = [], _paramsets = [];
+    private Guid? _cbotId, _acctId, _psId;
+    private string _symbol = "EURUSD", _timeframe = "h1", _image = "latest";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _cbots = (await Http.GetFromJsonAsync<dynamic[]>("/api/cbots/")) ?? [];
+        _accts = (await Http.GetFromJsonAsync<dynamic[]>("/api/accounts/")) ?? [];
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_cbotId is not null)
+            _paramsets = (await Http.GetFromJsonAsync<dynamic[]>($"/api/paramsets?cbotId={_cbotId}")) ?? [];
+    }
+
+    private async Task Start()
+    {
+        var r = await Http.PostAsJsonAsync("/api/instances/", new
+        {
+            CBotId = _cbotId, TradingAccountId = _acctId, Symbol = _symbol, Timeframe = _timeframe,
+            ParamSetId = _psId, DockerImageTag = _image, Type = 0
+        });
+        Snack.Add(r.IsSuccessStatusCode ? "Started" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+    }
+}

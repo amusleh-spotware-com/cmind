@@ -1,0 +1,36 @@
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<MudTable Items="_items" Dense="true" Breakpoint="Breakpoint.Sm">
+    <HeaderContent>
+        <MudTh>cBot</MudTh><MudTh>Symbol</MudTh><MudTh>TF</MudTh><MudTh>Status</MudTh><MudTh>Node</MudTh><MudTh /></HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.cBot</MudTd>
+        <MudTd>@context.symbol</MudTd>
+        <MudTd>@context.timeframe</MudTd>
+        <MudTd><MudChip T="string" Size="Size.Small">@context.status</MudChip></MudTd>
+        <MudTd>@context.node</MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" OnClick="@(() => Open((Guid)context.id))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Small" Color="Color.Warning" OnClick="@(() => Stop((Guid)context.id))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => Delete((Guid)context.id))" />
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    [Parameter] public string Type { get; set; } = "Run";
+    private dynamic[] _items = [];
+
+    protected override Task OnInitializedAsync() => Load();
+    private async Task Load()
+    {
+        var all = (await Http.GetFromJsonAsync<dynamic[]>("/api/instances/")) ?? [];
+        var filterType = Type == "Run" ? 0 : 1;
+        _items = all.Where(i => (int)i.type == filterType).ToArray();
+    }
+
+    private void Open(Guid id) => Nav.NavigateTo($"/instance/{id}");
+    private async Task Stop(Guid id) { await Http.PostAsync($"/api/instances/{id}/stop", null); await Load(); }
+    private async Task Delete(Guid id) { await Http.DeleteAsync($"/api/instances/{id}"); await Load(); }
+}

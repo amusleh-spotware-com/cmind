@@ -1,0 +1,9 @@
+{
+  "name": "cTrader Algo Web",
+  "short_name": "Ctw",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0E1218",
+  "theme_color": "#0E1218",
+  "icons": []
+}

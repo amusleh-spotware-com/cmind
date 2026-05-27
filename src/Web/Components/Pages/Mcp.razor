@@ -1,0 +1,50 @@
+@page "/mcp"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject HttpClient Http
+@inject ISnackbar Snack
+
+<PageTitle>MCP Keys</PageTitle>
+<MudText Typo="Typo.h5" Class="mb-3">MCP API Keys</MudText>
+
+<MudTextField @bind-Value="_label" Label="Label" />
+<MudButton OnClick="Create" Variant="Variant.Filled" Color="Color.Primary" Class="mt-2">Create</MudButton>
+
+@if (!string.IsNullOrEmpty(_newKey))
+{
+    <MudAlert Severity="Severity.Warning" Class="mt-2">
+        Copy now (shown once): <code>@_newKey</code>
+    </MudAlert>
+}
+
+<MudTable Items="_items" Class="mt-3" Dense="true">
+    <HeaderContent><MudTh>Label</MudTh><MudTh>Prefix</MudTh><MudTh>Last used</MudTh><MudTh /></HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.label</MudTd>
+        <MudTd>@context.keyPrefix</MudTd>
+        <MudTd>@context.lastUsedAt</MudTd>
+        <MudTd><MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => Revoke((Guid)context.id))" /></MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    private dynamic[] _items = [];
+    private string _label = "";
+    private string? _newKey;
+
+    protected override Task OnInitializedAsync() => Load();
+    private async Task Load() => _items = (await Http.GetFromJsonAsync<dynamic[]>("/api/mcp-keys/")) ?? [];
+
+    private async Task Create()
+    {
+        var r = await Http.PostAsJsonAsync("/api/mcp-keys/", new { Label = _label });
+        if (r.IsSuccessStatusCode)
+        {
+            var d = await r.Content.ReadFromJsonAsync<dynamic>();
+            _newKey = d!.token;
+            await Load();
+        }
+        else Snack.Add("Failed", Severity.Error);
+    }
+
+    private async Task Revoke(Guid id) { await Http.DeleteAsync($"/api/mcp-keys/{id}"); await Load(); }
+}

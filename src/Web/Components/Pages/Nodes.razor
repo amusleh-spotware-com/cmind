@@ -1,0 +1,81 @@
+@page "/nodes"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOrAbove")]
+@inject HttpClient Http
+@inject ISnackbar Snack
+
+<PageTitle>Nodes</PageTitle>
+<MudText Typo="Typo.h5" Class="mb-3">Nodes</MudText>
+
+<MudExpansionPanels>
+    <MudExpansionPanel Text="Add node">
+        <MudGrid>
+            <MudItem xs="12" md="4"><MudTextField @bind-Value="_name" Label="Name" /></MudItem>
+            <MudItem xs="12" md="4"><MudTextField @bind-Value="_host" Label="Host" /></MudItem>
+            <MudItem xs="6" md="2"><MudNumericField @bind-Value="_port" Label="Port" /></MudItem>
+            <MudItem xs="6" md="2"><MudTextField @bind-Value="_user" Label="User" /></MudItem>
+            <MudItem xs="12"><MudTextField @bind-Value="_key" Label="SSH private key" Lines="6" Variant="Variant.Outlined" /></MudItem>
+            <MudItem xs="6" md="3"><MudTextField @bind-Value="_pass" Label="Passphrase" InputType="InputType.Password" /></MudItem>
+            <MudItem xs="6" md="3">
+                <MudSelect T="int" @bind-Value="_mode" Label="Mode">
+                    <MudSelectItem T="int" Value="0">Run</MudSelectItem>
+                    <MudSelectItem T="int" Value="1">Backtest</MudSelectItem>
+                    <MudSelectItem T="int" Value="2">Mixed</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" md="3"><MudTextField @bind-Value="_dataDir" Label="Data dir" /></MudItem>
+            <MudItem xs="6" md="3"><MudNumericField @bind-Value="_max" Label="Max instances" /></MudItem>
+        </MudGrid>
+        <MudButton OnClick="Add" Variant="Variant.Filled" Color="Color.Primary" Class="mt-2">Add node</MudButton>
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+<MudTable Items="_items" Class="mt-3" Dense="true">
+    <HeaderContent>
+        <MudTh>Name</MudTh><MudTh>Host</MudTh><MudTh>Mode</MudTh><MudTh>CPU</MudTh><MudTh>Mem</MudTh><MudTh>Disk</MudTh><MudTh>Backtest</MudTh><MudTh /></HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.name</MudTd>
+        <MudTd>@context.host</MudTd>
+        <MudTd>@context.mode</MudTd>
+        <MudTd>@(((double?)context.stats?.cpuPercent ?? 0).ToString("F1"))%</MudTd>
+        <MudTd>@Fmt(context.stats?.memUsedBytes) / @Fmt(context.stats?.memTotalBytes)</MudTd>
+        <MudTd>@Fmt(context.stats?.diskUsedBytes) / @Fmt(context.stats?.diskTotalBytes)</MudTd>
+        <MudTd>@Fmt(context.stats?.backtestDataUsedBytes)</MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.CleaningServices" Size="Size.Small" OnClick="@(() => Clean((Guid)context.id))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => Remove((Guid)context.id))" />
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    private dynamic[] _items = [];
+    private string _name = "", _host = "", _user = "root", _key = "", _pass = "", _dataDir = "/var/ctw/data";
+    private int _port = 22, _mode = 2, _max = 10;
+
+    protected override Task OnInitializedAsync() => Load();
+    private async Task Load() => _items = (await Http.GetFromJsonAsync<dynamic[]>("/api/nodes/")) ?? [];
+
+    private async Task Add()
+    {
+        var r = await Http.PostAsJsonAsync("/api/nodes/", new
+        {
+            Name = _name, Host = _host, SshPort = _port, SshUser = _user,
+            SshPrivateKey = _key, SshKeyPassphrase = _pass, Mode = _mode,
+            DataDirPath = _dataDir, MaxInstances = _max
+        });
+        Snack.Add(r.IsSuccessStatusCode ? "Added" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        await Load();
+    }
+
+    private async Task Remove(Guid id) { await Http.DeleteAsync($"/api/nodes/{id}"); await Load(); }
+    private async Task Clean(Guid id) { await Http.PostAsync($"/api/nodes/{id}/clean-backtest-data", null); await Load(); }
+
+    private static string Fmt(dynamic? bytes)
+    {
+        if (bytes is null) return "-";
+        var b = (long)bytes;
+        string[] u = ["B","KB","MB","GB","TB"]; var i = 0; double v = b;
+        while (v >= 1024 && i < u.Length - 1) { v /= 1024; i++; }
+        return $"{v:F1} {u[i]}";
+    }
+}

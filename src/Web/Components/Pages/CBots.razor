@@ -1,0 +1,63 @@
+@page "/cbots"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@inject HttpClient Http
+@inject ISnackbar Snack
+
+<PageTitle>cBots</PageTitle>
+<MudText Typo="Typo.h5" Class="mb-3">cBots</MudText>
+
+<MudPaper Class="pa-3 mb-3">
+    <InputFile id="cbotFile" hidden OnChange="OnFile" accept=".algo" />
+    <MudTextField @bind-Value="_uploadName" Label="Name (optional)" Class="mb-2" />
+    <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" for="cbotFile"
+               StartIcon="@Icons.Material.Filled.Upload">
+        Upload .algo
+    </MudButton>
+</MudPaper>
+
+<MudTable Items="_items" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
+    <HeaderContent>
+        <MudTh>Name</MudTh><MudTh>Version</MudTh><MudTh>Created</MudTh><MudTh /></HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Name">@context.name</MudTd>
+        <MudTd DataLabel="Version">@context.version</MudTd>
+        <MudTd DataLabel="Created">@context.createdAt</MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => Rename(context.id, context.name))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => Delete(context.id))" />
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    private dynamic[] _items = [];
+    private string? _uploadName;
+
+    protected override Task OnInitializedAsync() => Load();
+
+    private async Task Load() => _items = (await Http.GetFromJsonAsync<dynamic[]>("/api/cbots/")) ?? [];
+
+    private async Task OnFile(InputFileChangeEventArgs e)
+    {
+        var f = e.File;
+        using var c = new MultipartFormDataContent();
+        c.Add(new StreamContent(f.OpenReadStream(10 * 1024 * 1024)), "file", f.Name);
+        if (!string.IsNullOrWhiteSpace(_uploadName)) c.Add(new StringContent(_uploadName), "name");
+        var r = await Http.PostAsync("/api/cbots/upload", c);
+        Snack.Add(r.IsSuccessStatusCode ? "Uploaded" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        if (r.IsSuccessStatusCode) await Load();
+    }
+
+    private async Task Rename(Guid id, string current)
+    {
+        var name = current; // TODO MudDialog
+        await Http.PatchAsJsonAsync($"/api/cbots/{id}", new { Name = name });
+        await Load();
+    }
+
+    private async Task Delete(Guid id)
+    {
+        await Http.DeleteAsync($"/api/cbots/{id}");
+        await Load();
+    }
+}

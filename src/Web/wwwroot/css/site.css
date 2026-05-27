@@ -1,0 +1,5 @@
+html, body { background: #0E1218; }
+.mud-table-toolbar { background: transparent !important; }
+@media (max-width: 600px) {
+    .mobile-stack > * { display: block !important; width: 100% !important; margin-bottom: 8px; }
+}

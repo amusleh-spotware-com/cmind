@@ -1,0 +1,48 @@
+@page "/accounts"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@inject HttpClient Http
+@inject ISnackbar Snack
+
+<PageTitle>cTrader Accounts</PageTitle>
+<MudText Typo="Typo.h5" Class="mb-3">cTrader Accounts</MudText>
+
+<MudExpansionPanels>
+    <MudExpansionPanel Text="Add cID account">
+        <MudTextField @bind-Value="_username" Label="cID username" />
+        <MudTextField @bind-Value="_password" Label="cID password" InputType="InputType.Password" Class="mt-2" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddCid" Class="mt-2">Add</MudButton>
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+<MudList T="dynamic" Class="mt-3">
+    @foreach (var c in _cids)
+    {
+        <MudListItem T="dynamic">
+            <MudText Typo="Typo.subtitle1">@c.username</MudText>
+            <MudButton Size="Size.Small" OnClick="@(() => DeleteCid(c.id))" Color="Color.Error">Remove</MudButton>
+            <TradingAccountList CtidId="@((Guid)c.id)" />
+        </MudListItem>
+    }
+</MudList>
+
+@code {
+    private dynamic[] _cids = [];
+    private string _username = "", _password = "";
+
+    protected override Task OnInitializedAsync() => Load();
+    private async Task Load() => _cids = (await Http.GetFromJsonAsync<dynamic[]>("/api/ctids/")) ?? [];
+
+    private async Task AddCid()
+    {
+        var r = await Http.PostAsJsonAsync("/api/ctids/", new { Username = _username, Password = _password });
+        Snack.Add(r.IsSuccessStatusCode ? "Added" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        _username = ""; _password = "";
+        if (r.IsSuccessStatusCode) await Load();
+    }
+
+    private async Task DeleteCid(Guid id)
+    {
+        await Http.DeleteAsync($"/api/ctids/{id}");
+        await Load();
+    }
+}

@@ -1,0 +1,43 @@
+@inject HttpClient Http
+@inject ISnackbar Snack
+
+<MudTable Items="_items" Dense="true" Class="mt-2">
+    <HeaderContent>
+        <MudTh>Account</MudTh><MudTh>Broker</MudTh><MudTh>Live</MudTh><MudTh /></HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.accountNumber</MudTd>
+        <MudTd>@context.broker</MudTd>
+        <MudTd>@context.isLive</MudTd>
+        <MudTd><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => Remove(context.id))" /></MudTd>
+    </RowTemplate>
+</MudTable>
+
+<MudGrid Class="mt-2">
+    <MudItem xs="12" sm="4"><MudTextField @bind-Value="_acct" Label="Account #" /></MudItem>
+    <MudItem xs="12" sm="4"><MudTextField @bind-Value="_broker" Label="Broker" /></MudItem>
+    <MudItem xs="6" sm="2"><MudSwitch @bind-Value="_live" Label="Live" Color="Color.Warning" /></MudItem>
+    <MudItem xs="6" sm="2"><MudButton OnClick="Add" Variant="Variant.Filled" Color="Color.Primary">Add</MudButton></MudItem>
+</MudGrid>
+
+@code {
+    [Parameter] public Guid CtidId { get; set; }
+    private dynamic[] _items = [];
+    private long _acct;
+    private string _broker = "";
+    private bool _live;
+
+    protected override Task OnParametersSetAsync() => Load();
+
+    private async Task Load() =>
+        _items = (await Http.GetFromJsonAsync<dynamic[]>($"/api/ctids/{CtidId}/accounts")) ?? [];
+
+    private async Task Add()
+    {
+        var r = await Http.PostAsJsonAsync($"/api/ctids/{CtidId}/accounts",
+            new { AccountNumber = _acct, Broker = _broker, IsLive = _live });
+        if (r.IsSuccessStatusCode) { _acct = 0; _broker = ""; _live = false; await Load(); }
+        else Snack.Add("Failed", Severity.Error);
+    }
+
+    private async Task Remove(Guid id) { await Http.DeleteAsync($"/api/accounts/{id}"); await Load(); }
+}

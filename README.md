@@ -1,0 +1,134 @@
+# cTrader Algo Web
+
+> **Experimental project — entirely built by [Claude Code](https://claude.com/claude-code).**
+> No line of code in this repository was hand-written by a human. Spec, scaffolding, refactors,
+> migrations, dependency wiring, and documentation were all produced by an AI agent through an
+> interactive coding session. Treat the code as a reference experiment, not production-ready.
+
+An ASP.NET Core + Blazor Server web application for building, running, backtesting, and (later) optimizing
+cTrader cBots through the official [cTrader Console Docker image](https://github.com/spotware/ctrader-console-docker),
+distributed across one or more SSH-accessible nodes.
+
+## Stack
+
+- .NET 10, C# (latest)
+- ASP.NET Core Minimal APIs
+- Blazor Server with Server-Side Rendering
+- MudBlazor + custom cTrader-style dark theme
+- BlazorMonaco for the in-browser cBot code editor
+- Blazor-ApexCharts for backtest charts
+- EF Core 10 + Npgsql + PostgreSQL
+- ASP.NET Core Data Protection (X.509 cert-protected key ring persisted in PostgreSQL)
+- Argon2id password hashing (Konscious)
+- SSH.NET for node connectivity
+- ModelContextProtocol .NET SDK for the MCP server
+- .NET Aspire 9 for orchestration
+- OpenTelemetry (metrics + traces + logs)
+
+## Solution layout
+
+| Project              | Description                                                                 |
+| -------------------- | --------------------------------------------------------------------------- |
+| `src/AppHost`        | .NET Aspire orchestrator (Postgres, Web, MCP, pgAdmin)                      |
+| `src/Core`           | Domain entities, value objects, strong-typed IDs, options, log delegates    |
+| `src/Infrastructure` | EF Core, persistence, encryption, Argon2, GHCR client, OTel/health defaults |
+| `src/Nodes`          | Node scheduler, SSH container dispatcher, stats poller, local cBot builder  |
+| `src/Web`            | Blazor Server SSR + Minimal API + SignalR LogsHub                           |
+| `src/Mcp`            | MCP server (HTTP + SSE) for AI integrations                                 |
+| `tests/UnitTests`    | xUnit unit tests                                                            |
+| `tests/IntegrationTests` | xUnit + Testcontainers integration tests                                |
+
+## Prerequisites
+
+- .NET 10 SDK
+- Docker (engine reachable by the Web container/host — used by the builder)
+- PostgreSQL (provisioned automatically by Aspire in development)
+
+## Configuration
+
+All settings live under the `Ctw` section and are bound to a strongly-typed
+[`CtwOptions`](src/Core/Options/CtwOptions.cs) record consumed via `IOptionsMonitor<CtwOptions>`.
+
+```jsonc
+{
+  "Ctw": {
+    "OwnerEmail": "owner@example.com",
+    "OwnerPassword": "set-via-secret",
+    "DataProtectionCertBase64": "<base64 PFX>",
+    "DataProtectionCertPassword": "<pfx password>",
+    "DefaultDockerImage": "ghcr.io/spotware/ctrader-console",
+    "DefaultDockerTag": "latest",
+    "BuildWorkRoot": "/var/ctw/builds",
+    "BuildImage": "mcr.microsoft.com/dotnet/sdk:9.0"
+  }
+}
+```
+
+## Build
+
+```bash
+dotnet restore
+dotnet build
+```
+
+## Database migration
+
+Migrations live in `src/Infrastructure/Persistence/Migrations`. The Web app calls
+`Database.MigrateAsync()` on startup via the `OwnerSeeder` hosted service, so usually you
+do not need to apply migrations manually.
+
+To regenerate:
+
+```bash
+dotnet ef migrations add <Name> -p src/Infrastructure -s src/Infrastructure -o Persistence/Migrations
+```
+
+## Run (Aspire)
+
+```bash
+dotnet run --project src/AppHost
+```
+
+Aspire spins up Postgres (with a persistent volume + pgAdmin), the Web app, and the MCP server,
+and provides a dashboard with live logs and telemetry.
+
+## Run the Web app standalone
+
+```bash
+dotnet run --project src/Web
+```
+
+Provide a connection string named `ctwdb` and the `Ctw:*` configuration values either through
+user-secrets, environment variables (`Ctw__OwnerEmail`, etc.), or `appsettings.Development.json`.
+
+## Tests
+
+```bash
+dotnet test
+```
+
+Integration tests use Testcontainers to spin up a real PostgreSQL container — Docker must be
+available.
+
+## Health checks
+
+- `GET /health` — readiness (includes PostgreSQL connectivity)
+- `GET /alive` — liveness
+
+Both endpoints are only mapped in Development; in production they live behind authentication
+or a private network as configured by the deployment.
+
+## MCP server
+
+The MCP server is hosted separately under `/mcp` and authenticates via per-user API keys
+issued from the Web UI (`ctw_mcp_<hex>`). Tokens are SHA-256 hashed in the database; the
+raw value is shown to the user exactly once.
+
+## License & disclaimer
+
+cTrader and the cTrader Console image are property of Spotware Systems Ltd. This project is
+an unaffiliated experiment and not endorsed by Spotware.
+
+The entire codebase is provided as-is for educational and experimental purposes. Because it
+was generated by an AI, expect rough edges, design inconsistencies, and code that should be
+reviewed before deployment.

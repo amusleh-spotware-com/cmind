@@ -1,0 +1,62 @@
+@page "/instance/{Id:guid}"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject HttpClient Http
+@inject NavigationManager Nav
+@implements IAsyncDisposable
+@using Microsoft.AspNetCore.SignalR.Client
+@using ApexCharts
+
+<PageTitle>Instance</PageTitle>
+<MudText Typo="Typo.h5" Class="mb-2">Instance @Id</MudText>
+
+@if (_detail is not null)
+{
+    <MudPaper Class="pa-2 mb-2">
+        <MudText>Status: @_detail.status</MudText>
+        <MudText>Symbol: @_detail.symbol  TF: @_detail.timeframe</MudText>
+    </MudPaper>
+
+    @if (_isBacktest && _equity.Count > 0)
+    {
+        <ApexChart TItem="EquityPoint" Title="Equity curve">
+            <ApexPointSeries TItem="EquityPoint" Items="_equity" Name="Equity"
+                             XValue="@(p => p.Ts)" YValue="@(p => (decimal)p.Value)" SeriesType="SeriesType.Line" />
+        </ApexChart>
+    }
+}
+
+<MudPaper Class="pa-2" Style="background:#0E1218;color:#E6E8EC;max-height:400px;overflow:auto;font-family:monospace;">
+    @foreach (var l in _logs) { <div>@l</div> }
+</MudPaper>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private dynamic? _detail;
+    private bool _isBacktest;
+    private List<string> _logs = new();
+    private List<EquityPoint> _equity = new();
+    private HubConnection? _hub;
+
+    public record EquityPoint(DateTime Ts, double Value);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _detail = await Http.GetFromJsonAsync<dynamic>($"/api/instances/{Id}");
+        _isBacktest = _detail is not null && (int)_detail.type == 1;
+
+        _hub = new HubConnectionBuilder().WithUrl(Nav.ToAbsoluteUri("/hubs/logs")).Build();
+        await _hub.StartAsync();
+        var stream = _hub.StreamAsync<string>("Tail", Id);
+        _ = Task.Run(async () =>
+        {
+            await foreach (var line in stream)
+            {
+                _logs.Add(line);
+                if (_logs.Count > 500) _logs.RemoveAt(0);
+                await InvokeAsync(StateHasChanged);
+            }
+        });
+    }
+
+    public async ValueTask DisposeAsync() { if (_hub is not null) await _hub.DisposeAsync(); }
+}

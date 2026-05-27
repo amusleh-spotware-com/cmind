@@ -1,0 +1,59 @@
+@page "/users"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOrAbove")]
+@inject HttpClient Http
+@inject ISnackbar Snack
+
+<PageTitle>Users</PageTitle>
+<MudText Typo="Typo.h5" Class="mb-3">Users</MudText>
+
+<MudGrid Class="mb-3">
+    <MudItem xs="12" md="4"><MudTextField @bind-Value="_email" Label="Email" /></MudItem>
+    <MudItem xs="12" md="4"><MudTextField @bind-Value="_password" Label="Temp password" InputType="InputType.Password" /></MudItem>
+    <MudItem xs="6" md="2">
+        <MudSelect T="int" @bind-Value="_role" Label="Role">
+            <MudSelectItem T="int" Value="1">Admin</MudSelectItem>
+            <MudSelectItem T="int" Value="2">User</MudSelectItem>
+            <MudSelectItem T="int" Value="3">Viewer</MudSelectItem>
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="6" md="2"><MudButton OnClick="Add" Variant="Variant.Filled" Color="Color.Primary" Class="mt-3">Create</MudButton></MudItem>
+</MudGrid>
+
+<MudTable Items="_items" Dense="true">
+    <HeaderContent><MudTh>Email</MudTh><MudTh>Role</MudTh><MudTh>Locked</MudTh><MudTh /></HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.email</MudTd>
+        <MudTd>@context.role</MudTd>
+        <MudTd>@context.isLockedOut</MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.LockReset" Size="Size.Small" OnClick="@(() => Reset((Guid)context.id))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => Remove((Guid)context.id))" />
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    private dynamic[] _items = [];
+    private string _email = "", _password = "";
+    private int _role = 2;
+
+    protected override Task OnInitializedAsync() => Load();
+    private async Task Load() => _items = (await Http.GetFromJsonAsync<dynamic[]>("/api/users/")) ?? [];
+
+    private async Task Add()
+    {
+        var r = await Http.PostAsJsonAsync("/api/users/", new { Email = _email, Password = _password, Role = _role });
+        Snack.Add(r.IsSuccessStatusCode ? "Created" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        _email = ""; _password = "";
+        await Load();
+    }
+
+    private async Task Reset(Guid id)
+    {
+        var pw = Guid.NewGuid().ToString("N")[..12];
+        var r = await Http.PostAsJsonAsync($"/api/users/{id}/reset-password", new { NewPassword = pw });
+        if (r.IsSuccessStatusCode) Snack.Add($"Temp password: {pw}", Severity.Info);
+    }
+
+    private async Task Remove(Guid id) { await Http.DeleteAsync($"/api/users/{id}"); await Load(); }
+}

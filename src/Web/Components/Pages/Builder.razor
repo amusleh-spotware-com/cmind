@@ -1,0 +1,97 @@
+@page "/builder"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@inject HttpClient Http
+@inject ISnackbar Snack
+@using BlazorMonaco.Editor
+
+<PageTitle>Builder</PageTitle>
+<MudText Typo="Typo.h5" Class="mb-2">cBot Builder</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="4">
+        <MudSelect T="Guid?" @bind-Value="_projectId" Label="Project">
+            @foreach (var p in _projects) { <MudSelectItem T="Guid?" Value="@((Guid?)p.id)">@p.name</MudSelectItem> }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="6" md="2">
+        <MudSelect T="int" @bind-Value="_language" Label="Language">
+            <MudSelectItem T="int" Value="0">C#</MudSelectItem>
+            <MudSelectItem T="int" Value="1">Python</MudSelectItem>
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="6" md="3"><MudTextField @bind-Value="_newName" Label="New project name" /></MudItem>
+    <MudItem xs="12" md="3">
+        <MudButton OnClick="Create" Variant="Variant.Filled">Create</MudButton>
+        <MudButton OnClick="Build" Color="Color.Primary" Variant="Variant.Filled" Class="ml-1">Build</MudButton>
+        <MudButton OnClick="QuickRun" Color="Color.Secondary" Variant="Variant.Filled" Class="ml-1">Run</MudButton>
+    </MudItem>
+</MudGrid>
+
+<MudTabs Elevation="0" Class="mt-3">
+    <MudTabPanel Text="Code">
+        <div style="height:60vh">
+            <StandaloneCodeEditor @ref="_editor" ConstructionOptions="EditorOptions" />
+        </div>
+    </MudTabPanel>
+    <MudTabPanel Text="Project file">
+        <MudTextField @bind-Value="_projFile" Lines="15" Variant="Variant.Outlined" Class="mt-2" />
+    </MudTabPanel>
+    <MudTabPanel Text="Build output">
+        <MudPaper Class="pa-2" Style="background:#0E1218;color:#E6E8EC;font-family:monospace;max-height:60vh;overflow:auto;">
+            <pre>@_buildLog</pre>
+        </MudPaper>
+    </MudTabPanel>
+</MudTabs>
+
+@code {
+    private StandaloneCodeEditor? _editor;
+    private dynamic[] _projects = [];
+    private Guid? _projectId;
+    private int _language;
+    private string _newName = "", _projFile = "", _buildLog = "";
+
+    private StandaloneEditorConstructionOptions EditorOptions(StandaloneCodeEditor _) => new()
+    {
+        AutomaticLayout = true,
+        Language = _language == 0 ? "csharp" : "python",
+        Theme = "vs-dark",
+        Value = "",
+        FontSize = 14
+    };
+
+    protected override Task OnInitializedAsync() => Load();
+    private async Task Load() => _projects = (await Http.GetFromJsonAsync<dynamic[]>("/api/builder/projects")) ?? [];
+
+    private async Task Create()
+    {
+        var r = await Http.PostAsJsonAsync("/api/builder/projects", new { Name = _newName, Language = _language });
+        if (r.IsSuccessStatusCode) { _newName = ""; await Load(); }
+        else Snack.Add("Failed", Severity.Error);
+    }
+
+    private async Task Build()
+    {
+        if (_projectId is null) return;
+        var code = _editor is null ? "" : await _editor.GetValue();
+        var r = await Http.PostAsJsonAsync($"/api/builder/projects/{_projectId}/build",
+            new { Code = code, ProjectFile = _projFile });
+        if (r.IsSuccessStatusCode)
+        {
+            var d = await r.Content.ReadFromJsonAsync<dynamic>();
+            _buildLog = d!.log;
+            Snack.Add((bool)d.success ? "Build OK" : "Build failed",
+                (bool)d.success ? Severity.Success : Severity.Error);
+        }
+    }
+
+    private async Task QuickRun()
+    {
+        if (_projectId is null) return;
+        var r = await Http.PostAsync($"/api/builder/projects/{_projectId}/quick-run", null);
+        if (r.IsSuccessStatusCode)
+        {
+            var d = await r.Content.ReadFromJsonAsync<dynamic>();
+            _buildLog = d!.output;
+        }
+    }
+}

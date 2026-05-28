@@ -1,98 +1,127 @@
 @page "/builder"
 @using Web.Json
+@using Web.Components.Dialogs
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
-@using BlazorMonaco.Editor
+@inject IDialogService Dialogs
+@inject NavigationManager Nav
 
-<PageTitle>Builder</PageTitle>
-<MudText Typo="Typo.h5" Class="mb-2">cBot Builder</MudText>
+<PageTitle>cBot Builder</PageTitle>
 
-<MudGrid>
-    <MudItem xs="12" md="4">
-        <MudSelect T="Guid?" @bind-Value="_projectId" Label="Project">
-            @foreach (var p in _projects) { <MudSelectItem T="Guid?" Value="@((Guid?)p.id)">@p.name</MudSelectItem> }
-        </MudSelect>
-    </MudItem>
-    <MudItem xs="6" md="2">
-        <MudSelect T="int" @bind-Value="_language" Label="Language">
-            <MudSelectItem T="int" Value="0">C#</MudSelectItem>
-            <MudSelectItem T="int" Value="1">Python</MudSelectItem>
-        </MudSelect>
-    </MudItem>
-    <MudItem xs="6" md="3"><MudTextField @bind-Value="_newName" Label="New project name" /></MudItem>
-    <MudItem xs="12" md="3">
-        <MudButton OnClick="Create" Variant="Variant.Filled">Create</MudButton>
-        <MudButton OnClick="Build" Color="Color.Primary" Variant="Variant.Filled" Class="ml-1">Build</MudButton>
-        <MudButton OnClick="QuickRun" Color="Color.Secondary" Variant="Variant.Filled" Class="ml-1">Run</MudButton>
-    </MudItem>
-</MudGrid>
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">cBot Builder</MudText>
+    <MudSpacer />
+    <MudButton Color="Color.Primary" Variant="Variant.Filled"
+               StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew">
+        New cBot
+    </MudButton>
+</MudStack>
 
-<MudTabs Elevation="0" Class="mt-3">
-    <MudTabPanel Text="Code">
-        <div style="height:60vh">
-            <StandaloneCodeEditor @ref="_editor" ConstructionOptions="EditorOptions" />
-        </div>
-    </MudTabPanel>
-    <MudTabPanel Text="Project file">
-        <MudTextField @bind-Value="_projFile" Lines="15" Variant="Variant.Outlined" Class="mt-2" />
-    </MudTabPanel>
-    <MudTabPanel Text="Build output">
-        <MudPaper Class="pa-2" Style="background:#0E1218;color:#E6E8EC;font-family:monospace;max-height:60vh;overflow:auto;">
-            <pre>@_buildLog</pre>
-        </MudPaper>
-    </MudTabPanel>
-</MudTabs>
+@if (_loading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (_projects.Length == 0)
+{
+    <MudPaper Class="pa-6" Style="text-align:center;">
+        <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large" Class="mb-2" />
+        <MudText Typo="Typo.body1" Class="mb-2">No cBot projects yet.</MudText>
+        <MudText Typo="Typo.caption" Style="color:#A0A0A0;">Click "New cBot" to create your first project.</MudText>
+    </MudPaper>
+}
+else
+{
+    <MudTable Items="_projects" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="1">
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Language</MudTh>
+            <MudTh>Last Build</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh Style="width:140px;" />
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">
+                <MudLink Href="@($"/builder/{context.id}")">@context.name</MudLink>
+            </MudTd>
+            <MudTd DataLabel="Language">@context.language</MudTd>
+            <MudTd DataLabel="Last Build">@FormatTs(context.lastBuildAt)</MudTd>
+            <MudTd DataLabel="Status">@BuildStatusChip(context)</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                               OnClick="@(() => Nav.NavigateTo($"/builder/{context.id}"))" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                               OnClick="@(() => Delete((Guid)context.id, (string)context.name))" />
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
 
 @code {
-    private StandaloneCodeEditor? _editor;
     private dynamic[] _projects = [];
-    private Guid? _projectId;
-    private int _language;
-    private string _newName = "", _projFile = "", _buildLog = "";
-
-    private StandaloneEditorConstructionOptions EditorOptions(StandaloneCodeEditor _) => new()
-    {
-        AutomaticLayout = true,
-        Language = _language == 0 ? "csharp" : "python",
-        Theme = "vs-dark",
-        Value = "",
-        FontSize = 14
-    };
+    private bool _loading = true;
 
     protected override Task OnInitializedAsync() => Load();
-    private async Task Load() => _projects = await Http.GetDynamicArrayAsync("/api/builder/projects");
 
-    private async Task Create()
+    private async Task Load()
     {
-        var r = await Http.PostAsJsonAsync("/api/builder/projects", new { Name = _newName, Language = _language });
-        if (r.IsSuccessStatusCode) { _newName = ""; await Load(); }
-        else Snack.Add("Failed", Severity.Error);
+        _loading = true;
+        try { _projects = await Http.GetDynamicArrayAsync("/api/builder/projects"); }
+        finally { _loading = false; }
     }
 
-    private async Task Build()
-    {
-        if (_projectId is null) return;
-        var code = _editor is null ? "" : await _editor.GetValue();
-        var r = await Http.PostAsJsonAsync($"/api/builder/projects/{_projectId}/build",
-            new { Code = code, ProjectFile = _projFile });
-        if (r.IsSuccessStatusCode)
+    private static string FormatTs(dynamic? v) =>
+        v switch
         {
-            var d = await r.Content.ReadFromJsonAsync<dynamic>();
-            _buildLog = d!.log;
-            Snack.Add((bool)d.success ? "Build OK" : "Build failed",
-                (bool)d.success ? Severity.Success : Severity.Error);
+            null => "—",
+            DateTimeOffset d => d.LocalDateTime.ToString("yyyy-MM-dd HH:mm"),
+            _ => v.ToString() ?? "—"
+        };
+
+    private RenderFragment BuildStatusChip(dynamic p) => builder =>
+    {
+        if (p.lastBuildAt is null)
+        {
+            builder.OpenComponent<MudChip<string>>(0);
+            builder.AddAttribute(1, "Size", Size.Small);
+            builder.AddAttribute(2, "Color", Color.Default);
+            builder.AddAttribute(3, "Variant", Variant.Outlined);
+            builder.AddAttribute(4, "ChildContent", (RenderFragment)(b => b.AddContent(0, "—")));
+            builder.CloseComponent();
+            return;
         }
+        var ok = (bool)p.lastBuildSucceeded;
+        builder.OpenComponent<MudChip<string>>(0);
+        builder.AddAttribute(1, "Size", Size.Small);
+        builder.AddAttribute(2, "Color", ok ? Color.Success : Color.Error);
+        builder.AddAttribute(3, "Variant", Variant.Filled);
+        builder.AddAttribute(4, "ChildContent", (RenderFragment)(b => b.AddContent(0, ok ? "Success" : "Failed")));
+        builder.CloseComponent();
+    };
+
+    private async Task OpenNew()
+    {
+        var dlg = await Dialogs.ShowAsync<NewProjectDialog>("New cBot Project",
+            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+        var res = await dlg.Result;
+        if (res is null || res.Canceled) return;
+        var data = (NewProjectDialog.NewProjectDialogResult)res.Data!;
+        var r = await Http.PostAsJsonAsync("/api/builder/projects", new { Name = data.Name, Language = data.Language });
+        if (!r.IsSuccessStatusCode) { Snack.Add("Failed to create project", Severity.Error); return; }
+        var d = await r.Content.ReadFromJsonAsync<dynamic?>(JsonDefaults.DynamicWeb);
+        if (d is null) { Snack.Add("Failed to create project", Severity.Error); return; }
+        Guid id = (Guid)d.id;
+        Nav.NavigateTo($"/builder/{id}");
     }
 
-    private async Task QuickRun()
+    private async Task Delete(Guid id, string name)
     {
-        if (_projectId is null) return;
-        var r = await Http.PostAsync($"/api/builder/projects/{_projectId}/quick-run", null);
-        if (r.IsSuccessStatusCode)
-        {
-            var d = await r.Content.ReadFromJsonAsync<dynamic>();
-            _buildLog = d!.output;
-        }
+        var ok = await Dialogs.ShowMessageBox("Delete project",
+            $"Delete '{name}'? This cannot be undone.",
+            yesText: "Delete", cancelText: "Cancel");
+        if (ok != true) return;
+        var r = await Http.DeleteAsync($"/api/builder/projects/{id}");
+        if (r.IsSuccessStatusCode) { Snack.Add("Deleted", Severity.Success); await Load(); }
+        else Snack.Add("Delete failed", Severity.Error);
     }
 }

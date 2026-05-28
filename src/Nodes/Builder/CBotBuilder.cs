@@ -40,8 +40,9 @@ public sealed class CBotBuilder(
         var outDir = Path.Combine(workDir, DockerCommands.BuildOutDir);
         Directory.CreateDirectory(outDir);
 
+        var mountSource = workDir.Replace('\\', '/');
         var dockerArgs =
-            $"{DockerCommands.RunBuild} {DockerCommands.VolumeFlag} \"{workDir}\":{DockerCommands.BuildMount} " +
+            $"{DockerCommands.RunBuild} {DockerCommands.VolumeFlag} \"{mountSource}\":{DockerCommands.BuildMount} " +
             $"{opts.BuildImage} {DockerCommands.BuildCommand}";
 
         var (code, log) = await RunProcessAsync(DockerExe, dockerArgs, ct);

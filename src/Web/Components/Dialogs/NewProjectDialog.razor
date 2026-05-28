@@ -1,0 +1,41 @@
+@* Modal dialog for creating a new cBot source project. Returns NewProjectDialogResult on confirm. *@
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">New cBot Project</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="_name" Label="Title" Required="true"
+                          RequiredError="Title is required" Class="mb-3" Immediate="true" />
+            <MudText Typo="Typo.caption" Class="mb-1">Language</MudText>
+            <MudRadioGroup T="int" @bind-Value="_language">
+                <MudRadio T="int" Value="0">C#</MudRadio>
+                <MudRadio T="int" Value="1">Python</MudRadio>
+            </MudRadioGroup>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    private MudForm? _form;
+    private string _name = "";
+    private int _language;
+
+    private async Task Submit()
+    {
+        if (_form is not null) await _form.Validate();
+        if (string.IsNullOrWhiteSpace(_name)) return;
+        Dialog.Close(DialogResult.Ok(new NewProjectDialogResult(_name.Trim(), _language)));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    public sealed record NewProjectDialogResult(string Name, int Language);
+}

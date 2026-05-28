@@ -159,7 +159,6 @@
 
     private HubConnection? _hub;
     private CancellationTokenSource? _streamCts;
-    private Guid? _currentInstanceId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -314,7 +313,6 @@
                 return;
             }
             _lastBuildOk = true;
-            _currentInstanceId = d.InstanceId;
             await StartLogStreamAsync(d.InstanceId.Value);
         }
         finally { _busy = false; }

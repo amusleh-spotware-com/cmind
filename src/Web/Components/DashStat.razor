@@ -1,0 +1,23 @@
+@inject NavigationManager Nav
+
+<MudItem xs="6" sm="4" md="3" lg="2">
+    <MudPaper Class="pa-4 ctw-stat-card" Elevation="0" Style="@($"cursor:{(Href is null ? "default" : "pointer")};")" @onclick="OnClick">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <MudIcon Icon="@Icon" Style="@($"color:{Color};font-size:32px;")" />
+            <div style="display:flex;flex-direction:column;">
+                <span style="color:#A0A0A0;font-size:12px;">@Label</span>
+                <span style="color:@Color;font-size:24px;font-weight:600;line-height:1.2;">@Value</span>
+            </div>
+        </div>
+    </MudPaper>
+</MudItem>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter, EditorRequired] public long Value { get; set; }
+    [Parameter] public string Color { get; set; } = "#E6E6E6";
+    [Parameter] public string Icon { get; set; } = "";
+    [Parameter] public string? Href { get; set; }
+
+    private void OnClick() { if (Href is not null) Nav.NavigateTo(Href); }
+}

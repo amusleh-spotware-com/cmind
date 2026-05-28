@@ -95,6 +95,7 @@ app.MapCtidEndpoints();
 app.MapParamSetEndpoints();
 app.MapMcpKeyEndpoints();
 app.MapBuilderEndpoints();
+app.MapDashboardEndpoints();
 app.MapImageEndpoints();
 app.MapHub<LogsHub>(HubRoutes.Logs);
 

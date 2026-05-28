@@ -1,6 +1,52 @@
 @page "/"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Web.Json
+@inject HttpClient Http
 
 <PageTitle>Dashboard</PageTitle>
-<h1>Dashboard</h1>
-<MudText>Welcome to cTrader Algo Web.</MudText>
+
+<MudText Typo="Typo.h5" Class="mb-4">Dashboard</MudText>
+
+@if (_stats is null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudText Typo="Typo.subtitle1" Class="mb-2" Style="color:#A0A0A0;">Activity</MudText>
+    <MudGrid Class="mb-4">
+        <DashStat Label="Running cBots" Value="@((long)_stats.runningInstances)" Color="#26C281" Icon="@Icons.Material.Filled.PlayCircle" />
+        <DashStat Label="Running backtests" Value="@((long)_stats.runningBacktests)" Color="#3498DB" Icon="@Icons.Material.Filled.Science" />
+        <DashStat Label="Pending" Value="@((long)_stats.pendingInstances)" Color="#F39C12" Icon="@Icons.Material.Filled.Schedule" />
+        <DashStat Label="Failed" Value="@((long)_stats.failedInstances)" Color="#E74C3C" Icon="@Icons.Material.Filled.ErrorOutline" />
+        <DashStat Label="Completed" Value="@((long)_stats.completedInstances)" Color="#A0A0A0" Icon="@Icons.Material.Filled.CheckCircle" />
+        <DashStat Label="Total instances" Value="@((long)_stats.totalInstances)" Color="#E6E6E6" Icon="@Icons.Material.Filled.ListAlt" />
+    </MudGrid>
+
+    <MudText Typo="Typo.subtitle1" Class="mb-2" Style="color:#A0A0A0;">My resources</MudText>
+    <MudGrid Class="mb-4">
+        <DashStat Label="cBots" Value="@((long)_stats.cBots)" Color="#26C281" Icon="@Icons.Material.Filled.SmartToy" Href="/cbots" />
+        <DashStat Label="Source projects" Value="@((long)_stats.projects)" Color="#26C281" Icon="@Icons.Material.Filled.Code" Href="/builder" />
+        <DashStat Label="Parameter sets" Value="@((long)_stats.paramSets)" Color="#26C281" Icon="@Icons.Material.Filled.Tune" Href="/paramsets" />
+        <DashStat Label="Trading accounts" Value="@((long)_stats.tradingAccounts)" Color="#26C281" Icon="@Icons.Material.Filled.AccountBalance" Href="/accounts" />
+        <DashStat Label="cTrader IDs" Value="@((long)_stats.ctids)" Color="#26C281" Icon="@Icons.Material.Filled.Person" Href="/accounts" />
+        <DashStat Label="MCP keys" Value="@((long)_stats.mcpKeys)" Color="#26C281" Icon="@Icons.Material.Filled.Key" Href="/mcp" />
+    </MudGrid>
+
+    @if ((bool)_stats.isAdmin)
+    {
+        <MudText Typo="Typo.subtitle1" Class="mb-2" Style="color:#A0A0A0;">Admin</MudText>
+        <MudGrid>
+            <DashStat Label="Users" Value="@((long)_stats.users)" Color="#3498DB" Icon="@Icons.Material.Filled.People" Href="/users" />
+            <DashStat Label="Nodes" Value="@((long)_stats.nodes)" Color="#3498DB" Icon="@Icons.Material.Filled.Dns" Href="/nodes" />
+            <DashStat Label="Active nodes" Value="@((long)_stats.activeNodes)" Color="#26C281" Icon="@Icons.Material.Filled.Cloud" Href="/nodes" />
+        </MudGrid>
+    }
+}
+
+@code {
+    private dynamic? _stats;
+
+    protected override async Task OnInitializedAsync() =>
+        _stats = await Http.GetDynamicAsync("/api/dashboard/stats");
+}

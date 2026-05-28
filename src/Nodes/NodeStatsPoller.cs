@@ -12,7 +12,7 @@ namespace Nodes;
 
 public sealed class NodeStatsPoller(
     IServiceScopeFactory scopeFactory,
-    IOptionsMonitor<CtwOptions> options,
+    IOptionsMonitor<AppOptions> options,
     ILogger<NodeStatsPoller> log) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -28,7 +28,7 @@ public sealed class NodeStatsPoller(
     private async Task PollOnceAsync(CancellationToken ct)
     {
         using var scope = scopeFactory.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<CtwDbContext>();
+        var db = scope.ServiceProvider.GetRequiredService<DataContext>();
         var dispatcher = scope.ServiceProvider.GetRequiredService<IContainerDispatcher>();
 
         var nodes = await db.Nodes.Where(n =>

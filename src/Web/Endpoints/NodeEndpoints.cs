@@ -20,7 +20,7 @@ public static class NodeEndpoints
     {
         var g = app.MapGroup("/api/nodes").RequireAuthorization("AdminOrAbove");
 
-        g.MapGet("/", async (CtwDbContext db) =>
+        g.MapGet("/", async (DataContext db) =>
         {
             var rows = await db.Nodes.Include(n => n.LatestStats)
                 .Select(n => new
@@ -36,7 +36,7 @@ public static class NodeEndpoints
             return rows;
         });
 
-        g.MapPost("/", async (CreateNodeRequest req, CtwDbContext db, ISecretProtector p) =>
+        g.MapPost("/", async (CreateNodeRequest req, DataContext db, ISecretProtector p) =>
         {
             Node node = CreateNodeForMode(req.Mode);
             node.Name = req.Name;
@@ -54,7 +54,7 @@ public static class NodeEndpoints
             return Results.Ok(new { node.Id });
         });
 
-        g.MapDelete("/{id:guid}", async (Guid id, CtwDbContext db, IContainerDispatcher dispatcher) =>
+        g.MapDelete("/{id:guid}", async (Guid id, DataContext db, IContainerDispatcher dispatcher) =>
         {
             var nid = NodeId.From(id);
             var node = await db.Nodes.Include(n => n.LatestStats).FirstOrDefaultAsync(n => n.Id == nid);
@@ -106,7 +106,7 @@ public static class NodeEndpoints
             return Results.NoContent();
         });
 
-        g.MapPost("/{id:guid}/clean-backtest-data", async (Guid id, CtwDbContext db,
+        g.MapPost("/{id:guid}/clean-backtest-data", async (Guid id, DataContext db,
             IContainerDispatcher dispatcher) =>
         {
             var nid = NodeId.From(id);

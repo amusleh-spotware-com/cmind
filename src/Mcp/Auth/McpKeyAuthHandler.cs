@@ -15,7 +15,7 @@ public sealed class McpKeyAuthHandler(
     IOptionsMonitor<AuthenticationSchemeOptions> options,
     ILoggerFactory logger,
     UrlEncoder encoder,
-    CtwDbContext db) : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
+    DataContext db) : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
     private const string AuthorizationHeader = "Authorization";
     private const int KeyPrefixLength = 16;

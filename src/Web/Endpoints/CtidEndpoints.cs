@@ -19,14 +19,14 @@ public static class CtidEndpoints
     {
         var g = app.MapGroup("/api/ctids").RequireAuthorization("UserOrAbove");
 
-        g.MapGet("/", async (CtwDbContext db, ICurrentUser u) =>
+        g.MapGet("/", async (DataContext db, ICurrentUser u) =>
         {
             var uid = u.UserId!.Value;
             return await db.CTids.Where(c => c.UserId == uid)
                 .Select(c => new { c.Id, c.Username }).ToListAsync();
         });
 
-        g.MapPost("/", async (CreateCtidRequest req, CtwDbContext db, ICurrentUser u, ISecretProtector p) =>
+        g.MapPost("/", async (CreateCtidRequest req, DataContext db, ICurrentUser u, ISecretProtector p) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             db.CTids.Add(new CTraderIdAccount
@@ -40,7 +40,7 @@ public static class CtidEndpoints
         });
 
         g.MapPut("/{id:guid}", async (Guid id, UpdateCtidRequest req,
-            CtwDbContext db, ICurrentUser u, ISecretProtector p) =>
+            DataContext db, ICurrentUser u, ISecretProtector p) =>
         {
             var uid = u.UserId!.Value;
             var cid = CtidId.From(id);
@@ -54,7 +54,7 @@ public static class CtidEndpoints
             return Results.Ok();
         });
 
-        g.MapDelete("/{id:guid}", async (Guid id, CtwDbContext db, ICurrentUser u) =>
+        g.MapDelete("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u) =>
         {
             var uid = u.UserId!.Value;
             var cid = CtidId.From(id);
@@ -65,7 +65,7 @@ public static class CtidEndpoints
             return Results.NoContent();
         });
 
-        g.MapGet("/{id:guid}/accounts", async (Guid id, CtwDbContext db, ICurrentUser u) =>
+        g.MapGet("/{id:guid}/accounts", async (Guid id, DataContext db, ICurrentUser u) =>
         {
             var uid = u.UserId!.Value;
             var cid = CtidId.From(id);
@@ -74,7 +74,7 @@ public static class CtidEndpoints
         });
 
         g.MapPost("/{id:guid}/accounts", async (Guid id, CreateTradingAccountRequest req,
-            CtwDbContext db, ICurrentUser u) =>
+            DataContext db, ICurrentUser u) =>
         {
             var uid = u.UserId!.Value;
             var cid = CtidId.From(id);
@@ -92,14 +92,14 @@ public static class CtidEndpoints
             return Results.Ok();
         });
 
-        app.MapGet("/api/accounts", async (CtwDbContext db, ICurrentUser u) =>
+        app.MapGet("/api/accounts", async (DataContext db, ICurrentUser u) =>
         {
             var uid = u.UserId!.Value;
             return await db.TradingAccounts.Where(t => t.CTid.UserId == uid)
                 .Select(t => new { t.Id, t.AccountNumber, t.Broker, t.IsLive, t.Label }).ToListAsync();
         }).RequireAuthorization("UserOrAbove");
 
-        app.MapDelete("/api/accounts/{id:guid}", async (Guid id, CtwDbContext db, ICurrentUser u) =>
+        app.MapDelete("/api/accounts/{id:guid}", async (Guid id, DataContext db, ICurrentUser u) =>
         {
             var uid = u.UserId!.Value;
             var tid = TradingAccountId.From(id);

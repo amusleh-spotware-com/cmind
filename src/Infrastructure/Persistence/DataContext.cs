@@ -7,9 +7,9 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Infrastructure.Persistence;
 
-public class CtwDbContext : DbContext, IDataProtectionKeyContext
+public class DataContext : DbContext, IDataProtectionKeyContext
 {
-    public CtwDbContext(DbContextOptions<CtwDbContext> options) : base(options) { }
+    public DataContext(DbContextOptions<DataContext> options) : base(options) { }
 
     public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<CTraderIdAccount> CTids => Set<CTraderIdAccount>();

@@ -1,6 +1,6 @@
 namespace Core.Options;
 
-public sealed record CtwOptions
+public sealed record AppOptions
 {
     public const string SectionName = Constants.ConfigSections.Ctw;
 

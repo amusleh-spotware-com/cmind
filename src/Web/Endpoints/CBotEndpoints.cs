@@ -15,7 +15,7 @@ public static class CBotEndpoints
     {
         var g = app.MapGroup("/api/cbots").RequireAuthorization("UserOrAbove").DisableAntiforgery();
 
-        g.MapGet("/", async (CtwDbContext db, ICurrentUser u) =>
+        g.MapGet("/", async (DataContext db, ICurrentUser u) =>
         {
             var uid = u.UserId!.Value;
             return await db.CBots.Where(c => c.UserId == uid)
@@ -23,7 +23,7 @@ public static class CBotEndpoints
                 .ToListAsync();
         });
 
-        g.MapPost("/upload", async (HttpRequest req, CtwDbContext db, ICurrentUser u, ISecretProtector p) =>
+        g.MapPost("/upload", async (HttpRequest req, DataContext db, ICurrentUser u, ISecretProtector p) =>
         {
             if (!req.HasFormContentType) return Results.BadRequest("multipart required");
             var form = await req.ReadFormAsync();
@@ -48,7 +48,7 @@ public static class CBotEndpoints
             return Results.Ok(new { cbot.Id });
         });
 
-        g.MapPatch("/{id:guid}", async (Guid id, RenameRequest req, CtwDbContext db, ICurrentUser u) =>
+        g.MapPatch("/{id:guid}", async (Guid id, RenameRequest req, DataContext db, ICurrentUser u) =>
         {
             var cid = CBotId.From(id);
             var cbot = await db.CBots.FirstOrDefaultAsync(c => c.Id == cid && c.UserId == u.UserId!.Value);
@@ -59,7 +59,7 @@ public static class CBotEndpoints
             return Results.Ok();
         });
 
-        g.MapDelete("/{id:guid}", async (Guid id, CtwDbContext db, ICurrentUser u) =>
+        g.MapDelete("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u) =>
         {
             var cid = CBotId.From(id);
             var cbot = await db.CBots.FirstOrDefaultAsync(c => c.Id == cid && c.UserId == u.UserId!.Value);

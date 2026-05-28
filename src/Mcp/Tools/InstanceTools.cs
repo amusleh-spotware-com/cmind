@@ -9,7 +9,7 @@ using ModelContextProtocol.Server;
 namespace Mcp.Tools;
 
 [McpServerToolType]
-public sealed class InstanceTools(CtwDbContext db, IHttpContextAccessor http)
+public sealed class InstanceTools(DataContext db, IHttpContextAccessor http)
 {
     private const int MaxResults = 100;
 

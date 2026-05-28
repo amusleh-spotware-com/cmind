@@ -13,13 +13,13 @@ namespace Web.Auth;
 
 public sealed class OwnerSeeder(
     IServiceScopeFactory sf,
-    IOptionsMonitor<CtwOptions> options,
+    IOptionsMonitor<AppOptions> options,
     ILogger<OwnerSeeder> log) : IHostedService
 {
     public async Task StartAsync(CancellationToken ct)
     {
         using var scope = sf.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<CtwDbContext>();
+        var db = scope.ServiceProvider.GetRequiredService<DataContext>();
         await db.Database.MigrateAsync(ct);
 
         if (await db.Users.OfType<OwnerUser>().AnyAsync(ct)) return;

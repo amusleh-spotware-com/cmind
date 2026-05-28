@@ -2,7 +2,7 @@ using System.Security.Cryptography.X509Certificates;
 using Core;
 using Core.Constants;
 using Core.Options;
-using Infrastructure.Ghcr;
+using Infrastructure.Github;
 using Infrastructure.Persistence;
 using Infrastructure.Security;
 using Microsoft.AspNetCore.DataProtection;
@@ -19,11 +19,11 @@ public static class DependencyInjection
     public static IServiceCollection AddCtwInfrastructure(this IServiceCollection services, IConfiguration config)
     {
         var dp = services.AddDataProtection().SetApplicationName(DataProtectionApplicationName);
-        dp.PersistKeysToDbContext<CtwDbContext>();
+        dp.PersistKeysToDbContext<DataContext>();
 
-        var ctwSection = config.GetSection(CtwOptions.SectionName);
-        var certB64 = ctwSection[nameof(CtwOptions.DataProtectionCertBase64)];
-        var certPass = ctwSection[nameof(CtwOptions.DataProtectionCertPassword)];
+        var ctwSection = config.GetSection(AppOptions.SectionName);
+        var certB64 = ctwSection[nameof(AppOptions.DataProtectionCertBase64)];
+        var certPass = ctwSection[nameof(AppOptions.DataProtectionCertPassword)];
         if (!string.IsNullOrWhiteSpace(certB64))
         {
             var bytes = Convert.FromBase64String(certB64);
@@ -34,7 +34,7 @@ public static class DependencyInjection
         services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
         services.AddSingleton<IPasswordHasher, Argon2PasswordHasher>();
         services.AddMemoryCache();
-        services.AddHttpClient<IGhcrTagProvider, GhcrTagProvider>();
+        services.AddHttpClient<IGithubContainerRegistryTagProvider, GithubContainerRegistryTagProvider>();
         return services;
     }
 }

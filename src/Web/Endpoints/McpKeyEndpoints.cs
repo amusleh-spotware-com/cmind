@@ -17,14 +17,14 @@ public static class McpKeyEndpoints
     {
         var g = app.MapGroup("/api/mcp-keys").RequireAuthorization();
 
-        g.MapGet("/", async (CtwDbContext db, ICurrentUser u) =>
+        g.MapGet("/", async (DataContext db, ICurrentUser u) =>
         {
             var uid = u.UserId!.Value;
             return await db.McpApiKeys.Where(k => k.UserId == uid && k.RevokedAt == null)
                 .Select(k => new { k.Id, k.Label, k.KeyPrefix, k.CreatedAt, k.LastUsedAt }).ToListAsync();
         });
 
-        g.MapPost("/", async (CreateMcpKeyRequest req, CtwDbContext db, ICurrentUser u) =>
+        g.MapPost("/", async (CreateMcpKeyRequest req, DataContext db, ICurrentUser u) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             var raw = "ctw_mcp_" + Convert.ToHexString(RandomNumberGenerator.GetBytes(24)).ToLowerInvariant();
@@ -38,7 +38,7 @@ public static class McpKeyEndpoints
             return Results.Ok(new { token = raw });
         });
 
-        g.MapDelete("/{id:guid}", async (Guid id, CtwDbContext db, ICurrentUser u) =>
+        g.MapDelete("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u) =>
         {
             var uid = u.UserId!.Value;
             var kid = McpApiKeyId.From(id);

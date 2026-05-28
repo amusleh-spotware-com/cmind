@@ -13,7 +13,7 @@ public static class DashboardEndpoints
     {
         var g = app.MapGroup("/api/dashboard").RequireAuthorization();
 
-        g.MapGet("/stats", async (CtwDbContext db, ICurrentUser u) =>
+        g.MapGet("/stats", async (DataContext db, ICurrentUser u) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             var isAdmin = u.IsAtLeast("Admin");

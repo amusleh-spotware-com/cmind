@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Infrastructure.Persistence.Migrations
 {
-    [DbContext(typeof(CtwDbContext))]
+    [DbContext(typeof(DataContext))]
     [Migration("20260527155904_StateTypesAndTimeRename")]
     partial class StateTypesAndTimeRename
     {

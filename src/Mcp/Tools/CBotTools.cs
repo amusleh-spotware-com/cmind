@@ -9,7 +9,7 @@ using ModelContextProtocol.Server;
 namespace Mcp.Tools;
 
 [McpServerToolType]
-public sealed class CBotTools(CtwDbContext db, IHttpContextAccessor http)
+public sealed class CBotTools(DataContext db, IHttpContextAccessor http)
 {
     private UserId? CurrentUserId => Guid.TryParse(
         http.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier), out var g) ? UserId.From(g) : null;

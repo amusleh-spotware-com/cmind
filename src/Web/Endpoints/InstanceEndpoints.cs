@@ -19,7 +19,7 @@ public static class InstanceEndpoints
     {
         var g = app.MapGroup("/api/instances").RequireAuthorization();
 
-        g.MapGet("/", async (CtwDbContext db, ICurrentUser u) =>
+        g.MapGet("/", async (DataContext db, ICurrentUser u) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             IQueryable<Instance> q = db.Instances.Include(i => i.CBot).Include(i => i.Node);
@@ -54,7 +54,7 @@ public static class InstanceEndpoints
             return Results.Ok(rows);
         });
 
-        g.MapPost("/", async (StartRequest req, CtwDbContext db, ICurrentUser u,
+        g.MapPost("/", async (StartRequest req, DataContext db, ICurrentUser u,
             INodeScheduler scheduler, IContainerDispatcher dispatcher, ISecretProtector protector) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
@@ -158,7 +158,7 @@ public static class InstanceEndpoints
             return Results.Ok(new { running.Id });
         });
 
-        g.MapPost("/{id:guid}/stop", async (Guid id, CtwDbContext db, ICurrentUser u,
+        g.MapPost("/{id:guid}/stop", async (Guid id, DataContext db, ICurrentUser u,
             IContainerDispatcher dispatcher) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
@@ -218,7 +218,7 @@ public static class InstanceEndpoints
             return Results.Ok();
         });
 
-        g.MapDelete("/{id:guid}", async (Guid id, CtwDbContext db, ICurrentUser u) =>
+        g.MapDelete("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             var iid = InstanceId.From(id);

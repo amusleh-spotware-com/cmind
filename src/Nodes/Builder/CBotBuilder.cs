@@ -13,9 +13,9 @@ namespace Nodes.Builder;
 public sealed record BuildResult(bool Success, string Log, byte[]? AlgoBytes);
 
 public sealed class CBotBuilder(
-    CtwDbContext db,
+    DataContext db,
     ISecretProtector protector,
-    IOptionsMonitor<CtwOptions> options)
+    IOptionsMonitor<AppOptions> options)
 {
     private const string DockerExe = "docker";
     private const string NoAlgoMessage = "\nNo .algo file produced.";

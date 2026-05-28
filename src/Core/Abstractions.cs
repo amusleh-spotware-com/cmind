@@ -29,7 +29,7 @@ public interface IContainerDispatcher
     Task CleanBacktestDataAsync(Node node, UserId? userId, CancellationToken ct);
 }
 
-public interface IGhcrTagProvider
+public interface IGithubContainerRegistryTagProvider
 {
     Task<IReadOnlyList<string>> GetTagsAsync(CancellationToken ct);
 }

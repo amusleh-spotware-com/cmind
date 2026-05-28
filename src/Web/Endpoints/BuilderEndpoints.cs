@@ -18,7 +18,7 @@ public static class BuilderEndpoints
     {
         var g = app.MapGroup("/api/builder").RequireAuthorization("UserOrAbove");
 
-        g.MapGet("/projects", async (CtwDbContext db, ICurrentUser u) =>
+        g.MapGet("/projects", async (DataContext db, ICurrentUser u) =>
         {
             var uid = u.UserId!.Value;
             return await db.CBotSourceProjects.Where(p => p.UserId == uid)
@@ -26,7 +26,7 @@ public static class BuilderEndpoints
                 .ToListAsync();
         });
 
-        g.MapPost("/projects", async (CreateProjectRequest req, CtwDbContext db, ICurrentUser u) =>
+        g.MapPost("/projects", async (CreateProjectRequest req, DataContext db, ICurrentUser u) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             CBotSourceProject project = req.Language == 1
@@ -40,7 +40,7 @@ public static class BuilderEndpoints
             return Results.Ok(new { project.Id });
         });
 
-        g.MapGet("/projects/{id:guid}", async (Guid id, CtwDbContext db, ICurrentUser u) =>
+        g.MapGet("/projects/{id:guid}", async (Guid id, DataContext db, ICurrentUser u) =>
         {
             var uid = u.UserId!.Value;
             var pid = CBotSourceProjectId.From(id);
@@ -49,7 +49,7 @@ public static class BuilderEndpoints
         });
 
         g.MapPost("/projects/{id:guid}/build", async (Guid id, BuildRequest req,
-            CtwDbContext db, ICurrentUser u, CBotBuilder builder) =>
+            DataContext db, ICurrentUser u, CBotBuilder builder) =>
         {
             var uid = u.UserId!.Value;
             var pid = CBotSourceProjectId.From(id);
@@ -77,7 +77,7 @@ public static class BuilderEndpoints
             return Results.Ok(new { success = result.Success, log = result.Log });
         });
 
-        g.MapPost("/projects/{id:guid}/quick-run", async (Guid id, CtwDbContext db, ICurrentUser u,
+        g.MapPost("/projects/{id:guid}/quick-run", async (Guid id, DataContext db, ICurrentUser u,
             CBotBuilder builder, IContainerDispatcher dispatcher, ISecretProtector protector,
             INodeScheduler scheduler) =>
         {

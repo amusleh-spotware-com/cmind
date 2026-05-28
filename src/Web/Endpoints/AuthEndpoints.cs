@@ -20,7 +20,7 @@ public static class AuthEndpoints
     {
         var g = app.MapGroup("/api/auth");
 
-        g.MapPost("/login", async (HttpContext ctx, CtwDbContext db, IPasswordHasher hasher) =>
+        g.MapPost("/login", async (HttpContext ctx, DataContext db, IPasswordHasher hasher) =>
         {
             string email;
             string password;
@@ -82,7 +82,7 @@ public static class AuthEndpoints
         });
 
         g.MapPost("/change-password", async (ChangePasswordRequest req, ICurrentUser current,
-            CtwDbContext db, IPasswordHasher hasher) =>
+            DataContext db, IPasswordHasher hasher) =>
         {
             if (current.UserId is not { } uid) return Results.Unauthorized();
             var user = await db.Users.FindAsync(uid);

@@ -16,11 +16,11 @@ using Web.Hubs;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddObservabilityDefaults();
-builder.AddNpgsqlDbContext<CtwDbContext>(ConnectionStrings.CtwDb);
+builder.AddNpgsqlDbContext<DataContext>(ConnectionStrings.CtwDb);
 
 builder.Services
-    .AddOptions<CtwOptions>()
-    .Bind(builder.Configuration.GetSection(CtwOptions.SectionName))
+    .AddOptions<AppOptions>()
+    .Bind(builder.Configuration.GetSection(AppOptions.SectionName))
     .ValidateOnStart();
 
 builder.Services.AddCtwInfrastructure(builder.Configuration);

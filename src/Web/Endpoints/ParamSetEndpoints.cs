@@ -16,7 +16,7 @@ public static class ParamSetEndpoints
     {
         var g = app.MapGroup("/api/paramsets").RequireAuthorization("UserOrAbove");
 
-        g.MapGet("/", async (Guid? cbotId, CtwDbContext db, ICurrentUser u) =>
+        g.MapGet("/", async (Guid? cbotId, DataContext db, ICurrentUser u) =>
         {
             var uid = u.UserId!.Value;
             var q = db.ParamSets.Where(p => p.UserId == uid);
@@ -28,7 +28,7 @@ public static class ParamSetEndpoints
             return await q.Select(p => new { p.Id, p.Name, p.CBotId }).ToListAsync();
         });
 
-        g.MapGet("/{id:guid}", async (Guid id, CtwDbContext db, ICurrentUser u) =>
+        g.MapGet("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u) =>
         {
             var uid = u.UserId!.Value;
             var pid = ParamSetId.From(id);
@@ -36,7 +36,7 @@ public static class ParamSetEndpoints
             return p is null ? Results.NotFound() : Results.Ok(p);
         });
 
-        g.MapPost("/", async (CreateParamSetRequest req, CtwDbContext db, ICurrentUser u) =>
+        g.MapPost("/", async (CreateParamSetRequest req, DataContext db, ICurrentUser u) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             try { _ = System.Text.Json.JsonDocument.Parse(req.JsonContent); }
@@ -52,7 +52,7 @@ public static class ParamSetEndpoints
             return Results.Ok();
         });
 
-        g.MapPut("/{id:guid}", async (Guid id, UpdateParamSetRequest req, CtwDbContext db, ICurrentUser u) =>
+        g.MapPut("/{id:guid}", async (Guid id, UpdateParamSetRequest req, DataContext db, ICurrentUser u) =>
         {
             var uid = u.UserId!.Value;
             var pid = ParamSetId.From(id);
@@ -67,7 +67,7 @@ public static class ParamSetEndpoints
             return Results.Ok();
         });
 
-        g.MapDelete("/{id:guid}", async (Guid id, CtwDbContext db, ICurrentUser u) =>
+        g.MapDelete("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u) =>
         {
             var uid = u.UserId!.Value;
             var pid = ParamSetId.From(id);

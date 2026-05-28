@@ -17,12 +17,12 @@ public static class UserEndpoints
     {
         var g = app.MapGroup("/api/users").RequireAuthorization("AdminOrAbove");
 
-        g.MapGet("/", async (CtwDbContext db) =>
+        g.MapGet("/", async (DataContext db) =>
             await db.Users
                 .Select(u => new { u.Id, u.Email, Role = u.RoleName, u.IsLockedOut, u.CreatedAt })
                 .ToListAsync());
 
-        g.MapPost("/", async (CreateUserRequest req, CtwDbContext db, IPasswordHasher hasher, ICurrentUser current) =>
+        g.MapPost("/", async (CreateUserRequest req, DataContext db, IPasswordHasher hasher, ICurrentUser current) =>
         {
             // Rank: 0=Owner,1=Admin,2=User,3=Viewer
             if (req.Role == 0) return Results.Forbid();
@@ -51,7 +51,7 @@ public static class UserEndpoints
         });
 
         g.MapPost("/{id:guid}/reset-password", async (Guid id, ResetPasswordRequest req,
-            CtwDbContext db, IPasswordHasher hasher, ICurrentUser current) =>
+            DataContext db, IPasswordHasher hasher, ICurrentUser current) =>
         {
             var uid = UserId.From(id);
             var target = await db.Users.FirstOrDefaultAsync(u => u.Id == uid);
@@ -67,7 +67,7 @@ public static class UserEndpoints
             return Results.Ok();
         });
 
-        g.MapDelete("/{id:guid}", async (Guid id, CtwDbContext db, ICurrentUser current) =>
+        g.MapDelete("/{id:guid}", async (Guid id, DataContext db, ICurrentUser current) =>
         {
             var uid = UserId.From(id);
             var target = await db.Users.FirstOrDefaultAsync(u => u.Id == uid);

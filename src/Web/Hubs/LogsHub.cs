@@ -9,9 +9,9 @@ namespace Web.Hubs;
 [Authorize]
 public sealed class LogsHub : Hub
 {
-    private readonly CtwDbContext _db;
+    private readonly DataContext _db;
     private readonly IContainerDispatcher _dispatcher;
-    public LogsHub(CtwDbContext db, IContainerDispatcher dispatcher)
+    public LogsHub(DataContext db, IContainerDispatcher dispatcher)
     {
         _db = db;
         _dispatcher = dispatcher;

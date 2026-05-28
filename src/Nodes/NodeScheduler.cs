@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Nodes;
 
-public sealed class NodeScheduler(CtwDbContext db) : INodeScheduler
+public sealed class NodeScheduler(DataContext db) : INodeScheduler
 {
     public async Task<Node?> PickNodeAsync(string kind, CancellationToken ct)
     {

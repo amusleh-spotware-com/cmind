@@ -12,7 +12,7 @@ namespace Web.Auth;
 
 public sealed class InstanceReconciler(
     IServiceScopeFactory scopeFactory,
-    IOptionsMonitor<CtwOptions> options,
+    IOptionsMonitor<AppOptions> options,
     ILogger<InstanceReconciler> log) : BackgroundService
 {
     private const string ReconcileTimeoutReason = "Reconcile timeout";
@@ -24,7 +24,7 @@ public sealed class InstanceReconciler(
             try
             {
                 using var scope = scopeFactory.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<CtwDbContext>();
+                var db = scope.ServiceProvider.GetRequiredService<DataContext>();
                 var cutoff = DateTimeOffset.UtcNow - options.CurrentValue.InstanceStartupTimeout;
                 var stale = await db.Instances
                     .Where(i => (i is PendingRunInstance || i is StartingRunInstance

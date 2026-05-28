@@ -6,10 +6,10 @@ using Core.Options;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
-namespace Infrastructure.Ghcr;
+namespace Infrastructure.Github;
 
-public sealed class GhcrTagProvider(HttpClient http, IMemoryCache cache, IOptionsMonitor<CtwOptions> options)
-    : IGhcrTagProvider
+public sealed class GithubContainerRegistryTagProvider(HttpClient http, IMemoryCache cache, IOptionsMonitor<AppOptions> options)
+    : IGithubContainerRegistryTagProvider
 {
     private const string GhcrHost = "ghcr.io";
     private const string GhcrPrefix = "ghcr.io/";

@@ -64,7 +64,7 @@ public class CtwDbContext : DbContext, IDataProtectionKeyContext
         b.Entity<AppUser>(e =>
         {
             e.HasIndex(x => x.NormalizedEmail).IsUnique();
-            e.Property(x => x.Role).HasConversion<int>();
+            e.Property(x => x.Role).HasConversion(v => v.Name, v => UserRole.FromName(v)).HasMaxLength(32);
         });
 
         b.Entity<CTraderIdAccount>(e =>
@@ -90,7 +90,7 @@ public class CtwDbContext : DbContext, IDataProtectionKeyContext
         b.Entity<CBotSourceProject>(e =>
         {
             e.HasIndex(x => new { x.UserId, x.Name }).IsUnique();
-            e.Property(x => x.Language).HasConversion<int>();
+            e.Property(x => x.Language).HasConversion(v => v.Name, v => CBotLanguage.FromName(v)).HasMaxLength(16);
         });
 
         b.Entity<ParamSet>(e =>
@@ -102,8 +102,8 @@ public class CtwDbContext : DbContext, IDataProtectionKeyContext
         b.Entity<Node>(e =>
         {
             e.HasIndex(x => x.Name).IsUnique();
-            e.Property(x => x.Mode).HasConversion<int>();
-            e.Property(x => x.Status).HasConversion<int>();
+            e.Property(x => x.Mode).HasConversion(v => v.Name, v => NodeMode.FromName(v)).HasMaxLength(16);
+            e.Property(x => x.Status).HasConversion(v => v.Name, v => NodeStatus.FromName(v)).HasMaxLength(16);
         });
 
         b.Entity<NodeStats>(e =>
@@ -115,15 +115,14 @@ public class CtwDbContext : DbContext, IDataProtectionKeyContext
 
         b.Entity<Instance>(e =>
         {
-            e.Property(x => x.Type).HasConversion<int>();
-            e.Property(x => x.Status).HasConversion<int>();
+            e.Property(x => x.Type).HasConversion(v => v.Name, v => InstanceType.FromName(v)).HasMaxLength(16);
+            e.Property(x => x.Status).HasConversion(v => v.Name, v => InstanceStatus.FromName(v)).HasMaxLength(16);
             e.HasIndex(x => new { x.UserId, x.CreatedAt });
-            e.HasIndex(x => new { x.NodeId, x.Status });
         });
 
         b.Entity<InstanceLog>(e =>
         {
-            e.HasIndex(x => new { x.InstanceId, x.Ts });
+            e.HasIndex(x => new { x.InstanceId, x.Time });
             e.HasOne(x => x.Instance).WithMany().HasForeignKey(x => x.InstanceId).OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -142,7 +141,7 @@ public class CtwDbContext : DbContext, IDataProtectionKeyContext
 
         b.Entity<AuditLog>(e =>
         {
-            e.HasIndex(x => new { x.UserId, x.Ts });
+            e.HasIndex(x => new { x.UserId, x.Time });
             e.HasIndex(x => new { x.EntityType, x.EntityId });
         });
 

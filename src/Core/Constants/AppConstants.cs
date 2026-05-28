@@ -91,3 +91,21 @@ public static class CliCommands
     public const string Run = "run";
     public const string Backtest = "backtest";
 }
+
+public static class DockerCommands
+{
+    public const string RunDetached = "run -d";
+    public const string Stop = "docker stop";
+    public const string RemoveForce = "docker rm -f";
+    public const string LogsFollow = "docker logs -f";
+    public const string StatsNoStream = "docker stats --no-stream --format '{{.CPUPerc}}|{{.MemUsage}}'";
+    public const string RunBuild = "run --rm --network=none --memory=1g --cpus=1";
+    public const string NameFlag = "--name";
+    public const string LabelFlag = "--label";
+    public const string VolumeFlag = "-v";
+    public const string ContainerNamePrefix = "ctw-";
+    public const string BuildCommand = "sh -c \"cd /work && dotnet build -c Release -o /work/out 2>&1\"";
+    public const string BuildOutDir = "out";
+    public const string BuildMount = "/work";
+    public const string AlgoExtensionPattern = "*.algo";
+}

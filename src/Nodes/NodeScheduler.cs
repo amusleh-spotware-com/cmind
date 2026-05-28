@@ -4,30 +4,32 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Nodes;
 
-public sealed class NodeScheduler : INodeScheduler
+public sealed class NodeScheduler(CtwDbContext db) : INodeScheduler
 {
-    private readonly CtwDbContext _db;
-    public NodeScheduler(CtwDbContext db) => _db = db;
-
     public async Task<Node?> PickNodeAsync(InstanceType type, CancellationToken ct)
     {
         var allowed = type switch
         {
-            InstanceType.Run => new[] { NodeMode.Run, NodeMode.Mixed },
-            InstanceType.Backtest => new[] { NodeMode.Backtest, NodeMode.Mixed },
+            InstanceType.RunType => new[] { NodeMode.Run, NodeMode.Mixed },
+            InstanceType.BacktestType => new[] { NodeMode.Backtest, NodeMode.Mixed },
             _ => new[] { NodeMode.Mixed }
         };
+        var active = NodeStatus.Active;
+        var modeA = allowed[0];
+        var modeB = allowed.Length > 1 ? allowed[1] : allowed[0];
 
-        var candidates = await _db.Nodes
-            .Where(n => n.Status == NodeStatus.Active && allowed.Contains(n.Mode))
+        var candidates = await db.Nodes
+            .Where(n => (n.Mode == modeA || n.Mode == modeB) && n.Status == active)
             .Include(n => n.LatestStats)
             .ToListAsync(ct);
 
-        var activeCounts = await _db.Instances
+        var running = InstanceStatus.Running;
+        var starting = InstanceStatus.Starting;
+        var scheduled = InstanceStatus.Scheduled;
+
+        var activeCounts = await db.Instances
             .Where(i => i.NodeId != null &&
-                        (i.Status == InstanceStatus.Running ||
-                         i.Status == InstanceStatus.Starting ||
-                         i.Status == InstanceStatus.Scheduled))
+                        (i.Status == running || i.Status == starting || i.Status == scheduled))
             .GroupBy(i => i.NodeId!.Value)
             .Select(g => new { NodeId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.NodeId, x => x.Count, ct);

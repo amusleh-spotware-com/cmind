@@ -1,4 +1,5 @@
 @page "/builder"
+@using Web.Json
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
@@ -60,7 +61,7 @@
     };
 
     protected override Task OnInitializedAsync() => Load();
-    private async Task Load() => _projects = (await Http.GetFromJsonAsync<dynamic[]>("/api/builder/projects")) ?? [];
+    private async Task Load() => _projects = await Http.GetDynamicArrayAsync("/api/builder/projects");
 
     private async Task Create()
     {

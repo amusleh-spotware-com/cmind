@@ -18,9 +18,6 @@ public static class DependencyInjection
 
     public static IServiceCollection AddCtwInfrastructure(this IServiceCollection services, IConfiguration config)
     {
-        services.AddDbContext<CtwDbContext>(o =>
-            o.UseNpgsql(config.GetConnectionString(ConnectionStrings.CtwDb)));
-
         var dp = services.AddDataProtection().SetApplicationName(DataProtectionApplicationName);
         dp.PersistKeysToDbContext<CtwDbContext>();
 

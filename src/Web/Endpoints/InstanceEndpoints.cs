@@ -9,7 +9,7 @@ namespace Web.Endpoints;
 
 public record StartRequest(
     Guid CBotId, Guid TradingAccountId, string Symbol, string Timeframe,
-    Guid ParamSetId, string DockerImageTag, InstanceType Type,
+    Guid ParamSetId, string DockerImageTag, string Type,
     string? BacktestSettingsJson);
 
 public static class InstanceEndpoints
@@ -35,10 +35,12 @@ public static class InstanceEndpoints
             {
                 q = q.Where(i => i.UserId == u.UserId);
             }
-            var rows = await q.OrderByDescending(i => i.CreatedAt).Take(200)
+            var raw = await q.OrderByDescending(i => i.CreatedAt).Take(200)
                 .Select(i => new { i.Id, i.Type, i.Status, i.Symbol, i.Timeframe,
                     CBot = i.CBot.Name, Node = i.Node!.Name, i.StartedAt, i.StoppedAt })
                 .ToListAsync();
+            var rows = raw.Select(i => new { i.Id, Type = i.Type.Name, Status = i.Status.Name,
+                i.Symbol, i.Timeframe, i.CBot, i.Node, i.StartedAt, i.StoppedAt }).ToList();
             return Results.Ok(rows);
         });
 
@@ -46,7 +48,7 @@ public static class InstanceEndpoints
             INodeScheduler scheduler, IContainerDispatcher dispatcher, ISecretProtector protector) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
-            if (u.Role is UserRole.Viewer) return Results.Forbid();
+            if (u.Role?.Name == UserRole.Viewer.Name) return Results.Forbid();
 
             var cbot = await db.CBots.FirstOrDefaultAsync(c => c.Id == req.CBotId && c.UserId == uid);
             if (cbot is null) return Results.BadRequest("cbot not found");
@@ -56,7 +58,8 @@ public static class InstanceEndpoints
             var paramSet = await db.ParamSets.FirstOrDefaultAsync(p => p.Id == req.ParamSetId && p.UserId == uid);
             if (paramSet is null) return Results.BadRequest("paramset not found");
 
-            var node = await scheduler.PickNodeAsync(req.Type, default);
+            var type = InstanceType.FromName(req.Type);
+            var node = await scheduler.PickNodeAsync(type, default);
             if (node is null) return Results.Conflict("no node available");
 
             var instance = new Instance
@@ -67,7 +70,7 @@ public static class InstanceEndpoints
                 TradingAccount = acct,
                 NodeId = node.Id,
                 Node = node,
-                Type = req.Type,
+                Type = type,
                 Status = InstanceStatus.Starting,
                 DockerImageTag = string.IsNullOrWhiteSpace(req.DockerImageTag) ? "latest" : req.DockerImageTag,
                 Symbol = req.Symbol,

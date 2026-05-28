@@ -4,16 +4,15 @@ using Microsoft.AspNetCore.DataProtection;
 
 namespace Infrastructure.Security;
 
-public sealed class DataProtectionSecretProtector : ISecretProtector
+public sealed class DataProtectionSecretProtector(IDataProtectionProvider provider) : ISecretProtector
 {
-    private readonly IDataProtectionProvider _provider;
-    public DataProtectionSecretProtector(IDataProtectionProvider provider) => _provider = provider;
+    private const string PurposePrefix = "ctw:";
 
     public byte[] Protect(ReadOnlySpan<byte> plaintext, string purpose)
-        => _provider.CreateProtector($"ctw:{purpose}").Protect(plaintext.ToArray());
+        => provider.CreateProtector(PurposePrefix + purpose).Protect(plaintext.ToArray());
 
     public byte[] Unprotect(ReadOnlySpan<byte> ciphertext, string purpose)
-        => _provider.CreateProtector($"ctw:{purpose}").Unprotect(ciphertext.ToArray());
+        => provider.CreateProtector(PurposePrefix + purpose).Unprotect(ciphertext.ToArray());
 
     public string ProtectString(string plaintext, string purpose)
         => Convert.ToBase64String(Protect(Encoding.UTF8.GetBytes(plaintext), purpose));

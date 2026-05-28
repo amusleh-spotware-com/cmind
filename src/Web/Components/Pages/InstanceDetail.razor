@@ -1,4 +1,5 @@
 @page "/instance/{Id:guid}"
+@using Web.Json
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inject HttpClient Http
 @inject NavigationManager Nav
@@ -41,7 +42,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _detail = await Http.GetFromJsonAsync<dynamic>($"/api/instances/{Id}");
+        _detail = await Http.GetDynamicAsync($"/api/instances/{Id}");
         _isBacktest = _detail is not null && (int)_detail.type == 1;
 
         _hub = new HubConnectionBuilder().WithUrl(Nav.ToAbsoluteUri("/hubs/logs")).Build();

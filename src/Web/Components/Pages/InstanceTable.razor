@@ -1,4 +1,5 @@
 @inject HttpClient Http
+@using Web.Json
 @inject NavigationManager Nav
 
 <MudTable Items="_items" Dense="true" Breakpoint="Breakpoint.Sm">
@@ -25,7 +26,7 @@
     protected override Task OnInitializedAsync() => Load();
     private async Task Load()
     {
-        var all = (await Http.GetFromJsonAsync<dynamic[]>("/api/instances/")) ?? [];
+        var all = await Http.GetDynamicArrayAsync("/api/instances/");
         var filterType = Type == "Run" ? 0 : 1;
         _items = all.Where(i => (int)i.type == filterType).ToArray();
     }

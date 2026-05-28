@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Web.Endpoints;
 
-public record CreateProjectRequest(string Name, CBotLanguage Language);
+public record CreateProjectRequest(string Name, int Language);
 public record BuildRequest(string? Code, string? ProjectFile);
 
 public static class BuilderEndpoints
@@ -19,19 +19,24 @@ public static class BuilderEndpoints
         var g = app.MapGroup("/api/builder").RequireAuthorization("UserOrAbove");
 
         g.MapGet("/projects", async (CtwDbContext db, ICurrentUser u) =>
-            await db.CBotSourceProjects.Where(p => p.UserId == u.UserId)
+        {
+            var raw = await db.CBotSourceProjects.Where(p => p.UserId == u.UserId)
                 .Select(p => new { p.Id, p.Name, p.Language, p.LastBuildAt, p.LastBuildSucceeded })
-                .ToListAsync());
+                .ToListAsync();
+            return raw.Select(p => new { p.Id, p.Name, Language = p.Language.Name,
+                p.LastBuildAt, p.LastBuildSucceeded }).ToList();
+        });
 
         g.MapPost("/projects", async (CreateProjectRequest req, CtwDbContext db, ICurrentUser u) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
+            var lang = req.Language == 1 ? CBotLanguage.Python : CBotLanguage.CSharp;
             var project = new CBotSourceProject
             {
                 UserId = uid,
                 Name = req.Name,
-                Language = req.Language,
-                ProjectFilesJson = Templates.CreateProjectJson(req.Language, req.Name)
+                Language = lang,
+                ProjectFilesJson = Templates.CreateProjectJson(lang, req.Name)
             };
             db.CBotSourceProjects.Add(project);
             await db.SaveChangesAsync();

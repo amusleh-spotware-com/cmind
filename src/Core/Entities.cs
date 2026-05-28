@@ -22,7 +22,7 @@ public class AppUser : AuditedEntity
     [MaxLength(256)] public string Email { get; set; } = default!;
     [MaxLength(256)] public string NormalizedEmail { get; set; } = default!;
     [MaxLength(512)] public string PasswordHash { get; set; } = default!;
-    public UserRole Role { get; set; }
+    public UserRole Role { get; set; } = UserRole.User;
     public Guid? CreatedByUserId { get; set; }
     public bool MustChangePassword { get; set; }
     public bool IsLockedOut { get; set; }
@@ -69,7 +69,7 @@ public class CBotSourceProject : AuditedEntity
 {
     public Guid UserId { get; set; }
     public AppUser User { get; set; } = default!;
-    public CBotLanguage Language { get; set; }
+    public CBotLanguage Language { get; set; } = CBotLanguage.CSharp;
     [MaxLength(256)] public string Name { get; set; } = default!;
     public string ProjectFilesJson { get; set; } = "{}";
     public string? LastBuildLog { get; set; }
@@ -127,7 +127,7 @@ public class Instance : AuditedEntity
     public TradingAccount? TradingAccount { get; set; }
     public Guid? NodeId { get; set; }
     public Node? Node { get; set; }
-    public InstanceType Type { get; set; }
+    public InstanceType Type { get; set; } = InstanceType.Run;
     public InstanceStatus Status { get; set; } = InstanceStatus.Pending;
     [MaxLength(128)] public string DockerImageTag { get; set; } = "latest";
     [MaxLength(128)] public string? ContainerId { get; set; }
@@ -148,7 +148,7 @@ public class InstanceLog
     public long Id { get; set; }
     public Guid InstanceId { get; set; }
     public Instance Instance { get; set; } = default!;
-    public DateTimeOffset Ts { get; set; }
+    public DateTimeOffset Time { get; set; }
     [MaxLength(8)] public string Stream { get; set; } = "out";
     public string Line { get; set; } = default!;
 }
@@ -178,7 +178,7 @@ public class AuditLog
 {
     public long Id { get; set; }
     public Guid? UserId { get; set; }
-    public DateTimeOffset Ts { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset Time { get; set; } = DateTimeOffset.UtcNow;
     [MaxLength(64)] public string Action { get; set; } = default!;
     [MaxLength(64)] public string EntityType { get; set; } = default!;
     public Guid? EntityId { get; set; }

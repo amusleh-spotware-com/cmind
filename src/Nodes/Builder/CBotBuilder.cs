@@ -6,32 +6,23 @@ using Core.Constants;
 using Core.Options;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Nodes.Builder;
 
 public sealed record BuildResult(bool Success, string Log, byte[]? AlgoBytes);
 
-public sealed class CBotBuilder
+public sealed class CBotBuilder(
+    CtwDbContext db,
+    ISecretProtector protector,
+    IOptionsMonitor<CtwOptions> options)
 {
-    private readonly CtwDbContext _db;
-    private readonly ISecretProtector _protector;
-    private readonly ILogger<CBotBuilder> _log;
-    private readonly IOptionsMonitor<CtwOptions> _options;
-
-    public CBotBuilder(CtwDbContext db, ISecretProtector protector, ILogger<CBotBuilder> log,
-        IOptionsMonitor<CtwOptions> options)
-    {
-        _db = db;
-        _protector = protector;
-        _log = log;
-        _options = options;
-    }
+    private const string DockerExe = "docker";
+    private const string NoAlgoMessage = "\nNo .algo file produced.";
 
     public async Task<BuildResult> BuildAsync(CBotSourceProject project, Guid userId, CancellationToken ct)
     {
-        var opts = _options.CurrentValue;
+        var opts = options.CurrentValue;
         var files = JsonSerializer.Deserialize<Dictionary<string, string>>(project.ProjectFilesJson)
                     ?? new Dictionary<string, string>();
 
@@ -46,24 +37,22 @@ public sealed class CBotBuilder
             await File.WriteAllTextAsync(full, content, ct);
         }
 
-        var outDir = Path.Combine(workDir, "out");
+        var outDir = Path.Combine(workDir, DockerCommands.BuildOutDir);
         Directory.CreateDirectory(outDir);
 
-        var image = opts.BuildImage;
-        var args = "sh -c \"cd /work && dotnet build -c Release -o /work/out 2>&1\"";
+        var dockerArgs =
+            $"{DockerCommands.RunBuild} {DockerCommands.VolumeFlag} \"{workDir}\":{DockerCommands.BuildMount} " +
+            $"{opts.BuildImage} {DockerCommands.BuildCommand}";
 
-        var dockerArgs = $"run --rm --network=none --memory=1g --cpus=1 " +
-                         $"-v \"{workDir}\":/work {image} {args}";
-
-        var (code, log) = await RunProcessAsync("docker", dockerArgs, ct);
+        var (code, log) = await RunProcessAsync(DockerExe, dockerArgs, ct);
         var success = code == 0;
 
         byte[]? algoBytes = null;
         if (success)
         {
-            var algoFile = Directory.EnumerateFiles(outDir, "*.algo", SearchOption.AllDirectories).FirstOrDefault();
+            var algoFile = Directory.EnumerateFiles(outDir, DockerCommands.AlgoExtensionPattern, SearchOption.AllDirectories).FirstOrDefault();
             if (algoFile is not null) algoBytes = await File.ReadAllBytesAsync(algoFile, ct);
-            else { success = false; log += "\nNo .algo file produced."; }
+            else { success = false; log += NoAlgoMessage; }
         }
 
         project.LastBuildLog = log;
@@ -72,26 +61,26 @@ public sealed class CBotBuilder
 
         if (success && algoBytes is not null)
         {
-            var existing = await _db.CBots.FirstOrDefaultAsync(c => c.SourceProjectId == project.Id, ct);
+            var existing = await db.CBots.FirstOrDefaultAsync(c => c.SourceProjectId == project.Id, ct);
             if (existing is null)
             {
-                _db.CBots.Add(new CBot
+                db.CBots.Add(new CBot
                 {
                     UserId = userId,
                     Name = project.Name,
-                    EncryptedAlgo = _protector.Protect(algoBytes, "cbot.algo"),
+                    EncryptedAlgo = protector.Protect(algoBytes, EncryptionPurposes.CbotAlgo),
                     SourceProjectId = project.Id,
                     Version = 1
                 });
             }
             else
             {
-                existing.EncryptedAlgo = _protector.Protect(algoBytes, "cbot.algo");
+                existing.EncryptedAlgo = protector.Protect(algoBytes, EncryptionPurposes.CbotAlgo);
                 existing.Version++;
                 existing.UpdatedAt = DateTimeOffset.UtcNow;
             }
         }
-        await _db.SaveChangesAsync(ct);
+        await db.SaveChangesAsync(ct);
         return new BuildResult(success, log, algoBytes);
     }
 

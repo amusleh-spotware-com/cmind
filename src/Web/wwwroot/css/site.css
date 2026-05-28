@@ -1,5 +1,172 @@
-html, body { background: #0E1218; }
+html, body {
+    background: #1A1A1A;
+    color: #E6E6E6;
+    font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 13px;
+}
+
 .mud-table-toolbar { background: transparent !important; }
+
+.mud-appbar {
+    border-bottom: 1px solid #2E2E2E;
+}
+
+.mud-drawer {
+    border-right: 1px solid #2E2E2E;
+}
+
+.mud-paper { background-color: #262626; }
+
+.mud-button-filled-primary {
+    background-color: #26C281 !important;
+    color: #FFFFFF !important;
+}
+.mud-button-filled-primary:hover {
+    background-color: #2ED690 !important;
+}
+
+.mud-button-filled-error {
+    background-color: #E74C3C !important;
+    color: #FFFFFF !important;
+}
+
+.mud-input-outlined .mud-input-outlined-border {
+    border-color: #3A3A3A;
+}
+
+.mud-table {
+    background-color: #1F1F1F;
+    border: 1px solid #2E2E2E;
+}
+
+.mud-table-row:hover {
+    background-color: #2E2E2E !important;
+}
+
+.mud-table-cell {
+    border-bottom: 1px solid #262626;
+}
+
+.mud-input-control input,
+.mud-input-control textarea {
+    color: #E6E6E6;
+}
+
+.mud-alert-filled-error {
+    background-color: #E74C3C;
+}
+
+.ctw-sell { color: #E74C3C; }
+.ctw-buy { color: #26C281; }
+
+.ctw-login-page {
+    min-height: 100vh;
+    background: #1A1A1A;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.ctw-login-card {
+    width: 100%;
+    max-width: 440px;
+    background: #1A1A1A;
+    padding: 40px 48px 48px;
+    border-radius: 4px;
+}
+
+.ctw-login-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 32px;
+}
+.ctw-login-brand {
+    font-size: 32px;
+    font-weight: 600;
+    color: #FFFFFF;
+    letter-spacing: -0.5px;
+}
+
+.ctw-login-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid #2E2E2E;
+}
+.ctw-login-tab {
+    padding: 12px 8px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: #6B6B6B;
+}
+.ctw-login-tab-active {
+    color: #FFFFFF;
+    border-bottom: 2px solid #26C281;
+    margin-bottom: -1px;
+}
+
+.ctw-login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.ctw-login-field {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #3A3A3A;
+    padding: 8px 0;
+}
+.ctw-login-field:focus-within {
+    border-bottom-color: #26C281;
+}
+.ctw-login-icon {
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+.ctw-login-field input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #E6E6E6;
+    font-size: 15px;
+    padding: 8px 0;
+}
+.ctw-login-field input::placeholder {
+    color: #6B6B6B;
+    font-style: italic;
+}
+
+.ctw-login-button {
+    margin-top: 12px;
+    background: #26C281;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 2px;
+    padding: 16px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.ctw-login-button:hover {
+    background: #2ED690;
+}
+
+.ctw-login-error {
+    color: #E74C3C;
+    font-size: 13px;
+    margin-top: -8px;
+}
+
 @media (max-width: 600px) {
     .mobile-stack > * { display: block !important; width: 100% !important; margin-bottom: 8px; }
+    .ctw-login-card { padding: 32px 24px; }
 }

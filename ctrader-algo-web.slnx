@@ -1,4 +1,13 @@
 <Solution>
+  <Folder Name="/.solution/">
+    <File Path="CLAUDE.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="Local Node Dockefile.dockerfile" />
+    <File Path="README.md" />
+    <File Path="REQUIREMENTS.md" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/AppHost/AppHost.csproj" />
     <Project Path="src/Core/Core.csproj" />

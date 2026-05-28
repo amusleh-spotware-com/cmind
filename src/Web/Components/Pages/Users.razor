@@ -1,5 +1,6 @@
 @page "/users"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOrAbove")]
+@using Web.Json
 @inject HttpClient Http
 @inject ISnackbar Snack
 
@@ -38,7 +39,7 @@
     private int _role = 2;
 
     protected override Task OnInitializedAsync() => Load();
-    private async Task Load() => _items = (await Http.GetFromJsonAsync<dynamic[]>("/api/users/")) ?? [];
+    private async Task Load() => _items = await Http.GetDynamicArrayAsync("/api/users/");
 
     private async Task Add()
     {

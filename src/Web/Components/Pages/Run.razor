@@ -1,4 +1,5 @@
 @page "/run"
+@using Web.Json
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
@@ -40,14 +41,14 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _cbots = (await Http.GetFromJsonAsync<dynamic[]>("/api/cbots/")) ?? [];
-        _accts = (await Http.GetFromJsonAsync<dynamic[]>("/api/accounts/")) ?? [];
+        _cbots = await Http.GetDynamicArrayAsync("/api/cbots/");
+        _accts = await Http.GetDynamicArrayAsync("/api/accounts/");
     }
 
     protected override async Task OnParametersSetAsync()
     {
         if (_cbotId is not null)
-            _paramsets = (await Http.GetFromJsonAsync<dynamic[]>($"/api/paramsets?cbotId={_cbotId}")) ?? [];
+            _paramsets = await Http.GetDynamicArrayAsync($"/api/paramsets?cbotId={_cbotId}");
     }
 
     private async Task Start()
@@ -55,7 +56,7 @@
         var r = await Http.PostAsJsonAsync("/api/instances/", new
         {
             CBotId = _cbotId, TradingAccountId = _acctId, Symbol = _symbol, Timeframe = _timeframe,
-            ParamSetId = _psId, DockerImageTag = _image, Type = 0
+            ParamSetId = _psId, DockerImageTag = _image, Type = "Run"
         });
         Snack.Add(r.IsSuccessStatusCode ? "Started" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
     }

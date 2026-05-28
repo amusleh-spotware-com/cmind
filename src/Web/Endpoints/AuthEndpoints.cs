@@ -20,11 +20,30 @@ public static class AuthEndpoints
     {
         var g = app.MapGroup("/api/auth");
 
-        g.MapPost("/login", async (LoginRequest req, CtwDbContext db, IPasswordHasher hasher, HttpContext ctx) =>
+        g.MapPost("/login", async (HttpContext ctx, CtwDbContext db, IPasswordHasher hasher) =>
         {
-            var normalized = req.Email.ToUpperInvariant();
+            string email;
+            string password;
+            string? returnUrl;
+            if (ctx.Request.HasFormContentType)
+            {
+                var form = await ctx.Request.ReadFormAsync();
+                email = form["Email"].ToString();
+                password = form["Password"].ToString();
+                returnUrl = form["ReturnUrl"].ToString();
+            }
+            else
+            {
+                var req = await ctx.Request.ReadFromJsonAsync<LoginRequest>();
+                if (req is null) return Results.BadRequest();
+                email = req.Email;
+                password = req.Password;
+                returnUrl = null;
+            }
+
+            var normalized = email.ToUpperInvariant();
             var user = await db.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == normalized);
-            if (user is null || user.IsLockedOut || !hasher.Verify(req.Password, user.PasswordHash))
+            if (user is null || user.IsLockedOut || !hasher.Verify(password, user.PasswordHash))
             {
                 if (user is not null)
                 {
@@ -32,6 +51,8 @@ public static class AuthEndpoints
                     if (user.AccessFailedCount >= 5) user.IsLockedOut = true;
                     await db.SaveChangesAsync();
                 }
+                if (ctx.Request.HasFormContentType)
+                    return Results.Redirect("/login?error=1");
                 return Results.Unauthorized();
             }
             user.AccessFailedCount = 0;
@@ -41,12 +62,18 @@ public static class AuthEndpoints
             {
                 new(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new(ClaimTypes.Email, user.Email),
-                new(ClaimTypes.Role, user.Role.ToString())
+                new(ClaimTypes.Role, user.Role.Name)
             };
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             await ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+
+            if (ctx.Request.HasFormContentType)
+            {
+                var target = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl;
+                return Results.Redirect(target);
+            }
             return Results.Ok(new { user.MustChangePassword });
-        });
+        }).DisableAntiforgery();
 
         g.MapPost("/logout", async (HttpContext ctx) =>
         {

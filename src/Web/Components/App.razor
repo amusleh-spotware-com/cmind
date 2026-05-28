@@ -8,11 +8,14 @@
     <link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css" />
     <link rel="stylesheet" href="css/site.css" />
     <link rel="manifest" href="manifest.webmanifest" />
-    <meta name="theme-color" content="#0e1218" />
+    <meta name="theme-color" content="#1A1A1A" />
     <HeadOutlet @rendermode="@RenderMode.InteractiveServer" />
 </head>
 <body>
     <Routes @rendermode="@RenderMode.InteractiveServer" />
+    <script src="_content/BlazorMonaco/jsInterop.js"></script>
+    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
+    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
     <script src="_framework/blazor.web.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 </body>

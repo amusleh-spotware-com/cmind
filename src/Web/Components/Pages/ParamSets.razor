@@ -1,4 +1,5 @@
 @page "/paramsets"
+@using Web.Json
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
@@ -35,11 +36,11 @@
     private Guid? _editing;
 
     protected override async Task OnInitializedAsync() =>
-        _cbots = (await Http.GetFromJsonAsync<dynamic[]>("/api/cbots/")) ?? [];
+        _cbots = await Http.GetDynamicArrayAsync("/api/cbots/");
 
     protected override async Task OnParametersSetAsync()
     {
-        if (_cbotId is not null) _items = (await Http.GetFromJsonAsync<dynamic[]>($"/api/paramsets?cbotId={_cbotId}")) ?? [];
+        if (_cbotId is not null) _items = await Http.GetDynamicArrayAsync($"/api/paramsets?cbotId={_cbotId}");
     }
 
     private async Task Save()
@@ -59,7 +60,7 @@
 
     private async Task Edit(Guid id)
     {
-        var p = await Http.GetFromJsonAsync<dynamic>($"/api/paramsets/{id}");
+        var p = await Http.GetDynamicAsync($"/api/paramsets/{id}");
         if (p is not null) { _editing = id; _name = p.name; _json = p.jsonContent; }
     }
 

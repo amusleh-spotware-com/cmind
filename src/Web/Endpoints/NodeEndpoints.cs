@@ -10,7 +10,7 @@ namespace Web.Endpoints;
 
 public record CreateNodeRequest(
     string Name, string Host, int SshPort, string SshUser,
-    string SshPrivateKey, string? SshKeyPassphrase, NodeMode Mode,
+    string SshPrivateKey, string? SshKeyPassphrase, string Mode,
     string DataDirPath, int MaxInstances);
 
 public static class NodeEndpoints
@@ -20,12 +20,16 @@ public static class NodeEndpoints
         var g = app.MapGroup("/api/nodes").RequireAuthorization("AdminOrAbove");
 
         g.MapGet("/", async (CtwDbContext db) =>
-            await db.Nodes.Include(n => n.LatestStats)
+        {
+            var raw = await db.Nodes.Include(n => n.LatestStats)
                 .Select(n => new
                 {
                     n.Id, n.Name, n.Host, n.Mode, n.Status, n.MaxInstances,
                     Stats = n.LatestStats
-                }).ToListAsync());
+                }).ToListAsync();
+            return raw.Select(n => new { n.Id, n.Name, n.Host,
+                Mode = n.Mode.Name, Status = n.Status.Name, n.MaxInstances, n.Stats }).ToList();
+        });
 
         g.MapPost("/", async (CreateNodeRequest req, CtwDbContext db, ISecretProtector p) =>
         {
@@ -39,7 +43,7 @@ public static class NodeEndpoints
                 EncryptedSshKeyPassphrase = string.IsNullOrEmpty(req.SshKeyPassphrase)
                     ? null
                     : p.Protect(Encoding.UTF8.GetBytes(req.SshKeyPassphrase), "node.ssh.pass"),
-                Mode = req.Mode,
+                Mode = NodeMode.FromName(req.Mode),
                 DataDirPath = req.DataDirPath,
                 MaxInstances = req.MaxInstances
             };

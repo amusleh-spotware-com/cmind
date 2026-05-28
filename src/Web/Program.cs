@@ -2,8 +2,9 @@ using Core;
 using Core.Constants;
 using Core.Options;
 using Infrastructure;
-using Infrastructure.Aspire;
 using Infrastructure.Persistence;
+using Microsoft.AspNetCore.Components;
+using Web;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using MudBlazor.Services;
 using Nodes;
@@ -14,7 +15,7 @@ using Web.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddServiceDefaults();
+builder.AddObservabilityDefaults();
 builder.AddNpgsqlDbContext<CtwDbContext>(ConnectionStrings.CtwDb);
 
 builder.Services
@@ -30,7 +31,8 @@ builder.Services.AddHealthChecks()
                      ?? throw new InvalidOperationException("Missing connection string"),
         name: "postgres", tags: ["ready"]);
 
-builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents(o => o.DetailedErrors = builder.Environment.IsDevelopment());
 builder.Services.AddMudServices();
 builder.Services.AddSignalR();
 builder.Services.AddOpenApi();
@@ -46,18 +48,30 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 builder.Services.AddAuthorizationBuilder()
-    .AddPolicy(AuthPolicies.Owner, p => p.RequireRole(nameof(UserRole.Owner)))
-    .AddPolicy(AuthPolicies.AdminOrAbove, p => p.RequireRole(nameof(UserRole.Owner), nameof(UserRole.Admin)))
+    .AddPolicy(AuthPolicies.Owner, p => p.RequireRole(UserRole.Owner.Name))
+    .AddPolicy(AuthPolicies.AdminOrAbove, p => p.RequireRole(UserRole.Owner.Name, UserRole.Admin.Name))
     .AddPolicy(AuthPolicies.UserOrAbove, p => p.RequireRole(
-        nameof(UserRole.Owner), nameof(UserRole.Admin), nameof(UserRole.User)));
+        UserRole.Owner.Name, UserRole.Admin.Name, UserRole.User.Name));
 
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<CookieForwardingHandler>();
+builder.Services.AddHttpClient("self")
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseCookies = false })
+    .AddHttpMessageHandler<CookieForwardingHandler>();
+builder.Services.AddScoped(sp =>
+{
+    var nav = sp.GetRequiredService<NavigationManager>();
+    var factory = sp.GetRequiredService<IHttpClientFactory>();
+    var http = factory.CreateClient("self");
+    http.BaseAddress = new Uri(nav.BaseUri);
+    return http;
+});
 builder.Services.AddHostedService<OwnerSeeder>();
 builder.Services.AddHostedService<InstanceReconciler>();
 
 var app = builder.Build();
-app.MapDefaultEndpoints();
+app.MapHostHealthEndpoints();
 
 if (!app.Environment.IsDevelopment())
 {

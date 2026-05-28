@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Web.Endpoints;
 
-public record CreateUserRequest(string Email, string Password, UserRole Role, bool ViewerSeeAllInstances = false);
+public record CreateUserRequest(string Email, string Password, int Role, bool ViewerSeeAllInstances = false);
 public record ResetPasswordRequest(string NewPassword);
 
 public static class UserEndpoints
@@ -18,12 +18,19 @@ public static class UserEndpoints
         var g = app.MapGroup("/api/users").RequireAuthorization("AdminOrAbove");
 
         g.MapGet("/", async (CtwDbContext db) =>
-            await db.Users.Select(u => new { u.Id, u.Email, u.Role, u.IsLockedOut, u.CreatedAt }).ToListAsync());
+        {
+            var rows = await db.Users
+                .Select(u => new { u.Id, u.Email, u.Role, u.IsLockedOut, u.CreatedAt })
+                .ToListAsync();
+            return rows.Select(u => new { u.Id, u.Email, Role = u.Role.Name, u.IsLockedOut, u.CreatedAt }).ToList();
+        });
 
         g.MapPost("/", async (CreateUserRequest req, CtwDbContext db, IPasswordHasher hasher, ICurrentUser current) =>
         {
-            if (req.Role == UserRole.Owner) return Results.Forbid();
-            if (req.Role == UserRole.Admin && current.Role != UserRole.Owner) return Results.Forbid();
+            var role = UserRole.All.FirstOrDefault(r => r.Rank == req.Role);
+            if (role is null) return Results.BadRequest("invalid role");
+            if (role == UserRole.Owner) return Results.Forbid();
+            if (role == UserRole.Admin && current.Role != UserRole.Owner) return Results.Forbid();
             var normalized = req.Email.ToUpperInvariant();
             if (await db.Users.AnyAsync(u => u.NormalizedEmail == normalized))
                 return Results.Conflict("email exists");
@@ -33,7 +40,7 @@ public static class UserEndpoints
                 Email = req.Email,
                 NormalizedEmail = normalized,
                 PasswordHash = hasher.Hash(req.Password),
-                Role = req.Role,
+                Role = role,
                 ViewerSeeAllInstances = req.ViewerSeeAllInstances,
                 MustChangePassword = true,
                 CreatedByUserId = current.UserId,

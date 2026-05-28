@@ -11,31 +11,24 @@ using Microsoft.Extensions.Options;
 
 namespace Web.Auth;
 
-public sealed class OwnerSeeder : IHostedService
+public sealed class OwnerSeeder(
+    IServiceScopeFactory sf,
+    IOptionsMonitor<CtwOptions> options,
+    ILogger<OwnerSeeder> log) : IHostedService
 {
-    private readonly IServiceScopeFactory _sf;
-    private readonly IOptionsMonitor<CtwOptions> _options;
-    private readonly ILogger<OwnerSeeder> _log;
-
-    public OwnerSeeder(IServiceScopeFactory sf, IOptionsMonitor<CtwOptions> options, ILogger<OwnerSeeder> log)
-    {
-        _sf = sf;
-        _options = options;
-        _log = log;
-    }
-
     public async Task StartAsync(CancellationToken ct)
     {
-        using var scope = _sf.CreateScope();
+        using var scope = sf.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<CtwDbContext>();
         await db.Database.MigrateAsync(ct);
 
-        if (await db.Users.AnyAsync(u => u.Role == UserRole.Owner, ct)) return;
+        var ownerRole = UserRole.Owner;
+        if (await db.Users.AnyAsync(u => u.Role == ownerRole, ct)) return;
 
-        var opts = _options.CurrentValue;
+        var opts = options.CurrentValue;
         if (string.IsNullOrWhiteSpace(opts.OwnerEmail) || string.IsNullOrWhiteSpace(opts.OwnerPassword))
         {
-            _log.OwnerCredentialsMissing();
+            log.OwnerCredentialsMissing();
             return;
         }
 
@@ -52,7 +45,7 @@ public sealed class OwnerSeeder : IHostedService
         };
         db.Users.Add(owner);
         await db.SaveChangesAsync(ct);
-        _log.OwnerSeeded(email.Value);
+        log.OwnerSeeded(email.Value);
     }
 
     public Task StopAsync(CancellationToken ct) => Task.CompletedTask;

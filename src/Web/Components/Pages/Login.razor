@@ -1,28 +1,53 @@
 @page "/login"
 @layout EmptyLayout
-@inject NavigationManager Nav
-@inject HttpClient Http
 
-<PageTitle>Login</PageTitle>
-<MudPaper Class="pa-6 mx-auto mt-12" Style="max-width:400px">
-    <MudText Typo="Typo.h5" Class="mb-4">Sign in</MudText>
-    <MudTextField @bind-Value="_email" Label="Email" />
-    <MudTextField @bind-Value="_password" Label="Password" InputType="InputType.Password" Class="mt-2" />
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="SubmitAsync" FullWidth="true">
-        Sign in
-    </MudButton>
-    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Class="mt-2">@_error</MudAlert> }
-</MudPaper>
+<PageTitle>Log in</PageTitle>
+
+<div class="ctw-login-page">
+    <div class="ctw-login-card">
+        <div class="ctw-login-logo">
+            <svg width="44" height="44" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="32" cy="32" r="28" fill="none" stroke="#E53935" stroke-width="8"/>
+                <path d="M 50 22 A 24 24 0 1 0 50 42" fill="none" stroke="#E53935" stroke-width="8" stroke-linecap="round"/>
+            </svg>
+            <span class="ctw-login-brand">cTrader</span>
+        </div>
+
+        <div class="ctw-login-tabs">
+            <div class="ctw-login-tab ctw-login-tab-active">LOG IN</div>
+        </div>
+
+        <form method="post" action="/api/auth/login" class="ctw-login-form">
+            <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
+
+            <div class="ctw-login-field">
+                <svg class="ctw-login-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9BA3AF" stroke-width="2">
+                    <rect x="3" y="5" width="18" height="14" rx="2"/>
+                    <polyline points="3,7 12,13 21,7"/>
+                </svg>
+                <input type="email" name="Email" placeholder="Enter email" required autofocus />
+            </div>
+
+            <div class="ctw-login-field">
+                <svg class="ctw-login-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9BA3AF" stroke-width="2">
+                    <rect x="5" y="11" width="14" height="10" rx="2"/>
+                    <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+                </svg>
+                <input type="password" name="Password" placeholder="Enter password" required />
+            </div>
+
+            @if (HasError)
+            {
+                <div class="ctw-login-error">Invalid credentials</div>
+            }
+
+            <button class="ctw-login-button" type="submit">LOG IN</button>
+        </form>
+    </div>
+</div>
 
 @code {
-    private string _email = "";
-    private string _password = "";
-    private string? _error;
-
-    private async Task SubmitAsync()
-    {
-        var resp = await Http.PostAsJsonAsync("/api/auth/login", new { Email = _email, Password = _password });
-        if (resp.IsSuccessStatusCode) Nav.NavigateTo("/", forceLoad: true);
-        else _error = "Invalid credentials";
-    }
+    [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+    [SupplyParameterFromQuery(Name = "error")] public string? Error { get; set; }
+    private bool HasError => !string.IsNullOrEmpty(Error);
 }

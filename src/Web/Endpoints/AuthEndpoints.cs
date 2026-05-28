@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Web.Endpoints;
 
-public record LoginRequest(string Email, string Password);
+public record LoginRequest(string Email, string Password, bool RememberMe = false);
 public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 
 public static class AuthEndpoints
@@ -25,12 +25,14 @@ public static class AuthEndpoints
             string email;
             string password;
             string? returnUrl;
+            bool rememberMe;
             if (ctx.Request.HasFormContentType)
             {
                 var form = await ctx.Request.ReadFormAsync();
                 email = form["Email"].ToString();
                 password = form["Password"].ToString();
                 returnUrl = form["ReturnUrl"].ToString();
+                rememberMe = string.Equals(form["RememberMe"].ToString(), "true", StringComparison.OrdinalIgnoreCase);
             }
             else
             {
@@ -39,6 +41,7 @@ public static class AuthEndpoints
                 email = req.Email;
                 password = req.Password;
                 returnUrl = null;
+                rememberMe = req.RememberMe;
             }
 
             var normalized = email.ToUpperInvariant();
@@ -65,7 +68,13 @@ public static class AuthEndpoints
                 new(ClaimTypes.Role, user.RoleName)
             };
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            await ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+            var authProps = new AuthenticationProperties
+            {
+                IsPersistent = rememberMe,
+                ExpiresUtc = rememberMe ? DateTimeOffset.UtcNow.AddDays(30) : null
+            };
+            await ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(identity), authProps);
 
             if (ctx.Request.HasFormContentType)
             {

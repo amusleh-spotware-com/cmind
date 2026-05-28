@@ -2,7 +2,22 @@ html, body {
     background: #1A1A1A;
     color: #E6E6E6;
     font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    font-size: 13px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+@media (min-width: 1200px) {
+    html, body { font-size: 15px; }
+    .mud-nav-link { font-size: 15px !important; font-weight: 600 !important; padding-top: 12px !important; padding-bottom: 12px !important; }
+    .mud-table-cell { padding: 14px 18px !important; font-size: 14.5px; }
+    .mud-table-head .mud-table-cell { font-size: 13px; font-weight: 700 !important; letter-spacing: 0.4px; text-transform: uppercase; }
+    .mud-button-root { font-weight: 700 !important; letter-spacing: 0.4px; padding: 9px 20px; }
+    .mud-card, .mud-paper { border: 1px solid #2E2E2E; }
+    .ctw-stat-card .mud-typography-h4 { font-size: 2rem !important; font-weight: 800 !important; letter-spacing: -0.5px; }
+}
+
+@media (min-width: 1600px) {
+    html, body { font-size: 16px; }
 }
 
 .mud-table-toolbar { background: transparent !important; }
@@ -93,10 +108,10 @@ html, body {
     margin-bottom: 32px;
 }
 .ctw-login-brand {
-    font-size: 32px;
-    font-weight: 600;
+    font-size: 26px;
+    font-weight: 700;
     color: #FFFFFF;
-    letter-spacing: -0.5px;
+    letter-spacing: -0.3px;
 }
 
 .ctw-login-tabs {
@@ -167,6 +182,22 @@ html, body {
 }
 .ctw-login-button:hover {
     background: #2ED690;
+}
+
+.ctw-login-remember {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #A0A0A0;
+    font-size: 13px;
+    user-select: none;
+    cursor: pointer;
+}
+.ctw-login-remember input {
+    width: 16px;
+    height: 16px;
+    accent-color: #26C281;
+    cursor: pointer;
 }
 
 .ctw-login-error {

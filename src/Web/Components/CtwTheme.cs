@@ -44,17 +44,27 @@ public static class CtwTheme
         LayoutProperties = new LayoutProperties
         {
             DefaultBorderRadius = "4px",
-            AppbarHeight = "56px",
-            DrawerWidthLeft = "240px"
+            AppbarHeight = "64px",
+            DrawerWidthLeft = "260px"
         },
         Typography = new Typography
         {
             Default = new DefaultTypography
             {
                 FontFamily = ["Inter", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
-                FontSize = "13px",
-                LineHeight = "1.5"
-            }
+                FontSize = "14px",
+                FontWeight = "500",
+                LineHeight = "1.55"
+            },
+            H1 = new H1Typography { FontSize = "2.5rem", FontWeight = "700", LineHeight = "1.2" },
+            H2 = new H2Typography { FontSize = "2rem", FontWeight = "700", LineHeight = "1.25" },
+            H3 = new H3Typography { FontSize = "1.625rem", FontWeight = "700", LineHeight = "1.3" },
+            H4 = new H4Typography { FontSize = "1.375rem", FontWeight = "700", LineHeight = "1.35" },
+            H5 = new H5Typography { FontSize = "1.15rem", FontWeight = "700", LineHeight = "1.4" },
+            H6 = new H6Typography { FontSize = "1rem", FontWeight = "700", LineHeight = "1.45" },
+            Subtitle1 = new Subtitle1Typography { FontSize = "0.95rem", FontWeight = "600" },
+            Subtitle2 = new Subtitle2Typography { FontSize = "0.85rem", FontWeight = "600" },
+            Button = new ButtonTypography { FontWeight = "700", LetterSpacing = "0.5px" }
         }
     };
 }

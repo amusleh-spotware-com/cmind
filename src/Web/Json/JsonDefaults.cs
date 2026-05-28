@@ -2,6 +2,7 @@ using System.Dynamic;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Core;
 
 namespace Web.Json;
 
@@ -12,6 +13,7 @@ public static class JsonDefaults
     private static JsonSerializerOptions Create()
     {
         var o = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        o.Converters.Add(new StrongIdJsonConverterFactory());
         o.Converters.Add(new ObjectToInferredTypesConverter());
         return o;
     }

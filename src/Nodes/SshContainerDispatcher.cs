@@ -28,7 +28,7 @@ public sealed class SshContainerDispatcher(
         using var client = Connect(instance.Node);
         using var sftp = ConnectSftp(instance.Node);
 
-        var workDir = $"{instance.Node.DataDirPath.TrimEnd('/')}/{instance.UserId}/{instance.CBotId}/{instance.Id}";
+        var workDir = $"{instance.Node.DataDirPath.TrimEnd('/')}/{instance.UserId.Value}/{instance.CBotId.Value}/{instance.Id.Value}";
         Run(client, $"mkdir -p {Shell(workDir)}/data");
 
         var algoPath = $"{workDir}/{AlgoFile}";
@@ -49,11 +49,11 @@ public sealed class SshContainerDispatcher(
         }
 
         var image = $"{DockerImages.CtraderConsole}:{instance.DockerImageTag}";
-        var name = $"{DockerCommands.ContainerNamePrefix}{instance.Type.Name.ToLowerInvariant()}-{instance.Id:N}";
+        var name = $"{DockerCommands.ContainerNamePrefix}{instance.KindName.ToLowerInvariant()}-{instance.Id.Value:N}";
         var labels =
-            $"{DockerCommands.LabelFlag} {DockerLabels.User}={instance.UserId} " +
-            $"{DockerCommands.LabelFlag} {DockerLabels.Instance}={instance.Id} " +
-            $"{DockerCommands.LabelFlag} {DockerLabels.Type}={instance.Type.Name}";
+            $"{DockerCommands.LabelFlag} {DockerLabels.User}={instance.UserId.Value} " +
+            $"{DockerCommands.LabelFlag} {DockerLabels.Instance}={instance.Id.Value} " +
+            $"{DockerCommands.LabelFlag} {DockerLabels.Type}={instance.KindName}";
         var mountWork = $"{DockerCommands.VolumeFlag} {Shell(workDir)}:{WorkMount}";
 
         var cmdArgs = BuildConsoleArgs(instance, ctid);
@@ -68,18 +68,21 @@ public sealed class SshContainerDispatcher(
 
     public async Task StopAsync(Instance instance, CancellationToken ct)
     {
-        if (instance.Node is null || instance.ContainerId is null) return;
+        if (instance.Node is null) return;
+        var containerId = GetContainerId(instance);
+        if (containerId is null) return;
         using var client = Connect(instance.Node);
-        Run(client, $"{DockerCommands.Stop} {Shell(instance.ContainerId)} || true");
-        Run(client, $"{DockerCommands.RemoveForce} {Shell(instance.ContainerId)} || true");
+        Run(client, $"{DockerCommands.Stop} {Shell(containerId)} || true");
+        Run(client, $"{DockerCommands.RemoveForce} {Shell(containerId)} || true");
         await Task.CompletedTask;
     }
 
     public async IAsyncEnumerable<string> TailLogsAsync(Instance instance, [EnumeratorCancellation] CancellationToken ct)
     {
-        if (instance.Node is null || instance.ContainerId is null) yield break;
+        var containerId = GetContainerId(instance);
+        if (instance.Node is null || containerId is null) yield break;
         using var client = Connect(instance.Node);
-        var cmd = client.CreateCommand($"{DockerCommands.LogsFollow} {Shell(instance.ContainerId)}");
+        var cmd = client.CreateCommand($"{DockerCommands.LogsFollow} {Shell(containerId)}");
         var async = cmd.BeginExecute();
         using var reader = new StreamReader(cmd.OutputStream);
         while (!ct.IsCancellationRequested && !async.IsCompleted)
@@ -122,16 +125,31 @@ public sealed class SshContainerDispatcher(
         return long.TryParse(du.Trim(), out var v) ? v : 0;
     }
 
-    public async Task CleanBacktestDataAsync(Node node, Guid? userId, CancellationToken ct)
+    public async Task CleanBacktestDataAsync(Node node, UserId? userId, CancellationToken ct)
     {
         using var client = Connect(node);
         var root = node.DataDirPath.TrimEnd('/');
         if (!root.StartsWith(FilePaths.CtwDataRootPrefix, StringComparison.Ordinal))
             throw new InvalidOperationException($"Refusing to clean outside {FilePaths.CtwDataRootPrefix}");
-        var target = userId is null ? $"{root}/*" : $"{root}/{userId}";
+        var target = userId is null ? $"{root}/*" : $"{root}/{userId.Value.Value}";
         Run(client, $"rm -rf {Shell(target)}");
         await Task.CompletedTask;
     }
+
+    private static string? GetContainerId(Instance i) => i switch
+    {
+        StartingRunInstance s => s.ContainerId,
+        RunningRunInstance r => r.ContainerId,
+        StoppingRunInstance st => st.ContainerId,
+        StoppedRunInstance st => st.ContainerId,
+        FailedRunInstance f => f.ContainerId,
+        StartingBacktestInstance s => s.ContainerId,
+        RunningBacktestInstance r => r.ContainerId,
+        StoppingBacktestInstance st => st.ContainerId,
+        CompletedBacktestInstance c => c.ContainerId,
+        FailedBacktestInstance f => f.ContainerId,
+        _ => null
+    };
 
     private SshClient Connect(Node node)
     {
@@ -177,7 +195,8 @@ public sealed class SshContainerDispatcher(
     private static string BuildConsoleArgs(Instance i, string ctid)
     {
         var sb = new StringBuilder();
-        sb.Append(i.Type.Name == InstanceType.Backtest.Name ? CliCommands.Backtest : CliCommands.Run).Append(' ');
+        var isBacktest = i is BacktestInstance;
+        sb.Append(isBacktest ? CliCommands.Backtest : CliCommands.Run).Append(' ');
         sb.Append($"{WorkMount}/{AlgoFile} ");
         if (!string.IsNullOrEmpty(ctid))
             sb.Append($"{CliFlags.Ctid} {ctid} {CliFlags.PwdFile} {WorkMount}/{PwdFile} ");
@@ -186,9 +205,9 @@ public sealed class SshContainerDispatcher(
         if (!string.IsNullOrEmpty(i.Timeframe)) sb.Append($"{CliFlags.Period} {i.Timeframe} ");
         sb.Append($"{CliFlags.DataDir} {DataDir} ");
 
-        if (i.Type.Name == InstanceType.Backtest.Name && !string.IsNullOrEmpty(i.BacktestSettingsJson))
+        if (i is BacktestInstance b && !string.IsNullOrEmpty(b.BacktestSettingsJson))
         {
-            var doc = JsonDocument.Parse(i.BacktestSettingsJson);
+            var doc = JsonDocument.Parse(b.BacktestSettingsJson);
             foreach (var p in doc.RootElement.EnumerateObject())
             {
                 var name = p.Name.ToLowerInvariant() switch

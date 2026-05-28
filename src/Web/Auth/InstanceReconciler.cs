@@ -25,22 +25,47 @@ public sealed class InstanceReconciler(
             {
                 using var scope = scopeFactory.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<CtwDbContext>();
-                var starting = InstanceStatus.Starting;
-                var pending = InstanceStatus.Pending;
                 var cutoff = DateTimeOffset.UtcNow - options.CurrentValue.InstanceStartupTimeout;
                 var stale = await db.Instances
-                    .Where(i => (i.Status == starting || i.Status == pending)
+                    .Where(i => (i is PendingRunInstance || i is StartingRunInstance
+                                 || i is PendingBacktestInstance || i is StartingBacktestInstance)
                                 && i.CreatedAt < cutoff)
                     .ToListAsync(stoppingToken);
                 foreach (var i in stale)
                 {
-                    i.Status = InstanceStatus.Failed;
-                    i.FailureReason = ReconcileTimeoutReason;
+                    Instance replacement = i is RunInstance
+                        ? new FailedRunInstance
+                        {
+                            ContainerId = (i as StartingRunInstance)?.ContainerId,
+                            FailureReason = ReconcileTimeoutReason
+                        }
+                        : new FailedBacktestInstance
+                        {
+                            ContainerId = (i as StartingBacktestInstance)?.ContainerId,
+                            FailureReason = ReconcileTimeoutReason
+                        };
+                    CopyCommon(i, replacement);
+                    db.Instances.Remove(i);
+                    db.Instances.Add(replacement);
                 }
                 if (stale.Count > 0) await db.SaveChangesAsync(stoppingToken);
             }
             catch (Exception ex) { log.ReconcileFailed(ex); }
             await Task.Delay(options.CurrentValue.InstanceReconcileInterval, stoppingToken);
         }
+    }
+
+    private static void CopyCommon(Instance src, Instance dst)
+    {
+        dst.UserId = src.UserId;
+        dst.CBotId = src.CBotId;
+        dst.TradingAccountId = src.TradingAccountId;
+        dst.NodeId = src.NodeId;
+        dst.DockerImageTag = src.DockerImageTag;
+        dst.Symbol = src.Symbol;
+        dst.Timeframe = src.Timeframe;
+        dst.ParamSetId = src.ParamSetId;
+        dst.DataDirSubPath = src.DataDirSubPath;
+        dst.CreatedAt = src.CreatedAt;
     }
 }

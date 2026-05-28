@@ -22,8 +22,7 @@ public sealed class OwnerSeeder(
         var db = scope.ServiceProvider.GetRequiredService<CtwDbContext>();
         await db.Database.MigrateAsync(ct);
 
-        var ownerRole = UserRole.Owner;
-        if (await db.Users.AnyAsync(u => u.Role == ownerRole, ct)) return;
+        if (await db.Users.OfType<OwnerUser>().AnyAsync(ct)) return;
 
         var opts = options.CurrentValue;
         if (string.IsNullOrWhiteSpace(opts.OwnerEmail) || string.IsNullOrWhiteSpace(opts.OwnerPassword))
@@ -34,12 +33,11 @@ public sealed class OwnerSeeder(
 
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         var email = new Email(opts.OwnerEmail);
-        var owner = new AppUser
+        var owner = new OwnerUser
         {
             Email = email.Value,
             NormalizedEmail = email.Normalized,
             PasswordHash = hasher.Hash(opts.OwnerPassword),
-            Role = UserRole.Owner,
             SecurityStamp = RandomNumberGenerator.GetBytes(32),
             MustChangePassword = true
         };

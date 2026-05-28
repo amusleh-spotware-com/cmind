@@ -1,12 +1,11 @@
 using System.Text.Json;
-using Core;
 
 namespace Nodes.Builder;
 
 public static class Templates
 {
-    public static string CreateProjectJson(CBotLanguage lang, string name) =>
-        lang == CBotLanguage.CSharp ? CSharp(name) : Python(name);
+    public static string CreateProjectJson(string languageName, string name) =>
+        string.Equals(languageName, "Python", StringComparison.OrdinalIgnoreCase) ? Python(name) : CSharp(name);
 
     private static string CSharp(string name)
     {

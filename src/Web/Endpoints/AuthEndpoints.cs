@@ -60,9 +60,9 @@ public static class AuthEndpoints
 
             var claims = new List<Claim>
             {
-                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new(ClaimTypes.NameIdentifier, user.Id.Value.ToString()),
                 new(ClaimTypes.Email, user.Email),
-                new(ClaimTypes.Role, user.Role.Name)
+                new(ClaimTypes.Role, user.RoleName)
             };
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             await ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));

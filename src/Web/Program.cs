@@ -37,6 +37,8 @@ builder.Services.AddMudServices();
 builder.Services.AddSignalR();
 builder.Services.AddOpenApi();
 builder.Services.AddAntiforgery();
+builder.Services.ConfigureHttpJsonOptions(o =>
+    o.SerializerOptions.Converters.Add(new StrongIdJsonConverterFactory()));
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(o =>
@@ -48,10 +50,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 builder.Services.AddAuthorizationBuilder()
-    .AddPolicy(AuthPolicies.Owner, p => p.RequireRole(UserRole.Owner.Name))
-    .AddPolicy(AuthPolicies.AdminOrAbove, p => p.RequireRole(UserRole.Owner.Name, UserRole.Admin.Name))
-    .AddPolicy(AuthPolicies.UserOrAbove, p => p.RequireRole(
-        UserRole.Owner.Name, UserRole.Admin.Name, UserRole.User.Name));
+    .AddPolicy(AuthPolicies.Owner, p => p.RequireRole("Owner"))
+    .AddPolicy(AuthPolicies.AdminOrAbove, p => p.RequireRole("Owner", "Admin"))
+    .AddPolicy(AuthPolicies.UserOrAbove, p => p.RequireRole("Owner", "Admin", "User"));
 
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddHttpContextAccessor();

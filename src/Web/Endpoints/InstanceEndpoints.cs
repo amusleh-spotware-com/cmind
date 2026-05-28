@@ -1,4 +1,5 @@
 using Core;
+using Core.Constants;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -20,27 +21,36 @@ public static class InstanceEndpoints
 
         g.MapGet("/", async (CtwDbContext db, ICurrentUser u) =>
         {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
             IQueryable<Instance> q = db.Instances.Include(i => i.CBot).Include(i => i.Node);
-            if (u.Role == UserRole.Viewer)
+            if (u.IsInRole("Viewer"))
             {
-                var user = await db.Users.FindAsync(u.UserId);
+                var user = await db.Users.OfType<ViewerUser>().FirstOrDefaultAsync(x => x.Id == uid);
                 if (user is null) return Results.Unauthorized();
-                if (!user.ViewerSeeAllInstances)
+                if (!user.SeeAllInstances)
                 {
-                    var grants = db.ViewerGrants.Where(v => v.ViewerId == u.UserId).Select(v => v.InstanceId);
+                    var grants = db.ViewerGrants.Where(v => v.ViewerId == uid).Select(v => v.InstanceId);
                     q = q.Where(i => grants.Contains(i.Id));
                 }
             }
-            else if (u.Role == UserRole.User)
+            else if (u.IsInRole("User"))
             {
-                q = q.Where(i => i.UserId == u.UserId);
+                q = q.Where(i => i.UserId == uid);
             }
-            var raw = await q.OrderByDescending(i => i.CreatedAt).Take(200)
-                .Select(i => new { i.Id, i.Type, i.Status, i.Symbol, i.Timeframe,
-                    CBot = i.CBot.Name, Node = i.Node!.Name, i.StartedAt, i.StoppedAt })
+            var rows = await q.OrderByDescending(i => i.CreatedAt).Take(200)
+                .Select(i => new
+                {
+                    i.Id,
+                    Kind = i.KindName,
+                    Status = i.StatusName,
+                    i.Symbol,
+                    i.Timeframe,
+                    CBot = i.CBot.Name,
+                    Node = i.Node!.Name,
+                    StartedAt = (i as RunningRunInstance)!.StartedAt,
+                    StoppedAt = (i as StoppedRunInstance)!.StoppedAt
+                })
                 .ToListAsync();
-            var rows = raw.Select(i => new { i.Id, Type = i.Type.Name, Status = i.Status.Name,
-                i.Symbol, i.Timeframe, i.CBot, i.Node, i.StartedAt, i.StoppedAt }).ToList();
             return Results.Ok(rows);
         });
 
@@ -48,70 +58,175 @@ public static class InstanceEndpoints
             INodeScheduler scheduler, IContainerDispatcher dispatcher, ISecretProtector protector) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
-            if (u.Role?.Name == UserRole.Viewer.Name) return Results.Forbid();
+            if (u.IsInRole("Viewer")) return Results.Forbid();
 
-            var cbot = await db.CBots.FirstOrDefaultAsync(c => c.Id == req.CBotId && c.UserId == uid);
+            var cbotId = CBotId.From(req.CBotId);
+            var accountId = TradingAccountId.From(req.TradingAccountId);
+            var paramSetId = ParamSetId.From(req.ParamSetId);
+
+            var cbot = await db.CBots.FirstOrDefaultAsync(c => c.Id == cbotId && c.UserId == uid);
             if (cbot is null) return Results.BadRequest("cbot not found");
             var acct = await db.TradingAccounts.Include(t => t.CTid)
-                .FirstOrDefaultAsync(t => t.Id == req.TradingAccountId && t.CTid.UserId == uid);
+                .FirstOrDefaultAsync(t => t.Id == accountId && t.CTid.UserId == uid);
             if (acct is null) return Results.BadRequest("account not found");
-            var paramSet = await db.ParamSets.FirstOrDefaultAsync(p => p.Id == req.ParamSetId && p.UserId == uid);
+            var paramSet = await db.ParamSets.FirstOrDefaultAsync(p => p.Id == paramSetId && p.UserId == uid);
             if (paramSet is null) return Results.BadRequest("paramset not found");
 
-            var type = InstanceType.FromName(req.Type);
-            var node = await scheduler.PickNodeAsync(type, default);
+            var kind = req.Type;
+            var node = await scheduler.PickNodeAsync(kind, default);
             if (node is null) return Results.Conflict("no node available");
 
-            var instance = new Instance
+            var imageTag = string.IsNullOrWhiteSpace(req.DockerImageTag) ? "latest" : req.DockerImageTag;
+
+            Instance starting;
+            if (string.Equals(kind, "Backtest", StringComparison.OrdinalIgnoreCase))
             {
-                UserId = uid,
-                CBotId = req.CBotId,
-                TradingAccountId = req.TradingAccountId,
-                TradingAccount = acct,
-                NodeId = node.Id,
-                Node = node,
-                Type = type,
-                Status = InstanceStatus.Starting,
-                DockerImageTag = string.IsNullOrWhiteSpace(req.DockerImageTag) ? "latest" : req.DockerImageTag,
-                Symbol = req.Symbol,
-                Timeframe = req.Timeframe,
-                ParamSetId = req.ParamSetId,
-                BacktestSettingsJson = req.BacktestSettingsJson,
-                StartedAt = DateTimeOffset.UtcNow
-            };
-            db.Instances.Add(instance);
+                starting = new StartingBacktestInstance
+                {
+                    UserId = uid,
+                    CBotId = cbotId,
+                    TradingAccountId = accountId,
+                    NodeId = node.Id,
+                    DockerImageTag = imageTag,
+                    Symbol = req.Symbol,
+                    Timeframe = req.Timeframe,
+                    ParamSetId = paramSetId,
+                    BacktestSettingsJson = req.BacktestSettingsJson
+                };
+            }
+            else
+            {
+                starting = new StartingRunInstance
+                {
+                    UserId = uid,
+                    CBotId = cbotId,
+                    TradingAccountId = accountId,
+                    NodeId = node.Id,
+                    DockerImageTag = imageTag,
+                    Symbol = req.Symbol,
+                    Timeframe = req.Timeframe,
+                    ParamSetId = paramSetId
+                };
+            }
+            db.Instances.Add(starting);
             await db.SaveChangesAsync();
 
-            var algo = protector.Unprotect(cbot.EncryptedAlgo, "cbot.algo");
-            instance.ContainerId = await dispatcher.StartAsync(instance, algo, paramSet.JsonContent, default);
-            instance.Status = InstanceStatus.Running;
+            // Re-load node for dispatcher context
+            starting.Node = node;
+
+            var algo = protector.Unprotect(cbot.EncryptedAlgo, EncryptionPurposes.CbotAlgo);
+            var containerId = await dispatcher.StartAsync(starting, algo, paramSet.JsonContent, default);
+
+            // Transition to Running by replacing entity (TPH discriminator cannot change)
+            db.Instances.Remove(starting);
+            Instance running;
+            if (starting is StartingBacktestInstance)
+            {
+                running = new RunningBacktestInstance
+                {
+                    UserId = uid,
+                    CBotId = cbotId,
+                    TradingAccountId = accountId,
+                    NodeId = node.Id,
+                    DockerImageTag = imageTag,
+                    Symbol = req.Symbol,
+                    Timeframe = req.Timeframe,
+                    ParamSetId = paramSetId,
+                    BacktestSettingsJson = req.BacktestSettingsJson,
+                    ContainerId = containerId,
+                    StartedAt = DateTimeOffset.UtcNow
+                };
+            }
+            else
+            {
+                running = new RunningRunInstance
+                {
+                    UserId = uid,
+                    CBotId = cbotId,
+                    TradingAccountId = accountId,
+                    NodeId = node.Id,
+                    DockerImageTag = imageTag,
+                    Symbol = req.Symbol,
+                    Timeframe = req.Timeframe,
+                    ParamSetId = paramSetId,
+                    ContainerId = containerId,
+                    StartedAt = DateTimeOffset.UtcNow
+                };
+            }
+            db.Instances.Add(running);
             await db.SaveChangesAsync();
-            return Results.Ok(new { instance.Id });
+            return Results.Ok(new { running.Id });
         });
 
         g.MapPost("/{id:guid}/stop", async (Guid id, CtwDbContext db, ICurrentUser u,
             IContainerDispatcher dispatcher) =>
         {
-            var i = await db.Instances.Include(x => x.Node).FirstOrDefaultAsync(x => x.Id == id);
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var iid = InstanceId.From(id);
+            var i = await db.Instances.Include(x => x.Node).FirstOrDefaultAsync(x => x.Id == iid);
             if (i is null) return Results.NotFound();
-            if (u.Role == UserRole.Viewer || (u.Role == UserRole.User && i.UserId != u.UserId))
+            if (u.IsInRole("Viewer") || (u.IsInRole("User") && i.UserId != uid))
                 return Results.Forbid();
-            i.Status = InstanceStatus.Stopping;
-            await db.SaveChangesAsync();
-            await dispatcher.StopAsync(i, default);
-            i.Status = InstanceStatus.Stopped;
-            i.StoppedAt = DateTimeOffset.UtcNow;
+
+            try { await dispatcher.StopAsync(i, default); } catch { /* swallow */ }
+
+            // Replace with Stopped/Completed entity
+            var now = DateTimeOffset.UtcNow;
+            Instance terminal;
+            if (i is RunningRunInstance rri)
+            {
+                terminal = new StoppedRunInstance
+                {
+                    UserId = i.UserId,
+                    CBotId = i.CBotId,
+                    TradingAccountId = i.TradingAccountId,
+                    NodeId = i.NodeId,
+                    DockerImageTag = i.DockerImageTag,
+                    Symbol = i.Symbol,
+                    Timeframe = i.Timeframe,
+                    ParamSetId = i.ParamSetId,
+                    ContainerId = rri.ContainerId,
+                    StartedAt = rri.StartedAt,
+                    StoppedAt = now
+                };
+            }
+            else if (i is RunningBacktestInstance rbi)
+            {
+                terminal = new CompletedBacktestInstance
+                {
+                    UserId = i.UserId,
+                    CBotId = i.CBotId,
+                    TradingAccountId = i.TradingAccountId,
+                    NodeId = i.NodeId,
+                    DockerImageTag = i.DockerImageTag,
+                    Symbol = i.Symbol,
+                    Timeframe = i.Timeframe,
+                    ParamSetId = i.ParamSetId,
+                    BacktestSettingsJson = ((BacktestInstance)i).BacktestSettingsJson,
+                    ContainerId = rbi.ContainerId,
+                    StartedAt = rbi.StartedAt,
+                    StoppedAt = now
+                };
+            }
+            else
+            {
+                return Results.Ok();
+            }
+            db.Instances.Remove(i);
+            db.Instances.Add(terminal);
             await db.SaveChangesAsync();
             return Results.Ok();
         });
 
         g.MapDelete("/{id:guid}", async (Guid id, CtwDbContext db, ICurrentUser u) =>
         {
-            var i = await db.Instances.FirstOrDefaultAsync(x => x.Id == id);
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var iid = InstanceId.From(id);
+            var i = await db.Instances.FirstOrDefaultAsync(x => x.Id == iid);
             if (i is null) return Results.NotFound();
-            if (u.Role == UserRole.Viewer || (u.Role == UserRole.User && i.UserId != u.UserId))
+            if (u.IsInRole("Viewer") || (u.IsInRole("User") && i.UserId != uid))
                 return Results.Forbid();
-            if (i.Status == InstanceStatus.Running) return Results.Conflict("stop first");
+            if (i.IsActive) return Results.Conflict("stop first");
             db.Instances.Remove(i);
             await db.SaveChangesAsync();
             return Results.NoContent();

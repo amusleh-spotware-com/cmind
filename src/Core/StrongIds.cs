@@ -1,5 +1,7 @@
 using System.ComponentModel;
 using System.Globalization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Core;
 
@@ -8,6 +10,42 @@ public interface IStronglyTypedId<TSelf> where TSelf : IStronglyTypedId<TSelf>
     Guid Value { get; }
     static abstract TSelf New();
     static abstract TSelf From(Guid value);
+}
+
+public sealed class StrongIdJsonConverter<TId> : JsonConverter<TId>
+    where TId : struct, IStronglyTypedId<TId>
+{
+    public override TId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.String && reader.TryGetGuid(out var g))
+            return TId.From(g);
+        if (reader.TokenType == JsonTokenType.StartObject)
+        {
+            using var doc = JsonDocument.ParseValue(ref reader);
+            if (doc.RootElement.TryGetProperty("Value", out var v) && v.TryGetGuid(out var g2))
+                return TId.From(g2);
+        }
+        throw new JsonException($"Invalid {typeof(TId).Name}");
+    }
+
+    public override void Write(Utf8JsonWriter writer, TId value, JsonSerializerOptions options)
+        => writer.WriteStringValue(value.Value);
+}
+
+public sealed class StrongIdJsonConverterFactory : JsonConverterFactory
+{
+    public override bool CanConvert(Type typeToConvert)
+    {
+        if (!typeToConvert.IsValueType) return false;
+        foreach (var i in typeToConvert.GetInterfaces())
+            if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStronglyTypedId<>))
+                return true;
+        return false;
+    }
+
+    public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
+        => (JsonConverter)Activator.CreateInstance(
+            typeof(StrongIdJsonConverter<>).MakeGenericType(typeToConvert))!;
 }
 
 public readonly record struct UserId(Guid Value) : IStronglyTypedId<UserId>

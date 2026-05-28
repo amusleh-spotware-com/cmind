@@ -6,30 +6,20 @@ namespace Nodes;
 
 public sealed class NodeScheduler(CtwDbContext db) : INodeScheduler
 {
-    public async Task<Node?> PickNodeAsync(InstanceType type, CancellationToken ct)
+    public async Task<Node?> PickNodeAsync(string kind, CancellationToken ct)
     {
-        var allowed = type switch
-        {
-            InstanceType.RunType => new[] { NodeMode.Run, NodeMode.Mixed },
-            InstanceType.BacktestType => new[] { NodeMode.Backtest, NodeMode.Mixed },
-            _ => new[] { NodeMode.Mixed }
-        };
-        var active = NodeStatus.Active;
-        var modeA = allowed[0];
-        var modeB = allowed.Length > 1 ? allowed[1] : allowed[0];
+        var wantRun = string.Equals(kind, "Run", StringComparison.OrdinalIgnoreCase);
 
         var candidates = await db.Nodes
-            .Where(n => (n.Mode == modeA || n.Mode == modeB) && n.Status == active)
+            .Where(n => n is ActiveMixedNode
+                        || (wantRun ? n is ActiveRunNode : n is ActiveBacktestNode))
             .Include(n => n.LatestStats)
             .ToListAsync(ct);
 
-        var running = InstanceStatus.Running;
-        var starting = InstanceStatus.Starting;
-        var scheduled = InstanceStatus.Scheduled;
-
         var activeCounts = await db.Instances
-            .Where(i => i.NodeId != null &&
-                        (i.Status == running || i.Status == starting || i.Status == scheduled))
+            .Where(i => i.NodeId != null && (
+                i is RunningRunInstance || i is StartingRunInstance || i is ScheduledRunInstance ||
+                i is RunningBacktestInstance || i is StartingBacktestInstance || i is ScheduledBacktestInstance))
             .GroupBy(i => i.NodeId!.Value)
             .Select(g => new { NodeId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.NodeId, x => x.Count, ct);

@@ -20,7 +20,8 @@ public sealed class LogsHub : Hub
     public async IAsyncEnumerable<string> Tail(Guid instanceId,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct)
     {
-        var i = await _db.Instances.Include(x => x.Node).FirstOrDefaultAsync(x => x.Id == instanceId, ct);
+        var iid = InstanceId.From(instanceId);
+        var i = await _db.Instances.Include(x => x.Node).FirstOrDefaultAsync(x => x.Id == iid, ct);
         if (i is null) yield break;
         await foreach (var line in _dispatcher.TailLogsAsync(i, ct))
             yield return line;

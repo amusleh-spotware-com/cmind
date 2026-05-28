@@ -18,34 +18,33 @@ public static class UserEndpoints
         var g = app.MapGroup("/api/users").RequireAuthorization("AdminOrAbove");
 
         g.MapGet("/", async (CtwDbContext db) =>
-        {
-            var rows = await db.Users
-                .Select(u => new { u.Id, u.Email, u.Role, u.IsLockedOut, u.CreatedAt })
-                .ToListAsync();
-            return rows.Select(u => new { u.Id, u.Email, Role = u.Role.Name, u.IsLockedOut, u.CreatedAt }).ToList();
-        });
+            await db.Users
+                .Select(u => new { u.Id, u.Email, Role = u.RoleName, u.IsLockedOut, u.CreatedAt })
+                .ToListAsync());
 
         g.MapPost("/", async (CreateUserRequest req, CtwDbContext db, IPasswordHasher hasher, ICurrentUser current) =>
         {
-            var role = UserRole.All.FirstOrDefault(r => r.Rank == req.Role);
-            if (role is null) return Results.BadRequest("invalid role");
-            if (role == UserRole.Owner) return Results.Forbid();
-            if (role == UserRole.Admin && current.Role != UserRole.Owner) return Results.Forbid();
+            // Rank: 0=Owner,1=Admin,2=User,3=Viewer
+            if (req.Role == 0) return Results.Forbid();
+            if (req.Role == 1 && !current.IsInRole("Owner")) return Results.Forbid();
             var normalized = req.Email.ToUpperInvariant();
             if (await db.Users.AnyAsync(u => u.NormalizedEmail == normalized))
                 return Results.Conflict("email exists");
 
-            var u = new AppUser
+            AppUser u = req.Role switch
             {
-                Email = req.Email,
-                NormalizedEmail = normalized,
-                PasswordHash = hasher.Hash(req.Password),
-                Role = role,
-                ViewerSeeAllInstances = req.ViewerSeeAllInstances,
-                MustChangePassword = true,
-                CreatedByUserId = current.UserId,
-                SecurityStamp = RandomNumberGenerator.GetBytes(32)
+                1 => new AdminUser(),
+                2 => new RegularUser(),
+                3 => new ViewerUser { SeeAllInstances = req.ViewerSeeAllInstances },
+                _ => throw new InvalidOperationException("invalid role")
             };
+            u.Email = req.Email;
+            u.NormalizedEmail = normalized;
+            u.PasswordHash = hasher.Hash(req.Password);
+            u.MustChangePassword = true;
+            u.CreatedByUserId = current.UserId;
+            u.SecurityStamp = RandomNumberGenerator.GetBytes(32);
+
             db.Users.Add(u);
             await db.SaveChangesAsync();
             return Results.Ok(new { u.Id });
@@ -54,9 +53,10 @@ public static class UserEndpoints
         g.MapPost("/{id:guid}/reset-password", async (Guid id, ResetPasswordRequest req,
             CtwDbContext db, IPasswordHasher hasher, ICurrentUser current) =>
         {
-            var target = await db.Users.FindAsync(id);
+            var uid = UserId.From(id);
+            var target = await db.Users.FirstOrDefaultAsync(u => u.Id == uid);
             if (target is null) return Results.NotFound();
-            if (target.Role == UserRole.Owner && current.Role != UserRole.Owner) return Results.Forbid();
+            if (target is OwnerUser && !current.IsInRole("Owner")) return Results.Forbid();
             target.PasswordHash = hasher.Hash(req.NewPassword);
             target.MustChangePassword = true;
             target.IsLockedOut = false;
@@ -69,10 +69,11 @@ public static class UserEndpoints
 
         g.MapDelete("/{id:guid}", async (Guid id, CtwDbContext db, ICurrentUser current) =>
         {
-            var target = await db.Users.FindAsync(id);
+            var uid = UserId.From(id);
+            var target = await db.Users.FirstOrDefaultAsync(u => u.Id == uid);
             if (target is null) return Results.NotFound();
-            if (target.Role == UserRole.Owner) return Results.Forbid();
-            if (target.Role == UserRole.Admin && current.Role != UserRole.Owner) return Results.Forbid();
+            if (target is OwnerUser) return Results.Forbid();
+            if (target is AdminUser && !current.IsInRole("Owner")) return Results.Forbid();
             db.Users.Remove(target);
             await db.SaveChangesAsync();
             return Results.NoContent();

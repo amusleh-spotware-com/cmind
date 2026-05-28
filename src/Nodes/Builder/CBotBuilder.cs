@@ -20,13 +20,13 @@ public sealed class CBotBuilder(
     private const string DockerExe = "docker";
     private const string NoAlgoMessage = "\nNo .algo file produced.";
 
-    public async Task<BuildResult> BuildAsync(CBotSourceProject project, Guid userId, CancellationToken ct)
+    public async Task<BuildResult> BuildAsync(CBotSourceProject project, UserId userId, CancellationToken ct)
     {
         var opts = options.CurrentValue;
         var files = JsonSerializer.Deserialize<Dictionary<string, string>>(project.ProjectFilesJson)
                     ?? new Dictionary<string, string>();
 
-        var workDir = Path.Combine(opts.BuildWorkRoot, userId.ToString("N"), project.Id.ToString("N"));
+        var workDir = Path.Combine(opts.BuildWorkRoot, userId.Value.ToString("N"), project.Id.Value.ToString("N"));
         if (Directory.Exists(workDir)) Directory.Delete(workDir, true);
         Directory.CreateDirectory(workDir);
 

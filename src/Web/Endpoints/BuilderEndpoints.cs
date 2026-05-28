@@ -20,24 +20,21 @@ public static class BuilderEndpoints
 
         g.MapGet("/projects", async (CtwDbContext db, ICurrentUser u) =>
         {
-            var raw = await db.CBotSourceProjects.Where(p => p.UserId == u.UserId)
-                .Select(p => new { p.Id, p.Name, p.Language, p.LastBuildAt, p.LastBuildSucceeded })
+            var uid = u.UserId!.Value;
+            return await db.CBotSourceProjects.Where(p => p.UserId == uid)
+                .Select(p => new { p.Id, p.Name, Language = p.LanguageName, p.LastBuildAt, p.LastBuildSucceeded })
                 .ToListAsync();
-            return raw.Select(p => new { p.Id, p.Name, Language = p.Language.Name,
-                p.LastBuildAt, p.LastBuildSucceeded }).ToList();
         });
 
         g.MapPost("/projects", async (CreateProjectRequest req, CtwDbContext db, ICurrentUser u) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
-            var lang = req.Language == 1 ? CBotLanguage.Python : CBotLanguage.CSharp;
-            var project = new CBotSourceProject
-            {
-                UserId = uid,
-                Name = req.Name,
-                Language = lang,
-                ProjectFilesJson = Templates.CreateProjectJson(lang, req.Name)
-            };
+            CBotSourceProject project = req.Language == 1
+                ? new PythonProject()
+                : new CSharpProject();
+            project.UserId = uid;
+            project.Name = req.Name;
+            project.ProjectFilesJson = Templates.CreateProjectJson(project.LanguageName, req.Name);
             db.CBotSourceProjects.Add(project);
             await db.SaveChangesAsync();
             return Results.Ok(new { project.Id });
@@ -45,14 +42,18 @@ public static class BuilderEndpoints
 
         g.MapGet("/projects/{id:guid}", async (Guid id, CtwDbContext db, ICurrentUser u) =>
         {
-            var p = await db.CBotSourceProjects.FirstOrDefaultAsync(x => x.Id == id && x.UserId == u.UserId);
+            var uid = u.UserId!.Value;
+            var pid = CBotSourceProjectId.From(id);
+            var p = await db.CBotSourceProjects.FirstOrDefaultAsync(x => x.Id == pid && x.UserId == uid);
             return p is null ? Results.NotFound() : Results.Ok(p);
         });
 
         g.MapPost("/projects/{id:guid}/build", async (Guid id, BuildRequest req,
             CtwDbContext db, ICurrentUser u, CBotBuilder builder) =>
         {
-            var p = await db.CBotSourceProjects.FirstOrDefaultAsync(x => x.Id == id && x.UserId == u.UserId);
+            var uid = u.UserId!.Value;
+            var pid = CBotSourceProjectId.From(id);
+            var p = await db.CBotSourceProjects.FirstOrDefaultAsync(x => x.Id == pid && x.UserId == uid);
             if (p is null) return Results.NotFound();
 
             var files = JsonSerializer.Deserialize<Dictionary<string, string>>(p.ProjectFilesJson)
@@ -72,7 +73,7 @@ public static class BuilderEndpoints
             p.ProjectFilesJson = JsonSerializer.Serialize(files);
             await db.SaveChangesAsync();
 
-            var result = await builder.BuildAsync(p, u.UserId!.Value, default);
+            var result = await builder.BuildAsync(p, uid, default);
             return Results.Ok(new { success = result.Success, log = result.Log });
         });
 
@@ -80,33 +81,46 @@ public static class BuilderEndpoints
             CBotBuilder builder, IContainerDispatcher dispatcher, ISecretProtector protector,
             INodeScheduler scheduler) =>
         {
-            var p = await db.CBotSourceProjects.FirstOrDefaultAsync(x => x.Id == id && x.UserId == u.UserId);
+            var uid = u.UserId!.Value;
+            var pid = CBotSourceProjectId.From(id);
+            var p = await db.CBotSourceProjects.FirstOrDefaultAsync(x => x.Id == pid && x.UserId == uid);
             if (p is null) return Results.NotFound();
-            var br = await builder.BuildAsync(p, u.UserId!.Value, default);
+            var br = await builder.BuildAsync(p, uid, default);
             if (!br.Success || br.AlgoBytes is null) return Results.Ok(new { output = br.Log });
 
-            var node = await scheduler.PickNodeAsync(InstanceType.Run, default);
+            var node = await scheduler.PickNodeAsync("Run", default);
             if (node is null) return Results.Conflict("no node available");
 
-            var instance = new Instance
+            var cbot = await db.CBots.FirstAsync(c => c.SourceProjectId == p.Id);
+            var starting = new StartingRunInstance
             {
-                UserId = u.UserId.Value,
-                CBotId = (await db.CBots.FirstAsync(c => c.SourceProjectId == p.Id)).Id,
+                UserId = uid,
+                CBotId = cbot.Id,
                 NodeId = node.Id,
-                Node = node,
-                Type = InstanceType.Run,
-                Status = InstanceStatus.Starting,
+                DockerImageTag = "latest",
+                Symbol = "EURUSD",
+                Timeframe = "h1"
+            };
+            db.Instances.Add(starting);
+            await db.SaveChangesAsync();
+            starting.Node = node;
+            var containerId = await dispatcher.StartAsync(starting, br.AlgoBytes, "{}", default);
+
+            db.Instances.Remove(starting);
+            var running = new RunningRunInstance
+            {
+                UserId = uid,
+                CBotId = cbot.Id,
+                NodeId = node.Id,
                 DockerImageTag = "latest",
                 Symbol = "EURUSD",
                 Timeframe = "h1",
+                ContainerId = containerId,
                 StartedAt = DateTimeOffset.UtcNow
             };
-            db.Instances.Add(instance);
+            db.Instances.Add(running);
             await db.SaveChangesAsync();
-            instance.ContainerId = await dispatcher.StartAsync(instance, br.AlgoBytes, "{}", default);
-            instance.Status = InstanceStatus.Running;
-            await db.SaveChangesAsync();
-            return Results.Ok(new { output = br.Log, instanceId = instance.Id });
+            return Results.Ok(new { output = br.Log, instanceId = running.Id });
         });
 
         return app;

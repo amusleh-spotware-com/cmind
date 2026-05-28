@@ -16,9 +16,12 @@ public static class CBotEndpoints
         var g = app.MapGroup("/api/cbots").RequireAuthorization("UserOrAbove").DisableAntiforgery();
 
         g.MapGet("/", async (CtwDbContext db, ICurrentUser u) =>
-            await db.CBots.Where(c => c.UserId == u.UserId!.Value)
+        {
+            var uid = u.UserId!.Value;
+            return await db.CBots.Where(c => c.UserId == uid)
                 .Select(c => new { c.Id, c.Name, c.Version, c.CreatedAt, HasSource = c.SourceProjectId != null })
-                .ToListAsync());
+                .ToListAsync();
+        });
 
         g.MapPost("/upload", async (HttpRequest req, CtwDbContext db, ICurrentUser u, ISecretProtector p) =>
         {
@@ -47,7 +50,8 @@ public static class CBotEndpoints
 
         g.MapPatch("/{id:guid}", async (Guid id, RenameRequest req, CtwDbContext db, ICurrentUser u) =>
         {
-            var cbot = await db.CBots.FirstOrDefaultAsync(c => c.Id == id && c.UserId == u.UserId);
+            var cid = CBotId.From(id);
+            var cbot = await db.CBots.FirstOrDefaultAsync(c => c.Id == cid && c.UserId == u.UserId!.Value);
             if (cbot is null) return Results.NotFound();
             cbot.Name = req.Name;
             cbot.UpdatedAt = DateTimeOffset.UtcNow;
@@ -57,7 +61,8 @@ public static class CBotEndpoints
 
         g.MapDelete("/{id:guid}", async (Guid id, CtwDbContext db, ICurrentUser u) =>
         {
-            var cbot = await db.CBots.FirstOrDefaultAsync(c => c.Id == id && c.UserId == u.UserId);
+            var cid = CBotId.From(id);
+            var cbot = await db.CBots.FirstOrDefaultAsync(c => c.Id == cid && c.UserId == u.UserId!.Value);
             if (cbot is null) return Results.NotFound();
             db.CBots.Remove(cbot);
             await db.SaveChangesAsync();

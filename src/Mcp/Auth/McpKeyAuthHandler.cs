@@ -45,9 +45,9 @@ public sealed class McpKeyAuthHandler(
 
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, key.UserId.ToString()),
+            new Claim(ClaimTypes.NameIdentifier, key.UserId.Value.ToString()),
             new Claim(ClaimTypes.Email, key.User.Email),
-            new Claim(ClaimTypes.Role, key.User.Role.Name)
+            new Claim(ClaimTypes.Role, key.User.RoleName)
         };
         var identity = new ClaimsIdentity(claims, AuthSchemes.McpKey);
         return AuthenticateResult.Success(

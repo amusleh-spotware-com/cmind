@@ -16,7 +16,7 @@ public interface IPasswordHasher
 
 public interface INodeScheduler
 {
-    Task<Node?> PickNodeAsync(InstanceType type, CancellationToken ct);
+    Task<Node?> PickNodeAsync(string kind, CancellationToken ct);
 }
 
 public interface IContainerDispatcher
@@ -26,7 +26,7 @@ public interface IContainerDispatcher
     IAsyncEnumerable<string> TailLogsAsync(Instance instance, CancellationToken ct);
     Task<NodeStats> CollectStatsAsync(Node node, CancellationToken ct);
     Task<long> GetBacktestDataSizeAsync(Node node, CancellationToken ct);
-    Task CleanBacktestDataAsync(Node node, Guid? userId, CancellationToken ct);
+    Task CleanBacktestDataAsync(Node node, UserId? userId, CancellationToken ct);
 }
 
 public interface IGhcrTagProvider
@@ -36,9 +36,10 @@ public interface IGhcrTagProvider
 
 public interface ICurrentUser
 {
-    Guid? UserId { get; }
-    UserRole? Role { get; }
+    UserId? UserId { get; }
+    string? RoleName { get; }
+    int? RoleRank { get; }
     string? Email { get; }
-    bool IsInRole(UserRole role);
-    bool IsAtLeast(UserRole role);
+    bool IsInRole(string roleName);
+    bool IsAtLeast(string roleName);
 }

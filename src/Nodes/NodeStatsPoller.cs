@@ -31,21 +31,17 @@ public sealed class NodeStatsPoller(
         var db = scope.ServiceProvider.GetRequiredService<CtwDbContext>();
         var dispatcher = scope.ServiceProvider.GetRequiredService<IContainerDispatcher>();
 
-        var active = NodeStatus.Active;
-        var running = InstanceStatus.Running;
-        var runType = InstanceType.Run;
-        var backtestType = InstanceType.Backtest;
-
-        var nodes = await db.Nodes.Where(n => n.Status == active).ToListAsync(ct);
+        var nodes = await db.Nodes.Where(n =>
+            n is ActiveRunNode || n is ActiveBacktestNode || n is ActiveMixedNode).ToListAsync(ct);
         foreach (var node in nodes)
         {
             try
             {
                 var stats = await dispatcher.CollectStatsAsync(node, ct);
                 stats.RunningCount = await db.Instances.CountAsync(i =>
-                    i.NodeId == node.Id && i.Type == runType && i.Status == running, ct);
+                    i.NodeId == node.Id && i is RunningRunInstance, ct);
                 stats.BacktestCount = await db.Instances.CountAsync(i =>
-                    i.NodeId == node.Id && i.Type == backtestType && i.Status == running, ct);
+                    i.NodeId == node.Id && i is RunningBacktestInstance, ct);
 
                 var existing = await db.NodeStats.FindAsync([node.Id], ct);
                 if (existing is null) db.NodeStats.Add(stats);

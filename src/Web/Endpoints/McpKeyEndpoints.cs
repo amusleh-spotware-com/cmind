@@ -18,8 +18,11 @@ public static class McpKeyEndpoints
         var g = app.MapGroup("/api/mcp-keys").RequireAuthorization();
 
         g.MapGet("/", async (CtwDbContext db, ICurrentUser u) =>
-            await db.McpApiKeys.Where(k => k.UserId == u.UserId && k.RevokedAt == null)
-                .Select(k => new { k.Id, k.Label, k.KeyPrefix, k.CreatedAt, k.LastUsedAt }).ToListAsync());
+        {
+            var uid = u.UserId!.Value;
+            return await db.McpApiKeys.Where(k => k.UserId == uid && k.RevokedAt == null)
+                .Select(k => new { k.Id, k.Label, k.KeyPrefix, k.CreatedAt, k.LastUsedAt }).ToListAsync();
+        });
 
         g.MapPost("/", async (CreateMcpKeyRequest req, CtwDbContext db, ICurrentUser u) =>
         {
@@ -37,7 +40,9 @@ public static class McpKeyEndpoints
 
         g.MapDelete("/{id:guid}", async (Guid id, CtwDbContext db, ICurrentUser u) =>
         {
-            var k = await db.McpApiKeys.FirstOrDefaultAsync(x => x.Id == id && x.UserId == u.UserId);
+            var uid = u.UserId!.Value;
+            var kid = McpApiKeyId.From(id);
+            var k = await db.McpApiKeys.FirstOrDefaultAsync(x => x.Id == kid && x.UserId == uid);
             if (k is null) return Results.NotFound();
             k.RevokedAt = DateTimeOffset.UtcNow;
             await db.SaveChangesAsync();

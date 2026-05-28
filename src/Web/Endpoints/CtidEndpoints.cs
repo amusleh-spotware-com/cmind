@@ -1,5 +1,6 @@
 using System.Text;
 using Core;
+using Core.Constants;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -19,8 +20,11 @@ public static class CtidEndpoints
         var g = app.MapGroup("/api/ctids").RequireAuthorization("UserOrAbove");
 
         g.MapGet("/", async (CtwDbContext db, ICurrentUser u) =>
-            await db.CTids.Where(c => c.UserId == u.UserId)
-                .Select(c => new { c.Id, c.Username }).ToListAsync());
+        {
+            var uid = u.UserId!.Value;
+            return await db.CTids.Where(c => c.UserId == uid)
+                .Select(c => new { c.Id, c.Username }).ToListAsync();
+        });
 
         g.MapPost("/", async (CreateCtidRequest req, CtwDbContext db, ICurrentUser u, ISecretProtector p) =>
         {
@@ -29,7 +33,7 @@ public static class CtidEndpoints
             {
                 UserId = uid,
                 Username = req.Username,
-                EncryptedPassword = p.Protect(Encoding.UTF8.GetBytes(req.Password), "ctid.password")
+                EncryptedPassword = p.Protect(Encoding.UTF8.GetBytes(req.Password), EncryptionPurposes.CtidPassword)
             });
             await db.SaveChangesAsync();
             return Results.Ok();
@@ -38,11 +42,13 @@ public static class CtidEndpoints
         g.MapPut("/{id:guid}", async (Guid id, UpdateCtidRequest req,
             CtwDbContext db, ICurrentUser u, ISecretProtector p) =>
         {
-            var c = await db.CTids.FirstOrDefaultAsync(x => x.Id == id && x.UserId == u.UserId);
+            var uid = u.UserId!.Value;
+            var cid = CtidId.From(id);
+            var c = await db.CTids.FirstOrDefaultAsync(x => x.Id == cid && x.UserId == uid);
             if (c is null) return Results.NotFound();
             c.Username = req.Username;
             if (!string.IsNullOrEmpty(req.Password))
-                c.EncryptedPassword = p.Protect(Encoding.UTF8.GetBytes(req.Password), "ctid.password");
+                c.EncryptedPassword = p.Protect(Encoding.UTF8.GetBytes(req.Password), EncryptionPurposes.CtidPassword);
             c.UpdatedAt = DateTimeOffset.UtcNow;
             await db.SaveChangesAsync();
             return Results.Ok();
@@ -50,7 +56,9 @@ public static class CtidEndpoints
 
         g.MapDelete("/{id:guid}", async (Guid id, CtwDbContext db, ICurrentUser u) =>
         {
-            var c = await db.CTids.FirstOrDefaultAsync(x => x.Id == id && x.UserId == u.UserId);
+            var uid = u.UserId!.Value;
+            var cid = CtidId.From(id);
+            var c = await db.CTids.FirstOrDefaultAsync(x => x.Id == cid && x.UserId == uid);
             if (c is null) return Results.NotFound();
             db.CTids.Remove(c);
             await db.SaveChangesAsync();
@@ -58,17 +66,23 @@ public static class CtidEndpoints
         });
 
         g.MapGet("/{id:guid}/accounts", async (Guid id, CtwDbContext db, ICurrentUser u) =>
-            await db.TradingAccounts.Where(t => t.CTidId == id && t.CTid.UserId == u.UserId)
-                .Select(t => new { t.Id, t.AccountNumber, t.Broker, t.IsLive, t.Label }).ToListAsync());
+        {
+            var uid = u.UserId!.Value;
+            var cid = CtidId.From(id);
+            return await db.TradingAccounts.Where(t => t.CTidId == cid && t.CTid.UserId == uid)
+                .Select(t => new { t.Id, t.AccountNumber, t.Broker, t.IsLive, t.Label }).ToListAsync();
+        });
 
         g.MapPost("/{id:guid}/accounts", async (Guid id, CreateTradingAccountRequest req,
             CtwDbContext db, ICurrentUser u) =>
         {
-            var c = await db.CTids.FirstOrDefaultAsync(x => x.Id == id && x.UserId == u.UserId);
+            var uid = u.UserId!.Value;
+            var cid = CtidId.From(id);
+            var c = await db.CTids.FirstOrDefaultAsync(x => x.Id == cid && x.UserId == uid);
             if (c is null) return Results.NotFound();
             db.TradingAccounts.Add(new TradingAccount
             {
-                CTidId = id,
+                CTidId = cid,
                 AccountNumber = req.AccountNumber,
                 Broker = req.Broker,
                 IsLive = req.IsLive,
@@ -79,14 +93,18 @@ public static class CtidEndpoints
         });
 
         app.MapGet("/api/accounts", async (CtwDbContext db, ICurrentUser u) =>
-            await db.TradingAccounts.Where(t => t.CTid.UserId == u.UserId)
-                .Select(t => new { t.Id, t.AccountNumber, t.Broker, t.IsLive, t.Label }).ToListAsync())
-            .RequireAuthorization("UserOrAbove");
+        {
+            var uid = u.UserId!.Value;
+            return await db.TradingAccounts.Where(t => t.CTid.UserId == uid)
+                .Select(t => new { t.Id, t.AccountNumber, t.Broker, t.IsLive, t.Label }).ToListAsync();
+        }).RequireAuthorization("UserOrAbove");
 
         app.MapDelete("/api/accounts/{id:guid}", async (Guid id, CtwDbContext db, ICurrentUser u) =>
         {
-            var t = await db.TradingAccounts.Include(x => x.CTid).FirstOrDefaultAsync(x => x.Id == id);
-            if (t is null || t.CTid.UserId != u.UserId) return Results.NotFound();
+            var uid = u.UserId!.Value;
+            var tid = TradingAccountId.From(id);
+            var t = await db.TradingAccounts.Include(x => x.CTid).FirstOrDefaultAsync(x => x.Id == tid);
+            if (t is null || t.CTid.UserId != uid) return Results.NotFound();
             db.TradingAccounts.Remove(t);
             await db.SaveChangesAsync();
             return Results.NoContent();

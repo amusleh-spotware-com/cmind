@@ -1,7 +1,9 @@
+using System.Text;
 using System.Text.Json;
 using Core;
+using Core.Constants;
 using Infrastructure.Persistence;
-using Nodes.Builder;
+using Infrastructure.Builder;
 using Microsoft.EntityFrameworkCore;
 
 namespace Web.Endpoints;
@@ -24,7 +26,7 @@ public static class BuilderEndpoints
                 .ToListAsync();
         });
 
-        g.MapPost("/projects", async (CreateProjectRequest req, DataContext db, ICurrentUser u) =>
+        g.MapPost("/projects", async (CreateProjectRequest req, DataContext db, ICurrentUser u, ISecretProtector protector) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             CBotSourceProject project = req.Language == 1
@@ -32,7 +34,8 @@ public static class BuilderEndpoints
                 : new CSharpProject();
             project.UserId = uid;
             project.Name = req.Name;
-            project.ProjectFilesJson = Templates.CreateProjectJson(project.LanguageName, req.Name);
+            var json = Templates.CreateProjectJson(project.LanguageName, req.Name);
+            project.EncryptedProjectFiles = protector.Protect(Encoding.UTF8.GetBytes(json), EncryptionPurposes.CbotSource);
             db.CBotSourceProjects.Add(project);
             await db.SaveChangesAsync();
             return Results.Ok(new { project.Id });
@@ -66,32 +69,36 @@ public static class BuilderEndpoints
             return Results.NoContent();
         });
 
-        g.MapGet("/projects/{id:guid}/files", async (Guid id, DataContext db, ICurrentUser u) =>
+        g.MapGet("/projects/{id:guid}/files", async (Guid id, DataContext db, ICurrentUser u, ISecretProtector protector) =>
         {
             var uid = u.UserId!.Value;
             var pid = CBotSourceProjectId.From(id);
             var p = await db.CBotSourceProjects.FirstOrDefaultAsync(x => x.Id == pid && x.UserId == uid);
             if (p is null) return Results.NotFound();
-            var files = JsonSerializer.Deserialize<Dictionary<string, string>>(p.ProjectFilesJson)
+            var json = p.EncryptedProjectFiles.Length == 0
+                ? "{}"
+                : Encoding.UTF8.GetString(protector.Unprotect(p.EncryptedProjectFiles, EncryptionPurposes.CbotSource));
+            var files = JsonSerializer.Deserialize<Dictionary<string, string>>(json)
                         ?? new Dictionary<string, string>();
             return Results.Ok(new { files });
         });
 
         g.MapPut("/projects/{id:guid}/files", async (Guid id, ProjectFilesRequest req,
-            DataContext db, ICurrentUser u) =>
+            DataContext db, ICurrentUser u, ISecretProtector protector) =>
         {
             var uid = u.UserId!.Value;
             var pid = CBotSourceProjectId.From(id);
             var p = await db.CBotSourceProjects.FirstOrDefaultAsync(x => x.Id == pid && x.UserId == uid);
             if (p is null) return Results.NotFound();
-            p.ProjectFilesJson = JsonSerializer.Serialize(req.Files);
+            var json = JsonSerializer.Serialize(req.Files);
+            p.EncryptedProjectFiles = protector.Protect(Encoding.UTF8.GetBytes(json), EncryptionPurposes.CbotSource);
             p.UpdatedAt = DateTimeOffset.UtcNow;
             await db.SaveChangesAsync();
             return Results.NoContent();
         });
 
         g.MapPost("/projects/{id:guid}/build", async (Guid id, BuildRequest? req,
-            DataContext db, ICurrentUser u, CBotBuilder builder) =>
+            DataContext db, ICurrentUser u, ISecretProtector protector, CBotBuilder builder) =>
         {
             var uid = u.UserId!.Value;
             var pid = CBotSourceProjectId.From(id);
@@ -101,7 +108,10 @@ public static class BuilderEndpoints
             // Back-compat: if a Code/ProjectFile body is supplied, merge it into stored files.
             if (req is not null && (req.Code is not null || req.ProjectFile is not null))
             {
-                var files = JsonSerializer.Deserialize<Dictionary<string, string>>(p.ProjectFilesJson)
+                var existingJson = p.EncryptedProjectFiles.Length == 0
+                    ? "{}"
+                    : Encoding.UTF8.GetString(protector.Unprotect(p.EncryptedProjectFiles, EncryptionPurposes.CbotSource));
+                var files = JsonSerializer.Deserialize<Dictionary<string, string>>(existingJson)
                             ?? new Dictionary<string, string>();
                 if (req.Code is not null)
                 {
@@ -115,7 +125,8 @@ public static class BuilderEndpoints
                         k.EndsWith(".csproj", StringComparison.Ordinal) || k == "pyproject.toml");
                     if (projFile is not null) files[projFile] = req.ProjectFile;
                 }
-                p.ProjectFilesJson = JsonSerializer.Serialize(files);
+                var newJson = JsonSerializer.Serialize(files);
+                p.EncryptedProjectFiles = protector.Protect(Encoding.UTF8.GetBytes(newJson), EncryptionPurposes.CbotSource);
                 await db.SaveChangesAsync();
             }
 

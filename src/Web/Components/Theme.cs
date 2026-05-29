@@ -2,7 +2,7 @@ using MudBlazor;
 
 namespace Web.Components;
 
-public static class CtwTheme
+public static class Theme
 {
     public static MudTheme Dark { get; } = new()
     {

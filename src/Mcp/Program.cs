@@ -7,7 +7,7 @@ using Mcp.Tools;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddNpgsqlDbContext<DataContext>(ConnectionStrings.CtwDb);
-builder.Services.AddCtwInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddAuthentication(AuthSchemes.McpKey)
     .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, McpKeyAuthHandler>(

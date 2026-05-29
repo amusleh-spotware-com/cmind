@@ -2,6 +2,7 @@ using System.Security.Cryptography.X509Certificates;
 using Core;
 using Core.Constants;
 using Core.Options;
+using Infrastructure.Builder;
 using Infrastructure.Github;
 using Infrastructure.Persistence;
 using Infrastructure.Security;
@@ -16,7 +17,7 @@ public static class DependencyInjection
 {
     private const string DataProtectionApplicationName = "ctw";
 
-    public static IServiceCollection AddCtwInfrastructure(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
         var dp = services.AddDataProtection().SetApplicationName(DataProtectionApplicationName);
         dp.PersistKeysToDbContext<DataContext>();
@@ -35,6 +36,7 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHasher, Argon2PasswordHasher>();
         services.AddMemoryCache();
         services.AddHttpClient<IGithubContainerRegistryTagProvider, GithubContainerRegistryTagProvider>();
+        services.AddScoped<CBotBuilder>();
         return services;
     }
 }

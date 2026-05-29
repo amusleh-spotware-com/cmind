@@ -194,10 +194,37 @@ html, body {
     cursor: pointer;
 }
 .ctw-login-remember input {
-    width: 16px;
-    height: 16px;
-    accent-color: #26C281;
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    width: 34px;
+    height: 18px;
+    background: #3A4150;
+    border-radius: 999px;
     cursor: pointer;
+    transition: background 0.15s ease-in-out;
+    margin: 0;
+}
+.ctw-login-remember input::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    background: #FFFFFF;
+    border-radius: 50%;
+    transition: transform 0.15s ease-in-out;
+}
+.ctw-login-remember input:checked {
+    background: #26C281;
+}
+.ctw-login-remember input:checked::before {
+    transform: translateX(16px);
+}
+.ctw-login-remember input:focus-visible {
+    outline: 2px solid #26C281;
+    outline-offset: 2px;
 }
 
 .ctw-login-error {

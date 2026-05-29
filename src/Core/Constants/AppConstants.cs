@@ -18,6 +18,7 @@ public static class EncryptionPurposes
 {
     public const string CtidPassword = "ctid.password";
     public const string CbotAlgo = "cbot.algo";
+    public const string CbotSource = "cbot.source";
     public const string NodeSshKey = "node.ssh.key";
     public const string NodeSshPassphrase = "node.ssh.pass";
 }
@@ -60,14 +61,15 @@ public static class FilePaths
     public const string CtidPwdFile = "ctid.pwd";
     public const string ReportJsonFile = "report.json";
     public const string ReportHtmlFile = "report.html";
-    public const string BuildWorkRootDefault = "/var/ctw/builds";
+    public static readonly string BuildWorkRootDefault =
+        System.IO.Path.Combine(System.IO.Path.GetTempPath(), "ctw", "builds");
     public const string CtwDataRootPrefix = "/var/ctw/";
 }
 
 public static class DockerImages
 {
     public const string CtraderConsole = "ghcr.io/spotware/ctrader-console";
-    public const string CsharpBuildDefault = "mcr.microsoft.com/dotnet/sdk:9.0";
+    public const string CsharpBuildDefault = "mcr.microsoft.com/dotnet/sdk:8.0";
     public const string DefaultTag = "latest";
 }
 
@@ -99,7 +101,7 @@ public static class DockerCommands
     public const string RemoveForce = "docker rm -f";
     public const string LogsFollow = "docker logs -f";
     public const string StatsNoStream = "docker stats --no-stream --format '{{.CPUPerc}}|{{.MemUsage}}'";
-    public const string RunBuild = "run --rm --network=none --memory=1g --cpus=1";
+    public const string RunBuild = "run --rm --memory=2g --cpus=2";
     public const string NameFlag = "--name";
     public const string LabelFlag = "--label";
     public const string VolumeFlag = "-v";

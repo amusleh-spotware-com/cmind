@@ -23,8 +23,8 @@ builder.Services
     .Bind(builder.Configuration.GetSection(AppOptions.SectionName))
     .ValidateOnStart();
 
-builder.Services.AddCtwInfrastructure(builder.Configuration);
-builder.Services.AddCtwNodes();
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddNodes();
 
 builder.Services.AddHealthChecks()
     .AddNpgSql(sp => builder.Configuration.GetConnectionString(ConnectionStrings.CtwDb)

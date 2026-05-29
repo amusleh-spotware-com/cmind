@@ -87,14 +87,14 @@ public class DataContext : DbContext, IDataProtectionKeyContext
 
         modelBuilder.Entity<CBot>(e =>
         {
-            e.HasIndex(x => new { x.UserId, x.Name }).IsUnique();
+            e.HasIndex(x => new { x.UserId, x.Name }).IsUnique().HasFilter("\"IsDeleted\" = false");
             e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(x => x.SourceProject).WithMany().HasForeignKey(x => x.SourceProjectId).OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<CBotSourceProject>(e =>
         {
-            e.HasIndex(x => new { x.UserId, x.Name }).IsUnique();
+            e.HasIndex(x => new { x.UserId, x.Name }).IsUnique().HasFilter("\"IsDeleted\" = false");
             e.HasDiscriminator<string>("Language")
                 .HasValue<CSharpProject>("CSharp")
                 .HasValue<PythonProject>("Python");
@@ -122,6 +122,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.HasKey(x => x.NodeId);
             e.HasOne(x => x.Node).WithOne(x => x.LatestStats).HasForeignKey<NodeStats>(x => x.NodeId)
                 .OnDelete(DeleteBehavior.Cascade);
+            e.HasQueryFilter(ns => !ns.Node.IsDeleted);
         });
 
         modelBuilder.Entity<Instance>(e =>

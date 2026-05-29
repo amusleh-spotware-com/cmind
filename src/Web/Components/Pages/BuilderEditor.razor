@@ -19,12 +19,16 @@
 <div class="builder-editor">
     <MudPaper Class="builder-toolbar pa-2" Square="true" Elevation="1">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Style="width:100%">
-            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Href="/builder"
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Href="/cbots"
                            title="Back to projects" />
             <MudText Typo="Typo.subtitle1">@(_projectName ?? "Loading...")</MudText>
             @if (_projectLanguage is not null)
             {
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@_projectLanguage</MudChip>
+                <MudTooltip Text="@LanguageIcons.LabelFor(_projectLanguage)">
+                    <span style="display:inline-flex;align-items:center;">
+                        @LanguageIcons.For(_projectLanguage)
+                    </span>
+                </MudTooltip>
             }
             @if (_lastBuildOk is true)
             {
@@ -55,10 +59,21 @@
 
     <div class="builder-sidebar">
         <MudPaper Class="pa-2" Square="true" Style="height:100%;overflow:auto;">
-            <MudText Typo="Typo.overline" Style="color:#A0A0A0;">Files</MudText>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Style="margin-bottom:4px;">
+                <MudText Typo="Typo.overline" Style="color:#A0A0A0;">Files</MudText>
+                <MudSpacer />
+                @if (IsPython && HasHiddenFiles)
+                {
+                    <MudIconButton Size="Size.Small"
+                                   Icon="@(_showHiddenFiles ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                                   Color="@(_showHiddenFiles ? Color.Primary : Color.Default)"
+                                   OnClick="@(() => _showHiddenFiles = !_showHiddenFiles)"
+                                   title="@(_showHiddenFiles ? "Hide internal files" : "Show internal files")" />
+                }
+            </MudStack>
             <MudList T="string" Dense="true" SelectedValue="@_currentFile"
                      SelectedValueChanged="@(v => SelectFileAsync(v))">
-                @foreach (var f in _files.Keys.OrderBy(k => k, StringComparer.Ordinal))
+                @foreach (var f in _files.Keys.Where(IsVisible).OrderBy(k => k, StringComparer.Ordinal))
                 {
                     <MudListItem T="string" Value="@f" Icon="@FileIcon(f)">
                         <MudText Typo="Typo.body2">
@@ -156,6 +171,28 @@
     private int _bottomTab;
     private string _buildLog = "";
     private string _runLog = "";
+    private bool _showHiddenFiles;
+
+    private static readonly HashSet<string> PythonHiddenFiles = new(StringComparer.Ordinal)
+    {
+        "BaseBridge.cs",
+        "EmbeddedResourceProvider.cs",
+        "EngineHelper.cs",
+        "http_requests.py",
+        "PythonHooks.cs",
+        "PythonManifest.cs",
+        "RobotBridge.cs",
+        "RobotEngine.cs",
+        "SafeExecuteMethodProxy.cs",
+        "robot_wrapper.py"
+    };
+
+    private bool IsPython => string.Equals(_projectLanguage, "Python", StringComparison.OrdinalIgnoreCase);
+    private bool HasHiddenFiles => _files.Keys.Any(IsHidden);
+    private bool IsHidden(string path) =>
+        IsPython && (PythonHiddenFiles.Contains(path)
+                     || (_projectName is not null && string.Equals(path, _projectName + ".cs", StringComparison.Ordinal)));
+    private bool IsVisible(string path) => _showHiddenFiles || !IsHidden(path);
 
     private HubConnection? _hub;
     private CancellationTokenSource? _streamCts;
@@ -168,7 +205,7 @@
     private async Task LoadProjectAsync()
     {
         var meta = await Http.GetDynamicAsync($"/api/builder/projects/{Id}");
-        if (meta is null) { Snack.Add("Project not found", Severity.Error); Nav.NavigateTo("/builder"); return; }
+        if (meta is null) { Snack.Add("Project not found", Severity.Error); Nav.NavigateTo("/cbots"); return; }
         _projectName = (string)meta.name;
         _projectLanguage = (string)meta.language;
         _lastBuildOk = meta.lastBuildAt is null ? (bool?)null : (bool)meta.lastBuildSucceeded;
@@ -179,9 +216,10 @@
             ? new Dictionary<string, string>(StringComparer.Ordinal)
             : new Dictionary<string, string>(filesResp.Files, StringComparer.Ordinal);
 
-        var main = _files.Keys.FirstOrDefault(k =>
-                       k.EndsWith(".cs", StringComparison.Ordinal) ||
-                       k.EndsWith(".py", StringComparison.Ordinal))
+        var mainExt = string.Equals(_projectLanguage, "Python", StringComparison.OrdinalIgnoreCase) ? ".py" : ".cs";
+        var mainName = _projectName is null ? null : _projectName + mainExt;
+        var main = (mainName is not null && _files.ContainsKey(mainName) ? mainName : null)
+                   ?? _files.Keys.FirstOrDefault(k => k.EndsWith(mainExt, StringComparison.Ordinal))
                    ?? _files.Keys.FirstOrDefault();
         if (main is not null) await SelectFileAsync(main);
     }

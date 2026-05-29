@@ -1,4 +1,5 @@
 using Core;
+using Core.Constants;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -19,7 +20,7 @@ public static class CBotEndpoints
         {
             var uid = u.UserId!.Value;
             return await db.CBots.Where(c => c.UserId == uid)
-                .Select(c => new { c.Id, c.Name, c.Version, c.CreatedAt, HasSource = c.SourceProjectId != null })
+                .Select(c => new { c.Id, c.Name, c.CreatedAt, HasSource = c.SourceProjectId != null })
                 .ToListAsync();
         });
 
@@ -57,6 +58,49 @@ public static class CBotEndpoints
             cbot.UpdatedAt = DateTimeOffset.UtcNow;
             await db.SaveChangesAsync();
             return Results.Ok();
+        });
+
+        g.MapPost("/{id:guid}/quick-run", async (Guid id, DataContext db, ICurrentUser u,
+            INodeScheduler scheduler, IContainerDispatcher dispatcher, ISecretProtector protector) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var cid = CBotId.From(id);
+            var cbot = await db.CBots.FirstOrDefaultAsync(c => c.Id == cid && c.UserId == uid);
+            if (cbot is null) return Results.NotFound();
+
+            var node = await scheduler.PickNodeAsync("Run", default);
+            if (node is null) return Results.Conflict("no node available");
+
+            var algo = protector.Unprotect(cbot.EncryptedAlgo, EncryptionPurposes.CbotAlgo);
+            var starting = new StartingRunInstance
+            {
+                UserId = uid,
+                CBotId = cbot.Id,
+                NodeId = node.Id,
+                DockerImageTag = "latest",
+                Symbol = "EURUSD",
+                Timeframe = "h1"
+            };
+            db.Instances.Add(starting);
+            await db.SaveChangesAsync();
+            starting.Node = node;
+            var containerId = await dispatcher.StartAsync(starting, algo, "{}", default);
+
+            db.Instances.Remove(starting);
+            var running = new RunningRunInstance
+            {
+                UserId = uid,
+                CBotId = cbot.Id,
+                NodeId = node.Id,
+                DockerImageTag = "latest",
+                Symbol = "EURUSD",
+                Timeframe = "h1",
+                ContainerId = containerId,
+                StartedAt = DateTimeOffset.UtcNow
+            };
+            db.Instances.Add(running);
+            await db.SaveChangesAsync();
+            return Results.Ok(new { instanceId = running.Id.Value });
         });
 
         g.MapDelete("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u) =>

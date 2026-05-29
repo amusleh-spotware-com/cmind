@@ -1,4 +1,5 @@
 @* Modal dialog for creating a new cBot source project. Returns NewProjectDialogResult on confirm. *@
+@using Web.Components
 
 <MudDialog>
     <TitleContent>
@@ -10,8 +11,12 @@
                           RequiredError="Title is required" Class="mb-3" Immediate="true" />
             <MudText Typo="Typo.caption" Class="mb-1">Language</MudText>
             <MudRadioGroup T="int" @bind-Value="_language">
-                <MudRadio T="int" Value="0">C#</MudRadio>
-                <MudRadio T="int" Value="1">Python</MudRadio>
+                <MudRadio T="int" Value="0">
+                    <span style="display:inline-flex;align-items:center;gap:6px;">@LanguageIcons.CSharp <span>C#</span></span>
+                </MudRadio>
+                <MudRadio T="int" Value="1">
+                    <span style="display:inline-flex;align-items:center;gap:6px;">@LanguageIcons.Python <span>Python</span></span>
+                </MudRadio>
             </MudRadioGroup>
         </MudForm>
     </DialogContent>

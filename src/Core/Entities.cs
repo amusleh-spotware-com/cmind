@@ -105,7 +105,7 @@ public abstract class CBotSourceProject : AuditedEntity<CBotSourceProjectId>
     public UserId UserId { get; set; }
     public AppUser User { get; set; } = default!;
     [MaxLength(256)] public string Name { get; set; } = default!;
-    public string ProjectFilesJson { get; set; } = "{}";
+    public byte[] EncryptedProjectFiles { get; set; } = [];
     public string? LastBuildLog { get; set; }
     public DateTimeOffset? LastBuildAt { get; set; }
     public bool LastBuildSucceeded { get; set; }

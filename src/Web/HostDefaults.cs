@@ -37,7 +37,12 @@ internal static class HostDefaults
         builder.Services.AddServiceDiscovery();
         builder.Services.ConfigureHttpClientDefaults(http =>
         {
-            http.AddStandardResilienceHandler();
+            http.AddStandardResilienceHandler(o =>
+            {
+                o.AttemptTimeout.Timeout = TimeSpan.FromMinutes(10);
+                o.TotalRequestTimeout.Timeout = TimeSpan.FromMinutes(15);
+                o.CircuitBreaker.SamplingDuration = TimeSpan.FromMinutes(30);
+            });
             http.AddServiceDiscovery();
         });
         builder.Services.AddHealthChecks()

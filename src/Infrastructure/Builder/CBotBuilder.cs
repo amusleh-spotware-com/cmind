@@ -8,7 +8,7 @@ using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-namespace Nodes.Builder;
+namespace Infrastructure.Builder;
 
 public sealed record BuildResult(bool Success, string Log, byte[]? AlgoBytes);
 
@@ -17,13 +17,18 @@ public sealed class CBotBuilder(
     ISecretProtector protector,
     IOptionsMonitor<AppOptions> options)
 {
-    private const string DockerExe = "docker";
+    private const string DotnetExe = "dotnet";
+    private const string OutDirName = "out";
     private const string NoAlgoMessage = "\nNo .algo file produced.";
+    private const string NoProjectFileMessage = "No .csproj file found in project.";
 
     public async Task<BuildResult> BuildAsync(CBotSourceProject project, UserId userId, CancellationToken ct)
     {
         var opts = options.CurrentValue;
-        var files = JsonSerializer.Deserialize<Dictionary<string, string>>(project.ProjectFilesJson)
+        var projectFilesJson = project.EncryptedProjectFiles.Length == 0
+            ? "{}"
+            : Encoding.UTF8.GetString(protector.Unprotect(project.EncryptedProjectFiles, EncryptionPurposes.CbotSource));
+        var files = JsonSerializer.Deserialize<Dictionary<string, string>>(projectFilesJson)
                     ?? new Dictionary<string, string>();
 
         var workDir = Path.Combine(opts.BuildWorkRoot, userId.Value.ToString("N"), project.Id.Value.ToString("N"));
@@ -37,21 +42,27 @@ public sealed class CBotBuilder(
             await File.WriteAllTextAsync(full, content, ct);
         }
 
-        var outDir = Path.Combine(workDir, DockerCommands.BuildOutDir);
+        var outDir = Path.Combine(workDir, OutDirName);
         Directory.CreateDirectory(outDir);
 
-        var mountSource = workDir.Replace('\\', '/');
-        var dockerArgs =
-            $"{DockerCommands.RunBuild} {DockerCommands.VolumeFlag} \"{mountSource}\":{DockerCommands.BuildMount} " +
-            $"{opts.BuildImage} {DockerCommands.BuildCommand}";
+        var projectFile = Directory.EnumerateFiles(workDir, "*.csproj", SearchOption.TopDirectoryOnly).FirstOrDefault();
+        if (projectFile is null)
+        {
+            project.LastBuildLog = NoProjectFileMessage;
+            project.LastBuildAt = DateTimeOffset.UtcNow;
+            project.LastBuildSucceeded = false;
+            await db.SaveChangesAsync(ct);
+            return new BuildResult(false, NoProjectFileMessage, null);
+        }
 
-        var (code, log) = await RunProcessAsync(DockerExe, dockerArgs, ct);
+        var args = $"build \"{projectFile}\" -c Release -o \"{outDir}\" --nologo";
+        var (code, log) = await RunProcessAsync(DotnetExe, args, workDir, ct);
         var success = code == 0;
 
         byte[]? algoBytes = null;
         if (success)
         {
-            var algoFile = Directory.EnumerateFiles(outDir, DockerCommands.AlgoExtensionPattern, SearchOption.AllDirectories).FirstOrDefault();
+            var algoFile = Directory.EnumerateFiles(outDir, "*.algo", SearchOption.AllDirectories).FirstOrDefault();
             if (algoFile is not null) algoBytes = await File.ReadAllBytesAsync(algoFile, ct);
             else { success = false; log += NoAlgoMessage; }
         }
@@ -62,7 +73,10 @@ public sealed class CBotBuilder(
 
         if (success && algoBytes is not null)
         {
-            var existing = await db.CBots.FirstOrDefaultAsync(c => c.SourceProjectId == project.Id, ct);
+            var existing = await db.CBots.FirstOrDefaultAsync(
+                c => c.SourceProjectId == project.Id
+                     || (c.UserId == userId && c.Name == project.Name),
+                ct);
             if (existing is null)
             {
                 db.CBots.Add(new CBot
@@ -77,6 +91,7 @@ public sealed class CBotBuilder(
             else
             {
                 existing.EncryptedAlgo = protector.Protect(algoBytes, EncryptionPurposes.CbotAlgo);
+                existing.SourceProjectId = project.Id;
                 existing.Version++;
                 existing.UpdatedAt = DateTimeOffset.UtcNow;
             }
@@ -85,10 +100,11 @@ public sealed class CBotBuilder(
         return new BuildResult(success, log, algoBytes);
     }
 
-    private static async Task<(int code, string log)> RunProcessAsync(string fileName, string args, CancellationToken ct)
+    private static async Task<(int code, string log)> RunProcessAsync(string fileName, string args, string workingDir, CancellationToken ct)
     {
         var psi = new ProcessStartInfo(fileName, args)
         {
+            WorkingDirectory = workingDir,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,

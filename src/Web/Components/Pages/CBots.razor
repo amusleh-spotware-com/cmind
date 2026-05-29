@@ -1,64 +1,276 @@
 @page "/cbots"
 @using Web.Json
+@using Web.Components
+@using Web.Components.Dialogs
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
+@inject IDialogService Dialogs
+@inject NavigationManager Nav
 
 <PageTitle>cBots</PageTitle>
-<MudText Typo="Typo.h5" Class="mb-3">cBots</MudText>
 
-<MudPaper Class="pa-3 mb-3">
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">cBots</MudText>
+    <MudSpacer />
+    @if (_selected.Count > 0)
+    {
+        <MudButton Color="Color.Error" Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.Delete" OnClick="DeleteSelected">
+            Delete (@_selected.Count)
+        </MudButton>
+    }
     <InputFile id="cbotFile" hidden OnChange="OnFile" accept=".algo" />
-    <MudTextField @bind-Value="_uploadName" Label="Name (optional)" Class="mb-2" />
-    <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" for="cbotFile"
+    <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Primary" for="cbotFile"
                StartIcon="@Icons.Material.Filled.Upload">
         Upload .algo
     </MudButton>
-</MudPaper>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled"
+               StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew">
+        New cBot
+    </MudButton>
+</MudStack>
 
-<MudTable Items="_items" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
-    <HeaderContent>
-        <MudTh>Name</MudTh><MudTh>Version</MudTh><MudTh>Created</MudTh><MudTh /></HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Name">@context.name</MudTd>
-        <MudTd DataLabel="Version">@context.version</MudTd>
-        <MudTd DataLabel="Created">@context.createdAt</MudTd>
-        <MudTd>
-            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => Rename(context.id, context.name))" />
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => Delete(context.id))" />
-        </MudTd>
-    </RowTemplate>
-</MudTable>
+@if (_loading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (_projects.Length == 0)
+{
+    <MudPaper Class="pa-6" Style="text-align:center;">
+        <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large" Class="mb-2" />
+        <MudText Typo="Typo.body1" Class="mb-2">No cBots yet.</MudText>
+        <MudText Typo="Typo.caption" Style="color:#A0A0A0;">Click "New cBot" to create your first project or upload a .algo file.</MudText>
+    </MudPaper>
+}
+else
+{
+    <MudTable T="CBotRow" Items="_projects" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="1"
+              Class="cbots-list" MultiSelection="true" SelectOnRowClick="false" @bind-SelectedItems="_selected">
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh Style="width:64px;text-align:center;">Lang</MudTh>
+            <MudTh>Last Build</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh Style="width:160px;" />
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">
+                @if (context.IsUpload)
+                {
+                    <span>@context.Name</span>
+                }
+                else
+                {
+                    <MudLink Href="@($"/builder/{context.Id}")">@context.Name</MudLink>
+                }
+            </MudTd>
+            <MudTd DataLabel="Language" Style="text-align:center;">
+                @if (context.Language is null)
+                {
+                    <MudTooltip Text="Uploaded">
+                        <MudIcon Icon="@Icons.Material.Filled.Upload" Size="Size.Small" Style="color:#A0A0A0;" />
+                    </MudTooltip>
+                }
+                else
+                {
+                    <MudTooltip Text="@LanguageIcons.LabelFor(context.Language)">
+                        @LanguageIcons.For(context.Language)
+                    </MudTooltip>
+                }
+            </MudTd>
+            <MudTd DataLabel="Last Build">@FormatTs(context.LastBuildAt)</MudTd>
+            <MudTd DataLabel="Status">@BuildStatusChip(context)</MudTd>
+            <MudTd>
+                @if (!context.IsUpload)
+                {
+                    <MudTooltip Text="Build">
+                        <MudIconButton Icon="@Icons.Material.Filled.Build" Size="Size.Small" Color="Color.Primary"
+                                       OnClick="@(() => Build(context.Id))" />
+                    </MudTooltip>
+                    <MudTooltip Text="Edit">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                       OnClick="@(() => Nav.NavigateTo($"/builder/{context.Id}"))" />
+                    </MudTooltip>
+                }
+                <MudTooltip Text="Run">
+                    <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" Color="Color.Success"
+                                   OnClick="@(() => Run(context))" />
+                </MudTooltip>
+                <MudTooltip Text="Delete">
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                   OnClick="@(() => Delete(context))" />
+                </MudTooltip>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+<style>
+    .cbots-list .mud-table-row { height: 32px; }
+    .cbots-list .mud-table-cell { padding-top: 2px; padding-bottom: 2px; line-height: 1.2; }
+    .cbots-list .mud-table-cell .mud-button-root { padding: 2px; min-width: 0; }
+</style>
 
 @code {
-    private dynamic[] _items = [];
-    private string? _uploadName;
+    private CBotRow[] _projects = [];
+    private HashSet<CBotRow> _selected = new();
+    private bool _loading = true;
+    private bool _busy;
 
     protected override Task OnInitializedAsync() => Load();
 
-    private async Task Load() => _items = await Http.GetDynamicArrayAsync("/api/cbots/");
+    private async Task Load()
+    {
+        _loading = true;
+        try
+        {
+            var projectsTask = Http.GetDynamicArrayAsync("/api/builder/projects");
+            var cbotsTask = Http.GetDynamicArrayAsync("/api/cbots/");
+            await Task.WhenAll(projectsTask, cbotsTask);
+
+            var projects = (await projectsTask).Select(p => new CBotRow(
+                Id: (Guid)p.id,
+                Name: (string)p.name,
+                Language: (string?)p.language,
+                LastBuildAt: p.lastBuildAt is null ? null : (DateTimeOffset?)p.lastBuildAt,
+                LastBuildSucceeded: p.lastBuildAt is null ? null : (bool?)p.lastBuildSucceeded,
+                IsUpload: false));
+
+            var uploads = (await cbotsTask)
+                .Where(c => (bool)c.hasSource == false)
+                .Select(c => new CBotRow(
+                    Id: (Guid)c.id,
+                    Name: (string)c.name,
+                    Language: null,
+                    LastBuildAt: (DateTimeOffset?)c.createdAt,
+                    LastBuildSucceeded: true,
+                    IsUpload: true));
+
+            _projects = projects.Concat(uploads).OrderByDescending(r => r.LastBuildAt ?? DateTimeOffset.MinValue).ToArray();
+        }
+        finally { _loading = false; }
+    }
+
+    private sealed record CBotRow(Guid Id, string Name, string? Language, DateTimeOffset? LastBuildAt, bool? LastBuildSucceeded, bool IsUpload);
+
+    private static string FormatTs(DateTimeOffset? v) =>
+        v is null ? "—" : v.Value.LocalDateTime.ToString("yyyy-MM-dd HH:mm");
+
+    private RenderFragment BuildStatusChip(CBotRow p) => builder =>
+    {
+        if (p.LastBuildSucceeded is not { } ok)
+        {
+            builder.OpenComponent<MudChip<string>>(0);
+            builder.AddAttribute(1, "Size", Size.Small);
+            builder.AddAttribute(2, "Color", Color.Default);
+            builder.AddAttribute(3, "Variant", Variant.Outlined);
+            builder.AddAttribute(4, "ChildContent", (RenderFragment)(b => b.AddContent(0, "—")));
+            builder.CloseComponent();
+            return;
+        }
+        builder.OpenComponent<MudChip<string>>(0);
+        builder.AddAttribute(1, "Size", Size.Small);
+        builder.AddAttribute(2, "Color", ok ? Color.Success : Color.Error);
+        builder.AddAttribute(3, "Variant", Variant.Filled);
+        builder.AddAttribute(4, "ChildContent", (RenderFragment)(b => b.AddContent(0, ok ? "Success" : "Failed")));
+        builder.CloseComponent();
+    };
+
+    private async Task OpenNew()
+    {
+        var dlg = await Dialogs.ShowAsync<NewProjectDialog>("New cBot Project",
+            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+        var res = await dlg.Result;
+        if (res is null || res.Canceled) return;
+        var data = (NewProjectDialog.NewProjectDialogResult)res.Data!;
+        var r = await Http.PostAsJsonAsync("/api/builder/projects", new { Name = data.Name, Language = data.Language });
+        if (!r.IsSuccessStatusCode) { Snack.Add("Failed to create project", Severity.Error); return; }
+        var d = await r.Content.ReadFromJsonAsync<dynamic?>(JsonDefaults.DynamicWeb);
+        if (d is null) { Snack.Add("Failed to create project", Severity.Error); return; }
+        Guid id = (Guid)d.id;
+        Nav.NavigateTo($"/builder/{id}");
+    }
 
     private async Task OnFile(InputFileChangeEventArgs e)
     {
         var f = e.File;
         using var c = new MultipartFormDataContent();
         c.Add(new StreamContent(f.OpenReadStream(10 * 1024 * 1024)), "file", f.Name);
-        if (!string.IsNullOrWhiteSpace(_uploadName)) c.Add(new StringContent(_uploadName), "name");
         var r = await Http.PostAsync("/api/cbots/upload", c);
-        Snack.Add(r.IsSuccessStatusCode ? "Uploaded" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        Snack.Add(r.IsSuccessStatusCode ? "Uploaded" : "Upload failed",
+                  r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
         if (r.IsSuccessStatusCode) await Load();
     }
 
-    private async Task Rename(Guid id, string current)
+    private async Task Build(Guid id)
     {
-        var name = current; // TODO MudDialog
-        await Http.PatchAsJsonAsync($"/api/cbots/{id}", new { Name = name });
+        if (_busy) return;
+        _busy = true;
+        Snack.Add("Building...", Severity.Info);
+        try
+        {
+            var r = await Http.PostAsJsonAsync($"/api/builder/projects/{id}/build", new { });
+            if (!r.IsSuccessStatusCode) { Snack.Add("Build request failed", Severity.Error); return; }
+            var d = await r.Content.ReadFromJsonAsync<BuildResponse>();
+            Snack.Add(d?.Success == true ? "Build OK" : "Build failed",
+                      d?.Success == true ? Severity.Success : Severity.Error);
+            await Load();
+        }
+        finally { _busy = false; }
+    }
+
+    private async Task Run(CBotRow row)
+    {
+        if (_busy) return;
+        _busy = true;
+        Snack.Add("Starting...", Severity.Info);
+        try
+        {
+            var url = row.IsUpload
+                ? $"/api/cbots/{row.Id}/quick-run"
+                : $"/api/builder/projects/{row.Id}/quick-run";
+            var r = await Http.PostAsJsonAsync(url, new { });
+            if (!r.IsSuccessStatusCode) { Snack.Add("Run failed", Severity.Error); return; }
+            Snack.Add("Started", Severity.Success);
+        }
+        finally { _busy = false; }
+    }
+
+    private async Task Delete(CBotRow row)
+    {
+        var ok = await Dialogs.ShowMessageBox("Delete cBot",
+            $"Delete '{row.Name}'? This cannot be undone.",
+            yesText: "Delete", cancelText: "Cancel");
+        if (ok != true) return;
+        var url = row.IsUpload ? $"/api/cbots/{row.Id}" : $"/api/builder/projects/{row.Id}";
+        var r = await Http.DeleteAsync(url);
+        if (r.IsSuccessStatusCode) { Snack.Add("Deleted", Severity.Success); await Load(); }
+        else Snack.Add("Delete failed", Severity.Error);
+    }
+
+    private async Task DeleteSelected()
+    {
+        if (_selected.Count == 0) return;
+        var rows = _selected.ToArray();
+        var count = rows.Length;
+        var ok = await Dialogs.ShowMessageBox("Delete cBots",
+            $"Delete {count} selected cBot(s)? This cannot be undone.",
+            yesText: "Delete", cancelText: "Cancel");
+        if (ok != true) return;
+
+        var failed = 0;
+        foreach (var row in rows)
+        {
+            var url = row.IsUpload ? $"/api/cbots/{row.Id}" : $"/api/builder/projects/{row.Id}";
+            var r = await Http.DeleteAsync(url);
+            if (!r.IsSuccessStatusCode) failed++;
+        }
+        _selected.Clear();
+        if (failed == 0) Snack.Add($"Deleted {count}", Severity.Success);
+        else Snack.Add($"Deleted {count - failed}, {failed} failed", Severity.Warning);
         await Load();
     }
 
-    private async Task Delete(Guid id)
-    {
-        await Http.DeleteAsync($"/api/cbots/{id}");
-        await Load();
-    }
+    private sealed record BuildResponse(bool Success, string? Log);
 }

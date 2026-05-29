@@ -159,3 +159,108 @@ When adding a feature, prefer this order:
 5. Add the corresponding Blazor page in `Web/Components/Pages/`.
 6. If background work is involved, add a `BackgroundService` and wire via DI.
 7. Regenerate the EF migration.
+
+## Implementation Workflow
+
+The full lifecycle of a feature task — from start to completion. Follow every step in order.
+
+### Phase 1: Understanding the Task
+
+1. **Explore the codebase** — identify which layers and projects are affected. Read the relevant CLAUDE.md files for each affected area.
+2. **Find existing analogous implementations** — before designing anything, find a similar feature that already exists and study its structure end-to-end, either reuse the existing code directly or use it as a structural template. Do not invent new patterns when established ones exist.
+
+### Phase 2: Planning
+
+3. **Create an implementation plan** — list every concrete change: new files, modified files, DI registrations, test files. Group by layer. Include which existing implementations will be used as templates.
+4. **Agree on the plan with the user** — present the plan and wait for approval. Discuss alternatives if the user has concerns. Do not start coding until the plan is approved.
+
+
+### Phase 3: Implementation
+
+5. **Implement using a write-review agent cycle** — for non-trivial changes, use two agents:
+    - **Writer agent** — implements a discrete piece of the plan (e.g., one layer: domain model, or view model, or tests).
+    - **Reviewer agent** — reviews the writer's output: checks code style, naming conventions, missing subscriptions/disposals, DI registration, and consistency with the analog implementation. Reports issues.
+    - **Writer agent** — fixes the reported issues.
+    - **Reviewer agent** — verifies that all issues are resolved.
+
+   For simple/mechanical changes (renaming, adding a map key, one-liner fixes), skip the review cycle.
+
+6. **Track progress** — if stopping at any point during the plan (end of session, blocked on a question, waiting for input):
+    - Include any decisions made during implementation that deviate from the original plan.
+
+7. **Handle plan changes** — if during implementation the approach changes (new requirements discovered, technical constraints, better solution found):
+    - Discuss the change with the user and get approval.
+
+### Phase 4: Verification
+
+8. **Build** — run `dotnet build` on the affected projects. Fix all compiler errors and warnings.
+9. **Write unit tests** — create tests for every new class, mirroring the source path under `UnitTests/`. Follow `UnitTests/CLAUDE.md` conventions. Use the analogous feature's tests as a template.
+10. **Run tests** — execute `dotnet test` on the relevant test projects. All tests must pass, including pre-existing ones.
+11. **Review agent pass** — launch a reviewer agent to do a final check across all changes:
+    - Subscription/disposal symmetry (`AddListener` ↔ `RemoveListener`, `+=` ↔ `-=`)
+    - Code style compliance (sealed, readonly, naming, no comments)
+    - No leftover TODOs, debug code, or hardcoded values
+
+### Phase 5: Completion
+
+12. **Post summary**:
+    - Summary of what was implemented (files created/modified)
+    - Any deviations from the original plan and why
+    - Test results (number of tests, pass/fail)
+    - Any known limitations or follow-up items
+
+### Completion Checklist
+Before considering a task done, verify:
+- [ ] Unit tests are written for all new classes (mirroring source path under `UnitTests/`)
+- [ ] Tests pass (`dotnet test` on the relevant test project)
+- [ ] No new compiler warnings introduced
+
+## Tooling Rules
+
+- **NEVER use `find` or `grep` via Bash** — use the dedicated `Glob` and `Grep` tools.
+- Prefer `Read`/`Edit`/`Write` over `cat`/`sed`/`echo` redirection.
+- **Always Use JetBrains Rider MCP If JetBrains Rider MCP tools are available, proactively use them to explore the codebase,
+  run tests, navigate symbols, or inspect the project structure before making assumptions.**
+
+## Code Style
+
+### General
+- **No comments**, unless marking a `TODO` or `FIXME`.
+- **Don't use Hardcoded strings**, instead create a class and store them as constants.
+- **File-scoped namespaces** — `namespace Foo;`, not `namespace Foo { }`.
+- **`sealed` by default** — classes (VMs, services, factories) are `sealed` unless inheritance is intended.
+- **`readonly` for injected dependencies** — all constructor-injected fields are `private readonly`. Non-`readonly` fields are only for mutable state.
+- **Reduce nesting with early returns**:
+  ```csharp
+  if (condition)
+      return;
+  // main code
+  ```
+
+### Naming
+- Private fields: `_camelCase` (underscore prefix).
+- Interfaces: `I` prefix (`IFooService`, `IBarViewModel`).
+- Async methods: `Async` suffix (`LoadDataAsync`, `ShareAccessAsync`).
+- `var` for local variables when type is obvious from context. Explicit types for fields and return types.
+- **No short abbreviations in identifiers.** Spell out domain terms in full — applies to variables, fields, parameters, and test method names alike. Don't shorten `TakeProfit` to `Tp`, `StopLoss` to `Sl`, `TaskCompletionSource` to `Tcs`, `ViewModel` to `Vm`, `WebView` to `Wv`, etc. Established initialisms used throughout the codebase (`UI`, `DI`, `CID`, `ASP`, `DOM`) are fine; ad-hoc shortenings are not. This rule applies to C# identifiers only — wire-format string values dictated by the protocol (e.g., `"WV_Plugin"`, `"orderWindow"`) keep their literal form even when the identifier holding them is spelled out (`WebViewPluginPrefix = "WV_Plugin"`).
+
+### Access Modifiers
+- Always specify access modifiers explicitly (no implicit `internal`).
+- `public` for interface implementations and types consumed outside the assembly.
+- `internal` for assembly-internal services.
+- `private` for fields (always).
+
+### Constructor Conventions
+- Always use primary constructor, parameter order (guidance, not strict — but follow it for new code):
+    1. Regular service dependencies (interfaces, services)
+    2. Custom factory interfaces (e.g., `IWindowIdentityFactory`)
+  ```csharp
+  public SomeService(
+      IAnotherService anotherService,
+      IBuildClientConfiguration buildClientConfiguration,
+      IWindowIdentityFactory windowIdentityFactory)
+  ```
+- **Body order**: field assignments → property initialization → event subscriptions (`AddListener`, `+=`) at the very end.
+
+### Class Member Order
+Fields → properties → events → methods. `Dispose()` is always the last method in the class.

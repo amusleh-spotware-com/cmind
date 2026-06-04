@@ -17,4 +17,13 @@ public sealed record AppOptions
     public TimeSpan NodeStatsPollInterval { get; init; } = TimeSpan.FromSeconds(15);
     public TimeSpan InstanceReconcileInterval { get; init; } = TimeSpan.FromMinutes(1);
     public TimeSpan InstanceStartupTimeout { get; init; } = TimeSpan.FromMinutes(10);
+    public LocalNodeOptions LocalNode { get; init; } = new();
+}
+
+public sealed record LocalNodeOptions
+{
+    public bool Enabled { get; init; }
+    public string Name { get; init; } = Constants.LocalNodeDefaults.Name;
+    public string WorkRoot { get; init; } = Constants.FilePaths.LocalRunWorkRootDefault;
+    public int MaxInstances { get; init; } = Constants.LocalNodeDefaults.MaxInstances;
 }

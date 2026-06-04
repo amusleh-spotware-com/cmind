@@ -29,15 +29,16 @@ public sealed class NodeStatsPoller(
     {
         using var scope = scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var dispatcher = scope.ServiceProvider.GetRequiredService<IContainerDispatcher>();
+        var factory = scope.ServiceProvider.GetRequiredService<IContainerDispatcherFactory>();
 
         var nodes = await db.Nodes.Where(n =>
-            n is ActiveRunNode || n is ActiveBacktestNode || n is ActiveMixedNode).ToListAsync(ct);
+            n is ActiveRunNode || n is ActiveBacktestNode || n is ActiveMixedNode
+            || (n is LocalNode && ((LocalNode)n).Enabled)).ToListAsync(ct);
         foreach (var node in nodes)
         {
             try
             {
-                var stats = await dispatcher.CollectStatsAsync(node, ct);
+                var stats = await factory.For(node).CollectStatsAsync(node, ct);
                 stats.RunningCount = await db.Instances.CountAsync(i =>
                     i.NodeId == node.Id && i is RunningRunInstance, ct);
                 stats.BacktestCount = await db.Instances.CountAsync(i =>

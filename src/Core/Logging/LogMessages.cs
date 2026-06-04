@@ -21,4 +21,10 @@ public static partial class LogMessages
 
     [LoggerMessage(EventId = 1005, Level = LogLevel.Information, Message = "Owner account seeded: {Email}")]
     public static partial void OwnerSeeded(this ILogger logger, string email);
+
+    [LoggerMessage(EventId = 1006, Level = LogLevel.Information, Message = "Local node seeded: {Name}")]
+    public static partial void LocalNodeSeeded(this ILogger logger, string name);
+
+    [LoggerMessage(EventId = 1007, Level = LogLevel.Warning, Message = "Local docker command failed: {Command} -> {Error}")]
+    public static partial void LocalDockerFailed(this ILogger logger, string command, string error);
 }

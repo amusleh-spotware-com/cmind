@@ -1,7 +1,5 @@
-using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Text.Json;
 using Core;
 using Core.Constants;
 using Core.Logging;
@@ -15,27 +13,25 @@ public sealed class SshContainerDispatcher(
     ILogger<SshContainerDispatcher> log) : IContainerDispatcher
 {
     private const string WorkMount = FilePaths.ContainerWorkMount;
-    private const string DataDir = FilePaths.ContainerDataDir;
     private const string AlgoFile = FilePaths.CbotAlgoFile;
     private const string ParamsFile = FilePaths.ParamsCbotsetFile;
     private const string PwdFile = FilePaths.CtidPwdFile;
-    private const string ReportJson = FilePaths.ReportJsonFile;
-    private const string ReportHtml = FilePaths.ReportHtmlFile;
 
     public async Task<string> StartAsync(Instance instance, byte[] algoBytes, string paramJson, CancellationToken ct)
     {
-        if (instance.Node is null) throw new InvalidOperationException("Instance has no node.");
-        using var client = Connect(instance.Node);
-        using var sftp = ConnectSftp(instance.Node);
+        if (instance.Node is not RemoteNode remote)
+            throw new InvalidOperationException("Instance has no remote node.");
+        using var client = Connect(remote);
+        using var sftp = ConnectSftp(remote);
 
-        var workDir = $"{instance.Node.DataDirPath.TrimEnd('/')}/{instance.UserId.Value}/{instance.CBotId.Value}/{instance.Id.Value}";
+        var workDir = $"{remote.DataDirPath.TrimEnd('/')}/{instance.UserId.Value}/{instance.CBotId.Value}/{instance.Id.Value}";
         Run(client, $"mkdir -p {Shell(workDir)}/data");
 
         var algoPath = $"{workDir}/{AlgoFile}";
         var cbotsetPath = $"{workDir}/{ParamsFile}";
         var pwdPath = $"{workDir}/{PwdFile}";
         using (var ms = new MemoryStream(algoBytes)) sftp.UploadFile(ms, algoPath, true);
-        using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(JsonToCbotset(paramJson))))
+        using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(ContainerCommandHelpers.JsonToCbotset(paramJson))))
             sftp.UploadFile(ms, cbotsetPath, true);
 
         var ctid = string.Empty;
@@ -56,10 +52,10 @@ public sealed class SshContainerDispatcher(
             $"{DockerCommands.LabelFlag} {DockerLabels.Type}={instance.KindName}";
         var mountWork = $"{DockerCommands.VolumeFlag} {Shell(workDir)}:{WorkMount}";
 
-        var cmdArgs = BuildConsoleArgs(instance, ctid);
+        var cmdArgs = ContainerCommandHelpers.BuildConsoleArgs(instance, ctid);
         var docker = $"docker {DockerCommands.RunDetached} {DockerCommands.NameFlag} {name} {labels} {mountWork} {image} {cmdArgs}";
 
-        log.StartingContainer(instance.Node.Host, docker);
+        log.StartingContainer(remote.Host, docker);
         var result = RunWithOutput(client, docker);
         instance.DataDirSubPath = workDir;
         await Task.CompletedTask;
@@ -68,10 +64,10 @@ public sealed class SshContainerDispatcher(
 
     public async Task StopAsync(Instance instance, CancellationToken ct)
     {
-        if (instance.Node is null) return;
-        var containerId = GetContainerId(instance);
+        if (instance.Node is not RemoteNode remote) return;
+        var containerId = ContainerCommandHelpers.GetContainerId(instance);
         if (containerId is null) return;
-        using var client = Connect(instance.Node);
+        using var client = Connect(remote);
         Run(client, $"{DockerCommands.Stop} {Shell(containerId)} || true");
         Run(client, $"{DockerCommands.RemoveForce} {Shell(containerId)} || true");
         await Task.CompletedTask;
@@ -79,9 +75,9 @@ public sealed class SshContainerDispatcher(
 
     public async IAsyncEnumerable<string> TailLogsAsync(Instance instance, [EnumeratorCancellation] CancellationToken ct)
     {
-        var containerId = GetContainerId(instance);
-        if (instance.Node is null || containerId is null) yield break;
-        using var client = Connect(instance.Node);
+        var containerId = ContainerCommandHelpers.GetContainerId(instance);
+        if (instance.Node is not RemoteNode remote || containerId is null) yield break;
+        using var client = Connect(remote);
         var cmd = client.CreateCommand($"{DockerCommands.LogsFollow} {Shell(containerId)}");
         var async = cmd.BeginExecute();
         using var reader = new StreamReader(cmd.OutputStream);
@@ -96,12 +92,13 @@ public sealed class SshContainerDispatcher(
 
     public async Task<NodeStats> CollectStatsAsync(Node node, CancellationToken ct)
     {
-        using var client = Connect(node);
+        if (node is not RemoteNode remote) throw new InvalidOperationException("Not a remote node.");
+        using var client = Connect(remote);
         var statsLine = RunWithOutput(client, DockerCommands.StatsNoStream);
-        var df = RunWithOutput(client, $"df -B1 --output=used,size {Shell(node.DataDirPath)} | tail -n1");
-        var du = RunWithOutput(client, $"du -sb {Shell(node.DataDirPath)} 2>/dev/null | awk '{{print $1}}'");
-        var (cpu, memUsed, memTotal) = ParseDockerStats(statsLine);
-        var (diskUsed, diskTotal) = ParseDf(df);
+        var df = RunWithOutput(client, $"df -B1 --output=used,size {Shell(remote.DataDirPath)} | tail -n1");
+        var du = RunWithOutput(client, $"du -sb {Shell(remote.DataDirPath)} 2>/dev/null | awk '{{print $1}}'");
+        var (cpu, memUsed, memTotal) = ContainerCommandHelpers.ParseDockerStats(statsLine);
+        var (diskUsed, diskTotal) = ContainerCommandHelpers.ParseDf(df);
         long.TryParse(du.Trim(), out var backtestUsed);
         await Task.CompletedTask;
         return new NodeStats
@@ -119,16 +116,18 @@ public sealed class SshContainerDispatcher(
 
     public async Task<long> GetBacktestDataSizeAsync(Node node, CancellationToken ct)
     {
-        using var client = Connect(node);
-        var du = RunWithOutput(client, $"du -sb {Shell(node.DataDirPath)} 2>/dev/null | awk '{{print $1}}'");
+        if (node is not RemoteNode remote) return 0;
+        using var client = Connect(remote);
+        var du = RunWithOutput(client, $"du -sb {Shell(remote.DataDirPath)} 2>/dev/null | awk '{{print $1}}'");
         await Task.CompletedTask;
         return long.TryParse(du.Trim(), out var v) ? v : 0;
     }
 
     public async Task CleanBacktestDataAsync(Node node, UserId? userId, CancellationToken ct)
     {
-        using var client = Connect(node);
-        var root = node.DataDirPath.TrimEnd('/');
+        if (node is not RemoteNode remote) return;
+        using var client = Connect(remote);
+        var root = remote.DataDirPath.TrimEnd('/');
         if (!root.StartsWith(FilePaths.CtwDataRootPrefix, StringComparison.Ordinal))
             throw new InvalidOperationException($"Refusing to clean outside {FilePaths.CtwDataRootPrefix}");
         var target = userId is null ? $"{root}/*" : $"{root}/{userId.Value.Value}";
@@ -136,22 +135,7 @@ public sealed class SshContainerDispatcher(
         await Task.CompletedTask;
     }
 
-    private static string? GetContainerId(Instance i) => i switch
-    {
-        StartingRunInstance s => s.ContainerId,
-        RunningRunInstance r => r.ContainerId,
-        StoppingRunInstance st => st.ContainerId,
-        StoppedRunInstance st => st.ContainerId,
-        FailedRunInstance f => f.ContainerId,
-        StartingBacktestInstance s => s.ContainerId,
-        RunningBacktestInstance r => r.ContainerId,
-        StoppingBacktestInstance st => st.ContainerId,
-        CompletedBacktestInstance c => c.ContainerId,
-        FailedBacktestInstance f => f.ContainerId,
-        _ => null
-    };
-
-    private SshClient Connect(Node node)
+    private SshClient Connect(RemoteNode node)
     {
         var keyFile = LoadKey(node);
         var client = new SshClient(node.Host, node.SshPort, node.SshUser, keyFile);
@@ -159,7 +143,7 @@ public sealed class SshContainerDispatcher(
         return client;
     }
 
-    private SftpClient ConnectSftp(Node node)
+    private SftpClient ConnectSftp(RemoteNode node)
     {
         var keyFile = LoadKey(node);
         var client = new SftpClient(node.Host, node.SshPort, node.SshUser, keyFile);
@@ -167,7 +151,7 @@ public sealed class SshContainerDispatcher(
         return client;
     }
 
-    private PrivateKeyFile LoadKey(Node node)
+    private PrivateKeyFile LoadKey(RemoteNode node)
     {
         var key = protector.Unprotect(node.EncryptedSshKey, EncryptionPurposes.NodeSshKey);
         var ms = new MemoryStream(key);
@@ -190,84 +174,5 @@ public sealed class SshContainerDispatcher(
         return r.Result;
     }
 
-    private static string Shell(string s) => "'" + s.Replace("'", "'\\''", StringComparison.Ordinal) + "'";
-
-    private static string BuildConsoleArgs(Instance i, string ctid)
-    {
-        var sb = new StringBuilder();
-        var isBacktest = i is BacktestInstance;
-        sb.Append(isBacktest ? CliCommands.Backtest : CliCommands.Run).Append(' ');
-        sb.Append($"{WorkMount}/{AlgoFile} ");
-        if (!string.IsNullOrEmpty(ctid))
-            sb.Append($"{CliFlags.Ctid} {ctid} {CliFlags.PwdFile} {WorkMount}/{PwdFile} ");
-        if (i.TradingAccount is { } ta) sb.Append($"{CliFlags.Account} {ta.AccountNumber} ");
-        if (!string.IsNullOrEmpty(i.Symbol)) sb.Append($"{CliFlags.Symbol} {i.Symbol} ");
-        if (!string.IsNullOrEmpty(i.Timeframe)) sb.Append($"{CliFlags.Period} {i.Timeframe} ");
-        sb.Append($"{CliFlags.DataDir} {DataDir} ");
-
-        if (i is BacktestInstance b && !string.IsNullOrEmpty(b.BacktestSettingsJson))
-        {
-            var doc = JsonDocument.Parse(b.BacktestSettingsJson);
-            foreach (var p in doc.RootElement.EnumerateObject())
-            {
-                var name = p.Name.ToLowerInvariant() switch
-                {
-                    "from" => "start",
-                    "to" => "end",
-                    _ => p.Name
-                };
-                var val = p.Value.ValueKind == JsonValueKind.String
-                    ? $"\"{p.Value.GetString()}\""
-                    : p.Value.ToString();
-                sb.Append($"--{name} {val} ");
-            }
-            sb.Append($"{CliFlags.ReportJson} {WorkMount}/{ReportJson} {CliFlags.Report} {WorkMount}/{ReportHtml} {CliFlags.ExitOnStop} ");
-        }
-        return sb.ToString().Trim();
-    }
-
-    private static string JsonToCbotset(string json)
-    {
-        try
-        {
-            var doc = JsonDocument.Parse(json);
-            var sb = new StringBuilder();
-            foreach (var p in doc.RootElement.EnumerateObject())
-                sb.AppendLine($"{p.Name}={p.Value}");
-            return sb.ToString();
-        }
-        catch { return json; }
-    }
-
-    private static (double, long, long) ParseDockerStats(string line)
-    {
-        if (string.IsNullOrWhiteSpace(line)) return (0, 0, 0);
-        var first = line.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
-        var parts = first.Split('|');
-        if (parts.Length < 2) return (0, 0, 0);
-        double.TryParse(parts[0].Trim().TrimEnd('%'), CultureInfo.InvariantCulture, out var cpu);
-        var mem = parts[1].Split('/');
-        return (cpu, ParseSize(mem[0]), mem.Length > 1 ? ParseSize(mem[1]) : 0);
-    }
-
-    private static (long used, long total) ParseDf(string line)
-    {
-        var parts = line.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length < 2) return (0, 0);
-        long.TryParse(parts[0], out var used);
-        long.TryParse(parts[1], out var total);
-        return (used, total);
-    }
-
-    private static long ParseSize(string s)
-    {
-        s = s.Trim();
-        var mult = 1L;
-        if (s.EndsWith("GiB", StringComparison.Ordinal)) { mult = 1024L * 1024 * 1024; s = s[..^3]; }
-        else if (s.EndsWith("MiB", StringComparison.Ordinal)) { mult = 1024L * 1024; s = s[..^3]; }
-        else if (s.EndsWith("KiB", StringComparison.Ordinal)) { mult = 1024L; s = s[..^3]; }
-        else if (s.EndsWith("B", StringComparison.Ordinal)) { s = s[..^1]; }
-        double.TryParse(s, CultureInfo.InvariantCulture, out var v);
-        return (long)(v * mult);
-    }
+    private static string Shell(string s) => ContainerCommandHelpers.ShellSingleQuote(s);
 }

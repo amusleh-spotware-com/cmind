@@ -29,6 +29,12 @@ public interface IContainerDispatcher
     Task CleanBacktestDataAsync(Node node, UserId? userId, CancellationToken ct);
 }
 
+public interface IContainerDispatcherFactory
+{
+    IContainerDispatcher For(Node node);
+    IContainerDispatcher For(Instance instance);
+}
+
 public interface IGithubContainerRegistryTagProvider
 {
     Task<IReadOnlyList<string>> GetTagsAsync(CancellationToken ct);

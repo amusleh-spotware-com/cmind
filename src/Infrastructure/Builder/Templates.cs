@@ -20,43 +20,54 @@ public static class Templates
     {
         var isPython = string.Equals(languageName, "Python", StringComparison.OrdinalIgnoreCase);
         var dir = isPython ? PythonDir : CSharpDir;
-        var identityClass = SanitizeIdentifier(name);
+        var identifier = ToPascalCaseIdentifier(name);
         var templateRoot = Path.Combine(AppContext.BaseDirectory, TemplatesRoot, dir);
 
         var files = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var path in Directory.EnumerateFiles(templateRoot, "*", SearchOption.AllDirectories))
         {
             var rel = Path.GetRelativePath(templateRoot, path).Replace('\\', '/');
-            var outName = RenameOutput(rel, name);
-            var content = Substitute(File.ReadAllText(path), name, identityClass);
+            var outName = RenameOutput(rel, identifier);
+            var content = Substitute(File.ReadAllText(path), identifier);
             files[outName] = content;
         }
         return JsonSerializer.Serialize(files);
     }
 
-    private static string RenameOutput(string relativePath, string name) => relativePath switch
+    private static string RenameOutput(string relativePath, string identifier) => relativePath switch
     {
-        ProjectFileName => $"{name}.csproj",
-        RobotCsFileName => $"{name}.cs",
-        RobotPyFileName => $"{name}.py",
+        ProjectFileName => $"{identifier}.csproj",
+        RobotCsFileName => $"{identifier}.cs",
+        RobotPyFileName => $"{identifier}.py",
         _ => relativePath
     };
 
-    private static string Substitute(string content, string name, string identityClass) =>
+    private static string Substitute(string content, string identifier) =>
         content
             .Replace("{TargetFramework}", TargetFramework, StringComparison.Ordinal)
             .Replace("{PackageName}", PackageName, StringComparison.Ordinal)
             .Replace("{PackageVersion}", PackageVersion, StringComparison.Ordinal)
             .Replace("{AlgoType}", AlgoType, StringComparison.Ordinal)
             .Replace("{AdditionalContentFileName}", AdditionalContentFileName, StringComparison.Ordinal)
-            .Replace("{MainCodeFileName}", name, StringComparison.Ordinal)
-            .Replace("{IdentityClass}", identityClass, StringComparison.Ordinal);
+            .Replace("{MainCodeFileName}", identifier, StringComparison.Ordinal)
+            .Replace("{IdentityClass}", identifier, StringComparison.Ordinal);
 
-    private static string SanitizeIdentifier(string name)
+    private static string ToPascalCaseIdentifier(string name)
     {
-        var chars = name.Select(c => char.IsLetterOrDigit(c) ? c : '_').ToArray();
-        var s = new string(chars);
-        if (s.Length == 0 || char.IsDigit(s[0])) s = "_" + s;
-        return s;
+        var builder = new System.Text.StringBuilder(name.Length);
+        var capitalizeNext = true;
+        foreach (var c in name)
+        {
+            if (!char.IsLetterOrDigit(c))
+            {
+                capitalizeNext = true;
+                continue;
+            }
+            builder.Append(capitalizeNext ? char.ToUpperInvariant(c) : c);
+            capitalizeNext = false;
+        }
+        if (builder.Length == 0 || char.IsDigit(builder[0]))
+            builder.Insert(0, '_');
+        return builder.ToString();
     }
 }

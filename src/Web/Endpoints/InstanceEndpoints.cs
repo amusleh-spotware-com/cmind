@@ -55,7 +55,7 @@ public static class InstanceEndpoints
         });
 
         g.MapPost("/", async (StartRequest req, DataContext db, ICurrentUser u,
-            INodeScheduler scheduler, IContainerDispatcher dispatcher, ISecretProtector protector) =>
+            INodeScheduler scheduler, IContainerDispatcherFactory factory, ISecretProtector protector) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             if (u.IsInRole("Viewer")) return Results.Forbid();
@@ -115,7 +115,7 @@ public static class InstanceEndpoints
             starting.Node = node;
 
             var algo = protector.Unprotect(cbot.EncryptedAlgo, EncryptionPurposes.CbotAlgo);
-            var containerId = await dispatcher.StartAsync(starting, algo, paramSet.JsonContent, default);
+            var containerId = await factory.For(node).StartAsync(starting, algo, paramSet.JsonContent, default);
 
             // Transition to Running by replacing entity (TPH discriminator cannot change)
             db.Instances.Remove(starting);
@@ -159,7 +159,7 @@ public static class InstanceEndpoints
         });
 
         g.MapPost("/{id:guid}/stop", async (Guid id, DataContext db, ICurrentUser u,
-            IContainerDispatcher dispatcher) =>
+            IContainerDispatcherFactory factory) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             var iid = InstanceId.From(id);
@@ -168,7 +168,8 @@ public static class InstanceEndpoints
             if (u.IsInRole("Viewer") || (u.IsInRole("User") && i.UserId != uid))
                 return Results.Forbid();
 
-            try { await dispatcher.StopAsync(i, default); } catch { /* swallow */ }
+            if (i.Node is not null)
+                try { await factory.For(i).StopAsync(i, default); } catch { /* swallow */ }
 
             // Replace with Stopped/Completed entity
             var now = DateTimeOffset.UtcNow;

@@ -63,7 +63,15 @@ public static class FilePaths
     public const string ReportHtmlFile = "report.html";
     public static readonly string BuildWorkRootDefault =
         System.IO.Path.Combine(System.IO.Path.GetTempPath(), "ctw", "builds");
+    public static readonly string LocalRunWorkRootDefault =
+        System.IO.Path.Combine(System.IO.Path.GetTempPath(), "ctw", "local-runs");
     public const string CtwDataRootPrefix = "/var/ctw/";
+}
+
+public static class LocalNodeDefaults
+{
+    public const string Name = "local";
+    public const int MaxInstances = 5;
 }
 
 public static class DockerImages

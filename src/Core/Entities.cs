@@ -143,11 +143,6 @@ public class ParamSet : AuditedEntity<ParamSetId>
 public abstract class Node : AuditedEntity<NodeId>
 {
     [MaxLength(128)] public string Name { get; set; } = default!;
-    [MaxLength(256)] public string Host { get; set; } = default!;
-    public int SshPort { get; set; } = 22;
-    [MaxLength(64)] public string SshUser { get; set; } = default!;
-    public byte[] EncryptedSshKey { get; set; } = default!;
-    public byte[]? EncryptedSshKeyPassphrase { get; set; }
     [MaxLength(256)] public string DataDirPath { get; set; } = "/var/ctw/data";
     public int MaxInstances { get; set; } = 10;
     public NodeStats? LatestStats { get; set; }
@@ -157,9 +152,21 @@ public abstract class Node : AuditedEntity<NodeId>
     public abstract bool IsActive { get; }
     public abstract bool AcceptsRun { get; }
     public abstract bool AcceptsBacktest { get; }
+    public abstract bool IsLocal { get; }
 }
 
-public sealed class ActiveRunNode : Node
+public abstract class RemoteNode : Node
+{
+    [MaxLength(256)] public string Host { get; set; } = default!;
+    public int SshPort { get; set; } = 22;
+    [MaxLength(64)] public string SshUser { get; set; } = default!;
+    public byte[] EncryptedSshKey { get; set; } = default!;
+    public byte[]? EncryptedSshKeyPassphrase { get; set; }
+
+    public override bool IsLocal => false;
+}
+
+public sealed class ActiveRunNode : RemoteNode
 {
     public override string ModeName => "Run";
     public override string StatusName => "Active";
@@ -168,7 +175,7 @@ public sealed class ActiveRunNode : Node
     public override bool AcceptsBacktest => false;
 }
 
-public sealed class ActiveBacktestNode : Node
+public sealed class ActiveBacktestNode : RemoteNode
 {
     public override string ModeName => "Backtest";
     public override string StatusName => "Active";
@@ -177,7 +184,7 @@ public sealed class ActiveBacktestNode : Node
     public override bool AcceptsBacktest => true;
 }
 
-public sealed class ActiveMixedNode : Node
+public sealed class ActiveMixedNode : RemoteNode
 {
     public override string ModeName => "Mixed";
     public override string StatusName => "Active";
@@ -186,7 +193,7 @@ public sealed class ActiveMixedNode : Node
     public override bool AcceptsBacktest => true;
 }
 
-public sealed class DecommissioningNode : Node
+public sealed class DecommissioningNode : RemoteNode
 {
     public override string ModeName => "Decommissioning";
     public override string StatusName => "Decommissioning";
@@ -195,13 +202,24 @@ public sealed class DecommissioningNode : Node
     public override bool AcceptsBacktest => false;
 }
 
-public sealed class OfflineNode : Node
+public sealed class OfflineNode : RemoteNode
 {
     public override string ModeName => "Offline";
     public override string StatusName => "Offline";
     public override bool IsActive => false;
     public override bool AcceptsRun => false;
     public override bool AcceptsBacktest => false;
+}
+
+public sealed class LocalNode : Node
+{
+    public bool Enabled { get; set; }
+    public override string ModeName => "Mixed";
+    public override string StatusName => Enabled ? "Active" : "Disabled";
+    public override bool IsActive => Enabled;
+    public override bool AcceptsRun => Enabled;
+    public override bool AcceptsBacktest => Enabled;
+    public override bool IsLocal => true;
 }
 
 public class NodeStats

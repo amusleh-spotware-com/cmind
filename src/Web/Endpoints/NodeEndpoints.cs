@@ -27,10 +27,12 @@ public static class NodeEndpoints
                 {
                     n.Id,
                     n.Name,
-                    n.Host,
+                    Host = n is RemoteNode ? ((RemoteNode)n).Host : "local",
                     Mode = n.ModeName,
                     Status = n.StatusName,
                     n.MaxInstances,
+                    IsLocal = n is LocalNode,
+                    Enabled = n is LocalNode ? ((LocalNode)n).Enabled : (bool?)null,
                     Stats = n.LatestStats
                 }).ToListAsync();
             return rows;
@@ -38,7 +40,7 @@ public static class NodeEndpoints
 
         g.MapPost("/", async (CreateNodeRequest req, DataContext db, ISecretProtector p) =>
         {
-            Node node = CreateNodeForMode(req.Mode);
+            RemoteNode node = CreateNodeForMode(req.Mode);
             node.Name = req.Name;
             node.Host = req.Host;
             node.SshPort = req.SshPort;
@@ -54,7 +56,17 @@ public static class NodeEndpoints
             return Results.Ok(new { node.Id });
         });
 
-        g.MapDelete("/{id:guid}", async (Guid id, DataContext db, IContainerDispatcher dispatcher) =>
+        g.MapPost("/local/toggle", async (LocalToggleRequest req, DataContext db) =>
+        {
+            var node = await db.Nodes.OfType<LocalNode>().FirstOrDefaultAsync();
+            if (node is null) return Results.NotFound("local node not seeded");
+            node.Enabled = req.Enabled;
+            node.UpdatedAt = DateTimeOffset.UtcNow;
+            await db.SaveChangesAsync();
+            return Results.Ok(new { node.Id, node.Enabled });
+        });
+
+        g.MapDelete("/{id:guid}", async (Guid id, DataContext db, IContainerDispatcherFactory factory) =>
         {
             var nid = NodeId.From(id);
             var node = await db.Nodes.Include(n => n.LatestStats).FirstOrDefaultAsync(n => n.Id == nid);
@@ -66,7 +78,7 @@ public static class NodeEndpoints
                 .ToListAsync();
             foreach (var i in active)
             {
-                try { await dispatcher.StopAsync(i, default); } catch { /* swallow */ }
+                try { await factory.For(node).StopAsync(i, default); } catch { /* swallow */ }
                 var now = DateTimeOffset.UtcNow;
                 Instance? terminal = i switch
                 {
@@ -107,19 +119,19 @@ public static class NodeEndpoints
         });
 
         g.MapPost("/{id:guid}/clean-backtest-data", async (Guid id, DataContext db,
-            IContainerDispatcher dispatcher) =>
+            IContainerDispatcherFactory factory) =>
         {
             var nid = NodeId.From(id);
             var node = await db.Nodes.FirstOrDefaultAsync(n => n.Id == nid);
             if (node is null) return Results.NotFound();
-            await dispatcher.CleanBacktestDataAsync(node, null, default);
+            await factory.For(node).CleanBacktestDataAsync(node, null, default);
             return Results.Ok();
         });
 
         return app;
     }
 
-    private static Node CreateNodeForMode(string mode) => mode switch
+    private static RemoteNode CreateNodeForMode(string mode) => mode switch
     {
         "Run" => new ActiveRunNode(),
         "Backtest" => new ActiveBacktestNode(),
@@ -127,3 +139,5 @@ public static class NodeEndpoints
         _ => throw new ArgumentException($"Invalid node mode: {mode}", nameof(mode))
     };
 }
+
+public record LocalToggleRequest(bool Enabled);

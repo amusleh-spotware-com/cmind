@@ -61,7 +61,7 @@ public static class CBotEndpoints
         });
 
         g.MapPost("/{id:guid}/quick-run", async (Guid id, DataContext db, ICurrentUser u,
-            INodeScheduler scheduler, IContainerDispatcher dispatcher, ISecretProtector protector) =>
+            INodeScheduler scheduler, IContainerDispatcherFactory factory, ISecretProtector protector) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             var cid = CBotId.From(id);
@@ -84,7 +84,7 @@ public static class CBotEndpoints
             db.Instances.Add(starting);
             await db.SaveChangesAsync();
             starting.Node = node;
-            var containerId = await dispatcher.StartAsync(starting, algo, "{}", default);
+            var containerId = await factory.For(node).StartAsync(starting, algo, "{}", default);
 
             db.Instances.Remove(starting);
             var running = new RunningRunInstance

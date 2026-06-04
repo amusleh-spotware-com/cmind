@@ -135,7 +135,7 @@ public static class BuilderEndpoints
         });
 
         g.MapPost("/projects/{id:guid}/quick-run", async (Guid id, DataContext db, ICurrentUser u,
-            CBotBuilder builder, IContainerDispatcher dispatcher, ISecretProtector protector,
+            CBotBuilder builder, IContainerDispatcherFactory factory, ISecretProtector protector,
             INodeScheduler scheduler) =>
         {
             var uid = u.UserId!.Value;
@@ -162,7 +162,7 @@ public static class BuilderEndpoints
             db.Instances.Add(starting);
             await db.SaveChangesAsync();
             starting.Node = node;
-            var containerId = await dispatcher.StartAsync(starting, br.AlgoBytes, "{}", default);
+            var containerId = await factory.For(node).StartAsync(starting, br.AlgoBytes, "{}", default);
 
             db.Instances.Remove(starting);
             var running = new RunningRunInstance

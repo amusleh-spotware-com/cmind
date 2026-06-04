@@ -69,6 +69,7 @@ builder.Services.AddScoped(sp =>
     return http;
 });
 builder.Services.AddHostedService<OwnerSeeder>();
+builder.Services.AddHostedService<LocalNodeSeeder>();
 builder.Services.AddHostedService<InstanceReconciler>();
 
 var app = builder.Build();

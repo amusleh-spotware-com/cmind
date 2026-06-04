@@ -12,7 +12,8 @@ public sealed class NodeScheduler(DataContext db) : INodeScheduler
 
         var candidates = await db.Nodes
             .Where(n => n is ActiveMixedNode
-                        || (wantRun ? n is ActiveRunNode : n is ActiveBacktestNode))
+                        || (wantRun ? n is ActiveRunNode : n is ActiveBacktestNode)
+                        || (n is LocalNode && ((LocalNode)n).Enabled))
             .Include(n => n.LatestStats)
             .ToListAsync(ct);
 

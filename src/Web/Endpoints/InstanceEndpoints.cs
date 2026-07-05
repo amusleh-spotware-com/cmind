@@ -48,8 +48,14 @@ public static class InstanceEndpoints
                     i.Timeframe,
                     CBot = i.CBot.Name,
                     Node = i.Node!.Name,
-                    StartedAt = (i as RunningRunInstance)!.StartedAt,
-                    StoppedAt = (i as StoppedRunInstance)!.StoppedAt
+                    StartedAt = (i as RunningRunInstance) != null ? (i as RunningRunInstance)!.StartedAt
+                        : (i as RunningBacktestInstance) != null ? (i as RunningBacktestInstance)!.StartedAt
+                        : (i as StoppedRunInstance) != null ? (i as StoppedRunInstance)!.StartedAt
+                        : (i as CompletedBacktestInstance) != null ? (i as CompletedBacktestInstance)!.StartedAt
+                        : (DateTimeOffset?)null,
+                    StoppedAt = (i as StoppedRunInstance) != null ? (i as StoppedRunInstance)!.StoppedAt
+                        : (i as CompletedBacktestInstance) != null ? (i as CompletedBacktestInstance)!.StoppedAt
+                        : (DateTimeOffset?)null
                 })
                 .ToListAsync();
             return Results.Ok(rows);
@@ -188,7 +194,7 @@ public static class InstanceEndpoints
                     StartedAt = DateTimeOffset.UtcNow
                 };
             }
-            running.Id = starting.Id;
+            running.DataDirSubPath = starting.DataDirSubPath;
             db.Instances.Add(running);
             await db.SaveChangesAsync();
             return Results.Ok(new { running.Id });
@@ -249,7 +255,6 @@ public static class InstanceEndpoints
             {
                 return Results.Ok();
             }
-            terminal.Id = i.Id;
             db.Instances.Remove(i);
             db.Instances.Add(terminal);
             await db.SaveChangesAsync();

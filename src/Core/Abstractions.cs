@@ -27,6 +27,10 @@ public interface IContainerDispatcher
     Task<NodeStats> CollectStatsAsync(Node node, CancellationToken ct);
     Task<long> GetBacktestDataSizeAsync(Node node, CancellationToken ct);
     Task CleanBacktestDataAsync(Node node, UserId? userId, CancellationToken ct);
+
+    /// <summary>Null when the container no longer exists (already removed).</summary>
+    Task<bool?> IsRunningAsync(Instance instance, CancellationToken ct);
+    Task<string?> ReadReportAsync(Instance instance, CancellationToken ct);
 }
 
 public interface IContainerDispatcherFactory

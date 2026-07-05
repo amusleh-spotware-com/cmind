@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddSingleton<IContainerDispatcher>(sp => sp.GetRequiredService<SshContainerDispatcher>());
         services.AddSingleton<IContainerDispatcherFactory, ContainerDispatcherFactory>();
         services.AddHostedService<NodeStatsPoller>();
+        services.AddHostedService<BacktestCompletionPoller>();
         return services;
     }
 }

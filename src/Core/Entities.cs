@@ -384,6 +384,7 @@ public sealed class CompletedBacktestInstance : BacktestInstance
     public DateTimeOffset? StartedAt { get; set; }
     public DateTimeOffset StoppedAt { get; set; }
     public string? ResultJsonPath { get; set; }
+    public string? ReportJson { get; set; }
     public override string StatusName => "Completed";
     public override bool IsTerminal => true;
     public override bool IsActive => false;

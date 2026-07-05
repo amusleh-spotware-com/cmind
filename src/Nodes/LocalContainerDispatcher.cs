@@ -139,6 +139,23 @@ public sealed class LocalContainerDispatcher(
         };
     }
 
+    public async Task<bool?> IsRunningAsync(Instance instance, CancellationToken ct)
+    {
+        var containerId = ContainerCommandHelpers.GetContainerId(instance);
+        if (containerId is null) return null;
+        var (code, output) = await RunProcessAsync("docker", $"inspect -f {{{{.State.Running}}}} {containerId}", ct);
+        if (code != 0) return null;
+        return bool.TryParse(output.Trim(), out var running) && running;
+    }
+
+    public async Task<string?> ReadReportAsync(Instance instance, CancellationToken ct)
+    {
+        if (instance.DataDirSubPath is not { } workDir) return null;
+        var path = Path.Combine(workDir, FilePaths.ReportJsonFile);
+        if (!File.Exists(path)) return null;
+        return await File.ReadAllTextAsync(path, ct);
+    }
+
     public Task<long> GetBacktestDataSizeAsync(Node node, CancellationToken ct)
     {
         if (node is not LocalNode) return Task.FromResult(0L);

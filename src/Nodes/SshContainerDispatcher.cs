@@ -114,6 +114,29 @@ public sealed class SshContainerDispatcher(
         };
     }
 
+    public async Task<bool?> IsRunningAsync(Instance instance, CancellationToken ct)
+    {
+        var containerId = ContainerCommandHelpers.GetContainerId(instance);
+        if (instance.Node is not RemoteNode remote || containerId is null) return null;
+        using var client = Connect(remote);
+        var r = client.RunCommand($"docker inspect -f {{{{.State.Running}}}} {Shell(containerId)}");
+        await Task.CompletedTask;
+        if (r.ExitStatus != 0) return null;
+        return bool.TryParse(r.Result.Trim(), out var running) && running;
+    }
+
+    public async Task<string?> ReadReportAsync(Instance instance, CancellationToken ct)
+    {
+        if (instance.Node is not RemoteNode remote || instance.DataDirSubPath is not { } workDir) return null;
+        using var sftp = ConnectSftp(remote);
+        var path = $"{workDir}/{FilePaths.ReportJsonFile}";
+        await Task.CompletedTask;
+        if (!sftp.Exists(path)) return null;
+        using var ms = new MemoryStream();
+        sftp.DownloadFile(path, ms);
+        return Encoding.UTF8.GetString(ms.ToArray());
+    }
+
     public async Task<long> GetBacktestDataSizeAsync(Node node, CancellationToken ct)
     {
         if (node is not RemoteNode remote) return 0;

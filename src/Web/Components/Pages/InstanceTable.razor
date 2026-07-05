@@ -27,8 +27,7 @@
     private async Task Load()
     {
         var all = await Http.GetDynamicArrayAsync("/api/instances/");
-        var filterType = Type == "Run" ? 0 : 1;
-        _items = all.Where(i => (int)i.type == filterType).ToArray();
+        _items = all.Where(i => (string)i.kind == Type).ToArray();
     }
 
     private void Open(Guid id) => Nav.NavigateTo($"/instance/{id}");

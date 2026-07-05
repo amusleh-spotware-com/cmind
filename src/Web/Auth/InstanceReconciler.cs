@@ -57,6 +57,7 @@ public sealed class InstanceReconciler(
 
     private static void CopyCommon(Instance src, Instance dst)
     {
+        dst.Id = src.Id;
         dst.UserId = src.UserId;
         dst.CBotId = src.CBotId;
         dst.TradingAccountId = src.TradingAccountId;

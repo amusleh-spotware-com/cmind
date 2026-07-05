@@ -1,6 +1,7 @@
 using Core;
 using Core.Constants;
 using Infrastructure.Persistence;
+using Nodes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -52,6 +53,40 @@ public static class InstanceEndpoints
                 })
                 .ToListAsync();
             return Results.Ok(rows);
+        });
+
+        g.MapGet("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var iid = InstanceId.From(id);
+            var i = await db.Instances.FirstOrDefaultAsync(x => x.Id == iid);
+            if (i is null) return Results.NotFound();
+            if (u.IsInRole("Viewer"))
+            {
+                var viewer = await db.Users.OfType<ViewerUser>().FirstOrDefaultAsync(x => x.Id == uid);
+                if (viewer is null) return Results.Unauthorized();
+                if (!viewer.SeeAllInstances && !await db.ViewerGrants.AnyAsync(v => v.ViewerId == uid && v.InstanceId == iid))
+                    return Results.Forbid();
+            }
+            else if (u.IsInRole("User") && i.UserId != uid)
+            {
+                return Results.Forbid();
+            }
+
+            var equity = i is CompletedBacktestInstance completed
+                ? ContainerCommandHelpers.ParseEquityCurve(completed.ReportJson)
+                    .Select(p => new { p.Timestamp, p.Value })
+                : null;
+
+            return Results.Ok(new
+            {
+                i.Id,
+                Kind = i.KindName,
+                Status = i.StatusName,
+                i.Symbol,
+                i.Timeframe,
+                Equity = equity
+            });
         });
 
         g.MapPost("/", async (StartRequest req, DataContext db, ICurrentUser u,
@@ -153,6 +188,7 @@ public static class InstanceEndpoints
                     StartedAt = DateTimeOffset.UtcNow
                 };
             }
+            running.Id = starting.Id;
             db.Instances.Add(running);
             await db.SaveChangesAsync();
             return Results.Ok(new { running.Id });
@@ -213,6 +249,7 @@ public static class InstanceEndpoints
             {
                 return Results.Ok();
             }
+            terminal.Id = i.Id;
             db.Instances.Remove(i);
             db.Instances.Add(terminal);
             await db.SaveChangesAsync();

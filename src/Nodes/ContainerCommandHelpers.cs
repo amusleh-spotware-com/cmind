@@ -6,7 +6,7 @@ using Core.Constants;
 
 namespace Nodes;
 
-internal static class ContainerCommandHelpers
+public static class ContainerCommandHelpers
 {
     private const string WorkMount = FilePaths.ContainerWorkMount;
     private const string DataDir = FilePaths.ContainerDataDir;
@@ -107,6 +107,68 @@ internal static class ContainerCommandHelpers
         else if (s.EndsWith("B", StringComparison.Ordinal)) { s = s[..^1]; }
         double.TryParse(s, CultureInfo.InvariantCulture, out var v);
         return (long)(v * mult);
+    }
+
+    private static readonly string[] EquityArrayKeys = ["equityHistory", "equityCurve", "history", "equity"];
+    private static readonly string[] TimeKeys = ["time", "date", "timestamp", "ts"];
+    private static readonly string[] ValueKeys = ["equity", "balance", "value"];
+
+    public static List<(DateTimeOffset Timestamp, double Value)> ParseEquityCurve(string? reportJson)
+    {
+        var points = new List<(DateTimeOffset, double)>();
+        if (string.IsNullOrWhiteSpace(reportJson)) return points;
+
+        JsonDocument doc;
+        try { doc = JsonDocument.Parse(reportJson); }
+        catch (JsonException) { return points; }
+        using (doc)
+        {
+            var array = FindEquityArray(doc.RootElement);
+            if (array is null) return points;
+            foreach (var item in array.Value.EnumerateArray())
+            {
+                if (item.ValueKind != JsonValueKind.Object) continue;
+                if (!TryGetProperty(item, TimeKeys, out var timeProp)) continue;
+                if (!TryGetProperty(item, ValueKeys, out var valueProp)) continue;
+                if (!TryParseTimestamp(timeProp, out var ts)) continue;
+                if (valueProp.ValueKind != JsonValueKind.Number) continue;
+                points.Add((ts, valueProp.GetDouble()));
+            }
+        }
+        return points;
+    }
+
+    private static JsonElement? FindEquityArray(JsonElement root)
+    {
+        if (root.ValueKind != JsonValueKind.Object) return null;
+        foreach (var key in EquityArrayKeys)
+            if (root.TryGetProperty(key, out var arr) && arr.ValueKind == JsonValueKind.Array)
+                return arr;
+        return null;
+    }
+
+    private static bool TryGetProperty(JsonElement obj, string[] candidateNames, out JsonElement value)
+    {
+        foreach (var name in candidateNames)
+            if (obj.TryGetProperty(name, out value))
+                return true;
+        value = default;
+        return false;
+    }
+
+    private static bool TryParseTimestamp(JsonElement el, out DateTimeOffset ts)
+    {
+        switch (el.ValueKind)
+        {
+            case JsonValueKind.String when el.TryGetDateTimeOffset(out ts):
+                return true;
+            case JsonValueKind.Number when el.TryGetInt64(out var epochMs):
+                ts = DateTimeOffset.FromUnixTimeMilliseconds(epochMs);
+                return true;
+            default:
+                ts = default;
+                return false;
+        }
     }
 
     public static string ShellSingleQuote(string s) =>

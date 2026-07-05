@@ -27,4 +27,10 @@ public static partial class LogMessages
 
     [LoggerMessage(EventId = 1007, Level = LogLevel.Warning, Message = "Local docker command failed: {Command} -> {Error}")]
     public static partial void LocalDockerFailed(this ILogger logger, string command, string error);
+
+    [LoggerMessage(EventId = 1008, Level = LogLevel.Error, Message = "Backtest completion poll cycle failed")]
+    public static partial void BacktestPollFailed(this ILogger logger, Exception ex);
+
+    [LoggerMessage(EventId = 1009, Level = LogLevel.Warning, Message = "Backtest status check failed for instance {InstanceId}")]
+    public static partial void BacktestStatusCheckFailed(this ILogger logger, Guid instanceId, Exception ex);
 }

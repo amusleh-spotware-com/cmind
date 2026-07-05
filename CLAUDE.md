@@ -95,6 +95,8 @@ dotnet ef database update    -p src/Infrastructure -s src/Infrastructure
 - `CBotBuilder` runs locally on the web host, not remote nodes — Web container needs Docker socket access.
 - Run/backtest containers run on nodes scheduled by `NodeScheduler`, dispatched via `ContainerDispatcherFactory` to `SshContainerDispatcher` (remote) or `LocalContainerDispatcher` (web host's own `LocalNode`, seeded by `LocalNodeSeeder`).
 - cTrader Console CLI parameter passing isn't fully documented upstream; we write `params.cbotset` (ini `key=value`) to the work dir — needs runtime verification.
+- `BacktestCompletionPoller` (`src/Nodes/BacktestCompletionPoller.cs`) polls `RunningBacktestInstance` rows on `AppOptions.BacktestCompletionPollInterval`, since backtest containers self-exit (`--exit-on-stop`) instead of running indefinitely like `Run` containers. `IContainerDispatcher.IsRunningAsync` checks `docker inspect .State.Running`; once a container has exited, `ReadReportAsync` pulls `report.json` from the instance work dir. Report present → `CompletedBacktestInstance` (with `ReportJson` stored); missing → `FailedBacktestInstance`.
+- Equity curve for the `InstanceDetail` chart is parsed from `CompletedBacktestInstance.ReportJson` by `ContainerCommandHelpers.ParseEquityCurve`, which tolerantly searches a few plausible key names (`equityHistory`/`equityCurve`/`history`/`equity`, `time`/`date`/`timestamp`/`ts`, `equity`/`balance`/`value`) since the CLI's `report.json` schema isn't documented upstream — needs runtime verification against a real report.
 - MCP server is a separate process so it can scale/redeploy independently of Web.
 
 ## Deliberately not done

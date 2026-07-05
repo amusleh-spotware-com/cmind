@@ -43,7 +43,12 @@
     protected override async Task OnInitializedAsync()
     {
         _detail = await Http.GetDynamicAsync($"/api/instances/{Id}");
-        _isBacktest = _detail is not null && (int)_detail.type == 1;
+        _isBacktest = _detail is not null && (string)_detail.kind == "Backtest";
+        if (_isBacktest && _detail?.equity is not null)
+        {
+            foreach (var p in _detail.equity)
+                _equity.Add(new EquityPoint(((DateTimeOffset)p.timestamp).UtcDateTime, (double)p.value));
+        }
 
         _hub = new HubConnectionBuilder().WithUrl(Nav.ToAbsoluteUri("/hubs/logs")).Build();
         await _hub.StartAsync();

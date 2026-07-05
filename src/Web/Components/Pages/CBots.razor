@@ -82,17 +82,14 @@ else
             <MudTd DataLabel="Last Build">@FormatTs(context.LastBuildAt)</MudTd>
             <MudTd DataLabel="Status">@BuildStatusChip(context)</MudTd>
             <MudTd>
-                @if (!context.IsUpload)
-                {
-                    <MudTooltip Text="Build">
-                        <MudIconButton Icon="@Icons.Material.Filled.Build" Size="Size.Small" Color="Color.Primary"
-                                       OnClick="@(() => Build(context.Id))" />
-                    </MudTooltip>
-                    <MudTooltip Text="Edit">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
-                                       OnClick="@(() => Nav.NavigateTo($"/builder/{context.Id}"))" />
-                    </MudTooltip>
-                }
+                <MudTooltip Text="Build">
+                    <MudIconButton Icon="@Icons.Material.Filled.Build" Size="Size.Small" Color="Color.Primary"
+                                   Disabled="@context.IsUpload" OnClick="@(() => Build(context.Id))" />
+                </MudTooltip>
+                <MudTooltip Text="Edit">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                   Disabled="@context.IsUpload" OnClick="@(() => Nav.NavigateTo($"/builder/{context.Id}"))" />
+                </MudTooltip>
                 <MudTooltip Text="Run">
                     <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" Color="Color.Success"
                                    OnClick="@(() => Run(context))" />
@@ -231,11 +228,24 @@ else
                 ? $"/api/cbots/{row.Id}/quick-run"
                 : $"/api/builder/projects/{row.Id}/quick-run";
             var r = await Http.PostAsJsonAsync(url, new { });
-            if (!r.IsSuccessStatusCode) { Snack.Add("Run failed", Severity.Error); return; }
+            if (!r.IsSuccessStatusCode)
+            {
+                var reason = await r.Content.ReadAsStringAsync();
+                Snack.Add(string.IsNullOrWhiteSpace(reason) ? "Run failed" : $"Run failed: {reason}", Severity.Error);
+                return;
+            }
+            var d = await r.Content.ReadFromJsonAsync<QuickRunResponse>();
+            if (d?.Success != true)
+            {
+                Snack.Add(string.IsNullOrWhiteSpace(d?.Output) ? "Run failed" : $"Run failed: {d.Output}", Severity.Error);
+                return;
+            }
             Snack.Add("Started", Severity.Success);
         }
         finally { _busy = false; }
     }
+
+    private sealed record QuickRunResponse(bool Success, string? Output, Guid? InstanceId);
 
     private async Task Delete(CBotRow row)
     {

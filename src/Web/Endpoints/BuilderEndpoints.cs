@@ -162,7 +162,28 @@ public static class BuilderEndpoints
             db.Instances.Add(starting);
             await db.SaveChangesAsync();
             starting.Node = node;
-            var containerId = await factory.For(node).StartAsync(starting, br.AlgoBytes, "{}", default);
+
+            string containerId;
+            try
+            {
+                containerId = await factory.For(node).StartAsync(starting, br.AlgoBytes, "{}", default);
+            }
+            catch (Exception ex)
+            {
+                db.Instances.Remove(starting);
+                db.Instances.Add(new FailedRunInstance
+                {
+                    UserId = uid,
+                    CBotId = cbot.Id,
+                    NodeId = node.Id,
+                    DockerImageTag = "latest",
+                    Symbol = "EURUSD",
+                    Timeframe = "h1",
+                    FailureReason = ex.Message
+                });
+                await db.SaveChangesAsync();
+                return Results.Ok(new { success = false, output = ex.Message, instanceId = (Guid?)null });
+            }
 
             db.Instances.Remove(starting);
             var running = new RunningRunInstance

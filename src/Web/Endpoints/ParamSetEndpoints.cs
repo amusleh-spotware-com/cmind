@@ -39,8 +39,8 @@ public static class ParamSetEndpoints
         g.MapPost("/", async (CreateParamSetRequest req, DataContext db, ICurrentUser u) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
-            try { _ = System.Text.Json.JsonDocument.Parse(req.JsonContent); }
-            catch { return Results.BadRequest("invalid JSON"); }
+            if (string.IsNullOrWhiteSpace(req.Name)) return Results.BadRequest("name is required");
+            if (!IsNonEmptyJson(req.JsonContent)) return Results.BadRequest("content cannot be empty");
             db.ParamSets.Add(new ParamSet
             {
                 UserId = uid,
@@ -58,8 +58,8 @@ public static class ParamSetEndpoints
             var pid = ParamSetId.From(id);
             var p = await db.ParamSets.FirstOrDefaultAsync(x => x.Id == pid && x.UserId == uid);
             if (p is null) return Results.NotFound();
-            try { _ = System.Text.Json.JsonDocument.Parse(req.JsonContent); }
-            catch { return Results.BadRequest("invalid JSON"); }
+            if (string.IsNullOrWhiteSpace(req.Name)) return Results.BadRequest("name is required");
+            if (!IsNonEmptyJson(req.JsonContent)) return Results.BadRequest("content cannot be empty");
             p.Name = req.Name;
             p.JsonContent = req.JsonContent;
             p.UpdatedAt = DateTimeOffset.UtcNow;
@@ -79,5 +79,22 @@ public static class ParamSetEndpoints
         });
 
         return app;
+    }
+
+    private static bool IsNonEmptyJson(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content)) return false;
+        System.Text.Json.JsonDocument doc;
+        try { doc = System.Text.Json.JsonDocument.Parse(content); }
+        catch { return false; }
+        using (doc)
+        {
+            return doc.RootElement.ValueKind switch
+            {
+                System.Text.Json.JsonValueKind.Object => doc.RootElement.EnumerateObject().Any(),
+                System.Text.Json.JsonValueKind.Array => doc.RootElement.EnumerateArray().Any(),
+                _ => true
+            };
+        }
     }
 }

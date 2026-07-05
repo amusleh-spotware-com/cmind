@@ -13,7 +13,7 @@
 
 @if (_cbotId is not null)
 {
-    <MudTextField @bind-Value="_name" Label="Name" />
+    <MudTextField @bind-Value="_name" Label="Name" Required="true" RequiredError="Name is required" />
     <MudTextField @bind-Value="_json" Label="JSON" Lines="8" Variant="Variant.Outlined" Class="mt-2" />
     <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Primary" Class="mt-2">Save</MudButton>
 
@@ -46,6 +46,9 @@
     private async Task Save()
     {
         if (_cbotId is null) return;
+        if (string.IsNullOrWhiteSpace(_name)) { Snack.Add("Name is required", Severity.Error); return; }
+        if (!IsNonEmptyJson(_json)) { Snack.Add("Content cannot be empty", Severity.Error); return; }
+
         var url = _editing is null ? "/api/paramsets" : $"/api/paramsets/{_editing}";
         var method = _editing is null ? HttpMethod.Post : HttpMethod.Put;
         var req = new HttpRequestMessage(method, url)
@@ -56,6 +59,23 @@
         Snack.Add(r.IsSuccessStatusCode ? "Saved" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
         _name = ""; _json = "{}"; _editing = null;
         await OnParametersSetAsync();
+    }
+
+    private static bool IsNonEmptyJson(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content)) return false;
+        System.Text.Json.JsonDocument doc;
+        try { doc = System.Text.Json.JsonDocument.Parse(content); }
+        catch { return false; }
+        using (doc)
+        {
+            return doc.RootElement.ValueKind switch
+            {
+                System.Text.Json.JsonValueKind.Object => doc.RootElement.EnumerateObject().Any(),
+                System.Text.Json.JsonValueKind.Array => doc.RootElement.EnumerateArray().Any(),
+                _ => true
+            };
+        }
     }
 
     private async Task Edit(Guid id)

@@ -84,7 +84,28 @@ public static class CBotEndpoints
             db.Instances.Add(starting);
             await db.SaveChangesAsync();
             starting.Node = node;
-            var containerId = await factory.For(node).StartAsync(starting, algo, "{}", default);
+
+            string containerId;
+            try
+            {
+                containerId = await factory.For(node).StartAsync(starting, algo, "{}", default);
+            }
+            catch (Exception ex)
+            {
+                db.Instances.Remove(starting);
+                db.Instances.Add(new FailedRunInstance
+                {
+                    UserId = uid,
+                    CBotId = cbot.Id,
+                    NodeId = node.Id,
+                    DockerImageTag = "latest",
+                    Symbol = "EURUSD",
+                    Timeframe = "h1",
+                    FailureReason = ex.Message
+                });
+                await db.SaveChangesAsync();
+                return Results.Ok(new { success = false, output = ex.Message, instanceId = (Guid?)null });
+            }
 
             db.Instances.Remove(starting);
             var running = new RunningRunInstance
@@ -100,7 +121,7 @@ public static class CBotEndpoints
             };
             db.Instances.Add(running);
             await db.SaveChangesAsync();
-            return Results.Ok(new { instanceId = running.Id.Value });
+            return Results.Ok(new { success = true, output = (string?)null, instanceId = (Guid?)running.Id.Value });
         });
 
         g.MapDelete("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u) =>

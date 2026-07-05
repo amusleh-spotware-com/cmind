@@ -5,9 +5,9 @@
 > migrations, dependency wiring, and documentation were all produced by an AI agent through an
 > interactive coding session. Treat the code as a reference experiment, not production-ready.
 
-An ASP.NET Core + Blazor Server web application for building, running, backtesting, and (later) optimizing
+ASP.NET Core + Blazor Server app for building, running, backtesting, and (later) optimizing
 cTrader cBots through the official [cTrader Console Docker image](https://github.com/spotware/ctrader-console-docker),
-distributed across one or more SSH-accessible nodes.
+scheduled across SSH-accessible nodes and/or the local web host.
 
 ## Stack
 
@@ -27,16 +27,16 @@ distributed across one or more SSH-accessible nodes.
 
 ## Solution layout
 
-| Project              | Description                                                                 |
-| -------------------- | --------------------------------------------------------------------------- |
-| `src/AppHost`        | .NET Aspire orchestrator (Postgres, Web, MCP, pgAdmin)                      |
-| `src/Core`           | Domain entities, value objects, strong-typed IDs, options, log delegates    |
-| `src/Infrastructure` | EF Core, persistence, encryption, Argon2, GHCR client, OTel/health defaults |
-| `src/Nodes`          | Node scheduler, SSH container dispatcher, stats poller, local cBot builder  |
-| `src/Web`            | Blazor Server SSR + Minimal API + SignalR LogsHub                           |
-| `src/Mcp`            | MCP server (HTTP + SSE) for AI integrations                                 |
-| `tests/UnitTests`    | xUnit unit tests                                                            |
-| `tests/IntegrationTests` | xUnit + Testcontainers integration tests                                |
+| Project              | Description                                                                    |
+| -------------------- | ------------------------------------------------------------------------------- |
+| `src/AppHost`        | .NET Aspire orchestrator (Postgres, Web, MCP, pgAdmin)                          |
+| `src/Core`           | Domain entities, value objects, strong-typed IDs, options, log delegates        |
+| `src/Infrastructure` | EF Core (`DataContext`), encryption, Argon2, GHCR client, OTel/health defaults  |
+| `src/Nodes`          | Node scheduler, SSH + local container dispatchers, stats poller, cBot builder   |
+| `src/Web`            | Blazor Server SSR + Minimal API + SignalR LogsHub (cBots, builder IDE, run/backtest, param sets, nodes, accounts) |
+| `src/Mcp`            | MCP server (HTTP + SSE) for AI integrations                                     |
+| `tests/UnitTests`    | xUnit unit tests                                                                |
+| `tests/IntegrationTests` | xUnit + Testcontainers integration tests                                    |
 
 ## Prerequisites
 
@@ -47,7 +47,7 @@ distributed across one or more SSH-accessible nodes.
 ## Configuration
 
 All settings live under the `Ctw` section and are bound to a strongly-typed
-[`CtwOptions`](src/Core/Options/CtwOptions.cs) record consumed via `IOptionsMonitor<CtwOptions>`.
+[`AppOptions`](src/Core/Options/AppOptions.cs) record consumed via `IOptionsMonitor<AppOptions>`.
 
 ```jsonc
 {
@@ -59,47 +59,30 @@ All settings live under the `Ctw` section and are bound to a strongly-typed
     "DefaultDockerImage": "ghcr.io/spotware/ctrader-console",
     "DefaultDockerTag": "latest",
     "BuildWorkRoot": "/var/ctw/builds",
-    "BuildImage": "mcr.microsoft.com/dotnet/sdk:9.0"
+    "BuildImage": "mcr.microsoft.com/dotnet/sdk:9.0",
+    "LocalNode": { "Enabled": true, "WorkRoot": "/var/ctw/local", "MaxInstances": 5 }
   }
 }
 ```
 
-## Build
+`LocalNode` (disabled by default) lets run/backtest containers be scheduled on the web
+host itself, dispatched via `LocalContainerDispatcher` instead of SSH.
+
+## Build & run
 
 ```bash
-dotnet restore
-dotnet build
+dotnet restore && dotnet build
+dotnet run --project src/AppHost   # Aspire: Postgres + pgAdmin + Web + MCP, with a live dashboard
+dotnet run --project src/Web       # Web app only — needs connection string "ctwdb" and Ctw:* config
+                                    # (user-secrets, Ctw__OwnerEmail-style env vars, or appsettings.Development.json)
 ```
 
-## Database migration
-
-Migrations live in `src/Infrastructure/Persistence/Migrations`. The Web app calls
-`Database.MigrateAsync()` on startup via the `OwnerSeeder` hosted service, so usually you
-do not need to apply migrations manually.
-
-To regenerate:
+Migrations live in `src/Infrastructure/Persistence/Migrations` and apply automatically on
+startup via `OwnerSeeder`. To regenerate:
 
 ```bash
 dotnet ef migrations add <Name> -p src/Infrastructure -s src/Infrastructure -o Persistence/Migrations
 ```
-
-## Run (Aspire)
-
-```bash
-dotnet run --project src/AppHost
-```
-
-Aspire spins up Postgres (with a persistent volume + pgAdmin), the Web app, and the MCP server,
-and provides a dashboard with live logs and telemetry.
-
-## Run the Web app standalone
-
-```bash
-dotnet run --project src/Web
-```
-
-Provide a connection string named `ctwdb` and the `Ctw:*` configuration values either through
-user-secrets, environment variables (`Ctw__OwnerEmail`, etc.), or `appsettings.Development.json`.
 
 ## Tests
 
@@ -107,8 +90,7 @@ user-secrets, environment variables (`Ctw__OwnerEmail`, etc.), or `appsettings.D
 dotnet test
 ```
 
-Integration tests use Testcontainers to spin up a real PostgreSQL container — Docker must be
-available.
+Integration tests use Testcontainers for a real PostgreSQL container — Docker must be available.
 
 ## Health checks
 

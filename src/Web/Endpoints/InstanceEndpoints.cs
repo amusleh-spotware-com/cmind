@@ -38,26 +38,19 @@ public static class InstanceEndpoints
             {
                 q = q.Where(i => i.UserId == uid);
             }
-            var rows = await q.OrderByDescending(i => i.CreatedAt).Take(200)
-                .Select(i => new
-                {
-                    i.Id,
-                    Kind = i.KindName,
-                    Status = i.StatusName,
-                    i.Symbol,
-                    i.Timeframe,
-                    CBot = i.CBot.Name,
-                    Node = i.Node!.Name,
-                    StartedAt = (i as RunningRunInstance) != null ? (i as RunningRunInstance)!.StartedAt
-                        : (i as RunningBacktestInstance) != null ? (i as RunningBacktestInstance)!.StartedAt
-                        : (i as StoppedRunInstance) != null ? (i as StoppedRunInstance)!.StartedAt
-                        : (i as CompletedBacktestInstance) != null ? (i as CompletedBacktestInstance)!.StartedAt
-                        : (DateTimeOffset?)null,
-                    StoppedAt = (i as StoppedRunInstance) != null ? (i as StoppedRunInstance)!.StoppedAt
-                        : (i as CompletedBacktestInstance) != null ? (i as CompletedBacktestInstance)!.StoppedAt
-                        : (DateTimeOffset?)null
-                })
-                .ToListAsync();
+            var instances = await q.OrderByDescending(i => i.CreatedAt).Take(200).ToListAsync();
+            var rows = instances.Select(i => new
+            {
+                i.Id,
+                Kind = i.KindName,
+                Status = i.StatusName,
+                i.Symbol,
+                i.Timeframe,
+                CBot = i.CBot.Name,
+                Node = i.Node!.Name,
+                StartedAt = GetStartedAt(i),
+                StoppedAt = GetStoppedAt(i)
+            });
             return Results.Ok(rows);
         });
 
@@ -277,4 +270,26 @@ public static class InstanceEndpoints
 
         return app;
     }
+
+    internal static DateTimeOffset? GetStartedAt(Instance i) => i switch
+    {
+        RunningRunInstance r => r.StartedAt,
+        RunningBacktestInstance r => r.StartedAt,
+        StoppingRunInstance r => r.StartedAt,
+        StoppingBacktestInstance r => r.StartedAt,
+        StoppedRunInstance r => r.StartedAt,
+        CompletedBacktestInstance r => r.StartedAt,
+        FailedRunInstance r => r.StartedAt,
+        FailedBacktestInstance r => r.StartedAt,
+        _ => null
+    };
+
+    internal static DateTimeOffset? GetStoppedAt(Instance i) => i switch
+    {
+        StoppedRunInstance r => r.StoppedAt,
+        CompletedBacktestInstance r => r.StoppedAt,
+        FailedRunInstance r => r.StoppedAt,
+        FailedBacktestInstance r => r.StoppedAt,
+        _ => null
+    };
 }

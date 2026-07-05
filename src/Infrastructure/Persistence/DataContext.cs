@@ -109,9 +109,6 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<Node>(e =>
         {
             e.HasIndex(x => x.Name).IsUnique();
-            e.Property<string>(nameof(RemoteNode.Host)).IsRequired(false);
-            e.Property<string>(nameof(RemoteNode.SshUser)).IsRequired(false);
-            e.Property<byte[]>(nameof(RemoteNode.EncryptedSshKey)).IsRequired(false);
             e.HasDiscriminator<string>("Kind")
                 .HasValue<ActiveRunNode>("ActiveRun")
                 .HasValue<ActiveBacktestNode>("ActiveBacktest")

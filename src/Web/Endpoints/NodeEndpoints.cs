@@ -33,7 +33,18 @@ public static class NodeEndpoints
                     n.MaxInstances,
                     IsLocal = n is LocalNode,
                     Enabled = n is LocalNode ? ((LocalNode)n).Enabled : (bool?)null,
-                    Stats = n.LatestStats
+                    Stats = n.LatestStats == null ? null : new
+                    {
+                        n.LatestStats.CpuPercent,
+                        n.LatestStats.MemUsedBytes,
+                        n.LatestStats.MemTotalBytes,
+                        n.LatestStats.DiskUsedBytes,
+                        n.LatestStats.DiskTotalBytes,
+                        n.LatestStats.BacktestDataUsedBytes,
+                        n.LatestStats.RunningCount,
+                        n.LatestStats.BacktestCount,
+                        n.LatestStats.UpdatedAt
+                    }
                 }).ToListAsync();
             return rows;
         });
@@ -73,9 +84,9 @@ public static class NodeEndpoints
             if (node is null) return Results.NotFound();
 
             // Stop any active instances on this node
-            var active = await db.Instances
-                .Where(i => i.NodeId == nid && i.IsActive)
-                .ToListAsync();
+            var active = (await db.Instances.Where(i => i.NodeId == nid).ToListAsync())
+                .Where(i => i.IsActive)
+                .ToList();
             foreach (var i in active)
             {
                 try { await factory.For(node).StopAsync(i, default); } catch { /* swallow */ }

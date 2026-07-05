@@ -1,0 +1,45 @@
+using Core;
+using FluentAssertions;
+using Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Xunit;
+
+namespace IntegrationTests;
+
+public class RemoteNodePersistenceTests(PostgresFixture fixture) : IClassFixture<PostgresFixture>
+{
+    private DataContext CreateContext() =>
+        new(new DbContextOptionsBuilder<DataContext>()
+            .UseNpgsql(fixture.Container.GetConnectionString())
+            .Options);
+
+    [Fact]
+    public async Task RemoteNode_Host_and_SshUser_survive_a_round_trip()
+    {
+        await using var setup = CreateContext();
+        await setup.Database.MigrateAsync();
+
+        var node = new ActiveRunNode
+        {
+            Name = $"remote-{Guid.NewGuid():N}",
+            Host = "10.20.30.40",
+            SshUser = "deployer",
+            EncryptedSshKey = "key-bytes"u8.ToArray(),
+            DataDirPath = "/var/ctw/remote"
+        };
+
+        await using (var writeContext = CreateContext())
+        {
+            writeContext.Nodes.Add(node);
+            await writeContext.SaveChangesAsync();
+        }
+
+        await using var readContext = CreateContext();
+        var reloaded = await readContext.Nodes.OfType<ActiveRunNode>()
+            .FirstAsync(n => n.Id == node.Id);
+
+        reloaded.Host.Should().Be("10.20.30.40");
+        reloaded.SshUser.Should().Be("deployer");
+        reloaded.EncryptedSshKey.Should().Equal("key-bytes"u8.ToArray());
+    }
+}

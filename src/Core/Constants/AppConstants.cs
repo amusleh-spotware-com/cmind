@@ -91,9 +91,16 @@ public static class CliFlags
     public const string DataDir = "--data-dir";
     public const string Start = "--start";
     public const string End = "--end";
+    public const string DataMode = "--data-mode";
     public const string ReportJson = "--report-json";
     public const string Report = "--report";
     public const string ExitOnStop = "--exit-on-stop";
+}
+
+public static class BacktestDefaults
+{
+    public const string DataMode = "m1";
+    public const string DateFormat = "dd/MM/yyyy HH:mm";
 }
 
 public static class CliCommands

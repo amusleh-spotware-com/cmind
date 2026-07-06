@@ -32,8 +32,9 @@ public sealed class LocalContainerDispatcher(
         Directory.CreateDirectory(Path.Combine(workDir, "data"));
 
         await File.WriteAllBytesAsync(Path.Combine(workDir, AlgoFile), algoBytes, ct);
-        await File.WriteAllTextAsync(Path.Combine(workDir, ParamsFile),
-            ContainerCommandHelpers.JsonToCbotset(paramJson), ct);
+        var cbotset = ContainerCommandHelpers.JsonToCbotset(paramJson);
+        await File.WriteAllTextAsync(Path.Combine(workDir, ParamsFile), cbotset, ct);
+        var hasParams = !string.IsNullOrWhiteSpace(cbotset);
 
         var ctid = string.Empty;
         if (instance.TradingAccount is { } ta && ta.CTid is not null)
@@ -48,7 +49,7 @@ public sealed class LocalContainerDispatcher(
 
         var image = $"{DockerImages.CtraderConsole}:{instance.DockerImageTag}";
         var name = $"{DockerCommands.ContainerNamePrefix}{instance.KindName.ToLowerInvariant()}-{instance.Id.Value:N}";
-        var cmdArgs = ContainerCommandHelpers.BuildConsoleArgs(instance, ctid);
+        var cmdArgs = ContainerCommandHelpers.BuildConsoleArgs(instance, ctid, hasParams);
 
         var dockerArgs = new StringBuilder();
         dockerArgs.Append(DockerCommands.RunDetached).Append(' ');

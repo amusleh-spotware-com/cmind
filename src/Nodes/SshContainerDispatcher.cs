@@ -31,8 +31,10 @@ public sealed class SshContainerDispatcher(
         var cbotsetPath = $"{workDir}/{ParamsFile}";
         var pwdPath = $"{workDir}/{PwdFile}";
         using (var ms = new MemoryStream(algoBytes)) sftp.UploadFile(ms, algoPath, true);
-        using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(ContainerCommandHelpers.JsonToCbotset(paramJson))))
+        var cbotset = ContainerCommandHelpers.JsonToCbotset(paramJson);
+        using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(cbotset)))
             sftp.UploadFile(ms, cbotsetPath, true);
+        var hasParams = !string.IsNullOrWhiteSpace(cbotset);
 
         var ctid = string.Empty;
         if (instance.TradingAccount is { } ta && ta.CTid is not null)
@@ -52,7 +54,7 @@ public sealed class SshContainerDispatcher(
             $"{DockerCommands.LabelFlag} {DockerLabels.Type}={instance.KindName}";
         var mountWork = $"{DockerCommands.VolumeFlag} {Shell(workDir)}:{WorkMount}";
 
-        var cmdArgs = ContainerCommandHelpers.BuildConsoleArgs(instance, ctid);
+        var cmdArgs = ContainerCommandHelpers.BuildConsoleArgs(instance, ctid, hasParams);
         var docker = $"docker {DockerCommands.RunDetached} {DockerCommands.NameFlag} {name} {labels} {mountWork} {image} {cmdArgs}";
 
         log.StartingContainer(remote.Host, docker);

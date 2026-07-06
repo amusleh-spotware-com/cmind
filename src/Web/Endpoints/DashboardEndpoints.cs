@@ -45,7 +45,8 @@ public static class DashboardEndpoints
                 userCount = await db.Users.CountAsync();
                 nodeCount = await db.Nodes.CountAsync();
                 activeNodes = await db.Nodes
-                    .CountAsync(n => n is ActiveRunNode || n is ActiveBacktestNode || n is ActiveMixedNode);
+                    .CountAsync(n => n is ActiveRunNode || n is ActiveBacktestNode || n is ActiveMixedNode
+                                     || (n is LocalNode && ((LocalNode)n).Enabled));
             }
 
             return Results.Ok(new

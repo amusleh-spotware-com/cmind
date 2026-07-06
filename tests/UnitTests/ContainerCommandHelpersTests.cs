@@ -1,3 +1,4 @@
+using Core;
 using FluentAssertions;
 using Nodes;
 using Xunit;
@@ -6,6 +7,116 @@ namespace UnitTests;
 
 public class ContainerCommandHelpersTests
 {
+    [Fact]
+    public void BuildConsoleArgs_backtest_emits_default_data_mode_and_report_flags()
+    {
+        var i = new StartingBacktestInstance
+        {
+            Symbol = "EURUSD", Timeframe = "h1",
+            BacktestSettingsJson = """{"from":"2024-01-01","to":"2024-02-01"}"""
+        };
+
+        var args = ContainerCommandHelpers.BuildConsoleArgs(i, "", false);
+
+        args.Should().StartWith("backtest /mnt/work/cbot.algo");
+        args.Should().Contain("--data-dir /mnt/work/data");
+        args.Should().Contain("--data-mode m1");
+        args.Should().Contain("--report-json /mnt/work/report.json");
+        args.Should().Contain("--report /mnt/work/report.html");
+        args.Should().Contain("--exit-on-stop");
+    }
+
+    [Fact]
+    public void BuildConsoleArgs_backtest_reformats_from_to_dates()
+    {
+        var i = new StartingBacktestInstance
+        {
+            Symbol = "EURUSD", Timeframe = "h1",
+            BacktestSettingsJson = """{"from":"2024-01-01","to":"2024-02-05"}"""
+        };
+
+        var args = ContainerCommandHelpers.BuildConsoleArgs(i, "", false);
+
+        args.Should().Contain("--start \"01/01/2024 00:00\"");
+        args.Should().Contain("--end \"05/02/2024 00:00\"");
+    }
+
+    [Fact]
+    public void BuildConsoleArgs_backtest_honors_data_mode_override()
+    {
+        var i = new StartingBacktestInstance
+        {
+            Symbol = "EURUSD", Timeframe = "h1",
+            BacktestSettingsJson = """{"from":"2024-01-01","to":"2024-02-01","dataMode":"tick"}"""
+        };
+
+        var args = ContainerCommandHelpers.BuildConsoleArgs(i, "", false);
+
+        args.Should().Contain("--data-mode tick");
+        args.Should().NotContain("--dataMode");
+    }
+
+    [Fact]
+    public void BuildConsoleArgs_passes_params_positional_when_present()
+    {
+        var i = new StartingBacktestInstance { Symbol = "EURUSD", Timeframe = "h1" };
+
+        var withParams = ContainerCommandHelpers.BuildConsoleArgs(i, "", true);
+        var withoutParams = ContainerCommandHelpers.BuildConsoleArgs(i, "", false);
+
+        withParams.Should().Contain("/mnt/work/cbot.algo /mnt/work/params.cbotset");
+        withoutParams.Should().NotContain("params.cbotset");
+    }
+
+    [Fact]
+    public void BuildConsoleArgs_run_has_no_backtest_flags()
+    {
+        var i = new StartingRunInstance { Symbol = "EURUSD", Timeframe = "h1" };
+
+        var args = ContainerCommandHelpers.BuildConsoleArgs(i, "", false);
+
+        args.Should().StartWith("run /mnt/work/cbot.algo");
+        args.Should().NotContain("--data-mode");
+        args.Should().NotContain("--data-dir");
+        args.Should().NotContain("--report-json");
+        args.Should().NotContain("--exit-on-stop");
+    }
+
+    [Fact]
+    public void JsonToCbotset_wraps_params_in_cbotset_json_with_string_values()
+    {
+        var result = ContainerCommandHelpers.JsonToCbotset("""{"Message":"hi","Periods":14}""");
+
+        result.Should().Be("""{"Parameters":{"Message":"hi","Periods":"14"}}""");
+    }
+
+    [Fact]
+    public void JsonToCbotset_returns_empty_for_empty_or_invalid()
+    {
+        ContainerCommandHelpers.JsonToCbotset("{}").Should().BeEmpty();
+        ContainerCommandHelpers.JsonToCbotset("not json").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ParseEquityCurve_parses_nested_equity_points()
+    {
+        const string json = """
+        {
+            "equity": {
+                "points": [
+                    { "timestamp": 1704067200000, "balance": 1000000, "minEquity": 1, "maxEquity": 2 }
+                ]
+            }
+        }
+        """;
+
+        var points = ContainerCommandHelpers.ParseEquityCurve(json);
+
+        points.Should().ContainSingle();
+        points[0].Value.Should().Be(1000000);
+        points[0].Timestamp.Should().Be(DateTimeOffset.FromUnixTimeMilliseconds(1704067200000));
+    }
+
     [Fact]
     public void ParseEquityCurve_returns_empty_for_null_or_blank()
     {

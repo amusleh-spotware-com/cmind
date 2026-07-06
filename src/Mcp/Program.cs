@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddNpgsqlDbContext<DataContext>(ConnectionStrings.CtwDb);
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthentication(AuthSchemes.McpKey)
     .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, McpKeyAuthHandler>(
@@ -15,7 +16,7 @@ builder.Services.AddAuthentication(AuthSchemes.McpKey)
 builder.Services.AddAuthorization();
 
 builder.Services.AddMcpServer()
-    .WithHttpTransport()
+    .WithHttpTransport(o => o.Stateless = true)
     .WithTools<CBotTools>()
     .WithTools<InstanceTools>();
 

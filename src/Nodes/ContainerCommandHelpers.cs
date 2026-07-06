@@ -11,9 +11,11 @@ public static class ContainerCommandHelpers
     private const string WorkMount = FilePaths.ContainerWorkMount;
     private const string DataDir = FilePaths.ContainerDataDir;
     private const string AlgoFile = FilePaths.CbotAlgoFile;
+    private const string ParamsFile = FilePaths.ParamsCbotsetFile;
     private const string PwdFile = FilePaths.CtidPwdFile;
     private const string ReportJson = FilePaths.ReportJsonFile;
     private const string ReportHtml = FilePaths.ReportHtmlFile;
+    private const string PointsKey = "points";
 
     public static string? GetContainerId(Instance i) => i switch
     {
@@ -30,51 +32,85 @@ public static class ContainerCommandHelpers
         _ => null
     };
 
-    public static string BuildConsoleArgs(Instance i, string ctid)
+    public static string BuildConsoleArgs(Instance i, string ctid, bool hasParams)
     {
         var sb = new StringBuilder();
         var isBacktest = i is BacktestInstance;
         sb.Append(isBacktest ? CliCommands.Backtest : CliCommands.Run).Append(' ');
         sb.Append($"{WorkMount}/{AlgoFile} ");
+        if (hasParams) sb.Append($"{WorkMount}/{ParamsFile} ");
         if (!string.IsNullOrEmpty(ctid))
             sb.Append($"{CliFlags.Ctid} {ctid} {CliFlags.PwdFile} {WorkMount}/{PwdFile} ");
         if (i.TradingAccount is { } ta) sb.Append($"{CliFlags.Account} {ta.AccountNumber} ");
         if (!string.IsNullOrEmpty(i.Symbol)) sb.Append($"{CliFlags.Symbol} {i.Symbol} ");
         if (!string.IsNullOrEmpty(i.Timeframe)) sb.Append($"{CliFlags.Period} {i.Timeframe} ");
-        sb.Append($"{CliFlags.DataDir} {DataDir} ");
 
-        if (i is BacktestInstance b && !string.IsNullOrEmpty(b.BacktestSettingsJson))
+        if (i is BacktestInstance b)
         {
-            var doc = JsonDocument.Parse(b.BacktestSettingsJson);
-            foreach (var p in doc.RootElement.EnumerateObject())
+            sb.Append($"{CliFlags.DataDir} {DataDir} ");
+            var dataMode = BacktestDefaults.DataMode;
+            if (!string.IsNullOrEmpty(b.BacktestSettingsJson))
             {
-                var name = p.Name.ToLowerInvariant() switch
+                var doc = JsonDocument.Parse(b.BacktestSettingsJson);
+                foreach (var p in doc.RootElement.EnumerateObject())
                 {
-                    "from" => "start",
-                    "to" => "end",
-                    _ => p.Name
-                };
-                var val = p.Value.ValueKind == JsonValueKind.String
-                    ? $"\"{p.Value.GetString()}\""
-                    : p.Value.ToString();
-                sb.Append($"--{name} {val} ");
+                    var lower = p.Name.ToLowerInvariant();
+                    if (lower is "datamode" or "data-mode")
+                    {
+                        var mode = p.Value.ValueKind == JsonValueKind.String
+                            ? p.Value.GetString()
+                            : p.Value.ToString();
+                        if (!string.IsNullOrWhiteSpace(mode)) dataMode = mode!;
+                        continue;
+                    }
+                    var name = lower switch
+                    {
+                        "from" => "start",
+                        "to" => "end",
+                        _ => p.Name
+                    };
+                    var val = name is "start" or "end"
+                        ? FormatBacktestDate(p.Value)
+                        : p.Value.ValueKind == JsonValueKind.String
+                            ? $"\"{p.Value.GetString()}\""
+                            : p.Value.ToString();
+                    sb.Append($"--{name} {val} ");
+                }
             }
+            sb.Append($"{CliFlags.DataMode} {dataMode} ");
             sb.Append($"{CliFlags.ReportJson} {WorkMount}/{ReportJson} {CliFlags.Report} {WorkMount}/{ReportHtml} {CliFlags.ExitOnStop} ");
         }
         return sb.ToString().Trim();
+    }
+
+    private static string FormatBacktestDate(JsonElement el)
+    {
+        var raw = el.ValueKind == JsonValueKind.String ? el.GetString() : el.ToString();
+        if (!string.IsNullOrWhiteSpace(raw)
+            && DateTimeOffset.TryParse(raw, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var dt))
+            return $"\"{dt.ToString(BacktestDefaults.DateFormat, CultureInfo.InvariantCulture)}\"";
+        return $"\"{raw}\"";
     }
 
     public static string JsonToCbotset(string json)
     {
         try
         {
-            var doc = JsonDocument.Parse(json);
-            var sb = new StringBuilder();
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.ValueKind != JsonValueKind.Object) return string.Empty;
+            var parameters = new Dictionary<string, string>();
             foreach (var p in doc.RootElement.EnumerateObject())
-                sb.AppendLine($"{p.Name}={p.Value}");
-            return sb.ToString();
+            {
+                var value = p.Value.ValueKind == JsonValueKind.String
+                    ? p.Value.GetString() ?? string.Empty
+                    : p.Value.ToString();
+                parameters[p.Name] = value;
+            }
+            return parameters.Count == 0
+                ? string.Empty
+                : JsonSerializer.Serialize(new { Parameters = parameters });
         }
-        catch { return json; }
+        catch { return string.Empty; }
     }
 
     public static (double, long, long) ParseDockerStats(string line)
@@ -144,6 +180,10 @@ public static class ContainerCommandHelpers
         foreach (var key in EquityArrayKeys)
             if (root.TryGetProperty(key, out var arr) && arr.ValueKind == JsonValueKind.Array)
                 return arr;
+        foreach (var key in EquityArrayKeys)
+            if (root.TryGetProperty(key, out var obj) && obj.ValueKind == JsonValueKind.Object
+                && obj.TryGetProperty(PointsKey, out var pts) && pts.ValueKind == JsonValueKind.Array)
+                return pts;
         return null;
     }
 

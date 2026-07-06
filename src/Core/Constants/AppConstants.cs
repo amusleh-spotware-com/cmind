@@ -124,5 +124,7 @@ public static class DockerCommands
     public const string BuildCommand = "sh -c \"cd /work && dotnet build -c Release -o /work/out 2>&1\"";
     public const string BuildOutDir = "out";
     public const string BuildMount = "/work";
+    public const string BuildNugetVolume = "ctw-nuget-cache";
+    public const string BuildNugetMount = "/root/.nuget/packages";
     public const string AlgoExtensionPattern = "*.algo";
 }

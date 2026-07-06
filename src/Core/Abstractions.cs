@@ -30,6 +30,9 @@ public interface IContainerDispatcher
 
     /// <summary>Null when the container no longer exists (already removed).</summary>
     Task<bool?> IsRunningAsync(Instance instance, CancellationToken ct);
+
+    /// <summary>Exit code of the (stopped) container, or null when it cannot be determined.</summary>
+    Task<int?> GetExitCodeAsync(Instance instance, CancellationToken ct);
     Task<string?> ReadReportAsync(Instance instance, CancellationToken ct);
 }
 

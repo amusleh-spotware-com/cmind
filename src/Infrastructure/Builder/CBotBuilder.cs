@@ -64,6 +64,7 @@ public sealed class CBotBuilder(
         // the build writes its output to /work/out.
         var dockerArgs =
             $"{DockerCommands.RunBuild} " +
+            $"{DockerCommands.VolumeFlag} {DockerCommands.BuildNugetVolume}:{DockerCommands.BuildNugetMount} " +
             $"{DockerCommands.VolumeFlag} \"{workDir}\":{DockerCommands.BuildMount} " +
             $"{opts.BuildImage} {DockerCommands.BuildCommand}";
         var (code, buildLog) = await RunProcessAsync(DockerExe, dockerArgs, workDir, ct);

@@ -149,6 +149,15 @@ public sealed class LocalContainerDispatcher(
         return bool.TryParse(output.Trim(), out var running) && running;
     }
 
+    public async Task<int?> GetExitCodeAsync(Instance instance, CancellationToken ct)
+    {
+        var containerId = ContainerCommandHelpers.GetContainerId(instance);
+        if (containerId is null) return null;
+        var (code, output) = await RunProcessAsync("docker", $"inspect -f {{{{.State.ExitCode}}}} {containerId}", ct);
+        if (code != 0) return null;
+        return int.TryParse(output.Trim(), out var exit) ? exit : null;
+    }
+
     public async Task<string?> ReadReportAsync(Instance instance, CancellationToken ct)
     {
         if (instance.DataDirSubPath is not { } workDir) return null;

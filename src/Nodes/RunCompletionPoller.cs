@@ -15,6 +15,8 @@ public sealed class RunCompletionPoller(
     IOptionsMonitor<AppOptions> options,
     ILogger<RunCompletionPoller> log) : BackgroundService
 {
+    private const string ContainerExitedReason = "Container exited with non-zero code ";
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
@@ -43,12 +45,25 @@ public sealed class RunCompletionPoller(
             catch (Exception ex) { log.RunStatusCheckFailed(instance.Id.Value, ex); continue; }
             if (isRunning != false) continue;
 
-            var terminal = new StoppedRunInstance
-            {
-                ContainerId = instance.ContainerId,
-                StartedAt = instance.StartedAt,
-                StoppedAt = DateTimeOffset.UtcNow
-            };
+            int? exitCode;
+            try { exitCode = await factory.For(instance).GetExitCodeAsync(instance, ct); }
+            catch { exitCode = null; }
+
+            var now = DateTimeOffset.UtcNow;
+            Instance terminal = exitCode is null or 0
+                ? new StoppedRunInstance
+                {
+                    ContainerId = instance.ContainerId,
+                    StartedAt = instance.StartedAt,
+                    StoppedAt = now
+                }
+                : new FailedRunInstance
+                {
+                    ContainerId = instance.ContainerId,
+                    StartedAt = instance.StartedAt,
+                    StoppedAt = now,
+                    FailureReason = $"{ContainerExitedReason}{exitCode}"
+                };
             CopyCommon(instance, terminal);
             db.Instances.Remove(instance);
             db.Instances.Add(terminal);

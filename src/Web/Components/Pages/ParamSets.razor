@@ -7,7 +7,7 @@
 <PageTitle>Parameter Sets</PageTitle>
 <MudText Typo="Typo.h5" Class="mb-3">Parameter Sets</MudText>
 
-<MudSelect T="Guid?" @bind-Value="_cbotId" Label="cBot" Class="mb-3">
+<MudSelect T="Guid?" @bind-Value="_cbotId" @bind-Value:after="LoadItems" Label="cBot" Class="mb-3">
     @foreach (var c in _cbots) { <MudSelectItem T="Guid?" Value="@((Guid?)c.id)">@c.name</MudSelectItem> }
 </MudSelect>
 
@@ -38,9 +38,12 @@
     protected override async Task OnInitializedAsync() =>
         _cbots = await Http.GetDynamicArrayAsync("/api/cbots/");
 
-    protected override async Task OnParametersSetAsync()
+    private async Task LoadItems()
     {
-        if (_cbotId is not null) _items = await Http.GetDynamicArrayAsync($"/api/paramsets?cbotId={_cbotId}");
+        _editing = null; _name = ""; _json = "{}";
+        _items = _cbotId is null
+            ? []
+            : await Http.GetDynamicArrayAsync($"/api/paramsets?cbotId={_cbotId}");
     }
 
     private async Task Save()
@@ -57,8 +60,7 @@
         };
         var r = await Http.SendAsync(req);
         Snack.Add(r.IsSuccessStatusCode ? "Saved" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
-        _name = ""; _json = "{}"; _editing = null;
-        await OnParametersSetAsync();
+        await LoadItems();
     }
 
     private static bool IsNonEmptyJson(string content)
@@ -84,5 +86,5 @@
         if (p is not null) { _editing = id; _name = p.name; _json = p.jsonContent; }
     }
 
-    private async Task Delete(Guid id) { await Http.DeleteAsync($"/api/paramsets/{id}"); await OnParametersSetAsync(); }
+    private async Task Delete(Guid id) { await Http.DeleteAsync($"/api/paramsets/{id}"); await LoadItems(); }
 }

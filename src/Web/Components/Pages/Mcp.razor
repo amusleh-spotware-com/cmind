@@ -40,12 +40,14 @@
         var r = await Http.PostAsJsonAsync("/api/mcp-keys/", new { Label = _label });
         if (r.IsSuccessStatusCode)
         {
-            var d = await r.Content.ReadFromJsonAsync<dynamic>();
-            _newKey = d!.token;
+            var d = await r.Content.ReadFromJsonAsync<TokenResponse>();
+            _newKey = d?.Token;
             await Load();
         }
         else Snack.Add("Failed", Severity.Error);
     }
 
     private async Task Revoke(Guid id) { await Http.DeleteAsync($"/api/mcp-keys/{id}"); await Load(); }
+
+    private sealed record TokenResponse(string Token);
 }

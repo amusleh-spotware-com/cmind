@@ -3,9 +3,11 @@ using System.Text;
 using System.Text.Json;
 using Core;
 using Core.Constants;
+using Core.Logging;
 using Core.Options;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Builder;
@@ -15,10 +17,12 @@ public sealed record BuildResult(bool Success, string Log, byte[]? AlgoBytes);
 public sealed class CBotBuilder(
     DataContext db,
     ISecretProtector protector,
-    IOptionsMonitor<AppOptions> options)
+    IOptionsMonitor<AppOptions> options,
+    ILogger<CBotBuilder> log)
 {
-    private const string DotnetExe = "dotnet";
-    private const string OutDirName = "out";
+    private const string DockerExe = "docker";
+    private const int MaxLogChars = 4000;
+    private const string OutDirName = DockerCommands.BuildOutDir;
     private const string NoAlgoMessage = "\nNo .algo file produced.";
     private const string NoProjectFileMessage = "No .csproj file found in project.";
 
@@ -55,19 +59,26 @@ public sealed class CBotBuilder(
             return new BuildResult(false, NoProjectFileMessage, null);
         }
 
-        var args = $"build \"{projectFile}\" -c Release -o \"{outDir}\" --nologo";
-        var (code, log) = await RunProcessAsync(DotnetExe, args, workDir, ct);
+        // Build inside a throwaway container so untrusted user MSBuild targets cannot
+        // reach the host filesystem/network. The work dir is bind-mounted at /work and
+        // the build writes its output to /work/out.
+        var dockerArgs =
+            $"{DockerCommands.RunBuild} " +
+            $"{DockerCommands.VolumeFlag} \"{workDir}\":{DockerCommands.BuildMount} " +
+            $"{opts.BuildImage} {DockerCommands.BuildCommand}";
+        var (code, buildLog) = await RunProcessAsync(DockerExe, dockerArgs, workDir, ct);
         var success = code == 0;
+        if (!success) log.LocalBuildFailed(buildLog.Length > MaxLogChars ? buildLog[^MaxLogChars..] : buildLog);
 
         byte[]? algoBytes = null;
         if (success)
         {
             var algoFile = Directory.EnumerateFiles(outDir, "*.algo", SearchOption.AllDirectories).FirstOrDefault();
             if (algoFile is not null) algoBytes = await File.ReadAllBytesAsync(algoFile, ct);
-            else { success = false; log += NoAlgoMessage; }
+            else { success = false; buildLog += NoAlgoMessage; }
         }
 
-        project.LastBuildLog = log;
+        project.LastBuildLog = buildLog;
         project.LastBuildAt = DateTimeOffset.UtcNow;
         project.LastBuildSucceeded = success;
 
@@ -97,7 +108,7 @@ public sealed class CBotBuilder(
             }
         }
         await db.SaveChangesAsync(ct);
-        return new BuildResult(success, log, algoBytes);
+        return new BuildResult(success, buildLog, algoBytes);
     }
 
     private static async Task<(int code, string log)> RunProcessAsync(string fileName, string args, string workingDir, CancellationToken ct)

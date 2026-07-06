@@ -16,6 +16,7 @@ public sealed record AppOptions
     public int LockoutThreshold { get; init; } = 5;
     public TimeSpan NodeStatsPollInterval { get; init; } = TimeSpan.FromSeconds(15);
     public TimeSpan BacktestCompletionPollInterval { get; init; } = TimeSpan.FromSeconds(10);
+    public TimeSpan RunCompletionPollInterval { get; init; } = TimeSpan.FromSeconds(15);
     public TimeSpan InstanceReconcileInterval { get; init; } = TimeSpan.FromMinutes(1);
     public TimeSpan InstanceStartupTimeout { get; init; } = TimeSpan.FromMinutes(10);
     public LocalNodeOptions LocalNode { get; init; } = new();

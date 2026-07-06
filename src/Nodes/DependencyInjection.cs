@@ -14,6 +14,7 @@ public static class DependencyInjection
         services.AddSingleton<IContainerDispatcherFactory, ContainerDispatcherFactory>();
         services.AddHostedService<NodeStatsPoller>();
         services.AddHostedService<BacktestCompletionPoller>();
+        services.AddHostedService<RunCompletionPoller>();
         return services;
     }
 }

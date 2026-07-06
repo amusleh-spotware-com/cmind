@@ -33,4 +33,13 @@ public static partial class LogMessages
 
     [LoggerMessage(EventId = 1009, Level = LogLevel.Warning, Message = "Backtest status check failed for instance {InstanceId}")]
     public static partial void BacktestStatusCheckFailed(this ILogger logger, Guid instanceId, Exception ex);
+
+    [LoggerMessage(EventId = 1010, Level = LogLevel.Error, Message = "Run completion poll cycle failed")]
+    public static partial void RunPollFailed(this ILogger logger, Exception ex);
+
+    [LoggerMessage(EventId = 1011, Level = LogLevel.Warning, Message = "Run status check failed for instance {InstanceId}")]
+    public static partial void RunStatusCheckFailed(this ILogger logger, Guid instanceId, Exception ex);
+
+    [LoggerMessage(EventId = 1012, Level = LogLevel.Warning, Message = "Local docker build failed: {Error}")]
+    public static partial void LocalBuildFailed(this ILogger logger, string error);
 }

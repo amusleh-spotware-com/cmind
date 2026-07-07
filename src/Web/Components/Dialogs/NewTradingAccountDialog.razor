@@ -1,0 +1,38 @@
+@* Modal dialog for adding a trading account. Returns NewTradingAccountDialogResult on confirm. *@
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">New Trading Account</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudNumericField @bind-Value="_account" Label="Account #" Class="mb-2" />
+            <MudTextField @bind-Value="_broker" Label="Broker" Required="true" RequiredError="Broker is required" Class="mb-2" />
+            <MudSwitch @bind-Value="_live" Label="Live" Color="Color.Warning" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Add</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    private MudForm? _form;
+    private long _account;
+    private string _broker = "";
+    private bool _live;
+
+    private async Task Submit()
+    {
+        if (_form is not null) await _form.Validate();
+        if (string.IsNullOrWhiteSpace(_broker)) return;
+        Dialog.Close(DialogResult.Ok(new NewTradingAccountDialogResult(_account, _broker.Trim(), _live)));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    public sealed record NewTradingAccountDialogResult(long AccountNumber, string Broker, bool IsLive);
+}

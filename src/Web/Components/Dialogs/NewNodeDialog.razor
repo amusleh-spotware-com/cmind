@@ -1,0 +1,47 @@
+@* Modal dialog for adding a remote node. Returns NewNodeDialogResult on confirm. *@
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">New Node</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="_name" Label="Name" Required="true" RequiredError="Name is required" Class="mb-2" />
+            <MudTextField @bind-Value="_baseUrl" Label="Agent base URL" Placeholder="http://node-host:8080"
+                          Required="true" RequiredError="Base URL is required" Class="mb-2" />
+            <MudTextField @bind-Value="_secret" Label="API secret" InputType="InputType.Password"
+                          Required="true" RequiredError="API secret is required" Class="mb-2" />
+            <MudSelect T="string" @bind-Value="_mode" Label="Mode" Class="mb-2">
+                <MudSelectItem T="string" Value="@("Run")">Run</MudSelectItem>
+                <MudSelectItem T="string" Value="@("Backtest")">Backtest</MudSelectItem>
+                <MudSelectItem T="string" Value="@("Mixed")">Mixed</MudSelectItem>
+            </MudSelect>
+            <MudTextField @bind-Value="_dataDir" Label="Data dir" Class="mb-2" />
+            <MudNumericField @bind-Value="_max" Label="Max instances" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Add node</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    private MudForm? _form;
+    private string _name = "", _baseUrl = "", _secret = "", _dataDir = "/var/app/data";
+    private int _max = 10;
+    private string _mode = "Mixed";
+
+    private async Task Submit()
+    {
+        if (_form is not null) await _form.Validate();
+        if (string.IsNullOrWhiteSpace(_name) || string.IsNullOrWhiteSpace(_baseUrl) || string.IsNullOrWhiteSpace(_secret)) return;
+        Dialog.Close(DialogResult.Ok(new NewNodeDialogResult(_name.Trim(), _baseUrl.Trim(), _secret, _mode, _dataDir, _max)));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    public sealed record NewNodeDialogResult(string Name, string BaseUrl, string ApiSecret, string Mode, string DataDir, int MaxInstances);
+}

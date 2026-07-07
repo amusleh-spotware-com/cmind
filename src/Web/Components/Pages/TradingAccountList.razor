@@ -1,6 +1,16 @@
 @inject HttpClient Http
 @using Web.Json
+@using Web.Components.Dialogs
 @inject ISnackbar Snack
+@inject IDialogService Dialogs
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-2">
+    <MudSpacer />
+    <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined"
+               StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew">
+        New Trading Account
+    </MudButton>
+</MudStack>
 
 <MudTable Items="_items" Dense="true" Class="mt-2">
     <HeaderContent>
@@ -13,30 +23,25 @@
     </RowTemplate>
 </MudTable>
 
-<MudGrid Class="mt-2">
-    <MudItem xs="12" sm="4"><MudTextField @bind-Value="_acct" Label="Account #" /></MudItem>
-    <MudItem xs="12" sm="4"><MudTextField @bind-Value="_broker" Label="Broker" /></MudItem>
-    <MudItem xs="6" sm="2"><MudSwitch @bind-Value="_live" Label="Live" Color="Color.Warning" /></MudItem>
-    <MudItem xs="6" sm="2"><MudButton OnClick="Add" Variant="Variant.Filled" Color="Color.Primary">Add</MudButton></MudItem>
-</MudGrid>
-
 @code {
     [Parameter] public Guid CtidId { get; set; }
     private dynamic[] _items = [];
-    private long _acct;
-    private string _broker = "";
-    private bool _live;
 
     protected override Task OnParametersSetAsync() => Load();
 
     private async Task Load() =>
         _items = await Http.GetDynamicArrayAsync($"/api/ctids/{CtidId}/accounts");
 
-    private async Task Add()
+    private async Task OpenNew()
     {
+        var dlg = await Dialogs.ShowAsync<NewTradingAccountDialog>("New Trading Account",
+            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+        var res = await dlg.Result;
+        if (res is null || res.Canceled) return;
+        var data = (NewTradingAccountDialog.NewTradingAccountDialogResult)res.Data!;
         var r = await Http.PostAsJsonAsync($"/api/ctids/{CtidId}/accounts",
-            new { AccountNumber = _acct, Broker = _broker, IsLive = _live });
-        if (r.IsSuccessStatusCode) { _acct = 0; _broker = ""; _live = false; await Load(); }
+            new { data.AccountNumber, data.Broker, data.IsLive });
+        if (r.IsSuccessStatusCode) await Load();
         else Snack.Add("Failed", Severity.Error);
     }
 

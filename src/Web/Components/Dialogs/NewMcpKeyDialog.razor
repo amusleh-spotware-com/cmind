@@ -1,0 +1,34 @@
+@* Modal dialog for creating an MCP API key. Returns NewMcpKeyDialogResult on confirm. *@
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">New MCP Key</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="_label" Label="Label" Required="true" RequiredError="Label is required" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    private MudForm? _form;
+    private string _label = "";
+
+    private async Task Submit()
+    {
+        if (_form is not null) await _form.Validate();
+        if (string.IsNullOrWhiteSpace(_label)) return;
+        Dialog.Close(DialogResult.Ok(new NewMcpKeyDialogResult(_label.Trim())));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    public sealed record NewMcpKeyDialogResult(string Label);
+}

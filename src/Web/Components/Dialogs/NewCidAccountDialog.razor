@@ -1,0 +1,36 @@
+@* Modal dialog for adding a cID account. Returns NewCidAccountDialogResult on confirm. *@
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">New cID Account</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="_username" Label="cID username" Required="true" RequiredError="Username is required" Class="mb-2" />
+            <MudTextField @bind-Value="_password" Label="cID password" InputType="InputType.Password"
+                          Required="true" RequiredError="Password is required" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Add</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    private MudForm? _form;
+    private string _username = "", _password = "";
+
+    private async Task Submit()
+    {
+        if (_form is not null) await _form.Validate();
+        if (string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)) return;
+        Dialog.Close(DialogResult.Ok(new NewCidAccountDialogResult(_username.Trim(), _password)));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    public sealed record NewCidAccountDialogResult(string Username, string Password);
+}

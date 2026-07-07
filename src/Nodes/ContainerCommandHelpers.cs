@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text;
 using System.Text.Json;
 using Core;
 using Core.Constants;
@@ -32,26 +31,37 @@ public static class ContainerCommandHelpers
         _ => null
     };
 
-    public static string BuildConsoleArgs(Instance i, string ctid, bool hasParams)
+    /// <summary>cTrader CLI arguments as individual tokens (no shell quoting) for exec-style invocation.</summary>
+    public static List<string> BuildConsoleArgsList(Instance i, string ctid, bool hasParams)
     {
-        var sb = new StringBuilder();
+        var args = new List<string>();
         var isBacktest = i is BacktestInstance;
-        sb.Append(isBacktest ? CliCommands.Backtest : CliCommands.Run).Append(' ');
-        sb.Append($"{WorkMount}/{AlgoFile} ");
-        if (hasParams) sb.Append($"{WorkMount}/{ParamsFile} ");
+        args.Add(isBacktest ? CliCommands.Backtest : CliCommands.Run);
+        args.Add($"{WorkMount}/{AlgoFile}");
+        if (hasParams) args.Add($"{WorkMount}/{ParamsFile}");
         if (!string.IsNullOrEmpty(ctid))
-            sb.Append($"{CliFlags.Ctid} {ctid} {CliFlags.PwdFile} {WorkMount}/{PwdFile} ");
-        if (i.TradingAccount is { } ta) sb.Append($"{CliFlags.Account} {ta.AccountNumber} ");
-        if (!string.IsNullOrEmpty(i.Symbol)) sb.Append($"{CliFlags.Symbol} {i.Symbol} ");
-        if (!string.IsNullOrEmpty(i.Timeframe)) sb.Append($"{CliFlags.Period} {i.Timeframe} ");
+        {
+            args.Add(CliFlags.Ctid);
+            args.Add(ctid);
+            args.Add(CliFlags.PwdFile);
+            args.Add($"{WorkMount}/{PwdFile}");
+        }
+        if (i.TradingAccount is { } ta)
+        {
+            args.Add(CliFlags.Account);
+            args.Add(ta.AccountNumber.ToString(CultureInfo.InvariantCulture));
+        }
+        if (!string.IsNullOrEmpty(i.Symbol)) { args.Add(CliFlags.Symbol); args.Add(i.Symbol); }
+        if (!string.IsNullOrEmpty(i.Timeframe)) { args.Add(CliFlags.Period); args.Add(i.Timeframe); }
 
         if (i is BacktestInstance b)
         {
-            sb.Append($"{CliFlags.DataDir} {DataDir} ");
+            args.Add(CliFlags.DataDir);
+            args.Add(DataDir);
             var dataMode = BacktestDefaults.DataMode;
             if (!string.IsNullOrEmpty(b.BacktestSettingsJson))
             {
-                var doc = JsonDocument.Parse(b.BacktestSettingsJson);
+                using var doc = JsonDocument.Parse(b.BacktestSettingsJson);
                 foreach (var p in doc.RootElement.EnumerateObject())
                 {
                     var lower = p.Name.ToLowerInvariant();
@@ -72,24 +82,37 @@ public static class ContainerCommandHelpers
                     var val = name is "start" or "end"
                         ? FormatBacktestDate(p.Value)
                         : p.Value.ValueKind == JsonValueKind.String
-                            ? $"\"{p.Value.GetString()}\""
+                            ? p.Value.GetString() ?? string.Empty
                             : p.Value.ToString();
-                    sb.Append($"--{name} {val} ");
+                    args.Add($"--{name}");
+                    args.Add(val);
                 }
             }
-            sb.Append($"{CliFlags.DataMode} {dataMode} ");
-            sb.Append($"{CliFlags.ReportJson} {WorkMount}/{ReportJson} {CliFlags.Report} {WorkMount}/{ReportHtml} {CliFlags.ExitOnStop} ");
+            args.Add(CliFlags.DataMode);
+            args.Add(dataMode);
+            args.Add(CliFlags.ReportJson);
+            args.Add($"{WorkMount}/{ReportJson}");
+            args.Add(CliFlags.Report);
+            args.Add($"{WorkMount}/{ReportHtml}");
+            args.Add(CliFlags.ExitOnStop);
         }
-        return sb.ToString().Trim();
+        return args;
     }
+
+    /// <summary>cTrader CLI arguments joined into a single shell-style string (spaces quoted).</summary>
+    public static string BuildConsoleArgs(Instance i, string ctid, bool hasParams) =>
+        string.Join(' ', BuildConsoleArgsList(i, ctid, hasParams).Select(QuoteIfNeeded));
+
+    private static string QuoteIfNeeded(string token) =>
+        token.Contains(' ', StringComparison.Ordinal) ? $"\"{token}\"" : token;
 
     private static string FormatBacktestDate(JsonElement el)
     {
         var raw = el.ValueKind == JsonValueKind.String ? el.GetString() : el.ToString();
         if (!string.IsNullOrWhiteSpace(raw)
             && DateTimeOffset.TryParse(raw, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var dt))
-            return $"\"{dt.ToString(BacktestDefaults.DateFormat, CultureInfo.InvariantCulture)}\"";
-        return $"\"{raw}\"";
+            return dt.ToString(BacktestDefaults.DateFormat, CultureInfo.InvariantCulture);
+        return raw ?? string.Empty;
     }
 
     public static string JsonToCbotset(string json)

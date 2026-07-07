@@ -98,6 +98,37 @@ public class ContainerCommandHelpersTests
     }
 
     [Fact]
+    public void BuildConsoleArgsList_tokenizes_backtest_with_unquoted_date_token()
+    {
+        var i = new StartingBacktestInstance
+        {
+            Symbol = "EURUSD", Timeframe = "h1",
+            BacktestSettingsJson = """{"from":"2024-01-01","to":"2024-02-05"}"""
+        };
+
+        var args = ContainerCommandHelpers.BuildConsoleArgsList(i, "", false);
+
+        args[0].Should().Be("backtest");
+        args.Should().ContainInConsecutiveOrder("--start", "01/01/2024 00:00");
+        args.Should().ContainInConsecutiveOrder("--end", "05/02/2024 00:00");
+        args.Should().ContainInConsecutiveOrder("--data-mode", "m1");
+        args.Should().Contain("--exit-on-stop");
+    }
+
+    [Fact]
+    public void BuildConsoleArgsList_run_includes_ctid_and_params_positional_no_datadir()
+    {
+        var i = new StartingRunInstance { Symbol = "EURUSD", Timeframe = "h1" };
+
+        var args = ContainerCommandHelpers.BuildConsoleArgsList(i, "amusleh", true);
+
+        args.Should().ContainInConsecutiveOrder("run", "/mnt/work/cbot.algo", "/mnt/work/params.cbotset");
+        args.Should().ContainInConsecutiveOrder("--ctid", "amusleh");
+        args.Should().NotContain("--data-dir");
+        args.Should().NotContain("--exit-on-stop");
+    }
+
+    [Fact]
     public void ParseEquityCurve_parses_nested_equity_points()
     {
         const string json = """

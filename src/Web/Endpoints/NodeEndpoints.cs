@@ -10,8 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Web.Endpoints;
 
 public record CreateNodeRequest(
-    string Name, string Host, int SshPort, string SshUser,
-    string SshPrivateKey, string? SshKeyPassphrase, string Mode,
+    string Name, string BaseUrl, string ApiSecret, string Mode,
     string DataDirPath, int MaxInstances);
 
 public static class NodeEndpoints
@@ -27,7 +26,7 @@ public static class NodeEndpoints
                 {
                     n.Id,
                     n.Name,
-                    Host = n is RemoteNode ? ((RemoteNode)n).Host : "local",
+                    Host = n is RemoteNode ? ((RemoteNode)n).BaseUrl : "local",
                     Mode = n.ModeName,
                     Status = n.StatusName,
                     n.MaxInstances,
@@ -51,15 +50,15 @@ public static class NodeEndpoints
 
         g.MapPost("/", async (CreateNodeRequest req, DataContext db, ISecretProtector p) =>
         {
+            if (string.IsNullOrWhiteSpace(req.BaseUrl) || !Uri.TryCreate(req.BaseUrl, UriKind.Absolute, out _))
+                return Results.BadRequest("invalid base url");
+            if (req.ApiSecret.Length < NodeAgentAuth.MinSecretLength)
+                return Results.BadRequest($"api secret must be at least {NodeAgentAuth.MinSecretLength} characters");
+
             RemoteNode node = CreateNodeForMode(req.Mode);
             node.Name = req.Name;
-            node.Host = req.Host;
-            node.SshPort = req.SshPort;
-            node.SshUser = req.SshUser;
-            node.EncryptedSshKey = p.Protect(Encoding.UTF8.GetBytes(req.SshPrivateKey), EncryptionPurposes.NodeSshKey);
-            node.EncryptedSshKeyPassphrase = string.IsNullOrEmpty(req.SshKeyPassphrase)
-                ? null
-                : p.Protect(Encoding.UTF8.GetBytes(req.SshKeyPassphrase), EncryptionPurposes.NodeSshPassphrase);
+            node.BaseUrl = req.BaseUrl.TrimEnd('/');
+            node.EncryptedApiSecret = p.Protect(Encoding.UTF8.GetBytes(req.ApiSecret), EncryptionPurposes.NodeApiSecret);
             node.DataDirPath = req.DataDirPath;
             node.MaxInstances = req.MaxInstances;
             db.Nodes.Add(node);

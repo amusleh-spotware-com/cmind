@@ -3,10 +3,10 @@ using Core;
 namespace Nodes;
 
 public sealed class ContainerDispatcherFactory(
-    SshContainerDispatcher ssh,
+    HttpContainerDispatcher http,
     LocalContainerDispatcher local) : IContainerDispatcherFactory
 {
-    public IContainerDispatcher For(Node node) => node is LocalNode ? local : ssh;
+    public IContainerDispatcher For(Node node) => node is LocalNode ? local : http;
 
     public IContainerDispatcher For(Instance instance)
     {

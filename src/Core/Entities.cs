@@ -157,11 +157,8 @@ public abstract class Node : AuditedEntity<NodeId>
 
 public abstract class RemoteNode : Node
 {
-    [MaxLength(256)] public string Host { get; set; } = default!;
-    public int SshPort { get; set; } = 22;
-    [MaxLength(64)] public string SshUser { get; set; } = default!;
-    public byte[] EncryptedSshKey { get; set; } = default!;
-    public byte[]? EncryptedSshKeyPassphrase { get; set; }
+    [MaxLength(512)] public string BaseUrl { get; set; } = default!;
+    public byte[] EncryptedApiSecret { get; set; } = default!;
 
     public override bool IsLocal => false;
 }

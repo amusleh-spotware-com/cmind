@@ -11,6 +11,7 @@
   <Folder Name="/src/">
     <Project Path="src/AppHost/AppHost.csproj" />
     <Project Path="src/Core/Core.csproj" />
+    <Project Path="src/ExternalNode/ExternalNode.csproj" />
     <Project Path="src/Infrastructure/Infrastructure.csproj" />
     <Project Path="src/Mcp/Mcp.csproj" />
     <Project Path="src/Nodes/Nodes.csproj" />

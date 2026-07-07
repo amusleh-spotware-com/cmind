@@ -1,3 +1,4 @@
+using System.Net.Http;
 using Core;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -11,26 +12,29 @@ namespace UnitTests;
 
 public class ContainerDispatcherFactoryTests
 {
+    private static HttpContainerDispatcher CreateHttp() =>
+        new(Substitute.For<IHttpClientFactory>(), Substitute.For<ISecretProtector>());
+
     [Fact]
     public void For_LocalNode_returns_local_dispatcher()
     {
-        var ssh = new SshContainerDispatcher(Substitute.For<ISecretProtector>(), NullLogger<SshContainerDispatcher>.Instance);
+        var http = CreateHttp();
         var opts = new TestMonitor(new AppOptions());
         var local = new LocalContainerDispatcher(Substitute.For<ISecretProtector>(), opts, NullLogger<LocalContainerDispatcher>.Instance);
-        var factory = new ContainerDispatcherFactory(ssh, local);
+        var factory = new ContainerDispatcherFactory(http, local);
 
         factory.For(new LocalNode()).Should().BeSameAs(local);
     }
 
     [Fact]
-    public void For_RemoteNode_returns_ssh_dispatcher()
+    public void For_RemoteNode_returns_http_dispatcher()
     {
-        var ssh = new SshContainerDispatcher(Substitute.For<ISecretProtector>(), NullLogger<SshContainerDispatcher>.Instance);
+        var http = CreateHttp();
         var opts = new TestMonitor(new AppOptions());
         var local = new LocalContainerDispatcher(Substitute.For<ISecretProtector>(), opts, NullLogger<LocalContainerDispatcher>.Instance);
-        var factory = new ContainerDispatcherFactory(ssh, local);
+        var factory = new ContainerDispatcherFactory(http, local);
 
-        factory.For(new ActiveMixedNode()).Should().BeSameAs(ssh);
+        factory.For(new ActiveMixedNode()).Should().BeSameAs(http);
     }
 
     private sealed class TestMonitor(AppOptions value) : IOptionsMonitor<AppOptions>

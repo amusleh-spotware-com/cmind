@@ -7,7 +7,7 @@
 
 ASP.NET Core + Blazor Server app for building, running, backtesting, and (later) optimizing
 cTrader cBots through the official [cTrader Console Docker image](https://github.com/spotware/ctrader-console-docker),
-scheduled across SSH-accessible nodes and/or the local web host.
+scheduled across remote nodes (each running the `ExternalNode` HTTP agent) and/or the local web host.
 
 ## Stack
 
@@ -20,7 +20,7 @@ scheduled across SSH-accessible nodes and/or the local web host.
 - EF Core 10 + Npgsql + PostgreSQL
 - ASP.NET Core Data Protection (X.509 cert-protected key ring persisted in PostgreSQL)
 - Argon2id password hashing (Konscious)
-- SSH.NET for node connectivity
+- HTTP + per-node HS256 JWT for external node connectivity
 - ModelContextProtocol .NET SDK for the MCP server
 - .NET Aspire 9 for orchestration
 - OpenTelemetry (metrics + traces + logs)
@@ -32,7 +32,8 @@ scheduled across SSH-accessible nodes and/or the local web host.
 | `src/AppHost`        | .NET Aspire orchestrator (Postgres, Web, MCP, pgAdmin)                          |
 | `src/Core`           | Domain entities, value objects, strong-typed IDs, options, log delegates        |
 | `src/Infrastructure` | EF Core (`DataContext`), encryption, Argon2, GHCR client, OTel/health defaults  |
-| `src/Nodes`          | Node scheduler, SSH + local container dispatchers, stats poller, cBot builder   |
+| `src/Nodes`          | Node scheduler, HTTP + local container dispatchers, stats poller, completion pollers |
+| `src/ExternalNode`   | Standalone HTTP node agent (JWT auth) that pulls images and runs cBot containers on a remote server |
 | `src/Web`            | Blazor Server SSR + Minimal API + SignalR LogsHub (cBots, builder IDE, run/backtest, param sets, nodes, accounts) |
 | `src/Mcp`            | MCP server (HTTP + SSE) for AI integrations                                     |
 | `tests/UnitTests`    | xUnit unit tests                                                                |
@@ -66,7 +67,45 @@ All settings live under the `Ctw` section and are bound to a strongly-typed
 ```
 
 `LocalNode` (disabled by default) lets run/backtest containers be scheduled on the web
-host itself, dispatched via `LocalContainerDispatcher` instead of SSH.
+host itself, dispatched via `LocalContainerDispatcher` instead of a remote agent.
+
+## External nodes
+
+Remote nodes run the **`src/ExternalNode`** agent — an HTTP API the main node calls to pull
+images and run cBot containers. There is no SSH/shell access: the main node sends the image,
+the tokenized `run`/`backtest` command, and the required files (algo, `params.cbotset`,
+`ctid.pwd`), and the agent runs the container locally and reports status/report/logs/stats back.
+
+Each request is authenticated with a short-lived HS256 JWT (`iss=ctw-main`, `aud=ctw-node`,
+5-minute expiry) signed with a **per-node shared secret**. The agent only runs images matching
+`AllowedImagePrefix` (default `ghcr.io/spotware/`) and finds containers by the `ctw.instance`
+label, so it is stateless and restart-safe.
+
+Agent configuration (`NodeAgent` section / `NodeAgent__*` env vars):
+
+```jsonc
+{
+  "NodeAgent": {
+    "JwtSecret": "<shared secret, >= 32 chars>",   // must match the value stored for the node
+    "DataRoot": "/var/ctw/data",
+    "AllowedImagePrefix": "ghcr.io/spotware/"
+  }
+}
+```
+
+Run the agent (build the image from `src/ExternalNode/Dockerfile`), giving it a docker daemon.
+It starts its own daemon, so run it `--privileged`:
+
+```bash
+docker build -f src/ExternalNode/Dockerfile -t ctw-node-agent .
+docker run -d --privileged -p 8080:8080 \
+  -e NodeAgent__JwtSecret="<shared secret>" \
+  --name ctw-node-agent ctw-node-agent
+```
+
+Then in the Web UI (**Nodes → Add node**) register it with its **base URL**
+(`http://<host>:8080`) and the same **API secret**. In production, terminate TLS in front of
+the agent and keep it on a private network.
 
 ## Build & run
 

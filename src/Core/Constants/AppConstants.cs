@@ -19,8 +19,31 @@ public static class EncryptionPurposes
     public const string CtidPassword = "ctid.password";
     public const string CbotAlgo = "cbot.algo";
     public const string CbotSource = "cbot.source";
-    public const string NodeSshKey = "node.ssh.key";
-    public const string NodeSshPassphrase = "node.ssh.pass";
+    public const string NodeApiSecret = "node.api.secret";
+}
+
+public static class NodeAgentAuth
+{
+    public const string Issuer = "ctw-main";
+    public const string Audience = "ctw-node";
+    public const int TokenLifetimeSeconds = 300;
+    public const int MinSecretLength = 32;
+}
+
+public static class NodeAgentRoutes
+{
+    public const string Base = "/api";
+    // Start is keyed by the instance id (used for the work dir + container label); all other
+    // operations are keyed by the returned container id, which is stable across the instance's
+    // TPH state transitions (starting -> running -> ...).
+    public const string Start = "/api/containers";
+    public const string NodeStats = "/api/node/stats";
+    public const string NodeClean = "/api/node/clean";
+
+    public static string Status(string containerId) => $"/api/containers/{containerId}/status";
+    public static string Report(string containerId) => $"/api/containers/{containerId}/report";
+    public static string Stop(string containerId) => $"/api/containers/{containerId}/stop";
+    public static string Logs(string containerId) => $"/api/containers/{containerId}/logs";
 }
 
 public static class ConfigSections

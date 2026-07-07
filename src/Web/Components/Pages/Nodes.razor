@@ -11,11 +11,8 @@
     <MudExpansionPanel Text="Add node">
         <MudGrid>
             <MudItem xs="12" md="4"><MudTextField @bind-Value="_name" Label="Name" /></MudItem>
-            <MudItem xs="12" md="4"><MudTextField @bind-Value="_host" Label="Host" /></MudItem>
-            <MudItem xs="6" md="2"><MudNumericField @bind-Value="_port" Label="Port" /></MudItem>
-            <MudItem xs="6" md="2"><MudTextField @bind-Value="_user" Label="User" /></MudItem>
-            <MudItem xs="12"><MudTextField @bind-Value="_key" Label="SSH private key" Lines="6" Variant="Variant.Outlined" /></MudItem>
-            <MudItem xs="6" md="3"><MudTextField @bind-Value="_pass" Label="Passphrase" InputType="InputType.Password" /></MudItem>
+            <MudItem xs="12" md="4"><MudTextField @bind-Value="_baseUrl" Label="Agent base URL" Placeholder="http://node-host:8080" /></MudItem>
+            <MudItem xs="12" md="4"><MudTextField @bind-Value="_secret" Label="API secret" InputType="InputType.Password" /></MudItem>
             <MudItem xs="6" md="3">
                 <MudSelect T="string" @bind-Value="_mode" Label="Mode">
                     <MudSelectItem T="string" Value="@("Run")">Run</MudSelectItem>
@@ -60,8 +57,8 @@
 
 @code {
     private dynamic[] _items = [];
-    private string _name = "", _host = "", _user = "root", _key = "", _pass = "", _dataDir = "/var/ctw/data";
-    private int _port = 22, _max = 10;
+    private string _name = "", _baseUrl = "", _secret = "", _dataDir = "/var/ctw/data";
+    private int _max = 10;
     private string _mode = "Mixed";
 
     protected override Task OnInitializedAsync() => Load();
@@ -71,8 +68,7 @@
     {
         var r = await Http.PostAsJsonAsync("/api/nodes/", new
         {
-            Name = _name, Host = _host, SshPort = _port, SshUser = _user,
-            SshPrivateKey = _key, SshKeyPassphrase = _pass, Mode = _mode,
+            Name = _name, BaseUrl = _baseUrl, ApiSecret = _secret, Mode = _mode,
             DataDirPath = _dataDir, MaxInstances = _max
         });
         Snack.Add(r.IsSuccessStatusCode ? "Added" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);

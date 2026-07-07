@@ -5,7 +5,7 @@ Guidance for future Claude Code sessions working on this repository.
 ## What this repo is
 
 Multi-tenant Blazor Server + Minimal API app that builds, runs, and backtests cTrader
-cBots through `ghcr.io/spotware/ctrader-console`, scheduled across SSH nodes and/or the
+cBots through `ghcr.io/spotware/ctrader-console`, scheduled across remote nodes (each running the `ExternalNode` HTTP agent) and/or the
 local web host. In-browser Monaco editor builds cBot projects (C# and Python, both
 .NET-based) locally via `dotnet build`.
 
@@ -39,13 +39,21 @@ src/
     DependencyInjection.cs  — AddCtwInfrastructure()
   Nodes/         — cross-node orchestration.
     NodeScheduler.cs           — picks least-loaded eligible node, honors MaxInstances
-    ContainerDispatcherFactory.cs — routes to Ssh or Local dispatcher by Node type
-    SshContainerDispatcher.cs   — SSH+docker CLI for remote nodes (start/stop/logs/stats/clean,
-                                  path-traversal guard: cleanup root must start with /var/ctw/)
+    ContainerDispatcherFactory.cs — routes to Http (remote) or Local dispatcher by Node type
+    HttpContainerDispatcher.cs  — calls the ExternalNode agent's HTTP API for remote nodes
+                                  (start/stop/status/report/logs/stats/clean); mints a short-lived
+                                  per-node HS256 JWT signed with that node's shared secret
     LocalContainerDispatcher.cs — same ops via local `docker` process calls, for the web host's LocalNode
     NodeStatsPoller.cs          — BackgroundService, polls per AppOptions.NodeStatsPollInterval
-    Builder/CBotBuilder.cs      — local builder; `docker run --rm --network=none` + dotnet build
+    RunCompletionPoller.cs / BacktestCompletionPoller.cs — reconcile exited run/backtest containers
+    ContainerCommandHelpers.cs  — BuildConsoleArgsList (tokens) / BuildConsoleArgs (shell string)
+    Builder/CBotBuilder.cs      — sandboxed builder; `docker run` an SDK image + dotnet build
     Builder/Templates/          — embedded C#/Python starter project files
+  ExternalNode/  — standalone HTTP node agent (deployed on remote servers).
+    Program.cs                  — minimal API, JWT-bearer auth, image-prefix guard
+    DockerService.cs            — pulls image + runs/stops/inspects containers via the docker CLI,
+                                  stateless (looks containers up by `ctw.instance` label)
+    NodeAgentOptions.cs, Dockerfile
   Web/           — Blazor Server SSR + Minimal API + SignalR.
     Program.cs               — binds AppOptions, cookie auth, role policies, hosted services
                                (OwnerSeeder, LocalNodeSeeder, InstanceReconciler), endpoint maps
@@ -93,7 +101,8 @@ dotnet ef database update    -p src/Infrastructure -s src/Infrastructure
 ## Notable design decisions
 
 - `CBotBuilder` runs locally on the web host, not remote nodes — Web container needs Docker socket access.
-- Run/backtest containers run on nodes scheduled by `NodeScheduler`, dispatched via `ContainerDispatcherFactory` to `SshContainerDispatcher` (remote) or `LocalContainerDispatcher` (web host's own `LocalNode`, seeded by `LocalNodeSeeder`).
+- Run/backtest containers run on nodes scheduled by `NodeScheduler`, dispatched via `ContainerDispatcherFactory` to `HttpContainerDispatcher` (remote, via the `ExternalNode` agent's HTTP API) or `LocalContainerDispatcher` (web host's own `LocalNode`, seeded by `LocalNodeSeeder`).
+- External nodes are **not** given SSH/shell access. The main node talks to an `ExternalNode` agent over HTTP; each `RemoteNode` stores `BaseUrl` + an encrypted per-node shared secret. Every request carries a short-lived HS256 JWT (`iss=ctw-main`, `aud=ctw-node`, 5-min expiry) signed with that node's secret; the agent validates it. The agent only runs images matching `AllowedImagePrefix` (default `ghcr.io/spotware/`), execs docker via `ArgumentList` (no shell), and is stateless (finds containers by the `ctw.instance` label so it survives restarts). Deploy it with the docker socket/daemon available; run the container `--privileged` (it starts a local dockerd) or run the binary on a host that already has docker.
 - cTrader Console CLI parameter passing isn't fully documented upstream; we write `params.cbotset` (ini `key=value`) to the work dir — needs runtime verification.
 - `BacktestCompletionPoller` (`src/Nodes/BacktestCompletionPoller.cs`) polls `RunningBacktestInstance` rows on `AppOptions.BacktestCompletionPollInterval`, since backtest containers self-exit (`--exit-on-stop`) instead of running indefinitely like `Run` containers. `IContainerDispatcher.IsRunningAsync` checks `docker inspect .State.Running`; once a container has exited, `ReadReportAsync` pulls `report.json` from the instance work dir. Report present → `CompletedBacktestInstance` (with `ReportJson` stored); missing → `FailedBacktestInstance`.
 - Equity curve for the `InstanceDetail` chart is parsed from `CompletedBacktestInstance.ReportJson` by `ContainerCommandHelpers.ParseEquityCurve`, which tolerantly searches a few plausible key names (`equityHistory`/`equityCurve`/`history`/`equity`, `time`/`date`/`timestamp`/`ts`, `equity`/`balance`/`value`) since the CLI's `report.json` schema isn't documented upstream — needs runtime verification against a real report.
@@ -105,7 +114,8 @@ dotnet ef database update    -p src/Infrastructure -s src/Infrastructure
 
 ## Known gaps / needs follow-up
 
-- **Builder isolation**: `CBotBuilder` (`src/Infrastructure/Builder/CBotBuilder.cs`) runs `dotnet build` directly on the Web host via `Process.Start` — no container sandbox. `Core/Constants/AppConstants.cs` still has `DockerCommands.RunBuild`/`BuildCommand`/`BuildMount`/`BuildOutDir` and `AppOptions.BuildImage`, all dead/unused, suggesting a docker-sandboxed build path was intended but never wired up. Confirmed live: building a project whose `.csproj` references the real `cTrader.Automate` NuGet package caused MSBuild to copy the output `.algo` file into the *host user's* `Documents\cAlgo\Sources\Robots` — i.e. untrusted user-submitted project code's build-time MSBuild targets execute with full host filesystem/network access. Needs a decision: wire up the existing-but-unused docker constants, or accept the risk for this deployment model.
+- **Builder isolation** (resolved): `CBotBuilder` now runs `dotnet build` inside a throwaway container (`DockerCommands.RunBuild` + `AppOptions.BuildImage`, work dir bind-mounted at `/work`), so untrusted user MSBuild targets no longer reach the host filesystem/network. Restore is cached across builds via the shared `ctw-nuget-cache` volume. The Web host still needs Docker socket access.
+- **Remote-node trust**: the `ExternalNode` agent runs whatever image+args the (JWT-authenticated) main node sends, constrained only by `AllowedImagePrefix`. The agent must run on a trusted host with docker; the shared secret is the sole credential — keep it ≥32 chars, transport over TLS in production (put the agent behind a reverse proxy), and rotate by updating both the node's stored secret and the agent's `NodeAgent:JwtSecret`.
 
 ## Deliberately not done
 

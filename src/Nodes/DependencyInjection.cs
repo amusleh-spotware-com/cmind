@@ -16,6 +16,7 @@ public static class DependencyInjection
         services.AddHostedService<NodeStatsPoller>();
         services.AddHostedService<BacktestCompletionPoller>();
         services.AddHostedService<RunCompletionPoller>();
+        services.AddHostedService<AiRiskGuard>();
         return services;
     }
 }

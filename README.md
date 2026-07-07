@@ -11,7 +11,9 @@
 
 Multi-tenant Blazor Server + Minimal API platform to build, run, and backtest cTrader cBots
 across remote nodes and/or the local host — with an in-browser Monaco IDE, an MCP server for
-AI integrations, and .NET Aspire orchestration.
+AI integrations, an **AI-first assistant layer** (Claude-powered cBot codegen, backtest
+analysis, review, optimization, sentiment, and a background risk guard), and .NET Aspire
+orchestration.
 
 **Contents:** [Stack](#stack) · [Solution layout](#solution-layout) · [Prerequisites](#prerequisites)
 · [Configuration](#configuration) · [External nodes](#external-nodes) · [Build & run](#build--run)
@@ -47,8 +49,8 @@ scheduled across remote nodes (each running the `ExternalNode` HTTP agent) and/o
 | `src/Infrastructure` | EF Core (`DataContext`), encryption, Argon2, GHCR client, OTel/health defaults  |
 | `src/Nodes`          | Node scheduler, HTTP + local container dispatchers, stats poller, completion pollers |
 | `src/ExternalNode`   | Standalone HTTP node agent (JWT auth) that pulls images and runs cBot containers on a remote server |
-| `src/Web`            | Blazor Server SSR + Minimal API + SignalR LogsHub (cBots, builder IDE, run/backtest, param sets, nodes, accounts) |
-| `src/Mcp`            | MCP server (HTTP + SSE) for AI integrations                                     |
+| `src/Web`            | Blazor Server SSR + Minimal API + SignalR LogsHub (cBots, builder IDE, run/backtest, param sets, nodes, accounts, AI Assistant + `/api/ai/*`) |
+| `src/Mcp`            | MCP server (HTTP + SSE) for AI integrations — `CBotTools`, `InstanceTools`, `AiTools` |
 | `tests/UnitTests`    | xUnit unit tests                                                                |
 | `tests/IntegrationTests` | xUnit + Testcontainers integration tests                                    |
 
@@ -74,13 +76,26 @@ Settings live under the `App` section, bound to a strongly-typed
     "DefaultDockerTag": "latest",
     "BuildWorkRoot": "/var/app/builds",
     "BuildImage": "mcr.microsoft.com/dotnet/sdk:9.0",
-    "LocalNode": { "Enabled": true, "WorkRoot": "/var/app/local", "MaxInstances": 5 }
+    "LocalNode": { "Enabled": true, "WorkRoot": "/var/app/local", "MaxInstances": 5 },
+    "Ai": {
+      "ApiKey": "<Anthropic API key>",       // enables all AI features when set
+      "Model": "claude-opus-4-8",
+      "RiskGuardEnabled": false,              // background risk agent over running bots
+      "RiskGuardInterval": "00:05:00"
+    }
   }
 }
 ```
 
 `LocalNode` (off by default) schedules run/backtest containers on the web host itself via
 `LocalContainerDispatcher` instead of a remote agent.
+
+`Ai` (off unless `ApiKey` is set) powers the AI-first features — natural-language cBot
+codegen, backtest analysis, cBot review, parameter optimization, post-mortems, market
+sentiment (web-search grounded), chart-vision strategy design, and marketplace curation —
+surfaced on the **AI Assistant** page, the `/api/ai/*` endpoints, and the MCP `AiTools`. Calls
+go directly to the Anthropic Messages API; when unset, every feature returns a friendly
+"not configured" result and the app runs unchanged.
 
 ## External nodes
 

@@ -75,6 +75,20 @@ public static class ConfigSections
     public const string App = "App";
 }
 
+public static class AiConstants
+{
+    public const string DefaultModel = "claude-opus-4-8";
+    public const string DefaultBaseUrl = "https://api.anthropic.com/";
+    public const string MessagesPath = "v1/messages";
+    public const string AnthropicVersion = "2023-06-01";
+    public const string AnthropicVersionHeader = "anthropic-version";
+    public const string ApiKeyHeader = "x-api-key";
+    public const int DefaultMaxTokens = 8000;
+    public const string WebSearchToolType = "web_search_20260209";
+    public const string WebSearchToolName = "web_search";
+    public const string DisabledMessage = "AI features are not configured (set App:Ai:ApiKey).";
+}
+
 public static class ConnectionStrings
 {
     public const string AppDb = "appdb";

@@ -42,4 +42,16 @@ public static partial class LogMessages
 
     [LoggerMessage(EventId = 1012, Level = LogLevel.Warning, Message = "Local docker build failed: {Error}")]
     public static partial void LocalBuildFailed(this ILogger logger, string error);
+
+    [LoggerMessage(EventId = 1013, Level = LogLevel.Warning, Message = "AI request failed with status {StatusCode}: {Body}")]
+    public static partial void AiRequestFailed(this ILogger logger, int statusCode, string body);
+
+    [LoggerMessage(EventId = 1014, Level = LogLevel.Error, Message = "AI request errored")]
+    public static partial void AiRequestError(this ILogger logger, Exception ex);
+
+    [LoggerMessage(EventId = 1015, Level = LogLevel.Error, Message = "AI risk-guard cycle failed")]
+    public static partial void RiskGuardFailed(this ILogger logger, Exception ex);
+
+    [LoggerMessage(EventId = 1016, Level = LogLevel.Information, Message = "AI risk-guard assessed {Count} running bots: {Summary}")]
+    public static partial void RiskGuardAssessment(this ILogger logger, int count, string summary);
 }

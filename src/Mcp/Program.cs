@@ -20,7 +20,8 @@ builder.Services.AddAuthorization();
 builder.Services.AddMcpServer()
     .WithHttpTransport(o => o.Stateless = true)
     .WithTools<CBotTools>()
-    .WithTools<InstanceTools>();
+    .WithTools<InstanceTools>()
+    .WithTools<AiTools>();
 
 var app = builder.Build();
 app.UseAuthentication();

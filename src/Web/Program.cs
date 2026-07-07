@@ -142,6 +142,7 @@ app.MapParamSetEndpoints();
 app.MapMcpKeyEndpoints();
 app.MapBuilderEndpoints();
 app.MapDashboardEndpoints();
+app.MapAiEndpoints();
 app.MapImageEndpoints();
 app.MapHub<LogsHub>(HubRoutes.Logs);
 

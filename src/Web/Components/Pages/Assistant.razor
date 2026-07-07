@@ -1,0 +1,91 @@
+﻿@page "/assistant"
+@using System.Net.Http.Json
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@inject HttpClient Http
+@inject ISnackbar Snack
+
+<PageTitle>AI Assistant</PageTitle>
+
+<MudText Typo="Typo.h5" Class="mb-3">AI Assistant</MudText>
+
+<MudTabs Elevation="1" Rounded="true" ApplyEffectsToContainer="true">
+    <MudTabPanel Text="Generate cBot">
+        <MudPaper Class="pa-4" Elevation="0">
+            <MudSelect T="string" @bind-Value="_language" Label="Language" Dense="true" Style="max-width:200px;">
+                <MudSelectItem Value="@("CSharp")">C#</MudSelectItem>
+                <MudSelectItem Value="@("Python")">Python</MudSelectItem>
+            </MudSelect>
+            <MudTextField @bind-Value="_description" Label="Strategy description" Lines="5" Class="mt-3"
+                          Placeholder="e.g. RSI mean-reversion on EURUSD, 2% risk, ATR stop" />
+            <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.AutoAwesome" OnClick="Generate" Disabled="_busy">
+                Generate cBot
+            </MudButton>
+        </MudPaper>
+    </MudTabPanel>
+    <MudTabPanel Text="Review">
+        <MudPaper Class="pa-4" Elevation="0">
+            <MudTextField @bind-Value="_reviewSource" Label="cBot source" Lines="10"
+                          Placeholder="Paste cBot source to review for bugs and trading risks" />
+            <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.RateReview" OnClick="Review" Disabled="_busy">
+                Review cBot
+            </MudButton>
+        </MudPaper>
+    </MudTabPanel>
+    <MudTabPanel Text="Market Sentiment">
+        <MudPaper Class="pa-4" Elevation="0">
+            <MudTextField @bind-Value="_symbol" Label="Symbol" Style="max-width:200px;" Placeholder="EURUSD" />
+            <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Insights" OnClick="Sentiment" Disabled="_busy">
+                Get sentiment
+            </MudButton>
+        </MudPaper>
+    </MudTabPanel>
+</MudTabs>
+
+@if (_busy) { <MudProgressLinear Indeterminate="true" Class="mt-3" /> }
+@if (!string.IsNullOrEmpty(_output))
+{
+    <MudPaper Class="pa-4 mt-3" Elevation="1">
+        <pre style="white-space:pre-wrap; margin:0;">@_output</pre>
+    </MudPaper>
+}
+
+@code {
+    private string _language = "CSharp";
+    private string _description = "";
+    private string _reviewSource = "";
+    private string _symbol = "EURUSD";
+    private string _output = "";
+    private bool _busy;
+
+    private Task Generate() => PostAsync("/api/ai/generate", new { Language = _language, Description = _description });
+    private Task Review() => PostAsync("/api/ai/review", new { Language = _language, Source = _reviewSource });
+    private Task Sentiment() => PostAsync("/api/ai/sentiment", new { Symbol = _symbol });
+
+    private async Task PostAsync(string url, object body)
+    {
+        _busy = true;
+        _output = "";
+        try
+        {
+            var response = await Http.PostAsJsonAsync(url, body);
+            var result = await response.Content.ReadFromJsonAsync<AiResponse>();
+            if (result is { success: true })
+                _output = result.text;
+            else
+                Snack.Add(result?.error ?? "AI request failed", Severity.Error);
+        }
+        catch
+        {
+            Snack.Add("AI request failed", Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private sealed record AiResponse(bool success, string text, string? error);
+}

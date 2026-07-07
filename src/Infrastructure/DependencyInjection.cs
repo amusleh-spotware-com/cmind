@@ -1,7 +1,9 @@
 using System.Security.Cryptography.X509Certificates;
 using Core;
+using Core.Ai;
 using Core.Constants;
 using Core.Options;
+using Infrastructure.Ai;
 using Infrastructure.Builder;
 using Infrastructure.Github;
 using Infrastructure.Persistence;
@@ -37,6 +39,8 @@ public static class DependencyInjection
         services.AddMemoryCache();
         services.AddHttpClient<IGithubContainerRegistryTagProvider, GithubContainerRegistryTagProvider>();
         services.AddScoped<CBotBuilder>();
+        services.AddHttpClient<IAiClient, AnthropicAiClient>();
+        services.AddScoped<IAiFeatureService, AiFeatureService>();
         return services;
     }
 }

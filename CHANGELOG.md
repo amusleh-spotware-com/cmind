@@ -8,6 +8,15 @@ All notable changes to this project are documented here. The format is based on
 
 ### Added
 
+- **AI-first assistant layer** (Claude / Anthropic Messages API). A `Core.Ai.IAiClient`
+  abstraction with a raw-HTTP `AnthropicAiClient` in Infrastructure, an `IAiFeatureService`
+  orchestrating ten features, and an `AiOptions` config block (`App:Ai`, off unless `ApiKey`
+  is set). Features: natural-language cBot codegen, cBot review, backtest analysis, parameter
+  optimization, instance post-mortems, market sentiment (web-search grounded), chart-vision
+  strategy design, and marketplace curation — surfaced on the new **AI Assistant** page,
+  the `/api/ai/*` endpoints, and MCP `AiTools`. A background `AiRiskGuard` (`Nodes`) assesses
+  running bots on an interval when `RiskGuardEnabled`.
+
 - Strict versioning across all components. A single SemVer product version
   (`VersionPrefix` in `Directory.Build.props`) is shipped in lockstep by every assembly and
   surfaced at runtime via `Core.VersionInfo` (Web app bar + `/version` on Web, MCP, and the

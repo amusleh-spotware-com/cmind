@@ -27,7 +27,8 @@ src/
     StrongIds.cs             — strong ID structs + Email/Symbol/Timeframe/DockerImageTag
     Abstractions.cs          — ISecretProtector, IPasswordHasher, INodeScheduler,
                                IContainerDispatcher(Factory), IGhcrTagProvider, ICurrentUser
-    Options/AppOptions.cs    — binds "App" section, incl. nested LocalNodeOptions
+    Options/AppOptions.cs    — binds "App" section, incl. nested LocalNodeOptions + AiOptions
+    Ai/AiContracts.cs        — IAiClient, IAiFeatureService + AI DTOs (AiTextRequest/Result/Image/InstanceContext)
     Constants/AppConstants.cs — all magic strings
     Logging/LogMessages.cs   — source-generated ILogger extensions
     NodeAgent/AgentContracts.cs — DTOs for the ExternalNode HTTP API
@@ -36,6 +37,8 @@ src/
     Persistence/Migrations/, DesignTimeDbContextFactory.cs
     Security/Argon2PasswordHasher.cs, DataProtectionSecretProtector.cs
     Ghcr/GhcrTagProvider.cs  — anonymous tag list, 1h MemoryCache
+    Ai/AnthropicAiClient.cs  — IAiClient impl, raw HTTP to Anthropic Messages API (typed HttpClient)
+    Ai/AiFeatureService.cs   — IAiFeatureService: 10 AI features + AiPrompts (system prompts)
     Aspire/ServiceDefaultsExtensions.cs — OTel, health checks, service discovery, resilience
     DependencyInjection.cs  — AddInfrastructure()
   Nodes/         — cross-node orchestration.
@@ -47,6 +50,7 @@ src/
     LocalContainerDispatcher.cs — same ops via local `docker` process calls, for the web host's LocalNode
     NodeStatsPoller.cs          — BackgroundService, polls per AppOptions.NodeStatsPollInterval
     RunCompletionPoller.cs / BacktestCompletionPoller.cs — reconcile exited run/backtest containers
+    AiRiskGuard.cs              — BackgroundService; when AppOptions.Ai.RiskGuardEnabled, AI-assesses running bots
     ContainerCommandHelpers.cs  — BuildConsoleArgsList (tokens) / BuildConsoleArgs (shell string)
     Builder/CBotBuilder.cs      — sandboxed builder; `docker run` an SDK image + dotnet build
     Builder/Templates/          — embedded C#/Python starter project files
@@ -61,16 +65,17 @@ src/
     Auth/                    — HttpCurrentUser, OwnerSeeder, LocalNodeSeeder, InstanceReconciler,
                                CookieForwardingHandler
     Endpoints/               — Auth, CBot, Builder, ParamSet, Instance, Node, User, Ctid,
-                               McpKey, Dashboard, Image
+                               McpKey, Dashboard, Image, Ai (/api/ai/* — generate/review/analyze-backtest/
+                               optimize-params/post-mortem/sentiment/vision/curate)
     Hubs/LogsHub.cs          — SignalR streaming of `docker logs -f`
     Components/Pages/        — CBots (list/build/run/edit), BuilderEditor (Monaco IDE), Run,
                                Backtest, ParamSets, Nodes, Accounts, Users, InstanceTable/Detail,
-                               Login, Index, Mcp
+                               Login, Index, Mcp, Assistant (AI codegen/review/sentiment)
     Components/Dialogs/NewProjectDialog.razor
     Components/              — MudBlazor + custom cTrader-style dark theme
   Mcp/           — MCP HTTP+SSE server.
     Auth/McpKeyAuthHandler.cs — bearer token `mcpk_<hex>`, SHA-256 hashed, prefix-indexed
-    Tools/                    — CBotTools, InstanceTools
+    Tools/                    — CBotTools, InstanceTools, AiTools (generate/review/sentiment/analyze-backtest)
 tests/
   UnitTests/         — xUnit + FluentAssertions + NSubstitute
   IntegrationTests/  — Testcontainers PostgreSQL
@@ -108,6 +113,13 @@ dotnet ef database update    -p src/Infrastructure -s src/Infrastructure
 - cTrader Console backtest CLI (verified live): requires `--data-mode` (default `m1`), dates `dd/MM/yyyy HH:mm`, `params.cbotset` is JSON (`{"Parameters":{...}}`) passed as positional arg; `run` rejects `--data-dir` (backtest-only). See `ContainerCommandHelpers`.
 - `BacktestCompletionPoller` polls `RunningBacktestInstance` on `AppOptions.BacktestCompletionPollInterval` (backtest containers self-exit via `--exit-on-stop`). `RunCompletionPoller` does same for `RunningRunInstance`, using `IContainerDispatcher.GetExitCodeAsync` → exit 0/null = `StoppedRunInstance`, non-zero = `FailedRunInstance`. Backtest: report present → `CompletedBacktestInstance` (stores `ReportJson`); missing → `FailedBacktestInstance`.
 - Equity curve for `InstanceDetail` chart parsed from `CompletedBacktestInstance.ReportJson` by `ContainerCommandHelpers.ParseEquityCurve`. Real report nests points at `equity.points[]` (`{balance,minEquity,maxEquity,timestamp}`); parser also scans root keys `equityHistory`/`equityCurve`/`history`/`equity`.
+- AI layer: `IAiClient` calls the Anthropic Messages API over **raw HTTP** (typed `HttpClient`),
+  not the Anthropic SDK — deliberate, to avoid a fragile new NuGet dependency + offline-restore
+  risk; the app already uses `IHttpClientFactory` everywhere. All AI is gated on `AppOptions.Ai.ApiKey`:
+  unset → every feature returns `AiResult.Fail(disabled)` and the app runs unchanged (no key needed
+  for build/test/E2E). `AiFeatureService` is the single orchestrator shared by Web endpoints, MCP
+  `AiTools`, and the `AiRiskGuard` background service. Market sentiment uses the server-side
+  `web_search` tool; chart-vision passes a base64 image block.
 - MCP server separate process → scales/redeploys independently of Web. Uses stateless HTTP transport + `AddHttpContextAccessor` so tool calls see the authenticated user.
 - EF TPH gotcha: don't add `e.Property<T>(nameof(Subclass.Prop)).IsRequired(false)` from a *base* type's `EntityTypeBuilder` for a property on a *derived* TPH type — silently produces a property EF never persists (bit us on old `RemoteNode` SSH fields). TPH makes subclass-only properties nullable at column level automatically; no extra config.
 - EF SQL-translation gotcha: nested `(i as T) != null ? (i as T)!.Prop : ...` chains in an `IQueryable` `.Select()` don't reliably translate (silent wrong/null values vs real Postgres). Materialize with `ToListAsync()` first, switch in C# (see `InstanceEndpoints.GetStartedAt`/`GetStoppedAt`).

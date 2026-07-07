@@ -20,6 +20,18 @@ public sealed record AppOptions
     public TimeSpan InstanceReconcileInterval { get; init; } = TimeSpan.FromMinutes(1);
     public TimeSpan InstanceStartupTimeout { get; init; } = TimeSpan.FromMinutes(10);
     public LocalNodeOptions LocalNode { get; init; } = new();
+    public AiOptions Ai { get; init; } = new();
+}
+
+public sealed record AiOptions
+{
+    public string? ApiKey { get; init; }
+    public string Model { get; init; } = Constants.AiConstants.DefaultModel;
+    public string BaseUrl { get; init; } = Constants.AiConstants.DefaultBaseUrl;
+    public int MaxTokens { get; init; } = Constants.AiConstants.DefaultMaxTokens;
+    public bool RiskGuardEnabled { get; init; }
+    public TimeSpan RiskGuardInterval { get; init; } = TimeSpan.FromMinutes(5);
+    public bool Enabled => !string.IsNullOrWhiteSpace(ApiKey);
 }
 
 public sealed record LocalNodeOptions

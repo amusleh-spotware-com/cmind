@@ -1,0 +1,46 @@
+@* Modal dialog for creating/editing a parameter set. Returns ParamSetDialogResult on confirm. *@
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(IsEdit ? "Edit Parameter Set" : "New Parameter Set")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="_name" Label="Name" Required="true" RequiredError="Name is required" Class="mb-2" Immediate="true" />
+            <MudTextField @bind-Value="_json" Label="JSON" Lines="8" Variant="Variant.Outlined" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public string? Name { get; set; }
+    [Parameter] public string? Json { get; set; }
+    [Parameter] public bool IsEdit { get; set; }
+
+    private MudForm? _form;
+    private string _name = "";
+    private string _json = "{}";
+
+    protected override void OnInitialized()
+    {
+        _name = Name ?? "";
+        _json = string.IsNullOrWhiteSpace(Json) ? "{}" : Json!;
+    }
+
+    private async Task Submit()
+    {
+        if (_form is not null) await _form.Validate();
+        if (string.IsNullOrWhiteSpace(_name)) return;
+        Dialog.Close(DialogResult.Ok(new ParamSetDialogResult(_name.Trim(), _json)));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    public sealed record ParamSetDialogResult(string Name, string Json);
+}

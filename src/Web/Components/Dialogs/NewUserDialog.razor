@@ -1,0 +1,42 @@
+@* Modal dialog for creating a user. Returns NewUserDialogResult on confirm. *@
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">New User</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="_email" Label="Email" Required="true" RequiredError="Email is required" Class="mb-2" />
+            <MudTextField @bind-Value="_password" Label="Temp password" InputType="InputType.Password"
+                          Required="true" RequiredError="Password is required" Class="mb-2" />
+            <MudSelect T="int" @bind-Value="_role" Label="Role">
+                <MudSelectItem T="int" Value="1">Admin</MudSelectItem>
+                <MudSelectItem T="int" Value="2">User</MudSelectItem>
+                <MudSelectItem T="int" Value="3">Viewer</MudSelectItem>
+            </MudSelect>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    private MudForm? _form;
+    private string _email = "", _password = "";
+    private int _role = 2;
+
+    private async Task Submit()
+    {
+        if (_form is not null) await _form.Validate();
+        if (string.IsNullOrWhiteSpace(_email) || string.IsNullOrWhiteSpace(_password)) return;
+        Dialog.Close(DialogResult.Ok(new NewUserDialogResult(_email.Trim(), _password, _role)));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    public sealed record NewUserDialogResult(string Email, string Password, int Role);
+}

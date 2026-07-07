@@ -18,6 +18,7 @@
     <Project Path="src/Web/Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/E2ETests/E2ETests.csproj" />
     <Project Path="tests/IntegrationTests/IntegrationTests.csproj" />
     <Project Path="tests/UnitTests/UnitTests.csproj" />
   </Folder>

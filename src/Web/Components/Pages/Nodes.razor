@@ -1,31 +1,21 @@
 @page "/nodes"
 @using Web.Json
+@using Web.Components.Dialogs
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
+@inject IDialogService Dialogs
 
 <PageTitle>Nodes</PageTitle>
-<MudText Typo="Typo.h5" Class="mb-3">Nodes</MudText>
 
-<MudExpansionPanels>
-    <MudExpansionPanel Text="Add node">
-        <MudGrid>
-            <MudItem xs="12" md="4"><MudTextField @bind-Value="_name" Label="Name" /></MudItem>
-            <MudItem xs="12" md="4"><MudTextField @bind-Value="_baseUrl" Label="Agent base URL" Placeholder="http://node-host:8080" /></MudItem>
-            <MudItem xs="12" md="4"><MudTextField @bind-Value="_secret" Label="API secret" InputType="InputType.Password" /></MudItem>
-            <MudItem xs="6" md="3">
-                <MudSelect T="string" @bind-Value="_mode" Label="Mode">
-                    <MudSelectItem T="string" Value="@("Run")">Run</MudSelectItem>
-                    <MudSelectItem T="string" Value="@("Backtest")">Backtest</MudSelectItem>
-                    <MudSelectItem T="string" Value="@("Mixed")">Mixed</MudSelectItem>
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="6" md="3"><MudTextField @bind-Value="_dataDir" Label="Data dir" /></MudItem>
-            <MudItem xs="6" md="3"><MudNumericField @bind-Value="_max" Label="Max instances" /></MudItem>
-        </MudGrid>
-        <MudButton OnClick="Add" Variant="Variant.Filled" Color="Color.Primary" Class="mt-2">Add node</MudButton>
-    </MudExpansionPanel>
-</MudExpansionPanels>
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Nodes</MudText>
+    <MudSpacer />
+    <MudButton Color="Color.Primary" Variant="Variant.Filled"
+               StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew">
+        New Node
+    </MudButton>
+</MudStack>
 
 <MudTable Items="_items" Class="mt-3" Dense="true">
     <HeaderContent>
@@ -57,19 +47,21 @@
 
 @code {
     private dynamic[] _items = [];
-    private string _name = "", _baseUrl = "", _secret = "", _dataDir = "/var/app/data";
-    private int _max = 10;
-    private string _mode = "Mixed";
 
     protected override Task OnInitializedAsync() => Load();
     private async Task Load() => _items = await Http.GetDynamicArrayAsync("/api/nodes/");
 
-    private async Task Add()
+    private async Task OpenNew()
     {
+        var dlg = await Dialogs.ShowAsync<NewNodeDialog>("New Node",
+            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
+        var res = await dlg.Result;
+        if (res is null || res.Canceled) return;
+        var data = (NewNodeDialog.NewNodeDialogResult)res.Data!;
         var r = await Http.PostAsJsonAsync("/api/nodes/", new
         {
-            Name = _name, BaseUrl = _baseUrl, ApiSecret = _secret, Mode = _mode,
-            DataDirPath = _dataDir, MaxInstances = _max
+            data.Name, data.BaseUrl, data.ApiSecret, data.Mode,
+            DataDirPath = data.DataDir, data.MaxInstances
         });
         Snack.Add(r.IsSuccessStatusCode ? "Added" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
         await Load();

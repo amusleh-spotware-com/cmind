@@ -1,14 +1,21 @@
 @page "/mcp"
 @using Web.Json
+@using Web.Components.Dialogs
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inject HttpClient Http
 @inject ISnackbar Snack
+@inject IDialogService Dialogs
 
 <PageTitle>MCP Keys</PageTitle>
-<MudText Typo="Typo.h5" Class="mb-3">MCP API Keys</MudText>
 
-<MudTextField @bind-Value="_label" Label="Label" />
-<MudButton OnClick="Create" Variant="Variant.Filled" Color="Color.Primary" Class="mt-2">Create</MudButton>
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">MCP API Keys</MudText>
+    <MudSpacer />
+    <MudButton Color="Color.Primary" Variant="Variant.Filled"
+               StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew">
+        New Key
+    </MudButton>
+</MudStack>
 
 @if (!string.IsNullOrEmpty(_newKey))
 {
@@ -22,22 +29,26 @@
     <RowTemplate>
         <MudTd>@context.label</MudTd>
         <MudTd>@context.keyPrefix</MudTd>
-        <MudTd>@context.lastUsedAt</MudTd>
+        <MudTd>@((string?)(context.lastUsedAt?.ToString()) ?? "—")</MudTd>
         <MudTd><MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => Revoke((Guid)context.id))" /></MudTd>
     </RowTemplate>
 </MudTable>
 
 @code {
     private dynamic[] _items = [];
-    private string _label = "";
     private string? _newKey;
 
     protected override Task OnInitializedAsync() => Load();
     private async Task Load() => _items = await Http.GetDynamicArrayAsync("/api/mcp-keys/");
 
-    private async Task Create()
+    private async Task OpenNew()
     {
-        var r = await Http.PostAsJsonAsync("/api/mcp-keys/", new { Label = _label });
+        var dlg = await Dialogs.ShowAsync<NewMcpKeyDialog>("New MCP Key",
+            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+        var res = await dlg.Result;
+        if (res is null || res.Canceled) return;
+        var data = (NewMcpKeyDialog.NewMcpKeyDialogResult)res.Data!;
+        var r = await Http.PostAsJsonAsync("/api/mcp-keys/", new { data.Label });
         if (r.IsSuccessStatusCode)
         {
             var d = await r.Content.ReadFromJsonAsync<TokenResponse>();

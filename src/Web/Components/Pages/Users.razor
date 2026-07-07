@@ -1,24 +1,21 @@
 @page "/users"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOrAbove")]
 @using Web.Json
+@using Web.Components.Dialogs
 @inject HttpClient Http
 @inject ISnackbar Snack
+@inject IDialogService Dialogs
 
 <PageTitle>Users</PageTitle>
-<MudText Typo="Typo.h5" Class="mb-3">Users</MudText>
 
-<MudGrid Class="mb-3">
-    <MudItem xs="12" md="4"><MudTextField @bind-Value="_email" Label="Email" /></MudItem>
-    <MudItem xs="12" md="4"><MudTextField @bind-Value="_password" Label="Temp password" InputType="InputType.Password" /></MudItem>
-    <MudItem xs="6" md="2">
-        <MudSelect T="int" @bind-Value="_role" Label="Role">
-            <MudSelectItem T="int" Value="1">Admin</MudSelectItem>
-            <MudSelectItem T="int" Value="2">User</MudSelectItem>
-            <MudSelectItem T="int" Value="3">Viewer</MudSelectItem>
-        </MudSelect>
-    </MudItem>
-    <MudItem xs="6" md="2"><MudButton OnClick="Add" Variant="Variant.Filled" Color="Color.Primary" Class="mt-3">Create</MudButton></MudItem>
-</MudGrid>
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Users</MudText>
+    <MudSpacer />
+    <MudButton Color="Color.Primary" Variant="Variant.Filled"
+               StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew">
+        New User
+    </MudButton>
+</MudStack>
 
 <MudTable Items="_items" Dense="true">
     <HeaderContent><MudTh>Email</MudTh><MudTh>Role</MudTh><MudTh>Locked</MudTh><MudTh /></HeaderContent>
@@ -35,17 +32,19 @@
 
 @code {
     private dynamic[] _items = [];
-    private string _email = "", _password = "";
-    private int _role = 2;
 
     protected override Task OnInitializedAsync() => Load();
     private async Task Load() => _items = await Http.GetDynamicArrayAsync("/api/users/");
 
-    private async Task Add()
+    private async Task OpenNew()
     {
-        var r = await Http.PostAsJsonAsync("/api/users/", new { Email = _email, Password = _password, Role = _role });
+        var dlg = await Dialogs.ShowAsync<NewUserDialog>("New User",
+            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+        var res = await dlg.Result;
+        if (res is null || res.Canceled) return;
+        var data = (NewUserDialog.NewUserDialogResult)res.Data!;
+        var r = await Http.PostAsJsonAsync("/api/users/", new { data.Email, data.Password, data.Role });
         Snack.Add(r.IsSuccessStatusCode ? "Created" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
-        _email = ""; _password = "";
         await Load();
     }
 

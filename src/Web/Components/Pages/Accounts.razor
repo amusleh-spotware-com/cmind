@@ -1,19 +1,21 @@
 @page "/accounts"
 @using Web.Json
+@using Web.Components.Dialogs
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
+@inject IDialogService Dialogs
 
 <PageTitle>cTrader Accounts</PageTitle>
-<MudText Typo="Typo.h5" Class="mb-3">cTrader Accounts</MudText>
 
-<MudExpansionPanels>
-    <MudExpansionPanel Text="Add cID account">
-        <MudTextField @bind-Value="_username" Label="cID username" />
-        <MudTextField @bind-Value="_password" Label="cID password" InputType="InputType.Password" Class="mt-2" />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddCid" Class="mt-2">Add</MudButton>
-    </MudExpansionPanel>
-</MudExpansionPanels>
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">cTrader Accounts</MudText>
+    <MudSpacer />
+    <MudButton Color="Color.Primary" Variant="Variant.Filled"
+               StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew">
+        New cID Account
+    </MudButton>
+</MudStack>
 
 <MudList T="dynamic" Class="mt-3">
     @foreach (var c in _cids)
@@ -28,16 +30,19 @@
 
 @code {
     private dynamic[] _cids = [];
-    private string _username = "", _password = "";
 
     protected override Task OnInitializedAsync() => Load();
     private async Task Load() => _cids = await Http.GetDynamicArrayAsync("/api/ctids/");
 
-    private async Task AddCid()
+    private async Task OpenNew()
     {
-        var r = await Http.PostAsJsonAsync("/api/ctids/", new { Username = _username, Password = _password });
+        var dlg = await Dialogs.ShowAsync<NewCidAccountDialog>("New cID Account",
+            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+        var res = await dlg.Result;
+        if (res is null || res.Canceled) return;
+        var data = (NewCidAccountDialog.NewCidAccountDialogResult)res.Data!;
+        var r = await Http.PostAsJsonAsync("/api/ctids/", new { data.Username, data.Password });
         Snack.Add(r.IsSuccessStatusCode ? "Added" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
-        _username = ""; _password = "";
         if (r.IsSuccessStatusCode) await Load();
     }
 

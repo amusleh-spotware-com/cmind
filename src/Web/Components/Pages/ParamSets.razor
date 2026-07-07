@@ -1,11 +1,24 @@
 @page "/paramsets"
 @using Web.Json
+@using Web.Components.Dialogs
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
+@inject IDialogService Dialogs
 
 <PageTitle>Parameter Sets</PageTitle>
-<MudText Typo="Typo.h5" Class="mb-3">Parameter Sets</MudText>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Parameter Sets</MudText>
+    <MudSpacer />
+    @if (_cbotId is not null)
+    {
+        <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew">
+            New Parameter Set
+        </MudButton>
+    }
+</MudStack>
 
 <MudSelect T="Guid?" @bind-Value="_cbotId" @bind-Value:after="LoadItems" Label="cBot" Class="mb-3">
     @foreach (var c in _cbots) { <MudSelectItem T="Guid?" Value="@((Guid?)c.id)">@c.name</MudSelectItem> }
@@ -13,10 +26,6 @@
 
 @if (_cbotId is not null)
 {
-    <MudTextField @bind-Value="_name" Label="Name" Required="true" RequiredError="Name is required" />
-    <MudTextField @bind-Value="_json" Label="JSON" Lines="8" Variant="Variant.Outlined" Class="mt-2" />
-    <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Primary" Class="mt-2">Save</MudButton>
-
     <MudTable Items="_items" Class="mt-3" Dense="true">
         <HeaderContent><MudTh>Name</MudTh><MudTh /></HeaderContent>
         <RowTemplate>
@@ -32,31 +41,50 @@
 @code {
     private dynamic[] _cbots = [], _items = [];
     private Guid? _cbotId;
-    private string _name = "", _json = "{}";
-    private Guid? _editing;
 
     protected override async Task OnInitializedAsync() =>
         _cbots = await Http.GetDynamicArrayAsync("/api/cbots/");
 
     private async Task LoadItems()
     {
-        _editing = null; _name = ""; _json = "{}";
         _items = _cbotId is null
             ? []
             : await Http.GetDynamicArrayAsync($"/api/paramsets?cbotId={_cbotId}");
     }
 
-    private async Task Save()
+    private async Task OpenNew()
     {
         if (_cbotId is null) return;
-        if (string.IsNullOrWhiteSpace(_name)) { Snack.Add("Name is required", Severity.Error); return; }
-        if (!IsNonEmptyJson(_json)) { Snack.Add("Content cannot be empty", Severity.Error); return; }
+        var res = await ShowDialogAsync(null, null);
+        if (res is null) return;
+        await Save(null, res.Name, res.Json);
+    }
 
-        var url = _editing is null ? "/api/paramsets" : $"/api/paramsets/{_editing}";
-        var method = _editing is null ? HttpMethod.Post : HttpMethod.Put;
+    private async Task<ParamSetDialog.ParamSetDialogResult?> ShowDialogAsync(string? name, string? json)
+    {
+        var parameters = new DialogParameters<ParamSetDialog>
+        {
+            { x => x.Name, name },
+            { x => x.Json, json },
+            { x => x.IsEdit, name is not null }
+        };
+        var dlg = await Dialogs.ShowAsync<ParamSetDialog>(name is null ? "New Parameter Set" : "Edit Parameter Set",
+            parameters, new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
+        var res = await dlg.Result;
+        if (res is null || res.Canceled) return null;
+        return (ParamSetDialog.ParamSetDialogResult)res.Data!;
+    }
+
+    private async Task Save(Guid? id, string name, string json)
+    {
+        if (_cbotId is null) return;
+        if (!IsNonEmptyJson(json)) { Snack.Add("Content cannot be empty", Severity.Error); return; }
+
+        var url = id is null ? "/api/paramsets" : $"/api/paramsets/{id}";
+        var method = id is null ? HttpMethod.Post : HttpMethod.Put;
         var req = new HttpRequestMessage(method, url)
         {
-            Content = JsonContent.Create(new { CBotId = _cbotId, Name = _name, JsonContent = _json })
+            Content = JsonContent.Create(new { CBotId = _cbotId, Name = name, JsonContent = json })
         };
         var r = await Http.SendAsync(req);
         Snack.Add(r.IsSuccessStatusCode ? "Saved" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
@@ -83,7 +111,10 @@
     private async Task Edit(Guid id)
     {
         var p = await Http.GetDynamicAsync($"/api/paramsets/{id}");
-        if (p is not null) { _editing = id; _name = p.name; _json = p.jsonContent; }
+        if (p is null) return;
+        var res = await ShowDialogAsync((string?)p.name ?? "", (string?)p.jsonContent ?? "{}");
+        if (res is null) return;
+        await Save(id, res.Name, res.Json);
     }
 
     private async Task Delete(Guid id) { await Http.DeleteAsync($"/api/paramsets/{id}"); await LoadItems(); }

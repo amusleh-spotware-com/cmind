@@ -54,7 +54,7 @@ api.AddEndpointFilter(async (ctx, next) =>
     return await next(ctx);
 });
 
-api.MapGet(NodeAgentRoutes.Info, () =>
+api.MapGet("/info", () =>
     Results.Ok(new NodeAgentInfoResponse(VersionInfo.Product, NodeAgentProtocol.Version)));
 
 api.MapPost("/containers", async (StartContainerRequest req, DockerService docker, CancellationToken ct) =>

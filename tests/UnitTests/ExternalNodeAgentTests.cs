@@ -1,8 +1,10 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text;
 using Core.Constants;
+using Core.NodeAgent;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Hosting;
@@ -40,11 +42,41 @@ public class ExternalNodeAgentTests(AgentFactory factory) : IClassFixture<AgentF
     [Fact]
     public async Task Api_accepts_valid_token()
     {
+        var request = AgentFactory.AuthedRequest(HttpMethod.Get, NodeAgentRoutes.Report("nonexistent-container"));
+        var resp = await factory.CreateClient().SendAsync(request);
+        // Auth + protocol passed; the report for an unknown container is 404.
+        resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Api_rejects_missing_protocol_version()
+    {
         var request = new HttpRequestMessage(HttpMethod.Get, NodeAgentRoutes.Report("nonexistent-container"));
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AgentFactory.MintToken(AgentFactory.Secret));
         var resp = await factory.CreateClient().SendAsync(request);
-        // Auth passed; the report for an unknown container is 404.
-        resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        resp.StatusCode.Should().Be(HttpStatusCode.UpgradeRequired);
+    }
+
+    [Fact]
+    public async Task Api_rejects_incompatible_protocol_version()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, NodeAgentRoutes.Report("nonexistent-container"));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AgentFactory.MintToken(AgentFactory.Secret));
+        request.Headers.Add(NodeAgentProtocol.HeaderName, (NodeAgentProtocol.Version + 1).ToString());
+        var resp = await factory.CreateClient().SendAsync(request);
+        resp.StatusCode.Should().Be(HttpStatusCode.UpgradeRequired);
+    }
+
+    [Fact]
+    public async Task Info_reports_product_and_protocol_version()
+    {
+        var request = AgentFactory.AuthedRequest(HttpMethod.Get, NodeAgentRoutes.Info);
+        var resp = await factory.CreateClient().SendAsync(request);
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var info = await resp.Content.ReadFromJsonAsync<NodeAgentInfoResponse>();
+        info.Should().NotBeNull();
+        info!.ProtocolVersion.Should().Be(NodeAgentProtocol.Version);
+        info.ProductVersion.Should().NotBeNullOrWhiteSpace();
     }
 }
 
@@ -58,6 +90,14 @@ public sealed class AgentFactory : WebApplicationFactory<Program>
         Environment.SetEnvironmentVariable("NodeAgent__JwtSecret", Secret);
         Environment.SetEnvironmentVariable("NodeAgent__DataRoot", Path.Combine(Path.GetTempPath(), "app-agent-test"));
         return base.CreateHost(builder);
+    }
+
+    public static HttpRequestMessage AuthedRequest(HttpMethod method, string url)
+    {
+        var request = new HttpRequestMessage(method, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", MintToken(Secret));
+        request.Headers.Add(NodeAgentProtocol.HeaderName, NodeAgentProtocol.Version.ToString());
+        return request;
     }
 
     public static string MintToken(string secret)

@@ -8,6 +8,13 @@ All notable changes to this project are documented here. The format is based on
 
 ### Added
 
+- Strict versioning across all components. A single SemVer product version
+  (`VersionPrefix` in `Directory.Build.props`) is shipped in lockstep by every assembly and
+  surfaced at runtime via `Core.VersionInfo` (Web app bar + `/version` on Web, MCP, and the
+  node agent). A dedicated wire-contract version (`NodeAgentProtocol`) guards the main
+  node ↔ external node agent HTTP API: the main node stamps every request with an
+  `X-Node-Protocol-Version` header and the agent rejects incompatible callers with
+  `426 Upgrade Required`.
 - MIT `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CHANGELOG.md`.
 - GitHub issue/PR templates, CI (build + test), CodeQL analysis, and Dependabot config.
 - `.dockerignore`.

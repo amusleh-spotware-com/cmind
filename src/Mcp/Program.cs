@@ -1,4 +1,6 @@
+using Core;
 using Core.Constants;
+using Core.NodeAgent;
 using Infrastructure;
 using Infrastructure.Persistence;
 using Mcp.Auth;
@@ -24,6 +26,8 @@ var app = builder.Build();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapMcp("/mcp").RequireAuthorization();
+app.MapGet(HealthEndpoints.Version, () => Results.Ok(new NodeAgentInfoResponse(VersionInfo.Product, NodeAgentProtocol.Version)))
+    .AllowAnonymous();
 
 app.Run();
 

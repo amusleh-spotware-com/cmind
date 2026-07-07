@@ -17,13 +17,6 @@
     </MudButton>
 </MudStack>
 
-@if (!string.IsNullOrEmpty(_newKey))
-{
-    <MudAlert Severity="Severity.Warning" Class="mt-2">
-        Copy now (shown once): <code>@_newKey</code>
-    </MudAlert>
-}
-
 <MudTable Items="_items" Class="mt-3" Dense="true">
     <HeaderContent><MudTh>Label</MudTh><MudTh>Prefix</MudTh><MudTh>Last used</MudTh><MudTh /></HeaderContent>
     <RowTemplate>
@@ -36,7 +29,6 @@
 
 @code {
     private dynamic[] _items = [];
-    private string? _newKey;
 
     protected override Task OnInitializedAsync() => Load();
     private async Task Load() => _items = await Http.GetDynamicArrayAsync("/api/mcp-keys/");
@@ -52,8 +44,13 @@
         if (r.IsSuccessStatusCode)
         {
             var d = await r.Content.ReadFromJsonAsync<TokenResponse>();
-            _newKey = d?.Token;
             await Load();
+            if (!string.IsNullOrEmpty(d?.Token))
+            {
+                await Dialogs.ShowAsync<McpKeyCreatedDialog>("MCP Key Created",
+                    new DialogParameters<McpKeyCreatedDialog> { { x => x.Key, d.Token } },
+                    new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
+            }
         }
         else Snack.Add("Failed", Severity.Error);
     }

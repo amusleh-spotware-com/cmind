@@ -49,7 +49,26 @@ public sealed class DialogTests(AppFixture app)
         var label = $"key-{Suffix}";
         var dialog = await OpenDialogAsync(page, "New Key");
         await dialog.Locator("input").Nth(0).FillAsync(label);
-        await SubmitAsync(dialog, "Create");
+
+        // Submitting opens a second dialog (the created key), so wait for that instead of the input closing.
+        var keyDialog = page.Locator(".mud-dialog:has-text('MCP Key Created')");
+        for (var attempt = 0; attempt < 15; attempt++)
+        {
+            await dialog.Locator("button:has-text('Create')").ClickAsync();
+            try
+            {
+                await keyDialog.WaitForAsync(new() { Timeout = 2000, State = WaitForSelectorState.Visible });
+                break;
+            }
+            catch (TimeoutException) { /* circuit not interactive yet — retry */ }
+            catch (PlaywrightException) { /* stale locator after circuit reconnect — retry */ }
+        }
+
+        // New key is shown once in its own dialog with a copy button, not on the page.
+        await Assertions.Expect(keyDialog.Locator("input").First).ToHaveValueAsync(
+            new System.Text.RegularExpressions.Regex("^mcpk_"), new() { Timeout = 15000 });
+        await Assertions.Expect(keyDialog.Locator("button:has-text('Copy')")).ToBeVisibleAsync(Slow);
+        await SubmitAsync(keyDialog, "Close");
 
         await Assertions.Expect(page.GetByText(label)).ToBeVisibleAsync(Slow);
     }

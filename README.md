@@ -1,19 +1,18 @@
 # cTrader Algo Web
 
-> **Experimental project — entirely built by [Claude Code](https://claude.com/claude-code).**
-> No line of code in this repository was hand-written by a human. Spec, scaffolding, refactors,
-> migrations, dependency wiring, and documentation were all produced by an AI agent through an
-> interactive coding session. Treat the code as a reference experiment, not production-ready.
+> **Experimental — entirely built by [Claude Code](https://claude.com/claude-code).**
+> No human-written code. Spec, scaffolding, refactors, migrations, DI wiring, docs — all
+> AI-generated through an interactive session. Reference experiment, not production-ready.
 
-ASP.NET Core + Blazor Server app for building, running, backtesting, and (later) optimizing
-cTrader cBots through the official [cTrader Console Docker image](https://github.com/spotware/ctrader-console-docker),
+ASP.NET Core + Blazor Server app to build, run, backtest (later optimize) cTrader cBots via the
+official [cTrader Console Docker image](https://github.com/spotware/ctrader-console-docker),
 scheduled across remote nodes (each running the `ExternalNode` HTTP agent) and/or the local web host.
 
 ## Stack
 
 - .NET 10, C# (latest)
 - ASP.NET Core Minimal APIs
-- Blazor Server with Server-Side Rendering
+- Blazor Server with SSR
 - MudBlazor + custom cTrader-style dark theme
 - BlazorMonaco for the in-browser cBot code editor
 - Blazor-ApexCharts for backtest charts
@@ -42,13 +41,13 @@ scheduled across remote nodes (each running the `ExternalNode` HTTP agent) and/o
 ## Prerequisites
 
 - .NET 10 SDK
-- Docker (engine reachable by the Web container/host — used by the builder)
-- PostgreSQL (provisioned automatically by Aspire in development)
+- Docker (engine reachable by the Web host — used by the builder)
+- PostgreSQL (auto-provisioned by Aspire in development)
 
 ## Configuration
 
-All settings live under the `Ctw` section and are bound to a strongly-typed
-[`AppOptions`](src/Core/Options/AppOptions.cs) record consumed via `IOptionsMonitor<AppOptions>`.
+Settings live under the `Ctw` section, bound to a strongly-typed
+[`AppOptions`](src/Core/Options/AppOptions.cs) record via `IOptionsMonitor<AppOptions>`.
 
 ```jsonc
 {
@@ -66,22 +65,22 @@ All settings live under the `Ctw` section and are bound to a strongly-typed
 }
 ```
 
-`LocalNode` (disabled by default) lets run/backtest containers be scheduled on the web
-host itself, dispatched via `LocalContainerDispatcher` instead of a remote agent.
+`LocalNode` (off by default) schedules run/backtest containers on the web host itself via
+`LocalContainerDispatcher` instead of a remote agent.
 
 ## External nodes
 
 Remote nodes run the **`src/ExternalNode`** agent — an HTTP API the main node calls to pull
-images and run cBot containers. There is no SSH/shell access: the main node sends the image,
-the tokenized `run`/`backtest` command, and the required files (algo, `params.cbotset`,
-`ctid.pwd`), and the agent runs the container locally and reports status/report/logs/stats back.
+images and run cBot containers. No SSH/shell access: main node sends the image, tokenized
+`run`/`backtest` command, and files (algo, `params.cbotset`, `ctid.pwd`); the agent runs the
+container locally and reports status/report/logs/stats back.
 
-Each request is authenticated with a short-lived HS256 JWT (`iss=ctw-main`, `aud=ctw-node`,
-5-minute expiry) signed with a **per-node shared secret**. The agent only runs images matching
-`AllowedImagePrefix` (default `ghcr.io/spotware/`) and finds containers by the `ctw.instance`
-label, so it is stateless and restart-safe.
+Each request carries a short-lived HS256 JWT (`iss=ctw-main`, `aud=ctw-node`, 5-min expiry)
+signed with a **per-node shared secret**. Agent only runs images matching `AllowedImagePrefix`
+(default `ghcr.io/spotware/`) and finds containers by the `ctw.instance` label → stateless,
+restart-safe.
 
-Agent configuration (`NodeAgent` section / `NodeAgent__*` env vars):
+Agent config (`NodeAgent` section / `NodeAgent__*` env vars):
 
 ```jsonc
 {
@@ -93,8 +92,7 @@ Agent configuration (`NodeAgent` section / `NodeAgent__*` env vars):
 }
 ```
 
-Run the agent (build the image from `src/ExternalNode/Dockerfile`), giving it a docker daemon.
-It starts its own daemon, so run it `--privileged`:
+Build the image from `src/ExternalNode/Dockerfile`. It starts its own daemon, so run it `--privileged`:
 
 ```bash
 docker build -f src/ExternalNode/Dockerfile -t ctw-node-agent .
@@ -103,9 +101,9 @@ docker run -d --privileged -p 8080:8080 \
   --name ctw-node-agent ctw-node-agent
 ```
 
-Then in the Web UI (**Nodes → Add node**) register it with its **base URL**
-(`http://<host>:8080`) and the same **API secret**. In production, terminate TLS in front of
-the agent and keep it on a private network.
+Then in the Web UI (**Nodes → Add node**) register it with its **base URL** (`http://<host>:8080`)
+and the same **API secret**. In production, terminate TLS in front of the agent and keep it on a
+private network.
 
 ## Build & run
 
@@ -116,12 +114,93 @@ dotnet run --project src/Web       # Web app only — needs connection string "c
                                     # (user-secrets, Ctw__OwnerEmail-style env vars, or appsettings.Development.json)
 ```
 
-Migrations live in `src/Infrastructure/Persistence/Migrations` and apply automatically on
-startup via `OwnerSeeder`. To regenerate:
+Migrations live in `src/Infrastructure/Persistence/Migrations`, apply automatically on startup
+via `OwnerSeeder`. Regenerate:
 
 ```bash
 dotnet ef migrations add <Name> -p src/Infrastructure -s src/Infrastructure -o Persistence/Migrations
 ```
+
+## Step-by-step guide
+
+Clean checkout → running a cBot on both the local host and a remote external node.
+
+### 1. Configure and start the app
+
+1. Install prerequisites (.NET 10 SDK, Docker, a demo cTrader ID).
+2. Set owner credentials (seed the first admin on first run). Dev: user-secrets on `src/Web` or env vars:
+
+   ```bash
+   dotnet user-secrets --project src/Web set "Ctw:OwnerEmail" "owner@example.com"
+   dotnet user-secrets --project src/Web set "Ctw:OwnerPassword" "ChangeMe!123"
+   ```
+
+   (Data-protection cert values may be empty in dev — keys then stored unencrypted.)
+3. Start everything with Aspire (Postgres, Web, MCP, pgAdmin):
+
+   ```bash
+   dotnet run --project src/AppHost
+   ```
+
+   Open the Web URL from the Aspire dashboard.
+
+### 2. First login
+
+1. Sign in with the owner email/password.
+2. Forced password change on first login — set a new one.
+
+### 3. Create a cBot
+
+Build in-browser or upload a compiled `.algo`:
+
+- **Build in-browser** — **cBots → New project**, pick C# or Python, edit in the Monaco editor,
+  **Build**. Build runs in a sandboxed container; on success produces a runnable cBot.
+- **Upload** — **cBots → Upload**, select an existing `.algo`.
+
+### 4. Add a cTrader ID and trading account
+
+1. Go to **Accounts**.
+2. Add a **cTrader ID** (cTID username + password) — encrypted at rest.
+3. Under it, add a **trading account** (account number + broker, e.g. a Spotware demo account).
+   Use the cTrader CLI `accounts` command to look up the number.
+
+### 5. Create a parameter set
+
+**Param sets → New**, pick the cBot, enter parameters as JSON whose keys match the cBot's
+`[Parameter]` names, e.g. `{"Periods": 20}`. Empty parameter sets are rejected; a cBot with no
+parameters gets none passed.
+
+### 6. Run or backtest locally
+
+1. Enable the local node: **Nodes**, toggle **local** **Enabled** (or set `Ctw:LocalNode:Enabled=true` before startup).
+2. **Backtest** — **Backtest**, choose cBot, trading account, symbol, timeframe, date range,
+   image tag (e.g. `5.7.10`), parameter set, **Start backtest**. On finish, open it in the
+   instances table for report + equity curve.
+3. **Run** — **Run**, same inputs, **Start**. Watch live logs; **Stop** when done.
+
+### 7. Add and use an external (remote) node
+
+1. **Pick a shared secret** (≥ 32 chars).
+2. **Build and run the agent** on the remote host (starts its own docker daemon → `--privileged`):
+
+   ```bash
+   docker build -f src/ExternalNode/Dockerfile -t ctw-node-agent .
+   docker run -d --privileged -p 8080:8080 \
+     -e NodeAgent__JwtSecret="<your shared secret>" \
+     --name ctw-node-agent ctw-node-agent
+   ```
+
+   Confirm: `curl http://<host>:8080/health` returns `Healthy`.
+3. **Register the node**: **Nodes → Add node** → set **name**, **base URL** (`http://<host>:8080`),
+   same **API secret**, a **mode** (Run / Backtest / Mixed), **data dir**, **max instances**. Save.
+4. (Optional) Disable the local node to prefer the remote one, or leave both — scheduler picks
+   the least-loaded eligible node.
+5. **Dispatch as usual** (step 6). Main node mints a short-lived JWT, sends image tag + command +
+   files; agent pulls the image and runs the container on the remote host. Status, logs, reports,
+   stop, and stats flow back over HTTP; the Nodes page shows the remote node's live CPU/mem/disk.
+
+Production: put the agent behind TLS on a private network; rotate a node's secret by updating
+both the agent's `NodeAgent:JwtSecret` and the node's stored API secret (re-add it).
 
 ## Tests
 
@@ -136,20 +215,17 @@ Integration tests use Testcontainers for a real PostgreSQL container — Docker 
 - `GET /health` — readiness (includes PostgreSQL connectivity)
 - `GET /alive` — liveness
 
-Both endpoints are only mapped in Development; in production they live behind authentication
-or a private network as configured by the deployment.
+Mapped in Development only; in production keep behind auth or a private network.
 
 ## MCP server
 
-The MCP server is hosted separately under `/mcp` and authenticates via per-user API keys
-issued from the Web UI (`ctw_mcp_<hex>`). Tokens are SHA-256 hashed in the database; the
-raw value is shown to the user exactly once.
+Hosted separately under `/mcp`, authenticated via per-user API keys from the Web UI
+(`ctw_mcp_<hex>`). Tokens SHA-256 hashed in DB; raw value shown once.
 
 ## License & disclaimer
 
-cTrader and the cTrader Console image are property of Spotware Systems Ltd. This project is
-an unaffiliated experiment and not endorsed by Spotware.
+cTrader and the cTrader Console image are property of Spotware Systems Ltd. This project is an
+unaffiliated experiment, not endorsed by Spotware.
 
-The entire codebase is provided as-is for educational and experimental purposes. Because it
-was generated by an AI, expect rough edges, design inconsistencies, and code that should be
-reviewed before deployment.
+Provided as-is for educational/experimental purposes. AI-generated — expect rough edges, design
+inconsistencies, and code that should be reviewed before deployment.

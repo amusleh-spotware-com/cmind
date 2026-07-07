@@ -65,8 +65,9 @@ src/
     Auth/                    — HttpCurrentUser, OwnerSeeder, LocalNodeSeeder, InstanceReconciler,
                                CookieForwardingHandler
     Endpoints/               — Auth, CBot, Builder, ParamSet, Instance, Node, User, Ctid,
-                               McpKey, Dashboard, Image, Ai (/api/ai/* — generate/review/analyze-backtest/
-                               optimize-params/post-mortem/sentiment/vision/curate)
+                               McpKey, Dashboard, Image, Ai (/api/ai/* — generate/generate-project/
+                               review/analyze-backtest/optimize-params/optimize-run/post-mortem/
+                               sentiment/vision/curate)
     Hubs/LogsHub.cs          — SignalR streaming of `docker logs -f`
     Components/Pages/        — CBots (list/build/run/edit), BuilderEditor (Monaco IDE), Run,
                                Backtest, ParamSets, Nodes, Accounts, Users, InstanceTable/Detail,
@@ -119,7 +120,10 @@ dotnet ef database update    -p src/Infrastructure -s src/Infrastructure
   unset → every feature returns `AiResult.Fail(disabled)` and the app runs unchanged (no key needed
   for build/test/E2E). `AiFeatureService` is the single orchestrator shared by Web endpoints, MCP
   `AiTools`, and the `AiRiskGuard` background service. Market sentiment uses the server-side
-  `web_search` tool; chart-vision passes a base64 image block.
+  `web_search` tool; chart-vision passes a base64 image block. `generate-project` runs a
+  generate → build (`CBotBuilder`) → AI-fix self-repair loop (≤3 attempts); `optimize-run`
+  is a closed loop — AI proposes param sets, each is persisted + backtested across nodes via
+  `INodeScheduler` (mirrors the `InstanceEndpoints` backtest-launch path).
 - MCP server separate process → scales/redeploys independently of Web. Uses stateless HTTP transport + `AddHttpContextAccessor` so tool calls see the authenticated user.
 - EF TPH gotcha: don't add `e.Property<T>(nameof(Subclass.Prop)).IsRequired(false)` from a *base* type's `EntityTypeBuilder` for a property on a *derived* TPH type — silently produces a property EF never persists (bit us on old `RemoteNode` SSH fields). TPH makes subclass-only properties nullable at column level automatically; no extra config.
 - EF SQL-translation gotcha: nested `(i as T) != null ? (i as T)!.Prop : ...` chains in an `IQueryable` `.Select()` don't reliably translate (silent wrong/null values vs real Postgres). Materialize with `ToListAsync()` first, switch in C# (see `InstanceEndpoints.GetStartedAt`/`GetStoppedAt`).

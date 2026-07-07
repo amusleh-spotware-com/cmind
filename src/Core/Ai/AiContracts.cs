@@ -34,6 +34,8 @@ public interface IAiFeatureService
     bool Enabled { get; }
     Task<AiResult> GenerateCBotAsync(string language, string description, CancellationToken ct);
     Task<AiResult> ReviewCBotAsync(string language, string source, CancellationToken ct);
+    Task<AiResult> FixCBotAsync(string language, string source, string buildLog, CancellationToken ct);
+    Task<AiResult> ProposeParamSetSuiteAsync(string cBotName, string currentParamsJson, int count, CancellationToken ct);
     Task<AiResult> AnalyzeBacktestAsync(string cBotName, string reportJson, CancellationToken ct);
     Task<AiResult> ProposeParamSetsAsync(string cBotName, string currentParamsJson, string? backtestReportJson, CancellationToken ct);
     Task<AiResult> PostMortemAsync(AiInstanceContext context, CancellationToken ct);

@@ -19,6 +19,16 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
             AiPrompts.ReviewSystem,
             $"Language: {language}\n\nSource:\n{Clip(source)}"), ct);
 
+    public Task<AiResult> FixCBotAsync(string language, string source, string buildLog, CancellationToken ct) =>
+        client.CompleteAsync(new AiTextRequest(
+            AiPrompts.FixSystem(language),
+            $"Build log:\n{Clip(buildLog)}\n\nCurrent source:\n{Clip(source)}"), ct);
+
+    public Task<AiResult> ProposeParamSetSuiteAsync(string cBotName, string currentParamsJson, int count, CancellationToken ct) =>
+        client.CompleteAsync(new AiTextRequest(
+            AiPrompts.SuiteSystem(count),
+            $"cBot: {cBotName}\nCount: {count}\nCurrent parameters (JSON):\n{Clip(currentParamsJson)}"), ct);
+
     public Task<AiResult> AnalyzeBacktestAsync(string cBotName, string reportJson, CancellationToken ct) =>
         client.CompleteAsync(new AiTextRequest(
             AiPrompts.AnalyzeBacktestSystem,
@@ -82,6 +92,15 @@ internal static class AiPrompts
         "You are a senior trading-systems reviewer. Review the cBot source for correctness bugs and trading risks " +
         "(missing stop-loss, unbounded position sizing, look-ahead bias, division on thin bars, missing error handling). " +
         "One finding per line: severity - problem - fix. No praise, no restating the code.";
+
+    public static string FixSystem(string language) =>
+        $"You are a cBot build-fixer. Given {language} cTrader cBot source and the compiler/build error log, " +
+        "return the corrected complete source that will compile. Output only the source in a single code block, no prose.";
+
+    public static string SuiteSystem(int count) =>
+        $"You are a trading parameter optimizer. Output ONLY a JSON array of exactly {count} objects and nothing else " +
+        "(no prose, no code fences). Each object has: \"name\" (string) and \"parameters\" (an object of cBot parameter " +
+        "name/value pairs). Vary the parameters meaningfully so each set tests a distinct hypothesis.";
 
     public const string AnalyzeBacktestSystem =
         "You are a quantitative backtest analyst. From the cTrader backtest report JSON, give a concise, skeptical verdict: " +

@@ -46,6 +46,24 @@ public sealed class AiFeatureServiceTests
     }
 
     [Fact]
+    public async Task FixCBot_passes_client_result_through()
+    {
+        var service = new AiFeatureService(Client(AiResult.Ok("fixed source")));
+        var result = await service.FixCBotAsync("CSharp", "bad source", "error CS0103", default);
+        result.Success.Should().BeTrue();
+        result.Text.Should().Be("fixed source");
+    }
+
+    [Fact]
+    public async Task ProposeParamSetSuite_passes_client_result_through()
+    {
+        var service = new AiFeatureService(Client(AiResult.Ok("[]")));
+        var result = await service.ProposeParamSetSuiteAsync("Bot", "{}", 3, default);
+        result.Success.Should().BeTrue();
+        result.Text.Should().Be("[]");
+    }
+
+    [Fact]
     public void Enabled_reflects_underlying_client()
     {
         new AiFeatureService(Client(AiResult.Ok(""), enabled: false)).Enabled.Should().BeFalse();

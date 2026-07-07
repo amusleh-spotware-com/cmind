@@ -15,22 +15,34 @@ public sealed class AiTests(AppFixture app)
         var page = await OpenAssistantAsync();
 
         await Assertions.Expect(page.Locator("button:has-text('Generate cBot')")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.Locator("button:has-text('Generate & build project')")).ToBeVisibleAsync(Slow);
         await Assertions.Expect(page.GetByLabel("Strategy description")).ToBeVisibleAsync(Slow);
         await Assertions.Expect(page.GetByText("Review")).ToBeVisibleAsync(Slow);
         await Assertions.Expect(page.GetByText("Market Sentiment")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.GetByText("Optimize")).ToBeVisibleAsync(Slow);
     }
 
     [Fact]
     public async Task Assistant_generate_button_drives_ai_endpoint_end_to_end()
     {
-        // No Anthropic API key is configured in the E2E environment, so a fully-wired
-        // click must surface the graceful "not configured" result via the snackbar.
-        // This proves: button -> HttpClient POST /api/ai/generate -> endpoint ->
-        // AiFeatureService -> IAiClient (disabled) -> UI feedback.
         var page = await OpenAssistantAsync();
+        await ClickUntilFeedbackAsync(page, "button:has-text('Generate cBot')");
+    }
 
+    [Fact]
+    public async Task Assistant_generate_and_build_button_drives_ai_endpoint_end_to_end()
+    {
+        var page = await OpenAssistantAsync();
+        await ClickUntilFeedbackAsync(page, "button:has-text('Generate & build project')");
+    }
+
+    // No Anthropic API key is configured in the E2E environment, so a fully-wired click must
+    // surface the graceful "not configured" result via the snackbar. This proves the whole path:
+    // button -> HttpClient POST /api/ai/* -> endpoint -> AiFeatureService -> IAiClient (disabled) -> UI feedback.
+    private static async Task ClickUntilFeedbackAsync(IPage page, string buttonSelector)
+    {
         var feedback = page.GetByText(new Regex("not configured", RegexOptions.IgnoreCase));
-        var button = page.Locator("button:has-text('Generate cBot')");
+        var button = page.Locator(buttonSelector);
 
         for (var attempt = 0; attempt < 15; attempt++)
         {

@@ -16,6 +16,12 @@ All notable changes to this project are documented here. The format is based on
   strategy design, and marketplace curation — surfaced on the new **AI Assistant** page,
   the `/api/ai/*` endpoints, and MCP `AiTools`. A background `AiRiskGuard` (`Nodes`) assesses
   running bots on an interval when `RiskGuardEnabled`.
+- AI codegen → buildable project with self-repair (`/api/ai/generate-project`): generates a
+  full `CBotSourceProject`, builds it in the sandboxed `CBotBuilder`, and feeds build errors
+  back to the model to fix, up to 3 attempts.
+- AI closed optimization loop (`/api/ai/optimize-run/{cbotId}`): the model proposes parameter
+  sets which are persisted and backtested across nodes via the scheduler — surfaced on the
+  AI Assistant **Optimize** tab.
 
 - Strict versioning across all components. A single SemVer product version
   (`VersionPrefix` in `Directory.Build.props`) is shipped in lockstep by every assembly and

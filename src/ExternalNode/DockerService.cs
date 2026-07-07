@@ -24,6 +24,14 @@ public sealed class DockerService(IOptionsMonitor<NodeAgentOptions> options, ILo
             throw new ImageNotAllowedException(req.Image);
 
         var workDir = WorkDirFor(req.InstanceId);
+        var containerName = $"{DockerCommands.ContainerNamePrefix}{req.Kind.ToLowerInvariant()}-{req.InstanceId:N}";
+
+        // Idempotency: a retried Start (resilience handler retries POST) must not wipe the
+        // already-running container's work dir or fail on the duplicate --name. If the
+        // container already exists, return it unchanged.
+        if (await FindContainerIdByNameAsync(containerName, ct) is { } existingId)
+            return new StartContainerResponse(existingId, workDir);
+
         if (Directory.Exists(workDir)) Directory.Delete(workDir, true);
         Directory.CreateDirectory(Path.Combine(workDir, "data"));
 
@@ -48,7 +56,6 @@ public sealed class DockerService(IOptionsMonitor<NodeAgentOptions> options, ILo
             throw new InvalidOperationException($"docker pull failed: {pullOut}");
         }
 
-        var containerName = $"{DockerCommands.ContainerNamePrefix}{req.Kind.ToLowerInvariant()}-{req.InstanceId:N}";
         var runArgs = new List<string>
         {
             "run", "-d",
@@ -161,6 +168,16 @@ public sealed class DockerService(IOptionsMonitor<NodeAgentOptions> options, ILo
             TryDelete(dir);
         _ = userId;
         return Task.CompletedTask;
+    }
+
+    private async Task<string?> FindContainerIdByNameAsync(string containerName, CancellationToken ct)
+    {
+        var opts = options.CurrentValue;
+        var (code, output) = await RunCaptureAsync(opts.DockerPath,
+            ["ps", "-aq", "--no-trunc", "-f", $"name=^{containerName}$"], opts.ProcessTimeoutSeconds, ct);
+        if (code != 0) return null;
+        var id = output.Trim();
+        return string.IsNullOrEmpty(id) ? null : id;
     }
 
     private async Task<string?> WorkDirForContainerAsync(string containerId, CancellationToken ct)

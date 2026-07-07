@@ -11,14 +11,22 @@ All notable changes to this project are documented here. The format is based on
 - MIT `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CHANGELOG.md`.
 - GitHub issue/PR templates, CI (build + test), CodeQL analysis, and Dependabot config.
 - `.dockerignore`.
-- Security headers middleware (`X-Content-Type-Options`, `X-Frame-Options`,
-  `Referrer-Policy`, `Permissions-Policy`) on the Web app.
+- Security headers middleware (`Content-Security-Policy`, `X-Content-Type-Options`,
+  `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`) on the Web app.
 - Rate limiting on authentication endpoints (login brute-force mitigation).
+- Time-based login lockout that auto-expires (`AppUser.LockoutEnd`, EF migration
+  `AddUserLockoutEnd`) instead of a permanent lock on failed attempts.
+- `<meta name="description">` and a fallback `<title>` in the app shell.
 
 ### Changed
 
-- Hardened the auth cookie (`HttpOnly`, `SameSite=Lax`, `SecurePolicy=Always`).
+- Hardened the auth cookie (`HttpOnly`, `SameSite=Lax`, `SecurePolicy=SameAsRequest`).
 - OpenAPI document is now exposed only in the Development environment.
+- External node `StartAsync` is now idempotent (short-circuits if the container already
+  exists) so a retried request can't wipe the running container's work dir.
+- Dashboard instance counters collapsed from six sequential `COUNT` queries into a single
+  grouped aggregate query.
+- `AsNoTracking()` on read-only instance list/detail queries.
 
 <!-- Link references -->
-[Unreleased]: https://github.com/<owner>/cMind/commits/main
+[Unreleased]: https://github.com/amusleh-spotware-com/cmind/commits/main

@@ -23,8 +23,8 @@ project. Contributions, bug reports, and ideas are welcome.
 ## Getting started
 
 ```bash
-git clone https://github.com/<owner>/cMind.git
-cd cMind
+git clone https://github.com/amusleh-spotware-com/cmind.git
+cd cmind
 dotnet restore
 dotnet build
 dotnet test

@@ -157,6 +157,7 @@ public sealed class HttpContainerDispatcher(
         client.BaseAddress = new Uri(node.BaseUrl);
         var secret = Encoding.UTF8.GetString(protector.Unprotect(node.EncryptedApiSecret, EncryptionPurposes.NodeApiSecret));
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CreateToken(secret));
+        client.DefaultRequestHeaders.Add(NodeAgentProtocol.HeaderName, NodeAgentProtocol.Version.ToString());
         return client;
     }
 

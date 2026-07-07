@@ -64,7 +64,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         o.SlidingExpiration = true;
         o.Cookie.HttpOnly = true;
         o.Cookie.SameSite = SameSiteMode.Lax;
-        o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        o.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
         o.Events.OnRedirectToLogin = ctx =>
         {
             if (ctx.Request.Path.StartsWithSegments("/api"))
@@ -112,6 +112,8 @@ builder.Services.AddHostedService<InstanceReconciler>();
 
 var app = builder.Build();
 app.MapHostHealthEndpoints();
+app.MapGet(HealthEndpoints.Version, () => Results.Ok(new NodeAgentInfoResponse(VersionInfo.Product, NodeAgentProtocol.Version)))
+    .AllowAnonymous();
 
 if (!app.Environment.IsDevelopment())
 {

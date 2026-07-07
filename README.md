@@ -1,7 +1,7 @@
 # cMind
 
-[![CI](https://github.com/nomanmusleh/cMind/actions/workflows/ci.yml/badge.svg)](https://github.com/nomanmusleh/cMind/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/nomanmusleh/cMind/actions/workflows/codeql.yml/badge.svg)](https://github.com/nomanmusleh/cMind/actions/workflows/codeql.yml)
+[![CI](https://github.com/amusleh-spotware-com/cmind/actions/workflows/ci.yml/badge.svg)](https://github.com/amusleh-spotware-com/cmind/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/amusleh-spotware-com/cmind/actions/workflows/codeql.yml/badge.svg)](https://github.com/amusleh-spotware-com/cmind/actions/workflows/codeql.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![.NET 10](https://img.shields.io/badge/.NET-10-512BD4.svg)](https://dotnet.microsoft.com/)
 

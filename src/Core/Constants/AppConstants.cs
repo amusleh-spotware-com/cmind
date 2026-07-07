@@ -10,8 +10,14 @@ public static class AuthPolicies
 public static class RateLimitPolicies
 {
     public const string Auth = nameof(Auth);
-    public const int AuthPermitPerWindow = 10;
+    public const int AuthPermitPerWindow = 20;
     public const int AuthWindowSeconds = 60;
+}
+
+public static class AuthLockout
+{
+    public const int MaxFailedAttempts = 5;
+    public const int LockoutMinutes = 15;
 }
 
 public static class AuthSchemes
@@ -37,9 +43,20 @@ public static class NodeAgentAuth
     public const int MinSecretLength = 32;
 }
 
+public static class NodeAgentProtocol
+{
+    // Wire-contract version for the main node <-> ExternalNode agent HTTP API. Independent of
+    // the product SemVer: bump ONLY on a breaking change to the agent contract (routes, request/
+    // response shapes, semantics). The main node stamps every request with HeaderName; the agent
+    // rejects mismatched versions with 426 Upgrade Required.
+    public const string HeaderName = "X-Node-Protocol-Version";
+    public const int Version = 1;
+}
+
 public static class NodeAgentRoutes
 {
     public const string Base = "/api";
+    public const string Info = "/api/info";
     // Start is keyed by the instance id (used for the work dir + container label); all other
     // operations are keyed by the returned container id, which is stable across the instance's
     // TPH state transitions (starting -> running -> ...).
@@ -73,6 +90,7 @@ public static class HealthEndpoints
     public const string Health = "/health";
     public const string Alive = "/alive";
     public const string LiveTag = "live";
+    public const string Version = "/version";
 }
 
 public static class DockerLabels

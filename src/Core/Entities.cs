@@ -29,6 +29,7 @@ public abstract class AppUser : AuditedEntity<UserId>
     public bool MustChangePassword { get; set; }
     public bool IsLockedOut { get; set; }
     public int AccessFailedCount { get; set; }
+    public DateTimeOffset? LockoutEnd { get; set; }
     [MaxLength(64)] public string? MfaSecret { get; set; }
     public bool MfaEnabled { get; set; }
     public byte[] SecurityStamp { get; set; } = default!;

@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Core;
 using Core.Constants;
 using Core.NodeAgent;
 using ExternalNode;
@@ -42,6 +43,19 @@ app.UseAuthorization();
 app.MapGet(HealthEndpoints.Health, () => Results.Ok("Healthy")).AllowAnonymous();
 
 var api = app.MapGroup(NodeAgentRoutes.Base).RequireAuthorization();
+
+api.AddEndpointFilter(async (ctx, next) =>
+{
+    var header = ctx.HttpContext.Request.Headers[NodeAgentProtocol.HeaderName].ToString();
+    if (!int.TryParse(header, out var clientVersion) || clientVersion != NodeAgentProtocol.Version)
+        return Results.Problem(
+            $"Protocol version mismatch: agent speaks {NodeAgentProtocol.Version}, caller sent '{header}'.",
+            statusCode: StatusCodes.Status426UpgradeRequired);
+    return await next(ctx);
+});
+
+api.MapGet(NodeAgentRoutes.Info, () =>
+    Results.Ok(new NodeAgentInfoResponse(VersionInfo.Product, NodeAgentProtocol.Version)));
 
 api.MapPost("/containers", async (StartContainerRequest req, DockerService docker, CancellationToken ct) =>
 {

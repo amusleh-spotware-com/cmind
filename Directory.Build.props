@@ -11,4 +11,11 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <NuGetAudit>false</NuGetAudit>
   </PropertyGroup>
+
+  <!-- Single source of truth for the product version (SemVer 2.0.0). All assemblies ship
+       in lockstep; bump here on release. Drives AssemblyVersion, FileVersion and the
+       InformationalVersion surfaced by Core.VersionInfo. -->
+  <PropertyGroup>
+    <VersionPrefix>1.0.0</VersionPrefix>
+  </PropertyGroup>
 </Project>

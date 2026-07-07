@@ -47,12 +47,18 @@ public static class AuthEndpoints
 
             var normalized = email.ToUpperInvariant();
             var user = await db.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == normalized);
-            if (user is null || user.IsLockedOut || !hasher.Verify(password, user.PasswordHash))
+            var lockedOut = user is not null &&
+                (user.IsLockedOut || (user.LockoutEnd is { } end && end > DateTimeOffset.UtcNow));
+            if (user is null || lockedOut || !hasher.Verify(password, user.PasswordHash))
             {
-                if (user is not null)
+                if (user is not null && !lockedOut)
                 {
                     user.AccessFailedCount++;
-                    if (user.AccessFailedCount >= 5) user.IsLockedOut = true;
+                    if (user.AccessFailedCount >= AuthLockout.MaxFailedAttempts)
+                    {
+                        user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(AuthLockout.LockoutMinutes);
+                        user.AccessFailedCount = 0;
+                    }
                     await db.SaveChangesAsync();
                 }
                 if (ctx.Request.HasFormContentType)
@@ -60,6 +66,7 @@ public static class AuthEndpoints
                 return Results.Unauthorized();
             }
             user.AccessFailedCount = 0;
+            user.LockoutEnd = null;
             await db.SaveChangesAsync();
 
             var claims = new List<Claim>

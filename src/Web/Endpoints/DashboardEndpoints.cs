@@ -24,18 +24,24 @@ public static class DashboardEndpoints
             var tradingAccountCount = await db.TradingAccounts.CountAsync(t => t.CTid.UserId == uid);
             var ctidCount = await db.CTids.CountAsync(c => c.UserId == uid);
 
-            var allInstances = db.Instances.Where(i => i.UserId == uid);
-            var runningCount = await allInstances
-                .CountAsync(i => i is RunningRunInstance || i is StartingRunInstance);
-            var backtestRunningCount = await allInstances
-                .CountAsync(i => i is RunningBacktestInstance || i is StartingBacktestInstance);
-            var pendingCount = await allInstances
-                .CountAsync(i => i is PendingRunInstance || i is PendingBacktestInstance);
-            var failedCount = await allInstances
-                .CountAsync(i => i is FailedRunInstance || i is FailedBacktestInstance);
-            var completedCount = await allInstances
-                .CountAsync(i => i is StoppedRunInstance || i is CompletedBacktestInstance);
-            var totalInstances = await allInstances.CountAsync();
+            var counts = await db.Instances.Where(i => i.UserId == uid)
+                .GroupBy(_ => 1)
+                .Select(g => new
+                {
+                    Running = g.Count(i => i is RunningRunInstance || i is StartingRunInstance),
+                    BacktestRunning = g.Count(i => i is RunningBacktestInstance || i is StartingBacktestInstance),
+                    Pending = g.Count(i => i is PendingRunInstance || i is PendingBacktestInstance),
+                    Failed = g.Count(i => i is FailedRunInstance || i is FailedBacktestInstance),
+                    Completed = g.Count(i => i is StoppedRunInstance || i is CompletedBacktestInstance),
+                    Total = g.Count()
+                })
+                .FirstOrDefaultAsync();
+            var runningCount = counts?.Running ?? 0;
+            var backtestRunningCount = counts?.BacktestRunning ?? 0;
+            var pendingCount = counts?.Pending ?? 0;
+            var failedCount = counts?.Failed ?? 0;
+            var completedCount = counts?.Completed ?? 0;
+            var totalInstances = counts?.Total ?? 0;
 
             var mcpKeyCount = await db.McpApiKeys.CountAsync(k => k.UserId == uid && k.RevokedAt == null);
 

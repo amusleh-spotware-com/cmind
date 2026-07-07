@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using Core;
 using Core.Constants;
 using Core.Options;
@@ -12,6 +13,7 @@ using Web.Auth;
 using Web.Components;
 using Web.Endpoints;
 using Web.Hubs;
+using Web.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,8 +37,21 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents(o => o.DetailedErrors = builder.Environment.IsDevelopment());
 builder.Services.AddMudServices();
 builder.Services.AddSignalR();
-builder.Services.AddOpenApi();
+if (builder.Environment.IsDevelopment())
+    builder.Services.AddOpenApi();
 builder.Services.AddAntiforgery();
+builder.Services.AddRateLimiter(o =>
+{
+    o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    o.AddPolicy(RateLimitPolicies.Auth, context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = RateLimitPolicies.AuthPermitPerWindow,
+                Window = TimeSpan.FromSeconds(RateLimitPolicies.AuthWindowSeconds)
+            }));
+});
 builder.Services.ConfigureHttpJsonOptions(o =>
     o.SerializerOptions.Converters.Add(new StrongIdJsonConverterFactory()));
 
@@ -47,6 +62,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         o.AccessDeniedPath = "/forbidden";
         o.ExpireTimeSpan = TimeSpan.FromHours(8);
         o.SlidingExpiration = true;
+        o.Cookie.HttpOnly = true;
+        o.Cookie.SameSite = SameSiteMode.Lax;
+        o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         o.Events.OnRedirectToLogin = ctx =>
         {
             if (ctx.Request.Path.StartsWithSegments("/api"))
@@ -102,12 +120,15 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseSecurityHeaders();
 app.UseStaticFiles();
 app.UseAntiforgery();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapOpenApi();
+if (app.Environment.IsDevelopment())
+    app.MapOpenApi();
 app.MapAuthEndpoints();
 app.MapCBotEndpoints();
 app.MapNodeEndpoints();

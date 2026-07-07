@@ -23,7 +23,7 @@ public static class InstanceEndpoints
         g.MapGet("/", async (DataContext db, ICurrentUser u) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
-            IQueryable<Instance> q = db.Instances.Include(i => i.CBot).Include(i => i.Node);
+            IQueryable<Instance> q = db.Instances.AsNoTracking().Include(i => i.CBot).Include(i => i.Node);
             if (u.IsInRole("Viewer"))
             {
                 var user = await db.Users.OfType<ViewerUser>().FirstOrDefaultAsync(x => x.Id == uid);
@@ -58,7 +58,7 @@ public static class InstanceEndpoints
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             var iid = InstanceId.From(id);
-            var i = await db.Instances.FirstOrDefaultAsync(x => x.Id == iid);
+            var i = await db.Instances.AsNoTracking().FirstOrDefaultAsync(x => x.Id == iid);
             if (i is null) return Results.NotFound();
             if (u.IsInRole("Viewer"))
             {

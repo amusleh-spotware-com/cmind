@@ -1,8 +1,22 @@
 # cMind
 
+[![CI](https://github.com/nomanmusleh/cMind/actions/workflows/ci.yml/badge.svg)](https://github.com/nomanmusleh/cMind/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/nomanmusleh/cMind/actions/workflows/codeql.yml/badge.svg)](https://github.com/nomanmusleh/cMind/actions/workflows/codeql.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4.svg)](https://dotnet.microsoft.com/)
+
 > **Experimental — entirely built by [Claude Code](https://claude.com/claude-code).**
 > No human-written code. Spec, scaffolding, refactors, migrations, DI wiring, docs — all
 > AI-generated through an interactive session. Reference experiment, not production-ready.
+
+Multi-tenant Blazor Server + Minimal API platform to build, run, and backtest cTrader cBots
+across remote nodes and/or the local host — with an in-browser Monaco IDE, an MCP server for
+AI integrations, and .NET Aspire orchestration.
+
+**Contents:** [Stack](#stack) · [Solution layout](#solution-layout) · [Prerequisites](#prerequisites)
+· [Configuration](#configuration) · [External nodes](#external-nodes) · [Build & run](#build--run)
+· [Step-by-step guide](#step-by-step-guide) · [Tests](#tests) · [Contributing](#contributing)
+· [Security](#security) · [License](#license--disclaimer)
 
 ASP.NET Core + Blazor Server app to build, run, backtest (later optimize) cTrader cBots via the
 official [cTrader Console Docker image](https://github.com/spotware/ctrader-console-docker),
@@ -222,7 +236,34 @@ Mapped in Development only; in production keep behind auth or a private network.
 Hosted separately under `/mcp`, authenticated via per-user API keys from the Web UI
 (`mcpk_<hex>`). Tokens SHA-256 hashed in DB; raw value shown once.
 
+## Multi-region / multi-node notes
+
+When nodes span regions, keep these in mind:
+
+- **Clock sync**: the main node authenticates each agent call with a short-lived HS256 JWT
+  (5-min lifetime, 30s allowed skew). Keep every host **NTP-synced** or requests will be
+  rejected as expired / not-yet-valid.
+- **Latency & retries**: all outbound HTTP uses a standard resilience handler (retry +
+  timeout + circuit breaker via `ConfigureHttpClientDefaults`). Prefer placing a node's
+  data dir on fast local storage; cross-region calls only carry commands and small files.
+- **Timestamps** are stored and compared in **UTC** throughout.
+
+## Contributing
+
+Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for setup, coding
+conventions, and the PR checklist. By participating you agree to the
+[Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Security
+
+Found a vulnerability? **Do not open a public issue.** See [SECURITY.md](SECURITY.md) for
+private reporting and the production hardening checklist.
+
 ## License & disclaimer
+
+Licensed under the [MIT License](LICENSE).
+
+
 
 cTrader and the cTrader Console image are property of Spotware Systems Ltd. This project is an
 unaffiliated experiment, not endorsed by Spotware.

@@ -7,6 +7,13 @@ public static class AuthPolicies
     public const string UserOrAbove = nameof(UserOrAbove);
 }
 
+public static class RateLimitPolicies
+{
+    public const string Auth = nameof(Auth);
+    public const int AuthPermitPerWindow = 10;
+    public const int AuthWindowSeconds = 60;
+}
+
 public static class AuthSchemes
 {
     public const string McpKey = nameof(McpKey);

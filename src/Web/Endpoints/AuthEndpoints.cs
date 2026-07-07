@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Core;
+using Core.Constants;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -18,7 +19,7 @@ public static class AuthEndpoints
 {
     public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/api/auth");
+        var g = app.MapGroup("/api/auth").RequireRateLimiting(RateLimitPolicies.Auth);
 
         g.MapPost("/login", async (HttpContext ctx, DataContext db, IPasswordHasher hasher) =>
         {

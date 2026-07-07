@@ -86,6 +86,7 @@ tests/
 - Strong IDs/value objects in `Core/StrongIds.cs`; entities still use `Guid` for EF mapping (value-converter migration follow-up).
 - Never log/store secrets plaintext — use `ISecretProtector` with `EncryptionPurposes` strings. Data Protection key ring PFX-encrypted via base64 env var.
 - Health checks: `AddHealthChecks().AddNpgSql(...)`, Development only.
+- Web security wiring (in `Web/Program.cs`): auth cookie is `HttpOnly` + `SameSite=Lax` + `SecurePolicy=Always`; `Web/Security/SecurityHeaders.cs` adds `X-Content-Type-Options`/`X-Frame-Options`/`Referrer-Policy`/`Permissions-Policy`; login/auth group is rate-limited (`RateLimitPolicies.Auth`, fixed-window per-IP); OpenAPI is mapped in Development only.
 
 ## Common commands
 

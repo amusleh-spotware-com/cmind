@@ -95,16 +95,40 @@ public sealed class DialogTests(AppFixture app)
         await Assertions.Expect(page.GetByText(cbotName)).ToBeVisibleAsync(Slow);
 
         await GotoAsync(page, "/paramsets");
-        await page.Locator(".mud-select").First.ClickAsync();
-        await page.Locator($".mud-list-item:has-text('{cbotName}')").First.ClickAsync();
 
         var paramName = $"pset-{Suffix}";
         var dialog = await OpenDialogAsync(page, "New Parameter Set");
-        await dialog.Locator("input").First.FillAsync(paramName);
+        await dialog.Locator(".mud-select").First.ClickAsync();
+        await page.Locator($".mud-list-item:has-text('{cbotName}')").First.ClickAsync();
+        await dialog.GetByLabel("Name").FillAsync(paramName);
         await dialog.Locator("textarea").First.FillAsync("{\"Period\":14}");
         await SubmitAsync(dialog, "Save");
 
         await Assertions.Expect(page.GetByText(paramName)).ToBeVisibleAsync(Slow);
+    }
+
+    [Fact]
+    public async Task Run_new_button_opens_dialog_with_fields()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await GotoAsync(page, "/run");
+
+        var dialog = await OpenDialogAsync(page, "Run New cBot");
+        await Assertions.Expect(dialog.GetByLabel("Symbol")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(dialog.Locator("button:has-text('Start')")).ToBeVisibleAsync(Slow);
+        await SubmitAsync(dialog, "Cancel");
+    }
+
+    [Fact]
+    public async Task Backtest_new_button_opens_dialog_with_fields()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await GotoAsync(page, "/backtest");
+
+        var dialog = await OpenDialogAsync(page, "Backtest New cBot");
+        await Assertions.Expect(dialog.GetByLabel("Symbol")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(dialog.Locator("button:has-text('Start backtest')")).ToBeVisibleAsync(Slow);
+        await SubmitAsync(dialog, "Cancel");
     }
 
     private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 15000 };

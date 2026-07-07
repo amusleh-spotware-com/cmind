@@ -25,7 +25,13 @@ public static class ParamSetEndpoints
                 var c = CBotId.From(cid);
                 q = q.Where(p => p.CBotId == c);
             }
-            return await q.Select(p => new { p.Id, p.Name, p.CBotId }).ToListAsync();
+            return await q.Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.CBotId,
+                CBotName = db.CBots.Where(c => c.Id == p.CBotId).Select(c => c.Name).FirstOrDefault()
+            }).ToListAsync();
         });
 
         g.MapGet("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u) =>

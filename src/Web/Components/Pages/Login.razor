@@ -3,9 +3,9 @@
 
 <PageTitle>Log in</PageTitle>
 
-<div class="ctw-login-page">
-    <div class="ctw-login-card">
-        <div class="ctw-login-logo">
+<div class="app-login-page">
+    <div class="app-login-card">
+        <div class="app-login-logo">
             <svg width="56" height="56" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
                 <line x1="32" y1="10" x2="32" y2="18" stroke="#26C281" stroke-width="3" stroke-linecap="round"/>
                 <circle cx="32" cy="8" r="3" fill="#26C281"/>
@@ -18,43 +18,43 @@
                 <line x1="50" y1="30" x2="54" y2="30" stroke="#26C281" stroke-width="3" stroke-linecap="round"/>
                 <line x1="50" y1="40" x2="54" y2="40" stroke="#26C281" stroke-width="3" stroke-linecap="round"/>
             </svg>
-            <span class="ctw-login-brand">cTrader Algo Web</span>
+            <span class="app-login-brand">cMind</span>
         </div>
 
-        <div class="ctw-login-tabs">
-            <div class="ctw-login-tab ctw-login-tab-active">LOG IN</div>
+        <div class="app-login-tabs">
+            <div class="app-login-tab app-login-tab-active">LOG IN</div>
         </div>
 
-        <form method="post" action="/api/auth/login" class="ctw-login-form">
+        <form method="post" action="/api/auth/login" class="app-login-form">
             <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
 
-            <div class="ctw-login-field">
-                <svg class="ctw-login-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9BA3AF" stroke-width="2">
+            <div class="app-login-field">
+                <svg class="app-login-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9BA3AF" stroke-width="2">
                     <rect x="3" y="5" width="18" height="14" rx="2"/>
                     <polyline points="3,7 12,13 21,7"/>
                 </svg>
                 <input type="email" name="Email" placeholder="Enter email" required autofocus />
             </div>
 
-            <div class="ctw-login-field">
-                <svg class="ctw-login-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9BA3AF" stroke-width="2">
+            <div class="app-login-field">
+                <svg class="app-login-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9BA3AF" stroke-width="2">
                     <rect x="5" y="11" width="14" height="10" rx="2"/>
                     <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
                 </svg>
                 <input type="password" name="Password" placeholder="Enter password" required />
             </div>
 
-            <label class="ctw-login-remember">
+            <label class="app-login-remember">
                 <input type="checkbox" name="RememberMe" value="true" role="switch" checked />
                 <span>Remember me</span>
             </label>
 
             @if (HasError)
             {
-                <div class="ctw-login-error">Invalid credentials</div>
+                <div class="app-login-error">Invalid credentials</div>
             }
 
-            <button class="ctw-login-button" type="submit">LOG IN</button>
+            <button class="app-login-button" type="submit">LOG IN</button>
         </form>
     </div>
 </div>

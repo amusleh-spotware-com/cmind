@@ -56,7 +56,7 @@ public sealed class AgentFactory : WebApplicationFactory<Program>
     {
         // The agent reads its secret at builder time, so it must be present before the host is built.
         Environment.SetEnvironmentVariable("NodeAgent__JwtSecret", Secret);
-        Environment.SetEnvironmentVariable("NodeAgent__DataRoot", Path.Combine(Path.GetTempPath(), "ctw-agent-test"));
+        Environment.SetEnvironmentVariable("NodeAgent__DataRoot", Path.Combine(Path.GetTempPath(), "app-agent-test"));
         return base.CreateHost(builder);
     }
 

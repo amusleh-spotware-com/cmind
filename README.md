@@ -1,4 +1,4 @@
-# cTrader Algo Web
+# cMind
 
 > **Experimental — entirely built by [Claude Code](https://claude.com/claude-code).**
 > No human-written code. Spec, scaffolding, refactors, migrations, DI wiring, docs — all
@@ -46,21 +46,21 @@ scheduled across remote nodes (each running the `ExternalNode` HTTP agent) and/o
 
 ## Configuration
 
-Settings live under the `Ctw` section, bound to a strongly-typed
+Settings live under the `App` section, bound to a strongly-typed
 [`AppOptions`](src/Core/Options/AppOptions.cs) record via `IOptionsMonitor<AppOptions>`.
 
 ```jsonc
 {
-  "Ctw": {
+  "App": {
     "OwnerEmail": "owner@example.com",
     "OwnerPassword": "set-via-secret",
     "DataProtectionCertBase64": "<base64 PFX>",
     "DataProtectionCertPassword": "<pfx password>",
     "DefaultDockerImage": "ghcr.io/spotware/ctrader-console",
     "DefaultDockerTag": "latest",
-    "BuildWorkRoot": "/var/ctw/builds",
+    "BuildWorkRoot": "/var/app/builds",
     "BuildImage": "mcr.microsoft.com/dotnet/sdk:9.0",
-    "LocalNode": { "Enabled": true, "WorkRoot": "/var/ctw/local", "MaxInstances": 5 }
+    "LocalNode": { "Enabled": true, "WorkRoot": "/var/app/local", "MaxInstances": 5 }
   }
 }
 ```
@@ -75,9 +75,9 @@ images and run cBot containers. No SSH/shell access: main node sends the image, 
 `run`/`backtest` command, and files (algo, `params.cbotset`, `ctid.pwd`); the agent runs the
 container locally and reports status/report/logs/stats back.
 
-Each request carries a short-lived HS256 JWT (`iss=ctw-main`, `aud=ctw-node`, 5-min expiry)
+Each request carries a short-lived HS256 JWT (`iss=app-main`, `aud=app-node`, 5-min expiry)
 signed with a **per-node shared secret**. Agent only runs images matching `AllowedImagePrefix`
-(default `ghcr.io/spotware/`) and finds containers by the `ctw.instance` label → stateless,
+(default `ghcr.io/spotware/`) and finds containers by the `app.instance` label → stateless,
 restart-safe.
 
 Agent config (`NodeAgent` section / `NodeAgent__*` env vars):
@@ -86,7 +86,7 @@ Agent config (`NodeAgent` section / `NodeAgent__*` env vars):
 {
   "NodeAgent": {
     "JwtSecret": "<shared secret, >= 32 chars>",   // must match the value stored for the node
-    "DataRoot": "/var/ctw/data",
+    "DataRoot": "/var/app/data",
     "AllowedImagePrefix": "ghcr.io/spotware/"
   }
 }
@@ -95,10 +95,10 @@ Agent config (`NodeAgent` section / `NodeAgent__*` env vars):
 Build the image from `src/ExternalNode/Dockerfile`. It starts its own daemon, so run it `--privileged`:
 
 ```bash
-docker build -f src/ExternalNode/Dockerfile -t ctw-node-agent .
+docker build -f src/ExternalNode/Dockerfile -t node-agent .
 docker run -d --privileged -p 8080:8080 \
   -e NodeAgent__JwtSecret="<shared secret>" \
-  --name ctw-node-agent ctw-node-agent
+  --name node-agent node-agent
 ```
 
 Then in the Web UI (**Nodes → Add node**) register it with its **base URL** (`http://<host>:8080`)
@@ -110,8 +110,8 @@ private network.
 ```bash
 dotnet restore && dotnet build
 dotnet run --project src/AppHost   # Aspire: Postgres + pgAdmin + Web + MCP, with a live dashboard
-dotnet run --project src/Web       # Web app only — needs connection string "ctwdb" and Ctw:* config
-                                    # (user-secrets, Ctw__OwnerEmail-style env vars, or appsettings.Development.json)
+dotnet run --project src/Web       # Web app only — needs connection string "appdb" and App:* config
+                                    # (user-secrets, App__OwnerEmail-style env vars, or appsettings.Development.json)
 ```
 
 Migrations live in `src/Infrastructure/Persistence/Migrations`, apply automatically on startup
@@ -131,8 +131,8 @@ Clean checkout → running a cBot on both the local host and a remote external n
 2. Set owner credentials (seed the first admin on first run). Dev: user-secrets on `src/Web` or env vars:
 
    ```bash
-   dotnet user-secrets --project src/Web set "Ctw:OwnerEmail" "owner@example.com"
-   dotnet user-secrets --project src/Web set "Ctw:OwnerPassword" "ChangeMe!123"
+   dotnet user-secrets --project src/Web set "App:OwnerEmail" "owner@example.com"
+   dotnet user-secrets --project src/Web set "App:OwnerPassword" "ChangeMe!123"
    ```
 
    (Data-protection cert values may be empty in dev — keys then stored unencrypted.)
@@ -172,7 +172,7 @@ parameters gets none passed.
 
 ### 6. Run or backtest locally
 
-1. Enable the local node: **Nodes**, toggle **local** **Enabled** (or set `Ctw:LocalNode:Enabled=true` before startup).
+1. Enable the local node: **Nodes**, toggle **local** **Enabled** (or set `App:LocalNode:Enabled=true` before startup).
 2. **Backtest** — **Backtest**, choose cBot, trading account, symbol, timeframe, date range,
    image tag (e.g. `5.7.10`), parameter set, **Start backtest**. On finish, open it in the
    instances table for report + equity curve.
@@ -184,10 +184,10 @@ parameters gets none passed.
 2. **Build and run the agent** on the remote host (starts its own docker daemon → `--privileged`):
 
    ```bash
-   docker build -f src/ExternalNode/Dockerfile -t ctw-node-agent .
+   docker build -f src/ExternalNode/Dockerfile -t node-agent .
    docker run -d --privileged -p 8080:8080 \
      -e NodeAgent__JwtSecret="<your shared secret>" \
-     --name ctw-node-agent ctw-node-agent
+     --name node-agent node-agent
    ```
 
    Confirm: `curl http://<host>:8080/health` returns `Healthy`.
@@ -220,7 +220,7 @@ Mapped in Development only; in production keep behind auth or a private network.
 ## MCP server
 
 Hosted separately under `/mcp`, authenticated via per-user API keys from the Web UI
-(`ctw_mcp_<hex>`). Tokens SHA-256 hashed in DB; raw value shown once.
+(`mcpk_<hex>`). Tokens SHA-256 hashed in DB; raw value shown once.
 
 ## License & disclaimer
 

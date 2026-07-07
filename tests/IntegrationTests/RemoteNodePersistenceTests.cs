@@ -24,7 +24,7 @@ public class RemoteNodePersistenceTests(PostgresFixture fixture) : IClassFixture
             Name = $"remote-{Guid.NewGuid():N}",
             BaseUrl = "http://10.20.30.40:8080",
             EncryptedApiSecret = "secret-bytes"u8.ToArray(),
-            DataDirPath = "/var/ctw/remote"
+            DataDirPath = "/var/app/remote"
         };
 
         await using (var writeContext = CreateContext())

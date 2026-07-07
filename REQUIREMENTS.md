@@ -103,8 +103,8 @@ per-user credentials.
 
 1. **Options pattern** with strongly-typed immutable records and `IOptionsMonitor`.
 2. Add **health checks**.
-3. Remove `Ctw.ServiceDefaults` project; merge into `Infrastructure`.
-4. Remove `Ctw.` prefix from project/file names + namespaces.
+3. Remove `App.ServiceDefaults` project; merge into `Infrastructure`.
+4. Remove `App.` prefix from project/file names + namespaces.
 5. `LoggerMessage` source-generated logging delegates instead of inline templated logs.
 6. NuGet **Central Package Management** (`Directory.Packages.props`).
 7. `README.md` mentioning this is an experiment built entirely by Claude Code.
@@ -148,21 +148,21 @@ per-user credentials.
 - `DataProtectionSecretProtector` with per-field purpose strings.
 - Cookie auth + role policies (`Owner`, `AdminOrAbove`, `UserOrAbove`); API paths return 401/403 JSON.
 - `OwnerSeeder` seeds Owner from options on startup.
-- MCP API key auth — `ctw_mcp_<hex>` token, SHA-256 hashed in DB, shown once.
+- MCP API key auth — `mcpk_<hex>` token, SHA-256 hashed in DB, shown once.
 - Password lockout, `MustChangePassword` flag.
 
 ### Nodes / orchestration
 
 - `INodeScheduler` picks least-loaded node honoring `NodeMode` + `MaxInstances`.
 - `HttpContainerDispatcher` calls the `ExternalNode` agent HTTP API (start/stop/status/report/logs/stats/clean) with a short-lived per-node HS256 JWT. `LocalContainerDispatcher` for the web host's own `LocalNode`.
-- `ExternalNode` agent pulls the image + runs the cBot container via docker CLI (`--ctid --pwd-file --account --symbol --period --data-dir --start --end --data-mode ...`), image-prefix guarded, stateless by `ctw.instance` label.
+- `ExternalNode` agent pulls the image + runs the cBot container via docker CLI (`--ctid --pwd-file --account --symbol --period --data-dir --start --end --data-mode ...`), image-prefix guarded, stateless by `app.instance` label.
 - `NodeStatsPoller` collects CPU/mem/disk/backtest-data stats.
 - `InstanceReconciler` marks stale Starting instances Failed; `RunCompletionPoller`/`BacktestCompletionPoller` reconcile exited containers.
 
 ### Builder (in-browser editor → `.algo`)
 
 - C# + Python cBot starter templates (both .NET projects).
-- `CBotBuilder` runs `dotnet build` in a throwaway container (SDK image, work dir bind-mounted at `/work`, shared `ctw-nuget-cache` volume) on the web host. Reads `out/*.algo`, encrypts, upserts the linked `CBot` row, bumps version.
+- `CBotBuilder` runs `dotnet build` in a throwaway container (SDK image, work dir bind-mounted at `/work`, shared `app-nuget-cache` volume) on the web host. Reads `out/*.algo`, encrypts, upserts the linked `CBot` row, bumps version.
 - Quick run dispatches the produced `.algo` to a `Run` node via the scheduler.
 
 ### Web / API

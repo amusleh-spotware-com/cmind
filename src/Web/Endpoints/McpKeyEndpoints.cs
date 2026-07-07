@@ -27,7 +27,7 @@ public static class McpKeyEndpoints
         g.MapPost("/", async (CreateMcpKeyRequest req, DataContext db, ICurrentUser u) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
-            var raw = "ctw_mcp_" + Convert.ToHexString(RandomNumberGenerator.GetBytes(24)).ToLowerInvariant();
+            var raw = "mcpk_" + Convert.ToHexString(RandomNumberGenerator.GetBytes(24)).ToLowerInvariant();
             var prefix = raw[..16];
             var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(raw)));
             db.McpApiKeys.Add(new McpApiKey

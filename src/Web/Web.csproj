@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <UserSecretsId>ctw-web-7d23f00b</UserSecretsId>
+    <UserSecretsId>app-web-7d23f00b</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="IntegrationTests" />

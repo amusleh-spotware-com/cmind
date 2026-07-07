@@ -15,7 +15,7 @@ public class DockerServiceTests
         var opts = new NodeAgentOptions
         {
             AllowedImagePrefix = "ghcr.io/spotware/",
-            DataRoot = Path.Combine(Path.GetTempPath(), "ctw-agent-test")
+            DataRoot = Path.Combine(Path.GetTempPath(), "app-agent-test")
         };
         var service = new DockerService(new StaticMonitor(opts), NullLogger<DockerService>.Instance);
         var request = new StartContainerRequest(
@@ -33,7 +33,7 @@ public class DockerServiceTests
         var opts = new NodeAgentOptions
         {
             AllowedImagePrefix = "ghcr.io/spotware",
-            DataRoot = Path.Combine(Path.GetTempPath(), "ctw-agent-test")
+            DataRoot = Path.Combine(Path.GetTempPath(), "app-agent-test")
         };
         var service = new DockerService(new StaticMonitor(opts), NullLogger<DockerService>.Instance);
         var request = new StartContainerRequest(

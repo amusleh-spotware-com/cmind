@@ -7,8 +7,8 @@ public sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<Dat
 {
     public DataContext CreateDbContext(string[] args)
     {
-        var cs = Environment.GetEnvironmentVariable("CTW_DESIGN_CONNECTION")
-                 ?? "Host=localhost;Port=5432;Database=ctwdb;Username=postgres;Password=postgres";
+        var cs = Environment.GetEnvironmentVariable("APP_DESIGN_CONNECTION")
+                 ?? "Host=localhost;Port=5432;Database=appdb;Username=postgres;Password=postgres";
         var opts = new DbContextOptionsBuilder<DataContext>().UseNpgsql(cs).Options;
         return new DataContext(opts);
     }

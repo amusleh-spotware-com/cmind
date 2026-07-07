@@ -6,7 +6,7 @@ namespace Infrastructure.Security;
 
 public sealed class DataProtectionSecretProtector(IDataProtectionProvider provider) : ISecretProtector
 {
-    private const string PurposePrefix = "ctw:";
+    private const string PurposePrefix = "app:";
 
     public byte[] Protect(ReadOnlySpan<byte> plaintext, string purpose)
         => provider.CreateProtector(PurposePrefix + purpose).Protect(plaintext.ToArray());

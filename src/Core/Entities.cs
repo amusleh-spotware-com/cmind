@@ -143,7 +143,7 @@ public class ParamSet : AuditedEntity<ParamSetId>
 public abstract class Node : AuditedEntity<NodeId>
 {
     [MaxLength(128)] public string Name { get; set; } = default!;
-    [MaxLength(256)] public string DataDirPath { get; set; } = "/var/ctw/data";
+    [MaxLength(256)] public string DataDirPath { get; set; } = "/var/app/data";
     public int MaxInstances { get; set; } = 10;
     public NodeStats? LatestStats { get; set; }
 

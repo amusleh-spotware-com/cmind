@@ -16,7 +16,7 @@ using Web.Hubs;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddObservabilityDefaults();
-builder.AddNpgsqlDbContext<DataContext>(ConnectionStrings.CtwDb);
+builder.AddNpgsqlDbContext<DataContext>(ConnectionStrings.AppDb);
 
 builder.Services
     .AddOptions<AppOptions>()
@@ -27,7 +27,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddNodes();
 
 builder.Services.AddHealthChecks()
-    .AddNpgSql(sp => builder.Configuration.GetConnectionString(ConnectionStrings.CtwDb)
+    .AddNpgSql(sp => builder.Configuration.GetConnectionString(ConnectionStrings.AppDb)
                      ?? throw new InvalidOperationException("Missing connection string"),
         name: "postgres", tags: ["ready"]);
 

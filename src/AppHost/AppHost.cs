@@ -7,25 +7,25 @@ var dataProtectionCertPass = builder.AddParameter("DataProtectionCertPassword", 
 
 var pgPassword = builder.AddParameter("PgPassword", secret: true);
 var postgres = builder.AddPostgres("postgres", password: pgPassword)
-    .WithDataVolume("ctw-pg-data")
+    .WithDataVolume("app-pg-data")
     .WithPgAdmin();
 
-var ctwDb = postgres.AddDatabase("ctwdb");
+var appDb = postgres.AddDatabase("appdb");
 
 var web = builder.AddProject<Projects.Web>("web")
-    .WithReference(ctwDb)
-    .WaitFor(ctwDb)
-    .WithEnvironment("Ctw__OwnerEmail", ownerEmail)
-    .WithEnvironment("Ctw__OwnerPassword", ownerPassword)
-    .WithEnvironment("Ctw__DataProtectionCertBase64", dataProtectionCertB64)
-    .WithEnvironment("Ctw__DataProtectionCertPassword", dataProtectionCertPass)
+    .WithReference(appDb)
+    .WaitFor(appDb)
+    .WithEnvironment("App__OwnerEmail", ownerEmail)
+    .WithEnvironment("App__OwnerPassword", ownerPassword)
+    .WithEnvironment("App__DataProtectionCertBase64", dataProtectionCertB64)
+    .WithEnvironment("App__DataProtectionCertPassword", dataProtectionCertPass)
     .WithExternalHttpEndpoints();
 
 var mcp = builder.AddProject<Projects.Mcp>("mcp")
-    .WithReference(ctwDb)
-    .WaitFor(ctwDb)
-    .WithEnvironment("Ctw__DataProtectionCertBase64", dataProtectionCertB64)
-    .WithEnvironment("Ctw__DataProtectionCertPassword", dataProtectionCertPass)
+    .WithReference(appDb)
+    .WaitFor(appDb)
+    .WithEnvironment("App__DataProtectionCertBase64", dataProtectionCertB64)
+    .WithEnvironment("App__DataProtectionCertPassword", dataProtectionCertPass)
     .WithExternalHttpEndpoints();
 
 builder.Build().Run();

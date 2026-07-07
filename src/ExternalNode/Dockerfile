@@ -12,7 +12,7 @@ RUN apt-get update \
 WORKDIR /app
 COPY --from=build /app .
 ENV ASPNETCORE_URLS=http://+:8080 \
-    NodeAgent__DataRoot=/var/ctw/data
+    NodeAgent__DataRoot=/var/app/data
 EXPOSE 8080
 # Starts a local Docker daemon then the agent. Requires `--privileged`.
 ENTRYPOINT ["/bin/sh", "-c", "dockerd >/var/log/dockerd.log 2>&1 & exec dotnet ExternalNode.dll"]

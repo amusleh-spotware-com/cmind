@@ -6,7 +6,7 @@ using Mcp.Tools;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddNpgsqlDbContext<DataContext>(ConnectionStrings.CtwDb);
+builder.AddNpgsqlDbContext<DataContext>(ConnectionStrings.AppDb);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 

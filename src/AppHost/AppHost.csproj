@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <IsAspireHost>true</IsAspireHost>
-    <UserSecretsId>ctw-apphost-9c1b8e0a</UserSecretsId>
+    <UserSecretsId>app-apphost-9c1b8e0a</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" />

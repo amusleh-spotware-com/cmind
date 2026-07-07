@@ -15,16 +15,16 @@ namespace Infrastructure;
 
 public static class DependencyInjection
 {
-    private const string DataProtectionApplicationName = "ctw";
+    private const string DataProtectionApplicationName = "app";
 
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
         var dp = services.AddDataProtection().SetApplicationName(DataProtectionApplicationName);
         dp.PersistKeysToDbContext<DataContext>();
 
-        var ctwSection = config.GetSection(AppOptions.SectionName);
-        var certB64 = ctwSection[nameof(AppOptions.DataProtectionCertBase64)];
-        var certPass = ctwSection[nameof(AppOptions.DataProtectionCertPassword)];
+        var appSection = config.GetSection(AppOptions.SectionName);
+        var certB64 = appSection[nameof(AppOptions.DataProtectionCertBase64)];
+        var certPass = appSection[nameof(AppOptions.DataProtectionCertPassword)];
         if (!string.IsNullOrWhiteSpace(certB64))
         {
             var bytes = Convert.FromBase64String(certB64);

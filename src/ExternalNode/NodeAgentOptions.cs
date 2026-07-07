@@ -8,7 +8,7 @@ public sealed class NodeAgentOptions
     public string JwtSecret { get; set; } = string.Empty;
 
     /// <summary>Host directory under which per-instance work dirs are created.</summary>
-    public string DataRoot { get; set; } = "/var/ctw/data";
+    public string DataRoot { get; set; } = "/var/app/data";
 
     public string DockerPath { get; set; } = "docker";
 

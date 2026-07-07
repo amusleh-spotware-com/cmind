@@ -2,7 +2,7 @@ namespace Core.Options;
 
 public sealed record AppOptions
 {
-    public const string SectionName = Constants.ConfigSections.Ctw;
+    public const string SectionName = Constants.ConfigSections.App;
 
     public string OwnerEmail { get; init; } = string.Empty;
     public string OwnerPassword { get; init; } = string.Empty;

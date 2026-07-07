@@ -1,7 +1,7 @@
 @inject NavigationManager Nav
 
 <MudItem xs="6" sm="4" md="3" lg="2">
-    <MudPaper Class="pa-4 ctw-stat-card" Elevation="0" Style="@($"cursor:{(Href is null ? "default" : "pointer")};")" @onclick="OnClick">
+    <MudPaper Class="pa-4 app-stat-card" Elevation="0" Style="@($"cursor:{(Href is null ? "default" : "pointer")};")" @onclick="OnClick">
         <div style="display:flex;align-items:center;gap:12px;">
             <MudIcon Icon="@Icon" Style="@($"color:{Color};font-size:32px;")" />
             <div style="display:flex;flex-direction:column;">

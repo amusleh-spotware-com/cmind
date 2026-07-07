@@ -27,7 +27,7 @@ src/
     StrongIds.cs             — strong ID structs + Email/Symbol/Timeframe/DockerImageTag
     Abstractions.cs          — ISecretProtector, IPasswordHasher, INodeScheduler,
                                IContainerDispatcher(Factory), IGhcrTagProvider, ICurrentUser
-    Options/AppOptions.cs    — binds "Ctw" section, incl. nested LocalNodeOptions
+    Options/AppOptions.cs    — binds "App" section, incl. nested LocalNodeOptions
     Constants/AppConstants.cs — all magic strings
     Logging/LogMessages.cs   — source-generated ILogger extensions
     NodeAgent/AgentContracts.cs — DTOs for the ExternalNode HTTP API
@@ -37,7 +37,7 @@ src/
     Security/Argon2PasswordHasher.cs, DataProtectionSecretProtector.cs
     Ghcr/GhcrTagProvider.cs  — anonymous tag list, 1h MemoryCache
     Aspire/ServiceDefaultsExtensions.cs — OTel, health checks, service discovery, resilience
-    DependencyInjection.cs  — AddCtwInfrastructure()
+    DependencyInjection.cs  — AddInfrastructure()
   Nodes/         — cross-node orchestration.
     NodeScheduler.cs           — picks least-loaded eligible node, honors MaxInstances
     ContainerDispatcherFactory.cs — routes to Http (remote) or Local dispatcher by Node type
@@ -53,7 +53,7 @@ src/
   ExternalNode/  — standalone HTTP node agent (deployed on remote servers).
     Program.cs                  — minimal API, JWT-bearer auth, image-prefix guard
     DockerService.cs            — pulls image + runs/stops/inspects containers via the docker CLI,
-                                  stateless (looks containers up by `ctw.instance` label)
+                                  stateless (looks containers up by `app.instance` label)
     NodeAgentOptions.cs, Dockerfile
   Web/           — Blazor Server SSR + Minimal API + SignalR.
     Program.cs               — binds AppOptions, cookie auth, role policies, hosted services
@@ -69,7 +69,7 @@ src/
     Components/Dialogs/NewProjectDialog.razor
     Components/              — MudBlazor + custom cTrader-style dark theme
   Mcp/           — MCP HTTP+SSE server.
-    Auth/McpKeyAuthHandler.cs — bearer token `ctw_mcp_<hex>`, SHA-256 hashed, prefix-indexed
+    Auth/McpKeyAuthHandler.cs — bearer token `mcpk_<hex>`, SHA-256 hashed, prefix-indexed
     Tools/                    — CBotTools, InstanceTools
 tests/
   UnitTests/         — xUnit + FluentAssertions + NSubstitute
@@ -79,7 +79,7 @@ tests/
 ## Conventions
 
 - `TreatWarningsAsErrors=true`, no `NoWarn` — fix real warnings.
-- Config via `IOptionsMonitor<AppOptions>` (binds `Ctw` section); no `cfg["Key"]` in business code.
+- Config via `IOptionsMonitor<AppOptions>` (binds `App` section); no `cfg["Key"]` in business code.
 - Log via `LogMessages` source-generated extensions (`Core/Logging/LogMessages.cs`) — never `ILogger.LogInformation(...)` directly.
 - Magic strings live in `Core/Constants/`.
 - Soft delete: entities inherit `AuditedEntity`/`ISoftDeletable`; `DataContext` global query filter + converts `Deleted` → `Modified`+`IsDeleted` in `SaveChanges`.
@@ -103,7 +103,7 @@ dotnet ef database update    -p src/Infrastructure -s src/Infrastructure
 
 - `CBotBuilder` runs on web host, not remote nodes — Web container needs Docker socket access.
 - Run/backtest containers run on nodes picked by `NodeScheduler`, dispatched via `ContainerDispatcherFactory` to `HttpContainerDispatcher` (remote, via `ExternalNode` agent HTTP API) or `LocalContainerDispatcher` (web host's own `LocalNode`, seeded by `LocalNodeSeeder`).
-- External nodes get **no** SSH/shell access. Main node talks to `ExternalNode` agent over HTTP; each `RemoteNode` stores `BaseUrl` + encrypted per-node shared secret. Every request carries short-lived HS256 JWT (`iss=ctw-main`, `aud=ctw-node`, 5-min expiry) signed with node's secret; agent validates. Agent only runs images matching `AllowedImagePrefix` (default `ghcr.io/spotware/`), execs docker via `ArgumentList` (no shell), stateless (finds containers by `ctw.instance` label → survives restart). Deploy with docker daemon available; run container `--privileged` (starts local dockerd) or run binary on host with docker.
+- External nodes get **no** SSH/shell access. Main node talks to `ExternalNode` agent over HTTP; each `RemoteNode` stores `BaseUrl` + encrypted per-node shared secret. Every request carries short-lived HS256 JWT (`iss=app-main`, `aud=app-node`, 5-min expiry) signed with node's secret; agent validates. Agent only runs images matching `AllowedImagePrefix` (default `ghcr.io/spotware/`), execs docker via `ArgumentList` (no shell), stateless (finds containers by `app.instance` label → survives restart). Deploy with docker daemon available; run container `--privileged` (starts local dockerd) or run binary on host with docker.
 - cTrader Console backtest CLI (verified live): requires `--data-mode` (default `m1`), dates `dd/MM/yyyy HH:mm`, `params.cbotset` is JSON (`{"Parameters":{...}}`) passed as positional arg; `run` rejects `--data-dir` (backtest-only). See `ContainerCommandHelpers`.
 - `BacktestCompletionPoller` polls `RunningBacktestInstance` on `AppOptions.BacktestCompletionPollInterval` (backtest containers self-exit via `--exit-on-stop`). `RunCompletionPoller` does same for `RunningRunInstance`, using `IContainerDispatcher.GetExitCodeAsync` → exit 0/null = `StoppedRunInstance`, non-zero = `FailedRunInstance`. Backtest: report present → `CompletedBacktestInstance` (stores `ReportJson`); missing → `FailedBacktestInstance`.
 - Equity curve for `InstanceDetail` chart parsed from `CompletedBacktestInstance.ReportJson` by `ContainerCommandHelpers.ParseEquityCurve`. Real report nests points at `equity.points[]` (`{balance,minEquity,maxEquity,timestamp}`); parser also scans root keys `equityHistory`/`equityCurve`/`history`/`equity`.
@@ -116,7 +116,7 @@ dotnet ef database update    -p src/Infrastructure -s src/Infrastructure
 
 ## Known gaps / needs follow-up
 
-- **Builder isolation** (resolved): `CBotBuilder` runs `dotnet build` inside a throwaway container (`DockerCommands.RunBuild` + `AppOptions.BuildImage`, work dir bind-mounted at `/work`) → untrusted user MSBuild targets can't reach host FS/network. Restore cached across builds via shared `ctw-nuget-cache` volume. Web host still needs Docker socket access.
+- **Builder isolation** (resolved): `CBotBuilder` runs `dotnet build` inside a throwaway container (`DockerCommands.RunBuild` + `AppOptions.BuildImage`, work dir bind-mounted at `/work`) → untrusted user MSBuild targets can't reach host FS/network. Restore cached across builds via shared `app-nuget-cache` volume. Web host still needs Docker socket access.
 - **Remote-node trust**: `ExternalNode` agent runs whatever image+args the JWT-authenticated main node sends, constrained only by `AllowedImagePrefix`. Agent must run on a trusted host with docker; shared secret is the sole credential — keep it ≥32 chars, TLS in production (agent behind reverse proxy), rotate by updating both node's stored secret and agent's `NodeAgent:JwtSecret`.
 
 ## Deliberately not done

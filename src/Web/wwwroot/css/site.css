@@ -13,7 +13,7 @@ html, body {
     .mud-table-head .mud-table-cell { font-size: 13px; font-weight: 700 !important; letter-spacing: 0.4px; text-transform: uppercase; }
     .mud-button-root { font-weight: 700 !important; letter-spacing: 0.4px; padding: 9px 20px; }
     .mud-card, .mud-paper { border: 1px solid #2E2E2E; }
-    .ctw-stat-card .mud-typography-h4 { font-size: 2rem !important; font-weight: 800 !important; letter-spacing: -0.5px; }
+    .app-stat-card .mud-typography-h4 { font-size: 2rem !important; font-weight: 800 !important; letter-spacing: -0.5px; }
 }
 
 @media (min-width: 1600px) {
@@ -71,19 +71,19 @@ html, body {
     background-color: #E74C3C;
 }
 
-.ctw-sell { color: #E74C3C; }
-.ctw-buy { color: #26C281; }
+.app-sell { color: #E74C3C; }
+.app-buy { color: #26C281; }
 
-.ctw-stat-card {
+.app-stat-card {
     background: #262626 !important;
     border: 1px solid #2E2E2E;
     transition: border-color 0.15s, transform 0.15s;
 }
-.ctw-stat-card:hover {
+.app-stat-card:hover {
     border-color: #3A3A3A;
 }
 
-.ctw-login-page {
+.app-login-page {
     min-height: 100vh;
     background: #1A1A1A;
     display: flex;
@@ -92,7 +92,7 @@ html, body {
     padding: 24px;
 }
 
-.ctw-login-card {
+.app-login-card {
     width: 100%;
     max-width: 440px;
     background: #1A1A1A;
@@ -100,60 +100,60 @@ html, body {
     border-radius: 4px;
 }
 
-.ctw-login-logo {
+.app-login-logo {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 12px;
     margin-bottom: 32px;
 }
-.ctw-login-brand {
+.app-login-brand {
     font-size: 26px;
     font-weight: 700;
     color: #FFFFFF;
     letter-spacing: -0.3px;
 }
 
-.ctw-login-tabs {
+.app-login-tabs {
     display: flex;
     justify-content: center;
     gap: 48px;
     margin-bottom: 32px;
     border-bottom: 1px solid #2E2E2E;
 }
-.ctw-login-tab {
+.app-login-tab {
     padding: 12px 8px;
     font-size: 14px;
     font-weight: 600;
     letter-spacing: 1px;
     color: #6B6B6B;
 }
-.ctw-login-tab-active {
+.app-login-tab-active {
     color: #FFFFFF;
     border-bottom: 2px solid #26C281;
     margin-bottom: -1px;
 }
 
-.ctw-login-form {
+.app-login-form {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-.ctw-login-field {
+.app-login-field {
     display: flex;
     align-items: center;
     border-bottom: 1px solid #3A3A3A;
     padding: 8px 0;
 }
-.ctw-login-field:focus-within {
+.app-login-field:focus-within {
     border-bottom-color: #26C281;
 }
-.ctw-login-icon {
+.app-login-icon {
     margin-right: 12px;
     flex-shrink: 0;
 }
-.ctw-login-field input {
+.app-login-field input {
     flex: 1;
     background: transparent;
     border: none;
@@ -162,12 +162,12 @@ html, body {
     font-size: 15px;
     padding: 8px 0;
 }
-.ctw-login-field input::placeholder {
+.app-login-field input::placeholder {
     color: #6B6B6B;
     font-style: italic;
 }
 
-.ctw-login-button {
+.app-login-button {
     margin-top: 12px;
     background: #26C281;
     color: #FFFFFF;
@@ -180,11 +180,11 @@ html, body {
     cursor: pointer;
     transition: background 0.15s;
 }
-.ctw-login-button:hover {
+.app-login-button:hover {
     background: #2ED690;
 }
 
-.ctw-login-remember {
+.app-login-remember {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -193,7 +193,7 @@ html, body {
     user-select: none;
     cursor: pointer;
 }
-.ctw-login-remember input {
+.app-login-remember input {
     appearance: none;
     -webkit-appearance: none;
     position: relative;
@@ -205,7 +205,7 @@ html, body {
     transition: background 0.15s ease-in-out;
     margin: 0;
 }
-.ctw-login-remember input::before {
+.app-login-remember input::before {
     content: "";
     position: absolute;
     top: 2px;
@@ -216,18 +216,18 @@ html, body {
     border-radius: 50%;
     transition: transform 0.15s ease-in-out;
 }
-.ctw-login-remember input:checked {
+.app-login-remember input:checked {
     background: #26C281;
 }
-.ctw-login-remember input:checked::before {
+.app-login-remember input:checked::before {
     transform: translateX(16px);
 }
-.ctw-login-remember input:focus-visible {
+.app-login-remember input:focus-visible {
     outline: 2px solid #26C281;
     outline-offset: 2px;
 }
 
-.ctw-login-error {
+.app-login-error {
     color: #E74C3C;
     font-size: 13px;
     margin-top: -8px;
@@ -235,5 +235,5 @@ html, body {
 
 @media (max-width: 600px) {
     .mobile-stack > * { display: block !important; width: 100% !important; margin-bottom: 8px; }
-    .ctw-login-card { padding: 32px 24px; }
+    .app-login-card { padding: 32px 24px; }
 }

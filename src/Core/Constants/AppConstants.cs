@@ -11,7 +11,7 @@ public static class AuthSchemes
 {
     public const string McpKey = nameof(McpKey);
     public const string Bearer = "Bearer";
-    public const string McpTokenPrefix = "ctw_mcp_";
+    public const string McpTokenPrefix = "mcpk_";
 }
 
 public static class EncryptionPurposes
@@ -24,8 +24,8 @@ public static class EncryptionPurposes
 
 public static class NodeAgentAuth
 {
-    public const string Issuer = "ctw-main";
-    public const string Audience = "ctw-node";
+    public const string Issuer = "app-main";
+    public const string Audience = "app-node";
     public const int TokenLifetimeSeconds = 300;
     public const int MinSecretLength = 32;
 }
@@ -48,12 +48,12 @@ public static class NodeAgentRoutes
 
 public static class ConfigSections
 {
-    public const string Ctw = "Ctw";
+    public const string App = "App";
 }
 
 public static class ConnectionStrings
 {
-    public const string CtwDb = "ctwdb";
+    public const string AppDb = "appdb";
 }
 
 public static class HubRoutes
@@ -70,9 +70,9 @@ public static class HealthEndpoints
 
 public static class DockerLabels
 {
-    public const string User = "ctw.user";
-    public const string Instance = "ctw.instance";
-    public const string Type = "ctw.type";
+    public const string User = "app.user";
+    public const string Instance = "app.instance";
+    public const string Type = "app.type";
 }
 
 public static class FilePaths
@@ -85,10 +85,10 @@ public static class FilePaths
     public const string ReportJsonFile = "report.json";
     public const string ReportHtmlFile = "report.html";
     public static readonly string BuildWorkRootDefault =
-        System.IO.Path.Combine(System.IO.Path.GetTempPath(), "ctw", "builds");
+        System.IO.Path.Combine(System.IO.Path.GetTempPath(), "app", "builds");
     public static readonly string LocalRunWorkRootDefault =
-        System.IO.Path.Combine(System.IO.Path.GetTempPath(), "ctw", "local-runs");
-    public const string CtwDataRootPrefix = "/var/ctw/";
+        System.IO.Path.Combine(System.IO.Path.GetTempPath(), "app", "local-runs");
+    public const string DataRootPrefix = "/var/app/";
 }
 
 public static class LocalNodeDefaults
@@ -143,11 +143,11 @@ public static class DockerCommands
     public const string NameFlag = "--name";
     public const string LabelFlag = "--label";
     public const string VolumeFlag = "-v";
-    public const string ContainerNamePrefix = "ctw-";
+    public const string ContainerNamePrefix = "app-";
     public const string BuildCommand = "sh -c \"cd /work && dotnet build -c Release -o /work/out 2>&1\"";
     public const string BuildOutDir = "out";
     public const string BuildMount = "/work";
-    public const string BuildNugetVolume = "ctw-nuget-cache";
+    public const string BuildNugetVolume = "app-nuget-cache";
     public const string BuildNugetMount = "/root/.nuget/packages";
     public const string AlgoExtensionPattern = "*.algo";
 }

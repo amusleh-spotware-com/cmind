@@ -1,4 +1,5 @@
 using Core;
+using Core.Domain;
 using FluentAssertions;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -19,23 +20,16 @@ public class AlertPersistenceTests(PostgresFixture fixture) : IClassFixture<Post
         await using var setup = CreateContext();
         await setup.Database.MigrateAsync();
 
-        var user = new OwnerUser
-        {
-            Email = $"alert-{Guid.NewGuid():N}@test.local",
-            NormalizedEmail = $"ALERT-{Guid.NewGuid():N}@TEST.LOCAL",
-            PasswordHash = "x",
-            SecurityStamp = Guid.NewGuid().ToByteArray()
-        };
-        var rule = new AlertRule { UserId = user.Id, Name = $"rule-{Guid.NewGuid():N}", Symbol = "EURUSD", IntervalMinutes = 30 };
+        var user = OwnerUser.Create(new Email($"alert-{Guid.NewGuid():N}@test.local"), "x",
+            Guid.NewGuid().ToByteArray());
+        var rule = AlertRule.Create(user.Id, $"rule-{Guid.NewGuid():N}", new Symbol("EURUSD"),
+            new EvaluationInterval(30));
+        rule.Raise(AlertSeverity.Critical, "ECB surprise");
 
         await using (var write = CreateContext())
         {
             write.Users.Add(user);
             write.AlertRules.Add(rule);
-            write.AlertEvents.Add(new AlertEvent
-            {
-                RuleId = rule.Id, UserId = user.Id, Severity = "critical", Message = "ECB surprise"
-            });
             await write.SaveChangesAsync();
         }
 

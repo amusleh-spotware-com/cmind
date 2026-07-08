@@ -40,7 +40,7 @@ public sealed class McpKeyAuthHandler(
                 Encoding.UTF8.GetBytes(key.KeyHash), Encoding.UTF8.GetBytes(hash)))
             return AuthenticateResult.Fail("invalid key");
 
-        key.LastUsedAt = DateTimeOffset.UtcNow;
+        key.MarkUsed();
         await db.SaveChangesAsync();
 
         var claims = new[]

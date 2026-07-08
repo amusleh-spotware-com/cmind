@@ -34,6 +34,16 @@ public static class DependencyInjection
             dp.ProtectKeysWithCertificate(cert);
         }
 
+        services.AddScoped<Core.Domain.IDomainEventDispatcher, DomainEventDispatcher>();
+        services.AddSingleton<Microsoft.EntityFrameworkCore.Diagnostics.ISaveChangesInterceptor,
+            Infrastructure.Persistence.DomainEventDispatchInterceptor>();
+        services.AddScoped<Core.Domain.IAppUserRepository, AppUserRepository>();
+        services.AddScoped<Core.Domain.ICTraderIdAccountRepository, CTraderIdAccountRepository>();
+        services.AddScoped<Core.Domain.IMcpApiKeyRepository, McpApiKeyRepository>();
+        services.AddScoped<Core.Domain.ICBotRepository, CBotRepository>();
+        services.AddScoped<Core.Domain.IAgentMandateRepository, AgentMandateRepository>();
+        services.AddScoped<Core.Domain.IAlertRuleRepository, AlertRuleRepository>();
+        services.AddScoped<Core.Domain.IPropRuleRepository, PropRuleRepository>();
         services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
         services.AddSingleton<IPasswordHasher, Argon2PasswordHasher>();
         services.AddMemoryCache();

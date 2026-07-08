@@ -94,31 +94,12 @@ public sealed class AiRiskGuard(
                 try { await factory.For(instance).StopAsync(instance, ct); }
                 catch (Exception ex) when (ex is not OperationCanceledException) { /* best effort */ }
 
-            var terminal = new StoppedRunInstance
-            {
-                UserId = instance.UserId,
-                CBotId = instance.CBotId,
-                TradingAccountId = instance.TradingAccountId,
-                NodeId = instance.NodeId,
-                DockerImageTag = instance.DockerImageTag,
-                Symbol = instance.Symbol,
-                Timeframe = instance.Timeframe,
-                ParamSetId = instance.ParamSetId,
-                ContainerId = instance.ContainerId,
-                StartedAt = instance.StartedAt,
-                StoppedAt = DateTimeOffset.UtcNow,
-                DataDirSubPath = instance.DataDirSubPath
-            };
+            var terminal = instance.ToStopped(DateTimeOffset.UtcNow);
             db.Instances.Remove(instance);
             db.Instances.Add(terminal);
-            db.AuditLogs.Add(new AuditLog
-            {
-                UserId = instance.UserId,
-                Action = RiskGuardConstants.AuditAction,
-                EntityType = RiskGuardConstants.AuditEntityType,
-                EntityId = id.Value,
-                DetailsJson = reason
-            });
+            db.AuditLogs.Add(AuditLog.Record(
+                RiskGuardConstants.AuditAction, RiskGuardConstants.AuditEntityType,
+                instance.UserId, id.Value, detailsJson: reason));
             await db.SaveChangesAsync(ct);
             logger.RiskGuardStopped(id.Value, Truncate(reason, MaxSummaryChars));
         }

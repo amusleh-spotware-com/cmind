@@ -1,0 +1,26 @@
+using Core.Agent;
+
+namespace Core.Domain;
+
+public abstract record DomainEventBase : IDomainEvent
+{
+    public DateTimeOffset OccurredAt { get; } = DateTimeOffset.UtcNow;
+}
+
+public sealed record AlertRaised(AlertRuleId RuleId, UserId UserId, string Severity) : DomainEventBase;
+
+public sealed record AgentProposalCreated(AgentProposalId ProposalId, AgentMandateId MandateId, UserId UserId)
+    : DomainEventBase;
+
+public sealed record AgentProposalDecided(
+    AgentProposalId ProposalId, AgentMandateId MandateId, AgentProposalStatus Status) : DomainEventBase;
+
+public sealed record InstanceStarted(InstanceId InstanceId, UserId UserId, string ContainerId) : DomainEventBase;
+
+public sealed record InstanceStopped(InstanceId InstanceId, UserId UserId) : DomainEventBase;
+
+public sealed record InstanceFailed(InstanceId InstanceId, UserId UserId, string Reason) : DomainEventBase;
+
+public sealed record BacktestCompleted(InstanceId InstanceId, UserId UserId) : DomainEventBase;
+
+public sealed record McpApiKeyRevoked(McpApiKeyId KeyId, UserId UserId) : DomainEventBase;

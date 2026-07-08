@@ -21,13 +21,7 @@ public sealed class LocalNodeSeeder(
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
         if (await db.Nodes.OfType<LocalNode>().IgnoreQueryFilters().AnyAsync(ct)) return;
 
-        var node = new LocalNode
-        {
-            Name = opts.Name,
-            DataDirPath = opts.WorkRoot,
-            MaxInstances = opts.MaxInstances,
-            Enabled = true
-        };
+        var node = LocalNode.Create(opts.Name, opts.WorkRoot, opts.MaxInstances, enabled: true);
         db.Nodes.Add(node);
         await db.SaveChangesAsync(ct);
         log.LocalNodeSeeded(opts.Name);

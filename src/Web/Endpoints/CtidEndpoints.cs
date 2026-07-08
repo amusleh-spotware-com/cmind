@@ -29,12 +29,8 @@ public static class CtidEndpoints
         g.MapPost("/", async (CreateCtidRequest req, DataContext db, ICurrentUser u, ISecretProtector p) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
-            db.CTids.Add(new CTraderIdAccount
-            {
-                UserId = uid,
-                Username = req.Username,
-                EncryptedPassword = p.Protect(Encoding.UTF8.GetBytes(req.Password), EncryptionPurposes.CtidPassword)
-            });
+            db.CTids.Add(CTraderIdAccount.Create(uid, req.Username,
+                p.Protect(Encoding.UTF8.GetBytes(req.Password), EncryptionPurposes.CtidPassword)));
             await db.SaveChangesAsync();
             return Results.Ok();
         });
@@ -46,10 +42,9 @@ public static class CtidEndpoints
             var cid = CtidId.From(id);
             var c = await db.CTids.FirstOrDefaultAsync(x => x.Id == cid && x.UserId == uid);
             if (c is null) return Results.NotFound();
-            c.Username = req.Username;
+            c.UpdateUsername(req.Username);
             if (!string.IsNullOrEmpty(req.Password))
-                c.EncryptedPassword = p.Protect(Encoding.UTF8.GetBytes(req.Password), EncryptionPurposes.CtidPassword);
-            c.UpdatedAt = DateTimeOffset.UtcNow;
+                c.UpdatePassword(p.Protect(Encoding.UTF8.GetBytes(req.Password), EncryptionPurposes.CtidPassword));
             await db.SaveChangesAsync();
             return Results.Ok();
         });
@@ -80,14 +75,7 @@ public static class CtidEndpoints
             var cid = CtidId.From(id);
             var c = await db.CTids.FirstOrDefaultAsync(x => x.Id == cid && x.UserId == uid);
             if (c is null) return Results.NotFound();
-            db.TradingAccounts.Add(new TradingAccount
-            {
-                CTidId = cid,
-                AccountNumber = req.AccountNumber,
-                Broker = req.Broker,
-                IsLive = req.IsLive,
-                Label = req.Label
-            });
+            c.AddTradingAccount(req.AccountNumber, req.Broker, req.IsLive, req.Label);
             await db.SaveChangesAsync();
             return Results.Ok();
         });

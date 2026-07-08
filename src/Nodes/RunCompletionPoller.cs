@@ -51,20 +51,8 @@ public sealed class RunCompletionPoller(
 
             var now = DateTimeOffset.UtcNow;
             Instance terminal = exitCode is null or 0
-                ? new StoppedRunInstance
-                {
-                    ContainerId = instance.ContainerId,
-                    StartedAt = instance.StartedAt,
-                    StoppedAt = now
-                }
-                : new FailedRunInstance
-                {
-                    ContainerId = instance.ContainerId,
-                    StartedAt = instance.StartedAt,
-                    StoppedAt = now,
-                    FailureReason = $"{ContainerExitedReason}{exitCode}"
-                };
-            CopyCommon(instance, terminal);
+                ? instance.ToStopped(now)
+                : instance.ToFailed($"{ContainerExitedReason}{exitCode}");
             db.Instances.Remove(instance);
             db.Instances.Add(terminal);
 
@@ -75,19 +63,5 @@ public sealed class RunCompletionPoller(
                 db.ChangeTracker.Clear();
             }
         }
-    }
-
-    private static void CopyCommon(Instance src, Instance dst)
-    {
-        dst.UserId = src.UserId;
-        dst.CBotId = src.CBotId;
-        dst.TradingAccountId = src.TradingAccountId;
-        dst.NodeId = src.NodeId;
-        dst.DockerImageTag = src.DockerImageTag;
-        dst.Symbol = src.Symbol;
-        dst.Timeframe = src.Timeframe;
-        dst.ParamSetId = src.ParamSetId;
-        dst.DataDirSubPath = src.DataDirSubPath;
-        dst.CreatedAt = src.CreatedAt;
     }
 }

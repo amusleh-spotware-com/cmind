@@ -1,6 +1,7 @@
 using Core;
 using Core.Agent;
 using Core.Constants;
+using Core.Domain;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -61,22 +62,14 @@ public static class AgentEndpoints
                 accountId = aid;
             }
 
-            var mandate = new AgentMandate
-            {
-                UserId = uid,
-                CBotId = cbotId,
-                TradingAccountId = accountId,
-                Name = req.Name!.Trim(),
-                Objective = req.Objective ?? string.Empty,
-                RiskPercentPerTrade = req.RiskPercentPerTrade ?? 1.0,
-                MaxDrawdownPercent = req.MaxDrawdownPercent ?? 20.0,
-                Symbol = string.IsNullOrWhiteSpace(req.Symbol) ? AgentConstants.DefaultSymbol : req.Symbol!.Trim(),
-                Timeframe = string.IsNullOrWhiteSpace(req.Timeframe) ? AgentConstants.DefaultTimeframe : req.Timeframe!.Trim(),
-                DockerImageTag = string.IsNullOrWhiteSpace(req.DockerImageTag) ? DockerImages.DefaultTag : req.DockerImageTag!.Trim(),
-                BacktestSettingsJson = req.BacktestSettingsJson,
-                Autonomy = autonomy,
-                Enabled = req.Enabled
-            };
+            var mandate = AgentMandate.Create(uid, cbotId, req.Name!.Trim(), req.Objective ?? string.Empty,
+                new RiskPercent(req.RiskPercentPerTrade ?? 1.0),
+                new DrawdownPercent(req.MaxDrawdownPercent ?? 20.0),
+                new Symbol(string.IsNullOrWhiteSpace(req.Symbol) ? AgentConstants.DefaultSymbol : req.Symbol!),
+                new Timeframe(string.IsNullOrWhiteSpace(req.Timeframe) ? AgentConstants.DefaultTimeframe : req.Timeframe!),
+                new DockerImageTag(string.IsNullOrWhiteSpace(req.DockerImageTag) ? DockerImages.DefaultTag : req.DockerImageTag!),
+                autonomy, req.BacktestSettingsJson, accountId);
+            if (req.Enabled) mandate.Enable();
             db.AgentMandates.Add(mandate);
             await db.SaveChangesAsync(ct);
             return Results.Ok(new { id = mandate.Id.Value });
@@ -89,24 +82,23 @@ public static class AgentEndpoints
             var mandate = await db.AgentMandates.FirstOrDefaultAsync(m => m.Id == mid && m.UserId == uid, ct);
             if (mandate is null) return Results.NotFound();
 
-            if (!string.IsNullOrWhiteSpace(req.Name)) mandate.Name = req.Name!.Trim();
-            if (req.Objective is not null) mandate.Objective = req.Objective;
-            if (req.RiskPercentPerTrade is { } risk) mandate.RiskPercentPerTrade = risk;
-            if (req.MaxDrawdownPercent is { } dd) mandate.MaxDrawdownPercent = dd;
-            if (!string.IsNullOrWhiteSpace(req.Symbol)) mandate.Symbol = req.Symbol!.Trim();
-            if (!string.IsNullOrWhiteSpace(req.Timeframe)) mandate.Timeframe = req.Timeframe!.Trim();
+            if (!string.IsNullOrWhiteSpace(req.Name)) mandate.Rename(req.Name!.Trim());
+            if (req.Objective is not null) mandate.SetObjective(req.Objective);
+            if (req.RiskPercentPerTrade is { } risk) mandate.SetRiskPerTrade(new RiskPercent(risk));
+            if (req.MaxDrawdownPercent is { } dd) mandate.SetMaxDrawdown(new DrawdownPercent(dd));
+            if (!string.IsNullOrWhiteSpace(req.Symbol)) mandate.SetSymbol(new Symbol(req.Symbol!));
+            if (!string.IsNullOrWhiteSpace(req.Timeframe)) mandate.SetTimeframe(new Timeframe(req.Timeframe!));
             if (req.Autonomy is not null && Enum.TryParse<AgentAutonomy>(req.Autonomy, ignoreCase: true, out var autonomy))
-                mandate.Autonomy = autonomy;
-            if (req.Enabled is { } enabled) mandate.Enabled = enabled;
+                mandate.SetAutonomy(autonomy);
+            if (req.Enabled is { } enabled) { if (enabled) mandate.Enable(); else mandate.Disable(); }
             if (req.TradingAccountId is { } acct)
             {
                 var aid = TradingAccountId.From(acct);
                 var ownsAccount = await db.TradingAccounts.Include(t => t.CTid)
                     .AnyAsync(t => t.Id == aid && t.CTid.UserId == uid, ct);
                 if (!ownsAccount) return Results.BadRequest("trading account not found");
-                mandate.TradingAccountId = aid;
+                mandate.SetTradingAccount(aid);
             }
-            mandate.UpdatedAt = DateTimeOffset.UtcNow;
             await db.SaveChangesAsync(ct);
             return Results.Ok();
         });
@@ -174,9 +166,7 @@ public static class AgentEndpoints
             var proposal = await db.AgentProposals.FirstOrDefaultAsync(p => p.Id == pid && p.UserId == uid, ct);
             if (proposal is null) return Results.NotFound();
             if (proposal.Status is AgentProposalStatus.Executed) return Results.BadRequest("proposal already executed");
-            proposal.Status = AgentProposalStatus.Rejected;
-            proposal.DecidedAt = DateTimeOffset.UtcNow;
-            proposal.DecidedByUserId = uid;
+            if (proposal.Status is AgentProposalStatus.Pending) proposal.Reject(uid);
             await db.SaveChangesAsync(ct);
             return Results.Ok(new { success = true });
         });

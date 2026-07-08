@@ -19,30 +19,16 @@ public class PropRulePersistenceTests(PostgresFixture fixture) : IClassFixture<P
         await using var setup = CreateContext();
         await setup.Database.MigrateAsync();
 
-        var user = new OwnerUser
-        {
-            Email = $"prop-{Guid.NewGuid():N}@test.local",
-            NormalizedEmail = $"PROP-{Guid.NewGuid():N}@TEST.LOCAL",
-            PasswordHash = "x",
-            SecurityStamp = Guid.NewGuid().ToByteArray()
-        };
-        var ctid = new CTraderIdAccount
-        {
-            UserId = user.Id, User = user, Username = $"ct-{Guid.NewGuid():N}",
-            EncryptedPassword = "pw"u8.ToArray()
-        };
-        var account = new TradingAccount { CTidId = ctid.Id, CTid = ctid, AccountNumber = 12345, Broker = "Test" };
-        var rule = new PropRule
-        {
-            UserId = user.Id, TradingAccountId = account.Id, Name = "FTMO",
-            MaxConcurrentLiveInstances = 2, AutoFlatten = true, MaxDrawdownPercent = 10
-        };
+        var user = OwnerUser.Create(new Email($"prop-{Guid.NewGuid():N}@test.local"), "x",
+            Guid.NewGuid().ToByteArray());
+        var ctid = CTraderIdAccount.Create(user.Id, $"ct-{Guid.NewGuid():N}", "pw"u8.ToArray());
+        var account = ctid.AddTradingAccount(12345, "Test", isLive: false, label: null);
+        var rule = PropRule.Create(user.Id, account.Id, "FTMO", 2, 0, 10, autoFlatten: true);
 
         await using (var write = CreateContext())
         {
             write.Users.Add(user);
             write.CTids.Add(ctid);
-            write.TradingAccounts.Add(account);
             write.PropRules.Add(rule);
             await write.SaveChangesAsync();
         }
@@ -56,10 +42,7 @@ public class PropRulePersistenceTests(PostgresFixture fixture) : IClassFixture<P
 
         await using (var dup = CreateContext())
         {
-            dup.PropRules.Add(new PropRule
-            {
-                UserId = user.Id, TradingAccountId = account.Id, Name = "Duplicate"
-            });
+            dup.PropRules.Add(PropRule.Create(user.Id, account.Id, "Duplicate", 3, 0, 0, autoFlatten: false));
             var act = async () => await dup.SaveChangesAsync();
             await act.Should().ThrowAsync<DbUpdateException>();
         }

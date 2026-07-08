@@ -47,26 +47,20 @@ public static class AuthEndpoints
 
             var normalized = email.ToUpperInvariant();
             var user = await db.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == normalized);
-            var lockedOut = user is not null &&
-                (user.IsLockedOut || (user.LockoutEnd is { } end && end > DateTimeOffset.UtcNow));
+            var lockedOut = user is not null && user.IsCurrentlyLockedOut();
             if (user is null || lockedOut || !hasher.Verify(password, user.PasswordHash))
             {
                 if (user is not null && !lockedOut)
                 {
-                    user.AccessFailedCount++;
-                    if (user.AccessFailedCount >= AuthLockout.MaxFailedAttempts)
-                    {
-                        user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(AuthLockout.LockoutMinutes);
-                        user.AccessFailedCount = 0;
-                    }
+                    user.RecordFailedLogin(AuthLockout.MaxFailedAttempts,
+                        TimeSpan.FromMinutes(AuthLockout.LockoutMinutes));
                     await db.SaveChangesAsync();
                 }
                 if (ctx.Request.HasFormContentType)
                     return Results.Redirect("/login?error=1");
                 return Results.Unauthorized();
             }
-            user.AccessFailedCount = 0;
-            user.LockoutEnd = null;
+            user.RecordSuccessfulLogin();
             await db.SaveChangesAsync();
 
             var claims = new List<Claim>
@@ -105,9 +99,7 @@ public static class AuthEndpoints
             var user = await db.Users.FindAsync(uid);
             if (user is null) return Results.NotFound();
             if (!hasher.Verify(req.CurrentPassword, user.PasswordHash)) return Results.Unauthorized();
-            user.PasswordHash = hasher.Hash(req.NewPassword);
-            user.MustChangePassword = false;
-            user.UpdatedAt = DateTimeOffset.UtcNow;
+            user.ChangePassword(hasher.Hash(req.NewPassword));
             await db.SaveChangesAsync();
             return Results.Ok();
         }).RequireAuthorization();

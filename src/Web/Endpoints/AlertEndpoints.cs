@@ -1,5 +1,6 @@
 using Core;
 using Core.Constants;
+using Core.Domain;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -38,14 +39,11 @@ public static class AlertEndpoints
             if (string.IsNullOrWhiteSpace(req.Name)) return Results.BadRequest("name required");
             if (string.IsNullOrWhiteSpace(req.Symbol)) return Results.BadRequest("symbol required");
 
-            var rule = new AlertRule
-            {
-                UserId = uid,
-                Name = req.Name!.Trim(),
-                Symbol = req.Symbol!.Trim().ToUpperInvariant(),
-                IntervalMinutes = Math.Clamp(req.IntervalMinutes ?? AlertConstants.DefaultIntervalMinutes, AlertConstants.MinIntervalMinutes, AlertConstants.MaxIntervalMinutes),
-                Enabled = req.Enabled ?? true
-            };
+            var minutes = Math.Clamp(req.IntervalMinutes ?? AlertConstants.DefaultIntervalMinutes,
+                AlertConstants.MinIntervalMinutes, AlertConstants.MaxIntervalMinutes);
+            var rule = AlertRule.Create(uid, req.Name!.Trim(), new Symbol(req.Symbol!),
+                new EvaluationInterval(minutes));
+            if (req.Enabled == false) rule.Disable();
             db.AlertRules.Add(rule);
             try { await db.SaveChangesAsync(ct); }
             catch (DbUpdateException) { return Results.Conflict("a rule with that name already exists"); }
@@ -58,11 +56,12 @@ public static class AlertEndpoints
             var rid = AlertRuleId.From(id);
             var rule = await db.AlertRules.FirstOrDefaultAsync(r => r.Id == rid && r.UserId == uid, ct);
             if (rule is null) return Results.NotFound();
-            if (!string.IsNullOrWhiteSpace(req.Name)) rule.Name = req.Name!.Trim();
-            if (!string.IsNullOrWhiteSpace(req.Symbol)) rule.Symbol = req.Symbol!.Trim().ToUpperInvariant();
-            if (req.IntervalMinutes is { } minutes) rule.IntervalMinutes = Math.Clamp(minutes, AlertConstants.MinIntervalMinutes, AlertConstants.MaxIntervalMinutes);
-            if (req.Enabled is { } enabled) rule.Enabled = enabled;
-            rule.UpdatedAt = DateTimeOffset.UtcNow;
+            if (!string.IsNullOrWhiteSpace(req.Name)) rule.Rename(req.Name!.Trim());
+            if (!string.IsNullOrWhiteSpace(req.Symbol)) rule.SetSymbol(new Symbol(req.Symbol!));
+            if (req.IntervalMinutes is { } minutes)
+                rule.SetInterval(new EvaluationInterval(Math.Clamp(minutes,
+                    AlertConstants.MinIntervalMinutes, AlertConstants.MaxIntervalMinutes)));
+            if (req.Enabled is { } enabled) { if (enabled) rule.Enable(); else rule.Disable(); }
             await db.SaveChangesAsync(ct);
             return Results.Ok();
         });
@@ -107,8 +106,7 @@ public static class AlertEndpoints
             var eid = AlertEventId.From(id);
             var evt = await db.AlertEvents.FirstOrDefaultAsync(e => e.Id == eid && e.UserId == uid, ct);
             if (evt is null) return Results.NotFound();
-            evt.Acknowledged = true;
-            evt.UpdatedAt = DateTimeOffset.UtcNow;
+            evt.Acknowledge();
             await db.SaveChangesAsync(ct);
             return Results.Ok();
         });

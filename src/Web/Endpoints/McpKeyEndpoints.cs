@@ -30,10 +30,7 @@ public static class McpKeyEndpoints
             var raw = "mcpk_" + Convert.ToHexString(RandomNumberGenerator.GetBytes(24)).ToLowerInvariant();
             var prefix = raw[..16];
             var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(raw)));
-            db.McpApiKeys.Add(new McpApiKey
-            {
-                UserId = uid, KeyPrefix = prefix, KeyHash = hash, Label = req.Label
-            });
+            db.McpApiKeys.Add(McpApiKey.Create(uid, prefix, hash, req.Label));
             await db.SaveChangesAsync();
             return Results.Ok(new { token = raw });
         });
@@ -44,7 +41,8 @@ public static class McpKeyEndpoints
             var kid = McpApiKeyId.From(id);
             var k = await db.McpApiKeys.FirstOrDefaultAsync(x => x.Id == kid && x.UserId == uid);
             if (k is null) return Results.NotFound();
-            k.RevokedAt = DateTimeOffset.UtcNow;
+            if (k.RevokedAt is not null) return Results.NoContent();
+            k.Revoke();
             await db.SaveChangesAsync();
             return Results.NoContent();
         });

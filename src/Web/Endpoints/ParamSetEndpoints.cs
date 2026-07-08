@@ -47,13 +47,7 @@ public static class ParamSetEndpoints
             if (u.UserId is not { } uid) return Results.Unauthorized();
             if (string.IsNullOrWhiteSpace(req.Name)) return Results.BadRequest("name is required");
             if (!IsNonEmptyJson(req.JsonContent)) return Results.BadRequest("content cannot be empty");
-            db.ParamSets.Add(new ParamSet
-            {
-                UserId = uid,
-                CBotId = CBotId.From(req.CBotId),
-                Name = req.Name,
-                JsonContent = req.JsonContent
-            });
+            db.ParamSets.Add(ParamSet.Create(uid, CBotId.From(req.CBotId), req.Name, req.JsonContent));
             await db.SaveChangesAsync();
             return Results.Ok();
         });
@@ -66,9 +60,7 @@ public static class ParamSetEndpoints
             if (p is null) return Results.NotFound();
             if (string.IsNullOrWhiteSpace(req.Name)) return Results.BadRequest("name is required");
             if (!IsNonEmptyJson(req.JsonContent)) return Results.BadRequest("content cannot be empty");
-            p.Name = req.Name;
-            p.JsonContent = req.JsonContent;
-            p.UpdatedAt = DateTimeOffset.UtcNow;
+            p.Update(req.Name, req.JsonContent);
             await db.SaveChangesAsync();
             return Results.Ok();
         });

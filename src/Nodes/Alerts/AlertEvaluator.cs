@@ -1,6 +1,7 @@
 using Core;
 using Core.Ai;
 using Core.Constants;
+using Core.Domain;
 using Core.Logging;
 using Core.Options;
 using Infrastructure.Persistence;
@@ -75,19 +76,13 @@ public sealed class AlertEvaluator(
         var rule = await db.AlertRules.FirstOrDefaultAsync(r => r.Id == ruleId, ct);
         if (rule is null) return;
 
-        rule.LastEvaluatedAt = DateTimeOffset.UtcNow;
+        rule.MarkEvaluated();
         if (result.Success)
         {
             var assessment = AlertJson.Parse(result.Text);
             if (assessment is { Alert: true })
             {
-                db.AlertEvents.Add(new AlertEvent
-                {
-                    RuleId = rule.Id,
-                    UserId = rule.UserId,
-                    Severity = assessment.Severity,
-                    Message = assessment.Message
-                });
+                rule.Raise(new AlertSeverity(assessment.Severity), assessment.Message);
                 logger.AlertRaised(rule.Id.Value, assessment.Severity);
             }
         }

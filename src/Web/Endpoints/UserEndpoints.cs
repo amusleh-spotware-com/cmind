@@ -31,19 +31,17 @@ public static class UserEndpoints
             if (await db.Users.AnyAsync(u => u.NormalizedEmail == normalized))
                 return Results.Conflict("email exists");
 
+            var email = new Email(req.Email);
+            var stamp = RandomNumberGenerator.GetBytes(32);
+            var passwordHash = hasher.Hash(req.Password);
             AppUser u = req.Role switch
             {
-                1 => new AdminUser(),
-                2 => new RegularUser(),
-                3 => new ViewerUser { SeeAllInstances = req.ViewerSeeAllInstances },
+                1 => AdminUser.Create(email, passwordHash, stamp, createdBy: current.UserId),
+                2 => RegularUser.Create(email, passwordHash, stamp, createdBy: current.UserId),
+                3 => ViewerUser.Create(email, passwordHash, stamp, req.ViewerSeeAllInstances,
+                    createdBy: current.UserId),
                 _ => throw new InvalidOperationException("invalid role")
             };
-            u.Email = req.Email;
-            u.NormalizedEmail = normalized;
-            u.PasswordHash = hasher.Hash(req.Password);
-            u.MustChangePassword = true;
-            u.CreatedByUserId = current.UserId;
-            u.SecurityStamp = RandomNumberGenerator.GetBytes(32);
 
             db.Users.Add(u);
             await db.SaveChangesAsync();
@@ -57,12 +55,7 @@ public static class UserEndpoints
             var target = await db.Users.FirstOrDefaultAsync(u => u.Id == uid);
             if (target is null) return Results.NotFound();
             if (target is OwnerUser && !current.IsInRole("Owner")) return Results.Forbid();
-            target.PasswordHash = hasher.Hash(req.NewPassword);
-            target.MustChangePassword = true;
-            target.IsLockedOut = false;
-            target.AccessFailedCount = 0;
-            target.SecurityStamp = RandomNumberGenerator.GetBytes(32);
-            target.UpdatedAt = DateTimeOffset.UtcNow;
+            target.ResetPassword(hasher.Hash(req.NewPassword), RandomNumberGenerator.GetBytes(32));
             await db.SaveChangesAsync();
             return Results.Ok();
         });

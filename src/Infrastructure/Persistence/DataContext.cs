@@ -33,8 +33,12 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     public override int SaveChanges() { ApplySoftDelete(); return base.SaveChanges(); }
+
     public override Task<int> SaveChangesAsync(CancellationToken ct = default)
-    { ApplySoftDelete(); return base.SaveChangesAsync(ct); }
+    {
+        ApplySoftDelete();
+        return base.SaveChangesAsync(ct);
+    }
 
     private void ApplySoftDelete()
     {
@@ -217,6 +221,15 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(x => x.TradingAccount).WithMany().HasForeignKey(x => x.TradingAccountId).OnDelete(DeleteBehavior.Cascade);
         });
+
+        modelBuilder.Entity<CTraderIdAccount>().Navigation(x => x.TradingAccounts)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+        modelBuilder.Entity<CBot>().Navigation(x => x.ParamSets)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+        modelBuilder.Entity<AgentMandate>().Navigation(x => x.Proposals)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+        modelBuilder.Entity<AlertRule>().Navigation(x => x.Events)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {

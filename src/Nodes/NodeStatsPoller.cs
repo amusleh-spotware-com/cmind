@@ -39,10 +39,11 @@ public sealed class NodeStatsPoller(
             try
             {
                 var stats = await factory.For(node).CollectStatsAsync(node, ct);
-                stats.RunningCount = await db.Instances.CountAsync(i =>
+                var runningCount = await db.Instances.CountAsync(i =>
                     i.NodeId == node.Id && i is RunningRunInstance, ct);
-                stats.BacktestCount = await db.Instances.CountAsync(i =>
+                var backtestCount = await db.Instances.CountAsync(i =>
                     i.NodeId == node.Id && i is RunningBacktestInstance, ct);
+                stats.SetInstanceCounts(runningCount, backtestCount);
 
                 var existing = await db.NodeStats.FindAsync([node.Id], ct);
                 if (existing is null) db.NodeStats.Add(stats);

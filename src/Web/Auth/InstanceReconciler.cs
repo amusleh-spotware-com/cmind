@@ -33,18 +33,12 @@ public sealed class InstanceReconciler(
                     .ToListAsync(stoppingToken);
                 foreach (var i in stale)
                 {
-                    Instance replacement = i is RunInstance
-                        ? new FailedRunInstance
-                        {
-                            ContainerId = (i as StartingRunInstance)?.ContainerId,
-                            FailureReason = ReconcileTimeoutReason
-                        }
-                        : new FailedBacktestInstance
-                        {
-                            ContainerId = (i as StartingBacktestInstance)?.ContainerId,
-                            FailureReason = ReconcileTimeoutReason
-                        };
-                    CopyCommon(i, replacement);
+                    Instance replacement = i switch
+                    {
+                        RunInstance r => r.ToFailed(ReconcileTimeoutReason),
+                        BacktestInstance b => b.ToFailed(ReconcileTimeoutReason),
+                        _ => throw new InvalidOperationException()
+                    };
                     db.Instances.Remove(i);
                     db.Instances.Add(replacement);
                 }
@@ -53,19 +47,5 @@ public sealed class InstanceReconciler(
             catch (Exception ex) { log.ReconcileFailed(ex); }
             await Task.Delay(options.CurrentValue.InstanceReconcileInterval, stoppingToken);
         }
-    }
-
-    private static void CopyCommon(Instance src, Instance dst)
-    {
-        dst.UserId = src.UserId;
-        dst.CBotId = src.CBotId;
-        dst.TradingAccountId = src.TradingAccountId;
-        dst.NodeId = src.NodeId;
-        dst.DockerImageTag = src.DockerImageTag;
-        dst.Symbol = src.Symbol;
-        dst.Timeframe = src.Timeframe;
-        dst.ParamSetId = src.ParamSetId;
-        dst.DataDirSubPath = src.DataDirSubPath;
-        dst.CreatedAt = src.CreatedAt;
     }
 }

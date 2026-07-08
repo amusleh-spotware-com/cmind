@@ -67,7 +67,7 @@ public sealed class LocalContainerDispatcher(
             log.LocalDockerFailed(dockerArgs.ToString(), output);
             throw new InvalidOperationException($"docker run failed: {output}");
         }
-        instance.DataDirSubPath = workDir;
+        instance.SetDataDirSubPath(workDir);
         return output.Trim();
     }
 
@@ -127,17 +127,7 @@ public sealed class LocalContainerDispatcher(
         }
         catch { /* swallow */ }
         var backtestUsed = SafeDirSize(workRoot);
-        return new NodeStats
-        {
-            NodeId = node.Id,
-            CpuPercent = cpu,
-            MemUsedBytes = memUsed,
-            MemTotalBytes = memTotal,
-            DiskUsedBytes = diskUsed,
-            DiskTotalBytes = diskTotal,
-            BacktestDataUsedBytes = backtestUsed,
-            UpdatedAt = DateTimeOffset.UtcNow
-        };
+        return NodeStats.Create(node.Id, cpu, memUsed, memTotal, diskUsed, diskTotal, backtestUsed);
     }
 
     public async Task<bool?> IsRunningAsync(Instance instance, CancellationToken ct)

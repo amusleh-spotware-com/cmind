@@ -33,14 +33,7 @@ public sealed class OwnerSeeder(
 
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         var email = new Email(opts.OwnerEmail);
-        var owner = new OwnerUser
-        {
-            Email = email.Value,
-            NormalizedEmail = email.Normalized,
-            PasswordHash = hasher.Hash(opts.OwnerPassword),
-            SecurityStamp = RandomNumberGenerator.GetBytes(32),
-            MustChangePassword = true
-        };
+        var owner = OwnerUser.Create(email, hasher.Hash(opts.OwnerPassword), RandomNumberGenerator.GetBytes(32));
         db.Users.Add(owner);
         await db.SaveChangesAsync(ct);
         log.OwnerSeeded(email.Value);

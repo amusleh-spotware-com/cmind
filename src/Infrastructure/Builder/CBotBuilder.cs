@@ -52,9 +52,7 @@ public sealed class CBotBuilder(
         var projectFile = Directory.EnumerateFiles(workDir, "*.csproj", SearchOption.TopDirectoryOnly).FirstOrDefault();
         if (projectFile is null)
         {
-            project.LastBuildLog = NoProjectFileMessage;
-            project.LastBuildAt = DateTimeOffset.UtcNow;
-            project.LastBuildSucceeded = false;
+            project.RecordBuild(NoProjectFileMessage, false);
             await db.SaveChangesAsync(ct);
             return new BuildResult(false, NoProjectFileMessage, null);
         }
@@ -79,9 +77,7 @@ public sealed class CBotBuilder(
             else { success = false; buildLog += NoAlgoMessage; }
         }
 
-        project.LastBuildLog = buildLog;
-        project.LastBuildAt = DateTimeOffset.UtcNow;
-        project.LastBuildSucceeded = success;
+        project.RecordBuild(buildLog, success);
 
         if (success && algoBytes is not null)
         {
@@ -91,21 +87,12 @@ public sealed class CBotBuilder(
                 ct);
             if (existing is null)
             {
-                db.CBots.Add(new CBot
-                {
-                    UserId = userId,
-                    Name = project.Name,
-                    EncryptedAlgo = protector.Protect(algoBytes, EncryptionPurposes.CbotAlgo),
-                    SourceProjectId = project.Id,
-                    Version = 1
-                });
+                db.CBots.Add(CBot.Create(userId, project.Name,
+                    protector.Protect(algoBytes, EncryptionPurposes.CbotAlgo), project.Id));
             }
             else
             {
-                existing.EncryptedAlgo = protector.Protect(algoBytes, EncryptionPurposes.CbotAlgo);
-                existing.SourceProjectId = project.Id;
-                existing.Version++;
-                existing.UpdatedAt = DateTimeOffset.UtcNow;
+                existing.UpdateAlgo(protector.Protect(algoBytes, EncryptionPurposes.CbotAlgo), project.Id);
             }
         }
         await db.SaveChangesAsync(ct);

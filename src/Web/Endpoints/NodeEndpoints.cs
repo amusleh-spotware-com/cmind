@@ -55,12 +55,9 @@ public static class NodeEndpoints
             if (req.ApiSecret.Length < NodeAgentAuth.MinSecretLength)
                 return Results.BadRequest($"api secret must be at least {NodeAgentAuth.MinSecretLength} characters");
 
-            RemoteNode node = CreateNodeForMode(req.Mode);
-            node.Name = req.Name;
-            node.BaseUrl = req.BaseUrl.TrimEnd('/');
-            node.EncryptedApiSecret = p.Protect(Encoding.UTF8.GetBytes(req.ApiSecret), EncryptionPurposes.NodeApiSecret);
-            node.DataDirPath = req.DataDirPath;
-            node.MaxInstances = req.MaxInstances;
+            var node = RemoteNode.Create(NodeMode.FromName(req.Mode), req.Name, req.BaseUrl,
+                p.Protect(Encoding.UTF8.GetBytes(req.ApiSecret), EncryptionPurposes.NodeApiSecret),
+                req.DataDirPath, req.MaxInstances);
             db.Nodes.Add(node);
             await db.SaveChangesAsync();
             return Results.Ok(new { node.Id });
@@ -70,8 +67,7 @@ public static class NodeEndpoints
         {
             var node = await db.Nodes.OfType<LocalNode>().FirstOrDefaultAsync();
             if (node is null) return Results.NotFound("local node not seeded");
-            node.Enabled = req.Enabled;
-            node.UpdatedAt = DateTimeOffset.UtcNow;
+            node.SetEnabled(req.Enabled);
             await db.SaveChangesAsync();
             return Results.Ok(new { node.Id, node.Enabled });
         });
@@ -92,28 +88,9 @@ public static class NodeEndpoints
                 var now = DateTimeOffset.UtcNow;
                 Instance? terminal = i switch
                 {
-                    RunningRunInstance rri => new StoppedRunInstance
-                    {
-                        UserId = i.UserId, CBotId = i.CBotId, TradingAccountId = i.TradingAccountId,
-                        NodeId = i.NodeId, DockerImageTag = i.DockerImageTag, Symbol = i.Symbol,
-                        Timeframe = i.Timeframe, ParamSetId = i.ParamSetId,
-                        ContainerId = rri.ContainerId, StartedAt = rri.StartedAt, StoppedAt = now
-                    },
-                    StartingRunInstance sri => new StoppedRunInstance
-                    {
-                        UserId = i.UserId, CBotId = i.CBotId, TradingAccountId = i.TradingAccountId,
-                        NodeId = i.NodeId, DockerImageTag = i.DockerImageTag, Symbol = i.Symbol,
-                        Timeframe = i.Timeframe, ParamSetId = i.ParamSetId,
-                        ContainerId = sri.ContainerId, StoppedAt = now
-                    },
-                    RunningBacktestInstance rbi => new CompletedBacktestInstance
-                    {
-                        UserId = i.UserId, CBotId = i.CBotId, TradingAccountId = i.TradingAccountId,
-                        NodeId = i.NodeId, DockerImageTag = i.DockerImageTag, Symbol = i.Symbol,
-                        Timeframe = i.Timeframe, ParamSetId = i.ParamSetId,
-                        BacktestSettingsJson = ((BacktestInstance)i).BacktestSettingsJson,
-                        ContainerId = rbi.ContainerId, StartedAt = rbi.StartedAt, StoppedAt = now
-                    },
+                    RunningRunInstance rri => rri.ToStopped(now),
+                    StartingRunInstance sri => sri.ToStopped(now),
+                    RunningBacktestInstance rbi => rbi.ToCompleted(now),
                     _ => null
                 };
                 if (terminal is not null)
@@ -140,14 +117,6 @@ public static class NodeEndpoints
 
         return app;
     }
-
-    private static RemoteNode CreateNodeForMode(string mode) => mode switch
-    {
-        "Run" => new ActiveRunNode(),
-        "Backtest" => new ActiveBacktestNode(),
-        "Mixed" => new ActiveMixedNode(),
-        _ => throw new ArgumentException($"Invalid node mode: {mode}", nameof(mode))
-    };
 }
 
 public record LocalToggleRequest(bool Enabled);

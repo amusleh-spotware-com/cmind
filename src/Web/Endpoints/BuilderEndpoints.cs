@@ -30,12 +30,10 @@ public static class BuilderEndpoints
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             CBotSourceProject project = req.Language == 1
-                ? new PythonProject()
-                : new CSharpProject();
-            project.UserId = uid;
-            project.Name = req.Name;
+                ? PythonProject.Create(uid, req.Name)
+                : CSharpProject.Create(uid, req.Name);
             var json = Templates.CreateProjectJson(project.LanguageName, req.Name);
-            project.EncryptedProjectFiles = protector.Protect(Encoding.UTF8.GetBytes(json), EncryptionPurposes.CbotSource);
+            project.SetFiles(protector.Protect(Encoding.UTF8.GetBytes(json), EncryptionPurposes.CbotSource));
             db.CBotSourceProjects.Add(project);
             await db.SaveChangesAsync();
             return Results.Ok(new { project.Id });
@@ -91,8 +89,7 @@ public static class BuilderEndpoints
             var p = await db.CBotSourceProjects.FirstOrDefaultAsync(x => x.Id == pid && x.UserId == uid);
             if (p is null) return Results.NotFound();
             var json = JsonSerializer.Serialize(req.Files);
-            p.EncryptedProjectFiles = protector.Protect(Encoding.UTF8.GetBytes(json), EncryptionPurposes.CbotSource);
-            p.UpdatedAt = DateTimeOffset.UtcNow;
+            p.SetFiles(protector.Protect(Encoding.UTF8.GetBytes(json), EncryptionPurposes.CbotSource));
             await db.SaveChangesAsync();
             return Results.NoContent();
         });
@@ -126,7 +123,7 @@ public static class BuilderEndpoints
                     if (projFile is not null) files[projFile] = req.ProjectFile;
                 }
                 var newJson = JsonSerializer.Serialize(files);
-                p.EncryptedProjectFiles = protector.Protect(Encoding.UTF8.GetBytes(newJson), EncryptionPurposes.CbotSource);
+                p.SetFiles(protector.Protect(Encoding.UTF8.GetBytes(newJson), EncryptionPurposes.CbotSource));
                 await db.SaveChangesAsync();
             }
 
@@ -150,18 +147,11 @@ public static class BuilderEndpoints
             if (node is null) return Results.Conflict("no node available");
 
             var cbot = await db.CBots.FirstAsync(c => c.SourceProjectId == p.Id);
-            var starting = new StartingRunInstance
-            {
-                UserId = uid,
-                CBotId = cbot.Id,
-                NodeId = node.Id,
-                DockerImageTag = "latest",
-                Symbol = "EURUSD",
-                Timeframe = "h1"
-            };
+            var starting = RunInstance.CreateStarting(uid, cbot.Id, node.Id, DockerImageTag.Latest,
+                new Symbol("EURUSD"), new Timeframe("h1"));
             db.Instances.Add(starting);
             await db.SaveChangesAsync();
-            starting.Node = node;
+            starting.AttachNode(node);
 
             string containerId;
             try
@@ -170,33 +160,15 @@ public static class BuilderEndpoints
             }
             catch (Exception ex)
             {
+                var failed = starting.ToFailed(ex.Message);
                 db.Instances.Remove(starting);
-                db.Instances.Add(new FailedRunInstance
-                {
-                    UserId = uid,
-                    CBotId = cbot.Id,
-                    NodeId = node.Id,
-                    DockerImageTag = "latest",
-                    Symbol = "EURUSD",
-                    Timeframe = "h1",
-                    FailureReason = ex.Message
-                });
+                db.Instances.Add(failed);
                 await db.SaveChangesAsync();
                 return Results.Ok(new { success = false, output = ex.Message, instanceId = (Guid?)null });
             }
 
+            var running = starting.ToRunning(containerId);
             db.Instances.Remove(starting);
-            var running = new RunningRunInstance
-            {
-                UserId = uid,
-                CBotId = cbot.Id,
-                NodeId = node.Id,
-                DockerImageTag = "latest",
-                Symbol = "EURUSD",
-                Timeframe = "h1",
-                ContainerId = containerId,
-                StartedAt = DateTimeOffset.UtcNow
-            };
             db.Instances.Add(running);
             await db.SaveChangesAsync();
             return Results.Ok(new { success = true, output = br.Log, instanceId = (Guid?)running.Id.Value });

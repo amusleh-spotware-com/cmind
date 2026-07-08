@@ -74,7 +74,7 @@ public sealed class PortfolioAgentService(
         var result = await ai.ProposeAgentActionAsync(
             mandate.CBot.Name, objective, currentParams, lastReport, AgentConstants.ActionMaxTokens, ct);
 
-        mandate.LastRunAt = DateTimeOffset.UtcNow;
+        mandate.RecordRun();
 
         if (!result.Success)
         {
@@ -89,17 +89,8 @@ public sealed class PortfolioAgentService(
             return;
         }
 
-        var proposal = new AgentProposal
-        {
-            MandateId = mandate.Id,
-            UserId = mandate.UserId,
-            Kind = AgentConstants.ProposalKindBacktest,
-            Reasoning = action.Reasoning,
-            PayloadJson = action.ParametersJson,
-            ProposedName = action.Name,
-            Status = AgentProposalStatus.Pending
-        };
-        db.AgentProposals.Add(proposal);
+        var proposal = mandate.AddProposal(AgentConstants.ProposalKindBacktest,
+            action.Reasoning, action.ParametersJson, action.Name);
         await db.SaveChangesAsync(ct);
         logger.AgentProposalCreated(proposal.Id.Value, mandate.Id.Value, mandate.Autonomy.ToString());
 

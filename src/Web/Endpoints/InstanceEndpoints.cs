@@ -112,82 +112,31 @@ public static class InstanceEndpoints
 
             var imageTag = string.IsNullOrWhiteSpace(req.DockerImageTag) ? "latest" : req.DockerImageTag;
 
-            Instance starting;
-            if (string.Equals(kind, "Backtest", StringComparison.OrdinalIgnoreCase))
-            {
-                starting = new StartingBacktestInstance
-                {
-                    UserId = uid,
-                    CBotId = cbotId,
-                    TradingAccountId = accountId,
-                    NodeId = node.Id,
-                    DockerImageTag = imageTag,
-                    Symbol = req.Symbol,
-                    Timeframe = req.Timeframe,
-                    ParamSetId = paramSetId,
-                    BacktestSettingsJson = req.BacktestSettingsJson
-                };
-            }
-            else
-            {
-                starting = new StartingRunInstance
-                {
-                    UserId = uid,
-                    CBotId = cbotId,
-                    TradingAccountId = accountId,
-                    NodeId = node.Id,
-                    DockerImageTag = imageTag,
-                    Symbol = req.Symbol,
-                    Timeframe = req.Timeframe,
-                    ParamSetId = paramSetId
-                };
-            }
+            var imageTagValue = new DockerImageTag(imageTag);
+            var symbol = new Symbol(req.Symbol);
+            var timeframe = new Timeframe(req.Timeframe);
+            Instance starting = string.Equals(kind, "Backtest", StringComparison.OrdinalIgnoreCase)
+                ? BacktestInstance.CreateStarting(uid, cbotId, node.Id, imageTagValue, symbol, timeframe,
+                    req.BacktestSettingsJson, accountId, paramSetId)
+                : RunInstance.CreateStarting(uid, cbotId, node.Id, imageTagValue, symbol, timeframe,
+                    accountId, paramSetId);
             db.Instances.Add(starting);
             await db.SaveChangesAsync();
 
             // Re-load node for dispatcher context
-            starting.Node = node;
+            starting.AttachNode(node);
 
             var algo = protector.Unprotect(cbot.EncryptedAlgo, EncryptionPurposes.CbotAlgo);
             var containerId = await factory.For(node).StartAsync(starting, algo, paramSet.JsonContent, default);
 
             // Transition to Running by replacing entity (TPH discriminator cannot change)
+            Instance running = starting switch
+            {
+                StartingBacktestInstance sb => sb.ToRunning(containerId),
+                StartingRunInstance sr => sr.ToRunning(containerId),
+                _ => throw new InvalidOperationException()
+            };
             db.Instances.Remove(starting);
-            Instance running;
-            if (starting is StartingBacktestInstance)
-            {
-                running = new RunningBacktestInstance
-                {
-                    UserId = uid,
-                    CBotId = cbotId,
-                    TradingAccountId = accountId,
-                    NodeId = node.Id,
-                    DockerImageTag = imageTag,
-                    Symbol = req.Symbol,
-                    Timeframe = req.Timeframe,
-                    ParamSetId = paramSetId,
-                    BacktestSettingsJson = req.BacktestSettingsJson,
-                    ContainerId = containerId,
-                    StartedAt = DateTimeOffset.UtcNow
-                };
-            }
-            else
-            {
-                running = new RunningRunInstance
-                {
-                    UserId = uid,
-                    CBotId = cbotId,
-                    TradingAccountId = accountId,
-                    NodeId = node.Id,
-                    DockerImageTag = imageTag,
-                    Symbol = req.Symbol,
-                    Timeframe = req.Timeframe,
-                    ParamSetId = paramSetId,
-                    ContainerId = containerId,
-                    StartedAt = DateTimeOffset.UtcNow
-                };
-            }
-            running.DataDirSubPath = starting.DataDirSubPath;
             db.Instances.Add(running);
             await db.SaveChangesAsync();
             return Results.Ok(new { running.Id });
@@ -209,45 +158,9 @@ public static class InstanceEndpoints
             // Replace with Stopped/Completed entity
             var now = DateTimeOffset.UtcNow;
             Instance terminal;
-            if (i is RunningRunInstance rri)
-            {
-                terminal = new StoppedRunInstance
-                {
-                    UserId = i.UserId,
-                    CBotId = i.CBotId,
-                    TradingAccountId = i.TradingAccountId,
-                    NodeId = i.NodeId,
-                    DockerImageTag = i.DockerImageTag,
-                    Symbol = i.Symbol,
-                    Timeframe = i.Timeframe,
-                    ParamSetId = i.ParamSetId,
-                    ContainerId = rri.ContainerId,
-                    StartedAt = rri.StartedAt,
-                    StoppedAt = now
-                };
-            }
-            else if (i is RunningBacktestInstance rbi)
-            {
-                terminal = new CompletedBacktestInstance
-                {
-                    UserId = i.UserId,
-                    CBotId = i.CBotId,
-                    TradingAccountId = i.TradingAccountId,
-                    NodeId = i.NodeId,
-                    DockerImageTag = i.DockerImageTag,
-                    Symbol = i.Symbol,
-                    Timeframe = i.Timeframe,
-                    ParamSetId = i.ParamSetId,
-                    BacktestSettingsJson = ((BacktestInstance)i).BacktestSettingsJson,
-                    ContainerId = rbi.ContainerId,
-                    StartedAt = rbi.StartedAt,
-                    StoppedAt = now
-                };
-            }
-            else
-            {
-                return Results.Ok();
-            }
+            if (i is RunningRunInstance rri) terminal = rri.ToStopped(now);
+            else if (i is RunningBacktestInstance rbi) terminal = rbi.ToCompleted(now);
+            else return Results.Ok();
             db.Instances.Remove(i);
             db.Instances.Add(terminal);
             await db.SaveChangesAsync();

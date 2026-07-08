@@ -48,22 +48,8 @@ public sealed class BacktestCompletionPoller(
             var reportJson = await TryReadReportAsync(factory, instance, ct);
             var now = DateTimeOffset.UtcNow;
             Instance terminal = reportJson is not null
-                ? new CompletedBacktestInstance
-                {
-                    ContainerId = instance.ContainerId,
-                    StartedAt = instance.StartedAt,
-                    StoppedAt = now,
-                    ResultJsonPath = instance.DataDirSubPath,
-                    ReportJson = reportJson
-                }
-                : new FailedBacktestInstance
-                {
-                    ContainerId = instance.ContainerId,
-                    StartedAt = instance.StartedAt,
-                    StoppedAt = now,
-                    FailureReason = ContainerExitedReason
-                };
-            CopyCommon(instance, terminal);
+                ? instance.ToCompleted(now, reportJson, instance.DataDirSubPath)
+                : instance.ToFailed(ContainerExitedReason);
             db.Instances.Remove(instance);
             db.Instances.Add(terminal);
 
@@ -83,18 +69,4 @@ public sealed class BacktestCompletionPoller(
         catch { return null; }
     }
 
-    private static void CopyCommon(Instance src, Instance dst)
-    {
-        dst.UserId = src.UserId;
-        dst.CBotId = src.CBotId;
-        dst.TradingAccountId = src.TradingAccountId;
-        dst.NodeId = src.NodeId;
-        dst.DockerImageTag = src.DockerImageTag;
-        dst.Symbol = src.Symbol;
-        dst.Timeframe = src.Timeframe;
-        dst.ParamSetId = src.ParamSetId;
-        dst.DataDirSubPath = src.DataDirSubPath;
-        dst.CreatedAt = src.CreatedAt;
-        ((BacktestInstance)dst).BacktestSettingsJson = ((BacktestInstance)src).BacktestSettingsJson;
-    }
 }

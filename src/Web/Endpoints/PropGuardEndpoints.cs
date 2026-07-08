@@ -48,17 +48,10 @@ public static class PropGuardEndpoints
                 .AnyAsync(t => t.Id == accountId && t.CTid.UserId == uid, ct);
             if (!ownsAccount) return Results.BadRequest("trading account not found");
 
-            var rule = new PropRule
-            {
-                UserId = uid,
-                TradingAccountId = accountId,
-                Name = req.Name!.Trim(),
-                MaxConcurrentLiveInstances = Math.Clamp(req.MaxConcurrentLiveInstances ?? 3, 0, PropGuardConstants.MaxConcurrentCap),
-                DailyLossLimit = req.DailyLossLimit ?? 0,
-                MaxDrawdownPercent = req.MaxDrawdownPercent ?? 0,
-                AutoFlatten = req.AutoFlatten ?? false,
-                Enabled = req.Enabled ?? true
-            };
+            var rule = PropRule.Create(uid, accountId, req.Name!.Trim(),
+                Math.Clamp(req.MaxConcurrentLiveInstances ?? 3, 0, PropGuardConstants.MaxConcurrentCap),
+                req.DailyLossLimit ?? 0, req.MaxDrawdownPercent ?? 0, req.AutoFlatten ?? false);
+            if (req.Enabled == false) rule.SetEnabled(false);
             db.PropRules.Add(rule);
             try { await db.SaveChangesAsync(ct); }
             catch (DbUpdateException) { return Results.Conflict("a rule already exists for that account"); }
@@ -71,13 +64,13 @@ public static class PropGuardEndpoints
             var rid = PropRuleId.From(id);
             var rule = await db.PropRules.FirstOrDefaultAsync(r => r.Id == rid && r.UserId == uid, ct);
             if (rule is null) return Results.NotFound();
-            if (!string.IsNullOrWhiteSpace(req.Name)) rule.Name = req.Name!.Trim();
-            if (req.MaxConcurrentLiveInstances is { } max) rule.MaxConcurrentLiveInstances = Math.Clamp(max, 0, PropGuardConstants.MaxConcurrentCap);
-            if (req.DailyLossLimit is { } dll) rule.DailyLossLimit = dll;
-            if (req.MaxDrawdownPercent is { } dd) rule.MaxDrawdownPercent = dd;
-            if (req.AutoFlatten is { } af) rule.AutoFlatten = af;
-            if (req.Enabled is { } en) rule.Enabled = en;
-            rule.UpdatedAt = DateTimeOffset.UtcNow;
+            rule.Update(
+                string.IsNullOrWhiteSpace(req.Name) ? rule.Name : req.Name!.Trim(),
+                req.MaxConcurrentLiveInstances ?? rule.MaxConcurrentLiveInstances,
+                req.DailyLossLimit ?? rule.DailyLossLimit,
+                req.MaxDrawdownPercent ?? rule.MaxDrawdownPercent,
+                req.AutoFlatten ?? rule.AutoFlatten,
+                req.Enabled ?? rule.Enabled);
             await db.SaveChangesAsync(ct);
             return Results.Ok();
         });

@@ -27,12 +27,8 @@ public sealed class AgentExecutor(
 
         try
         {
-            var instanceId = await LaunchBacktestAsync(proposal, ct);
-            proposal.Status = AgentProposalStatus.Executed;
-            proposal.CreatedInstanceId = instanceId;
-            proposal.DecidedAt = DateTimeOffset.UtcNow;
-            proposal.DecidedByUserId = actor;
-            proposal.FailureReason = null;
+            var (instanceId, paramSetId) = await LaunchBacktestAsync(proposal, ct);
+            proposal.MarkExecuted(paramSetId, instanceId);
             await db.SaveChangesAsync(ct);
             logger.AgentProposalExecuted(proposalId.Value, instanceId.Value);
             return true;
@@ -45,69 +41,41 @@ public sealed class AgentExecutor(
         }
     }
 
-    private async Task<InstanceId> LaunchBacktestAsync(AgentProposal proposal, CancellationToken ct)
+    private async Task<(InstanceId InstanceId, ParamSetId ParamSetId)> LaunchBacktestAsync(
+        AgentProposal proposal, CancellationToken ct)
     {
         var mandate = proposal.Mandate;
         if (mandate.TradingAccountId is not { } accountId)
             throw new InvalidOperationException("mandate has no trading account");
 
-        var account = await db.TradingAccounts.Include(t => t.CTid)
+        _ = await db.TradingAccounts.Include(t => t.CTid)
             .FirstOrDefaultAsync(t => t.Id == accountId && t.CTid.UserId == mandate.UserId, ct)
             ?? throw new InvalidOperationException("trading account not found");
 
-        var paramSet = new ParamSet
-        {
-            UserId = mandate.UserId,
-            CBotId = mandate.CBotId,
-            Name = UniqueParamName(proposal.ProposedName, proposal.Id),
-            JsonContent = proposal.PayloadJson
-        };
+        var paramSet = ParamSet.Create(mandate.UserId, mandate.CBotId,
+            UniqueParamName(proposal.ProposedName, proposal.Id), proposal.PayloadJson);
         db.ParamSets.Add(paramSet);
         await db.SaveChangesAsync(ct);
-        proposal.CreatedParamSetId = paramSet.Id;
 
         var node = await scheduler.PickNodeAsync(CliCommands.Backtest, ct)
             ?? throw new InvalidOperationException("no backtest node available");
 
-        var starting = new StartingBacktestInstance
-        {
-            UserId = mandate.UserId,
-            CBotId = mandate.CBotId,
-            TradingAccountId = accountId,
-            NodeId = node.Id,
-            DockerImageTag = mandate.DockerImageTag,
-            Symbol = mandate.Symbol,
-            Timeframe = mandate.Timeframe,
-            ParamSetId = paramSet.Id,
-            BacktestSettingsJson = mandate.BacktestSettingsJson
-        };
+        var starting = BacktestInstance.CreateStarting(mandate.UserId, mandate.CBotId, node.Id,
+            new DockerImageTag(mandate.DockerImageTag), new Symbol(mandate.Symbol), new Timeframe(mandate.Timeframe),
+            mandate.BacktestSettingsJson, accountId, paramSet.Id);
         db.Instances.Add(starting);
         await db.SaveChangesAsync(ct);
-        starting.Node = node;
+        starting.AttachNode(node);
 
         var algo = protector.Unprotect(mandate.CBot.EncryptedAlgo, EncryptionPurposes.CbotAlgo);
         try
         {
             var containerId = await factory.For(node).StartAsync(starting, algo, paramSet.JsonContent, ct);
+            var running = starting.ToRunning(containerId);
             db.Instances.Remove(starting);
-            var running = new RunningBacktestInstance
-            {
-                UserId = mandate.UserId,
-                CBotId = mandate.CBotId,
-                TradingAccountId = accountId,
-                NodeId = node.Id,
-                DockerImageTag = mandate.DockerImageTag,
-                Symbol = mandate.Symbol,
-                Timeframe = mandate.Timeframe,
-                ParamSetId = paramSet.Id,
-                BacktestSettingsJson = mandate.BacktestSettingsJson,
-                ContainerId = containerId,
-                StartedAt = DateTimeOffset.UtcNow,
-                DataDirSubPath = starting.DataDirSubPath
-            };
             db.Instances.Add(running);
             await db.SaveChangesAsync(ct);
-            return running.Id;
+            return (running.Id, paramSet.Id);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -119,10 +87,7 @@ public sealed class AgentExecutor(
 
     private async Task MarkFailedAsync(AgentProposal proposal, UserId actor, string reason, CancellationToken ct)
     {
-        proposal.Status = AgentProposalStatus.Failed;
-        proposal.FailureReason = Clip(reason);
-        proposal.DecidedAt = DateTimeOffset.UtcNow;
-        proposal.DecidedByUserId = actor;
+        proposal.MarkFailed(actor, Clip(reason));
         try { await db.SaveChangesAsync(ct); }
         catch (Exception ex) when (ex is not OperationCanceledException) { logger.AgentMandateFailed(proposal.MandateId.Value, ex); }
     }

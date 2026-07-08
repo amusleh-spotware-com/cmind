@@ -38,12 +38,7 @@ public static class CBotEndpoints
             await file.CopyToAsync(ms);
             var bytes = ms.ToArray();
 
-            var cbot = new CBot
-            {
-                UserId = u.UserId!.Value,
-                Name = name,
-                EncryptedAlgo = p.Protect(bytes, "cbot.algo")
-            };
+            var cbot = CBot.Create(u.UserId!.Value, name, p.Protect(bytes, EncryptionPurposes.CbotAlgo));
             db.CBots.Add(cbot);
             await db.SaveChangesAsync();
             return Results.Ok(new { cbot.Id });
@@ -54,8 +49,7 @@ public static class CBotEndpoints
             var cid = CBotId.From(id);
             var cbot = await db.CBots.FirstOrDefaultAsync(c => c.Id == cid && c.UserId == u.UserId!.Value);
             if (cbot is null) return Results.NotFound();
-            cbot.Name = req.Name;
-            cbot.UpdatedAt = DateTimeOffset.UtcNow;
+            cbot.Rename(req.Name);
             await db.SaveChangesAsync();
             return Results.Ok();
         });
@@ -72,18 +66,11 @@ public static class CBotEndpoints
             if (node is null) return Results.Conflict("no node available");
 
             var algo = protector.Unprotect(cbot.EncryptedAlgo, EncryptionPurposes.CbotAlgo);
-            var starting = new StartingRunInstance
-            {
-                UserId = uid,
-                CBotId = cbot.Id,
-                NodeId = node.Id,
-                DockerImageTag = "latest",
-                Symbol = "EURUSD",
-                Timeframe = "h1"
-            };
+            var starting = RunInstance.CreateStarting(uid, cbot.Id, node.Id, DockerImageTag.Latest,
+                new Symbol("EURUSD"), new Timeframe("h1"));
             db.Instances.Add(starting);
             await db.SaveChangesAsync();
-            starting.Node = node;
+            starting.AttachNode(node);
 
             string containerId;
             try
@@ -92,33 +79,15 @@ public static class CBotEndpoints
             }
             catch (Exception ex)
             {
+                var failed = starting.ToFailed(ex.Message);
                 db.Instances.Remove(starting);
-                db.Instances.Add(new FailedRunInstance
-                {
-                    UserId = uid,
-                    CBotId = cbot.Id,
-                    NodeId = node.Id,
-                    DockerImageTag = "latest",
-                    Symbol = "EURUSD",
-                    Timeframe = "h1",
-                    FailureReason = ex.Message
-                });
+                db.Instances.Add(failed);
                 await db.SaveChangesAsync();
                 return Results.Ok(new { success = false, output = ex.Message, instanceId = (Guid?)null });
             }
 
+            var running = starting.ToRunning(containerId);
             db.Instances.Remove(starting);
-            var running = new RunningRunInstance
-            {
-                UserId = uid,
-                CBotId = cbot.Id,
-                NodeId = node.Id,
-                DockerImageTag = "latest",
-                Symbol = "EURUSD",
-                Timeframe = "h1",
-                ContainerId = containerId,
-                StartedAt = DateTimeOffset.UtcNow
-            };
             db.Instances.Add(running);
             await db.SaveChangesAsync();
             return Results.Ok(new { success = true, output = (string?)null, instanceId = (Guid?)running.Id.Value });

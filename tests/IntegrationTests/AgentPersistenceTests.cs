@@ -1,5 +1,6 @@
 using Core;
 using Core.Agent;
+using Core.Domain;
 using FluentAssertions;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -20,31 +21,20 @@ public class AgentPersistenceTests(PostgresFixture fixture) : IClassFixture<Post
         await using var setup = CreateContext();
         await setup.Database.MigrateAsync();
 
-        var user = new OwnerUser
-        {
-            Email = $"agent-{Guid.NewGuid():N}@test.local",
-            NormalizedEmail = $"AGENT-{Guid.NewGuid():N}@TEST.LOCAL",
-            PasswordHash = "x",
-            SecurityStamp = Guid.NewGuid().ToByteArray()
-        };
-        var cbot = new CBot { UserId = user.Id, User = user, Name = $"bot-{Guid.NewGuid():N}", EncryptedAlgo = "algo"u8.ToArray() };
-        var mandate = new AgentMandate
-        {
-            UserId = user.Id, CBotId = cbot.Id, Name = $"mandate-{Guid.NewGuid():N}",
-            Objective = "grow safely", Autonomy = AgentAutonomy.Auto, Enabled = true
-        };
+        var user = OwnerUser.Create(new Email($"agent-{Guid.NewGuid():N}@test.local"), "x",
+            Guid.NewGuid().ToByteArray());
+        var cbot = CBot.Create(user.Id, $"bot-{Guid.NewGuid():N}", "algo"u8.ToArray());
+        var mandate = AgentMandate.Create(user.Id, cbot.Id, $"mandate-{Guid.NewGuid():N}", "grow safely",
+            new RiskPercent(1), new DrawdownPercent(20), new Symbol("EURUSD"), new Timeframe("h1"),
+            DockerImageTag.Latest, AgentAutonomy.Auto, null);
+        mandate.Enable();
+        mandate.AddProposal("Backtest", "tighten stop", "{\"StopLoss\":20}", "Tighter SL");
 
         await using (var write = CreateContext())
         {
             write.Users.Add(user);
             write.CBots.Add(cbot);
             write.AgentMandates.Add(mandate);
-            write.AgentProposals.Add(new AgentProposal
-            {
-                MandateId = mandate.Id, UserId = user.Id, Reasoning = "tighten stop",
-                PayloadJson = "{\"StopLoss\":20}", ProposedName = "Tighter SL",
-                Status = AgentProposalStatus.Pending
-            });
             await write.SaveChangesAsync();
         }
 

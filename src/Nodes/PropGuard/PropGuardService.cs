@@ -90,14 +90,9 @@ public sealed class PropGuardService(
             db.Instances.Add(InstanceTransitions.StoppedFrom(instance, now));
         }
 
-        db.AuditLogs.Add(new AuditLog
-        {
-            UserId = live[0].UserId,
-            Action = PropGuardConstants.AuditAction,
-            EntityType = PropGuardConstants.AuditEntityType,
-            EntityId = accountId.Value,
-            DetailsJson = $"{{\"flattened\":{live.Count}}}"
-        });
+        db.AuditLogs.Add(AuditLog.Record(
+            PropGuardConstants.AuditAction, PropGuardConstants.AuditEntityType,
+            live[0].UserId, accountId.Value, detailsJson: $"{{\"flattened\":{live.Count}}}"));
         await db.SaveChangesAsync(ct);
         logger.PropGuardFlattened(accountId.Value, live.Count);
     }

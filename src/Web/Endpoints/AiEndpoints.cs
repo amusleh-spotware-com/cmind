@@ -144,9 +144,7 @@ public static class AiEndpoints
             var language = req.Language ?? "CSharp";
             var name = string.IsNullOrWhiteSpace(req.Name) ? "AiBot" : req.Name!;
             CBotSourceProject project = language.Equals("Python", StringComparison.OrdinalIgnoreCase)
-                ? new PythonProject() : new CSharpProject();
-            project.UserId = uid;
-            project.Name = name;
+                ? PythonProject.Create(uid, name) : CSharpProject.Create(uid, name);
 
             var files = JsonSerializer.Deserialize<Dictionary<string, string>>(
                 Templates.CreateProjectJson(project.LanguageName, name)) ?? new Dictionary<string, string>();
@@ -165,8 +163,8 @@ public static class AiEndpoints
             var attempts = 0;
             for (attempts = 1; attempts <= maxAttempts; attempts++)
             {
-                project.EncryptedProjectFiles = protector.Protect(
-                    Encoding.UTF8.GetBytes(JsonSerializer.Serialize(files)), EncryptionPurposes.CbotSource);
+                project.SetFiles(protector.Protect(
+                    Encoding.UTF8.GetBytes(JsonSerializer.Serialize(files)), EncryptionPurposes.CbotSource));
                 await db.SaveChangesAsync(ct);
 
                 var build = await builder.BuildAsync(project, uid, ct);
@@ -194,10 +192,10 @@ public static class AiEndpoints
 
             var language = req.Language ?? "CSharp";
             var name = string.IsNullOrWhiteSpace(req.Name) ? "AiBot" : req.Name!.Trim();
+            var projectName = await UniqueNameAsync(
+                db.CBotSourceProjects.Where(p => p.UserId == uid).Select(p => p.Name), name, ct);
             CBotSourceProject project = language.Equals("Python", StringComparison.OrdinalIgnoreCase)
-                ? new PythonProject() : new CSharpProject();
-            project.UserId = uid;
-            project.Name = await UniqueNameAsync(db.CBotSourceProjects.Where(p => p.UserId == uid).Select(p => p.Name), name, ct);
+                ? PythonProject.Create(uid, projectName) : CSharpProject.Create(uid, projectName);
 
             var files = JsonSerializer.Deserialize<Dictionary<string, string>>(
                 Templates.CreateProjectJson(project.LanguageName, project.Name)) ?? new Dictionary<string, string>();
@@ -219,8 +217,8 @@ public static class AiEndpoints
             var attempts = 0;
             for (attempts = 1; attempts <= maxAttempts; attempts++)
             {
-                project.EncryptedProjectFiles = protector.Protect(
-                    Encoding.UTF8.GetBytes(JsonSerializer.Serialize(files)), EncryptionPurposes.CbotSource);
+                project.SetFiles(protector.Protect(
+                    Encoding.UTF8.GetBytes(JsonSerializer.Serialize(files)), EncryptionPurposes.CbotSource));
                 await db.SaveChangesAsync(ct);
 
                 var build = await builder.BuildAsync(project, uid, ct);
@@ -238,13 +236,7 @@ public static class AiEndpoints
                 return Results.Ok(new { success = false, projectId = project.Id.Value, attempts, log = ClipLog(log) });
 
             var cbotName = await UniqueNameAsync(db.CBots.Where(c => c.UserId == uid).Select(c => c.Name), project.Name, ct);
-            var cbot = new CBot
-            {
-                UserId = uid,
-                Name = cbotName,
-                EncryptedAlgo = protector.Protect(algo, EncryptionPurposes.CbotAlgo),
-                SourceProjectId = project.Id
-            };
+            var cbot = CBot.Create(uid, cbotName, protector.Protect(algo, EncryptionPurposes.CbotAlgo), project.Id);
             db.CBots.Add(cbot);
             await db.SaveChangesAsync(ct);
 
@@ -289,10 +281,13 @@ public static class AiEndpoints
             var timeframe = string.IsNullOrWhiteSpace(req.Timeframe) ? "h1" : req.Timeframe!;
             var algo = protector.Unprotect(cbot.EncryptedAlgo, EncryptionPurposes.CbotAlgo);
 
+            var imageTagValue = new DockerImageTag(imageTag);
+            var symbolValue = new Symbol(symbol);
+            var timeframeValue = new Timeframe(timeframe);
             var launched = new List<object>();
             foreach (var (name, json) in proposals)
             {
-                var paramSet = new ParamSet { UserId = uid, CBotId = cid, Name = name, JsonContent = json };
+                var paramSet = ParamSet.Create(uid, cid, name, json);
                 db.ParamSets.Add(paramSet);
                 await db.SaveChangesAsync(ct);
 
@@ -303,41 +298,26 @@ public static class AiEndpoints
                     continue;
                 }
 
-                var starting = new StartingBacktestInstance
-                {
-                    UserId = uid, CBotId = cid, TradingAccountId = accountId, NodeId = node.Id,
-                    DockerImageTag = imageTag, Symbol = symbol, Timeframe = timeframe,
-                    ParamSetId = paramSet.Id, BacktestSettingsJson = req.BacktestSettingsJson
-                };
+                var starting = BacktestInstance.CreateStarting(uid, cid, node.Id, imageTagValue, symbolValue,
+                    timeframeValue, req.BacktestSettingsJson, accountId, paramSet.Id);
                 db.Instances.Add(starting);
                 await db.SaveChangesAsync(ct);
-                starting.Node = node;
+                starting.AttachNode(node);
 
                 try
                 {
                     var containerId = await factory.For(node).StartAsync(starting, algo, json, ct);
+                    var running = starting.ToRunning(containerId);
                     db.Instances.Remove(starting);
-                    var running = new RunningBacktestInstance
-                    {
-                        UserId = uid, CBotId = cid, TradingAccountId = accountId, NodeId = node.Id,
-                        DockerImageTag = imageTag, Symbol = symbol, Timeframe = timeframe,
-                        ParamSetId = paramSet.Id, BacktestSettingsJson = req.BacktestSettingsJson,
-                        ContainerId = containerId, StartedAt = DateTimeOffset.UtcNow,
-                        DataDirSubPath = starting.DataDirSubPath
-                    };
                     db.Instances.Add(running);
                     await db.SaveChangesAsync(ct);
                     launched.Add(new { name, paramSetId = paramSet.Id.Value, instanceId = (Guid?)running.Id.Value, error = (string?)null });
                 }
                 catch (Exception ex)
                 {
+                    var failed = starting.ToFailed(ex.Message);
                     db.Instances.Remove(starting);
-                    db.Instances.Add(new FailedBacktestInstance
-                    {
-                        UserId = uid, CBotId = cid, TradingAccountId = accountId, NodeId = node.Id,
-                        DockerImageTag = imageTag, Symbol = symbol, Timeframe = timeframe,
-                        ParamSetId = paramSet.Id, FailureReason = ex.Message
-                    });
+                    db.Instances.Add(failed);
                     await db.SaveChangesAsync(ct);
                     launched.Add(new { name, paramSetId = paramSet.Id.Value, instanceId = (Guid?)null, error = ex.Message });
                 }

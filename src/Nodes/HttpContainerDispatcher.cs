@@ -52,7 +52,7 @@ public sealed class HttpContainerDispatcher(
             throw new InvalidOperationException($"Agent start failed ({(int)response.StatusCode}): {await response.Content.ReadAsStringAsync(ct)}");
         var result = await response.Content.ReadFromJsonAsync<StartContainerResponse>(ct)
                      ?? throw new InvalidOperationException("Agent returned empty start response.");
-        instance.DataDirSubPath = result.WorkDir;
+        instance.SetDataDirSubPath(result.WorkDir);
         return result.ContainerId;
     }
 
@@ -113,17 +113,8 @@ public sealed class HttpContainerDispatcher(
         using var client = CreateClient(remote);
         var stats = await client.GetFromJsonAsync<NodeStatsResponse>(NodeAgentRoutes.NodeStats, ct)
                     ?? throw new InvalidOperationException("Agent returned empty stats.");
-        return new NodeStats
-        {
-            NodeId = node.Id,
-            CpuPercent = stats.CpuPercent,
-            MemUsedBytes = stats.MemUsedBytes,
-            MemTotalBytes = stats.MemTotalBytes,
-            DiskUsedBytes = stats.DiskUsedBytes,
-            DiskTotalBytes = stats.DiskTotalBytes,
-            BacktestDataUsedBytes = stats.BacktestDataUsedBytes,
-            UpdatedAt = DateTimeOffset.UtcNow
-        };
+        return NodeStats.Create(node.Id, stats.CpuPercent, stats.MemUsedBytes, stats.MemTotalBytes,
+            stats.DiskUsedBytes, stats.DiskTotalBytes, stats.BacktestDataUsedBytes);
     }
 
     public async Task<long> GetBacktestDataSizeAsync(Node node, CancellationToken ct)

@@ -127,6 +127,14 @@ public static class AlertConstants
     public const string SeverityCritical = "critical";
 }
 
+public static class PropGuardConstants
+{
+    public const string AuditAction = "PropGuardFlatten";
+    public const string AuditEntityType = "TradingAccount";
+    public const int MaxConcurrentCap = 100;
+    public const int MaxRulesPerCycle = 20;
+}
+
 public static class ConnectionStrings
 {
     public const string AppDb = "appdb";

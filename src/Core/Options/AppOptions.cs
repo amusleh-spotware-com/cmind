@@ -23,6 +23,13 @@ public sealed record AppOptions
     public AiOptions Ai { get; init; } = new();
     public AgentOptions Agent { get; init; } = new();
     public AlertOptions Alerts { get; init; } = new();
+    public PropGuardOptions PropGuard { get; init; } = new();
+}
+
+public sealed record PropGuardOptions
+{
+    public bool Enabled { get; init; }
+    public TimeSpan PollInterval { get; init; } = TimeSpan.FromMinutes(1);
 }
 
 public sealed record AlertOptions

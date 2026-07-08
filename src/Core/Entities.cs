@@ -491,6 +491,23 @@ public class AlertEvent : AuditedEntity<AlertEventId>
     public bool Acknowledged { get; set; }
 }
 
+// ---------------- Prop-firm guardian (exposure caps + auto-flatten) ----------------
+
+public class PropRule : AuditedEntity<PropRuleId>
+{
+    public UserId UserId { get; set; }
+    public AppUser User { get; set; } = default!;
+    public TradingAccountId TradingAccountId { get; set; }
+    public TradingAccount TradingAccount { get; set; } = default!;
+    [MaxLength(128)] public string Name { get; set; } = default!;
+    public int MaxConcurrentLiveInstances { get; set; } = 3;
+    public double DailyLossLimit { get; set; }
+    public double MaxDrawdownPercent { get; set; }
+    public bool AutoFlatten { get; set; }
+    public bool Enabled { get; set; } = true;
+    public DateTimeOffset? LastFlattenedAt { get; set; }
+}
+
 // ---------------- MCP / Audit / Settings ----------------
 
 public class McpApiKey : AuditedEntity<McpApiKeyId>

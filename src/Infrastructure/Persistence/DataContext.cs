@@ -29,6 +29,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<AgentProposal> AgentProposals => Set<AgentProposal>();
     public DbSet<AlertRule> AlertRules => Set<AlertRule>();
     public DbSet<AlertEvent> AlertEvents => Set<AlertEvent>();
+    public DbSet<PropRule> PropRules => Set<PropRule>();
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     public override int SaveChanges() { ApplySoftDelete(); return base.SaveChanges(); }
@@ -64,6 +65,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<AgentProposalId>().HaveConversion<StrongIdConverter<AgentProposalId>>();
         configurationBuilder.Properties<AlertRuleId>().HaveConversion<StrongIdConverter<AlertRuleId>>();
         configurationBuilder.Properties<AlertEventId>().HaveConversion<StrongIdConverter<AlertEventId>>();
+        configurationBuilder.Properties<PropRuleId>().HaveConversion<StrongIdConverter<PropRuleId>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -207,6 +209,13 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         {
             e.HasIndex(x => new { x.UserId, x.CreatedAt });
             e.HasOne(x => x.Rule).WithMany(x => x.Events).HasForeignKey(x => x.RuleId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PropRule>(e =>
+        {
+            e.HasIndex(x => new { x.UserId, x.TradingAccountId }).IsUnique().HasFilter("\"IsDeleted\" = false");
+            e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.TradingAccount).WithMany().HasForeignKey(x => x.TradingAccountId).OnDelete(DeleteBehavior.Cascade);
         });
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())

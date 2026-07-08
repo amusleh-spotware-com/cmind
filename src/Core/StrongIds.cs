@@ -139,6 +139,13 @@ public readonly record struct AlertEventId(Guid Value) : IStronglyTypedId<AlertE
     public override string ToString() => Value.ToString();
 }
 
+public readonly record struct PropRuleId(Guid Value) : IStronglyTypedId<PropRuleId>
+{
+    public static PropRuleId New() => new(Guid.NewGuid());
+    public static PropRuleId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct Email
 {
     public string Value { get; }

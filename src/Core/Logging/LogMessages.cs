@@ -87,4 +87,13 @@ public static partial class LogMessages
 
     [LoggerMessage(EventId = 1027, Level = LogLevel.Information, Message = "Alert raised for rule {RuleId} (severity {Severity})")]
     public static partial void AlertRaised(this ILogger logger, Guid ruleId, string severity);
+
+    [LoggerMessage(EventId = 1028, Level = LogLevel.Error, Message = "Prop-guard cycle failed")]
+    public static partial void PropGuardCycleFailed(this ILogger logger, Exception ex);
+
+    [LoggerMessage(EventId = 1029, Level = LogLevel.Warning, Message = "Prop-guard rule {RuleId} enforcement failed")]
+    public static partial void PropGuardRuleFailed(this ILogger logger, Guid ruleId, Exception ex);
+
+    [LoggerMessage(EventId = 1030, Level = LogLevel.Warning, Message = "Prop-guard flattened account {AccountId} ({Count} live instances stopped)")]
+    public static partial void PropGuardFlattened(this ILogger logger, Guid accountId, int count);
 }

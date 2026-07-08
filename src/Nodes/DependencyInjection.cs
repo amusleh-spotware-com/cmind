@@ -3,6 +3,7 @@ using Core.Agent;
 using Microsoft.Extensions.DependencyInjection;
 using Nodes.Agent;
 using Nodes.Alerts;
+using Nodes.PropGuard;
 
 namespace Nodes;
 
@@ -23,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<IAgentExecutor, AgentExecutor>();
         services.AddHostedService<PortfolioAgentService>();
         services.AddHostedService<AlertEvaluator>();
+        services.AddHostedService<PropGuardService>();
         return services;
     }
 }

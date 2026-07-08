@@ -145,6 +145,7 @@ app.MapDashboardEndpoints();
 app.MapAiEndpoints();
 app.MapAgentEndpoints();
 app.MapAlertEndpoints();
+app.MapPropGuardEndpoints();
 app.MapImageEndpoints();
 app.MapHub<LogsHub>(HubRoutes.Logs);
 

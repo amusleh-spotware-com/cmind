@@ -107,6 +107,18 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
         return client.CompleteAsync(new AiTextRequest(AiPrompts.AgentSystem, user.ToString(), MaxTokens: maxTokens), ct);
     }
 
+    public Task<AiResult> AssessStrategyDecayAsync(
+        string cBotName, string? previousReportJson, string latestReportJson, string currentParamsJson, int maxTokens, CancellationToken ct)
+    {
+        var user = new StringBuilder();
+        user.AppendLine($"cBot: {cBotName}");
+        user.AppendLine($"Current parameters (JSON):\n{Clip(currentParamsJson)}");
+        if (!string.IsNullOrWhiteSpace(previousReportJson))
+            user.AppendLine($"\nPrevious backtest report JSON:\n{Clip(previousReportJson)}");
+        user.AppendLine($"\nLatest backtest report JSON:\n{Clip(latestReportJson)}");
+        return client.CompleteAsync(new AiTextRequest(AiPrompts.DecaySystem, user.ToString(), MaxTokens: maxTokens), ct);
+    }
+
     private static string Clip(string value) =>
         string.IsNullOrEmpty(value) || value.Length <= MaxInputChars ? value ?? string.Empty : value[..MaxInputChars];
 }
@@ -179,6 +191,12 @@ internal static class AiPrompts
         "and nothing else (no prose, no code fences): {\"reasoning\": string (<=3 sentences explaining the change and how it " +
         "serves the objective and risk limits), \"name\": string (short label), \"parameters\": object (cBot parameter " +
         "name/value pairs)}. Respect the stated risk limits; prefer conservative, testable adjustments.";
+
+    public const string DecaySystem =
+        "You are a quant reviewing whether a trading strategy's edge is decaying. Compare the previous and latest " +
+        "backtest reports for the same cBot. State clearly whether performance is degrading, the key metric deltas " +
+        "(net profit, win rate, drawdown, Sharpe/profit factor if present), the likely regime cause, and ONE concrete " +
+        "parameter adjustment to test next. Be concise and skeptical. If there is only one report, say a baseline is needed.";
 
     public const string CurateSystem =
         "You are a strategy marketplace curator. From the cBot source, produce compact JSON with fields: title (one line), " +

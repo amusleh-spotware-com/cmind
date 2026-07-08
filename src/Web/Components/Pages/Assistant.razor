@@ -53,6 +53,20 @@
             </MudButton>
         </MudPaper>
     </MudTabPanel>
+    <MudTabPanel Text="Tune Advisor">
+        <MudPaper Class="pa-4" Elevation="0">
+            <MudText Typo="Typo.body2" Class="mb-2">
+                Compares a cBot's two most recent backtests and tells you if its edge is decaying, with one adjustment to test.
+            </MudText>
+            <MudSelect T="Guid?" @bind-Value="_tuneCbotId" Label="cBot" Dense="true" Style="max-width:240px;">
+                @foreach (var c in _cbots) { <MudSelectItem T="Guid?" Value="@((Guid?)c.id)">@c.name</MudSelectItem> }
+            </MudSelect>
+            <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.TrendingDown" OnClick="TuneAdvice" Disabled="_busy">
+                Check for decay
+            </MudButton>
+        </MudPaper>
+    </MudTabPanel>
     <MudTabPanel Text="Optimize">
         <MudPaper Class="pa-4" Elevation="0">
             <MudText Typo="Typo.body2" Class="mb-2">
@@ -96,7 +110,7 @@
     private bool _busy;
 
     private dynamic[] _cbots = [], _accounts = [];
-    private Guid? _optCbotId, _optAcctId;
+    private Guid? _optCbotId, _optAcctId, _tuneCbotId;
     private string _optSymbol = "EURUSD", _optTimeframe = "h1";
 
     protected override async Task OnInitializedAsync()
@@ -121,6 +135,16 @@
         }
         return PostJsonAsync($"/api/ai/optimize-run/{_optCbotId}",
             new { TradingAccountId = _optAcctId, Symbol = _optSymbol, Timeframe = _optTimeframe });
+    }
+
+    private Task TuneAdvice()
+    {
+        if (_tuneCbotId is null)
+        {
+            Snack.Add("Pick a cBot", Severity.Warning);
+            return Task.CompletedTask;
+        }
+        return PostTextAsync($"/api/ai/tune-advice/{_tuneCbotId}", new { });
     }
 
     private async Task PostTextAsync(string url, object body)

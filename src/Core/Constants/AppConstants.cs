@@ -87,6 +87,7 @@ public static class AiConstants
     public const string WebSearchToolType = "web_search_20260209";
     public const string WebSearchToolName = "web_search";
     public const string DisabledMessage = "AI features are not configured (set App:Ai:ApiKey).";
+    public const int TuneAdviceMaxTokens = 1500;
 }
 
 public static class RiskGuardConstants

@@ -61,6 +61,28 @@ public static class AiEndpoints
             return Results.Ok(await ai.ProposeParamSetsAsync(name, current, null, ct));
         });
 
+        g.MapPost("/tune-advice/{cbotId:guid}", async (
+            Guid cbotId, DataContext db, ICurrentUser u, IAiFeatureService ai, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var cid = CBotId.From(cbotId);
+            var name = await db.CBots.Where(c => c.Id == cid && c.UserId == uid)
+                .Select(c => c.Name).FirstOrDefaultAsync(ct);
+            if (name is null) return Results.NotFound();
+
+            var reports = await db.Instances.OfType<CompletedBacktestInstance>()
+                .Where(i => i.CBotId == cid && i.UserId == uid && i.ReportJson != null)
+                .OrderByDescending(i => i.CreatedAt)
+                .Select(i => i.ReportJson!)
+                .Take(2).ToListAsync(ct);
+            if (reports.Count == 0) return Results.Ok(new AiResult(false, string.Empty, "no completed backtests to analyze yet"));
+
+            var current = await db.ParamSets.Where(p => p.CBotId == cid && p.UserId == uid)
+                .OrderByDescending(p => p.CreatedAt).Select(p => p.JsonContent).FirstOrDefaultAsync(ct) ?? "{}";
+            var previous = reports.Count > 1 ? reports[1] : null;
+            return Results.Ok(await ai.AssessStrategyDecayAsync(name, previous, reports[0], current, AiConstants.TuneAdviceMaxTokens, ct));
+        });
+
         g.MapPost("/post-mortem/{id:guid}", async (
             Guid id, DataContext db, ICurrentUser u, IAiFeatureService ai, CancellationToken ct) =>
         {

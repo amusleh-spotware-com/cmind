@@ -100,6 +100,17 @@ public sealed class AiFeatureServiceTests
     }
 
     [Fact]
+    public async Task AssessStrategyDecay_includes_both_reports_and_caps_tokens()
+    {
+        var client = Client(AiResult.Ok("stable"));
+        var service = new AiFeatureService(client);
+        await service.AssessStrategyDecayAsync("Bot", "PREVREPORT", "LATESTREPORT", "{}", 1500, default);
+        await client.Received().CompleteAsync(
+            Arg.Is<AiTextRequest>(r => r.MaxTokens == 1500 && r.User.Contains("PREVREPORT") && r.User.Contains("LATESTREPORT")),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public void Enabled_reflects_underlying_client()
     {
         new AiFeatureService(Client(AiResult.Ok(""), enabled: false)).Enabled.Should().BeFalse();

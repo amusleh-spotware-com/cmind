@@ -124,6 +124,80 @@ public static class AiEndpoints
             return Results.Ok(new { success, projectId = project.Id.Value, attempts, log = ClipLog(log) });
         });
 
+        // Feature C: plain-English intent -> generate -> build/self-repair -> create a runnable cBot.
+        g.MapPost("/build-strategy", async (
+            BuildStrategyRequest req, DataContext db, ICurrentUser u, IAiFeatureService ai,
+            ISecretProtector protector, CBotBuilder builder, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            if (!ai.Enabled) return Results.Ok(new { success = false, error = AiConstants.DisabledMessage });
+            if (string.IsNullOrWhiteSpace(req.Description))
+                return Results.Ok(new { success = false, error = "describe the strategy first" });
+
+            var language = req.Language ?? "CSharp";
+            var name = string.IsNullOrWhiteSpace(req.Name) ? "AiBot" : req.Name!.Trim();
+            CBotSourceProject project = language.Equals("Python", StringComparison.OrdinalIgnoreCase)
+                ? new PythonProject() : new CSharpProject();
+            project.UserId = uid;
+            project.Name = await UniqueNameAsync(db.CBotSourceProjects.Where(p => p.UserId == uid).Select(p => p.Name), name, ct);
+
+            var files = JsonSerializer.Deserialize<Dictionary<string, string>>(
+                Templates.CreateProjectJson(project.LanguageName, project.Name)) ?? new Dictionary<string, string>();
+            var codeKey = files.Keys.FirstOrDefault(k => k.EndsWith(project.FileExtension, StringComparison.Ordinal));
+            if (codeKey is null) return Results.Ok(new { success = false, error = "project template has no code file" });
+
+            var gen = await ai.GenerateCBotAsync(language, req.Description!, ct);
+            if (!gen.Success) return Results.Ok(new { success = false, error = gen.Error });
+            files[codeKey] = ExtractCode(gen.Text);
+
+            db.CBotSourceProjects.Add(project);
+
+            try
+            {
+            const int maxAttempts = 3;
+            var success = false;
+            var log = string.Empty;
+            byte[]? algo = null;
+            var attempts = 0;
+            for (attempts = 1; attempts <= maxAttempts; attempts++)
+            {
+                project.EncryptedProjectFiles = protector.Protect(
+                    Encoding.UTF8.GetBytes(JsonSerializer.Serialize(files)), EncryptionPurposes.CbotSource);
+                await db.SaveChangesAsync(ct);
+
+                var build = await builder.BuildAsync(project, uid, ct);
+                success = build.Success;
+                log = build.Log;
+                algo = build.AlgoBytes;
+                if (success || attempts == maxAttempts) break;
+
+                var fix = await ai.FixCBotAsync(language, files[codeKey], build.Log, ct);
+                if (!fix.Success) break;
+                files[codeKey] = ExtractCode(fix.Text);
+            }
+
+            if (!success || algo is null)
+                return Results.Ok(new { success = false, projectId = project.Id.Value, attempts, log = ClipLog(log) });
+
+            var cbotName = await UniqueNameAsync(db.CBots.Where(c => c.UserId == uid).Select(c => c.Name), project.Name, ct);
+            var cbot = new CBot
+            {
+                UserId = uid,
+                Name = cbotName,
+                EncryptedAlgo = protector.Protect(algo, EncryptionPurposes.CbotAlgo),
+                SourceProjectId = project.Id
+            };
+            db.CBots.Add(cbot);
+            await db.SaveChangesAsync(ct);
+
+            return Results.Ok(new { success = true, projectId = project.Id.Value, cbotId = cbot.Id.Value, attempts, log = ClipLog(log) });
+            }
+            catch (DbUpdateException)
+            {
+                return Results.Ok(new { success = false, error = "a cBot or project with that name already exists — try another name" });
+            }
+        });
+
         // Feature B: closed optimization loop — AI proposes parameter sets, we backtest each across nodes.
         g.MapPost("/optimize-run/{cbotId:guid}", async (
             Guid cbotId, OptimizeRunRequest req, DataContext db, ICurrentUser u, IAiFeatureService ai,
@@ -221,6 +295,19 @@ public static class AiEndpoints
 
     private static string ClipLog(string value) => value.Length <= MaxLogChars ? value : value[^MaxLogChars..];
 
+    private static async Task<string> UniqueNameAsync(IQueryable<string> existingNames, string desired, CancellationToken ct)
+    {
+        var taken = await existingNames.ToListAsync(ct);
+        var set = new HashSet<string>(taken, StringComparer.OrdinalIgnoreCase);
+        if (!set.Contains(desired)) return desired;
+        for (var suffix = 2; suffix < 1000; suffix++)
+        {
+            var candidate = $"{desired} {suffix}";
+            if (!set.Contains(candidate)) return candidate;
+        }
+        return $"{desired} {Guid.NewGuid():N}";
+    }
+
     private static string ExtractCode(string text)
     {
         var trimmed = text.Trim();
@@ -292,6 +379,7 @@ public sealed record SentimentRequest(string? Symbol);
 public sealed record VisionRequest(string? MediaType, string? Base64, string? Note);
 public sealed record CurateRequest(string? Name, string? Language, string? Source);
 public sealed record GenerateProjectRequest(string? Name, string? Language, string? Description);
+public sealed record BuildStrategyRequest(string? Name, string? Language, string? Description);
 public sealed record OptimizeRunRequest(
     Guid TradingAccountId, string? Symbol, string? Timeframe,
     string? DockerImageTag, string? BacktestSettingsJson, int? Count);

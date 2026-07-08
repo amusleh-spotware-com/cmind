@@ -4,6 +4,10 @@ External nodes join the cluster by **self-registration + heartbeat** — no manu
 This is the same pattern used by Consul/Nomad/kubeadm agents: an agent boots knowing where the
 main node is and a shared cluster secret, then continuously announces itself.
 
+> Verified end-to-end on both Docker Compose and a `kind` Kubernetes cluster: agents self-register,
+> appear in the DB reachable, get auto-marked unreachable when heartbeats stop past the TTL, and
+> return online when they resume.
+
 ## How it works
 
 ```

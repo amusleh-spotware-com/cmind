@@ -1,11 +1,22 @@
-# Azure deployment
+# Azure deployment — step by step
 
 `deploy/azure/main.bicep` provisions the stateless tier on **Azure Container Apps** plus a
 **Postgres Flexible Server** and Log Analytics.
 
+## 1. Prerequisites
+
+- Azure CLI (`az login` done), a subscription, and permission to create resource groups.
+- The three images pushed to a registry Azure can pull (e.g. GHCR public, or ACR).
+
+## 2. Create a resource group
+
 ```bash
 az group create -n cmind-rg -l westeurope
+```
 
+## 3. Deploy the Bicep
+
+```bash
 az deployment group create -g cmind-rg -f deploy/azure/main.bicep \
   -p imageRegistry=ghcr.io/your-org/cmind imageTag=1.0.0 \
      ownerEmail=you@example.com \
@@ -14,25 +25,41 @@ az deployment group create -g cmind-rg -f deploy/azure/main.bicep \
      discoveryJoinToken="$(openssl rand -hex 24)"
 ```
 
-Outputs `webUrl` and `mcpUrl`. Container Apps captures stdout (compact JSON logs) into Log
-Analytics; set `OTEL_EXPORTER_OTLP_ENDPOINT` on the apps to also forward to a collector.
+This creates: Container Apps environment, Web (external ingress), MCP (external ingress), Postgres
+Flexible Server + `appdb`, and Log Analytics. Discovery is enabled on Web.
 
-## Node agents on Azure
+## 4. Get the URLs
 
-Container Apps cannot run privileged/DinD workloads, so **node agents do not run there**. Options:
+```bash
+az deployment group show -g cmind-rg -n main --query properties.outputs
+# webUrl, mcpUrl
+```
 
-1. **AKS** — deploy the Helm chart (`deploy/helm/cmind`) with `web.enabled`/`mcp.enabled` scaled to
-   0 (or just install the node-agent portion) and `nodeAgent.privileged=true`, pointing
-   `NodeAgent__MainUrl` at the Container Apps `webUrl`.
-2. **VM / VMSS** — run the `cmind-node-agent` image with `--privileged`, setting `NodeAgent:MainUrl`,
-   `NodeAgent:AdvertiseUrl` (the VM's reachable URL), `NodeAgent:JwtSecret` = the deployment's
-   `discoveryJoinToken`.
+Open `webUrl`, sign in with the owner (forced password change on first login).
 
-Agents self-register to the Web app; see `docs/operations/node-discovery.md`.
+## 5. Add node agents (separate)
+
+Container Apps can't run privileged/DinD, so run agents elsewhere and point them at `webUrl`:
+
+- **AKS** — deploy the Helm chart ([kubernetes.md](kubernetes.md)) with `nodeAgent.privileged=true`,
+  scaling Web/MCP to 0 if you only want the agent tier there.
+- **VM / VMSS** — run the `cmind-node-agent` image `--privileged` with `NodeAgent:MainUrl=<webUrl>`,
+  `NodeAgent:AdvertiseUrl=<vm reachable url>`, `NodeAgent:JwtSecret=<discoveryJoinToken>`.
+
+Agents self-register within one heartbeat interval — see
+[../operations/node-discovery.md](../operations/node-discovery.md).
+
+## 6. Verify
+
+```bash
+az containerapp logs show -g cmind-rg -n cmind-web --tail 50   # compact JSON logs
+curl -s <webUrl>/version
+```
 
 ## Production notes
 
-- Front the Web app with Azure Front Door / App Gateway for TLS + WAF.
-- Use a Key Vault-backed secret store; pass a stable Data Protection cert
+- Front Web with Azure Front Door / App Gateway for TLS + WAF.
+- Store secrets in Key Vault; pass a stable Data Protection cert
   (`App__DataProtectionCertBase64` / `...Password`) so the key ring survives replica restarts.
-- Scale Web/MCP with the Container Apps `scale` rules (already min/max wired in the Bicep).
+- Set `OTEL_EXPORTER_OTLP_ENDPOINT` on the apps to forward logs+traces+metrics to a collector.
+- Container Apps `scale` rules (min/max) are wired in the Bicep.

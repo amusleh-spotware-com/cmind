@@ -2,12 +2,12 @@
 
 Guidance for future Claude Code sessions on this repo.
 
-> **MANDATORY — Domain-Driven Design.** This solution is developed **strictly** under DDD.
-> Before you write **or modify any C# under `src/`**, invoke the **`ddd-dotnet`** skill and obey it.
-> The binding rules live in [`## Domain-Driven Design — MANDATORY`](#domain-driven-design--mandatory)
-> below. No feature, fix, or refactor is "done" until it passes the DDD checklist there. This
-> overrides convenience — do not add anemic entities, primitive-obsessed signatures, or domain
-> logic in endpoints/services because it is "quicker".
+> **MANDATORY — Domain-Driven Design.** Solution developed **strictly** under DDD.
+> Before you write **or modify any C# under `src/`**, invoke **`ddd-dotnet`** skill and obey it.
+> Binding rules live in [`## Domain-Driven Design — MANDATORY`](#domain-driven-design--mandatory)
+> below. No feature/fix/refactor "done" until it passes DDD checklist there. Overrides
+> convenience — no anemic entities, primitive-obsessed signatures, or domain logic in
+> endpoints/services because "quicker".
 
 ## What this repo is
 
@@ -104,7 +104,7 @@ tests/
 - Never log/store secrets plaintext — use `ISecretProtector` with `EncryptionPurposes` strings. Data Protection key ring PFX-encrypted via base64 env var.
 - Health checks: `AddHealthChecks().AddNpgSql(...)`. `/health` (readiness) + `/alive` (liveness) mapped in **all** environments (K8s/cloud probes); MCP exposes `/version`.
 - Logging: Serilog (compact JSON stdout) in Web/Mcp/ExternalNode via `Infrastructure/Observability/SerilogConfigurator` (Web+Mcp) or inline (ExternalNode); OTLP sink when `OTEL_EXPORTER_OTLP_ENDPOINT` set. OTel keeps metrics+traces. Still author app logs through `LogMessages`.
-- Web security wiring (in `Web/Program.cs`): auth cookie is `HttpOnly` + `SameSite=Lax` + `SecurePolicy=Always`; `Web/Security/SecurityHeaders.cs` adds `X-Content-Type-Options`/`X-Frame-Options`/`Referrer-Policy`/`Permissions-Policy`; login/auth group is rate-limited (`RateLimitPolicies.Auth`, fixed-window per-IP); OpenAPI is mapped in Development only.
+- Web security (`Web/Program.cs`): auth cookie `HttpOnly` + `SameSite=Lax` + `SecurePolicy=Always`; `Web/Security/SecurityHeaders.cs` adds `X-Content-Type-Options`/`X-Frame-Options`/`Referrer-Policy`/`Permissions-Policy`; login/auth group rate-limited (`RateLimitPolicies.Auth`, fixed-window per-IP); OpenAPI mapped Development only.
 
 ## Common commands
 
@@ -122,33 +122,25 @@ dotnet ef database update    -p src/Infrastructure -s src/Infrastructure
 
 - `CBotBuilder` runs on web host, not remote nodes — Web container needs Docker socket access.
 - Run/backtest containers run on nodes picked by `NodeScheduler`, dispatched via `ContainerDispatcherFactory` to `HttpContainerDispatcher` (remote, via `ExternalNode` agent HTTP API) or `LocalContainerDispatcher` (web host's own `LocalNode`, seeded by `LocalNodeSeeder`).
-- External nodes get **no** SSH/shell access. Main node talks to `ExternalNode` agent over HTTP; each `RemoteNode` stores `BaseUrl` + encrypted per-node shared secret. Every request carries short-lived HS256 JWT (`iss=app-main`, `aud=app-node`, 5-min expiry) signed with node's secret; agent validates. Agent only runs images matching `AllowedImagePrefix` (default `ghcr.io/spotware/`), execs docker via `ArgumentList` (no shell), stateless (finds containers by `app.instance` label → survives restart). Deploy with docker daemon available; run container `--privileged` (starts local dockerd) or run binary on host with docker.
-- Node auto-discovery: agents self-register + heartbeat to the main's `POST /api/nodes/register` (join-token bearer, constant-time compare, protocol-version gated). Main upserts a `RemoteNode` **by name** (stable identity across IP changes); auto-registered nodes share the cluster secret (`App:Discovery:JoinToken`) as their dispatch secret. `RemoteNode.SelfRegister/RecordHeartbeat/MarkUnreachable/IsHeartbeatStale` are domain methods; `IsActive/AcceptsRun/AcceptsBacktest` gate on `IsReachable` (a heartbeat flag, **not** a TPH type change — `OfflineNode`/`DecommissioningNode` remain admin states). `NodeHeartbeatMonitor` reconciles staleness. Gated on `App:Discovery:Enabled`; manual `POST /api/nodes` still works. Docs: `docs/operations/node-discovery.md`.
+- External nodes get **no** SSH/shell access. Main talks to `ExternalNode` agent over HTTP; each `RemoteNode` stores `BaseUrl` + encrypted per-node shared secret. Every request carries short-lived HS256 JWT (`iss=app-main`, `aud=app-node`, 5-min expiry) signed with node's secret; agent validates. Agent only runs images matching `AllowedImagePrefix` (default `ghcr.io/spotware/`), execs docker via `ArgumentList` (no shell), stateless (finds containers by `app.instance` label → survives restart). Deploy with docker daemon available; run container `--privileged` (starts local dockerd) or run binary on host with docker.
+- Node auto-discovery: agents self-register + heartbeat to main's `POST /api/nodes/register` (join-token bearer, constant-time compare, protocol-version gated). Main upserts `RemoteNode` **by name** (stable identity across IP changes); auto-registered nodes share cluster secret (`App:Discovery:JoinToken`) as dispatch secret. `RemoteNode.SelfRegister/RecordHeartbeat/MarkUnreachable/IsHeartbeatStale` are domain methods; `IsActive/AcceptsRun/AcceptsBacktest` gate on `IsReachable` (heartbeat flag, **not** TPH type change — `OfflineNode`/`DecommissioningNode` remain admin states). `NodeHeartbeatMonitor` reconciles staleness. Gated on `App:Discovery:Enabled`; manual `POST /api/nodes` still works. Docs: `docs/operations/node-discovery.md`.
 - Deploy artifacts: `Dockerfile.{web,mcp,node-agent}`, root `docker-compose.yml`+`.env.example` (local), `deploy/helm/cmind` (K8s; node agents = privileged StatefulSet + headless Service for per-pod addressability), `deploy/azure/main.bicep` (Container Apps), `deploy/aws` (ECS Fargate + RDS Terraform). Fargate/Container-Apps can't run privileged node agents → agents go on AKS/EKS/EC2/VM. See `docs/deployment/`.
 - cTrader Console backtest CLI (verified live): requires `--data-mode` (default `m1`), dates `dd/MM/yyyy HH:mm`, `params.cbotset` is JSON (`{"Parameters":{...}}`) passed as positional arg; `run` rejects `--data-dir` (backtest-only). See `ContainerCommandHelpers`.
 - `BacktestCompletionPoller` polls `RunningBacktestInstance` on `AppOptions.BacktestCompletionPollInterval` (backtest containers self-exit via `--exit-on-stop`). `RunCompletionPoller` does same for `RunningRunInstance`, using `IContainerDispatcher.GetExitCodeAsync` → exit 0/null = `StoppedRunInstance`, non-zero = `FailedRunInstance`. Backtest: report present → `CompletedBacktestInstance` (stores `ReportJson`); missing → `FailedBacktestInstance`.
 - Equity curve for `InstanceDetail` chart parsed from `CompletedBacktestInstance.ReportJson` by `ContainerCommandHelpers.ParseEquityCurve`. Real report nests points at `equity.points[]` (`{balance,minEquity,maxEquity,timestamp}`); parser also scans root keys `equityHistory`/`equityCurve`/`history`/`equity`.
-- AI layer: `IAiClient` calls the Anthropic Messages API over **raw HTTP** (typed `HttpClient`),
-  not the Anthropic SDK — deliberate, to avoid a fragile new NuGet dependency + offline-restore
-  risk; the app already uses `IHttpClientFactory` everywhere. All AI is gated on `AppOptions.Ai.ApiKey`:
-  unset → every feature returns `AiResult.Fail(disabled)` and the app runs unchanged (no key needed
-  for build/test/E2E). `AiFeatureService` is the single orchestrator shared by Web endpoints, MCP
-  `AiTools`, and the `AiRiskGuard` background service. Market sentiment uses the server-side
-  `web_search` tool; chart-vision passes a base64 image block. `generate-project` runs a
-  generate → build (`CBotBuilder`) → AI-fix self-repair loop (≤3 attempts); `optimize-run`
-  is a closed loop — AI proposes param sets, each is persisted + backtested across nodes via
-  `INodeScheduler` (mirrors the `InstanceEndpoints` backtest-launch path).
-- MCP server separate process → scales/redeploys independently of Web. Uses stateless HTTP transport + `AddHttpContextAccessor` so tool calls see the authenticated user.
+- AI layer: `IAiClient` calls Anthropic Messages API over **raw HTTP** (typed `HttpClient`), not the Anthropic SDK — deliberate, avoids fragile new NuGet dep + offline-restore risk; app already uses `IHttpClientFactory` everywhere. All AI gated on `AppOptions.Ai.ApiKey`: unset → every feature returns `AiResult.Fail(disabled)`, app runs unchanged (no key needed for build/test/E2E). `AiFeatureService` = single orchestrator shared by Web endpoints, MCP `AiTools`, `AiRiskGuard` background service. Market sentiment uses server-side `web_search` tool; chart-vision passes base64 image block. `generate-project` runs generate → build (`CBotBuilder`) → AI-fix self-repair loop (≤3 attempts); `optimize-run` is closed loop — AI proposes param sets, each persisted + backtested across nodes via `INodeScheduler` (mirrors `InstanceEndpoints` backtest-launch path).
+- MCP server separate process → scales/redeploys independently of Web. Stateless HTTP transport + `AddHttpContextAccessor` so tool calls see authenticated user.
 - EF TPH gotcha: don't add `e.Property<T>(nameof(Subclass.Prop)).IsRequired(false)` from a *base* type's `EntityTypeBuilder` for a property on a *derived* TPH type — silently produces a property EF never persists (bit us on old `RemoteNode` SSH fields). TPH makes subclass-only properties nullable at column level automatically; no extra config.
 - EF SQL-translation gotcha: nested `(i as T) != null ? (i as T)!.Prop : ...` chains in an `IQueryable` `.Select()` don't reliably translate (silent wrong/null values vs real Postgres). Materialize with `ToListAsync()` first, switch in C# (see `InstanceEndpoints.GetStartedAt`/`GetStoppedAt`).
+- EF TPH `OfType<Intermediate>()` gotcha: `db.Nodes.OfType<RemoteNode>()` over the soft-delete query filter does **not** translate on Npgsql (throws at runtime, 500 — caught in K8s/Docker E2E, missed by in-memory unit tests). Query without narrowing (by unique key, then pattern-match `is RemoteNode`) or enumerate concrete leaf subtypes + `ToListAsync()` + `.Cast<>()` in memory (see `NodeEndpoints.RegisterNodeAsync`, `NodeHeartbeatMonitor`).
 - Don't project a full entity with a one-to-one nav cycle (`Node.LatestStats`/`NodeStats.Node`) into an API response — System.Text.Json has no cycle detection, serializes to `MaxDepth` and 500s. Project scalar fields.
 - `Instance.IsActive`/`IsTerminal` are C#-only computed (per-subclass override), not mapped columns — filtering on them in `IQueryable` throws at translation. Materialize first.
-- Instance state transitions replace the entity (TPH discriminator can't change) → the instance **id changes** starting→running→terminal. Container id is stable and carried over; the HTTP agent is keyed by container id for status/report/stop/logs.
+- Instance state transitions replace the entity (TPH discriminator can't change) → instance **id changes** starting→running→terminal. Container id stable and carried over; HTTP agent keyed by container id for status/report/stop/logs.
 
 ## Known gaps / needs follow-up
 
 - **Builder isolation** (resolved): `CBotBuilder` runs `dotnet build` inside a throwaway container (`DockerCommands.RunBuild` + `AppOptions.BuildImage`, work dir bind-mounted at `/work`) → untrusted user MSBuild targets can't reach host FS/network. Restore cached across builds via shared `app-nuget-cache` volume. Web host still needs Docker socket access.
-- **Remote-node trust**: `ExternalNode` agent runs whatever image+args the JWT-authenticated main node sends, constrained only by `AllowedImagePrefix`. Agent must run on a trusted host with docker; shared secret is the sole credential — keep it ≥32 chars, TLS in production (agent behind reverse proxy), rotate by updating both node's stored secret and agent's `NodeAgent:JwtSecret`.
+- **Remote-node trust**: `ExternalNode` agent runs whatever image+args the JWT-authenticated main node sends, constrained only by `AllowedImagePrefix`. Agent must run on trusted host with docker; shared secret is sole credential — keep ≥32 chars, TLS in production (agent behind reverse proxy), rotate by updating both node's stored secret and agent's `NodeAgent:JwtSecret`.
 
 ## Deliberately not done
 
@@ -166,9 +158,9 @@ No optimization (unsupported by cTrader Console) · no email/SMTP (manual reset 
 
 ## Implementation workflow
 
-1. **Understand** — explore affected layers, read CLAUDE.md, find an analogous implementation to template.
+1. **Understand** — explore affected layers, read CLAUDE.md, find analogous implementation to template.
 2. **Plan** — list changes by layer (files, DI, tests); agree with user before coding.
-3. **Implement** — non-trivial work: alternate writer/reviewer agents per layer (style, naming, disposal symmetry, DI, consistency with the analog); skip for mechanical changes.
+3. **Implement** — non-trivial work: alternate writer/reviewer agents per layer (style, naming, disposal symmetry, DI, consistency with analog); skip for mechanical changes.
 4. **Track & adapt** — note plan deviations; get approval before changing approach mid-flight.
 5. **Verify** — clean `dotnet build`; unit tests for every new class mirroring source path under `UnitTests/`; `dotnet test` green incl pre-existing; final reviewer pass (disposal symmetry, style, no leftover TODOs/hardcoded values).
 6. **Summarize** — changes, deviations + why, test results, known limits.
@@ -177,18 +169,17 @@ Checklist: tests written · `dotnet test` passes · no new warnings.
 
 ## Domain-Driven Design — MANDATORY
 
-This is the binding contract. The `ddd-dotnet` skill is the long-form playbook; this section is
-the law. When the two agree, follow either. If you think a rule should be broken, **stop and ask
-the user** — do not break it silently.
+Binding contract. `ddd-dotnet` skill = long-form playbook; this section = law. When they agree,
+follow either. If you think a rule should be broken, **stop and ask the user** — don't break it silently.
 
 ### Ubiquitous language
 
-- Names in code == names the domain uses: `CBot`, `SourceProject`, `ParamSet`, `Instance`
+- Names in code == names domain uses: `CBot`, `SourceProject`, `ParamSet`, `Instance`
   (Run/Backtest), `Node`, `AgentMandate`, `AgentProposal`, `AlertRule`, `TradingAccount`, `Ctid`.
 - No technical synonyms for domain concepts (`InstanceRecord`, `CBotDto`, `NodeManager` where a
-  domain term exists). DTOs at the edge are fine but must not rename the concept.
-- A backtest is never a "job"; a node is never a "server"; a param set is never "config". Keep the
-  language stable across Core, Web, Mcp, and tests.
+  domain term exists). DTOs at the edge fine but must not rename the concept.
+- Backtest never a "job"; node never a "server"; param set never "config". Keep language stable
+  across Core, Web, Mcp, tests.
 
 ### Layering (dependency rule — already enforced by project refs; keep it)
 
@@ -202,27 +193,26 @@ Web / Mcp / ExternalNode ← application services / use-cases (endpoints, MCP to
                            Orchestrate: load aggregate → call its methods → persist → dispatch events.
 ```
 
-- **Domain logic never lives in an endpoint, MCP tool, Razor component, or a `BackgroundService`.**
-  Those are application/presentation layers: they orchestrate, they do not decide. Any `if` that
-  encodes a business rule belongs on an aggregate or a domain service.
-- Core stays pure. If you need infra in the domain, you modeled it wrong — introduce an interface
-  in Core and implement it outside.
+- **Domain logic never lives in an endpoint, MCP tool, Razor component, or `BackgroundService`.**
+  Those are application/presentation layers: orchestrate, don't decide. Any `if` encoding a business
+  rule belongs on an aggregate or domain service.
+- Core stays pure. Need infra in the domain → you modeled it wrong; introduce an interface in Core,
+  implement it outside.
 
 ### Aggregates & aggregate roots
 
 - Every write goes through an **aggregate root**. Current roots: `AppUser`, `CTraderIdAccount`
   (owns `TradingAccount`), `CBot` (owns `ParamSet`), `CBotSourceProject`, `Instance`, `Node`
   (owns `NodeStats`), `AgentMandate` (owns `AgentProposal`), `AlertRule` (owns `AlertEvent`),
-  `McpApiKey`. `AuditLog`/`AppSetting`/`InstanceLog` are append-only records, not aggregates.
+  `McpApiKey`. `AuditLog`/`AppSetting`/`InstanceLog` = append-only records, not aggregates.
 - **One aggregate = one consistency boundary = one transaction.** A single `SaveChanges` mutates
-  **one** aggregate instance. Need to touch two? Use a domain event + a second use-case, or a
-  process manager — never a fat transaction spanning roots.
+  **one** aggregate instance. Touch two? Use a domain event + second use-case, or a process
+  manager — never a fat transaction spanning roots.
 - **Reference other aggregates by strong ID only** in new code (`CBotId`, `NodeId`, …), not by
-  navigation property. EF nav props that already exist on entities may stay for query projection,
-  but **do not add new cross-aggregate nav props** and never mutate another aggregate through one.
-- Child entities (`ParamSet`, `TradingAccount`, `AgentProposal`, `AlertEvent`, `NodeStats`) are
-  reached and mutated **only through their root** (`cbot.AddParamSet(...)`, not `new ParamSet` +
-  `context.Add`).
+  navigation property. Existing EF nav props may stay for query projection, but **do not add new
+  cross-aggregate nav props** and never mutate another aggregate through one.
+- Child entities (`ParamSet`, `TradingAccount`, `AgentProposal`, `AlertEvent`, `NodeStats`) reached
+  and mutated **only through their root** (`cbot.AddParamSet(...)`, not `new ParamSet` + `context.Add`).
 
 ### Entities — rich, not anemic
 
@@ -232,12 +222,12 @@ Web / Mcp / ExternalNode ← application services / use-cases (endpoints, MCP to
 - Constructors/factories put the entity in a **valid** state or throw a **domain exception**
   (`DomainException` subtype in Core, not `ArgumentException` from a controller). Prefer a static
   `Create(...)` factory when construction has rules; keep a private ctor for EF.
-- Invariants are checked **inside** the aggregate, once, at the point of change — not re-validated
-  in every caller. Callers trust the aggregate.
-- The TPH state hierarchies (`Instance`, `Node` states) are the state pattern — **good, keep it**.
-  A transition is a domain operation that returns the next-state entity; centralize transition
-  rules (which state may go where) in the domain, not scattered across pollers. When you add a
-  state or transition, model it as a method, not an ad-hoc `new XxxInstance { … }` in a service.
+- Invariants checked **inside** the aggregate, once, at the point of change — not re-validated in
+  every caller. Callers trust the aggregate.
+- TPH state hierarchies (`Instance`, `Node` states) = state pattern — **good, keep it**. A transition
+  is a domain operation returning the next-state entity; centralize transition rules (which state may
+  go where) in the domain, not scattered across pollers. Add a state/transition → model it as a
+  method, not ad-hoc `new XxxInstance { … }` in a service.
 
 ### Value objects
 
@@ -245,38 +235,38 @@ Web / Mcp / ExternalNode ← application services / use-cases (endpoints, MCP to
   IDs are VOs — **immutable, equality by value, self-validating** (see `Core/StrongIds.cs`). Follow
   that template for new ones (money/percent/risk, drawdown, container id, url, secret material).
 - **Ban primitive obsession in new/changed signatures.** No bare `string symbol`, `Guid id`,
-  `double riskPercent`, `int intervalMinutes` crossing a domain boundary — wrap them. Percentages
-  and risk numbers especially (`RiskPercentPerTrade`, `MaxDrawdownPercent`) deserve a VO that
-  rejects out-of-range values at construction.
-- VOs validate in their constructor and throw a domain exception; they never carry an invalid value.
+  `double riskPercent`, `int intervalMinutes` crossing a domain boundary — wrap them. Percentages and
+  risk numbers especially (`RiskPercentPerTrade`, `MaxDrawdownPercent`) deserve a VO that rejects
+  out-of-range values at construction.
+- VOs validate in their constructor and throw a domain exception; never carry an invalid value.
 
 ### Domain services, factories, domain events
 
-- **Domain service** = stateless logic that spans aggregates or doesn't belong on one entity
-  (`INodeScheduler` picking a node is the canonical example). Interface in Core; keep it free of
-  infra. Reach for one only when the behavior genuinely isn't a single aggregate's responsibility.
+- **Domain service** = stateless logic spanning aggregates or not belonging on one entity
+  (`INodeScheduler` picking a node = canonical). Interface in Core; keep it infra-free. Reach for one
+  only when behavior genuinely isn't a single aggregate's responsibility.
 - **Domain events** signal "something happened" (`InstanceStarted`, `BacktestCompleted`,
-  `AgentProposalAccepted`, `RiskThresholdBreached`). Raise them from aggregate methods; collect on
-  the entity; dispatch **after** a successful `SaveChanges` (EF `SavingChanges`/interceptor or an
-  outbox). Cross-aggregate reactions and integration (SignalR, AI risk actions) subscribe to these
-  instead of being inlined into the mutating use-case.
+  `AgentProposalAccepted`, `RiskThresholdBreached`). Raise from aggregate methods; collect on the
+  entity; dispatch **after** successful `SaveChanges` (EF `SavingChanges`/interceptor or outbox).
+  Cross-aggregate reactions + integration (SignalR, AI risk actions) subscribe to these instead of
+  being inlined into the mutating use-case.
 - **Factories** encapsulate multi-step/invariant-heavy creation. Repositories persist and retrieve
-  **whole aggregates** — never leak `IQueryable` out of Core, never expose a generic
-  `Repository<T>` that lets callers dodge aggregate methods.
+  **whole aggregates** — never leak `IQueryable` out of Core, never expose a generic `Repository<T>`
+  that lets callers dodge aggregate methods.
 
 ### Repositories & persistence
 
 - One repository interface **per aggregate root**, defined in Core, implemented in Infrastructure.
   Methods speak the domain (`GetActiveByUserAsync`, `AddAsync`, not `Query()`).
-- Read models / list projections for the UI are **separate** from the write side — query EF
-  directly in a read service/endpoint (CQRS-lite), returning DTOs. Don't force reporting queries
-  through aggregate repositories, and don't reshape aggregates to make a screen easier.
+- Read models / list projections for the UI are **separate** from the write side — query EF directly
+  in a read service/endpoint (CQRS-lite), returning DTOs. Don't force reporting queries through
+  aggregate repositories, and don't reshape aggregates to make a screen easier.
 - Persistence concerns (EF config, converters, TPH mapping, soft delete) stay in Infrastructure.
   The domain does not know EF exists.
 
 ### Bounded contexts / modules
 
-- Organize the domain by module, not by technical type. Current de-facto contexts:
+- Organize the domain by module, not technical type. Current de-facto contexts:
   **Access** (users, MFA, viewer grants, MCP keys), **Authoring** (CBot, SourceProject, ParamSet,
   builder), **Execution** (Instance, Node, scheduling, dispatch), **Portfolio** (AgentMandate,
   proposals, decision journal), **Alerts**. Put new types in the module that owns the concept;
@@ -284,16 +274,15 @@ Web / Mcp / ExternalNode ← application services / use-cases (endpoints, MCP to
 - Anti-corruption layers already exist for external systems (cTrader Console CLI, GHCR, Anthropic,
   `ExternalNode` agent) — keep them: translate at the edge, never let their shapes leak into Core.
 
-### Brownfield rule (this repo is mid-migration)
+### Brownfield rule (repo is mid-migration)
 
-Existing entities are anemic (public setters, logic in pollers/services). You are **not** required
-to boil the ocean, but:
+Existing entities anemic (public setters, logic in pollers/services). Not required to boil the ocean, but:
 - **New** aggregates/entities/VOs: full DDD from the start. No exceptions.
 - When you **touch** an existing anemic entity for a feature/fix: encapsulate the part you touch —
-  add the intention method, tighten those setters, move that rule into the aggregate. Leave it
-  better than you found it; do not add new anemic surface.
-- Never cite "the rest of the code does it this way" to justify new anemic code. The old way is the
-  debt being paid down, not the standard.
+  add the intention method, tighten those setters, move that rule into the aggregate. Leave it better
+  than you found it; add no new anemic surface.
+- Never cite "the rest of the code does it this way" to justify new anemic code. The old way is debt
+  being paid down, not the standard.
 
 ### DDD definition-of-done checklist (all must hold before "done")
 

@@ -38,6 +38,7 @@ public sealed record AiOptions
     public string BaseUrl { get; init; } = Constants.AiConstants.DefaultBaseUrl;
     public int MaxTokens { get; init; } = Constants.AiConstants.DefaultMaxTokens;
     public bool RiskGuardEnabled { get; init; }
+    public bool RiskGuardAutoStop { get; init; }
     public TimeSpan RiskGuardInterval { get; init; } = TimeSpan.FromMinutes(5);
     public bool Enabled => !string.IsNullOrWhiteSpace(ApiKey);
 }

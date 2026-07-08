@@ -89,6 +89,16 @@ public static class AiConstants
     public const string DisabledMessage = "AI features are not configured (set App:Ai:ApiKey).";
 }
 
+public static class RiskGuardConstants
+{
+    public const int ActionMaxTokens = 1000;
+    public const string ActionStop = "stop";
+    public const string SeverityCritical = "critical";
+    public const string AuditAction = "AiRiskGuardStop";
+    public const string AuditEntityType = "Instance";
+    public const int MaxReasonChars = 512;
+}
+
 public static class AgentConstants
 {
     public const string ProposalKindBacktest = "Backtest";

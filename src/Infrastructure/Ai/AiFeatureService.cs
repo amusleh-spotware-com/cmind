@@ -61,6 +61,19 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
         return client.CompleteAsync(new AiTextRequest(AiPrompts.RiskGuardSystem, user.ToString()), ct);
     }
 
+    public Task<AiResult> AssessRiskActionsAsync(IReadOnlyList<AiInstanceContext> running, int maxTokens, CancellationToken ct)
+    {
+        var user = new StringBuilder("Running bots (each prefixed with its [index]):\n");
+        for (var index = 0; index < running.Count; index++)
+        {
+            var i = running[index];
+            user.AppendLine(
+                $"[{index}] {i.CBotName} [{i.Kind}] {i.Symbol ?? "?"} {i.Timeframe ?? "?"} status={i.Status}" +
+                (i.Detail is null ? "" : $" {i.Detail}"));
+        }
+        return client.CompleteAsync(new AiTextRequest(AiPrompts.RiskActionSystem, user.ToString(), MaxTokens: maxTokens), ct);
+    }
+
     public Task<AiResult> MarketSentimentAsync(string symbol, CancellationToken ct) =>
         client.CompleteAsync(new AiTextRequest(
             AiPrompts.SentimentSystem,
@@ -131,6 +144,14 @@ internal static class AiPrompts
         "You are a real-time risk guard for a leveraged FX/CFD trading desk. Given the currently running bots, flag " +
         "concentration, correlation, and anomaly risks, and recommend actions. Be brief; only flag real concerns. " +
         "If nothing is concerning, say so in one line.";
+
+    public const string RiskActionSystem =
+        "You are a real-time risk guard for a leveraged FX/CFD desk. Each running bot is listed with an index [n]. " +
+        "Assess concentration, correlation, drawdown, and anomaly risk. Output ONLY a JSON array and nothing else " +
+        "(no prose, no code fences); include one object ONLY for each bot you judge risky: " +
+        "{\"ref\": n (integer index), \"severity\": \"low\"|\"medium\"|\"high\"|\"critical\", " +
+        "\"action\": \"none\"|\"stop\", \"reason\": string}. Recommend \"stop\" ONLY for critical, clearly unsafe positions. " +
+        "If nothing is risky, output an empty array [].";
 
     public const string SentimentSystem =
         "You are an FX/CFD market analyst. Using current web information, summarize sentiment, key drivers, and upcoming " +

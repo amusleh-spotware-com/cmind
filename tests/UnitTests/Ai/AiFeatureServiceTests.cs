@@ -74,6 +74,22 @@ public sealed class AiFeatureServiceTests
     }
 
     [Fact]
+    public async Task AssessRiskActions_numbers_bots_and_caps_tokens()
+    {
+        var client = Client(AiResult.Ok("[]"));
+        var service = new AiFeatureService(client);
+        var running = new[]
+        {
+            new AiInstanceContext("BotA", "Run", "Running", "EURUSD", "h1", null),
+            new AiInstanceContext("BotB", "Run", "Running", "GBPUSD", "m5", null)
+        };
+        await service.AssessRiskActionsAsync(running, 1000, default);
+        await client.Received().CompleteAsync(
+            Arg.Is<AiTextRequest>(r => r.MaxTokens == 1000 && r.User.Contains("[0]") && r.User.Contains("[1]")),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public void Enabled_reflects_underlying_client()
     {
         new AiFeatureService(Client(AiResult.Ok(""), enabled: false)).Enabled.Should().BeFalse();

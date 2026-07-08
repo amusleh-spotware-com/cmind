@@ -69,4 +69,13 @@ public static partial class LogMessages
 
     [LoggerMessage(EventId = 1021, Level = LogLevel.Warning, Message = "Portfolio agent proposal {ProposalId} execution failed: {Reason}")]
     public static partial void AgentProposalExecutionFailed(this ILogger logger, Guid proposalId, string reason);
+
+    [LoggerMessage(EventId = 1022, Level = LogLevel.Warning, Message = "AI risk-guard auto-stopped instance {InstanceId}: {Reason}")]
+    public static partial void RiskGuardStopped(this ILogger logger, Guid instanceId, string reason);
+
+    [LoggerMessage(EventId = 1023, Level = LogLevel.Warning, Message = "AI risk-guard verdict ref {Ref} out of range (running count {Count})")]
+    public static partial void RiskGuardStopSkipped(this ILogger logger, int @ref, int count);
+
+    [LoggerMessage(EventId = 1024, Level = LogLevel.Warning, Message = "AI risk-guard instance {InstanceId} has no node; container not stopped")]
+    public static partial void RiskGuardNodeMissing(this ILogger logger, Guid instanceId);
 }

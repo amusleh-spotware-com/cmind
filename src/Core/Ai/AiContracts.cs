@@ -40,6 +40,7 @@ public interface IAiFeatureService
     Task<AiResult> ProposeParamSetsAsync(string cBotName, string currentParamsJson, string? backtestReportJson, CancellationToken ct);
     Task<AiResult> PostMortemAsync(AiInstanceContext context, CancellationToken ct);
     Task<AiResult> AssessRiskAsync(IReadOnlyList<AiInstanceContext> running, CancellationToken ct);
+    Task<AiResult> AssessRiskActionsAsync(IReadOnlyList<AiInstanceContext> running, int maxTokens, CancellationToken ct);
     Task<AiResult> MarketSentimentAsync(string symbol, CancellationToken ct);
     Task<AiResult> VisionToStrategyAsync(AiImage chart, string? note, CancellationToken ct);
     Task<AiResult> CurateStrategyAsync(string name, string language, string source, CancellationToken ct);

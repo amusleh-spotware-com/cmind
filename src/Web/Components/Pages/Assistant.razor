@@ -44,6 +44,19 @@
             </MudButton>
         </MudPaper>
     </MudTabPanel>
+    <MudTabPanel Text="Debate">
+        <MudPaper Class="pa-4" Elevation="0">
+            <MudText Typo="Typo.body2" Class="mb-2">
+                A bull, a bear, and a risk officer argue your cBot before you deploy it, then give a verdict.
+            </MudText>
+            <MudTextField @bind-Value="_debateSource" Label="cBot source" Lines="10"
+                          Placeholder="Paste cBot source to put it before the committee" />
+            <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Forum" OnClick="Debate" Disabled="_busy">
+                Run the debate
+            </MudButton>
+        </MudPaper>
+    </MudTabPanel>
     <MudTabPanel Text="Market Sentiment">
         <MudPaper Class="pa-4" Elevation="0">
             <MudTextField @bind-Value="_symbol" Label="Symbol" Style="max-width:200px;" Placeholder="EURUSD" />
@@ -116,6 +129,7 @@
     private string _projectName = "MyBot";
     private string _description = "";
     private string _reviewSource = "";
+    private string _debateSource = "";
     private string _symbol = "EURUSD";
     private string _output = "";
     private bool _busy;
@@ -132,6 +146,7 @@
 
     private Task Generate() => PostTextAsync("/api/ai/generate", new { Language = _language, Description = _description });
     private Task Review() => PostTextAsync("/api/ai/review", new { Language = _language, Source = _reviewSource });
+    private Task Debate() => PostTextAsync("/api/ai/debate", new { Name = _projectName, Language = _language, Source = _debateSource });
     private Task Sentiment() => PostTextAsync("/api/ai/sentiment", new { Symbol = _symbol });
 
     private Task GenerateProject() =>

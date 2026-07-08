@@ -90,6 +90,7 @@ public static class AiConstants
     public const int TuneAdviceMaxTokens = 1500;
     public const int DigestMaxTokens = 2000;
     public const int DigestMaxInstances = 60;
+    public const int DebateMaxTokens = 2000;
 }
 
 public static class RiskGuardConstants

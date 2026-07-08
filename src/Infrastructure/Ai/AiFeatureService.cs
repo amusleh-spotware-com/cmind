@@ -90,6 +90,11 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
             string.IsNullOrWhiteSpace(note) ? "Describe this chart and design a cBot strategy for it." : Clip(note),
             Image: chart), ct);
 
+    public Task<AiResult> DebateStrategyAsync(string name, string language, string source, int maxTokens, CancellationToken ct) =>
+        client.CompleteAsync(new AiTextRequest(
+            AiPrompts.DebateSystem,
+            $"Name: {name}\nLanguage: {language}\n\nSource:\n{Clip(source)}", MaxTokens: maxTokens), ct);
+
     public Task<AiResult> CurateStrategyAsync(string name, string language, string source, CancellationToken ct) =>
         client.CompleteAsync(new AiTextRequest(
             AiPrompts.CurateSystem,
@@ -213,6 +218,12 @@ internal static class AiPrompts
         "produce a short digest: what is working vs failing, concentration and correlation risk (same symbol/base " +
         "currency across bots), over-exposure, and 2-3 concrete rebalancing or next-step actions. Group by theme, be " +
         "specific, and keep it brief. Not financial advice.";
+
+    public const string DebateSystem =
+        "You are a trading-desk committee reviewing a cBot before deployment. Argue it from three distinct roles, then " +
+        "reconcile. Output exactly these sections: '## Bull case' (why it should make money), '## Bear case' (why it " +
+        "will lose), '## Risk officer' (blow-up risks, position sizing, stop-loss, correlation), and '## Verdict' " +
+        "(deploy / iterate / reject, with one-line reasoning). Ground every point in the actual code. Be concise and specific.";
 
     public const string CurateSystem =
         "You are a strategy marketplace curator. From the cBot source, produce compact JSON with fields: title (one line), " +

@@ -48,4 +48,5 @@ public interface IAiFeatureService
     Task<AiResult> ProposeAgentActionAsync(string cBotName, string objective, string currentParamsJson, string? lastReportJson, int maxTokens, CancellationToken ct);
     Task<AiResult> AssessStrategyDecayAsync(string cBotName, string? previousReportJson, string latestReportJson, string currentParamsJson, int maxTokens, CancellationToken ct);
     Task<AiResult> PortfolioDigestAsync(IReadOnlyList<AiInstanceContext> portfolio, int maxTokens, CancellationToken ct);
+    Task<AiResult> DebateStrategyAsync(string name, string language, string source, int maxTokens, CancellationToken ct);
 }

@@ -127,6 +127,16 @@ public sealed class AiFeatureServiceTests
     }
 
     [Fact]
+    public async Task DebateStrategy_sends_source_and_caps_tokens()
+    {
+        var client = Client(AiResult.Ok("## Verdict\ndeploy"));
+        var service = new AiFeatureService(client);
+        await service.DebateStrategyAsync("Bot", "CSharp", "class Foo {}", 2000, default);
+        await client.Received().CompleteAsync(
+            Arg.Is<AiTextRequest>(r => r.MaxTokens == 2000 && r.User.Contains("class Foo")), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public void Enabled_reflects_underlying_client()
     {
         new AiFeatureService(Client(AiResult.Ok(""), enabled: false)).Enabled.Should().BeFalse();

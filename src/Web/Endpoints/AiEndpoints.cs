@@ -24,6 +24,9 @@ public static class AiEndpoints
         g.MapPost("/review", async (ReviewCBotRequest req, IAiFeatureService ai, CancellationToken ct) =>
             Results.Ok(await ai.ReviewCBotAsync(req.Language ?? "CSharp", req.Source ?? "", ct)));
 
+        g.MapPost("/debate", async (DebateRequest req, IAiFeatureService ai, CancellationToken ct) =>
+            Results.Ok(await ai.DebateStrategyAsync(req.Name ?? "cBot", req.Language ?? "CSharp", req.Source ?? "", AiConstants.DebateMaxTokens, ct)));
+
         g.MapPost("/sentiment", async (SentimentRequest req, IAiFeatureService ai, CancellationToken ct) =>
             Results.Ok(await ai.MarketSentimentAsync(req.Symbol ?? "", ct)));
 
@@ -415,6 +418,7 @@ public static class AiEndpoints
 
 public sealed record GenerateCBotRequest(string? Language, string? Description);
 public sealed record ReviewCBotRequest(string? Language, string? Source);
+public sealed record DebateRequest(string? Name, string? Language, string? Source);
 public sealed record SentimentRequest(string? Symbol);
 public sealed record VisionRequest(string? MediaType, string? Base64, string? Note);
 public sealed record CurateRequest(string? Name, string? Language, string? Source);

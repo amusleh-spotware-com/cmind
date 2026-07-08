@@ -2,12 +2,15 @@ using Core;
 using Core.Constants;
 using Core.NodeAgent;
 using Infrastructure;
+using Infrastructure.Observability;
 using Infrastructure.Persistence;
 using Mcp.Auth;
 using Mcp.Tools;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddStructuredLogging(builder.Configuration, ObservabilityDefaults.McpServiceName);
 builder.AddNpgsqlDbContext<DataContext>(ConnectionStrings.AppDb);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
@@ -24,6 +27,7 @@ builder.Services.AddMcpServer()
     .WithTools<AiTools>();
 
 var app = builder.Build();
+app.UseSerilogRequestLogging();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapMcp("/mcp").RequireAuthorization();

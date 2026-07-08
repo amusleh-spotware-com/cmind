@@ -18,6 +18,7 @@ public static class DependencyInjection
         services.AddSingleton<IContainerDispatcher>(sp => sp.GetRequiredService<HttpContainerDispatcher>());
         services.AddSingleton<IContainerDispatcherFactory, ContainerDispatcherFactory>();
         services.AddHostedService<NodeStatsPoller>();
+        services.AddHostedService<NodeHeartbeatMonitor>();
         services.AddHostedService<BacktestCompletionPoller>();
         services.AddHostedService<RunCompletionPoller>();
         services.AddHostedService<AiRiskGuard>();

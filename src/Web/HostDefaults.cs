@@ -1,7 +1,7 @@
 using Core.Constants;
+using Infrastructure.Observability;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
@@ -12,11 +12,8 @@ internal static class HostDefaults
     public static TBuilder AddObservabilityDefaults<TBuilder>(this TBuilder builder)
         where TBuilder : IHostApplicationBuilder
     {
-        builder.Logging.AddOpenTelemetry(o =>
-        {
-            o.IncludeFormattedMessage = true;
-            o.IncludeScopes = true;
-        });
+        builder.Services.AddStructuredLogging(builder.Configuration, ObservabilityDefaults.WebServiceName);
+
         builder.Services.AddOpenTelemetry()
             .WithMetrics(m => m
                 .AddAspNetCoreInstrumentation()
@@ -26,9 +23,8 @@ internal static class HostDefaults
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation());
 
-        if (!string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]))
+        if (!string.IsNullOrWhiteSpace(builder.Configuration[ObservabilityDefaults.OtlpEndpointKey]))
         {
-            builder.Logging.AddOpenTelemetry(o => o.AddOtlpExporter());
             builder.Services.AddOpenTelemetry()
                 .WithMetrics(m => m.AddOtlpExporter())
                 .WithTracing(t => t.AddOtlpExporter());
@@ -52,14 +48,13 @@ internal static class HostDefaults
 
     public static WebApplication MapHostHealthEndpoints(this WebApplication app)
     {
-        if (app.Environment.IsDevelopment())
+        // Mapped in all environments so container/K8s probes work in production.
+        // /health = readiness (all checks incl. database); /alive = liveness (process only).
+        app.MapHealthChecks(HealthEndpoints.Health).AllowAnonymous();
+        app.MapHealthChecks(HealthEndpoints.Alive, new HealthCheckOptions
         {
-            app.MapHealthChecks(HealthEndpoints.Health);
-            app.MapHealthChecks(HealthEndpoints.Alive, new HealthCheckOptions
-            {
-                Predicate = r => r.Tags.Contains(HealthEndpoints.LiveTag)
-            });
-        }
+            Predicate = r => r.Tags.Contains(HealthEndpoints.LiveTag)
+        }).AllowAnonymous();
         return app;
     }
 }

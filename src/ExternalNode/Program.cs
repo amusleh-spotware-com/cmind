@@ -6,13 +6,42 @@ using ExternalNode;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
+using Serilog.Events;
+using Serilog.Formatting.Compact;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddSerilog((sp, lc) =>
+{
+    lc.MinimumLevel.Information()
+        .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+        .Enrich.FromLogContext()
+        .Enrich.WithProperty(ObservabilityDefaults.ServiceNameProperty, ObservabilityDefaults.NodeAgentServiceName)
+        .ReadFrom.Configuration(builder.Configuration)
+        .ReadFrom.Services(sp)
+        .WriteTo.Console(new RenderedCompactJsonFormatter());
+
+    var otlpEndpoint = builder.Configuration[ObservabilityDefaults.OtlpEndpointKey];
+    if (!string.IsNullOrWhiteSpace(otlpEndpoint))
+    {
+        lc.WriteTo.OpenTelemetry(o =>
+        {
+            o.Endpoint = otlpEndpoint;
+            o.ResourceAttributes = new Dictionary<string, object>
+            {
+                [ObservabilityDefaults.ServiceNameProperty] = ObservabilityDefaults.NodeAgentServiceName
+            };
+        });
+    }
+});
 
 builder.Services.AddOptions<NodeAgentOptions>()
     .Bind(builder.Configuration.GetSection(NodeAgentOptions.SectionName))
     .ValidateOnStart();
 builder.Services.AddSingleton<DockerService>();
+builder.Services.AddHttpClient(NodeRegistrationClient.HttpClientName);
+builder.Services.AddHostedService<NodeRegistrationClient>();
 
 var secret = builder.Configuration.GetSection(NodeAgentOptions.SectionName)[nameof(NodeAgentOptions.JwtSecret)] ?? string.Empty;
 if (secret.Length < NodeAgentAuth.MinSecretLength)
@@ -37,6 +66,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+app.UseSerilogRequestLogging();
 app.UseAuthentication();
 app.UseAuthorization();
 

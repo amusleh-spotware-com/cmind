@@ -14,5 +14,7 @@
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
     <PackageReference Include="Konscious.Security.Cryptography.Argon2" />
     <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.OpenTelemetry" />
   </ItemGroup>
 </Project>

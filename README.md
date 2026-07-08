@@ -17,7 +17,7 @@ orchestration.
 
 **Contents:** [Stack](#stack) · [Solution layout](#solution-layout) · [Prerequisites](#prerequisites)
 · [Configuration](#configuration) · [External nodes](#external-nodes) · [Build & run](#build--run)
-· [Step-by-step guide](#step-by-step-guide) · [Tests](#tests) · [Contributing](#contributing)
+· [Deployment](#deployment) · [Step-by-step guide](#step-by-step-guide) · [Tests](#tests) · [Contributing](#contributing)
 · [Security](#security) · [License](#license--disclaimer)
 
 ASP.NET Core + Blazor Server app to build, run, backtest (later optimize) cTrader cBots via the
@@ -38,7 +38,8 @@ scheduled across remote nodes (each running the `ExternalNode` HTTP agent) and/o
 - HTTP + per-node HS256 JWT for external node connectivity
 - ModelContextProtocol .NET SDK for the MCP server
 - .NET Aspire 9 for orchestration
-- OpenTelemetry (metrics + traces + logs)
+- Serilog structured logging (compact JSON) + OpenTelemetry (metrics + traces + logs, OTLP export)
+- Self-registering node auto-discovery (agent heartbeat); Docker Compose, Helm, Bicep & Terraform deploy
 
 ## Solution layout
 
@@ -134,6 +135,15 @@ Then in the Web UI (**Nodes → Add node**) register it with its **base URL** (`
 and the same **API secret**. In production, terminate TLS in front of the agent and keep it on a
 private network.
 
+### Auto-discovery (no manual add)
+
+Instead of registering each node by hand, agents can **self-register + heartbeat**. Set
+`App:Discovery:Enabled=true` and a shared `App:Discovery:JoinToken` (≥ 32 chars) on the main node,
+then start agents with `NodeAgent:MainUrl`, `NodeAgent:AdvertiseUrl`, and `NodeAgent:JwtSecret` =
+the join token. Agents appear on the **Nodes** page within one heartbeat interval and are marked
+unreachable automatically when heartbeats stop. Full details:
+[docs/operations/node-discovery.md](docs/operations/node-discovery.md).
+
 ## Build & run
 
 ```bash
@@ -149,6 +159,19 @@ via `OwnerSeeder`. Regenerate:
 ```bash
 dotnet ef migrations add <Name> -p src/Infrastructure -s src/Infrastructure -o Persistence/Migrations
 ```
+
+## Deployment
+
+| Target | Artifacts | Guide |
+| ------ | --------- | ----- |
+| **Local** | `docker-compose.yml` + `.env.example` (or Aspire) | [docs/deployment/local.md](docs/deployment/local.md) |
+| **Kubernetes** | `deploy/helm/cmind` + `Dockerfile.{web,mcp,node-agent}` | [docs/deployment/kubernetes.md](docs/deployment/kubernetes.md) |
+| **Azure** | `deploy/azure/main.bicep` (Container Apps + Postgres Flexible) | [docs/deployment/cloud-azure.md](docs/deployment/cloud-azure.md) |
+| **AWS** | `deploy/aws` Terraform (ECS Fargate + RDS + ALB) | [docs/deployment/cloud-aws.md](docs/deployment/cloud-aws.md) |
+
+The fastest local start is Docker Compose — `cp .env.example .env && docker compose up --build`
+brings up Postgres + Web + MCP with the schema auto-migrated. Kubernetes and cloud deploys use the
+self-registering node agents, so worker capacity scales by adding agent replicas.
 
 ## Step-by-step guide
 
@@ -243,8 +266,11 @@ Integration tests use Testcontainers for a real PostgreSQL container — Docker 
 
 - `GET /health` — readiness (includes PostgreSQL connectivity)
 - `GET /alive` — liveness
+- `GET /version` — product + protocol version (also MCP liveness/readiness)
 
-Mapped in Development only; in production keep behind auth or a private network.
+Mapped in **all** environments so container/Kubernetes probes work in production. Put a reverse
+proxy / network policy in front if you don't want them publicly reachable. Logging & observability:
+[docs/operations/logging.md](docs/operations/logging.md).
 
 ## MCP server
 

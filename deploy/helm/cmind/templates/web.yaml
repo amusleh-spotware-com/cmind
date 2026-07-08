@@ -1,0 +1,176 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cmind.fullname" . }}-web
+  labels:
+    {{- include "cmind.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  replicas: {{ .Values.web.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: web
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: web
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: web
+          image: "{{ include "cmind.image" . }}-web:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.web.port }}
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Production
+            - name: ASPNETCORE_URLS
+              value: "http://+:{{ .Values.web.port }}"
+            - name: PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "cmind.secretName" . }}
+                  key: PG_PASSWORD
+            - name: ConnectionStrings__appdb
+              value: {{ include "cmind.connectionString" . | quote }}
+            - name: App__OwnerEmail
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "cmind.secretName" . }}
+                  key: OWNER_EMAIL
+            - name: App__OwnerPassword
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "cmind.secretName" . }}
+                  key: OWNER_PASSWORD
+            - name: App__DataProtectionCertBase64
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "cmind.secretName" . }}
+                  key: DATA_PROTECTION_CERT_B64
+            - name: App__DataProtectionCertPassword
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "cmind.secretName" . }}
+                  key: DATA_PROTECTION_CERT_PASSWORD
+            - name: App__LocalNode__Enabled
+              value: {{ .Values.web.localNodeEnabled | quote }}
+            - name: App__Discovery__Enabled
+              value: {{ .Values.discovery.enabled | quote }}
+            - name: App__Discovery__HeartbeatTtl
+              value: {{ .Values.discovery.heartbeatTtl | quote }}
+            - name: App__Discovery__MonitorInterval
+              value: {{ .Values.discovery.monitorInterval | quote }}
+            - name: App__Discovery__HeartbeatInterval
+              value: {{ .Values.discovery.heartbeatInterval | quote }}
+            - name: App__Discovery__JoinToken
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "cmind.secretName" . }}
+                  key: DISCOVERY_JOIN_TOKEN
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.observability.otlpEndpoint | quote }}
+          livenessProbe:
+            httpGet:
+              path: /alive
+              port: {{ .Values.web.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.web.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.web.resources | nindent 12 }}
+          {{- if .Values.web.dockerSocket.enabled }}
+          volumeMounts:
+            - name: docker-sock
+              mountPath: /var/run/docker.sock
+          {{- end }}
+      {{- if .Values.web.dockerSocket.enabled }}
+      volumes:
+        - name: docker-sock
+          hostPath:
+            path: {{ .Values.web.dockerSocket.path }}
+            type: Socket
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cmind.fullname" . }}-web
+  labels:
+    {{- include "cmind.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: web
+  ports:
+    - name: http
+      port: {{ .Values.web.port }}
+      targetPort: {{ .Values.web.port }}
+{{- if .Values.web.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "cmind.fullname" . }}-web
+  labels:
+    {{- include "cmind.labels" . | nindent 4 }}
+  {{- with .Values.web.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.web.ingress.className }}
+  ingressClassName: {{ .Values.web.ingress.className }}
+  {{- end }}
+  {{- if .Values.web.ingress.tls }}
+  tls:
+    - hosts: [{{ .Values.web.ingress.host | quote }}]
+      secretName: {{ include "cmind.fullname" . }}-web-tls
+  {{- end }}
+  rules:
+    - host: {{ .Values.web.ingress.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "cmind.fullname" . }}-web
+                port:
+                  number: {{ .Values.web.port }}
+{{- end }}
+{{- if .Values.web.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "cmind.fullname" . }}-web
+  labels:
+    {{- include "cmind.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "cmind.fullname" . }}-web
+  minReplicas: {{ .Values.web.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.web.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.web.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}

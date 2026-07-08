@@ -19,4 +19,6 @@ public static class DomainErrors
 
     public const string InstanceTransitionInvalid = "domain.instance.transition_invalid";
     public const string NodeMaxInstancesInvalid = "domain.node.max_instances_invalid";
+    public const string NodeEndpointUrlInvalid = "domain.node.endpoint_url_invalid";
+    public const string JoinTokenTooShort = "domain.node.join_token_too_short";
 }

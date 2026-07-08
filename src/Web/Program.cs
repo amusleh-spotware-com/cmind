@@ -10,6 +10,7 @@ using Web;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using MudBlazor.Services;
 using Nodes;
+using Serilog;
 using Web.Auth;
 using Web.Components;
 using Web.Endpoints;
@@ -112,6 +113,7 @@ builder.Services.AddHostedService<LocalNodeSeeder>();
 builder.Services.AddHostedService<InstanceReconciler>();
 
 var app = builder.Build();
+app.UseSerilogRequestLogging();
 app.MapHostHealthEndpoints();
 app.MapGet(HealthEndpoints.Version, () => Results.Ok(new NodeAgentInfoResponse(VersionInfo.Product, NodeAgentProtocol.Version)))
     .AllowAnonymous();

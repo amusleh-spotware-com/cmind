@@ -96,4 +96,25 @@ public static partial class LogMessages
 
     [LoggerMessage(EventId = 1030, Level = LogLevel.Warning, Message = "Prop-guard flattened account {AccountId} ({Count} live instances stopped)")]
     public static partial void PropGuardFlattened(this ILogger logger, Guid accountId, int count);
+
+    [LoggerMessage(EventId = 1031, Level = LogLevel.Information, Message = "Node self-registered: {Name} at {BaseUrl}")]
+    public static partial void NodeSelfRegistered(this ILogger logger, string name, string baseUrl);
+
+    [LoggerMessage(EventId = 1032, Level = LogLevel.Warning, Message = "Node {Name} marked unreachable (no heartbeat within TTL)")]
+    public static partial void NodeMarkedUnreachable(this ILogger logger, string name);
+
+    [LoggerMessage(EventId = 1033, Level = LogLevel.Information, Message = "Node {Name} heartbeat resumed; back online")]
+    public static partial void NodeBackOnline(this ILogger logger, string name);
+
+    [LoggerMessage(EventId = 1034, Level = LogLevel.Error, Message = "Node heartbeat monitor cycle failed")]
+    public static partial void HeartbeatMonitorFailed(this ILogger logger, Exception ex);
+
+    [LoggerMessage(EventId = 1035, Level = LogLevel.Information, Message = "Agent registered with main at {MainUrl} as node {NodeId}")]
+    public static partial void AgentRegistered(this ILogger logger, string mainUrl, Guid nodeId);
+
+    [LoggerMessage(EventId = 1036, Level = LogLevel.Warning, Message = "Agent registration attempt failed: {Error}")]
+    public static partial void AgentRegistrationFailed(this ILogger logger, string error);
+
+    [LoggerMessage(EventId = 1037, Level = LogLevel.Warning, Message = "Node {Name} re-registered with mode {Requested} but is persisted as {Current}; mode change ignored (delete + re-register to change mode)")]
+    public static partial void NodeModeChangeIgnored(this ILogger logger, string name, string requested, string current);
 }

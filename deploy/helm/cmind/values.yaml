@@ -1,0 +1,95 @@
+## cmind Helm values.
+
+image:
+  registry: ghcr.io
+  repository: your-org/cmind
+  # Per-component tags default to Chart.appVersion; override per environment.
+  tag: ""
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+## Secrets. In production, prefer an external Secret / sealed-secret / CSI provider and set
+## existingSecret to its name; the keys below must exist in it.
+secrets:
+  existingSecret: ""
+  pgPassword: "change-me"
+  ownerEmail: "owner@example.com"
+  ownerPassword: "Change-Me-Str0ng!"
+  # Shared cluster secret agents present to self-register (>= 32 chars). Also each agent's JwtSecret.
+  discoveryJoinToken: "change-me-to-a-32-char-min-cluster-secret"
+  # Optional Data Protection cert (base64 PFX) + password for a stable key ring across replicas.
+  dataProtectionCertBase64: ""
+  dataProtectionCertPassword: ""
+
+## Observability. Point at your OTLP collector to ship logs+traces+metrics.
+observability:
+  otlpEndpoint: ""
+
+## In-cluster Postgres (dev/test). Disable and set externalDatabase for managed Postgres.
+postgres:
+  enabled: true
+  image: postgres:17
+  storage: 10Gi
+  storageClass: ""
+
+externalDatabase:
+  # Used when postgres.enabled=false. Full Npgsql connection string (or leave blank and set via secret).
+  connectionString: ""
+
+web:
+  replicas: 2
+  port: 8080
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { cpu: "1", memory: 1Gi }
+  # CBotBuilder + LocalNode need Docker. hostPath mounts the node's docker socket (nodes must run
+  # Docker, not containerd). Disable if you offload all builds/runs to privileged node agents.
+  dockerSocket:
+    enabled: true
+    path: /var/run/docker.sock
+  localNodeEnabled: false
+  ingress:
+    enabled: false
+    className: ""
+    host: cmind.example.com
+    tls: false
+    annotations: {}
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+
+mcp:
+  replicas: 1
+  port: 8080
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 70
+
+## Self-registering node agents. Each pod boots, self-registers to the Web service, then
+## heartbeats. Scale replicas for more run/backtest capacity.
+nodeAgent:
+  enabled: true
+  replicas: 2
+  port: 8080
+  mode: Mixed
+  maxInstances: 10
+  heartbeatIntervalSeconds: 30
+  allowedImagePrefix: "ghcr.io/spotware/"
+  # Privileged so the agent can start its own in-pod dockerd (see ExternalNode Dockerfile).
+  privileged: true
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { cpu: "2", memory: 2Gi }
+
+discovery:
+  enabled: true
+  heartbeatTtl: "00:01:30"
+  monitorInterval: "00:00:30"
+  heartbeatInterval: "00:00:30"

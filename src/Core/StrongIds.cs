@@ -193,3 +193,29 @@ public readonly record struct DockerImageTag
     public override string ToString() => Value;
     public static DockerImageTag Latest => new(Constants.DockerImages.DefaultTag);
 }
+
+public readonly record struct NodeEndpointUrl
+{
+    public string Value { get; }
+    public NodeEndpointUrl(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)
+            || !Uri.TryCreate(value, UriKind.Absolute, out var uri)
+            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+            throw new Domain.DomainException(Constants.DomainErrors.NodeEndpointUrlInvalid);
+        Value = value.TrimEnd('/');
+    }
+    public override string ToString() => Value;
+}
+
+public readonly record struct ClusterJoinToken
+{
+    public string Value { get; }
+    public ClusterJoinToken(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Length < Constants.NodeAgentAuth.MinSecretLength)
+            throw new Domain.DomainException(Constants.DomainErrors.JoinTokenTooShort);
+        Value = value;
+    }
+    public override string ToString() => Value;
+}

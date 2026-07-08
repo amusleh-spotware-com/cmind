@@ -53,6 +53,12 @@ public static class NodeAgentProtocol
     public const int Version = 1;
 }
 
+public static class NodeDiscoveryRoutes
+{
+    // Route on the MAIN node that agents self-register + heartbeat against.
+    public const string Register = "/api/nodes/register";
+}
+
 public static class NodeAgentRoutes
 {
     public const string Base = "/api";
@@ -73,6 +79,15 @@ public static class NodeAgentRoutes
 public static class ConfigSections
 {
     public const string App = "App";
+}
+
+public static class ObservabilityDefaults
+{
+    public const string WebServiceName = "cmind-web";
+    public const string McpServiceName = "cmind-mcp";
+    public const string NodeAgentServiceName = "cmind-node-agent";
+    public const string OtlpEndpointKey = "OTEL_EXPORTER_OTLP_ENDPOINT";
+    public const string ServiceNameProperty = "service.name";
 }
 
 public static class AiConstants
@@ -174,6 +189,7 @@ public static class FilePaths
     public static readonly string LocalRunWorkRootDefault =
         System.IO.Path.Combine(System.IO.Path.GetTempPath(), "app", "local-runs");
     public const string DataRootPrefix = "/var/app/";
+    public const string NodeDataDirDefault = "/var/app/data";
 }
 
 public static class LocalNodeDefaults

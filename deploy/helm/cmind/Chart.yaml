@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cmind
+description: Multi-tenant cTrader cBot build/run/backtest platform (Web + MCP + self-registering node agents)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

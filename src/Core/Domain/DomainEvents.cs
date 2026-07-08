@@ -24,3 +24,9 @@ public sealed record InstanceFailed(InstanceId InstanceId, UserId UserId, string
 public sealed record BacktestCompleted(InstanceId InstanceId, UserId UserId) : DomainEventBase;
 
 public sealed record McpApiKeyRevoked(McpApiKeyId KeyId, UserId UserId) : DomainEventBase;
+
+public sealed record NodeRegistered(NodeId NodeId, string Name) : DomainEventBase;
+
+public sealed record NodeWentOffline(NodeId NodeId, string Name) : DomainEventBase;
+
+public sealed record NodeCameOnline(NodeId NodeId, string Name) : DomainEventBase;

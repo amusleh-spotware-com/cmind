@@ -20,6 +20,7 @@ public sealed record AppOptions
     public TimeSpan InstanceReconcileInterval { get; init; } = TimeSpan.FromMinutes(1);
     public TimeSpan InstanceStartupTimeout { get; init; } = TimeSpan.FromMinutes(10);
     public LocalNodeOptions LocalNode { get; init; } = new();
+    public DiscoveryOptions Discovery { get; init; } = new();
     public AiOptions Ai { get; init; } = new();
     public AgentOptions Agent { get; init; } = new();
     public AlertOptions Alerts { get; init; } = new();
@@ -56,6 +57,15 @@ public sealed record AiOptions
     public bool RiskGuardAutoStop { get; init; }
     public TimeSpan RiskGuardInterval { get; init; } = TimeSpan.FromMinutes(5);
     public bool Enabled => !string.IsNullOrWhiteSpace(ApiKey);
+}
+
+public sealed record DiscoveryOptions
+{
+    public bool Enabled { get; init; }
+    public string? JoinToken { get; init; }
+    public TimeSpan HeartbeatTtl { get; init; } = TimeSpan.FromSeconds(90);
+    public TimeSpan MonitorInterval { get; init; } = TimeSpan.FromSeconds(30);
+    public TimeSpan HeartbeatInterval { get; init; } = TimeSpan.FromSeconds(30);
 }
 
 public sealed record LocalNodeOptions

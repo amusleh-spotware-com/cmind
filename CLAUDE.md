@@ -34,7 +34,7 @@ src/
     StrongIds.cs             — strong ID structs + Email/Symbol/Timeframe/DockerImageTag
     Abstractions.cs          — ISecretProtector, IPasswordHasher, INodeScheduler,
                                IContainerDispatcher(Factory), IGhcrTagProvider, ICurrentUser
-    Options/AppOptions.cs    — binds "App" section, incl. nested LocalNodeOptions + AiOptions
+    Options/AppOptions.cs    — binds "App" section, incl. nested LocalNodeOptions + DiscoveryOptions + AiOptions
     Ai/AiContracts.cs        — IAiClient, IAiFeatureService + AI DTOs (AiTextRequest/Result/Image/InstanceContext)
     Constants/AppConstants.cs — all magic strings
     Logging/LogMessages.cs   — source-generated ILogger extensions
@@ -56,13 +56,17 @@ src/
                                   per-node HS256 JWT signed with that node's shared secret
     LocalContainerDispatcher.cs — same ops via local `docker` process calls, for the web host's LocalNode
     NodeStatsPoller.cs          — BackgroundService, polls per AppOptions.NodeStatsPollInterval
+    NodeHeartbeatMonitor.cs     — BackgroundService; marks self-registered RemoteNodes unreachable when
+                                  their heartbeat exceeds AppOptions.Discovery.HeartbeatTtl
     RunCompletionPoller.cs / BacktestCompletionPoller.cs — reconcile exited run/backtest containers
     AiRiskGuard.cs              — BackgroundService; when AppOptions.Ai.RiskGuardEnabled, AI-assesses running bots
     ContainerCommandHelpers.cs  — BuildConsoleArgsList (tokens) / BuildConsoleArgs (shell string)
     Builder/CBotBuilder.cs      — sandboxed builder; `docker run` an SDK image + dotnet build
     Builder/Templates/          — embedded C#/Python starter project files
   ExternalNode/  — standalone HTTP node agent (deployed on remote servers).
-    Program.cs                  — minimal API, JWT-bearer auth, image-prefix guard
+    Program.cs                  — minimal API, JWT-bearer auth, image-prefix guard, Serilog
+    NodeRegistrationClient.cs   — BackgroundService; self-registers + heartbeats to the main node's
+                                  /api/nodes/register when NodeAgent:MainUrl+AdvertiseUrl are set
     DockerService.cs            — pulls image + runs/stops/inspects containers via the docker CLI,
                                   stateless (looks containers up by `app.instance` label)
     NodeAgentOptions.cs, Dockerfile
@@ -98,7 +102,8 @@ tests/
 - Soft delete: entities inherit `AuditedEntity`/`ISoftDeletable`; `DataContext` global query filter + converts `Deleted` → `Modified`+`IsDeleted` in `SaveChanges`.
 - Strong IDs/value objects in `Core/StrongIds.cs`; entities still use `Guid` for EF mapping (value-converter migration follow-up).
 - Never log/store secrets plaintext — use `ISecretProtector` with `EncryptionPurposes` strings. Data Protection key ring PFX-encrypted via base64 env var.
-- Health checks: `AddHealthChecks().AddNpgSql(...)`, Development only.
+- Health checks: `AddHealthChecks().AddNpgSql(...)`. `/health` (readiness) + `/alive` (liveness) mapped in **all** environments (K8s/cloud probes); MCP exposes `/version`.
+- Logging: Serilog (compact JSON stdout) in Web/Mcp/ExternalNode via `Infrastructure/Observability/SerilogConfigurator` (Web+Mcp) or inline (ExternalNode); OTLP sink when `OTEL_EXPORTER_OTLP_ENDPOINT` set. OTel keeps metrics+traces. Still author app logs through `LogMessages`.
 - Web security wiring (in `Web/Program.cs`): auth cookie is `HttpOnly` + `SameSite=Lax` + `SecurePolicy=Always`; `Web/Security/SecurityHeaders.cs` adds `X-Content-Type-Options`/`X-Frame-Options`/`Referrer-Policy`/`Permissions-Policy`; login/auth group is rate-limited (`RateLimitPolicies.Auth`, fixed-window per-IP); OpenAPI is mapped in Development only.
 
 ## Common commands
@@ -118,6 +123,8 @@ dotnet ef database update    -p src/Infrastructure -s src/Infrastructure
 - `CBotBuilder` runs on web host, not remote nodes — Web container needs Docker socket access.
 - Run/backtest containers run on nodes picked by `NodeScheduler`, dispatched via `ContainerDispatcherFactory` to `HttpContainerDispatcher` (remote, via `ExternalNode` agent HTTP API) or `LocalContainerDispatcher` (web host's own `LocalNode`, seeded by `LocalNodeSeeder`).
 - External nodes get **no** SSH/shell access. Main node talks to `ExternalNode` agent over HTTP; each `RemoteNode` stores `BaseUrl` + encrypted per-node shared secret. Every request carries short-lived HS256 JWT (`iss=app-main`, `aud=app-node`, 5-min expiry) signed with node's secret; agent validates. Agent only runs images matching `AllowedImagePrefix` (default `ghcr.io/spotware/`), execs docker via `ArgumentList` (no shell), stateless (finds containers by `app.instance` label → survives restart). Deploy with docker daemon available; run container `--privileged` (starts local dockerd) or run binary on host with docker.
+- Node auto-discovery: agents self-register + heartbeat to the main's `POST /api/nodes/register` (join-token bearer, constant-time compare, protocol-version gated). Main upserts a `RemoteNode` **by name** (stable identity across IP changes); auto-registered nodes share the cluster secret (`App:Discovery:JoinToken`) as their dispatch secret. `RemoteNode.SelfRegister/RecordHeartbeat/MarkUnreachable/IsHeartbeatStale` are domain methods; `IsActive/AcceptsRun/AcceptsBacktest` gate on `IsReachable` (a heartbeat flag, **not** a TPH type change — `OfflineNode`/`DecommissioningNode` remain admin states). `NodeHeartbeatMonitor` reconciles staleness. Gated on `App:Discovery:Enabled`; manual `POST /api/nodes` still works. Docs: `docs/operations/node-discovery.md`.
+- Deploy artifacts: `Dockerfile.{web,mcp,node-agent}`, root `docker-compose.yml`+`.env.example` (local), `deploy/helm/cmind` (K8s; node agents = privileged StatefulSet + headless Service for per-pod addressability), `deploy/azure/main.bicep` (Container Apps), `deploy/aws` (ECS Fargate + RDS Terraform). Fargate/Container-Apps can't run privileged node agents → agents go on AKS/EKS/EC2/VM. See `docs/deployment/`.
 - cTrader Console backtest CLI (verified live): requires `--data-mode` (default `m1`), dates `dd/MM/yyyy HH:mm`, `params.cbotset` is JSON (`{"Parameters":{...}}`) passed as positional arg; `run` rejects `--data-dir` (backtest-only). See `ContainerCommandHelpers`.
 - `BacktestCompletionPoller` polls `RunningBacktestInstance` on `AppOptions.BacktestCompletionPollInterval` (backtest containers self-exit via `--exit-on-stop`). `RunCompletionPoller` does same for `RunningRunInstance`, using `IContainerDispatcher.GetExitCodeAsync` → exit 0/null = `StoppedRunInstance`, non-zero = `FailedRunInstance`. Backtest: report present → `CompletedBacktestInstance` (stores `ReportJson`); missing → `FailedBacktestInstance`.
 - Equity curve for `InstanceDetail` chart parsed from `CompletedBacktestInstance.ReportJson` by `ContainerCommandHelpers.ParseEquityCurve`. Real report nests points at `equity.points[]` (`{balance,minEquity,maxEquity,timestamp}`); parser also scans root keys `equityHistory`/`equityCurve`/`history`/`equity`.

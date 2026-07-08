@@ -1,11 +1,18 @@
+using System.Security.Cryptography;
 using System.Text;
 using Core;
 using Core.Constants;
+using Core.Domain;
+using Core.Logging;
+using Core.NodeAgent;
+using Core.Options;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Web.Endpoints;
 
@@ -17,6 +24,8 @@ public static class NodeEndpoints
 {
     public static IEndpointRouteBuilder MapNodeEndpoints(this IEndpointRouteBuilder app)
     {
+        app.MapPost(NodeDiscoveryRoutes.Register, RegisterNodeAsync).AllowAnonymous();
+
         var g = app.MapGroup("/api/nodes").RequireAuthorization("AdminOrAbove");
 
         g.MapGet("/", async (DataContext db) =>
@@ -117,6 +126,80 @@ public static class NodeEndpoints
 
         return app;
     }
+
+    private static async Task<IResult> RegisterNodeAsync(
+        NodeRegistrationRequest req,
+        HttpContext ctx,
+        DataContext db,
+        ISecretProtector protector,
+        IOptionsMonitor<AppOptions> options,
+        ILoggerFactory loggerFactory)
+    {
+        var discovery = options.CurrentValue.Discovery;
+        if (!discovery.Enabled || string.IsNullOrWhiteSpace(discovery.JoinToken))
+            return Results.NotFound();
+
+        var presented = ExtractBearer(ctx);
+        if (presented is null || !TokensMatch(presented, discovery.JoinToken))
+            return Results.Unauthorized();
+
+        if (req.ProtocolVersion != NodeAgentProtocol.Version)
+            return Results.Problem(
+                $"Protocol version mismatch: main speaks {NodeAgentProtocol.Version}, agent sent {req.ProtocolVersion}.",
+                statusCode: StatusCodes.Status426UpgradeRequired);
+
+        if (string.IsNullOrWhiteSpace(req.Name))
+            return Results.BadRequest("name required");
+
+        NodeEndpointUrl endpoint;
+        NodeMode mode;
+        try
+        {
+            endpoint = new NodeEndpointUrl(req.BaseUrl);
+            mode = NodeMode.FromName(req.Mode);
+        }
+        catch (Exception ex) when (ex is DomainException or ArgumentException)
+        {
+            return Results.BadRequest(ex.Message);
+        }
+
+        var maxInstances = req.MaxInstances <= 0 ? DefaultMaxInstances : req.MaxInstances;
+        var dataDir = string.IsNullOrWhiteSpace(req.DataDirPath) ? FilePaths.NodeDataDirDefault : req.DataDirPath;
+        var heartbeatSeconds = (int)discovery.HeartbeatInterval.TotalSeconds;
+        var log = loggerFactory.CreateLogger(nameof(NodeEndpoints));
+
+        var existing = await db.Nodes.OfType<RemoteNode>().FirstOrDefaultAsync(n => n.Name == req.Name);
+        if (existing is not null)
+        {
+            if (!string.Equals(existing.ModeName, mode.Name, StringComparison.Ordinal))
+                log.NodeModeChangeIgnored(existing.Name, mode.Name, existing.ModeName);
+            existing.RecordHeartbeat(endpoint, maxInstances);
+            await db.SaveChangesAsync();
+            return Results.Ok(new NodeRegistrationResponse(existing.Id.Value, heartbeatSeconds));
+        }
+
+        var secret = protector.Protect(Encoding.UTF8.GetBytes(discovery.JoinToken), EncryptionPurposes.NodeApiSecret);
+        var node = RemoteNode.SelfRegister(mode, req.Name, endpoint, secret, dataDir, maxInstances);
+        db.Nodes.Add(node);
+        await db.SaveChangesAsync();
+        log.NodeSelfRegistered(node.Name, endpoint.Value);
+        return Results.Ok(new NodeRegistrationResponse(node.Id.Value, heartbeatSeconds));
+    }
+
+    private static string? ExtractBearer(HttpContext ctx)
+    {
+        var header = ctx.Request.Headers.Authorization.ToString();
+        var prefix = $"{AuthSchemes.Bearer} ";
+        return header.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+            ? header[prefix.Length..].Trim()
+            : null;
+    }
+
+    private static bool TokensMatch(string presented, string expected)
+        => CryptographicOperations.FixedTimeEquals(
+            Encoding.UTF8.GetBytes(presented), Encoding.UTF8.GetBytes(expected));
+
+    private const int DefaultMaxInstances = 10;
 }
 
 public record LocalToggleRequest(bool Enabled);

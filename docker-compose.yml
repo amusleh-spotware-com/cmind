@@ -1,0 +1,59 @@
+# One-command local stack: Postgres + Web + MCP.
+#   cp .env.example .env   # then edit secrets
+#   docker compose up --build
+# Web -> http://localhost:8080  (owner login from .env), MCP -> http://localhost:8081/mcp
+#
+# The Web container mounts the host Docker socket so the in-app builder and the seeded
+# LocalNode can run cTrader Console containers on your machine. See docs/deployment/local.md.
+name: cmind
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_DB: appdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d appdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__appdb: "Host=postgres;Port=5432;Database=appdb;Username=postgres;Password=${PG_PASSWORD}"
+      App__OwnerEmail: ${OWNER_EMAIL}
+      App__OwnerPassword: ${OWNER_PASSWORD}
+      App__LocalNode__Enabled: "true"
+    ports:
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+  mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__appdb: "Host=postgres;Port=5432;Database=appdb;Username=postgres;Password=${PG_PASSWORD}"
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+
+volumes:
+  pgdata:

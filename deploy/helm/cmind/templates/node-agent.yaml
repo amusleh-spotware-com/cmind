@@ -1,0 +1,95 @@
+{{- if .Values.nodeAgent.enabled }}
+{{- $svc := printf "%s-node-agent" (include "cmind.fullname" .) }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $svc }}
+  labels:
+    {{- include "cmind.labels" . | nindent 4 }}
+    app.kubernetes.io/component: node-agent
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: node-agent
+  ports:
+    - name: http
+      port: {{ .Values.nodeAgent.port }}
+      targetPort: {{ .Values.nodeAgent.port }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $svc }}
+  labels:
+    {{- include "cmind.labels" . | nindent 4 }}
+    app.kubernetes.io/component: node-agent
+spec:
+  serviceName: {{ $svc }}
+  replicas: {{ .Values.nodeAgent.replicas }}
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: node-agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: node-agent
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: node-agent
+          image: "{{ include "cmind.image" . }}-node-agent:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.nodeAgent.privileged }}
+          securityContext:
+            privileged: true
+          {{- end }}
+          ports:
+            - containerPort: {{ .Values.nodeAgent.port }}
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: ASPNETCORE_URLS
+              value: "http://+:{{ .Values.nodeAgent.port }}"
+            - name: NodeAgent__JwtSecret
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "cmind.secretName" . }}
+                  key: DISCOVERY_JOIN_TOKEN
+            - name: NodeAgent__MainUrl
+              value: {{ include "cmind.webUrl" . | quote }}
+            - name: NodeAgent__AdvertiseUrl
+              value: "http://$(POD_NAME).{{ $svc }}.$(POD_NAMESPACE).svc.cluster.local:{{ .Values.nodeAgent.port }}"
+            - name: NodeAgent__NodeName
+              value: "$(POD_NAME)"
+            - name: NodeAgent__Mode
+              value: {{ .Values.nodeAgent.mode | quote }}
+            - name: NodeAgent__MaxInstances
+              value: {{ .Values.nodeAgent.maxInstances | quote }}
+            - name: NodeAgent__HeartbeatIntervalSeconds
+              value: {{ .Values.nodeAgent.heartbeatIntervalSeconds | quote }}
+            - name: NodeAgent__AllowedImagePrefix
+              value: {{ .Values.nodeAgent.allowedImagePrefix | quote }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.observability.otlpEndpoint | quote }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.nodeAgent.port }}
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.nodeAgent.resources | nindent 12 }}
+{{- end }}

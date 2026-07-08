@@ -1,0 +1,18 @@
+cmind installed as release {{ .Release.Name }} in namespace {{ .Release.Namespace }}.
+
+Web service:  {{ include "cmind.fullname" . }}-web:{{ .Values.web.port }}
+MCP service:  {{ include "cmind.fullname" . }}-mcp:{{ .Values.mcp.port }}
+{{- if .Values.nodeAgent.enabled }}
+Node agents:  {{ .Values.nodeAgent.replicas }} replica(s) self-registering to Web (mode {{ .Values.nodeAgent.mode }}).
+{{- end }}
+
+1. Port-forward the Web UI:
+   kubectl port-forward svc/{{ include "cmind.fullname" . }}-web {{ .Values.web.port }}:{{ .Values.web.port }}
+   Open http://localhost:{{ .Values.web.port }} and sign in with the seeded owner.
+
+2. Watch node auto-discovery:
+   kubectl get pods -l app.kubernetes.io/component=node-agent
+   Nodes appear on the Web "Nodes" page within one heartbeat interval.
+
+SECURITY: rotate secrets.discoveryJoinToken (>=32 chars) and put TLS in front of Web/agents
+in production. See docs/operations/node-discovery.md.

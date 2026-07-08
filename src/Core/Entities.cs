@@ -390,6 +390,8 @@ public abstract class RemoteNode : Node
 {
     [MaxLength(512)] public string BaseUrl { get; internal set; } = default!;
     public byte[] EncryptedApiSecret { get; internal set; } = default!;
+    public DateTimeOffset? LastHeartbeatAt { get; private set; }
+    public bool IsReachable { get; private set; } = true;
 
     public override bool IsLocal => false;
 
@@ -408,33 +410,66 @@ public abstract class RemoteNode : Node
         node.EncryptedApiSecret = encryptedApiSecret;
         return node;
     }
+
+    public static RemoteNode SelfRegister(NodeMode mode, string name, NodeEndpointUrl endpoint,
+        byte[] encryptedApiSecret, string dataDirPath, int maxInstances)
+    {
+        var node = Create(mode, name, endpoint.Value, encryptedApiSecret, dataDirPath, maxInstances);
+        node.LastHeartbeatAt = DateTimeOffset.UtcNow;
+        node.IsReachable = true;
+        node.RaiseDomainEvent(new NodeRegistered(node.Id, node.Name));
+        return node;
+    }
+
+    public void RecordHeartbeat(NodeEndpointUrl endpoint, int maxInstances)
+    {
+        if (maxInstances <= 0) throw new DomainException(DomainErrors.NodeMaxInstancesInvalid);
+        BaseUrl = endpoint.Value;
+        MaxInstances = maxInstances;
+        LastHeartbeatAt = DateTimeOffset.UtcNow;
+        var wasUnreachable = !IsReachable;
+        IsReachable = true;
+        Touch();
+        if (wasUnreachable) RaiseDomainEvent(new NodeCameOnline(Id, Name));
+    }
+
+    public bool IsHeartbeatStale(TimeSpan ttl, DateTimeOffset asOf) =>
+        LastHeartbeatAt is { } last && asOf - last > ttl;
+
+    public void MarkUnreachable()
+    {
+        if (!IsReachable) return;
+        IsReachable = false;
+        Touch();
+        RaiseDomainEvent(new NodeWentOffline(Id, Name));
+    }
 }
 
 public sealed class ActiveRunNode : RemoteNode
 {
     public override string ModeName => "Run";
-    public override string StatusName => "Active";
-    public override bool IsActive => true;
-    public override bool AcceptsRun => true;
+    public override string StatusName => IsReachable ? "Active" : "Unreachable";
+    public override bool IsActive => IsReachable;
+    public override bool AcceptsRun => IsReachable;
     public override bool AcceptsBacktest => false;
 }
 
 public sealed class ActiveBacktestNode : RemoteNode
 {
     public override string ModeName => "Backtest";
-    public override string StatusName => "Active";
-    public override bool IsActive => true;
+    public override string StatusName => IsReachable ? "Active" : "Unreachable";
+    public override bool IsActive => IsReachable;
     public override bool AcceptsRun => false;
-    public override bool AcceptsBacktest => true;
+    public override bool AcceptsBacktest => IsReachable;
 }
 
 public sealed class ActiveMixedNode : RemoteNode
 {
     public override string ModeName => "Mixed";
-    public override string StatusName => "Active";
-    public override bool IsActive => true;
-    public override bool AcceptsRun => true;
-    public override bool AcceptsBacktest => true;
+    public override string StatusName => IsReachable ? "Active" : "Unreachable";
+    public override bool IsActive => IsReachable;
+    public override bool AcceptsRun => IsReachable;
+    public override bool AcceptsBacktest => IsReachable;
 }
 
 public sealed class DecommissioningNode : RemoteNode

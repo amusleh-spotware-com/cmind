@@ -168,8 +168,8 @@ public static class NodeEndpoints
         var heartbeatSeconds = (int)discovery.HeartbeatInterval.TotalSeconds;
         var log = loggerFactory.CreateLogger(nameof(NodeEndpoints));
 
-        var existing = await db.Nodes.OfType<RemoteNode>().FirstOrDefaultAsync(n => n.Name == req.Name);
-        if (existing is not null)
+        var existingNode = await db.Nodes.FirstOrDefaultAsync(n => n.Name == req.Name);
+        if (existingNode is RemoteNode existing)
         {
             if (!string.Equals(existing.ModeName, mode.Name, StringComparison.Ordinal))
                 log.NodeModeChangeIgnored(existing.Name, mode.Name, existing.ModeName);
@@ -177,6 +177,8 @@ public static class NodeEndpoints
             await db.SaveChangesAsync();
             return Results.Ok(new NodeRegistrationResponse(existing.Id.Value, heartbeatSeconds));
         }
+        if (existingNode is not null)
+            return Results.Conflict("node name already in use by a non-remote node");
 
         var secret = protector.Protect(Encoding.UTF8.GetBytes(discovery.JoinToken), EncryptionPurposes.NodeApiSecret);
         var node = RemoteNode.SelfRegister(mode, req.Name, endpoint, secret, dataDir, maxInstances);

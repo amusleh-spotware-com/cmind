@@ -40,13 +40,17 @@ public sealed class NodeHeartbeatMonitor(
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
         var now = DateTimeOffset.UtcNow;
 
-        var nodes = await db.Nodes.OfType<RemoteNode>()
-            .Where(n => n.IsReachable && n.LastHeartbeatAt != null)
+        // OfType<RemoteNode>() over the soft-delete-filtered TPH set does not translate on Npgsql;
+        // enumerate the concrete remote subtypes, then filter reachability in memory.
+        var candidates = await db.Nodes
+            .Where(n => n is ActiveRunNode || n is ActiveBacktestNode || n is ActiveMixedNode
+                        || n is DecommissioningNode || n is OfflineNode)
             .ToListAsync(ct);
 
         var changed = false;
-        foreach (var node in nodes)
+        foreach (var node in candidates.Cast<RemoteNode>())
         {
+            if (!node.IsReachable || node.LastHeartbeatAt is null) continue;
             if (!node.IsHeartbeatStale(ttl, now)) continue;
             node.MarkUnreachable();
             log.NodeMarkedUnreachable(node.Name);

@@ -103,9 +103,6 @@ public static partial class LogMessages
     [LoggerMessage(EventId = 1032, Level = LogLevel.Warning, Message = "Node {Name} marked unreachable (no heartbeat within TTL)")]
     public static partial void NodeMarkedUnreachable(this ILogger logger, string name);
 
-    [LoggerMessage(EventId = 1033, Level = LogLevel.Information, Message = "Node {Name} heartbeat resumed; back online")]
-    public static partial void NodeBackOnline(this ILogger logger, string name);
-
     [LoggerMessage(EventId = 1034, Level = LogLevel.Error, Message = "Node heartbeat monitor cycle failed")]
     public static partial void HeartbeatMonitorFailed(this ILogger logger, Exception ex);
 

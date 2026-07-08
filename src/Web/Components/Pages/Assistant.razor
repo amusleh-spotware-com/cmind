@@ -66,6 +66,17 @@
             </MudButton>
         </MudPaper>
     </MudTabPanel>
+    <MudTabPanel Text="Exposure Check">
+        <MudPaper Class="pa-4" Elevation="0">
+            <MudText Typo="Typo.body2" Class="mb-2">
+                Checks current news and sentiment for the symbols your live bots are trading and flags any that warrant de-risking.
+            </MudText>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Shield" OnClick="ExposureCheck" Disabled="_busy">
+                Check live exposure
+            </MudButton>
+        </MudPaper>
+    </MudTabPanel>
     <MudTabPanel Text="Portfolio Digest">
         <MudPaper Class="pa-4" Elevation="0">
             <MudText Typo="Typo.body2" Class="mb-2">
@@ -164,6 +175,7 @@
     }
 
     private Task Digest() => PostTextAsync("/api/ai/portfolio-digest", new { });
+    private Task ExposureCheck() => PostTextAsync("/api/ai/exposure-check", new { });
 
     private Task TuneAdvice()
     {

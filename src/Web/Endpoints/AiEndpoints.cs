@@ -64,6 +64,21 @@ public static class AiEndpoints
             return Results.Ok(await ai.ProposeParamSetsAsync(name, current, null, ct));
         });
 
+        g.MapPost("/exposure-check", async (
+            DataContext db, ICurrentUser u, IAiFeatureService ai, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var live = await db.Instances.OfType<RunningRunInstance>()
+                .Where(i => i.UserId == uid && i.Symbol != null)
+                .OrderByDescending(i => i.CreatedAt)
+                .Take(AiConstants.ExposureMaxInstances)
+                .Select(i => new AiInstanceContext(i.CBot.Name, "Run", "Running", i.Symbol, i.Timeframe, null))
+                .ToListAsync(ct);
+            if (live.Count == 0)
+                return Results.Ok(new AiResult(false, string.Empty, "no live positions to check"));
+            return Results.Ok(await ai.AssessLiveExposureAsync(live, AiConstants.ExposureMaxTokens, ct));
+        });
+
         g.MapPost("/portfolio-digest", async (
             DataContext db, ICurrentUser u, IAiFeatureService ai, CancellationToken ct) =>
         {

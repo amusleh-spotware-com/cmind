@@ -74,6 +74,18 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
         return client.CompleteAsync(new AiTextRequest(AiPrompts.RiskActionSystem, user.ToString(), MaxTokens: maxTokens), ct);
     }
 
+    public Task<AiResult> AssessLiveExposureAsync(IReadOnlyList<AiInstanceContext> live, int maxTokens, CancellationToken ct)
+    {
+        var symbols = string.Join(", ", live.Select(i => i.Symbol ?? "?").Distinct());
+        var user = new StringBuilder();
+        user.AppendLine($"Currently traded symbols: {symbols}");
+        user.AppendLine("Live bots:");
+        foreach (var i in live)
+            user.AppendLine($"- {i.CBotName} {i.Symbol ?? "?"} {i.Timeframe ?? "?"}");
+        return client.CompleteAsync(new AiTextRequest(
+            AiPrompts.ExposureSystem, user.ToString(), MaxTokens: maxTokens, EnableWebSearch: true), ct);
+    }
+
     public Task<AiResult> MarketSentimentAsync(string symbol, CancellationToken ct) =>
         client.CompleteAsync(new AiTextRequest(
             AiPrompts.SentimentSystem,
@@ -191,6 +203,13 @@ internal static class AiPrompts
         "be alerted to right now. Output ONLY a JSON object and nothing else (no prose, no code fences): " +
         "{\"alert\": boolean, \"severity\": \"info\"|\"warning\"|\"critical\", \"message\": string (one or two sentences, " +
         "cite the driver)}. Set alert=false when nothing is noteworthy. Not financial advice.";
+
+    public const string ExposureSystem =
+        "You are a risk analyst watching a trader's LIVE open exposure. Using current web information for each symbol " +
+        "the trader is actively running a bot on, flag any adverse sentiment, breaking news, or imminent high-impact " +
+        "events that argue for de-risking that specific position. For each symbol give: a one-line read and a clear " +
+        "recommendation (hold / reduce / flatten) with the driver and today's date. Only raise real concerns. " +
+        "Cite sources. Not financial advice.";
 
     public const string SentimentSystem =
         "You are an FX/CFD market analyst. Using current web information, summarize sentiment, key drivers, and upcoming " +

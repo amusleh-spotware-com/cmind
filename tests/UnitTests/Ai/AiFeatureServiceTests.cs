@@ -137,6 +137,18 @@ public sealed class AiFeatureServiceTests
     }
 
     [Fact]
+    public async Task AssessLiveExposure_enables_web_search_and_lists_symbols()
+    {
+        var client = Client(AiResult.Ok("hold"));
+        var service = new AiFeatureService(client);
+        var live = new[] { new AiInstanceContext("Alpha", "Run", "Running", "EURUSD", "h1", null) };
+        await service.AssessLiveExposureAsync(live, 2000, default);
+        await client.Received().CompleteAsync(
+            Arg.Is<AiTextRequest>(r => r.EnableWebSearch && r.MaxTokens == 2000 && r.User.Contains("EURUSD")),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public void Enabled_reflects_underlying_client()
     {
         new AiFeatureService(Client(AiResult.Ok(""), enabled: false)).Enabled.Should().BeFalse();

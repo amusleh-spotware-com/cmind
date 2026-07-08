@@ -15,6 +15,31 @@ AI integrations, an **AI-first assistant layer** (Claude-powered cBot codegen, b
 analysis, review, optimization, sentiment, and a background risk guard), and .NET Aspire
 orchestration.
 
+## ✨ Features
+
+### 🤖 AI-first (Claude-powered)
+- **💬 Strategy Builder** — plain-English prompt → runnable cBot, with a **codegen → build → self-repair** loop
+- **⚙️ Optimization loop** — AI proposes param sets, each persisted + backtested across nodes, closed-loop
+- **🧠 Autonomous portfolio agent** — mandate-driven proposals + a full decision journal
+- **🛡️ Acting risk guard** — background agent AI-assesses running bots, opt-in **auto-stop** on critical risk
+- **🚨 Prop-firm exposure guardian** — drawdown/exposure limits with **auto-flatten**
+- **📰 Live exposure check** — news-driven de-risk on held symbols (web-search grounded)
+- **🗣️ Pre-deploy strategy debate** — bull / bear / risk perspectives before you go live
+- **📊 Portfolio digest** — cross-instance AI review
+- **🎯 Tune Advisor** — backtest-decay detection
+- **🔔 AI market alerts** engine
+- **🔍 Plus** — cBot review, backtest analysis, post-mortems, market sentiment, chart-vision design, marketplace curation
+
+### 🏗️ Platform
+- **🖥️ In-browser Monaco IDE** — build C# **and** Python cBots via sandboxed `dotnet build`
+- **🌐 Auto-discovering node fleet** — agents self-register + heartbeat; scheduler picks least-loaded node
+- **📡 MCP server** — HTTP + SSE, per-user API keys, exposes cBot / instance / AI tools
+- **📈 Run & backtest** across remote nodes and/or local host, live logs over SignalR, equity-curve charts
+- **☸️ Deploy anywhere** — Docker Compose, Helm/K8s, Azure Bicep, AWS Terraform
+- **🔒 Hardened** — Argon2id hashing, cert-protected Data Protection key ring, per-node HS256 JWT, rate limiting, security headers
+- **🧭 Strict Domain-Driven Design** — rich aggregates, value objects, domain events
+- **📟 Observability** — Serilog structured JSON + OpenTelemetry (metrics, traces, logs; OTLP export)
+
 **Contents:** [Stack](#stack) · [Solution layout](#solution-layout) · [Prerequisites](#prerequisites)
 · [Configuration](#configuration) · [External nodes](#external-nodes) · [Build & run](#build--run)
 · [Deployment](#deployment) · [Step-by-step guide](#step-by-step-guide) · [Tests](#tests) · [Contributing](#contributing)

@@ -89,6 +89,16 @@ public static class AiConstants
     public const string DisabledMessage = "AI features are not configured (set App:Ai:ApiKey).";
 }
 
+public static class AgentConstants
+{
+    public const string ProposalKindBacktest = "Backtest";
+    public const int ActionMaxTokens = 1500;
+    public const int MaxReasoningChars = 4000;
+    public const int MaxProposalsPerCycleDefault = 3;
+    public const string DefaultSymbol = "EURUSD";
+    public const string DefaultTimeframe = "h1";
+}
+
 public static class ConnectionStrings
 {
     public const string AppDb = "appdb";

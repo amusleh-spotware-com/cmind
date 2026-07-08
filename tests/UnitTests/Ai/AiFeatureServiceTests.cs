@@ -64,6 +64,16 @@ public sealed class AiFeatureServiceTests
     }
 
     [Fact]
+    public async Task ProposeAgentAction_forwards_max_tokens_and_disables_web_search()
+    {
+        var client = Client(AiResult.Ok("{}"));
+        var service = new AiFeatureService(client);
+        await service.ProposeAgentActionAsync("Bot", "grow safely", "{}", null, 1500, default);
+        await client.Received().CompleteAsync(
+            Arg.Is<AiTextRequest>(r => r.MaxTokens == 1500 && !r.EnableWebSearch), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public void Enabled_reflects_underlying_client()
     {
         new AiFeatureService(Client(AiResult.Ok(""), enabled: false)).Enabled.Should().BeFalse();

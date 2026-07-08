@@ -21,6 +21,14 @@ public sealed record AppOptions
     public TimeSpan InstanceStartupTimeout { get; init; } = TimeSpan.FromMinutes(10);
     public LocalNodeOptions LocalNode { get; init; } = new();
     public AiOptions Ai { get; init; } = new();
+    public AgentOptions Agent { get; init; } = new();
+}
+
+public sealed record AgentOptions
+{
+    public bool Enabled { get; init; }
+    public TimeSpan Interval { get; init; } = TimeSpan.FromMinutes(30);
+    public int MaxProposalsPerCycle { get; init; } = Constants.AgentConstants.MaxProposalsPerCycleDefault;
 }
 
 public sealed record AiOptions

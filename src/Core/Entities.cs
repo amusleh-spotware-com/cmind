@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Core.Agent;
 
 namespace Core;
 
@@ -423,6 +424,47 @@ public class ViewerGrant : ISoftDeletable
     public UserId GrantedByUserId { get; set; }
     public bool IsDeleted { get; set; }
     public DateTimeOffset? DeletedAt { get; set; }
+}
+
+// ---------------- Agent (Autonomous Portfolio Agent + Decision Journal) ----------------
+
+public class AgentMandate : AuditedEntity<AgentMandateId>
+{
+    public UserId UserId { get; set; }
+    public AppUser User { get; set; } = default!;
+    public CBotId CBotId { get; set; }
+    public CBot CBot { get; set; } = default!;
+    public TradingAccountId? TradingAccountId { get; set; }
+    public TradingAccount? TradingAccount { get; set; }
+    [MaxLength(128)] public string Name { get; set; } = default!;
+    [MaxLength(1024)] public string Objective { get; set; } = string.Empty;
+    public double RiskPercentPerTrade { get; set; } = 1.0;
+    public double MaxDrawdownPercent { get; set; } = 20.0;
+    [MaxLength(32)] public string Symbol { get; set; } = "EURUSD";
+    [MaxLength(16)] public string Timeframe { get; set; } = "h1";
+    [MaxLength(128)] public string DockerImageTag { get; set; } = "latest";
+    public string? BacktestSettingsJson { get; set; }
+    public AgentAutonomy Autonomy { get; set; } = AgentAutonomy.Suggest;
+    public bool Enabled { get; set; }
+    public DateTimeOffset? LastRunAt { get; set; }
+    public List<AgentProposal> Proposals { get; set; } = [];
+}
+
+public class AgentProposal : AuditedEntity<AgentProposalId>
+{
+    public AgentMandateId MandateId { get; set; }
+    public AgentMandate Mandate { get; set; } = default!;
+    public UserId UserId { get; set; }
+    [MaxLength(32)] public string Kind { get; set; } = "Backtest";
+    public string Reasoning { get; set; } = string.Empty;
+    public string PayloadJson { get; set; } = "{}";
+    [MaxLength(128)] public string ProposedName { get; set; } = default!;
+    public AgentProposalStatus Status { get; set; } = AgentProposalStatus.Pending;
+    public ParamSetId? CreatedParamSetId { get; set; }
+    public InstanceId? CreatedInstanceId { get; set; }
+    public DateTimeOffset? DecidedAt { get; set; }
+    public UserId? DecidedByUserId { get; set; }
+    public string? FailureReason { get; set; }
 }
 
 // ---------------- MCP / Audit / Settings ----------------

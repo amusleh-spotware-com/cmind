@@ -1,5 +1,7 @@
 using Core;
+using Core.Agent;
 using Microsoft.Extensions.DependencyInjection;
+using Nodes.Agent;
 
 namespace Nodes;
 
@@ -17,6 +19,8 @@ public static class DependencyInjection
         services.AddHostedService<BacktestCompletionPoller>();
         services.AddHostedService<RunCompletionPoller>();
         services.AddHostedService<AiRiskGuard>();
+        services.AddScoped<IAgentExecutor, AgentExecutor>();
+        services.AddHostedService<PortfolioAgentService>();
         return services;
     }
 }

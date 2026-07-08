@@ -111,6 +111,20 @@ public readonly record struct McpApiKeyId(Guid Value) : IStronglyTypedId<McpApiK
     public override string ToString() => Value.ToString();
 }
 
+public readonly record struct AgentMandateId(Guid Value) : IStronglyTypedId<AgentMandateId>
+{
+    public static AgentMandateId New() => new(Guid.NewGuid());
+    public static AgentMandateId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
+public readonly record struct AgentProposalId(Guid Value) : IStronglyTypedId<AgentProposalId>
+{
+    public static AgentProposalId New() => new(Guid.NewGuid());
+    public static AgentProposalId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct Email
 {
     public string Value { get; }

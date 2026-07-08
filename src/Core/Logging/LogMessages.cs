@@ -54,4 +54,19 @@ public static partial class LogMessages
 
     [LoggerMessage(EventId = 1016, Level = LogLevel.Information, Message = "AI risk-guard assessed {Count} running bots: {Summary}")]
     public static partial void RiskGuardAssessment(this ILogger logger, int count, string summary);
+
+    [LoggerMessage(EventId = 1017, Level = LogLevel.Error, Message = "Portfolio agent cycle failed")]
+    public static partial void AgentCycleFailed(this ILogger logger, Exception ex);
+
+    [LoggerMessage(EventId = 1018, Level = LogLevel.Warning, Message = "Portfolio agent mandate {MandateId} failed")]
+    public static partial void AgentMandateFailed(this ILogger logger, Guid mandateId, Exception ex);
+
+    [LoggerMessage(EventId = 1019, Level = LogLevel.Information, Message = "Portfolio agent proposal {ProposalId} created for mandate {MandateId} (autonomy {Autonomy})")]
+    public static partial void AgentProposalCreated(this ILogger logger, Guid proposalId, Guid mandateId, string autonomy);
+
+    [LoggerMessage(EventId = 1020, Level = LogLevel.Information, Message = "Portfolio agent proposal {ProposalId} executed -> instance {InstanceId}")]
+    public static partial void AgentProposalExecuted(this ILogger logger, Guid proposalId, Guid instanceId);
+
+    [LoggerMessage(EventId = 1021, Level = LogLevel.Warning, Message = "Portfolio agent proposal {ProposalId} execution failed: {Reason}")]
+    public static partial void AgentProposalExecutionFailed(this ILogger logger, Guid proposalId, string reason);
 }

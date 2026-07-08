@@ -77,6 +77,18 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
             AiPrompts.CurateSystem,
             $"Name: {name}\nLanguage: {language}\n\nSource:\n{Clip(source)}"), ct);
 
+    public Task<AiResult> ProposeAgentActionAsync(
+        string cBotName, string objective, string currentParamsJson, string? lastReportJson, int maxTokens, CancellationToken ct)
+    {
+        var user = new StringBuilder();
+        user.AppendLine($"cBot: {cBotName}");
+        user.AppendLine($"Objective: {Clip(objective)}");
+        user.AppendLine($"Current parameters (JSON):\n{Clip(currentParamsJson)}");
+        if (!string.IsNullOrWhiteSpace(lastReportJson))
+            user.AppendLine($"\nMost recent backtest report JSON:\n{Clip(lastReportJson)}");
+        return client.CompleteAsync(new AiTextRequest(AiPrompts.AgentSystem, user.ToString(), MaxTokens: maxTokens), ct);
+    }
+
     private static string Clip(string value) =>
         string.IsNullOrEmpty(value) || value.Length <= MaxInputChars ? value ?? string.Empty : value[..MaxInputChars];
 }
@@ -127,6 +139,13 @@ internal static class AiPrompts
     public const string VisionSystem =
         "You are a trading strategist. Describe the chart pattern/setup shown, then outline a concrete, rule-based cBot " +
         "strategy (entry, exit, stop-loss, position sizing) that captures it.";
+
+    public const string AgentSystem =
+        "You are an autonomous trading portfolio agent. Given a cBot, its objective, current parameters, and any recent " +
+        "backtest result, decide ONE next parameter set to backtest that advances the objective. Output ONLY a JSON object " +
+        "and nothing else (no prose, no code fences): {\"reasoning\": string (<=3 sentences explaining the change and how it " +
+        "serves the objective and risk limits), \"name\": string (short label), \"parameters\": object (cBot parameter " +
+        "name/value pairs)}. Respect the stated risk limits; prefer conservative, testable adjustments.";
 
     public const string CurateSystem =
         "You are a strategy marketplace curator. From the cBot source, produce compact JSON with fields: title (one line), " +

@@ -25,6 +25,8 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<McpApiKey> McpApiKeys => Set<McpApiKey>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
+    public DbSet<AgentMandate> AgentMandates => Set<AgentMandate>();
+    public DbSet<AgentProposal> AgentProposals => Set<AgentProposal>();
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     public override int SaveChanges() { ApplySoftDelete(); return base.SaveChanges(); }
@@ -56,6 +58,8 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<NodeId>().HaveConversion<StrongIdConverter<NodeId>>();
         configurationBuilder.Properties<InstanceId>().HaveConversion<StrongIdConverter<InstanceId>>();
         configurationBuilder.Properties<McpApiKeyId>().HaveConversion<StrongIdConverter<McpApiKeyId>>();
+        configurationBuilder.Properties<AgentMandateId>().HaveConversion<StrongIdConverter<AgentMandateId>>();
+        configurationBuilder.Properties<AgentProposalId>().HaveConversion<StrongIdConverter<AgentProposalId>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -172,6 +176,22 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         });
 
         modelBuilder.Entity<AppSetting>(e => e.HasKey(x => x.Key));
+
+        modelBuilder.Entity<AgentMandate>(e =>
+        {
+            e.HasIndex(x => new { x.UserId, x.Name }).IsUnique().HasFilter("\"IsDeleted\" = false");
+            e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.CBot).WithMany().HasForeignKey(x => x.CBotId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.TradingAccount).WithMany().HasForeignKey(x => x.TradingAccountId).OnDelete(DeleteBehavior.SetNull);
+            e.Property(x => x.Autonomy).HasConversion<string>().HasMaxLength(16);
+        });
+
+        modelBuilder.Entity<AgentProposal>(e =>
+        {
+            e.HasIndex(x => new { x.MandateId, x.CreatedAt });
+            e.HasOne(x => x.Mandate).WithMany(x => x.Proposals).HasForeignKey(x => x.MandateId).OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
+        });
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {

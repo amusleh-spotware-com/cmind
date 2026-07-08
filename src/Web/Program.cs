@@ -143,6 +143,7 @@ app.MapMcpKeyEndpoints();
 app.MapBuilderEndpoints();
 app.MapDashboardEndpoints();
 app.MapAiEndpoints();
+app.MapAgentEndpoints();
 app.MapImageEndpoints();
 app.MapHub<LogsHub>(HubRoutes.Logs);
 

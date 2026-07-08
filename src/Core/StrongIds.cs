@@ -125,6 +125,20 @@ public readonly record struct AgentProposalId(Guid Value) : IStronglyTypedId<Age
     public override string ToString() => Value.ToString();
 }
 
+public readonly record struct AlertRuleId(Guid Value) : IStronglyTypedId<AlertRuleId>
+{
+    public static AlertRuleId New() => new(Guid.NewGuid());
+    public static AlertRuleId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
+public readonly record struct AlertEventId(Guid Value) : IStronglyTypedId<AlertEventId>
+{
+    public static AlertEventId New() => new(Guid.NewGuid());
+    public static AlertEventId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct Email
 {
     public string Value { get; }

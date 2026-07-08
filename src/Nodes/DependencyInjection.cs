@@ -2,6 +2,7 @@ using Core;
 using Core.Agent;
 using Microsoft.Extensions.DependencyInjection;
 using Nodes.Agent;
+using Nodes.Alerts;
 
 namespace Nodes;
 
@@ -21,6 +22,7 @@ public static class DependencyInjection
         services.AddHostedService<AiRiskGuard>();
         services.AddScoped<IAgentExecutor, AgentExecutor>();
         services.AddHostedService<PortfolioAgentService>();
+        services.AddHostedService<AlertEvaluator>();
         return services;
     }
 }

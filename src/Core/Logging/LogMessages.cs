@@ -78,4 +78,13 @@ public static partial class LogMessages
 
     [LoggerMessage(EventId = 1024, Level = LogLevel.Warning, Message = "AI risk-guard instance {InstanceId} has no node; container not stopped")]
     public static partial void RiskGuardNodeMissing(this ILogger logger, Guid instanceId);
+
+    [LoggerMessage(EventId = 1025, Level = LogLevel.Error, Message = "Alert evaluation cycle failed")]
+    public static partial void AlertCycleFailed(this ILogger logger, Exception ex);
+
+    [LoggerMessage(EventId = 1026, Level = LogLevel.Warning, Message = "Alert rule {RuleId} evaluation failed")]
+    public static partial void AlertRuleFailed(this ILogger logger, Guid ruleId, Exception ex);
+
+    [LoggerMessage(EventId = 1027, Level = LogLevel.Information, Message = "Alert raised for rule {RuleId} (severity {Severity})")]
+    public static partial void AlertRaised(this ILogger logger, Guid ruleId, string severity);
 }

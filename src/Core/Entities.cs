@@ -467,6 +467,30 @@ public class AgentProposal : AuditedEntity<AgentProposalId>
     public string? FailureReason { get; set; }
 }
 
+// ---------------- Alerts (AI-assessed market alerts) ----------------
+
+public class AlertRule : AuditedEntity<AlertRuleId>
+{
+    public UserId UserId { get; set; }
+    public AppUser User { get; set; } = default!;
+    [MaxLength(128)] public string Name { get; set; } = default!;
+    [MaxLength(32)] public string Symbol { get; set; } = default!;
+    public int IntervalMinutes { get; set; } = 60;
+    public bool Enabled { get; set; } = true;
+    public DateTimeOffset? LastEvaluatedAt { get; set; }
+    public List<AlertEvent> Events { get; set; } = [];
+}
+
+public class AlertEvent : AuditedEntity<AlertEventId>
+{
+    public AlertRuleId RuleId { get; set; }
+    public AlertRule Rule { get; set; } = default!;
+    public UserId UserId { get; set; }
+    [MaxLength(16)] public string Severity { get; set; } = "info";
+    public string Message { get; set; } = string.Empty;
+    public bool Acknowledged { get; set; }
+}
+
 // ---------------- MCP / Audit / Settings ----------------
 
 public class McpApiKey : AuditedEntity<McpApiKeyId>

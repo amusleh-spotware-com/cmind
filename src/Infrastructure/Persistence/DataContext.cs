@@ -27,6 +27,8 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
     public DbSet<AgentMandate> AgentMandates => Set<AgentMandate>();
     public DbSet<AgentProposal> AgentProposals => Set<AgentProposal>();
+    public DbSet<AlertRule> AlertRules => Set<AlertRule>();
+    public DbSet<AlertEvent> AlertEvents => Set<AlertEvent>();
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     public override int SaveChanges() { ApplySoftDelete(); return base.SaveChanges(); }
@@ -60,6 +62,8 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<McpApiKeyId>().HaveConversion<StrongIdConverter<McpApiKeyId>>();
         configurationBuilder.Properties<AgentMandateId>().HaveConversion<StrongIdConverter<AgentMandateId>>();
         configurationBuilder.Properties<AgentProposalId>().HaveConversion<StrongIdConverter<AgentProposalId>>();
+        configurationBuilder.Properties<AlertRuleId>().HaveConversion<StrongIdConverter<AlertRuleId>>();
+        configurationBuilder.Properties<AlertEventId>().HaveConversion<StrongIdConverter<AlertEventId>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -191,6 +195,18 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.HasIndex(x => new { x.MandateId, x.CreatedAt });
             e.HasOne(x => x.Mandate).WithMany(x => x.Proposals).HasForeignKey(x => x.MandateId).OnDelete(DeleteBehavior.Cascade);
             e.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
+        });
+
+        modelBuilder.Entity<AlertRule>(e =>
+        {
+            e.HasIndex(x => new { x.UserId, x.Name }).IsUnique().HasFilter("\"IsDeleted\" = false");
+            e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AlertEvent>(e =>
+        {
+            e.HasIndex(x => new { x.UserId, x.CreatedAt });
+            e.HasOne(x => x.Rule).WithMany(x => x.Events).HasForeignKey(x => x.RuleId).OnDelete(DeleteBehavior.Cascade);
         });
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())

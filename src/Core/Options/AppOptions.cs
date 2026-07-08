@@ -22,6 +22,14 @@ public sealed record AppOptions
     public LocalNodeOptions LocalNode { get; init; } = new();
     public AiOptions Ai { get; init; } = new();
     public AgentOptions Agent { get; init; } = new();
+    public AlertOptions Alerts { get; init; } = new();
+}
+
+public sealed record AlertOptions
+{
+    public bool Enabled { get; init; }
+    public TimeSpan PollInterval { get; init; } = TimeSpan.FromMinutes(5);
+    public int MaxRulesPerCycle { get; init; } = 10;
 }
 
 public sealed record AgentOptions

@@ -109,6 +109,18 @@ public static class AgentConstants
     public const string DefaultTimeframe = "h1";
 }
 
+public static class AlertConstants
+{
+    public const int AssessMaxTokens = 1200;
+    public const int MaxMessageChars = 1000;
+    public const int MinIntervalMinutes = 5;
+    public const int MaxIntervalMinutes = 1440;
+    public const int DefaultIntervalMinutes = 60;
+    public const string SeverityInfo = "info";
+    public const string SeverityWarning = "warning";
+    public const string SeverityCritical = "critical";
+}
+
 public static class ConnectionStrings
 {
     public const string AppDb = "appdb";

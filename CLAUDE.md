@@ -2,6 +2,13 @@
 
 Guidance for future Claude Code sessions on this repo.
 
+> **MANDATORY — Domain-Driven Design.** This solution is developed **strictly** under DDD.
+> Before you write **or modify any C# under `src/`**, invoke the **`ddd-dotnet`** skill and obey it.
+> The binding rules live in [`## Domain-Driven Design — MANDATORY`](#domain-driven-design--mandatory)
+> below. No feature, fix, or refactor is "done" until it passes the DDD checklist there. This
+> overrides convenience — do not add anemic entities, primitive-obsessed signatures, or domain
+> logic in endpoints/services because it is "quicker".
+
 ## What this repo is
 
 Multi-tenant Blazor Server + Minimal API app. Builds, runs, backtests cTrader cBots
@@ -160,6 +167,139 @@ No optimization (unsupported by cTrader Console) · no email/SMTP (manual reset 
 6. **Summarize** — changes, deviations + why, test results, known limits.
 
 Checklist: tests written · `dotnet test` passes · no new warnings.
+
+## Domain-Driven Design — MANDATORY
+
+This is the binding contract. The `ddd-dotnet` skill is the long-form playbook; this section is
+the law. When the two agree, follow either. If you think a rule should be broken, **stop and ask
+the user** — do not break it silently.
+
+### Ubiquitous language
+
+- Names in code == names the domain uses: `CBot`, `SourceProject`, `ParamSet`, `Instance`
+  (Run/Backtest), `Node`, `AgentMandate`, `AgentProposal`, `AlertRule`, `TradingAccount`, `Ctid`.
+- No technical synonyms for domain concepts (`InstanceRecord`, `CBotDto`, `NodeManager` where a
+  domain term exists). DTOs at the edge are fine but must not rename the concept.
+- A backtest is never a "job"; a node is never a "server"; a param set is never "config". Keep the
+  language stable across Core, Web, Mcp, and tests.
+
+### Layering (dependency rule — already enforced by project refs; keep it)
+
+```
+Core (domain)          ← zero infra deps. No EF, no HttpClient, no Docker, no ASP.NET, no Anthropic.
+  ↑                       Entities, aggregates, value objects, domain events, domain services,
+  │                       repository *interfaces*, domain exceptions.
+Infrastructure/Nodes   ← EF Core, encryption, GHCR, Anthropic, Docker, node HTTP. Implements Core
+  ↑                       interfaces (repositories, schedulers, dispatchers). Anti-corruption lives here.
+Web / Mcp / ExternalNode ← application services / use-cases (endpoints, MCP tools, hosted services).
+                           Orchestrate: load aggregate → call its methods → persist → dispatch events.
+```
+
+- **Domain logic never lives in an endpoint, MCP tool, Razor component, or a `BackgroundService`.**
+  Those are application/presentation layers: they orchestrate, they do not decide. Any `if` that
+  encodes a business rule belongs on an aggregate or a domain service.
+- Core stays pure. If you need infra in the domain, you modeled it wrong — introduce an interface
+  in Core and implement it outside.
+
+### Aggregates & aggregate roots
+
+- Every write goes through an **aggregate root**. Current roots: `AppUser`, `CTraderIdAccount`
+  (owns `TradingAccount`), `CBot` (owns `ParamSet`), `CBotSourceProject`, `Instance`, `Node`
+  (owns `NodeStats`), `AgentMandate` (owns `AgentProposal`), `AlertRule` (owns `AlertEvent`),
+  `McpApiKey`. `AuditLog`/`AppSetting`/`InstanceLog` are append-only records, not aggregates.
+- **One aggregate = one consistency boundary = one transaction.** A single `SaveChanges` mutates
+  **one** aggregate instance. Need to touch two? Use a domain event + a second use-case, or a
+  process manager — never a fat transaction spanning roots.
+- **Reference other aggregates by strong ID only** in new code (`CBotId`, `NodeId`, …), not by
+  navigation property. EF nav props that already exist on entities may stay for query projection,
+  but **do not add new cross-aggregate nav props** and never mutate another aggregate through one.
+- Child entities (`ParamSet`, `TradingAccount`, `AgentProposal`, `AlertEvent`, `NodeStats`) are
+  reached and mutated **only through their root** (`cbot.AddParamSet(...)`, not `new ParamSet` +
+  `context.Add`).
+
+### Entities — rich, not anemic
+
+- **No public setters on domain entities.** State changes through intention-revealing methods that
+  enforce invariants (`cbot.Rename(name)`, `mandate.Enable()`, `alertRule.SetInterval(minutes)`).
+  Setters become `private set` / `init`.
+- Constructors/factories put the entity in a **valid** state or throw a **domain exception**
+  (`DomainException` subtype in Core, not `ArgumentException` from a controller). Prefer a static
+  `Create(...)` factory when construction has rules; keep a private ctor for EF.
+- Invariants are checked **inside** the aggregate, once, at the point of change — not re-validated
+  in every caller. Callers trust the aggregate.
+- The TPH state hierarchies (`Instance`, `Node` states) are the state pattern — **good, keep it**.
+  A transition is a domain operation that returns the next-state entity; centralize transition
+  rules (which state may go where) in the domain, not scattered across pollers. When you add a
+  state or transition, model it as a method, not an ad-hoc `new XxxInstance { … }` in a service.
+
+### Value objects
+
+- Model concepts, not primitives. `Email`, `Symbol`, `Timeframe`, `DockerImageTag` and all strong
+  IDs are VOs — **immutable, equality by value, self-validating** (see `Core/StrongIds.cs`). Follow
+  that template for new ones (money/percent/risk, drawdown, container id, url, secret material).
+- **Ban primitive obsession in new/changed signatures.** No bare `string symbol`, `Guid id`,
+  `double riskPercent`, `int intervalMinutes` crossing a domain boundary — wrap them. Percentages
+  and risk numbers especially (`RiskPercentPerTrade`, `MaxDrawdownPercent`) deserve a VO that
+  rejects out-of-range values at construction.
+- VOs validate in their constructor and throw a domain exception; they never carry an invalid value.
+
+### Domain services, factories, domain events
+
+- **Domain service** = stateless logic that spans aggregates or doesn't belong on one entity
+  (`INodeScheduler` picking a node is the canonical example). Interface in Core; keep it free of
+  infra. Reach for one only when the behavior genuinely isn't a single aggregate's responsibility.
+- **Domain events** signal "something happened" (`InstanceStarted`, `BacktestCompleted`,
+  `AgentProposalAccepted`, `RiskThresholdBreached`). Raise them from aggregate methods; collect on
+  the entity; dispatch **after** a successful `SaveChanges` (EF `SavingChanges`/interceptor or an
+  outbox). Cross-aggregate reactions and integration (SignalR, AI risk actions) subscribe to these
+  instead of being inlined into the mutating use-case.
+- **Factories** encapsulate multi-step/invariant-heavy creation. Repositories persist and retrieve
+  **whole aggregates** — never leak `IQueryable` out of Core, never expose a generic
+  `Repository<T>` that lets callers dodge aggregate methods.
+
+### Repositories & persistence
+
+- One repository interface **per aggregate root**, defined in Core, implemented in Infrastructure.
+  Methods speak the domain (`GetActiveByUserAsync`, `AddAsync`, not `Query()`).
+- Read models / list projections for the UI are **separate** from the write side — query EF
+  directly in a read service/endpoint (CQRS-lite), returning DTOs. Don't force reporting queries
+  through aggregate repositories, and don't reshape aggregates to make a screen easier.
+- Persistence concerns (EF config, converters, TPH mapping, soft delete) stay in Infrastructure.
+  The domain does not know EF exists.
+
+### Bounded contexts / modules
+
+- Organize the domain by module, not by technical type. Current de-facto contexts:
+  **Access** (users, MFA, viewer grants, MCP keys), **Authoring** (CBot, SourceProject, ParamSet,
+  builder), **Execution** (Instance, Node, scheduling, dispatch), **Portfolio** (AgentMandate,
+  proposals, decision journal), **Alerts**. Put new types in the module that owns the concept;
+  cross-context calls go through a well-named interface, not a shared mutable entity.
+- Anti-corruption layers already exist for external systems (cTrader Console CLI, GHCR, Anthropic,
+  `ExternalNode` agent) — keep them: translate at the edge, never let their shapes leak into Core.
+
+### Brownfield rule (this repo is mid-migration)
+
+Existing entities are anemic (public setters, logic in pollers/services). You are **not** required
+to boil the ocean, but:
+- **New** aggregates/entities/VOs: full DDD from the start. No exceptions.
+- When you **touch** an existing anemic entity for a feature/fix: encapsulate the part you touch —
+  add the intention method, tighten those setters, move that rule into the aggregate. Leave it
+  better than you found it; do not add new anemic surface.
+- Never cite "the rest of the code does it this way" to justify new anemic code. The old way is the
+  debt being paid down, not the standard.
+
+### DDD definition-of-done checklist (all must hold before "done")
+
+- [ ] New behavior lives on an aggregate/VO/domain service — **not** in an endpoint, tool, or hosted service.
+- [ ] No new public setters on domain entities; state changes via intention methods that guard invariants.
+- [ ] No new cross-aggregate navigation; other aggregates referenced by strong ID.
+- [ ] Each `SaveChanges` mutates a single aggregate; multi-aggregate flows use domain events.
+- [ ] No primitive-obsessed domain signatures; new domain concepts are value objects.
+- [ ] Invariant violations throw a Core `DomainException`, not framework exceptions from outer layers.
+- [ ] Ubiquitous-language names; no invented synonyms.
+- [ ] Core still compiles with zero infra dependencies.
+- [ ] Unit tests assert **invariants and transitions** on the aggregate (not just getters/setters).
+- [ ] Existing anemic code you touched is left more encapsulated than before.
 
 ## Tooling rules
 

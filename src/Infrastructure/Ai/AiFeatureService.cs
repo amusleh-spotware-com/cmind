@@ -79,6 +79,11 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
             AiPrompts.SentimentSystem,
             $"Symbol: {symbol}", EnableWebSearch: true), ct);
 
+    public Task<AiResult> AssessSymbolAlertAsync(string symbol, int maxTokens, CancellationToken ct) =>
+        client.CompleteAsync(new AiTextRequest(
+            AiPrompts.AlertSystem,
+            $"Symbol: {symbol}", MaxTokens: maxTokens, EnableWebSearch: true), ct);
+
     public Task<AiResult> VisionToStrategyAsync(AiImage chart, string? note, CancellationToken ct) =>
         client.CompleteAsync(new AiTextRequest(
             AiPrompts.VisionSystem,
@@ -152,6 +157,13 @@ internal static class AiPrompts
         "{\"ref\": n (integer index), \"severity\": \"low\"|\"medium\"|\"high\"|\"critical\", " +
         "\"action\": \"none\"|\"stop\", \"reason\": string}. Recommend \"stop\" ONLY for critical, clearly unsafe positions. " +
         "If nothing is risky, output an empty array [].";
+
+    public const string AlertSystem =
+        "You are an FX/CFD alerting agent. Using current web information for the given symbol, decide whether there is " +
+        "an actionable, time-sensitive development (major news, sharp move, imminent high-impact event) a trader should " +
+        "be alerted to right now. Output ONLY a JSON object and nothing else (no prose, no code fences): " +
+        "{\"alert\": boolean, \"severity\": \"info\"|\"warning\"|\"critical\", \"message\": string (one or two sentences, " +
+        "cite the driver)}. Set alert=false when nothing is noteworthy. Not financial advice.";
 
     public const string SentimentSystem =
         "You are an FX/CFD market analyst. Using current web information, summarize sentiment, key drivers, and upcoming " +

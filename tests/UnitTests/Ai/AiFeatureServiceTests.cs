@@ -90,6 +90,16 @@ public sealed class AiFeatureServiceTests
     }
 
     [Fact]
+    public async Task AssessSymbolAlert_enables_web_search_and_caps_tokens()
+    {
+        var client = Client(AiResult.Ok("{\"alert\":false}"));
+        var service = new AiFeatureService(client);
+        await service.AssessSymbolAlertAsync("EURUSD", 1200, default);
+        await client.Received().CompleteAsync(
+            Arg.Is<AiTextRequest>(r => r.EnableWebSearch && r.MaxTokens == 1200), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public void Enabled_reflects_underlying_client()
     {
         new AiFeatureService(Client(AiResult.Ok(""), enabled: false)).Enabled.Should().BeFalse();

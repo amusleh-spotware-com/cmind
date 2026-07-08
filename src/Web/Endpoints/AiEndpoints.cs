@@ -61,6 +61,24 @@ public static class AiEndpoints
             return Results.Ok(await ai.ProposeParamSetsAsync(name, current, null, ct));
         });
 
+        g.MapPost("/portfolio-digest", async (
+            DataContext db, ICurrentUser u, IAiFeatureService ai, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var instances = await db.Instances.Include(i => i.CBot)
+                .Where(i => i.UserId == uid)
+                .OrderByDescending(i => i.CreatedAt)
+                .Take(AiConstants.DigestMaxInstances)
+                .ToListAsync(ct);
+            if (instances.Count == 0)
+                return Results.Ok(new AiResult(false, string.Empty, "no instances to analyze yet"));
+
+            var portfolio = instances
+                .Select(i => new AiInstanceContext(i.CBot.Name, i.KindName, i.StatusName, i.Symbol, i.Timeframe, DetailOf(i)))
+                .ToList();
+            return Results.Ok(await ai.PortfolioDigestAsync(portfolio, AiConstants.DigestMaxTokens, ct));
+        });
+
         g.MapPost("/tune-advice/{cbotId:guid}", async (
             Guid cbotId, DataContext db, ICurrentUser u, IAiFeatureService ai, CancellationToken ct) =>
         {

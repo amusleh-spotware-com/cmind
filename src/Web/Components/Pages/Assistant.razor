@@ -53,6 +53,17 @@
             </MudButton>
         </MudPaper>
     </MudTabPanel>
+    <MudTabPanel Text="Portfolio Digest">
+        <MudPaper Class="pa-4" Elevation="0">
+            <MudText Typo="Typo.body2" Class="mb-2">
+                Reviews your recent and running bots for what's working, concentration/correlation risk, and next steps.
+            </MudText>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Summarize" OnClick="Digest" Disabled="_busy">
+                Generate digest
+            </MudButton>
+        </MudPaper>
+    </MudTabPanel>
     <MudTabPanel Text="Tune Advisor">
         <MudPaper Class="pa-4" Elevation="0">
             <MudText Typo="Typo.body2" Class="mb-2">
@@ -136,6 +147,8 @@
         return PostJsonAsync($"/api/ai/optimize-run/{_optCbotId}",
             new { TradingAccountId = _optAcctId, Symbol = _optSymbol, Timeframe = _optTimeframe });
     }
+
+    private Task Digest() => PostTextAsync("/api/ai/portfolio-digest", new { });
 
     private Task TuneAdvice()
     {

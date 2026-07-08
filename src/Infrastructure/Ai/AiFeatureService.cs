@@ -119,6 +119,16 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
         return client.CompleteAsync(new AiTextRequest(AiPrompts.DecaySystem, user.ToString(), MaxTokens: maxTokens), ct);
     }
 
+    public Task<AiResult> PortfolioDigestAsync(IReadOnlyList<AiInstanceContext> portfolio, int maxTokens, CancellationToken ct)
+    {
+        var user = new StringBuilder("Portfolio (recent bots, one per line):\n");
+        foreach (var i in portfolio)
+            user.AppendLine(
+                $"- {i.CBotName} [{i.Kind}] {i.Symbol ?? "?"} {i.Timeframe ?? "?"} status={i.Status}" +
+                (i.Detail is null ? "" : $" {i.Detail}"));
+        return client.CompleteAsync(new AiTextRequest(AiPrompts.DigestSystem, user.ToString(), MaxTokens: maxTokens), ct);
+    }
+
     private static string Clip(string value) =>
         string.IsNullOrEmpty(value) || value.Length <= MaxInputChars ? value ?? string.Empty : value[..MaxInputChars];
 }
@@ -197,6 +207,12 @@ internal static class AiPrompts
         "backtest reports for the same cBot. State clearly whether performance is degrading, the key metric deltas " +
         "(net profit, win rate, drawdown, Sharpe/profit factor if present), the likely regime cause, and ONE concrete " +
         "parameter adjustment to test next. Be concise and skeptical. If there is only one report, say a baseline is needed.";
+
+    public const string DigestSystem =
+        "You are a portfolio analyst for a retail algo trader. From the list of the trader's recent and running bots, " +
+        "produce a short digest: what is working vs failing, concentration and correlation risk (same symbol/base " +
+        "currency across bots), over-exposure, and 2-3 concrete rebalancing or next-step actions. Group by theme, be " +
+        "specific, and keep it brief. Not financial advice.";
 
     public const string CurateSystem =
         "You are a strategy marketplace curator. From the cBot source, produce compact JSON with fields: title (one line), " +

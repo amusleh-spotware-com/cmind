@@ -111,6 +111,22 @@ public sealed class AiFeatureServiceTests
     }
 
     [Fact]
+    public async Task PortfolioDigest_lists_every_bot_and_caps_tokens()
+    {
+        var client = Client(AiResult.Ok("digest"));
+        var service = new AiFeatureService(client);
+        var portfolio = new[]
+        {
+            new AiInstanceContext("Alpha", "Run", "Running", "EURUSD", "h1", null),
+            new AiInstanceContext("Beta", "Backtest", "Completed", "GBPUSD", "m5", "done")
+        };
+        await service.PortfolioDigestAsync(portfolio, 2000, default);
+        await client.Received().CompleteAsync(
+            Arg.Is<AiTextRequest>(r => r.MaxTokens == 2000 && r.User.Contains("Alpha") && r.User.Contains("Beta")),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public void Enabled_reflects_underlying_client()
     {
         new AiFeatureService(Client(AiResult.Ok(""), enabled: false)).Enabled.Should().BeFalse();

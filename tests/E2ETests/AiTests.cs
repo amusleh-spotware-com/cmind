@@ -21,6 +21,7 @@ public sealed class AiTests(AppFixture app)
         await Assertions.Expect(page.GetByText("Market Sentiment")).ToBeVisibleAsync(Slow);
         await Assertions.Expect(page.GetByText("Optimize")).ToBeVisibleAsync(Slow);
         await Assertions.Expect(page.GetByText("Tune Advisor")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.GetByText("Portfolio Digest")).ToBeVisibleAsync(Slow);
     }
 
     [Fact]

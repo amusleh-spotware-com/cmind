@@ -142,6 +142,7 @@ app.MapInstanceEndpoints();
 app.MapUserEndpoints();
 app.MapCtidEndpoints();
 app.MapOpenApiEndpoints();
+app.MapCopyEndpoints();
 app.MapParamSetEndpoints();
 app.MapMcpKeyEndpoints();
 app.MapBuilderEndpoints();

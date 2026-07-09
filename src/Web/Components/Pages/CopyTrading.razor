@@ -1,0 +1,202 @@
+@page "/copy-trading"
+@using Core.Domain
+@using Web.Json
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@inject HttpClient Http
+@inject ISnackbar Snack
+
+<PageTitle>Copy Trading</PageTitle>
+
+<MudText Typo="Typo.h5" Class="mb-3">Copy Trading</MudText>
+
+<MudCard Class="mb-4">
+    <MudCardContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center">
+            <MudTextField @bind-Value="_newName" Label="Profile name" />
+            <MudSelect T="long" @bind-Value="_newSource" Label="Source account">
+                @foreach (var a in _accounts)
+                {
+                    <MudSelectItem T="long" Value="@((long)a.accountNumber)">@a.accountNumber (@a.broker)</MudSelectItem>
+                }
+            </MudSelect>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CreateProfile">Create profile</MudButton>
+        </MudStack>
+    </MudCardContent>
+</MudCard>
+
+<MudTable Items="_profiles" Dense="true" OnRowClick="@((TableRowClickEventArgs<dynamic> e) => Select((Guid)e.Item!.id))">
+    <HeaderContent>
+        <MudTh>Name</MudTh><MudTh>Source</MudTh><MudTh>Status</MudTh><MudTh>Destinations</MudTh><MudTh /></HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.name</MudTd>
+        <MudTd>@context.sourceAccountId</MudTd>
+        <MudTd><MudChip T="string" Size="Size.Small" Color="StatusColor((string)context.status)">@context.status</MudChip></MudTd>
+        <MudTd>@context.destinationCount</MudTd>
+        <MudTd>
+            <MudButton Size="Size.Small" Color="Color.Success" OnClick="@(() => Action((Guid)context.id, "start"))">Start</MudButton>
+            <MudButton Size="Size.Small" Color="Color.Warning" OnClick="@(() => Action((Guid)context.id, "pause"))">Pause</MudButton>
+            <MudButton Size="Size.Small" Color="Color.Default" OnClick="@(() => Action((Guid)context.id, "stop"))">Stop</MudButton>
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                           OnClick="@(() => DeleteProfile((Guid)context.id))" />
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@if (_detail is not null)
+{
+    <MudCard Class="mt-4">
+        <MudCardContent>
+            <MudText Typo="Typo.h6">Destinations — @_detail.name</MudText>
+            <MudTable Items="@(((IEnumerable<dynamic>)_detail.destinations))" Dense="true" Class="mb-3">
+                <HeaderContent>
+                    <MudTh>Account</MudTh><MudTh>Mode</MudTh><MudTh>Param</MudTh><MudTh>Reverse</MudTh><MudTh>Direction</MudTh><MudTh /></HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.destinationAccountId</MudTd>
+                    <MudTd>@context.mode</MudTd>
+                    <MudTd>@context.riskParameter</MudTd>
+                    <MudTd>@context.reverse</MudTd>
+                    <MudTd>@context.direction</MudTd>
+                    <MudTd><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                          OnClick="@(() => RemoveDestination((Guid)context.id))" /></MudTd>
+                </RowTemplate>
+            </MudTable>
+
+            <MudText Typo="Typo.subtitle2">Add destination</MudText>
+            <MudGrid>
+                <MudItem xs="6" md="3">
+                    <MudSelect T="long" @bind-Value="_destAccount" Label="Destination account">
+                        @foreach (var a in _accounts)
+                        {
+                            <MudSelectItem T="long" Value="@((long)a.accountNumber)">@a.accountNumber</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="6" md="3">
+                    <MudSelect T="MoneyManagementMode" @bind-Value="_mode" Label="Money management">
+                        @foreach (var m in Enum.GetValues<MoneyManagementMode>())
+                        {
+                            <MudSelectItem T="MoneyManagementMode" Value="@m">@m</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="6" md="2"><MudNumericField T="double" @bind-Value="_param" Label="Parameter" /></MudItem>
+                <MudItem xs="6" md="2"><MudNumericField T="double" @bind-Value="_slippage" Label="Slippage (pips)" /></MudItem>
+                <MudItem xs="6" md="2">
+                    <MudSelect T="CopyDirectionFilter" @bind-Value="_direction" Label="Direction">
+                        @foreach (var d in Enum.GetValues<CopyDirectionFilter>())
+                        {
+                            <MudSelectItem T="CopyDirectionFilter" Value="@d">@d</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="6" md="2"><MudNumericField T="double" @bind-Value="_minLot" Label="Min lot" /></MudItem>
+                <MudItem xs="6" md="2"><MudNumericField T="double" @bind-Value="_maxLot" Label="Max lot" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_reverse" Label="Reverse" Color="Color.Primary" /></MudItem>
+                <MudItem xs="12" md="3">
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddDestination">Add destination</MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+    </MudCard>
+}
+
+@code {
+    private dynamic[] _profiles = [];
+    private dynamic[] _accounts = [];
+    private dynamic? _detail;
+    private Guid? _selectedId;
+
+    private string _newName = "";
+    private long _newSource;
+
+    private long _destAccount;
+    private MoneyManagementMode _mode = MoneyManagementMode.LotMultiplier;
+    private double _param = 1;
+    private double _slippage;
+    private CopyDirectionFilter _direction = CopyDirectionFilter.Both;
+    private double _minLot;
+    private double _maxLot;
+    private bool _reverse;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _accounts = await Http.GetDynamicArrayAsync("/api/accounts");
+        await Load();
+    }
+
+    private async Task Load() => _profiles = await Http.GetDynamicArrayAsync("/api/copy/profiles");
+
+    private static Color StatusColor(string status) => status switch
+    {
+        "Running" => Color.Success,
+        "Paused" => Color.Warning,
+        "Error" => Color.Error,
+        _ => Color.Default
+    };
+
+    private async Task CreateProfile()
+    {
+        var r = await Http.PostAsJsonAsync("/api/copy/profiles", new { Name = _newName, SourceAccountId = SourceAccountGuid(_newSource) });
+        if (r.IsSuccessStatusCode) { _newName = ""; await Load(); }
+        else Snack.Add("Failed to create profile", Severity.Error);
+    }
+
+    private async Task Action(Guid id, string action)
+    {
+        var r = await Http.PostAsync($"/api/copy/profiles/{id}/{action}", null);
+        if (!r.IsSuccessStatusCode) Snack.Add($"Cannot {action} profile", Severity.Error);
+        await Load();
+        if (_selectedId == id) await Select(id);
+    }
+
+    private async Task DeleteProfile(Guid id)
+    {
+        await Http.DeleteAsync($"/api/copy/profiles/{id}");
+        if (_selectedId == id) _detail = null;
+        await Load();
+    }
+
+    private async Task Select(Guid id)
+    {
+        _selectedId = id;
+        _detail = await Http.GetDynamicAsync($"/api/copy/profiles/{id}");
+    }
+
+    private async Task AddDestination()
+    {
+        if (_selectedId is not { } id) return;
+        var r = await Http.PostAsJsonAsync($"/api/copy/profiles/{id}/destinations", new
+        {
+            DestinationAccountId = SourceAccountGuid(_destAccount),
+            Mode = _mode,
+            Parameter = _param,
+            SlippagePips = _slippage,
+            MaxDelaySeconds = 0,
+            Reverse = _reverse,
+            CopyStopLoss = true,
+            CopyTakeProfit = true,
+            Direction = _direction,
+            MinLot = _minLot,
+            MaxLot = _maxLot,
+            ForceMinLot = false,
+            MaxDrawdownPercent = 0.0,
+            DailyLossLimit = 0.0
+        });
+        if (r.IsSuccessStatusCode) await Select(id);
+        else Snack.Add("Failed to add destination", Severity.Error);
+    }
+
+    private async Task RemoveDestination(Guid destinationId)
+    {
+        if (_selectedId is not { } id) return;
+        await Http.DeleteAsync($"/api/copy/profiles/{id}/destinations/{destinationId}");
+        await Select(id);
+    }
+
+    private Guid SourceAccountGuid(long accountNumber)
+    {
+        foreach (var a in _accounts)
+            if ((long)a.accountNumber == accountNumber) return (Guid)a.id;
+        return Guid.Empty;
+    }
+}

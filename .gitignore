@@ -21,3 +21,7 @@ wwwroot/lib/
 publish/
 .claude/
 .local-node/
+
+# Local test secrets (never commit)
+/secrets/
+*.local.json

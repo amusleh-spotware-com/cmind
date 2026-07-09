@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Web.Endpoints;
 
-public record CreateCopyProfileRequest(string Name, Guid SourceAccountId);
+public record CreateCopyProfileRequest(string Name, Guid SourceAccountId, IReadOnlyList<Guid>? DestinationAccountIds = null);
 
 public record AddCopyDestinationRequest(
     Guid DestinationAccountId,
@@ -121,6 +121,9 @@ public static class CopyEndpoints
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             var profile = CopyProfile.Create(uid, req.Name, TradingAccountId.From(req.SourceAccountId));
+            if (req.DestinationAccountIds is { Count: > 0 })
+                foreach (var destinationId in req.DestinationAccountIds.Distinct())
+                    profile.AddDestination(TradingAccountId.From(destinationId), RiskSettings.Default);
             await repo.AddAsync(profile, ct);
             await repo.SaveChangesAsync(ct);
             return Results.Ok(new { profile.Id });

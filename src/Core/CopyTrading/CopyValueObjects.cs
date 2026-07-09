@@ -107,6 +107,8 @@ public readonly record struct RiskSettings
         Parameter = parameter;
     }
 
+    public static RiskSettings Default => new(MoneyManagementMode.LotMultiplier, 1);
+
     private static void Validate(MoneyManagementMode mode, double parameter)
     {
         if (double.IsNaN(parameter) || double.IsInfinity(parameter))

@@ -95,6 +95,9 @@ public static class OpenApiEndpoints
     public const int Port = 5035;
     public const string StateCookieName = "oapi_oauth_state";
     public const string CallbackPath = "/openapi/callback";
+    public const string AuthorizedRedirectPath = "/accounts";
+    public const string InviteRedirectPath = "/";
+    public const int SuccessRedirectDelaySeconds = 5;
 }
 
 public static class ObservabilityDefaults

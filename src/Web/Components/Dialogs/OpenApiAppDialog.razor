@@ -9,6 +9,13 @@
             Register a cTrader Open API application in your cTrader Open API account, then set its redirect URI to
             the value below. You configure a single application and use it to authorize accounts from any number of cIDs.
         </MudText>
+        @if (IsEdit && AuthorizedAccountCount > 0)
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-3">
+                Changing this application will lose access to @AuthorizedAccountCount already-authorized
+                account(s). They will stop copying and must be re-authorized with the new application.
+            </MudAlert>
+        }
         <MudForm @ref="_form">
             <MudTextField @bind-Value="_name" Label="Name" Required="true"
                           RequiredError="Name is required" Class="mb-2" Immediate="true" />
@@ -34,6 +41,7 @@
     [Parameter] public string CallbackUrl { get; set; } = "";
     [Parameter] public string? Name { get; set; }
     [Parameter] public string? ClientId { get; set; }
+    [Parameter] public int AuthorizedAccountCount { get; set; }
 
     private MudForm? _form;
     private string _name = "";

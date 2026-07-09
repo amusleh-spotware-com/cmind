@@ -25,13 +25,19 @@ public static class OpenApiEndpoints
     {
         var g = app.MapGroup("/api/openapi").RequireAuthorization(AuthPolicies.UserOrAbove);
 
-        g.MapGet("/application", async (IOpenApiApplicationRepository apps, ICurrentUser u, HttpContext ctx, CancellationToken ct) =>
+        g.MapGet("/application", async (IOpenApiApplicationRepository apps, ICurrentUser u, DataContext db,
+            HttpContext ctx, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             var application = await apps.GetByUserAsync(uid, ct);
-            return application is null
-                ? Results.Ok(new { configured = false, callbackUrl = CallbackUrl(ctx) })
-                : Results.Ok(new { configured = true, application.Name, application.ClientId, callbackUrl = CallbackUrl(ctx) });
+            if (application is null)
+                return Results.Ok(new { configured = false, callbackUrl = CallbackUrl(ctx), authorizedAccountCount = 0 });
+            var authorizedAccountCount = await db.OpenApiAuthorizations.CountAsync(a => a.UserId == uid, ct);
+            return Results.Ok(new
+            {
+                configured = true, application.Name, application.ClientId,
+                callbackUrl = CallbackUrl(ctx), authorizedAccountCount
+            });
         });
 
         g.MapPut("/application", async (SaveOpenApiAppRequest req, IOpenApiApplicationRepository apps,
@@ -98,7 +104,7 @@ public static class OpenApiEndpoints
             var application = await db.OpenApiApplications
                 .FirstOrDefaultAsync(a => a.Id == result.ApplicationId && a.UserId == result.UserId);
             if (application is null) return Html(ErrorPage("The linked application no longer exists."));
-            var authState = states.CreateState(result.UserId, result.ApplicationId, AuthorizeStateTtl, isInvite: false);
+            var authState = states.CreateState(result.UserId, result.ApplicationId, AuthorizeStateTtl, isInvite: true);
             SetStateCookie(ctx, authState);
             return Results.Redirect(BuildAuthorizeUrl(options.CurrentValue.OpenApi, application, authState));
         }).AllowAnonymous().RequireRateLimiting(RateLimitPolicies.Auth);
@@ -131,7 +137,10 @@ public static class OpenApiEndpoints
                     application.ClientId, clientSecret, code, application.RedirectUri, ct);
                 var grant = await client.LoadGrantAsync(application.ClientId, clientSecret, tokens.AccessToken, ct);
                 await linker.LinkAsync(result.UserId, application, grant, tokens, ct);
-                return Html(SuccessPage(grant.Accounts.Count));
+                var redirectTo = result.IsInvite
+                    ? Core.Constants.OpenApiEndpoints.InviteRedirectPath
+                    : Core.Constants.OpenApiEndpoints.AuthorizedRedirectPath;
+                return Html(SuccessPage(grant.Accounts.Count, redirectTo));
             }
             catch (Exception ex)
             {
@@ -180,19 +189,33 @@ public static class OpenApiEndpoints
 
     private static IResult Html(string html) => Results.Content(html, "text/html; charset=utf-8");
 
-    private static string SuccessPage(int accountCount) => Page(
-        "Accounts authorized",
-        $"<h1>&#10003; You're all set</h1><p>{accountCount} trading account(s) were added and authorized. " +
-        "You can close this window.</p>");
+    private static string SuccessPage(int accountCount, string redirectUrl)
+    {
+        var delay = Core.Constants.OpenApiEndpoints.SuccessRedirectDelaySeconds;
+        return Page(
+            "Accounts authorized",
+            $"<h1>&#10003; You're all set</h1><p>{accountCount} trading account(s) were added and authorized.</p>" +
+            $"<p class=\"muted\">Taking you back in {delay} seconds&hellip;</p>",
+            redirectUrl);
+    }
 
     private static string ErrorPage(string message) => Page(
         "Authorization problem",
         $"<h1>Something went wrong</h1><p>{System.Net.WebUtility.HtmlEncode(message)}</p>");
 
-    private static string Page(string title, string body) =>
-        $"<!doctype html><html><head><meta charset=\"utf-8\"><title>{title}</title>" +
-        "<style>body{font-family:system-ui,sans-serif;background:#1a1a1a;color:#eee;display:flex;" +
-        "align-items:center;justify-content:center;height:100vh;margin:0}" +
-        "div{max-width:32rem;padding:2rem;text-align:center}h1{color:#4caf50}</style></head>" +
-        $"<body><div>{body}</div></body></html>";
+    private static string Page(string title, string body, string? redirectUrl = null)
+    {
+        var delay = Core.Constants.OpenApiEndpoints.SuccessRedirectDelaySeconds;
+        var meta = redirectUrl is null
+            ? string.Empty
+            : $"<meta http-equiv=\"refresh\" content=\"{delay};url={System.Net.WebUtility.HtmlEncode(redirectUrl)}\">";
+        var script = redirectUrl is null
+            ? string.Empty
+            : $"<script>setTimeout(function(){{location.href={System.Text.Json.JsonSerializer.Serialize(redirectUrl)};}},{delay * 1000});</script>";
+        return $"<!doctype html><html><head><meta charset=\"utf-8\"><title>{title}</title>{meta}" +
+            "<style>body{font-family:system-ui,sans-serif;background:#1a1a1a;color:#eee;display:flex;" +
+            "align-items:center;justify-content:center;height:100vh;margin:0}" +
+            "div{max-width:32rem;padding:2rem;text-align:center}h1{color:#4caf50}.muted{color:#9e9e9e}</style></head>" +
+            $"<body><div>{body}</div>{script}</body></html>";
+    }
 }

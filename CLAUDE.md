@@ -106,6 +106,19 @@ tests/
 - Logging: Serilog (compact JSON stdout) in Web/Mcp/ExternalNode via `Infrastructure/Observability/SerilogConfigurator` (Web+Mcp) or inline (ExternalNode); OTLP sink when `OTEL_EXPORTER_OTLP_ENDPOINT` set. OTel keeps metrics+traces. Still author app logs through `LogMessages`.
 - Web security (`Web/Program.cs`): auth cookie `HttpOnly` + `SameSite=Lax` + `SecurePolicy=Always`; `Web/Security/SecurityHeaders.cs` adds `X-Content-Type-Options`/`X-Frame-Options`/`Referrer-Policy`/`Permissions-Policy`; login/auth group rate-limited (`RateLimitPolicies.Auth`, fixed-window per-IP); OpenAPI mapped Development only.
 
+## UI design guide (MANDATORY for Blazor pages)
+
+- **All "add/create/edit/new" actions use a MudBlazor dialog** (`IDialogService.ShowAsync<TDialog>`),
+  never an inline form/card embedded in the page. A page-level toolbar button (`New X`, top-right via
+  `MudSpacer`) opens the dialog; the dialog owns the form + validation and returns a small result record
+  (see `Components/Dialogs/*` — `NewProjectDialog`, `NewCidAccountDialog`, `OpenApiAppDialog`,
+  `NewCopyProfileDialog`). The page does the HTTP call with the returned data, then reloads.
+- **Do not reintroduce the old inline "card with fields + Create button at top of page" pattern.** It was
+  removed from Copy Trading / Open API on purpose. New pages match the dialog convention from day one.
+- Dialog files live in `Web/Components/Dialogs/`, expose `[Parameter]`s for edit/prefill state, and a
+  nested `public sealed record …Result(...)` for the payload. Confirm-destructive actions may use a
+  simple dialog too, but list actions (start/stop/delete on a row) stay inline as icon buttons.
+
 ## Common commands
 
 ```bash

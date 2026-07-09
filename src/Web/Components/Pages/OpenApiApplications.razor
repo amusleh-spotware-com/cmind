@@ -74,6 +74,7 @@ else
     private string _name = "";
     private string _clientId = "";
     private string _callbackUrl = "";
+    private int _authorizedAccountCount;
     private string? _inviteUrl;
 
     protected override Task OnInitializedAsync() => Load();
@@ -86,6 +87,7 @@ else
         {
             _configured = (bool)res.configured;
             _callbackUrl = (string)res.callbackUrl;
+            _authorizedAccountCount = (int)res.authorizedAccountCount;
             if (_configured)
             {
                 _name = (string)res.name;
@@ -103,6 +105,7 @@ else
             { nameof(OpenApiAppDialog.CallbackUrl), _callbackUrl },
             { nameof(OpenApiAppDialog.Name), _configured ? _name : null },
             { nameof(OpenApiAppDialog.ClientId), _configured ? _clientId : null },
+            { nameof(OpenApiAppDialog.AuthorizedAccountCount), _authorizedAccountCount },
         };
         var dlg = await Dialogs.ShowAsync<OpenApiAppDialog>(null,
             parameters, new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });

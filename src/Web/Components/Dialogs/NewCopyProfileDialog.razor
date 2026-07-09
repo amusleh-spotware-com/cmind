@@ -1,0 +1,58 @@
+@* Modal dialog to create a copy-trading profile: a source (master) account plus one or more
+   destination (slave) accounts. Returns NewCopyProfileResult on confirm. *@
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">New Copy Profile</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="_name" Label="Profile name" Required="true"
+                          RequiredError="Profile name is required" Class="mb-2" Immediate="true" />
+            <MudSelect T="long" @bind-Value="_source" Label="Source (master) account" Required="true"
+                       RequiredError="Source account is required" Class="mb-2">
+                @foreach (var a in Accounts)
+                {
+                    <MudSelectItem T="long" Value="@a.Number">@a.Label</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="long" MultiSelection="true" @bind-SelectedValues="_destinations"
+                       Label="Destination (slave) accounts" MultiSelectionTextFunc="@(v => $"{v.Count} account(s) selected")"
+                       HelperText="Select one or more accounts to copy trades into">
+                @foreach (var a in Accounts.Where(a => a.Number != _source))
+                {
+                    <MudSelectItem T="long" Value="@a.Number">@a.Label</MudSelectItem>
+                }
+            </MudSelect>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public IReadOnlyList<CopyAccountOption> Accounts { get; set; } = [];
+
+    private MudForm? _form;
+    private string _name = "";
+    private long _source;
+    private IEnumerable<long> _destinations = new HashSet<long>();
+
+    private async Task Submit()
+    {
+        if (_form is not null) await _form.Validate();
+        if (string.IsNullOrWhiteSpace(_name) || _source == 0) return;
+        Dialog.Close(DialogResult.Ok(new NewCopyProfileResult(
+            _name.Trim(), _source, _destinations.Where(d => d != _source).ToArray())));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    public sealed record CopyAccountOption(long Number, string Label);
+
+    public sealed record NewCopyProfileResult(string Name, long SourceAccountNumber, long[] DestinationAccountNumbers);
+}

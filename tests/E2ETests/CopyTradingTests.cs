@@ -1,0 +1,237 @@
+using System.Text.Json;
+using Core.Domain;
+using Microsoft.Playwright;
+using Xunit;
+
+namespace E2ETests;
+
+[Collection(AppCollection.Name)]
+public sealed class CopyTradingTests(AppFixture app)
+{
+    private static readonly string Suffix = Guid.NewGuid().ToString("N")[..6];
+    private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 15000 };
+
+    // ---------------- UI: profile creation is dialog-driven ----------------
+
+    [Fact]
+    public async Task New_profile_dialog_creates_profile()
+    {
+        var page = await app.NewAuthedPageAsync();
+
+        await GotoAsync(page, "/accounts");
+        var cid = $"ui-cid-{Suffix}";
+        var cidDialog = await OpenDialogAsync(page, "New cID Account");
+        await cidDialog.Locator("input").Nth(0).FillAsync(cid);
+        await cidDialog.Locator("input").Nth(1).FillAsync("cid_password_123");
+        await SubmitAsync(cidDialog, "Add");
+        await Assertions.Expect(page.GetByText(cid)).ToBeVisibleAsync(Slow);
+
+        var master = NextAccountNumber(10);
+        await AddTradingAccountAsync(page, master, $"UiMaster-{Suffix}");
+
+        await GotoAsync(page, "/copy-trading");
+        var profileName = $"ui-profile-{Suffix}";
+        var dialog = await OpenDialogAsync(page, "New Profile");
+        await dialog.GetByLabel("Profile name").FillAsync(profileName);
+        await dialog.Locator(".mud-select").First.ClickAsync();
+        await page.Locator($".mud-list-item:has-text('{master}')").First.ClickAsync();
+        await SubmitAsync(dialog, "Create");
+
+        var row = page.Locator($"tr:has-text('{profileName}')");
+        await Assertions.Expect(row).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(row.GetByText("Draft")).ToBeVisibleAsync(Slow);
+    }
+
+    // ---------------- Non-UI (API): multi-slave, options, lifecycle ----------------
+
+    [Fact]
+    public async Task Api_creates_profile_with_multiple_slave_accounts()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var api = page.APIRequest;
+
+        var cidId = await CreateCidAsync(api, $"api-cid-{Suffix}");
+        var master = await CreateAccountAsync(api, cidId, NextAccountNumber(20), "ApiMaster");
+        var slave1 = await CreateAccountAsync(api, cidId, NextAccountNumber(21), "ApiSlave1");
+        var slave2 = await CreateAccountAsync(api, cidId, NextAccountNumber(22), "ApiSlave2");
+
+        var create = await api.PostAsync(U("/api/copy/profiles"), new()
+        {
+            DataObject = new
+            {
+                Name = $"api-multi-{Suffix}",
+                SourceAccountId = master,
+                DestinationAccountIds = new[] { slave1, slave2 }
+            }
+        });
+        Assert.True(create.Ok, $"create profile failed: {create.Status}");
+        var profileId = (await ReadJsonAsync(create)).GetProperty("id").GetString()!;
+
+        var detail = await GetJsonAsync(api, $"/api/copy/profiles/{profileId}");
+        Assert.Equal(2, detail.GetProperty("destinations").GetArrayLength());
+    }
+
+    [Fact]
+    public async Task Api_destination_options_round_trip_and_lifecycle_transitions()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var api = page.APIRequest;
+
+        var cidId = await CreateCidAsync(api, $"opt-cid-{Suffix}");
+        var master = await CreateAccountAsync(api, cidId, NextAccountNumber(30), "OptMaster");
+        var slave = await CreateAccountAsync(api, cidId, NextAccountNumber(31), "OptSlave");
+
+        var create = await api.PostAsync(U("/api/copy/profiles"), new()
+        {
+            DataObject = new { Name = $"api-opt-{Suffix}", SourceAccountId = master }
+        });
+        Assert.True(create.Ok);
+        var profileId = (await ReadJsonAsync(create)).GetProperty("id").GetString()!;
+
+        // Add one destination exercising every copy option.
+        var addDest = await api.PostAsync(U($"/api/copy/profiles/{profileId}/destinations"), new()
+        {
+            DataObject = new
+            {
+                DestinationAccountId = slave,
+                Mode = (int)MoneyManagementMode.FixedRiskPercent,
+                Parameter = 2.5,
+                SlippagePips = 1.5,
+                MaxDelaySeconds = 30,
+                Reverse = true,
+                CopyStopLoss = true,
+                CopyTakeProfit = false,
+                Direction = (int)CopyDirectionFilter.LongOnly,
+                MinLot = 0.01,
+                MaxLot = 5.0,
+                ForceMinLot = true,
+                MaxDrawdownPercent = 20.0,
+                DailyLossLimit = 500.0,
+                SymbolFilterMode = (int)SymbolFilterMode.Whitelist,
+                SymbolFilters = new[] { "EURUSD", "GBPUSD" },
+                SymbolMap = new[] { new { Source = "EURUSD", Destination = "EURUSD.x" } }
+            }
+        });
+        Assert.True(addDest.Ok, $"add destination failed: {addDest.Status}");
+
+        var detail = await GetJsonAsync(api, $"/api/copy/profiles/{profileId}");
+        var dest = detail.GetProperty("destinations").EnumerateArray().Single();
+        Assert.Equal("FixedRiskPercent", dest.GetProperty("mode").GetString());
+        Assert.Equal(2.5, dest.GetProperty("riskParameter").GetDouble());
+        Assert.True(dest.GetProperty("reverse").GetBoolean());
+        Assert.False(dest.GetProperty("copyTakeProfit").GetBoolean());
+        Assert.Equal("LongOnly", dest.GetProperty("direction").GetString());
+        Assert.True(dest.GetProperty("forceMinLot").GetBoolean());
+        Assert.Equal(20.0, dest.GetProperty("maxDrawdownPercent").GetDouble());
+        Assert.Equal("Whitelist", dest.GetProperty("symbolFilterMode").GetString());
+        Assert.Equal(2, dest.GetProperty("symbolFilters").GetArrayLength());
+        var map = dest.GetProperty("symbolMaps").EnumerateArray().Single();
+        Assert.Equal("EURUSD", map.GetProperty("source").GetString());
+        Assert.Equal("EURUSD.X", map.GetProperty("destination").GetString());
+
+        // Lifecycle: Draft -> Running -> Paused -> Running -> Stopped.
+        Assert.Equal("Running", await ActAsync(api, profileId, "start"));
+        Assert.Equal("Paused", await ActAsync(api, profileId, "pause"));
+        Assert.Equal("Running", await ActAsync(api, profileId, "start"));
+        Assert.Equal("Stopped", await ActAsync(api, profileId, "stop"));
+    }
+
+    // ---------------- helpers ----------------
+
+    private string U(string path) => app.BaseUrl + path;
+
+    private static long NextAccountNumber(int slot) => 700_000 + (Convert.ToInt64(Suffix, 16) % 50_000) * 100 + slot;
+
+    private async Task<string> CreateCidAsync(IAPIRequestContext api, string username)
+    {
+        var r = await api.PostAsync(U("/api/ctids/"), new() { DataObject = new { Username = username, Password = "cid_password_123" } });
+        Assert.True(r.Ok, $"create cid failed: {r.Status}");
+        var cids = await GetJsonAsync(api, "/api/ctids/");
+        return cids.EnumerateArray().First(c => c.GetProperty("username").GetString() == username)
+            .GetProperty("id").GetString()!;
+    }
+
+    private async Task<Guid> CreateAccountAsync(IAPIRequestContext api, string cidId, long number, string broker)
+    {
+        var r = await api.PostAsync(U($"/api/ctids/{cidId}/accounts"), new()
+        {
+            DataObject = new { AccountNumber = number, Broker = broker, IsLive = false, Label = (string?)null }
+        });
+        Assert.True(r.Ok, $"create account failed: {r.Status}");
+        var accounts = await GetJsonAsync(api, "/api/accounts");
+        return accounts.EnumerateArray().First(a => a.GetProperty("accountNumber").GetInt64() == number)
+            .GetProperty("id").GetGuid();
+    }
+
+    private async Task<string> ActAsync(IAPIRequestContext api, string profileId, string action)
+    {
+        var r = await api.PostAsync(U($"/api/copy/profiles/{profileId}/{action}"), new());
+        Assert.True(r.Ok, $"action {action} failed: {r.Status}");
+        return (await ReadJsonAsync(r)).GetProperty("status").GetString()!;
+    }
+
+    private async Task<JsonElement> GetJsonAsync(IAPIRequestContext api, string path)
+    {
+        var r = await api.GetAsync(U(path));
+        Assert.True(r.Ok, $"GET {path} failed: {r.Status}");
+        return await ReadJsonAsync(r);
+    }
+
+    private static async Task<JsonElement> ReadJsonAsync(IAPIResponse response)
+    {
+        var text = await response.TextAsync();
+        return JsonSerializer.Deserialize<JsonElement>(text);
+    }
+
+    private async Task AddTradingAccountAsync(IPage page, long accountNumber, string broker)
+    {
+        var dialog = await OpenDialogAsync(page, "New Trading Account");
+        await dialog.Locator("input").Nth(0).FillAsync(accountNumber.ToString());
+        await dialog.Locator("input").Nth(1).FillAsync(broker);
+        await SubmitAsync(dialog, "Add");
+        await Assertions.Expect(page.GetByText(broker)).ToBeVisibleAsync(Slow);
+    }
+
+    private static async Task GotoAsync(IPage page, string path)
+    {
+        await page.GotoAsync(path);
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+    }
+
+    private static async Task<ILocator> OpenDialogAsync(IPage page, string buttonText)
+    {
+        var button = page.Locator($"button:has-text('{buttonText}')").First;
+        await button.WaitForAsync(new() { Timeout = 15000 });
+        var dialog = page.Locator(".mud-dialog").Last;
+
+        for (var attempt = 0; attempt < 15; attempt++)
+        {
+            await button.ClickAsync();
+            try
+            {
+                await dialog.WaitForAsync(new() { Timeout = 2000, State = WaitForSelectorState.Visible });
+                return dialog;
+            }
+            catch (TimeoutException) { /* circuit not interactive yet — retry */ }
+            catch (PlaywrightException) { /* stale locator after circuit reconnect — retry */ }
+        }
+        throw new TimeoutException($"Dialog did not open after clicking '{buttonText}'.");
+    }
+
+    private static async Task SubmitAsync(ILocator dialog, string buttonText)
+    {
+        var button = dialog.Locator($"button:has-text('{buttonText}')");
+        for (var attempt = 0; attempt < 15; attempt++)
+        {
+            await button.ClickAsync();
+            try
+            {
+                await dialog.WaitForAsync(new() { Timeout = 2000, State = WaitForSelectorState.Hidden });
+                return;
+            }
+            catch (TimeoutException) { /* submit click lost before circuit ready — retry */ }
+            catch (PlaywrightException) { /* stale locator after circuit reconnect — retry */ }
+        }
+        throw new TimeoutException($"Dialog did not close after clicking '{buttonText}'.");
+    }
+}

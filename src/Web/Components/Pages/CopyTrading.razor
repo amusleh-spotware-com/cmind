@@ -1,29 +1,21 @@
 @page "/copy-trading"
 @using System.Net.Http.Json
 @using Core.Domain
+@using Web.Components.Dialogs
 @using Web.Json
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
+@inject IDialogService Dialogs
 
 <PageTitle>Copy Trading</PageTitle>
 
-<MudText Typo="Typo.h5" Class="mb-3">Copy Trading</MudText>
-
-<MudCard Class="mb-4">
-    <MudCardContent>
-        <MudStack Row="true" AlignItems="AlignItems.Center">
-            <MudTextField @bind-Value="_newName" Label="Profile name" />
-            <MudSelect T="long" @bind-Value="_newSource" Label="Source account">
-                @foreach (var a in _accounts)
-                {
-                    <MudSelectItem T="long" Value="@((long)a.accountNumber)">@a.accountNumber (@a.broker)</MudSelectItem>
-                }
-            </MudSelect>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CreateProfile">Create profile</MudButton>
-        </MudStack>
-    </MudCardContent>
-</MudCard>
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Copy Trading</MudText>
+    <MudSpacer />
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
+               OnClick="OpenNewProfile">New Profile</MudButton>
+</MudStack>
 
 <MudTable Items="_profiles" Dense="true" OnRowClick="@((TableRowClickEventArgs<dynamic> e) => Select((Guid)e.Item!.id))">
     <HeaderContent>
@@ -65,7 +57,9 @@
             <MudText Typo="Typo.subtitle2">Add destination</MudText>
             <MudGrid>
                 <MudItem xs="6" md="3">
-                    <MudSelect T="long" @bind-Value="_destAccount" Label="Destination account">
+                    <MudSelect T="long" MultiSelection="true" @bind-SelectedValues="_destAccounts"
+                               Label="Destination (slave) accounts"
+                               MultiSelectionTextFunc="@(v => $"{v.Count} account(s)")">
                         @foreach (var a in _accounts)
                         {
                             <MudSelectItem T="long" Value="@((long)a.accountNumber)">@a.accountNumber</MudSelectItem>
@@ -130,10 +124,7 @@
     private dynamic? _detail;
     private Guid? _selectedId;
 
-    private string _newName = "";
-    private long _newSource;
-
-    private long _destAccount;
+    private IEnumerable<long> _destAccounts = new HashSet<long>();
     private MoneyManagementMode _mode = MoneyManagementMode.LotMultiplier;
     private double _param = 1;
     private double _slippage;
@@ -168,10 +159,30 @@
         _ => Color.Default
     };
 
-    private async Task CreateProfile()
+    private async Task OpenNewProfile()
     {
-        var r = await Http.PostAsJsonAsync("/api/copy/profiles", new { Name = _newName, SourceAccountId = SourceAccountGuid(_newSource) });
-        if (r.IsSuccessStatusCode) { _newName = ""; await Load(); }
+        var options = ((IEnumerable<dynamic>)_accounts)
+            .Select(a => new NewCopyProfileDialog.CopyAccountOption((long)a.accountNumber, $"{a.accountNumber} ({a.broker})"))
+            .ToList();
+        var parameters = new DialogParameters
+        {
+            { nameof(NewCopyProfileDialog.Accounts), (IReadOnlyList<NewCopyProfileDialog.CopyAccountOption>)options }
+        };
+        var dlg = await Dialogs.ShowAsync<NewCopyProfileDialog>(null,
+            parameters, new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
+        var res = await dlg.Result;
+        if (res is null || res.Canceled) return;
+        var data = (NewCopyProfileDialog.NewCopyProfileResult)res.Data!;
+
+        var destinationIds = data.DestinationAccountNumbers
+            .Select(SourceAccountGuid).Where(g => g != Guid.Empty).ToArray();
+        var r = await Http.PostAsJsonAsync("/api/copy/profiles", new
+        {
+            Name = data.Name,
+            SourceAccountId = SourceAccountGuid(data.SourceAccountNumber),
+            DestinationAccountIds = destinationIds
+        });
+        if (r.IsSuccessStatusCode) { Snack.Add("Profile created", Severity.Success); await Load(); }
         else Snack.Add("Failed to create profile", Severity.Error);
     }
 
@@ -199,28 +210,38 @@
     private async Task AddDestination()
     {
         if (_selectedId is not { } id) return;
-        var r = await Http.PostAsJsonAsync($"/api/copy/profiles/{id}/destinations", new
+        var accounts = _destAccounts.ToArray();
+        if (accounts.Length == 0) { Snack.Add("Select at least one destination account", Severity.Warning); return; }
+
+        var failed = false;
+        foreach (var accountNumber in accounts)
         {
-            DestinationAccountId = SourceAccountGuid(_destAccount),
-            Mode = _mode,
-            Parameter = _param,
-            SlippagePips = _slippage,
-            MaxDelaySeconds = _maxDelay,
-            Reverse = _reverse,
-            CopyStopLoss = _copyStopLoss,
-            CopyTakeProfit = _copyTakeProfit,
-            Direction = _direction,
-            MinLot = _minLot,
-            MaxLot = _maxLot,
-            ForceMinLot = _forceMin,
-            MaxDrawdownPercent = _maxDrawdown,
-            DailyLossLimit = _dailyLoss,
-            SymbolFilterMode = _filterMode,
-            SymbolFilters = ParseCsv(_filterText),
-            SymbolMap = ParseMap(_symbolMapText)
-        });
-        if (r.IsSuccessStatusCode) await Select(id);
-        else Snack.Add("Failed to add destination", Severity.Error);
+            var r = await Http.PostAsJsonAsync($"/api/copy/profiles/{id}/destinations", new
+            {
+                DestinationAccountId = SourceAccountGuid(accountNumber),
+                Mode = _mode,
+                Parameter = _param,
+                SlippagePips = _slippage,
+                MaxDelaySeconds = _maxDelay,
+                Reverse = _reverse,
+                CopyStopLoss = _copyStopLoss,
+                CopyTakeProfit = _copyTakeProfit,
+                Direction = _direction,
+                MinLot = _minLot,
+                MaxLot = _maxLot,
+                ForceMinLot = _forceMin,
+                MaxDrawdownPercent = _maxDrawdown,
+                DailyLossLimit = _dailyLoss,
+                SymbolFilterMode = _filterMode,
+                SymbolFilters = ParseCsv(_filterText),
+                SymbolMap = ParseMap(_symbolMapText)
+            });
+            if (!r.IsSuccessStatusCode) failed = true;
+        }
+
+        if (failed) Snack.Add("Some destinations could not be added", Severity.Error);
+        _destAccounts = new HashSet<long>();
+        await Select(id);
     }
 
     private async Task RemoveDestination(Guid destinationId)
@@ -232,7 +253,9 @@
 
     private async Task SuggestSymbols()
     {
-        var guid = SourceAccountGuid(_destAccount);
+        var first = _destAccounts.FirstOrDefault();
+        if (first == 0) return;
+        var guid = SourceAccountGuid(first);
         if (guid == Guid.Empty) return;
         try { _suggested = await Http.GetFromJsonAsync<string[]>($"/api/copy/accounts/{guid}/symbols") ?? []; }
         catch { _suggested = []; }

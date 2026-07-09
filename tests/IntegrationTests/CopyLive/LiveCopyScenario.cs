@@ -1,0 +1,139 @@
+using Core;
+using Core.Domain;
+using CopyEngine;
+using CTraderOpenApi.Client;
+using Microsoft.Extensions.Logging.Abstractions;
+using Xunit.Abstractions;
+
+namespace IntegrationTests.CopyLive;
+
+// Drives one real copy scenario end to end against cTrader demo accounts: starts the production
+// CopyEngineHost, opens a position on the master, and waits for the mirrored copies on each slave.
+// Cleans up every position it opened. Returns a result the test asserts on. Handles a closed market
+// (no fill) by reporting Inconclusive instead of a hard failure.
+public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper output)
+{
+    private static readonly string[] SymbolPreference = ["BTCUSD", "EURUSD", "GBPUSD", "XAUUSD"];
+    private static readonly TimeSpan HostWarmup = TimeSpan.FromSeconds(6);
+    private static readonly TimeSpan CopyTimeout = TimeSpan.FromSeconds(30);
+
+    public sealed record SlaveSetup(long Ctid, CopyDestination Config);
+
+    public sealed record SlaveResult(long Ctid, bool Copied, bool IsBuy, long Volume);
+
+    public sealed record ScenarioResult(bool Inconclusive, string? Reason, bool MasterIsBuy,
+        long MasterVolume, IReadOnlyList<SlaveResult> Slaves);
+
+    public async Task<ScenarioResult> RunAsync(long masterCtid, bool masterIsBuy,
+        IReadOnlyList<SlaveSetup> slaves, CancellationToken ct)
+    {
+        var plan = new CopyProfilePlan(CopyProfileId.New(), fixture.IsLive, fixture.ClientId, fixture.ClientSecret,
+            masterCtid, fixture.AccessToken,
+            slaves.Select(s => new CopyDestinationPlan(s.Ctid, fixture.AccessToken, s.Config)).ToList());
+
+        var host = new CopyEngineHost(plan, fixture.ConnectionFactory,
+            new CopyDecisionEngine(new CopySizingCalculator()), NullLogger.Instance);
+
+        using var hostCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var hostTask = Task.Run(() => host.RunAsync(hostCts.Token), CancellationToken.None);
+
+        var probeCtids = new[] { masterCtid }.Concat(slaves.Select(s => s.Ctid)).ToArray();
+        await using var probe = fixture.NewSession(probeCtids);
+        await probe.StartAsync(ct);
+
+        var symbolId = await ResolveSymbolAsync(probe, masterCtid, ct);
+        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct)).First();
+        var volume = details.MinVolume > 0 ? details.MinVolume : details.StepVolume;
+
+        var label = $"cmind-live-{Guid.NewGuid():N}"[..24];
+        output.WriteLine($"Host warming up ({HostWarmup.TotalSeconds}s) before opening master position…");
+        await Task.Delay(HostWarmup, ct);
+
+        await probe.SendMarketOrderAsync(masterCtid, symbolId, masterIsBuy, volume, label, ct);
+
+        var masterPosition = await PollAsync(
+            () => FindByLabelAsync(probe, masterCtid, label, ct), TimeSpan.FromSeconds(12), ct);
+        if (masterPosition is null)
+        {
+            await StopHostAsync(hostCts, hostTask);
+            return new ScenarioResult(true, "Master order did not fill (market likely closed).",
+                masterIsBuy, volume, []);
+        }
+
+        var sourceId = masterPosition.PositionId.ToString();
+        var slaveResults = new List<SlaveResult>();
+        foreach (var slave in slaves)
+        {
+            var copy = await PollAsync(() => FindByLabelAsync(probe, slave.Ctid, sourceId, ct), CopyTimeout, ct);
+            slaveResults.Add(new SlaveResult(slave.Ctid, copy is not null, copy?.IsBuy ?? false, copy?.Volume ?? 0));
+            output.WriteLine($"slave {slave.Ctid}: copied={copy is not null} volume={copy?.Volume ?? 0} buy={copy?.IsBuy}");
+        }
+
+        await CleanupAsync(probe, masterCtid, sourceId, slaves, ct);
+        await StopHostAsync(hostCts, hostTask);
+        return new ScenarioResult(false, null, masterIsBuy, volume, slaveResults);
+    }
+
+    private async Task<long> ResolveSymbolAsync(OpenApiTradingSession probe, long masterCtid, CancellationToken ct)
+    {
+        var ids = await probe.LoadSymbolIdsAsync(masterCtid, ct);
+        foreach (var preferred in SymbolPreference)
+            if (ids.TryGetValue(preferred, out var id)) return id;
+        return ids.Values.First();
+    }
+
+    private static async Task<OpenPositionSnapshot?> FindByLabelAsync(
+        OpenApiTradingSession probe, long ctid, string label, CancellationToken ct)
+    {
+        var positions = await probe.ReconcileAsync(ctid, ct);
+        return positions.FirstOrDefault(p => p.Label == label);
+    }
+
+    private static async Task<T?> PollAsync<T>(Func<Task<T?>> probe, TimeSpan timeout, CancellationToken ct)
+        where T : class
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            var result = await probe();
+            if (result is not null) return result;
+            await Task.Delay(TimeSpan.FromMilliseconds(800), ct);
+        }
+        return null;
+    }
+
+    private async Task CleanupAsync(OpenApiTradingSession probe, long masterCtid, string sourceId,
+        IReadOnlyList<SlaveSetup> slaves, CancellationToken ct)
+    {
+        foreach (var slave in slaves)
+        {
+            foreach (var position in await probe.ReconcileAsync(slave.Ctid, ct))
+                if (position.Label == sourceId)
+                    await SafeCloseAsync(probe, slave.Ctid, position, ct);
+        }
+
+        foreach (var position in await probe.ReconcileAsync(masterCtid, ct))
+            if (position.PositionId.ToString() == sourceId)
+                await SafeCloseAsync(probe, masterCtid, position, ct);
+    }
+
+    private async Task SafeCloseAsync(OpenApiTradingSession probe, long ctid, OpenPositionSnapshot position, CancellationToken ct)
+    {
+        try { await probe.ClosePositionAsync(ctid, position.PositionId, position.Volume, ct); }
+        catch (Exception ex) { output.WriteLine($"cleanup close failed for {ctid}/{position.PositionId}: {ex.Message}"); }
+    }
+
+    private static async Task StopHostAsync(CancellationTokenSource hostCts, Task hostTask)
+    {
+        hostCts.Cancel();
+        try { await hostTask.WaitAsync(TimeSpan.FromSeconds(5)); } catch { /* best effort */ }
+    }
+
+    public static CopyDestination Destination(Action<CopyDestination>? configure = null)
+    {
+        var profile = CopyProfile.Create(UserId.New(), "live", TradingAccountId.New());
+        var destination = profile.AddDestination(TradingAccountId.New(), RiskSettings.Default);
+        configure?.Invoke(destination);
+        return destination;
+    }
+}

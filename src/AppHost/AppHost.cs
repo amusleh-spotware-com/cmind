@@ -12,6 +12,8 @@ var postgres = builder.AddPostgres("postgres", password: pgPassword)
 
 var appDb = postgres.AddDatabase("appdb");
 
+var copyEnabled = builder.Configuration["CopyEnabled"] ?? "false";
+
 var web = builder.AddProject<Projects.Web>("web")
     .WithReference(appDb)
     .WaitFor(appDb)
@@ -19,6 +21,7 @@ var web = builder.AddProject<Projects.Web>("web")
     .WithEnvironment("App__OwnerPassword", ownerPassword)
     .WithEnvironment("App__DataProtectionCertBase64", dataProtectionCertB64)
     .WithEnvironment("App__DataProtectionCertPassword", dataProtectionCertPass)
+    .WithEnvironment("App__Copy__Enabled", copyEnabled)
     .WithExternalHttpEndpoints();
 
 var mcp = builder.AddProject<Projects.Mcp>("mcp")

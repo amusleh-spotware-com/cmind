@@ -31,7 +31,7 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
             masterCtid, fixture.AccessToken,
             slaves.Select(s => new CopyDestinationPlan(s.Ctid, fixture.AccessToken, s.Config)).ToList());
 
-        var host = new CopyEngineHost(plan, fixture.ConnectionFactory,
+        var host = new CopyEngineHost(plan, new OpenApiTradingSessionFactory(fixture.ConnectionFactory),
             new CopyDecisionEngine(new CopySizingCalculator()), NullLogger.Instance);
 
         using var hostCts = CancellationTokenSource.CreateLinkedTokenSource(ct);

@@ -95,6 +95,37 @@ public sealed class CopyDecisionEngineTests
     }
 
     [Fact]
+    public void ShortOnly_blocks_long_source()
+    {
+        var destination = Destination(d => d.SetDirection(CopyDirectionFilter.ShortOnly));
+        _engine.DecideOpen(destination, Context(isLong: true)).SkipReason.Should().Be("direction");
+    }
+
+    [Fact]
+    public void ShortOnly_allows_short_source()
+    {
+        var destination = Destination(d => d.SetDirection(CopyDirectionFilter.ShortOnly));
+        _engine.DecideOpen(destination, Context(isLong: false)).Kind.Should().Be(CopyActionKind.Open);
+    }
+
+    [Fact]
+    public void Slippage_exactly_at_limit_is_allowed()
+    {
+        var destination = Destination(d => d.ConfigureSlippage(new SlippagePips(5)));
+        // 1.1000 -> 1.1005 at 0.0001 pip size == exactly 5 pips, which is within the limit.
+        _engine.DecideOpen(destination, Context(openPrice: 1.1000, destinationPrice: 1.1005))
+            .Kind.Should().Be(CopyActionKind.Open);
+    }
+
+    [Fact]
+    public void Zero_sized_destination_is_skipped()
+    {
+        // Bound the min lot above the copied size with no force -> the sizer skips -> size_zero.
+        var destination = Destination(d => d.ConfigureBounds(new LotBounds(100, 0, false)));
+        _engine.DecideOpen(destination, Context()).SkipReason.Should().Be("size_zero");
+    }
+
+    [Fact]
     public void PositionsToOpen_excludes_already_mapped_sources()
     {
         var map = new Dictionary<long, long> { [10] = 100 };

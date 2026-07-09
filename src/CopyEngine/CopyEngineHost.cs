@@ -24,7 +24,7 @@ public sealed record CopyProfilePlan(
 /// </summary>
 public sealed class CopyEngineHost(
     CopyProfilePlan plan,
-    IOpenApiConnectionFactory connectionFactory,
+    IOpenApiTradingSessionFactory sessionFactory,
     CopyDecisionEngine decisions,
     ILogger logger)
 {
@@ -35,8 +35,7 @@ public sealed class CopyEngineHost(
 
     public async Task RunAsync(CancellationToken ct)
     {
-        await using var session = new OpenApiTradingSession(
-            connectionFactory.Create(plan.Live, plan.ClientId, plan.ClientSecret));
+        await using var session = sessionFactory.Create(plan.Live, plan.ClientId, plan.ClientSecret);
 
         session.AttachAccount(plan.SourceCtidTraderAccountId, plan.SourceAccessToken);
         foreach (var destination in plan.Destinations)
@@ -82,35 +81,53 @@ public sealed class CopyEngineHost(
 
         foreach (var destination in plan.Destinations)
         {
-            var destinationName = destination.Config.ResolveDestinationSymbol(sourceName);
-            if (!_destinationSymbolIds[destination.CtidTraderAccountId].TryGetValue(Normalize(destinationName), out var destinationSymbolId))
-                continue;
-
-            var destinationDetail = await SymbolDetailAsync(session, destination.CtidTraderAccountId, destinationSymbolId, ct);
-            var destinationBalance = await session.LoadBalanceAsync(destination.CtidTraderAccountId, ct);
-
-            var decision = decisions.DecideOpen(destination.Config, new OpenDecisionContext(
-                new SourcePosition(execution.PositionId, sourceName, execution.IsBuy, sourceLots,
-                    execution.Price, execution.StopLoss, execution.TakeProfit),
-                Snapshot(sourceBalance),
-                Snapshot(destinationBalance),
-                Spec(sourceDetail),
-                Spec(destinationDetail),
-                execution.Price,
-                Math.Pow(10, -destinationDetail.PipPosition),
-                TimeSpan.Zero));
-
-            if (decision.Kind != CopyActionKind.Open) continue;
-
-            var effectiveBuy = destination.Config.Reverse ? !execution.IsBuy : execution.IsBuy;
-            var wireVolume = VolumeConversion.ProtocolFromLots(decision.Lots, destinationDetail.LotSize);
-            if (wireVolume <= 0) continue;
-
-            await session.SendMarketOrderAsync(destination.CtidTraderAccountId, destinationSymbolId,
-                effectiveBuy, wireVolume, execution.PositionId.ToString(), ct);
-
-            await ApplyProtectionAsync(session, destination, execution, ct);
+            // Isolate each destination: a failure copying to one slave (rejected order, symbol issue,
+            // transient error) must not stop the copy reaching the other slaves.
+            try
+            {
+                await CopyOpenToDestinationAsync(session, destination, execution, sourceName, sourceLots,
+                    sourceDetail, sourceBalance, ct);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Copy open to destination {Ctid} failed for source position {PositionId}",
+                    destination.CtidTraderAccountId, execution.PositionId);
+            }
         }
+    }
+
+    private async Task CopyOpenToDestinationAsync(IOpenApiTradingSession session, CopyDestinationPlan destination,
+        ExecutionEvent execution, string sourceName, double sourceLots, SymbolDetails sourceDetail,
+        double sourceBalance, CancellationToken ct)
+    {
+        var destinationName = destination.Config.ResolveDestinationSymbol(sourceName);
+        if (!_destinationSymbolIds[destination.CtidTraderAccountId].TryGetValue(Normalize(destinationName), out var destinationSymbolId))
+            return;
+
+        var destinationDetail = await SymbolDetailAsync(session, destination.CtidTraderAccountId, destinationSymbolId, ct);
+        var destinationBalance = await session.LoadBalanceAsync(destination.CtidTraderAccountId, ct);
+
+        var decision = decisions.DecideOpen(destination.Config, new OpenDecisionContext(
+            new SourcePosition(execution.PositionId, sourceName, execution.IsBuy, sourceLots,
+                execution.Price, execution.StopLoss, execution.TakeProfit),
+            Snapshot(sourceBalance),
+            Snapshot(destinationBalance),
+            Spec(sourceDetail),
+            Spec(destinationDetail),
+            execution.Price,
+            Math.Pow(10, -destinationDetail.PipPosition),
+            TimeSpan.Zero));
+
+        if (decision.Kind != CopyActionKind.Open) return;
+
+        var effectiveBuy = destination.Config.Reverse ? !execution.IsBuy : execution.IsBuy;
+        var wireVolume = VolumeConversion.ProtocolFromLots(decision.Lots, destinationDetail.LotSize);
+        if (wireVolume <= 0) return;
+
+        await session.SendMarketOrderAsync(destination.CtidTraderAccountId, destinationSymbolId,
+            effectiveBuy, wireVolume, execution.PositionId.ToString(), ct);
+
+        await ApplyProtectionAsync(session, destination, execution, ct);
     }
 
     private static async Task ApplyProtectionAsync(
@@ -143,9 +160,17 @@ public sealed class CopyEngineHost(
 
         foreach (var destination in plan.Destinations)
         {
-            var positions = await session.ReconcileAsync(destination.CtidTraderAccountId, ct);
-            foreach (var position in positions.Where(p => p.Label == label))
-                await session.ClosePositionAsync(destination.CtidTraderAccountId, position.PositionId, position.Volume, ct);
+            try
+            {
+                var positions = await session.ReconcileAsync(destination.CtidTraderAccountId, ct);
+                foreach (var position in positions.Where(p => p.Label == label))
+                    await session.ClosePositionAsync(destination.CtidTraderAccountId, position.PositionId, position.Volume, ct);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Copy close to destination {Ctid} failed for source position {PositionId}",
+                    destination.CtidTraderAccountId, sourcePositionId);
+            }
         }
     }
 

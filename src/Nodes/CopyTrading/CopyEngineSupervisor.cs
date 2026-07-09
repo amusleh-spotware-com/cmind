@@ -24,7 +24,7 @@ namespace Nodes.CopyTrading;
 /// </summary>
 public sealed class CopyEngineSupervisor(
     IServiceScopeFactory scopeFactory,
-    IOpenApiConnectionFactory connectionFactory,
+    IOpenApiTradingSessionFactory sessionFactory,
     IOptionsMonitor<AppOptions> options,
     ILoggerFactory loggerFactory,
     ILogger<CopyEngineSupervisor> log) : BackgroundService
@@ -76,7 +76,7 @@ public sealed class CopyEngineSupervisor(
             }
 
             var cts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
-            var host = new CopyEngineHost(plan, connectionFactory,
+            var host = new CopyEngineHost(plan, sessionFactory,
                 new CopyDecisionEngine(new CopySizingCalculator()), loggerFactory.CreateLogger<CopyEngineHost>());
             var task = Task.Run(() => host.RunAsync(cts.Token), CancellationToken.None);
             _running[profile.Id] = new HostHandle(task, cts);

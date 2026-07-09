@@ -38,6 +38,17 @@ public interface IOpenApiTradingSession : IAsyncDisposable
         long ctidTraderAccountId, IReadOnlyCollection<long> symbolIds, CancellationToken ct);
 }
 
+public interface IOpenApiTradingSessionFactory
+{
+    IOpenApiTradingSession Create(bool live, string clientId, string clientSecret);
+}
+
+public sealed class OpenApiTradingSessionFactory(IOpenApiConnectionFactory connectionFactory) : IOpenApiTradingSessionFactory
+{
+    public IOpenApiTradingSession Create(bool live, string clientId, string clientSecret)
+        => new OpenApiTradingSession(connectionFactory.Create(live, clientId, clientSecret));
+}
+
 public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenApiTradingSession
 {
     public ConnectionState State => connection.State;

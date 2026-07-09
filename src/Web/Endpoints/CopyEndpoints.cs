@@ -1,6 +1,8 @@
+using System.Text;
 using Core;
 using Core.Constants;
 using Core.Domain;
+using CTraderOpenApi.Client;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -25,7 +27,12 @@ public record AddCopyDestinationRequest(
     double MaxLot,
     bool ForceMinLot,
     double MaxDrawdownPercent,
-    double DailyLossLimit);
+    double DailyLossLimit,
+    SymbolFilterMode SymbolFilterMode = SymbolFilterMode.None,
+    IReadOnlyList<string>? SymbolFilters = null,
+    IReadOnlyList<SymbolMapPair>? SymbolMap = null);
+
+public record SymbolMapPair(string Source, string Destination);
 
 public static class CopyEndpoints
 {
@@ -46,6 +53,34 @@ public static class CopyEndpoints
                 Status = p.Status.ToString(),
                 DestinationCount = p.Destinations.Count
             });
+        });
+
+        g.MapGet("/accounts/{tradingAccountId:guid}/symbols", async (Guid tradingAccountId, DataContext db,
+            ICurrentUser u, ISecretProtector p, IOpenApiClient client, CancellationToken ct) =>
+        {
+            var uid = u.UserId!.Value;
+            var tid = TradingAccountId.From(tradingAccountId);
+            var account = await db.TradingAccounts.Include(t => t.CTid)
+                .FirstOrDefaultAsync(t => t.Id == tid && t.CTid.UserId == uid, ct);
+            if (account?.OpenApiAuthorizationId is null || account.CtidTraderAccountId is null)
+                return Results.BadRequest("Account is not Open API linked.");
+
+            var auth = await db.OpenApiAuthorizations.FirstOrDefaultAsync(a => a.Id == account.OpenApiAuthorizationId, ct);
+            var application = auth is null ? null
+                : await db.OpenApiApplications.FirstOrDefaultAsync(a => a.Id == auth.ApplicationId, ct);
+            if (auth is null || application is null) return Results.NotFound();
+
+            var secret = Encoding.UTF8.GetString(p.Unprotect(application.EncryptedClientSecret, EncryptionPurposes.OpenApiClientSecret));
+            var token = Encoding.UTF8.GetString(p.Unprotect(auth.EncryptedAccessToken, EncryptionPurposes.OpenApiAccessToken));
+            try
+            {
+                return Results.Ok(await client.GetSymbolNamesAsync(
+                    account.IsLive, application.ClientId, secret, token, account.CtidTraderAccountId.Value, ct));
+            }
+            catch (Exception)
+            {
+                return Results.Ok(Array.Empty<string>());
+            }
         });
 
         g.MapGet("/profiles/{id:guid}", async (Guid id, ICopyProfileRepository repo, ICurrentUser u, CancellationToken ct) =>
@@ -75,6 +110,8 @@ public static class CopyEndpoints
                     d.ForceMinLot,
                     d.MaxDrawdownPercent,
                     d.DailyLossLimit,
+                    SymbolFilterMode = d.SymbolFilterMode.ToString(),
+                    SymbolFilters = d.SymbolFilters.Select(f => f.Symbol),
                     SymbolMaps = d.SymbolMaps.Select(m => new { m.Source, m.Destination })
                 })
             });
@@ -114,6 +151,10 @@ public static class CopyEndpoints
             destination.SetCopyProtection(req.CopyStopLoss, req.CopyTakeProfit);
             destination.SetDirection(req.Direction);
             destination.SetGuards(new DrawdownPercent(req.MaxDrawdownPercent), req.DailyLossLimit);
+            if (req.SymbolMap is { Count: > 0 })
+                destination.SetSymbolMap(req.SymbolMap.Select(m => new SymbolMapEntry(new Symbol(m.Source), new Symbol(m.Destination))));
+            if (req.SymbolFilterMode != SymbolFilterMode.None && req.SymbolFilters is { Count: > 0 })
+                destination.SetSymbolFilter(req.SymbolFilterMode, req.SymbolFilters.Select(s => new Symbol(s)));
             await repo.SaveChangesAsync(ct);
             return Results.Ok(new { destination.Id });
         });

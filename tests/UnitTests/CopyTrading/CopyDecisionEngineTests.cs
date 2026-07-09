@@ -74,6 +74,27 @@ public sealed class CopyDecisionEngineTests
     }
 
     [Fact]
+    public void Whitelist_blocks_unlisted_symbol()
+    {
+        var destination = Destination(d => d.SetSymbolFilter(SymbolFilterMode.Whitelist, [new Symbol("GBPUSD")]));
+        _engine.DecideOpen(destination, Context()).SkipReason.Should().Be("symbol_filter");
+    }
+
+    [Fact]
+    public void Blacklist_blocks_listed_symbol()
+    {
+        var destination = Destination(d => d.SetSymbolFilter(SymbolFilterMode.Blacklist, [new Symbol("EURUSD")]));
+        _engine.DecideOpen(destination, Context()).SkipReason.Should().Be("symbol_filter");
+    }
+
+    [Fact]
+    public void Whitelist_allows_listed_symbol()
+    {
+        var destination = Destination(d => d.SetSymbolFilter(SymbolFilterMode.Whitelist, [new Symbol("EURUSD")]));
+        _engine.DecideOpen(destination, Context()).Kind.Should().Be(CopyActionKind.Open);
+    }
+
+    [Fact]
     public void PositionsToOpen_excludes_already_mapped_sources()
     {
         var map = new Dictionary<long, long> { [10] = 100 };

@@ -108,6 +108,31 @@ public sealed class CopyEngineHost(
 
             await session.SendMarketOrderAsync(destination.CtidTraderAccountId, destinationSymbolId,
                 effectiveBuy, wireVolume, execution.PositionId.ToString(), ct);
+
+            await ApplyProtectionAsync(session, destination, execution, ct);
+        }
+    }
+
+    private static async Task ApplyProtectionAsync(
+        IOpenApiTradingSession session, CopyDestinationPlan destination, ExecutionEvent source, CancellationToken ct)
+    {
+        double? stopLoss = destination.Config.CopyStopLoss ? source.StopLoss : null;
+        double? takeProfit = destination.Config.CopyTakeProfit ? source.TakeProfit : null;
+        if (destination.Config.Reverse) (stopLoss, takeProfit) = (takeProfit, stopLoss);
+        if (stopLoss is null && takeProfit is null) return;
+
+        var label = source.PositionId.ToString();
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            var positions = await session.ReconcileAsync(destination.CtidTraderAccountId, ct);
+            var match = positions.FirstOrDefault(p => p.Label == label);
+            if (match is not null)
+            {
+                await session.AmendPositionSltpAsync(destination.CtidTraderAccountId, match.PositionId, stopLoss, takeProfit, ct);
+                return;
+            }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(400), ct);
         }
     }
 

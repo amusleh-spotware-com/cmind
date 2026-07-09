@@ -20,9 +20,19 @@ public sealed class CopySymbolMapEntry
     }
 }
 
+public sealed class CopySymbolFilter
+{
+    public string Symbol { get; private set; } = default!;
+
+    private CopySymbolFilter() { }
+
+    public CopySymbolFilter(Symbol symbol) => Symbol = symbol.Value;
+}
+
 public class CopyDestination : AuditedEntity<CopyDestinationId>
 {
     private readonly List<CopySymbolMapEntry> _symbolMaps = [];
+    private readonly List<CopySymbolFilter> _symbolFilters = [];
 
     public CopyProfileId ProfileId { get; private set; }
     public TradingAccountId DestinationAccountId { get; private set; }
@@ -39,7 +49,9 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public bool ForceMinLot { get; private set; }
     public double MaxDrawdownPercent { get; private set; }
     public double DailyLossLimit { get; private set; }
+    public SymbolFilterMode SymbolFilterMode { get; private set; } = SymbolFilterMode.None;
     public IReadOnlyList<CopySymbolMapEntry> SymbolMaps => _symbolMaps;
+    public IReadOnlyList<CopySymbolFilter> SymbolFilters => _symbolFilters;
 
     private CopyDestination() { }
 
@@ -82,6 +94,22 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public string ResolveDestinationSymbol(string sourceSymbol)
         => _symbolMaps.FirstOrDefault(m => string.Equals(m.Source, sourceSymbol, StringComparison.OrdinalIgnoreCase))
                ?.Destination ?? sourceSymbol;
+
+    public void SetSymbolFilter(SymbolFilterMode mode, IEnumerable<Symbol> symbols)
+    {
+        SymbolFilterMode = mode;
+        _symbolFilters.Clear();
+        foreach (var symbol in symbols)
+            _symbolFilters.Add(new CopySymbolFilter(symbol));
+        Touch();
+    }
+
+    public bool IsSymbolAllowed(string sourceSymbol) => SymbolFilterMode switch
+    {
+        SymbolFilterMode.Whitelist => _symbolFilters.Any(f => string.Equals(f.Symbol, sourceSymbol, StringComparison.OrdinalIgnoreCase)),
+        SymbolFilterMode.Blacklist => !_symbolFilters.Any(f => string.Equals(f.Symbol, sourceSymbol, StringComparison.OrdinalIgnoreCase)),
+        _ => true
+    };
 }
 
 public class CopyProfile : AuditedEntity<CopyProfileId>

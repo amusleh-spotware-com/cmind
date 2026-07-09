@@ -32,6 +32,7 @@ public interface IOpenApiTradingSession : IAsyncDisposable
     Task<IReadOnlyDictionary<long, string>> LoadSymbolNamesAsync(long ctidTraderAccountId, CancellationToken ct);
     Task SendMarketOrderAsync(long ctidTraderAccountId, long symbolId, bool isBuy, long volume, string label, CancellationToken ct);
     Task ClosePositionAsync(long ctidTraderAccountId, long positionId, long volume, CancellationToken ct);
+    Task AmendPositionSltpAsync(long ctidTraderAccountId, long positionId, double? stopLoss, double? takeProfit, CancellationToken ct);
     Task<IReadOnlyList<OpenPositionSnapshot>> ReconcileAsync(long ctidTraderAccountId, CancellationToken ct);
     Task<IReadOnlyList<SymbolDetails>> LoadSymbolDetailsAsync(
         long ctidTraderAccountId, IReadOnlyCollection<long> symbolIds, CancellationToken ct);
@@ -132,6 +133,19 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
             Volume = volume
         };
         await connection.SendAsync(request, (int)ProtoOAPayloadType.ProtoOaClosePositionReq, ct);
+    }
+
+    public async Task AmendPositionSltpAsync(
+        long ctidTraderAccountId, long positionId, double? stopLoss, double? takeProfit, CancellationToken ct)
+    {
+        var request = new ProtoOAAmendPositionSLTPReq
+        {
+            CtidTraderAccountId = ctidTraderAccountId,
+            PositionId = positionId
+        };
+        if (stopLoss.HasValue) request.StopLoss = stopLoss.Value;
+        if (takeProfit.HasValue) request.TakeProfit = takeProfit.Value;
+        await connection.SendAsync(request, (int)ProtoOAPayloadType.ProtoOaAmendPositionSltpReq, ct);
     }
 
     public async Task<IReadOnlyList<OpenPositionSnapshot>> ReconcileAsync(long ctidTraderAccountId, CancellationToken ct)

@@ -14,6 +14,9 @@ public interface IOpenApiConnectionFactory
 public interface IOpenApiClient
 {
     Task<OpenApiGrant> LoadGrantAsync(string clientId, string clientSecret, string accessToken, CancellationToken ct);
+
+    Task<IReadOnlyList<string>> GetSymbolNamesAsync(
+        bool live, string clientId, string clientSecret, string accessToken, long ctidTraderAccountId, CancellationToken ct);
 }
 
 public sealed class OpenApiClient(IOpenApiConnectionFactory connectionFactory) : IOpenApiClient
@@ -38,5 +41,15 @@ public sealed class OpenApiClient(IOpenApiConnectionFactory connectionFactory) :
             .ToList();
 
         return new OpenApiGrant(ctidUserId, accounts);
+    }
+
+    public async Task<IReadOnlyList<string>> GetSymbolNamesAsync(
+        bool live, string clientId, string clientSecret, string accessToken, long ctidTraderAccountId, CancellationToken ct)
+    {
+        await using var session = new OpenApiTradingSession(connectionFactory.Create(live, clientId, clientSecret));
+        session.AttachAccount(ctidTraderAccountId, accessToken);
+        await session.StartAsync(ct);
+        var symbols = await session.LoadSymbolIdsAsync(ctidTraderAccountId, ct);
+        return symbols.Keys.OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToList();
     }
 }

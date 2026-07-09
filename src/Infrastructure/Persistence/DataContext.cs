@@ -259,12 +259,16 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.HasIndex(x => new { x.ProfileId, x.DestinationAccountId }).IsUnique().HasFilter("\"IsDeleted\" = false");
             e.Property(x => x.RiskMode).HasConversion<string>().HasMaxLength(24);
             e.Property(x => x.Direction).HasConversion<string>().HasMaxLength(16);
+            e.Property(x => x.SymbolFilterMode).HasConversion<string>().HasMaxLength(16);
             e.OwnsMany(x => x.SymbolMaps, b => b.ToJson());
+            e.OwnsMany(x => x.SymbolFilters, b => b.ToJson());
         });
 
         modelBuilder.Entity<CopyProfile>().Navigation(x => x.Destinations)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
         modelBuilder.Entity<CopyDestination>().Navigation(x => x.SymbolMaps)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+        modelBuilder.Entity<CopyDestination>().Navigation(x => x.SymbolFilters)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         modelBuilder.Entity<CTraderIdAccount>().Navigation(x => x.TradingAccounts)

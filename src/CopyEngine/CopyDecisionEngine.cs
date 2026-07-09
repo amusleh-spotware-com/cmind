@@ -42,6 +42,9 @@ public sealed class CopyDecisionEngine(ICopySizingCalculator calculator)
 {
     public CopyAction DecideOpen(CopyDestination destination, OpenDecisionContext context)
     {
+        if (!destination.IsSymbolAllowed(context.Source.Symbol))
+            return CopyAction.Skip("symbol_filter");
+
         var effectiveLong = destination.Reverse ? !context.Source.IsLong : context.Source.IsLong;
 
         if (destination.Direction == CopyDirectionFilter.LongOnly && !effectiveLong)

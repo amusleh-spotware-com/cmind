@@ -22,6 +22,13 @@ public enum CopyDirectionFilter
     ShortOnly = 2
 }
 
+public enum SymbolFilterMode
+{
+    None = 0,
+    Whitelist = 1,
+    Blacklist = 2
+}
+
 public enum CopyProfileStatus
 {
     Draft = 0,

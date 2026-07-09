@@ -1,4 +1,5 @@
 @page "/copy-trading"
+@using System.Net.Http.Json
 @using Core.Domain
 @using Web.Json
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
@@ -98,6 +99,23 @@
                 <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_forceMin" Label="Force min lot" Color="Color.Primary" /></MudItem>
                 <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyStopLoss" Label="Copy SL" Color="Color.Primary" /></MudItem>
                 <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyTakeProfit" Label="Copy TP" Color="Color.Primary" /></MudItem>
+                <MudItem xs="12" md="6"><MudTextField @bind-Value="_symbolMapText" Label="Symbol map (SRC=DST, comma separated)" /></MudItem>
+                <MudItem xs="6" md="3">
+                    <MudSelect T="SymbolFilterMode" @bind-Value="_filterMode" Label="Symbol filter">
+                        @foreach (var f in Enum.GetValues<SymbolFilterMode>())
+                        {
+                            <MudSelectItem T="SymbolFilterMode" Value="@f">@f</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="6" md="3"><MudTextField @bind-Value="_filterText" Label="Filter symbols (comma separated)" /></MudItem>
+                <MudItem xs="12">
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="SuggestSymbols">Suggest broker symbols</MudButton>
+                    @foreach (var s in _suggested)
+                    {
+                        <MudChip T="string" Size="Size.Small">@s</MudChip>
+                    }
+                </MudItem>
                 <MudItem xs="12" md="3">
                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddDestination">Add destination</MudButton>
                 </MudItem>
@@ -129,6 +147,10 @@
     private bool _forceMin;
     private bool _copyStopLoss = true;
     private bool _copyTakeProfit = true;
+    private string _symbolMapText = "";
+    private string _filterText = "";
+    private SymbolFilterMode _filterMode = SymbolFilterMode.None;
+    private string[] _suggested = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -192,7 +214,10 @@
             MaxLot = _maxLot,
             ForceMinLot = _forceMin,
             MaxDrawdownPercent = _maxDrawdown,
-            DailyLossLimit = _dailyLoss
+            DailyLossLimit = _dailyLoss,
+            SymbolFilterMode = _filterMode,
+            SymbolFilters = ParseCsv(_filterText),
+            SymbolMap = ParseMap(_symbolMapText)
         });
         if (r.IsSuccessStatusCode) await Select(id);
         else Snack.Add("Failed to add destination", Severity.Error);
@@ -204,6 +229,24 @@
         await Http.DeleteAsync($"/api/copy/profiles/{id}/destinations/{destinationId}");
         await Select(id);
     }
+
+    private async Task SuggestSymbols()
+    {
+        var guid = SourceAccountGuid(_destAccount);
+        if (guid == Guid.Empty) return;
+        try { _suggested = await Http.GetFromJsonAsync<string[]>($"/api/copy/accounts/{guid}/symbols") ?? []; }
+        catch { _suggested = []; }
+    }
+
+    private static string[] ParseCsv(string text) => text
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    private static object[] ParseMap(string text) => text
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Select(pair => pair.Split('=', 2, StringSplitOptions.TrimEntries))
+        .Where(parts => parts.Length == 2)
+        .Select(parts => (object)new { Source = parts[0], Destination = parts[1] })
+        .ToArray();
 
     private Guid SourceAccountGuid(long accountNumber)
     {

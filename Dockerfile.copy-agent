@@ -1,0 +1,16 @@
+# Standing per-node copy-trading agent. Holds long-lived cTrader Open API sockets and mirrors
+# trades for running copy profiles. No Docker daemon required (unlike the node agent).
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+COPY . .
+RUN dotnet publish src/CopyAgent/CopyAgent.csproj -c Release -o /app
+
+FROM mcr.microsoft.com/dotnet/runtime:10.0
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY --from=build /app .
+# Enable copy hosting on this node (disable App:Copy:Enabled on the web host to avoid double-hosting).
+ENV App__Copy__Enabled=true
+ENTRYPOINT ["dotnet", "CopyAgent.dll"]

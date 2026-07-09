@@ -1,0 +1,55 @@
+{{- if .Values.copyAgent.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cmind.fullname" . }}-copy-agent
+  labels:
+    {{- include "cmind.labels" . | nindent 4 }}
+    app.kubernetes.io/component: copy-agent
+spec:
+  # Copy hosting is stateful (long-lived sockets). Keep a single replica unless claim-based
+  # partitioning across replicas is enabled.
+  replicas: {{ .Values.copyAgent.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: copy-agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: copy-agent
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: copy-agent
+          image: "{{ include "cmind.image" . }}-copy-agent:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: DOTNET_ENVIRONMENT
+              value: Production
+            - name: App__Copy__Enabled
+              value: "true"
+            - name: PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "cmind.secretName" . }}
+                  key: PG_PASSWORD
+            - name: ConnectionStrings__appdb
+              value: {{ include "cmind.connectionString" . | quote }}
+            - name: App__DataProtectionCertBase64
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "cmind.secretName" . }}
+                  key: DATA_PROTECTION_CERT_B64
+            - name: App__DataProtectionCertPassword
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "cmind.secretName" . }}
+                  key: DATA_PROTECTION_CERT_PASSWORD
+          resources:
+            {{- toYaml .Values.copyAgent.resources | nindent 12 }}
+{{- end }}

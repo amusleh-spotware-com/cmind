@@ -13,6 +13,7 @@
     <Project Path="src/Core/Core.csproj" />
     <Project Path="src/CTraderOpenApi/CTraderOpenApi.csproj" />
     <Project Path="src/CopyEngine/CopyEngine.csproj" />
+    <Project Path="src/CopyAgent/CopyAgent.csproj" />
     <Project Path="src/ExternalNode/ExternalNode.csproj" />
     <Project Path="src/Infrastructure/Infrastructure.csproj" />
     <Project Path="src/Mcp/Mcp.csproj" />

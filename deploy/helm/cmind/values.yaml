@@ -88,6 +88,15 @@ nodeAgent:
     requests: { cpu: 250m, memory: 512Mi }
     limits: { cpu: "2", memory: 2Gi }
 
+copyAgent:
+  # Standing per-node copy-trading agent (holds Open API sockets, mirrors trades). Disabled by
+  # default; enable and set App:Copy:Enabled=false on the web host to move copy hosting here.
+  enabled: false
+  replicas: 1
+  resources:
+    requests: { cpu: 250m, memory: 256Mi }
+    limits: { cpu: "1", memory: 1Gi }
+
 discovery:
   enabled: true
   heartbeatTtl: "00:01:30"

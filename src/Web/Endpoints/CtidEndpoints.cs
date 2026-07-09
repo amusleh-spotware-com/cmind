@@ -1,6 +1,7 @@
 using System.Text;
 using Core;
 using Core.Constants;
+using Core.Domain;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -23,7 +24,7 @@ public static class CtidEndpoints
         {
             var uid = u.UserId!.Value;
             return await db.CTids.Where(c => c.UserId == uid)
-                .Select(c => new { c.Id, c.Username }).ToListAsync();
+                .Select(c => new { c.Id, c.Username, c.CtidUserId }).ToListAsync();
         });
 
         g.MapPost("/", async (CreateCtidRequest req, DataContext db, ICurrentUser u, ISecretProtector p) =>
@@ -64,8 +65,8 @@ public static class CtidEndpoints
         {
             var uid = u.UserId!.Value;
             var cid = CtidId.From(id);
-            return await db.TradingAccounts.Where(t => t.CTidId == cid && t.CTid.UserId == uid)
-                .Select(t => new { t.Id, t.AccountNumber, t.Broker, t.IsLive, t.Label }).ToListAsync();
+            var accounts = await db.TradingAccounts.Where(t => t.CTidId == cid && t.CTid.UserId == uid).ToListAsync();
+            return accounts.Select(ToAccountView);
         });
 
         g.MapPost("/{id:guid}/accounts", async (Guid id, CreateTradingAccountRequest req,
@@ -83,8 +84,8 @@ public static class CtidEndpoints
         app.MapGet("/api/accounts", async (DataContext db, ICurrentUser u) =>
         {
             var uid = u.UserId!.Value;
-            return await db.TradingAccounts.Where(t => t.CTid.UserId == uid)
-                .Select(t => new { t.Id, t.AccountNumber, t.Broker, t.IsLive, t.Label }).ToListAsync();
+            var accounts = await db.TradingAccounts.Where(t => t.CTid.UserId == uid).ToListAsync();
+            return accounts.Select(ToAccountView);
         }).RequireAuthorization("UserOrAbove");
 
         app.MapDelete("/api/accounts/{id:guid}", async (Guid id, DataContext db, ICurrentUser u) =>
@@ -100,4 +101,15 @@ public static class CtidEndpoints
 
         return app;
     }
+
+    private static object ToAccountView(TradingAccount t) => new
+    {
+        t.Id,
+        t.AccountNumber,
+        t.Broker,
+        t.IsLive,
+        t.Label,
+        LinkedViaCid = t.LinkMethod.HasFlag(AccountLinkMethod.Cid),
+        LinkedViaOpenApi = t.LinkMethod.HasFlag(AccountLinkMethod.OpenApi)
+    };
 }

@@ -108,6 +108,7 @@ builder.Services.AddScoped(sp =>
     http.BaseAddress = new Uri(nav.BaseUri);
     return http;
 });
+builder.Services.AddScoped<Web.OpenApi.OpenApiAccountLinker>();
 builder.Services.AddHostedService<OwnerSeeder>();
 builder.Services.AddHostedService<LocalNodeSeeder>();
 builder.Services.AddHostedService<InstanceReconciler>();
@@ -140,6 +141,7 @@ app.MapNodeEndpoints();
 app.MapInstanceEndpoints();
 app.MapUserEndpoints();
 app.MapCtidEndpoints();
+app.MapOpenApiEndpoints();
 app.MapParamSetEndpoints();
 app.MapMcpKeyEndpoints();
 app.MapBuilderEndpoints();

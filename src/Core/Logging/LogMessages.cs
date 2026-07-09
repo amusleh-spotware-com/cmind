@@ -126,4 +126,7 @@ public static partial class LogMessages
 
     [LoggerMessage(EventId = 1041, Level = LogLevel.Warning, Message = "Open API token refresh skipped for account {CtidTraderAccountId}: application {ApplicationId} not found")]
     public static partial void OpenApiTokenRefreshApplicationMissing(this ILogger logger, long ctidTraderAccountId, Guid applicationId);
+
+    [LoggerMessage(EventId = 1042, Level = LogLevel.Warning, Message = "Open API OAuth callback failed")]
+    public static partial void OpenApiCallbackFailed(this ILogger logger, Exception ex);
 }

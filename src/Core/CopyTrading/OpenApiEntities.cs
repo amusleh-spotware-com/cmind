@@ -53,7 +53,7 @@ public class OpenApiAuthorization : AuditedEntity<OpenApiAuthorizationId>
 {
     public UserId UserId { get; private set; }
     public OpenApiApplicationId ApplicationId { get; private set; }
-    public long CtidTraderAccountId { get; private set; }
+    public long CtidUserId { get; private set; }
     public bool IsLive { get; private set; }
     public byte[] EncryptedAccessToken { get; private set; } = default!;
     public byte[] EncryptedRefreshToken { get; private set; } = default!;
@@ -65,7 +65,7 @@ public class OpenApiAuthorization : AuditedEntity<OpenApiAuthorizationId>
     public static OpenApiAuthorization Create(
         UserId userId,
         OpenApiApplicationId applicationId,
-        CtidTraderAccountId ctidTraderAccountId,
+        CtidUserId ctidUserId,
         bool isLive,
         byte[] encryptedAccessToken,
         byte[] encryptedRefreshToken,
@@ -76,7 +76,7 @@ public class OpenApiAuthorization : AuditedEntity<OpenApiAuthorizationId>
         {
             UserId = userId,
             ApplicationId = applicationId,
-            CtidTraderAccountId = ctidTraderAccountId.Value,
+            CtidUserId = ctidUserId.Value,
             IsLive = isLive,
             EncryptedAccessToken = GuardToken(encryptedAccessToken),
             EncryptedRefreshToken = GuardToken(encryptedRefreshToken),
@@ -84,7 +84,7 @@ public class OpenApiAuthorization : AuditedEntity<OpenApiAuthorizationId>
             Scope = scope
         };
         authorization.RaiseDomainEvent(
-            new OpenApiAccountAuthorized(authorization.Id, userId, ctidTraderAccountId.Value));
+            new OpenApiAccountAuthorized(authorization.Id, userId, ctidUserId.Value));
         return authorization;
     }
 
@@ -96,7 +96,7 @@ public class OpenApiAuthorization : AuditedEntity<OpenApiAuthorizationId>
         LastRefreshedAt = DateTimeOffset.UtcNow;
         RefreshFailedAt = null;
         Touch();
-        RaiseDomainEvent(new AccessTokenRefreshed(Id, UserId, CtidTraderAccountId));
+        RaiseDomainEvent(new AccessTokenRefreshed(Id, UserId, CtidUserId));
     }
 
     public void MarkRefreshFailed(string reason)

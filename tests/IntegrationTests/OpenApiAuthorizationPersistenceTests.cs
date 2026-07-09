@@ -25,7 +25,7 @@ public class OpenApiAuthorizationPersistenceTests(PostgresFixture fixture) : ICl
         var application = OpenApiApplication.Create(user.Id, $"app-{Guid.NewGuid():N}",
             new OpenApiClientId("client-123"), [1, 2, 3], new OpenApiRedirectUri("https://app.test/callback"));
         var ctid = Math.Abs(Guid.NewGuid().GetHashCode()) + 1L;
-        var authorization = OpenApiAuthorization.Create(user.Id, application.Id, new CtidTraderAccountId(ctid),
+        var authorization = OpenApiAuthorization.Create(user.Id, application.Id, new CtidUserId(ctid),
             isLive: true, [9, 9], [8, 8], DateTimeOffset.UtcNow.AddDays(30), OpenApiScope.Trade);
 
         await using (var write = CreateContext())
@@ -39,7 +39,7 @@ public class OpenApiAuthorizationPersistenceTests(PostgresFixture fixture) : ICl
         await using (var read = CreateContext())
         {
             var loaded = await read.OpenApiAuthorizations.FirstAsync(a => a.Id == authorization.Id);
-            loaded.CtidTraderAccountId.Should().Be(ctid);
+            loaded.CtidUserId.Should().Be(ctid);
             loaded.Scope.Should().Be(OpenApiScope.Trade);
             loaded.IsLive.Should().BeTrue();
             loaded.EncryptedAccessToken.Should().Equal(new byte[] { 9, 9 });

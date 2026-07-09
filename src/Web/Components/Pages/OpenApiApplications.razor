@@ -1,0 +1,120 @@
+@page "/openapi-apps"
+@using System.Text.Json
+@using Web.Json
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@inject HttpClient Http
+@inject ISnackbar Snack
+@inject NavigationManager Nav
+
+<PageTitle>Open API Applications</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Open API Applications</MudText>
+    <MudSpacer />
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
+               OnClick="@(() => _showForm = !_showForm)">Add Application</MudButton>
+</MudStack>
+
+<MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
+    Register a cTrader Open API application (from your cTrader Open API account), then authorize your
+    cTrader ID to add its trading accounts. Set the application's redirect URI to
+    <code>@_callbackUrl</code>.
+</MudText>
+
+@if (_showForm)
+{
+    <MudCard Class="mb-4">
+        <MudCardContent>
+            <MudTextField @bind-Value="_name" Label="Name" Class="mb-2" />
+            <MudTextField @bind-Value="_clientId" Label="Client ID" Class="mb-2" />
+            <MudTextField @bind-Value="_clientSecret" Label="Client Secret" InputType="InputType.Password" Class="mb-2" />
+            <MudTextField @bind-Value="_redirectUri" Label="Redirect URI" HelperText="@_callbackUrl" Class="mb-2" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Create">Save</MudButton>
+            <MudButton OnClick="@(() => _showForm = false)">Cancel</MudButton>
+        </MudCardActions>
+    </MudCard>
+}
+
+<MudTable Items="_apps" Dense="true">
+    <HeaderContent>
+        <MudTh>Name</MudTh><MudTh>Client ID</MudTh><MudTh>Redirect URI</MudTh><MudTh /></HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.name</MudTd>
+        <MudTd>@context.clientId</MudTd>
+        <MudTd>@context.redirectUri</MudTd>
+        <MudTd>
+            <MudButton Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Link"
+                       OnClick="@(() => Authorize((Guid)context.id))">Authorize</MudButton>
+            <MudButton Size="Size.Small" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Share"
+                       OnClick="@(() => Invite((Guid)context.id))">Invite link</MudButton>
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                           OnClick="@(() => Delete((Guid)context.id))" />
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@if (!string.IsNullOrEmpty(_inviteUrl))
+{
+    <MudTextField T="string" Value="_inviteUrl" ReadOnly="true" Label="Investor invite link (share with copiers)"
+                  Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.ContentCopy" Class="mt-4" />
+}
+
+@code {
+    private dynamic[] _apps = [];
+    private bool _showForm;
+    private string _name = "";
+    private string _clientId = "";
+    private string _clientSecret = "";
+    private string _redirectUri = "";
+    private string? _inviteUrl;
+    private string _callbackUrl = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _callbackUrl = new Uri(new Uri(Nav.BaseUri), "/openapi/callback").ToString();
+        if (string.IsNullOrEmpty(_redirectUri)) _redirectUri = _callbackUrl;
+        await Load();
+    }
+
+    private async Task Load() => _apps = await Http.GetDynamicArrayAsync("/api/openapi/applications");
+
+    private async Task Create()
+    {
+        var r = await Http.PostAsJsonAsync("/api/openapi/applications",
+            new { Name = _name, ClientId = _clientId, ClientSecret = _clientSecret, RedirectUri = _redirectUri });
+        if (r.IsSuccessStatusCode)
+        {
+            Snack.Add("Application saved", Severity.Success);
+            _showForm = false;
+            _name = _clientId = _clientSecret = "";
+            _redirectUri = _callbackUrl;
+            await Load();
+        }
+        else
+        {
+            Snack.Add("Failed to save application", Severity.Error);
+        }
+    }
+
+    private async Task Authorize(Guid id)
+    {
+        var res = await Http.GetDynamicAsync($"/api/openapi/applications/{id}/authorize-url");
+        if (res is not null) Nav.NavigateTo((string)res.url, forceLoad: true);
+    }
+
+    private async Task Invite(Guid id)
+    {
+        var r = await Http.PostAsync($"/api/openapi/applications/{id}/invite", null);
+        if (!r.IsSuccessStatusCode) { Snack.Add("Failed to create invite", Severity.Error); return; }
+        using var doc = JsonDocument.Parse(await r.Content.ReadAsStringAsync());
+        _inviteUrl = doc.RootElement.GetProperty("url").GetString();
+    }
+
+    private async Task Delete(Guid id)
+    {
+        await Http.DeleteAsync($"/api/openapi/applications/{id}");
+        await Load();
+    }
+}

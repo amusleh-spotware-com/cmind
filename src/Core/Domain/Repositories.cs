@@ -25,7 +25,7 @@ public interface IOpenApiApplicationRepository
 public interface IOpenApiAuthorizationRepository
 {
     Task<OpenApiAuthorization?> GetByIdAsync(OpenApiAuthorizationId id, UserId owner, CancellationToken ct);
-    Task<OpenApiAuthorization?> GetByCtidTraderAccountAsync(long ctidTraderAccountId, UserId owner, CancellationToken ct);
+    Task<OpenApiAuthorization?> GetByCtidUserIdAsync(long ctidUserId, UserId owner, CancellationToken ct);
     Task<IReadOnlyList<OpenApiAuthorization>> GetExpiringAsync(DateTimeOffset threshold, CancellationToken ct);
     Task AddAsync(OpenApiAuthorization authorization, CancellationToken ct);
     Task SaveChangesAsync(CancellationToken ct);

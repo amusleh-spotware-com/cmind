@@ -96,7 +96,7 @@ public sealed class OpenApiAuthDomainTests
         => OpenApiAuthorization.Create(
             UserId.New(),
             OpenApiApplicationId.New(),
-            new CtidTraderAccountId(12345),
+            new CtidUserId(12345),
             isLive: true,
             [1, 2, 3],
             [4, 5, 6],

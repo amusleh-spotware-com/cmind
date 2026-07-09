@@ -26,10 +26,10 @@ public sealed record BacktestCompleted(InstanceId InstanceId, UserId UserId) : D
 public sealed record McpApiKeyRevoked(McpApiKeyId KeyId, UserId UserId) : DomainEventBase;
 
 public sealed record OpenApiAccountAuthorized(
-    OpenApiAuthorizationId AuthorizationId, UserId UserId, long CtidTraderAccountId) : DomainEventBase;
+    OpenApiAuthorizationId AuthorizationId, UserId UserId, long CtidUserId) : DomainEventBase;
 
 public sealed record AccessTokenRefreshed(
-    OpenApiAuthorizationId AuthorizationId, UserId UserId, long CtidTraderAccountId) : DomainEventBase;
+    OpenApiAuthorizationId AuthorizationId, UserId UserId, long CtidUserId) : DomainEventBase;
 
 public sealed record AccessTokenRefreshFailed(
     OpenApiAuthorizationId AuthorizationId, UserId UserId, string Reason) : DomainEventBase;

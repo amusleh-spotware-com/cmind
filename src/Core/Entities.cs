@@ -172,6 +172,7 @@ public class CTraderIdAccount : AuditedEntity<CtidId>
     public AppUser User { get; private set; } = default!;
     [MaxLength(256)] public string Username { get; private set; } = default!;
     public byte[] EncryptedPassword { get; private set; } = default!;
+    public long? CtidUserId { get; private set; }
     public IReadOnlyList<TradingAccount> TradingAccounts => _tradingAccounts;
 
     public static CTraderIdAccount Create(UserId userId, string username, byte[] encryptedPassword)
@@ -180,6 +181,15 @@ public class CTraderIdAccount : AuditedEntity<CtidId>
             UserId = userId,
             Username = DomainGuard.AgainstNullOrWhiteSpace(username, DomainErrors.NameRequired),
             EncryptedPassword = encryptedPassword
+        };
+
+    public static CTraderIdAccount CreateForOpenApi(UserId userId, CtidUserId ctidUserId, string username)
+        => new()
+        {
+            UserId = userId,
+            Username = DomainGuard.AgainstNullOrWhiteSpace(username, DomainErrors.NameRequired),
+            EncryptedPassword = [],
+            CtidUserId = ctidUserId.Value
         };
 
     public void UpdateUsername(string username)
@@ -201,6 +211,24 @@ public class CTraderIdAccount : AuditedEntity<CtidId>
         Touch();
         return account;
     }
+
+    public TradingAccount LinkOpenApiAccount(long accountNumber, string broker, bool isLive,
+        CtidTraderAccountId ctidTraderAccountId, OpenApiAuthorizationId authorizationId, string? label)
+    {
+        var existing = _tradingAccounts.FirstOrDefault(a => a.AccountNumber == accountNumber);
+        if (existing is not null)
+        {
+            existing.LinkOpenApi(ctidTraderAccountId, authorizationId);
+            Touch();
+            return existing;
+        }
+
+        var account = TradingAccount.CreateFromOpenApi(
+            Id, accountNumber, broker, isLive, ctidTraderAccountId, authorizationId, label);
+        _tradingAccounts.Add(account);
+        Touch();
+        return account;
+    }
 }
 
 public class TradingAccount : AuditedEntity<TradingAccountId>
@@ -212,6 +240,9 @@ public class TradingAccount : AuditedEntity<TradingAccountId>
     public bool IsLive { get; private set; }
     public byte[]? EncryptedToken { get; private set; }
     [MaxLength(128)] public string? Label { get; private set; }
+    public AccountLinkMethod LinkMethod { get; private set; } = AccountLinkMethod.Cid;
+    public long? CtidTraderAccountId { get; private set; }
+    public OpenApiAuthorizationId? OpenApiAuthorizationId { get; private set; }
 
     public static TradingAccount Create(CtidId ctidId, long accountNumber, string broker, bool isLive, string? label)
         => new()
@@ -220,12 +251,35 @@ public class TradingAccount : AuditedEntity<TradingAccountId>
             AccountNumber = accountNumber,
             Broker = DomainGuard.AgainstNullOrWhiteSpace(broker, DomainErrors.NameRequired),
             IsLive = isLive,
-            Label = label
+            Label = label,
+            LinkMethod = AccountLinkMethod.Cid
+        };
+
+    public static TradingAccount CreateFromOpenApi(CtidId ctidId, long accountNumber, string broker, bool isLive,
+        CtidTraderAccountId ctidTraderAccountId, OpenApiAuthorizationId authorizationId, string? label)
+        => new()
+        {
+            CTidId = ctidId,
+            AccountNumber = accountNumber,
+            Broker = DomainGuard.AgainstNullOrWhiteSpace(broker, DomainErrors.NameRequired),
+            IsLive = isLive,
+            Label = label,
+            LinkMethod = AccountLinkMethod.OpenApi,
+            CtidTraderAccountId = ctidTraderAccountId.Value,
+            OpenApiAuthorizationId = authorizationId
         };
 
     public void SetToken(byte[]? encryptedToken)
     {
         EncryptedToken = encryptedToken;
+        Touch();
+    }
+
+    public void LinkOpenApi(CtidTraderAccountId ctidTraderAccountId, OpenApiAuthorizationId authorizationId)
+    {
+        CtidTraderAccountId = ctidTraderAccountId.Value;
+        OpenApiAuthorizationId = authorizationId;
+        LinkMethod |= AccountLinkMethod.OpenApi;
         Touch();
     }
 }

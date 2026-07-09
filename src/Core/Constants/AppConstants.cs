@@ -36,6 +36,7 @@ public static class EncryptionPurposes
     public const string OpenApiClientSecret = "openapi.client_secret";
     public const string OpenApiAccessToken = "openapi.access_token";
     public const string OpenApiRefreshToken = "openapi.refresh_token";
+    public const string OpenApiOAuthState = "openapi.oauth_state";
 }
 
 public static class NodeAgentAuth

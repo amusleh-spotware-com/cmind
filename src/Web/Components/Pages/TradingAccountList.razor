@@ -14,11 +14,21 @@
 
 <MudTable Items="_items" Dense="true" Class="mt-2">
     <HeaderContent>
-        <MudTh>Account</MudTh><MudTh>Broker</MudTh><MudTh>Live</MudTh><MudTh /></HeaderContent>
+        <MudTh>Account</MudTh><MudTh>Broker</MudTh><MudTh>Live</MudTh><MudTh>Linked via</MudTh><MudTh /></HeaderContent>
     <RowTemplate>
         <MudTd>@context.accountNumber</MudTd>
         <MudTd>@context.broker</MudTd>
         <MudTd>@context.isLive</MudTd>
+        <MudTd>
+            @if ((bool)context.linkedViaCid)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Default" Icon="@Icons.Material.Filled.Badge">cID</MudChip>
+            }
+            @if ((bool)context.linkedViaOpenApi)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Icon="@Icons.Material.Filled.Api">Open API</MudChip>
+            }
+        </MudTd>
         <MudTd><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => Remove(context.id))" /></MudTd>
     </RowTemplate>
 </MudTable>

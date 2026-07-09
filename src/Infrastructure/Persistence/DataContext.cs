@@ -101,6 +101,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.HasIndex(x => new { x.CTidId, x.AccountNumber }).IsUnique();
             e.HasOne(x => x.CTid).WithMany(x => x.TradingAccounts).HasForeignKey(x => x.CTidId)
                 .OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.LinkMethod).HasConversion<string>().HasMaxLength(16);
         });
 
         modelBuilder.Entity<CBot>(e =>
@@ -234,8 +235,9 @@ public class DataContext : DbContext, IDataProtectionKeyContext
 
         modelBuilder.Entity<OpenApiAuthorization>(e =>
         {
-            e.HasIndex(x => new { x.UserId, x.CtidTraderAccountId }).IsUnique().HasFilter("\"IsDeleted\" = false");
+            e.HasIndex(x => new { x.UserId, x.CtidUserId }).IsUnique().HasFilter("\"IsDeleted\" = false");
             e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<OpenApiApplication>().WithMany().HasForeignKey(x => x.ApplicationId).OnDelete(DeleteBehavior.Cascade);
             e.Property(x => x.Scope).HasConversion<string>().HasMaxLength(16);
         });
 

@@ -52,6 +52,7 @@ public static class DependencyInjection
         services.AddSingleton<CTraderOpenApi.Client.IOpenApiConnectionFactory,
             Infrastructure.OpenApi.OpenApiConnectionFactory>();
         services.AddScoped<CTraderOpenApi.Client.IOpenApiClient, CTraderOpenApi.Client.OpenApiClient>();
+        services.AddSingleton<Core.Domain.IOAuthStateService, Infrastructure.OpenApi.OAuthStateService>();
         services.AddHttpClient<CTraderOpenApi.Auth.IOpenApiTokenClient, CTraderOpenApi.Auth.OpenApiTokenClient>(
             (sp, client) =>
             {

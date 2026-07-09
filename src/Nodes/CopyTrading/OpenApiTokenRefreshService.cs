@@ -61,7 +61,7 @@ public sealed class OpenApiTokenRefreshService(
             if (application is null)
             {
                 log.OpenApiTokenRefreshApplicationMissing(
-                    authorization.CtidTraderAccountId, authorization.ApplicationId.Value);
+                    authorization.CtidUserId, authorization.ApplicationId.Value);
                 continue;
             }
 
@@ -81,12 +81,12 @@ public sealed class OpenApiTokenRefreshService(
 
                 authorization.Refresh(
                     encryptedAccess, encryptedRefresh, DateTimeOffset.UtcNow.AddSeconds(response.ExpiresInSeconds));
-                log.OpenApiTokenRefreshed(authorization.CtidTraderAccountId);
+                log.OpenApiTokenRefreshed(authorization.CtidUserId);
             }
             catch (Exception ex)
             {
                 authorization.MarkRefreshFailed(ex.Message);
-                log.OpenApiTokenRefreshFailedFor(authorization.CtidTraderAccountId, ex.Message);
+                log.OpenApiTokenRefreshFailedFor(authorization.CtidUserId, ex.Message);
             }
 
             await authorizations.SaveChangesAsync(ct);

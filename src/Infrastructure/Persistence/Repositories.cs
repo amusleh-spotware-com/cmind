@@ -43,8 +43,8 @@ public sealed class OpenApiAuthorizationRepository(DataContext db) : IOpenApiAut
     public Task<OpenApiAuthorization?> GetByIdAsync(OpenApiAuthorizationId id, UserId owner, CancellationToken ct) =>
         db.OpenApiAuthorizations.FirstOrDefaultAsync(a => a.Id == id && a.UserId == owner, ct);
 
-    public Task<OpenApiAuthorization?> GetByCtidTraderAccountAsync(long ctidTraderAccountId, UserId owner, CancellationToken ct) =>
-        db.OpenApiAuthorizations.FirstOrDefaultAsync(a => a.CtidTraderAccountId == ctidTraderAccountId && a.UserId == owner, ct);
+    public Task<OpenApiAuthorization?> GetByCtidUserIdAsync(long ctidUserId, UserId owner, CancellationToken ct) =>
+        db.OpenApiAuthorizations.FirstOrDefaultAsync(a => a.CtidUserId == ctidUserId && a.UserId == owner, ct);
 
     public async Task<IReadOnlyList<OpenApiAuthorization>> GetExpiringAsync(DateTimeOffset threshold, CancellationToken ct) =>
         await db.OpenApiAuthorizations.Where(a => a.AccessTokenExpiresAt <= threshold).ToListAsync(ct);

@@ -8,6 +8,27 @@ public enum OpenApiScope
     Trade = 1
 }
 
+[Flags]
+public enum AccountLinkMethod
+{
+    None = 0,
+    Cid = 1,
+    OpenApi = 2
+}
+
+public readonly record struct CtidUserId
+{
+    public long Value { get; }
+
+    public CtidUserId(long value)
+    {
+        if (value <= 0) throw new DomainException(DomainErrors.CtidTraderAccountInvalid);
+        Value = value;
+    }
+
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct OpenApiClientId
 {
     public string Value { get; }

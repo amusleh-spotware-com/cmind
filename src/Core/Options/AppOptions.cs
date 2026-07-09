@@ -26,6 +26,13 @@ public sealed record AppOptions
     public AlertOptions Alerts { get; init; } = new();
     public PropGuardOptions PropGuard { get; init; } = new();
     public OpenApiOptions OpenApi { get; init; } = new();
+    public CopyOptions Copy { get; init; } = new();
+}
+
+public sealed record CopyOptions
+{
+    public bool Enabled { get; init; }
+    public TimeSpan ReconcileInterval { get; init; } = TimeSpan.FromSeconds(30);
 }
 
 public sealed record OpenApiOptions

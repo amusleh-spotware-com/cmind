@@ -129,4 +129,13 @@ public static partial class LogMessages
 
     [LoggerMessage(EventId = 1042, Level = LogLevel.Warning, Message = "Open API OAuth callback failed")]
     public static partial void OpenApiCallbackFailed(this ILogger logger, Exception ex);
+
+    [LoggerMessage(EventId = 1043, Level = LogLevel.Error, Message = "Copy engine supervisor cycle failed")]
+    public static partial void CopySupervisorFailed(this ILogger logger, Exception ex);
+
+    [LoggerMessage(EventId = 1044, Level = LogLevel.Information, Message = "Copy profile {ProfileId} hosted")]
+    public static partial void CopyProfileHosted(this ILogger logger, Guid profileId);
+
+    [LoggerMessage(EventId = 1045, Level = LogLevel.Warning, Message = "Copy profile {ProfileId} skipped: source or destinations are not Open API linked")]
+    public static partial void CopyProfileNotLinkable(this ILogger logger, Guid profileId);
 }

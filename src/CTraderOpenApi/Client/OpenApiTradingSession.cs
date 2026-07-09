@@ -12,9 +12,10 @@ public sealed record ExecutionEvent(
     long Volume,
     double Price,
     double? StopLoss,
-    double? TakeProfit);
+    double? TakeProfit,
+    bool IsOpen);
 
-public sealed record OpenPositionSnapshot(long PositionId, long SymbolId, bool IsBuy, long Volume);
+public sealed record OpenPositionSnapshot(long PositionId, long SymbolId, bool IsBuy, long Volume, string Label);
 
 public sealed record SymbolDetails(long SymbolId, long LotSize, long StepVolume, long MinVolume, int PipPosition);
 
@@ -25,10 +26,11 @@ public interface IOpenApiTradingSession : IAsyncDisposable
 
     void AttachAccount(long ctidTraderAccountId, string accessToken);
     Task StartAsync(CancellationToken ct);
+    Task<double> LoadBalanceAsync(long ctidTraderAccountId, CancellationToken ct);
     IAsyncEnumerable<ExecutionEvent> SourceExecutionsAsync(long ctidTraderAccountId, CancellationToken ct);
     Task<IReadOnlyDictionary<string, long>> LoadSymbolIdsAsync(long ctidTraderAccountId, CancellationToken ct);
     Task<IReadOnlyDictionary<long, string>> LoadSymbolNamesAsync(long ctidTraderAccountId, CancellationToken ct);
-    Task SendMarketOrderAsync(long ctidTraderAccountId, long symbolId, bool isBuy, long volume, CancellationToken ct);
+    Task SendMarketOrderAsync(long ctidTraderAccountId, long symbolId, bool isBuy, long volume, string label, CancellationToken ct);
     Task ClosePositionAsync(long ctidTraderAccountId, long positionId, long volume, CancellationToken ct);
     Task<IReadOnlyList<OpenPositionSnapshot>> ReconcileAsync(long ctidTraderAccountId, CancellationToken ct);
     Task<IReadOnlyList<SymbolDetails>> LoadSymbolDetailsAsync(
@@ -71,7 +73,8 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
                 tradeData.Volume,
                 position.Price,
                 position.HasStopLoss ? position.StopLoss : null,
-                position.HasTakeProfit ? position.TakeProfit : null);
+                position.HasTakeProfit ? position.TakeProfit : null,
+                position.PositionStatus == ProtoOAPositionStatus.PositionStatusOpen);
         }
     }
 
@@ -95,7 +98,8 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
         return map;
     }
 
-    public async Task SendMarketOrderAsync(long ctidTraderAccountId, long symbolId, bool isBuy, long volume, CancellationToken ct)
+    public async Task SendMarketOrderAsync(
+        long ctidTraderAccountId, long symbolId, bool isBuy, long volume, string label, CancellationToken ct)
     {
         var request = new ProtoOANewOrderReq
         {
@@ -103,9 +107,20 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
             SymbolId = symbolId,
             OrderType = ProtoOAOrderType.Market,
             TradeSide = isBuy ? ProtoOATradeSide.Buy : ProtoOATradeSide.Sell,
-            Volume = volume
+            Volume = volume,
+            Label = label
         };
         await connection.SendAsync(request, (int)ProtoOAPayloadType.ProtoOaNewOrderReq, ct);
+    }
+
+    public async Task<double> LoadBalanceAsync(long ctidTraderAccountId, CancellationToken ct)
+    {
+        var response = await connection.SendAsync(
+            new ProtoOATraderReq { CtidTraderAccountId = ctidTraderAccountId },
+            (int)ProtoOAPayloadType.ProtoOaTraderReq, ct);
+        var trader = ProtoOATraderRes.Parser.ParseFrom(response.Payload).Trader;
+        var scale = Math.Pow(10, trader.HasMoneyDigits ? trader.MoneyDigits : 2);
+        return trader.Balance / scale;
     }
 
     public async Task ClosePositionAsync(long ctidTraderAccountId, long positionId, long volume, CancellationToken ct)
@@ -127,7 +142,8 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
 
         return ProtoOAReconcileRes.Parser.ParseFrom(response.Payload).Position
             .Select(p => new OpenPositionSnapshot(
-                p.PositionId, p.TradeData.SymbolId, p.TradeData.TradeSide == ProtoOATradeSide.Buy, p.TradeData.Volume))
+                p.PositionId, p.TradeData.SymbolId, p.TradeData.TradeSide == ProtoOATradeSide.Buy,
+                p.TradeData.Volume, p.TradeData.Label ?? string.Empty))
             .ToList();
     }
 

@@ -24,7 +24,8 @@ builder.Services.AddMcpServer()
     .WithHttpTransport(o => o.Stateless = true)
     .WithTools<CBotTools>()
     .WithTools<InstanceTools>()
-    .WithTools<AiTools>();
+    .WithTools<AiTools>()
+    .WithTools<CopyTools>();
 
 var app = builder.Build();
 app.UseSerilogRequestLogging();

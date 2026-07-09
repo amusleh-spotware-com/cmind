@@ -27,6 +27,7 @@ public static class DependencyInjection
         services.AddHostedService<AlertEvaluator>();
         services.AddHostedService<PropGuardService>();
         services.AddHostedService<Nodes.CopyTrading.OpenApiTokenRefreshService>();
+        services.AddHostedService<Nodes.CopyTrading.CopyEngineSupervisor>();
         return services;
     }
 }

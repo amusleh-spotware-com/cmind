@@ -91,7 +91,13 @@
                 </MudItem>
                 <MudItem xs="6" md="2"><MudNumericField T="double" @bind-Value="_minLot" Label="Min lot" /></MudItem>
                 <MudItem xs="6" md="2"><MudNumericField T="double" @bind-Value="_maxLot" Label="Max lot" /></MudItem>
+                <MudItem xs="6" md="2"><MudNumericField T="int" @bind-Value="_maxDelay" Label="Max delay (s)" /></MudItem>
+                <MudItem xs="6" md="2"><MudNumericField T="double" @bind-Value="_maxDrawdown" Label="Max drawdown %" /></MudItem>
+                <MudItem xs="6" md="2"><MudNumericField T="double" @bind-Value="_dailyLoss" Label="Daily loss cap" /></MudItem>
                 <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_reverse" Label="Reverse" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_forceMin" Label="Force min lot" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyStopLoss" Label="Copy SL" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyTakeProfit" Label="Copy TP" Color="Color.Primary" /></MudItem>
                 <MudItem xs="12" md="3">
                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddDestination">Add destination</MudButton>
                 </MudItem>
@@ -116,7 +122,13 @@
     private CopyDirectionFilter _direction = CopyDirectionFilter.Both;
     private double _minLot;
     private double _maxLot;
+    private int _maxDelay;
+    private double _maxDrawdown;
+    private double _dailyLoss;
     private bool _reverse;
+    private bool _forceMin;
+    private bool _copyStopLoss = true;
+    private bool _copyTakeProfit = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -171,16 +183,16 @@
             Mode = _mode,
             Parameter = _param,
             SlippagePips = _slippage,
-            MaxDelaySeconds = 0,
+            MaxDelaySeconds = _maxDelay,
             Reverse = _reverse,
-            CopyStopLoss = true,
-            CopyTakeProfit = true,
+            CopyStopLoss = _copyStopLoss,
+            CopyTakeProfit = _copyTakeProfit,
             Direction = _direction,
             MinLot = _minLot,
             MaxLot = _maxLot,
-            ForceMinLot = false,
-            MaxDrawdownPercent = 0.0,
-            DailyLossLimit = 0.0
+            ForceMinLot = _forceMin,
+            MaxDrawdownPercent = _maxDrawdown,
+            DailyLossLimit = _dailyLoss
         });
         if (r.IsSuccessStatusCode) await Select(id);
         else Snack.Add("Failed to add destination", Severity.Error);

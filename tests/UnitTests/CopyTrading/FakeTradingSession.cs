@@ -1,8 +1,28 @@
 using System.Threading.Channels;
 using CTraderOpenApi;
 using CTraderOpenApi.Client;
+using Microsoft.Extensions.Logging;
 
 namespace UnitTests.CopyTrading;
+
+// Captures log records so tests can assert the copy audit trail fires.
+internal sealed class CapturingLogger : ILogger
+{
+    public List<(int EventId, string Message)> Records { get; } = [];
+
+    public IDisposable BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
+    public bool IsEnabled(LogLevel logLevel) => true;
+
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
+        Func<TState, Exception?, string> formatter)
+        => Records.Add((eventId.Id, formatter(state, exception)));
+
+    private sealed class NullScope : IDisposable
+    {
+        public static readonly NullScope Instance = new();
+        public void Dispose() { }
+    }
+}
 
 // Deterministic in-memory IOpenApiTradingSession for CopyEngineHost tests. Models symbols, balances
 // and per-account open positions; records the orders/closes/amends the host issues; and lets a test

@@ -3,6 +3,7 @@ using Core.Domain;
 using CopyEngine;
 using CTraderOpenApi.Client;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
@@ -34,10 +35,10 @@ public sealed class CopyEngineHostTests
         => new(CopyProfileId.New(), Live: false, "client", "secret", Source, "token", destinations);
 
     private static async Task DriveAsync(FakeTradingSession session, CopyProfilePlan plan,
-        Func<Task> act)
+        Func<Task> act, CapturingLogger? logger = null)
     {
         var host = new CopyEngineHost(plan, new FakeTradingSessionFactory(session),
-            new CopyDecisionEngine(new CopySizingCalculator()), NullLogger.Instance);
+            new CopyDecisionEngine(new CopySizingCalculator()), logger ?? (ILogger)NullLogger.Instance);
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         var run = Task.Run(() => host.RunAsync(cts.Token), CancellationToken.None);
         try { await act(); }
@@ -144,6 +145,32 @@ public sealed class CopyEngineHostTests
         });
 
         session.Closes.Single().Ctid.Should().Be(Slave);
+    }
+
+    [Fact]
+    public async Task Audit_log_records_every_trading_operation()
+    {
+        var session = NewSession();
+        var log = new CapturingLogger();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", Destination(Slave)));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushOpen(Source, 2001, SymbolId, isBuy: true, volume: 100, stopLoss: 1.09, takeProfit: 1.12);
+            await WaitUntil(() => session.Orders.Count == 1 && session.Amends.Count == 1);
+            session.PushClose(Source, 2001, SymbolId, isBuy: true, volume: 100);
+            await WaitUntil(() => session.Closes.Count == 1);
+        }, log);
+
+        log.Records.Select(r => r.EventId).Should().Contain(new[]
+        {
+            1046, // host started
+            1047, // source open
+            1048, // order placed
+            1050, // protection applied
+            1052, // source close
+            1053, // position closed
+        });
     }
 
     [Fact]

@@ -1,5 +1,6 @@
 using Core;
 using Core.Domain;
+using Core.Logging;
 using CTraderOpenApi.Client;
 using Microsoft.Extensions.Logging;
 
@@ -43,6 +44,7 @@ public sealed class CopyEngineHost(
 
         session.OnReconnected = token => ResyncAsync(session, token);
         await session.StartAsync(ct);
+        logger.CopyHostStarted(plan.ProfileId.Value, plan.SourceCtidTraderAccountId, plan.Destinations.Count);
         await LoadReferenceDataAsync(session, ct);
         await ResyncAsync(session, ct);
 
@@ -78,6 +80,8 @@ public sealed class CopyEngineHost(
         var sourceDetail = await SymbolDetailAsync(session, plan.SourceCtidTraderAccountId, execution.SymbolId, ct);
         var sourceLots = VolumeConversion.LotsFromProtocol(execution.Volume, sourceDetail.LotSize);
         var sourceBalance = await session.LoadBalanceAsync(plan.SourceCtidTraderAccountId, ct);
+        logger.CopySourceOpen(plan.ProfileId.Value, execution.PositionId, sourceName,
+            execution.IsBuy ? "Buy" : "Sell", sourceLots);
 
         foreach (var destination in plan.Destinations)
         {
@@ -90,8 +94,7 @@ public sealed class CopyEngineHost(
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Copy open to destination {Ctid} failed for source position {PositionId}",
-                    destination.CtidTraderAccountId, execution.PositionId);
+                logger.CopyOpenFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, ex);
             }
         }
     }
@@ -118,19 +121,30 @@ public sealed class CopyEngineHost(
             Math.Pow(10, -destinationDetail.PipPosition),
             TimeSpan.Zero));
 
-        if (decision.Kind != CopyActionKind.Open) return;
+        if (decision.Kind != CopyActionKind.Open)
+        {
+            logger.CopySkipped(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId,
+                decision.SkipReason ?? "unknown");
+            return;
+        }
 
         var effectiveBuy = destination.Config.Reverse ? !execution.IsBuy : execution.IsBuy;
         var wireVolume = VolumeConversion.ProtocolFromLots(decision.Lots, destinationDetail.LotSize);
-        if (wireVolume <= 0) return;
+        if (wireVolume <= 0)
+        {
+            logger.CopySkipped(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, "size_zero");
+            return;
+        }
 
         await session.SendMarketOrderAsync(destination.CtidTraderAccountId, destinationSymbolId,
             effectiveBuy, wireVolume, execution.PositionId.ToString(), ct);
+        logger.CopyOrderPlaced(plan.ProfileId.Value, destination.CtidTraderAccountId, destinationName,
+            effectiveBuy ? "Buy" : "Sell", wireVolume, execution.PositionId);
 
         await ApplyProtectionAsync(session, destination, execution, ct);
     }
 
-    private static async Task ApplyProtectionAsync(
+    private async Task ApplyProtectionAsync(
         IOpenApiTradingSession session, CopyDestinationPlan destination, ExecutionEvent source, CancellationToken ct)
     {
         double? stopLoss = destination.Config.CopyStopLoss ? source.StopLoss : null;
@@ -146,6 +160,8 @@ public sealed class CopyEngineHost(
             if (match is not null)
             {
                 await session.AmendPositionSltpAsync(destination.CtidTraderAccountId, match.PositionId, stopLoss, takeProfit, ct);
+                logger.CopyProtectionApplied(plan.ProfileId.Value, destination.CtidTraderAccountId,
+                    source.PositionId, stopLoss ?? 0, takeProfit ?? 0);
                 return;
             }
 
@@ -157,6 +173,7 @@ public sealed class CopyEngineHost(
     {
         _openSourcePositions.Remove(sourcePositionId);
         var label = sourcePositionId.ToString();
+        logger.CopySourceClose(plan.ProfileId.Value, sourcePositionId);
 
         foreach (var destination in plan.Destinations)
         {
@@ -164,12 +181,15 @@ public sealed class CopyEngineHost(
             {
                 var positions = await session.ReconcileAsync(destination.CtidTraderAccountId, ct);
                 foreach (var position in positions.Where(p => p.Label == label))
+                {
                     await session.ClosePositionAsync(destination.CtidTraderAccountId, position.PositionId, position.Volume, ct);
+                    logger.CopyPositionClosed(plan.ProfileId.Value, destination.CtidTraderAccountId,
+                        position.PositionId, sourcePositionId);
+                }
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Copy close to destination {Ctid} failed for source position {PositionId}",
-                    destination.CtidTraderAccountId, sourcePositionId);
+                logger.CopyCloseFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, sourcePositionId, ex);
             }
         }
     }
@@ -181,15 +201,21 @@ public sealed class CopyEngineHost(
         _openSourcePositions.Clear();
         foreach (var id in sourceOpenIds) _openSourcePositions.Add(id);
 
+        var orphansClosed = 0;
         foreach (var destination in plan.Destinations)
         {
             var destinationPositions = await session.ReconcileAsync(destination.CtidTraderAccountId, ct);
             foreach (var position in destinationPositions)
             {
                 if (long.TryParse(position.Label, out var sourceId) && !sourceOpenIds.Contains(sourceId))
+                {
                     await session.ClosePositionAsync(destination.CtidTraderAccountId, position.PositionId, position.Volume, ct);
+                    orphansClosed++;
+                }
             }
         }
+
+        logger.CopyResync(plan.ProfileId.Value, sourceOpenIds.Count, orphansClosed);
     }
 
     private async Task<SymbolDetails> SymbolDetailAsync(

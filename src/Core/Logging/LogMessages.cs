@@ -138,4 +138,46 @@ public static partial class LogMessages
 
     [LoggerMessage(EventId = 1045, Level = LogLevel.Warning, Message = "Copy profile {ProfileId} skipped: source or destinations are not Open API linked")]
     public static partial void CopyProfileNotLinkable(this ILogger logger, Guid profileId);
+
+    // ---- Copy trading audit trail (every trading operation is logged for auditability) ----
+
+    [LoggerMessage(EventId = 1046, Level = LogLevel.Information,
+        Message = "Copy host started: profile {ProfileId} source {SourceCtid} -> {DestinationCount} destination(s)")]
+    public static partial void CopyHostStarted(this ILogger logger, Guid profileId, long sourceCtid, int destinationCount);
+
+    [LoggerMessage(EventId = 1047, Level = LogLevel.Information,
+        Message = "Copy source open: profile {ProfileId} position {SourcePositionId} {Symbol} {Side} {Lots} lots")]
+    public static partial void CopySourceOpen(this ILogger logger, Guid profileId, long sourcePositionId, string symbol, string side, double lots);
+
+    [LoggerMessage(EventId = 1048, Level = LogLevel.Information,
+        Message = "Copy order placed: profile {ProfileId} dest {DestinationCtid} {Symbol} {Side} volume {Volume} (source {SourcePositionId})")]
+    public static partial void CopyOrderPlaced(this ILogger logger, Guid profileId, long destinationCtid, string symbol, string side, long volume, long sourcePositionId);
+
+    [LoggerMessage(EventId = 1049, Level = LogLevel.Information,
+        Message = "Copy skipped: profile {ProfileId} dest {DestinationCtid} source {SourcePositionId} reason {Reason}")]
+    public static partial void CopySkipped(this ILogger logger, Guid profileId, long destinationCtid, long sourcePositionId, string reason);
+
+    [LoggerMessage(EventId = 1050, Level = LogLevel.Information,
+        Message = "Copy protection applied: profile {ProfileId} dest {DestinationCtid} source {SourcePositionId} SL {StopLoss} TP {TakeProfit}")]
+    public static partial void CopyProtectionApplied(this ILogger logger, Guid profileId, long destinationCtid, long sourcePositionId, double stopLoss, double takeProfit);
+
+    [LoggerMessage(EventId = 1051, Level = LogLevel.Warning,
+        Message = "Copy open failed: profile {ProfileId} dest {DestinationCtid} source {SourcePositionId}")]
+    public static partial void CopyOpenFailed(this ILogger logger, Guid profileId, long destinationCtid, long sourcePositionId, Exception ex);
+
+    [LoggerMessage(EventId = 1052, Level = LogLevel.Information,
+        Message = "Copy source close: profile {ProfileId} position {SourcePositionId}")]
+    public static partial void CopySourceClose(this ILogger logger, Guid profileId, long sourcePositionId);
+
+    [LoggerMessage(EventId = 1053, Level = LogLevel.Information,
+        Message = "Copy position closed: profile {ProfileId} dest {DestinationCtid} position {PositionId} (source {SourcePositionId})")]
+    public static partial void CopyPositionClosed(this ILogger logger, Guid profileId, long destinationCtid, long positionId, long sourcePositionId);
+
+    [LoggerMessage(EventId = 1054, Level = LogLevel.Warning,
+        Message = "Copy close failed: profile {ProfileId} dest {DestinationCtid} source {SourcePositionId}")]
+    public static partial void CopyCloseFailed(this ILogger logger, Guid profileId, long destinationCtid, long sourcePositionId, Exception ex);
+
+    [LoggerMessage(EventId = 1055, Level = LogLevel.Information,
+        Message = "Copy resync: profile {ProfileId} {SourceOpen} source position(s) open, closed {OrphansClosed} orphaned copy(ies)")]
+    public static partial void CopyResync(this ILogger logger, Guid profileId, int sourceOpen, int orphansClosed);
 }

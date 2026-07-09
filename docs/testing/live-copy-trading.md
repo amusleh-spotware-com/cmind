@@ -142,6 +142,39 @@ slave under another cID, each authenticating with its own token). Each opens a r
 the master, waits for the engine to mirror it (matched by the source-position-id label on the slave),
 asserts, and closes everything. A closed market is reported **Inconclusive** rather than failing.
 
+## Logging & auditability
+
+Every copy trading operation is logged through source-generated structured events
+(`Core/Logging/LogMessages.cs`, event IDs 1043–1055) so the full trail is auditable:
+
+| Event | Id | Meaning |
+|-------|----|---------|
+| CopyHostStarted | 1046 | a profile's engine came up (source + destination count) |
+| CopySourceOpen | 1047 | master opened a position (symbol / side / lots) |
+| CopyOrderPlaced | 1048 | copy order sent to a slave (symbol / side / volume / source id) |
+| CopySkipped | 1049 | a copy was skipped and why (slippage / direction / symbol_filter / size_zero / …) |
+| CopyProtectionApplied | 1050 | SL/TP applied to a slave copy |
+| CopyOpenFailed | 1051 | a slave copy-open failed (isolated — other slaves continue) |
+| CopySourceClose / CopyPositionClosed | 1052 / 1053 | master closed → slave copy closed |
+| CopyCloseFailed | 1054 | a slave copy-close failed |
+| CopyResync | 1055 | reconnect reconciliation (source open count, orphans closed) |
+
+Logs are emitted as Serilog compact JSON (structured properties: `ProfileId`, `DestinationCtid`,
+`SourcePositionId`, `Symbol`, `Side`, `Volume`, …) and shipped to OTLP when
+`OTEL_EXPORTER_OTLP_ENDPOINT` is set. **Fully configurable** per category via standard config — e.g. to
+raise or lower copy-engine verbosity without touching code:
+
+```jsonc
+// appsettings.json — Serilog level overrides
+"Serilog": { "MinimumLevel": { "Override": {
+  "CopyEngine": "Information",              // the CopyEngineHost audit trail
+  "Nodes.CopyTrading": "Information"        // supervisor / token refresh
+} } }
+```
+
+The `Audit_log_records_every_trading_operation` host test asserts the trail fires for open, order,
+protection, and close.
+
 ## Edge cases (validated against how real copy/MAM platforms fail)
 
 Slippage & latency, symbol suffix/mismatch, duplicate trades on reconnect, leverage mismatch &

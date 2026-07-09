@@ -55,6 +55,19 @@ public sealed class OpenApiAuthorizationRepository(DataContext db) : IOpenApiAut
     public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
 }
 
+public sealed class CopyProfileRepository(DataContext db) : ICopyProfileRepository
+{
+    public Task<CopyProfile?> GetByIdAsync(CopyProfileId id, UserId owner, CancellationToken ct) =>
+        db.CopyProfiles.FirstOrDefaultAsync(p => p.Id == id && p.UserId == owner, ct);
+
+    public Task<CopyProfile?> GetWithDestinationsAsync(CopyProfileId id, CancellationToken ct) =>
+        db.CopyProfiles.Include(p => p.Destinations).FirstOrDefaultAsync(p => p.Id == id, ct);
+
+    public async Task AddAsync(CopyProfile profile, CancellationToken ct) => await db.CopyProfiles.AddAsync(profile, ct);
+
+    public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
+}
+
 public sealed class McpApiKeyRepository(DataContext db) : IMcpApiKeyRepository
 {
     public Task<McpApiKey?> GetByIdAsync(McpApiKeyId id, UserId owner, CancellationToken ct) =>

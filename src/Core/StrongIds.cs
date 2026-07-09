@@ -160,6 +160,27 @@ public readonly record struct OpenApiAuthorizationId(Guid Value) : IStronglyType
     public override string ToString() => Value.ToString();
 }
 
+public readonly record struct CopyProfileId(Guid Value) : IStronglyTypedId<CopyProfileId>
+{
+    public static CopyProfileId New() => new(Guid.NewGuid());
+    public static CopyProfileId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
+public readonly record struct CopyDestinationId(Guid Value) : IStronglyTypedId<CopyDestinationId>
+{
+    public static CopyDestinationId New() => new(Guid.NewGuid());
+    public static CopyDestinationId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
+public readonly record struct CopyRunId(Guid Value) : IStronglyTypedId<CopyRunId>
+{
+    public static CopyRunId New() => new(Guid.NewGuid());
+    public static CopyRunId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct Email
 {
     public string Value { get; }

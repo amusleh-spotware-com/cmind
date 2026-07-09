@@ -34,6 +34,14 @@ public sealed record AccessTokenRefreshed(
 public sealed record AccessTokenRefreshFailed(
     OpenApiAuthorizationId AuthorizationId, UserId UserId, string Reason) : DomainEventBase;
 
+public sealed record CopyProfileStarted(CopyProfileId ProfileId, UserId UserId) : DomainEventBase;
+
+public sealed record CopyProfilePaused(CopyProfileId ProfileId, UserId UserId) : DomainEventBase;
+
+public sealed record CopyProfileStopped(CopyProfileId ProfileId, UserId UserId) : DomainEventBase;
+
+public sealed record CopyProfileErrored(CopyProfileId ProfileId, UserId UserId, string Reason) : DomainEventBase;
+
 public sealed record NodeRegistered(NodeId NodeId, string Name) : DomainEventBase;
 
 public sealed record NodeWentOffline(NodeId NodeId, string Name) : DomainEventBase;

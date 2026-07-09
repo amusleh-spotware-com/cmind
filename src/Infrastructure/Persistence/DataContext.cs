@@ -32,6 +32,8 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<PropRule> PropRules => Set<PropRule>();
     public DbSet<OpenApiApplication> OpenApiApplications => Set<OpenApiApplication>();
     public DbSet<OpenApiAuthorization> OpenApiAuthorizations => Set<OpenApiAuthorization>();
+    public DbSet<CopyProfile> CopyProfiles => Set<CopyProfile>();
+    public DbSet<CopyDestination> CopyDestinations => Set<CopyDestination>();
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     public override int SaveChanges() { ApplySoftDelete(); return base.SaveChanges(); }
@@ -74,6 +76,9 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<PropRuleId>().HaveConversion<StrongIdConverter<PropRuleId>>();
         configurationBuilder.Properties<OpenApiApplicationId>().HaveConversion<StrongIdConverter<OpenApiApplicationId>>();
         configurationBuilder.Properties<OpenApiAuthorizationId>().HaveConversion<StrongIdConverter<OpenApiAuthorizationId>>();
+        configurationBuilder.Properties<CopyProfileId>().HaveConversion<StrongIdConverter<CopyProfileId>>();
+        configurationBuilder.Properties<CopyDestinationId>().HaveConversion<StrongIdConverter<CopyDestinationId>>();
+        configurationBuilder.Properties<CopyRunId>().HaveConversion<StrongIdConverter<CopyRunId>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -240,6 +245,27 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.HasOne<OpenApiApplication>().WithMany().HasForeignKey(x => x.ApplicationId).OnDelete(DeleteBehavior.Cascade);
             e.Property(x => x.Scope).HasConversion<string>().HasMaxLength(16);
         });
+
+        modelBuilder.Entity<CopyProfile>(e =>
+        {
+            e.HasIndex(x => new { x.UserId, x.Name }).IsUnique().HasFilter("\"IsDeleted\" = false");
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
+            e.HasMany(x => x.Destinations).WithOne().HasForeignKey(x => x.ProfileId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CopyDestination>(e =>
+        {
+            e.HasIndex(x => new { x.ProfileId, x.DestinationAccountId }).IsUnique().HasFilter("\"IsDeleted\" = false");
+            e.Property(x => x.RiskMode).HasConversion<string>().HasMaxLength(24);
+            e.Property(x => x.Direction).HasConversion<string>().HasMaxLength(16);
+            e.OwnsMany(x => x.SymbolMaps, b => b.ToJson());
+        });
+
+        modelBuilder.Entity<CopyProfile>().Navigation(x => x.Destinations)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+        modelBuilder.Entity<CopyDestination>().Navigation(x => x.SymbolMaps)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         modelBuilder.Entity<CTraderIdAccount>().Navigation(x => x.TradingAccounts)
             .UsePropertyAccessMode(PropertyAccessMode.Field);

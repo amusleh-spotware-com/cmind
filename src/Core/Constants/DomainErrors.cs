@@ -23,6 +23,17 @@ public static class DomainErrors
     public const string OpenApiTokenRequired = "domain.openapi.token_required";
     public const string CtidTraderAccountInvalid = "domain.openapi.ctid_trader_account_invalid";
 
+    public const string CopyMultiplierInvalid = "domain.copy.multiplier_invalid";
+    public const string CopyLotInvalid = "domain.copy.lot_invalid";
+    public const string CopySlippageInvalid = "domain.copy.slippage_invalid";
+    public const string CopyDelayInvalid = "domain.copy.delay_invalid";
+    public const string CopyLeverageInvalid = "domain.copy.leverage_invalid";
+    public const string CopyLotBoundsInvalid = "domain.copy.lot_bounds_invalid";
+    public const string CopyRiskParameterInvalid = "domain.copy.risk_parameter_invalid";
+    public const string CopySourceEqualsDestination = "domain.copy.source_equals_destination";
+    public const string CopyDestinationDuplicate = "domain.copy.destination_duplicate";
+    public const string CopyProfileTransitionInvalid = "domain.copy.profile_transition_invalid";
+
     public const string InstanceTransitionInvalid = "domain.instance.transition_invalid";
     public const string NodeMaxInstancesInvalid = "domain.node.max_instances_invalid";
     public const string NodeEndpointUrlInvalid = "domain.node.endpoint_url_invalid";

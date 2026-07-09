@@ -31,6 +31,14 @@ public interface IOpenApiAuthorizationRepository
     Task SaveChangesAsync(CancellationToken ct);
 }
 
+public interface ICopyProfileRepository
+{
+    Task<CopyProfile?> GetByIdAsync(CopyProfileId id, UserId owner, CancellationToken ct);
+    Task<CopyProfile?> GetWithDestinationsAsync(CopyProfileId id, CancellationToken ct);
+    Task AddAsync(CopyProfile profile, CancellationToken ct);
+    Task SaveChangesAsync(CancellationToken ct);
+}
+
 public interface IMcpApiKeyRepository
 {
     Task<McpApiKey?> GetByIdAsync(McpApiKeyId id, UserId owner, CancellationToken ct);

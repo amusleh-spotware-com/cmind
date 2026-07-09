@@ -53,6 +53,8 @@ public static class DependencyInjection
             Infrastructure.OpenApi.OpenApiConnectionFactory>();
         services.AddScoped<CTraderOpenApi.Client.IOpenApiClient, CTraderOpenApi.Client.OpenApiClient>();
         services.AddSingleton<Core.Domain.IOAuthStateService, Infrastructure.OpenApi.OAuthStateService>();
+        services.AddScoped<Core.Domain.ICopyProfileRepository, CopyProfileRepository>();
+        services.AddSingleton<Core.Domain.ICopySizingCalculator, Core.Domain.CopySizingCalculator>();
         services.AddHttpClient<CTraderOpenApi.Auth.IOpenApiTokenClient, CTraderOpenApi.Auth.OpenApiTokenClient>(
             (sp, client) =>
             {

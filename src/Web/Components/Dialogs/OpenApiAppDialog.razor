@@ -1,0 +1,61 @@
+@* Modal dialog to configure the single cTrader Open API application. Returns OpenApiAppDialogResult on confirm. *@
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(IsEdit ? "Edit Open API Application" : "Add Open API Application")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
+            Register a cTrader Open API application in your cTrader Open API account, then set its redirect URI to
+            the value below. You configure a single application and use it to authorize accounts from any number of cIDs.
+        </MudText>
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="_name" Label="Name" Required="true"
+                          RequiredError="Name is required" Class="mb-2" Immediate="true" />
+            <MudTextField @bind-Value="_clientId" Label="Client ID" Required="true"
+                          RequiredError="Client ID is required" Class="mb-2" Immediate="true" />
+            <MudTextField @bind-Value="_clientSecret" Label="Client Secret" InputType="InputType.Password"
+                          HelperText="@(IsEdit ? "Leave blank to keep the current secret" : null)"
+                          Required="@(!IsEdit)" RequiredError="Client Secret is required" Class="mb-2" Immediate="true" />
+            <MudTextField T="string" Value="@CallbackUrl" ReadOnly="true" Label="Redirect URI (set this in cTrader)"
+                          Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.ContentCopy" Class="mb-1" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public bool IsEdit { get; set; }
+    [Parameter] public string CallbackUrl { get; set; } = "";
+    [Parameter] public string? Name { get; set; }
+    [Parameter] public string? ClientId { get; set; }
+
+    private MudForm? _form;
+    private string _name = "";
+    private string _clientId = "";
+    private string _clientSecret = "";
+
+    protected override void OnInitialized()
+    {
+        _name = Name ?? "";
+        _clientId = ClientId ?? "";
+    }
+
+    private async Task Submit()
+    {
+        if (_form is not null) await _form.Validate();
+        if (string.IsNullOrWhiteSpace(_name) || string.IsNullOrWhiteSpace(_clientId)) return;
+        if (!IsEdit && string.IsNullOrWhiteSpace(_clientSecret)) return;
+        Dialog.Close(DialogResult.Ok(new OpenApiAppDialogResult(
+            _name.Trim(), _clientId.Trim(), string.IsNullOrWhiteSpace(_clientSecret) ? null : _clientSecret)));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    public sealed record OpenApiAppDialogResult(string Name, string ClientId, string? ClientSecret);
+}

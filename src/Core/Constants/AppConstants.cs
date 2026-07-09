@@ -93,6 +93,8 @@ public static class OpenApiEndpoints
     public const string LiveHost = "live.ctraderapi.com";
     public const string DemoHost = "demo.ctraderapi.com";
     public const int Port = 5035;
+    public const string StateCookieName = "oapi_oauth_state";
+    public const string CallbackPath = "/openapi/callback";
 }
 
 public static class ObservabilityDefaults

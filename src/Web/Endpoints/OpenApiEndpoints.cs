@@ -7,18 +7,13 @@ using Core.Options;
 using CTraderOpenApi.Auth;
 using CTraderOpenApi.Client;
 using Infrastructure.Persistence;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Web.OpenApi;
 
 namespace Web.Endpoints;
 
-public record CreateOpenApiAppRequest(string Name, string ClientId, string ClientSecret, string RedirectUri);
-public record UpdateOpenApiAppRequest(string Name, string ClientId, string? ClientSecret, string RedirectUri);
+public record SaveOpenApiAppRequest(string Name, string ClientId, string? ClientSecret);
 
 public static class OpenApiEndpoints
 {
@@ -30,76 +25,73 @@ public static class OpenApiEndpoints
     {
         var g = app.MapGroup("/api/openapi").RequireAuthorization(AuthPolicies.UserOrAbove);
 
-        g.MapGet("/applications", async (DataContext db, ICurrentUser u) =>
-        {
-            var uid = u.UserId!.Value;
-            return await db.OpenApiApplications.Where(a => a.UserId == uid)
-                .Select(a => new { a.Id, a.Name, a.ClientId, a.RedirectUri }).ToListAsync();
-        });
-
-        g.MapPost("/applications", async (CreateOpenApiAppRequest req, DataContext db, ICurrentUser u, ISecretProtector p) =>
+        g.MapGet("/application", async (IOpenApiApplicationRepository apps, ICurrentUser u, HttpContext ctx, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
-            var application = OpenApiApplication.Create(uid, req.Name, new OpenApiClientId(req.ClientId),
-                p.Protect(Encoding.UTF8.GetBytes(req.ClientSecret), EncryptionPurposes.OpenApiClientSecret),
-                new OpenApiRedirectUri(req.RedirectUri));
-            db.OpenApiApplications.Add(application);
-            await db.SaveChangesAsync();
-            return Results.Ok(new { application.Id });
+            var application = await apps.GetByUserAsync(uid, ct);
+            return application is null
+                ? Results.Ok(new { configured = false, callbackUrl = CallbackUrl(ctx) })
+                : Results.Ok(new { configured = true, application.Name, application.ClientId, callbackUrl = CallbackUrl(ctx) });
         });
 
-        g.MapPut("/applications/{id:guid}", async (Guid id, UpdateOpenApiAppRequest req,
-            DataContext db, ICurrentUser u, ISecretProtector p) =>
+        g.MapPut("/application", async (SaveOpenApiAppRequest req, IOpenApiApplicationRepository apps,
+            ICurrentUser u, ISecretProtector p, HttpContext ctx, CancellationToken ct) =>
         {
-            var uid = u.UserId!.Value;
-            var aid = OpenApiApplicationId.From(id);
-            var application = await db.OpenApiApplications.FirstOrDefaultAsync(a => a.Id == aid && a.UserId == uid);
-            if (application is null) return Results.NotFound();
-            var secret = string.IsNullOrEmpty(req.ClientSecret)
-                ? application.EncryptedClientSecret
-                : p.Protect(Encoding.UTF8.GetBytes(req.ClientSecret), EncryptionPurposes.OpenApiClientSecret);
-            application.UpdateCredentials(req.Name, new OpenApiClientId(req.ClientId), secret,
-                new OpenApiRedirectUri(req.RedirectUri));
-            await db.SaveChangesAsync();
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var redirectUri = new OpenApiRedirectUri(CallbackUrl(ctx));
+            var existing = await apps.GetByUserAsync(uid, ct);
+            if (existing is null)
+            {
+                if (string.IsNullOrEmpty(req.ClientSecret)) return Results.BadRequest(new { error = DomainErrors.OpenApiSecretRequired });
+                var application = OpenApiApplication.Create(uid, req.Name, new OpenApiClientId(req.ClientId),
+                    p.Protect(Encoding.UTF8.GetBytes(req.ClientSecret), EncryptionPurposes.OpenApiClientSecret), redirectUri);
+                await apps.AddAsync(application, ct);
+            }
+            else
+            {
+                var secret = string.IsNullOrEmpty(req.ClientSecret)
+                    ? existing.EncryptedClientSecret
+                    : p.Protect(Encoding.UTF8.GetBytes(req.ClientSecret), EncryptionPurposes.OpenApiClientSecret);
+                existing.UpdateCredentials(req.Name, new OpenApiClientId(req.ClientId), secret, redirectUri);
+            }
+            await apps.SaveChangesAsync(ct);
             return Results.Ok();
         });
 
-        g.MapDelete("/applications/{id:guid}", async (Guid id, DataContext db, ICurrentUser u) =>
+        g.MapDelete("/application", async (IOpenApiApplicationRepository apps, ICurrentUser u, CancellationToken ct) =>
         {
-            var uid = u.UserId!.Value;
-            var aid = OpenApiApplicationId.From(id);
-            var application = await db.OpenApiApplications.FirstOrDefaultAsync(a => a.Id == aid && a.UserId == uid);
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var application = await apps.GetByUserAsync(uid, ct);
             if (application is null) return Results.NotFound();
-            db.OpenApiApplications.Remove(application);
-            await db.SaveChangesAsync();
+            await apps.RemoveAsync(application, ct);
+            await apps.SaveChangesAsync(ct);
             return Results.NoContent();
         });
 
-        g.MapGet("/applications/{id:guid}/authorize-url", async (Guid id, DataContext db, ICurrentUser u,
-            IOAuthStateService states, IOptionsMonitor<AppOptions> options) =>
+        g.MapGet("/authorize", async (IOpenApiApplicationRepository apps, ICurrentUser u,
+            IOAuthStateService states, IOptionsMonitor<AppOptions> options, HttpContext ctx, CancellationToken ct) =>
         {
-            var uid = u.UserId!.Value;
-            var aid = OpenApiApplicationId.From(id);
-            var application = await db.OpenApiApplications.FirstOrDefaultAsync(a => a.Id == aid && a.UserId == uid);
-            if (application is null) return Results.NotFound();
-            var state = states.CreateState(uid, aid, AuthorizeStateTtl, isInvite: false);
-            return Results.Ok(new { url = BuildAuthorizeUrl(options.CurrentValue.OpenApi, application, state) });
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var application = await apps.GetByUserAsync(uid, ct);
+            if (application is null) return Results.Redirect("/openapi-apps");
+            var state = states.CreateState(uid, application.Id, AuthorizeStateTtl, isInvite: false);
+            SetStateCookie(ctx, state);
+            return Results.Redirect(BuildAuthorizeUrl(options.CurrentValue.OpenApi, application, state));
         });
 
-        g.MapPost("/applications/{id:guid}/invite", async (Guid id, DataContext db, ICurrentUser u,
-            IOAuthStateService states, HttpContext ctx) =>
+        g.MapPost("/application/invite", async (IOpenApiApplicationRepository apps, ICurrentUser u,
+            IOAuthStateService states, HttpContext ctx, CancellationToken ct) =>
         {
-            var uid = u.UserId!.Value;
-            var aid = OpenApiApplicationId.From(id);
-            var application = await db.OpenApiApplications.FirstOrDefaultAsync(a => a.Id == aid && a.UserId == uid);
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var application = await apps.GetByUserAsync(uid, ct);
             if (application is null) return Results.NotFound();
-            var state = states.CreateState(uid, aid, InviteTtl, isInvite: true);
+            var state = states.CreateState(uid, application.Id, InviteTtl, isInvite: true);
             var baseUrl = $"{ctx.Request.Scheme}://{ctx.Request.Host}";
             return Results.Ok(new { url = $"{baseUrl}/openapi/invite/{Uri.EscapeDataString(state)}" });
         });
 
         app.MapGet("/openapi/invite/{state}", async (string state, DataContext db,
-            IOAuthStateService states, IOptionsMonitor<AppOptions> options) =>
+            IOAuthStateService states, IOptionsMonitor<AppOptions> options, HttpContext ctx) =>
         {
             var result = states.Validate(state);
             if (result is null || !result.IsInvite) return Html(ErrorPage("This invite link is invalid or expired."));
@@ -107,17 +99,24 @@ public static class OpenApiEndpoints
                 .FirstOrDefaultAsync(a => a.Id == result.ApplicationId && a.UserId == result.UserId);
             if (application is null) return Html(ErrorPage("The linked application no longer exists."));
             var authState = states.CreateState(result.UserId, result.ApplicationId, AuthorizeStateTtl, isInvite: false);
+            SetStateCookie(ctx, authState);
             return Results.Redirect(BuildAuthorizeUrl(options.CurrentValue.OpenApi, application, authState));
         }).AllowAnonymous().RequireRateLimiting(RateLimitPolicies.Auth);
 
         app.MapGet("/openapi/callback", async (string? code, string? state, DataContext db,
             IOAuthStateService states, IOpenApiTokenClient tokenClient, IOpenApiClient client,
-            OpenApiAccountLinker linker, ISecretProtector p, ILoggerFactory loggerFactory, CancellationToken ct) =>
+            OpenApiAccountLinker linker, ISecretProtector p, ILoggerFactory loggerFactory, HttpContext ctx,
+            CancellationToken ct) =>
         {
-            if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(state))
-                return Html(ErrorPage("Missing authorization code or state."));
+            var effectiveState = state;
+            if (string.IsNullOrEmpty(effectiveState) && ctx.Request.Cookies.TryGetValue(StateCookieName, out var cookieState))
+                effectiveState = cookieState;
+            ClearStateCookie(ctx);
 
-            var result = states.Validate(state);
+            if (string.IsNullOrEmpty(code)) return Html(ErrorPage("Missing authorization code."));
+            if (string.IsNullOrEmpty(effectiveState)) return Html(ErrorPage("Missing authorization state. Please start again."));
+
+            var result = states.Validate(effectiveState);
             if (result is null) return Html(ErrorPage("This authorization link is invalid or expired."));
 
             var application = await db.OpenApiApplications
@@ -143,6 +142,31 @@ public static class OpenApiEndpoints
 
         return app;
     }
+
+    private const string StateCookieName = Core.Constants.OpenApiEndpoints.StateCookieName;
+    private const string CookiePath = Core.Constants.OpenApiEndpoints.CallbackPath;
+
+    private static string CallbackUrl(HttpContext ctx) =>
+        $"{ctx.Request.Scheme}://{ctx.Request.Host}{Core.Constants.OpenApiEndpoints.CallbackPath}";
+
+    private static void SetStateCookie(HttpContext ctx, string state) =>
+        ctx.Response.Cookies.Append(StateCookieName, state, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+            Path = CookiePath,
+            MaxAge = AuthorizeStateTtl,
+        });
+
+    private static void ClearStateCookie(HttpContext ctx) =>
+        ctx.Response.Cookies.Delete(StateCookieName, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+            Path = CookiePath,
+        });
 
     private static string BuildAuthorizeUrl(OpenApiOptions options, OpenApiApplication application, string state)
     {

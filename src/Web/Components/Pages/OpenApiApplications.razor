@@ -1,59 +1,66 @@
 @page "/openapi-apps"
 @using System.Text.Json
 @using Web.Json
+@using Web.Components.Dialogs
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
+@inject IDialogService Dialogs
 @inject NavigationManager Nav
 
-<PageTitle>Open API Applications</PageTitle>
+<PageTitle>Open API Application</PageTitle>
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
-    <MudText Typo="Typo.h5">Open API Applications</MudText>
+    <MudText Typo="Typo.h5">Open API Application</MudText>
     <MudSpacer />
-    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
-               OnClick="@(() => _showForm = !_showForm)">Add Application</MudButton>
+    @if (_configured)
+    {
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Link"
+                   OnClick="Authorize">Authorize accounts</MudButton>
+    }
 </MudStack>
 
 <MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
-    Register a cTrader Open API application (from your cTrader Open API account), then authorize your
-    cTrader ID to add its trading accounts. Set the application's redirect URI to
-    <code>@_callbackUrl</code>.
+    Configure a single cTrader Open API application, then authorize your cIDs to add their trading accounts.
+    One application is used for all accounts to keep copy trading consistent.
 </MudText>
 
-@if (_showForm)
+@if (_loading)
 {
-    <MudCard Class="mb-4">
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (!_configured)
+{
+    <MudPaper Class="pa-6" Elevation="0" Outlined="true">
+        <MudStack AlignItems="AlignItems.Center" Spacing="3">
+            <MudIcon Icon="@Icons.Material.Filled.Api" Size="Size.Large" Color="Color.Secondary" />
+            <MudText Typo="Typo.subtitle1">No Open API application configured</MudText>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="Configure">Add Application</MudButton>
+        </MudStack>
+    </MudPaper>
+}
+else
+{
+    <MudCard>
         <MudCardContent>
-            <MudTextField @bind-Value="_name" Label="Name" Class="mb-2" />
-            <MudTextField @bind-Value="_clientId" Label="Client ID" Class="mb-2" />
-            <MudTextField @bind-Value="_clientSecret" Label="Client Secret" InputType="InputType.Password" Class="mb-2" />
-            <MudTextField @bind-Value="_redirectUri" Label="Redirect URI" HelperText="@_callbackUrl" Class="mb-2" />
+            <MudStack Spacing="2">
+                <MudStack Row="true" AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.subtitle1">@_name</MudText>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Icon="@Icons.Material.Filled.CheckCircle">Configured</MudChip>
+                </MudStack>
+                <MudText Typo="Typo.body2"><b>Client ID:</b> @_clientId</MudText>
+                <MudText Typo="Typo.body2"><b>Redirect URI:</b> <code>@_callbackUrl</code></MudText>
+            </MudStack>
         </MudCardContent>
         <MudCardActions>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Create">Save</MudButton>
-            <MudButton OnClick="@(() => _showForm = false)">Cancel</MudButton>
+            <MudButton Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Edit" OnClick="Configure">Edit</MudButton>
+            <MudButton Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Share" OnClick="Invite">Invite link</MudButton>
+            <MudSpacer />
+            <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="Delete">Delete</MudButton>
         </MudCardActions>
     </MudCard>
 }
-
-<MudTable Items="_apps" Dense="true">
-    <HeaderContent>
-        <MudTh>Name</MudTh><MudTh>Client ID</MudTh><MudTh>Redirect URI</MudTh><MudTh /></HeaderContent>
-    <RowTemplate>
-        <MudTd>@context.name</MudTd>
-        <MudTd>@context.clientId</MudTd>
-        <MudTd>@context.redirectUri</MudTd>
-        <MudTd>
-            <MudButton Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Link"
-                       OnClick="@(() => Authorize((Guid)context.id))">Authorize</MudButton>
-            <MudButton Size="Size.Small" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Share"
-                       OnClick="@(() => Invite((Guid)context.id))">Invite link</MudButton>
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
-                           OnClick="@(() => Delete((Guid)context.id))" />
-        </MudTd>
-    </RowTemplate>
-</MudTable>
 
 @if (!string.IsNullOrEmpty(_inviteUrl))
 {
@@ -62,59 +69,67 @@
 }
 
 @code {
-    private dynamic[] _apps = [];
-    private bool _showForm;
+    private bool _loading = true;
+    private bool _configured;
     private string _name = "";
     private string _clientId = "";
-    private string _clientSecret = "";
-    private string _redirectUri = "";
-    private string? _inviteUrl;
     private string _callbackUrl = "";
+    private string? _inviteUrl;
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync() => Load();
+
+    private async Task Load()
     {
-        _callbackUrl = new Uri(new Uri(Nav.BaseUri), "/openapi/callback").ToString();
-        if (string.IsNullOrEmpty(_redirectUri)) _redirectUri = _callbackUrl;
-        await Load();
-    }
-
-    private async Task Load() => _apps = await Http.GetDynamicArrayAsync("/api/openapi/applications");
-
-    private async Task Create()
-    {
-        var r = await Http.PostAsJsonAsync("/api/openapi/applications",
-            new { Name = _name, ClientId = _clientId, ClientSecret = _clientSecret, RedirectUri = _redirectUri });
-        if (r.IsSuccessStatusCode)
+        _loading = true;
+        var res = await Http.GetDynamicAsync("/api/openapi/application");
+        if (res is not null)
         {
-            Snack.Add("Application saved", Severity.Success);
-            _showForm = false;
-            _name = _clientId = _clientSecret = "";
-            _redirectUri = _callbackUrl;
-            await Load();
+            _configured = (bool)res.configured;
+            _callbackUrl = (string)res.callbackUrl;
+            if (_configured)
+            {
+                _name = (string)res.name;
+                _clientId = (string)res.clientId;
+            }
         }
-        else
+        _loading = false;
+    }
+
+    private async Task Configure()
+    {
+        var parameters = new DialogParameters
         {
-            Snack.Add("Failed to save application", Severity.Error);
-        }
+            { nameof(OpenApiAppDialog.IsEdit), _configured },
+            { nameof(OpenApiAppDialog.CallbackUrl), _callbackUrl },
+            { nameof(OpenApiAppDialog.Name), _configured ? _name : null },
+            { nameof(OpenApiAppDialog.ClientId), _configured ? _clientId : null },
+        };
+        var dlg = await Dialogs.ShowAsync<OpenApiAppDialog>(null,
+            parameters, new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
+        var res = await dlg.Result;
+        if (res is null || res.Canceled) return;
+        var data = (OpenApiAppDialog.OpenApiAppDialogResult)res.Data!;
+        var r = await Http.PutAsJsonAsync("/api/openapi/application",
+            new { data.Name, data.ClientId, data.ClientSecret });
+        Snack.Add(r.IsSuccessStatusCode ? "Application saved" : "Failed to save application",
+            r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        if (r.IsSuccessStatusCode) await Load();
     }
 
-    private async Task Authorize(Guid id)
-    {
-        var res = await Http.GetDynamicAsync($"/api/openapi/applications/{id}/authorize-url");
-        if (res is not null) Nav.NavigateTo((string)res.url, forceLoad: true);
-    }
+    private void Authorize() => Nav.NavigateTo("/api/openapi/authorize", forceLoad: true);
 
-    private async Task Invite(Guid id)
+    private async Task Invite()
     {
-        var r = await Http.PostAsync($"/api/openapi/applications/{id}/invite", null);
+        var r = await Http.PostAsync("/api/openapi/application/invite", null);
         if (!r.IsSuccessStatusCode) { Snack.Add("Failed to create invite", Severity.Error); return; }
         using var doc = JsonDocument.Parse(await r.Content.ReadAsStringAsync());
         _inviteUrl = doc.RootElement.GetProperty("url").GetString();
     }
 
-    private async Task Delete(Guid id)
+    private async Task Delete()
     {
-        await Http.DeleteAsync($"/api/openapi/applications/{id}");
-        await Load();
+        var r = await Http.DeleteAsync("/api/openapi/application");
+        if (r.IsSuccessStatusCode) { Snack.Add("Application deleted", Severity.Success); _inviteUrl = null; await Load(); }
+        else Snack.Add("Failed to delete application", Severity.Error);
     }
 }

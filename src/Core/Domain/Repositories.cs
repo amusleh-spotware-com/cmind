@@ -18,7 +18,9 @@ public interface ICTraderIdAccountRepository
 public interface IOpenApiApplicationRepository
 {
     Task<OpenApiApplication?> GetByIdAsync(OpenApiApplicationId id, UserId owner, CancellationToken ct);
+    Task<OpenApiApplication?> GetByUserAsync(UserId owner, CancellationToken ct);
     Task AddAsync(OpenApiApplication application, CancellationToken ct);
+    Task RemoveAsync(OpenApiApplication application, CancellationToken ct);
     Task SaveChangesAsync(CancellationToken ct);
 }
 

@@ -7,59 +7,75 @@ using Xunit;
 
 namespace IntegrationTests.CopyLive;
 
-// Boots the shared state for the live copy-trading tests against real cTrader demo accounts.
-// Reads app credentials + the cached refresh token from the gitignored secrets files, rotates the
-// access token via the refresh token (no browser), and exposes a connection factory + account list.
-// If secrets are absent the fixture is "unavailable" and every live test skips.
+// Boots the shared state for the live copy-trading tests against real cTrader accounts. Reads the
+// app credentials + the multi-cID token cache from the gitignored secrets, rotates each cID's access
+// token via its refresh token (no browser), and exposes a flat pool of usable accounts.
+//
+// SAFETY: only DEMO accounts (IsLive == false) are ever exposed for trading, so no test can place an
+// order on a live/funded account. Live accounts in the cache are ignored.
 public sealed class LiveCopyFixture : IAsyncLifetime
 {
     public bool Available { get; private set; }
     public string SkipReason { get; private set; } = "";
     public string ClientId { get; private set; } = "";
     public string ClientSecret { get; private set; } = "";
-    public string AccessToken { get; private set; } = "";
-    public bool IsLive { get; private set; }
-    public IReadOnlyList<LiveCopySecrets.CachedAccount> Accounts { get; private set; } = [];
+    public IReadOnlyList<LiveAccount> DemoAccounts { get; private set; } = [];
     public IOpenApiConnectionFactory ConnectionFactory { get; } =
         new LiveConnectionFactory(new TcpSslOpenApiTransportFactory());
+
+    public sealed record LiveAccount(string Cid, long Ctid, long Login, string AccessToken);
 
     public async Task InitializeAsync()
     {
         var app = LiveCopySecrets.LoadApp();
         var tokens = LiveCopySecrets.LoadTokens();
-        if (app is null || tokens is null)
+        if (app is null || tokens is null || tokens.Cids.Count == 0)
         {
             SkipReason = $"Live copy secrets missing (need secrets/{LiveCopySecrets.AppFileName} and " +
-                         $"secrets/{LiveCopySecrets.TokensFileName}). See docs/testing/live-copy-trading.md.";
+                         $"secrets/{LiveCopySecrets.TokensFileName}). Run the OAuth onboarding once " +
+                         "(see docs/testing/live-copy-trading.md).";
             return;
         }
 
         ClientId = app.ClientId;
         ClientSecret = app.ClientSecret;
-        IsLive = tokens.IsLive;
-        Accounts = tokens.Accounts;
 
         using var http = new HttpClient { BaseAddress = new Uri(Core.Constants.OpenApiEndpoints.AuthBaseUrl) };
         var client = new OpenApiTokenClient(http);
-        var refreshed = await client.RefreshAsync(ClientId, ClientSecret, tokens.RefreshToken, CancellationToken.None);
 
-        AccessToken = refreshed.AccessToken;
-        var newRefresh = string.IsNullOrEmpty(refreshed.RefreshToken) ? tokens.RefreshToken : refreshed.RefreshToken;
-        LiveCopySecrets.SaveTokens(tokens with { AccessToken = AccessToken, RefreshToken = newRefresh });
-        Available = true;
+        var refreshedCids = new List<LiveCopySecrets.CidTokens>();
+        var pool = new List<LiveAccount>();
+        foreach (var cid in tokens.Cids)
+        {
+            var refreshed = await client.RefreshAsync(ClientId, ClientSecret, cid.RefreshToken, CancellationToken.None);
+            var access = refreshed.AccessToken;
+            var newRefresh = string.IsNullOrEmpty(refreshed.RefreshToken) ? cid.RefreshToken : refreshed.RefreshToken;
+            refreshedCids.Add(cid with { AccessToken = access, RefreshToken = newRefresh });
+
+            foreach (var account in cid.Accounts.Where(a => !a.IsLive)) // DEMO ONLY
+                pool.Add(new LiveAccount(cid.Cid, account.CtidTraderAccountId, account.TraderLogin, access));
+        }
+
+        LiveCopySecrets.SaveTokens(new LiveCopySecrets.TokenCache(refreshedCids));
+        DemoAccounts = pool;
+        Available = pool.Count >= 2;
+        if (!Available)
+            SkipReason = $"Need at least two demo accounts across the authorized cIDs (found {pool.Count}).";
     }
 
-    public OpenApiTradingSession NewSession(params long[] ctidTraderAccountIds)
+    public OpenApiTradingSession NewSession(params LiveAccount[] accounts)
     {
-        var session = new OpenApiTradingSession(ConnectionFactory.Create(IsLive, ClientId, ClientSecret));
-        foreach (var ctid in ctidTraderAccountIds) session.AttachAccount(ctid, AccessToken);
+        // All demo accounts live on the demo gateway, so a single demo connection can hold them all,
+        // even across different cIDs (each account authenticates with its own access token).
+        var session = new OpenApiTradingSession(ConnectionFactory.Create(live: false, ClientId, ClientSecret));
+        foreach (var account in accounts) session.AttachAccount(account.Ctid, account.AccessToken);
         return session;
     }
 
     public Task DisposeAsync() => Task.CompletedTask;
 }
 
-// Minimal connection factory for the live tests — real TCP-SSL transport to the demo/live gateway.
+// Minimal connection factory for the live tests — real TCP-SSL transport to the demo gateway.
 internal sealed class LiveConnectionFactory(IOpenApiTransportFactory transportFactory) : IOpenApiConnectionFactory
 {
     private const string DemoHost = "demo.ctraderapi.com";

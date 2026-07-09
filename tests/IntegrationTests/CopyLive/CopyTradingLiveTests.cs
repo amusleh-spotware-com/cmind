@@ -5,6 +5,9 @@ using Xunit.Abstractions;
 
 namespace IntegrationTests.CopyLive;
 
+// End-to-end copy trading against real cTrader DEMO accounts. Fully automated + reproducible: the
+// fixture refreshes the cached tokens, these tests open a real master position and assert the engine
+// mirrors it onto the slave(s), then clean everything up. Only demo accounts are ever traded.
 [Collection(LiveCopyCollection.Name)]
 public sealed class CopyTradingLiveTests(LiveCopyFixture fixture, ITestOutputHelper output)
 {
@@ -12,74 +15,82 @@ public sealed class CopyTradingLiveTests(LiveCopyFixture fixture, ITestOutputHel
     public async Task Token_refreshes_and_lists_demo_accounts_live()
     {
         if (!fixture.Available) { output.WriteLine(fixture.SkipReason); return; }
+        var account = fixture.DemoAccounts[0];
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         var client = new OpenApiClient(fixture.ConnectionFactory);
-        var grant = await client.LoadGrantAsync(fixture.ClientId, fixture.ClientSecret, fixture.AccessToken, cts.Token);
+        var grant = await client.LoadGrantAsync(fixture.ClientId, fixture.ClientSecret, account.AccessToken, cts.Token);
 
-        output.WriteLine($"ctidUserId={grant.CtidUserId}, accounts={grant.Accounts.Count}");
-        grant.Accounts.Should().HaveCountGreaterThanOrEqualTo(2,
-            "copy trading needs at least a master and a slave account under the cID");
+        output.WriteLine($"cid={account.Cid} ctidUser={grant.CtidUserId} accounts={grant.Accounts.Count}");
+        grant.Accounts.Should().NotBeEmpty();
     }
 
     [Fact]
     public async Task One_to_one_lot_multiplier_copies_master_position()
-    {
-        if (!fixture.Available) { output.WriteLine(fixture.SkipReason); return; }
-        var (master, slaves) = Accounts(1);
-
-        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-        var scenario = new LiveCopyScenario(fixture, output);
-        var result = await scenario.RunAsync(master, masterIsBuy: true,
-            [new LiveCopyScenario.SlaveSetup(slaves[0], LiveCopyScenario.Destination())], cts.Token);
-
-        if (result.Inconclusive) { output.WriteLine($"INCONCLUSIVE: {result.Reason}"); return; }
-
-        result.Slaves.Should().ContainSingle();
-        result.Slaves[0].Copied.Should().BeTrue("the master position must be mirrored onto the slave");
-        result.Slaves[0].IsBuy.Should().BeTrue("a non-reversed copy keeps the master's direction");
-    }
+        => await RunAsync(SameCid(1), masterIsBuy: true, reverse: false, r =>
+        {
+            r.Slaves.Should().ContainSingle();
+            r.Slaves[0].Copied.Should().BeTrue("the master position must be mirrored onto the slave");
+            r.Slaves[0].IsBuy.Should().BeTrue("a non-reversed copy keeps the master's direction");
+        });
 
     [Fact]
     public async Task One_to_many_copies_to_all_slaves()
-    {
-        if (!fixture.Available) { output.WriteLine(fixture.SkipReason); return; }
-        var (master, slaves) = Accounts(2);
-
-        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-        var scenario = new LiveCopyScenario(fixture, output);
-        var result = await scenario.RunAsync(master, masterIsBuy: true,
-            slaves.Select(s => new LiveCopyScenario.SlaveSetup(s, LiveCopyScenario.Destination())).ToList(),
-            cts.Token);
-
-        if (result.Inconclusive) { output.WriteLine($"INCONCLUSIVE: {result.Reason}"); return; }
-
-        result.Slaves.Should().HaveCount(2);
-        result.Slaves.Should().OnlyContain(s => s.Copied, "every slave in a 1:many profile must be mirrored");
-    }
+        => await RunAsync(SameCid(2), masterIsBuy: true, reverse: false, r =>
+        {
+            r.Slaves.Should().HaveCount(2);
+            r.Slaves.Should().OnlyContain(s => s.Copied, "every slave in a 1:many profile must be mirrored");
+        });
 
     [Fact]
     public async Task Reverse_copies_the_opposite_side()
+        => await RunAsync(SameCid(1), masterIsBuy: true, reverse: true, r =>
+        {
+            r.Slaves[0].Copied.Should().BeTrue();
+            r.Slaves[0].IsBuy.Should().BeFalse("reverse copy mirrors a master buy as a slave sell");
+        });
+
+    [Fact]
+    public async Task Copies_across_different_cids()
     {
         if (!fixture.Available) { output.WriteLine(fixture.SkipReason); return; }
-        var (master, slaves) = Accounts(1);
+        var master = fixture.DemoAccounts[0];
+        var slave = fixture.DemoAccounts.FirstOrDefault(a => a.Cid != master.Cid);
+        if (slave is null) { output.WriteLine("only one cID has demo accounts; cross-cID skipped"); return; }
+        output.WriteLine($"cross-cID: master cid={master.Cid} -> slave cid={slave.Cid}");
 
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-        var scenario = new LiveCopyScenario(fixture, output);
-        var reverse = LiveCopyScenario.Destination(d => d.SetReverse(true));
-        var result = await scenario.RunAsync(master, masterIsBuy: true,
-            [new LiveCopyScenario.SlaveSetup(slaves[0], reverse)], cts.Token);
+        var result = await new LiveCopyScenario(fixture, output).RunAsync(master, masterIsBuy: true,
+            [new LiveCopyScenario.SlaveSetup(slave, LiveCopyScenario.Destination())], cts.Token);
 
         if (result.Inconclusive) { output.WriteLine($"INCONCLUSIVE: {result.Reason}"); return; }
-
-        result.Slaves[0].Copied.Should().BeTrue();
-        result.Slaves[0].IsBuy.Should().BeFalse("reverse copy mirrors a master buy as a slave sell");
+        result.Slaves[0].Copied.Should().BeTrue("a master under one cID must copy to a slave under another cID");
     }
 
-    private (long Master, IReadOnlyList<long> Slaves) Accounts(int slaveCount)
+    private async Task RunAsync(IReadOnlyList<LiveCopyFixture.LiveAccount> accounts, bool masterIsBuy,
+        bool reverse, Action<LiveCopyScenario.ScenarioResult> assert)
     {
-        var ctids = fixture.Accounts.Select(a => a.CtidTraderAccountId).ToList();
-        ctids.Count.Should().BeGreaterThan(slaveCount, "need a master plus enough slaves");
-        return (ctids[0], ctids.Skip(1).Take(slaveCount).ToList());
+        if (!fixture.Available) { output.WriteLine(fixture.SkipReason); return; }
+
+        var master = accounts[0];
+        var slaves = accounts.Skip(1)
+            .Select(a => new LiveCopyScenario.SlaveSetup(a,
+                LiveCopyScenario.Destination(d => { if (reverse) d.SetReverse(true); })))
+            .ToList();
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        var result = await new LiveCopyScenario(fixture, output).RunAsync(master, masterIsBuy, slaves, cts.Token);
+
+        if (result.Inconclusive) { output.WriteLine($"INCONCLUSIVE: {result.Reason}"); return; }
+        assert(result);
+    }
+
+    // Master + N slaves all under the same cID (so symbols/specs match exactly).
+    private IReadOnlyList<LiveCopyFixture.LiveAccount> SameCid(int slaveCount)
+    {
+        var byCid = fixture.DemoAccounts.GroupBy(a => a.Cid)
+            .FirstOrDefault(g => g.Count() > slaveCount);
+        byCid.Should().NotBeNull($"need a cID with at least {slaveCount + 1} demo accounts");
+        return byCid!.Take(slaveCount + 1).ToList();
     }
 }

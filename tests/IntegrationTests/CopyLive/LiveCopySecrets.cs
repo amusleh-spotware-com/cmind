@@ -5,6 +5,9 @@ namespace IntegrationTests.CopyLive;
 // Loads local, gitignored credentials for the live copy-trading tests. Everything is read from
 // files under <repo>/secrets so reruns need no prompts. Returns null when a file is absent, which
 // makes the live tests skip cleanly on machines without the secrets.
+//
+// The token cache is multi-cID: one entry per authorized cID, each with its own refresh/access token
+// and account list. It is written by the OAuth onboarding (E2ETests) or the volume bootstrap.
 public static class LiveCopySecrets
 {
     public const string AppFileName = "openapi-test-app.local.json";
@@ -14,11 +17,10 @@ public static class LiveCopySecrets
 
     public sealed record CachedAccount(long CtidTraderAccountId, long TraderLogin, bool IsLive);
 
-    public sealed record TokenCache(
-        string RefreshToken,
-        string AccessToken,
-        bool IsLive,
-        IReadOnlyList<CachedAccount> Accounts);
+    public sealed record CidTokens(
+        string Cid, string RefreshToken, string AccessToken, bool IsLive, IReadOnlyList<CachedAccount> Accounts);
+
+    public sealed record TokenCache(IReadOnlyList<CidTokens> Cids);
 
     public static string SecretsDirectory
     {

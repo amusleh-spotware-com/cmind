@@ -17,19 +17,20 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
     private static readonly TimeSpan HostWarmup = TimeSpan.FromSeconds(6);
     private static readonly TimeSpan CopyTimeout = TimeSpan.FromSeconds(30);
 
-    public sealed record SlaveSetup(long Ctid, CopyDestination Config);
+    public sealed record SlaveSetup(LiveCopyFixture.LiveAccount Account, CopyDestination Config);
 
     public sealed record SlaveResult(long Ctid, bool Copied, bool IsBuy, long Volume);
 
     public sealed record ScenarioResult(bool Inconclusive, string? Reason, bool MasterIsBuy,
         long MasterVolume, IReadOnlyList<SlaveResult> Slaves);
 
-    public async Task<ScenarioResult> RunAsync(long masterCtid, bool masterIsBuy,
+    public async Task<ScenarioResult> RunAsync(LiveCopyFixture.LiveAccount master, bool masterIsBuy,
         IReadOnlyList<SlaveSetup> slaves, CancellationToken ct)
     {
-        var plan = new CopyProfilePlan(CopyProfileId.New(), fixture.IsLive, fixture.ClientId, fixture.ClientSecret,
-            masterCtid, fixture.AccessToken,
-            slaves.Select(s => new CopyDestinationPlan(s.Ctid, fixture.AccessToken, s.Config)).ToList());
+        var masterCtid = master.Ctid;
+        var plan = new CopyProfilePlan(CopyProfileId.New(), Live: false, fixture.ClientId, fixture.ClientSecret,
+            masterCtid, master.AccessToken,
+            slaves.Select(s => new CopyDestinationPlan(s.Account.Ctid, s.Account.AccessToken, s.Config)).ToList());
 
         var host = new CopyEngineHost(plan, new OpenApiTradingSessionFactory(fixture.ConnectionFactory),
             new CopyDecisionEngine(new CopySizingCalculator()), NullLogger.Instance);
@@ -37,11 +38,11 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
         using var hostCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         var hostTask = Task.Run(() => host.RunAsync(hostCts.Token), CancellationToken.None);
 
-        var probeCtids = new[] { masterCtid }.Concat(slaves.Select(s => s.Ctid)).ToArray();
-        await using var probe = fixture.NewSession(probeCtids);
+        var probeAccounts = new[] { master }.Concat(slaves.Select(s => s.Account)).ToArray();
+        await using var probe = fixture.NewSession(probeAccounts);
         await probe.StartAsync(ct);
 
-        var symbolId = await ResolveSymbolAsync(probe, masterCtid, ct);
+        var symbolId = await ResolveSymbolAsync(probe, masterCtid, slaves.Select(s => s.Account.Ctid).ToList(), ct);
         var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct)).First();
         var volume = details.MinVolume > 0 ? details.MinVolume : details.StepVolume;
 
@@ -64,9 +65,10 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
         var slaveResults = new List<SlaveResult>();
         foreach (var slave in slaves)
         {
-            var copy = await PollAsync(() => FindByLabelAsync(probe, slave.Ctid, sourceId, ct), CopyTimeout, ct);
-            slaveResults.Add(new SlaveResult(slave.Ctid, copy is not null, copy?.IsBuy ?? false, copy?.Volume ?? 0));
-            output.WriteLine($"slave {slave.Ctid}: copied={copy is not null} volume={copy?.Volume ?? 0} buy={copy?.IsBuy}");
+            var ctid = slave.Account.Ctid;
+            var copy = await PollAsync(() => FindByLabelAsync(probe, ctid, sourceId, ct), CopyTimeout, ct);
+            slaveResults.Add(new SlaveResult(ctid, copy is not null, copy?.IsBuy ?? false, copy?.Volume ?? 0));
+            output.WriteLine($"slave {ctid} (cid {slave.Account.Cid}): copied={copy is not null} volume={copy?.Volume ?? 0} buy={copy?.IsBuy}");
         }
 
         await CleanupAsync(probe, masterCtid, sourceId, slaves, ct);
@@ -74,12 +76,25 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
         return new ScenarioResult(false, null, masterIsBuy, volume, slaveResults);
     }
 
-    private async Task<long> ResolveSymbolAsync(OpenApiTradingSession probe, long masterCtid, CancellationToken ct)
+    private async Task<long> ResolveSymbolAsync(OpenApiTradingSession probe, long masterCtid,
+        IReadOnlyList<long> slaveCtids, CancellationToken ct)
     {
-        var ids = await probe.LoadSymbolIdsAsync(masterCtid, ct);
+        var masterIds = await probe.LoadSymbolIdsAsync(masterCtid, ct);
+
+        // Choose a symbol that exists on the master AND on every slave (cross-broker safety) so the
+        // engine can actually place the copy on each destination.
+        var common = new HashSet<string>(masterIds.Keys, StringComparer.OrdinalIgnoreCase);
+        foreach (var slaveCtid in slaveCtids)
+        {
+            var slaveIds = await probe.LoadSymbolIdsAsync(slaveCtid, ct);
+            common.IntersectWith(slaveIds.Keys);
+        }
+
         foreach (var preferred in SymbolPreference)
-            if (ids.TryGetValue(preferred, out var id)) return id;
-        return ids.Values.First();
+            if (common.Contains(preferred) && masterIds.TryGetValue(preferred, out var id)) return id;
+
+        var fallback = common.FirstOrDefault();
+        return fallback is not null ? masterIds[fallback] : masterIds.Values.First();
     }
 
     private static async Task<OpenPositionSnapshot?> FindByLabelAsync(
@@ -107,9 +122,9 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
     {
         foreach (var slave in slaves)
         {
-            foreach (var position in await probe.ReconcileAsync(slave.Ctid, ct))
+            foreach (var position in await probe.ReconcileAsync(slave.Account.Ctid, ct))
                 if (position.Label == sourceId)
-                    await SafeCloseAsync(probe, slave.Ctid, position, ct);
+                    await SafeCloseAsync(probe, slave.Account.Ctid, position, ct);
         }
 
         foreach (var position in await probe.ReconcileAsync(masterCtid, ct))

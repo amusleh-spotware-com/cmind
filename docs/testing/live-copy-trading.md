@@ -33,7 +33,8 @@ tests/IntegrationTests/CopyLive/
 
 ## Secrets (local, gitignored — never committed)
 
-All credentials live under `<repo>/secrets/` (already in `.gitignore`). Two files:
+All credentials live under `<repo>/secrets/` (already in `.gitignore`). The **dev only writes the first
+two files**; the third (tokens) is produced automatically by the onboarding.
 
 `secrets/openapi-test-app.local.json` — the Open API application:
 
@@ -41,42 +42,59 @@ All credentials live under `<repo>/secrets/` (already in `.gitignore`). Two file
 { "ClientId": "2175_…", "ClientSecret": "…" }
 ```
 
-`secrets/openapi-tokens.local.json` — the cached OAuth tokens + demo accounts (written by the
-bootstrap, refreshed on every live run):
+`secrets/openapi-cids.local.json` — the cID login credentials to authorize (one or many):
 
 ```json
-{
-  "RefreshToken": "…",
-  "AccessToken": "…",
-  "IsLive": false,
-  "Accounts": [ { "CtidTraderAccountId": 25172589, "TraderLogin": 3635817, "IsLive": false }, … ]
-}
+{ "Cids": [
+  { "Cid": "amusleh",  "Username": "amusleh",  "Password": "…" },
+  { "Cid": "afhacker", "Username": "afhacker", "Password": "…" }
+] }
 ```
 
-The **refresh token does not expire**, so after the one-time bootstrap the live tests keep working
-indefinitely: each run exchanges the refresh token for a fresh access token (rotation) with no browser
-and no prompts.
+`secrets/openapi-tokens.local.json` — **written by the onboarding**, multi-cID, refreshed on every run:
 
-## One-time bootstrap (getting the tokens)
+```json
+{ "Cids": [
+  { "Cid": "amusleh", "RefreshToken": "…", "AccessToken": "…", "IsLive": false,
+    "Accounts": [ { "CtidTraderAccountId": 25172589, "TraderLogin": 3635817, "IsLive": false }, … ] }
+] }
+```
 
-The tokens are obtained by authorising the demo accounts through the app's OAuth flow (Accounts →
-"Add via Open API" → log in with the cID → the accounts are linked). Once that has been done in the
-running app, decrypt the stored tokens straight out of the app's Postgres into the token cache:
+The **refresh token does not expire**, so after the one-time onboarding the live tests keep working
+indefinitely: each run exchanges each cID's refresh token for a fresh access token (rotation) — no
+browser, no prompts.
+
+## One-time onboarding (fully automated — no dev interaction beyond saving creds)
+
+The onboarding drives the real cTrader ID login in a headless browser from the saved cID credentials,
+captures the OAuth callback on a local HTTPS listener at the app's registered redirect
+(`https://localhost:7080/openapi/callback`), exchanges the code for tokens, loads the account list, and
+writes the multi-cID token cache. Run it once per machine (or whenever you add a cID):
 
 ```bash
-# 1. Start a Postgres on the app's data volume (same major version as Aspire's postgres)
+CMIND_ONBOARD=1 dotnet test tests/E2ETests --filter FullyQualifiedName~OnboardingTests
+```
+
+That authorizes every cID in `openapi-cids.local.json` and writes `openapi-tokens.local.json`. From then
+on the live copy tests need nothing else. (The cID's cTrader ID account must not have 2FA/captcha on
+login for the automation to complete.)
+
+**Alternative bootstrap** (if the accounts are already authorized in a running app): decrypt the stored
+tokens straight out of the app's Postgres volume instead of re-authorizing:
+
+```bash
 docker run -d --name cmind-pg-extract -e POSTGRES_PASSWORD=appdev \
   -v app-pg-data:/var/lib/postgresql/data -p 5544:5432 postgres:17-alpine
-
-# 2. Decrypt + cache (uses the app's own DataProtection setup)
 CMIND_VOLUME_CONN="Host=127.0.0.1;Port=5544;Database=appdb;Username=postgres;Password=appdev" \
   dotnet test tests/IntegrationTests --filter FullyQualifiedName~LiveTokenBootstrapTests
-
-# 3. Clean up
 docker rm -f cmind-pg-extract
 ```
 
-That writes `secrets/openapi-tokens.local.json`. From then on the live tests need nothing else.
+## Safety — demo only
+
+The live tests trade **only demo accounts**: the fixture filters the token cache to accounts with
+`IsLive == false` and connects to the demo gateway, so an order can never be placed on a live/funded
+account even if a live account is authorized. Every position a test opens is closed in cleanup.
 
 ## Running
 
@@ -119,9 +137,10 @@ exponential backoff.
 
 ### Live, real cTrader demo accounts (`CopyTradingLiveTests`)
 Token refresh + account listing · **1:1** copy executes · **1:many** copy mirrors to every slave ·
-**reverse** turns a master buy into a slave sell. Each opens a real min-lot position on the master,
-waits for the engine to mirror it (matched by the source-position-id label on the slave), asserts, and
-closes everything. A closed market is reported **Inconclusive** rather than failing.
+**reverse** turns a master buy into a slave sell · **cross-cID** copy (master under one cID mirrors to a
+slave under another cID, each authenticating with its own token). Each opens a real min-lot position on
+the master, waits for the engine to mirror it (matched by the source-position-id label on the slave),
+asserts, and closes everything. A closed market is reported **Inconclusive** rather than failing.
 
 ## Edge cases (validated against how real copy/MAM platforms fail)
 
@@ -137,11 +156,6 @@ direction filters, and orphan cleanup after a disconnect are all covered above. 
 
 ## Known gaps / next
 
-- **Cross-cID copying (multiple cIDs).** The engine already supports a different access token per
-  account, so a master under one cID can copy to a slave under another. To exercise it live, onboard the
-  second cID's token: authorise its accounts in the app (Add via Open API), then re-run the bootstrap so
-  the token cache holds both cIDs. A Playwright-driven OAuth onboarding (log in with a cID + password,
-  capture the callback code) would make adding a cID fully hands-off — not yet built.
 - **Token rotation across external nodes.** Each run rotates the access token via the refresh token
   (exercised by `LiveCopyFixture`). `OpenApiTokenRefreshService` refreshes near expiry in-process; a test
   that a refreshed token propagates to the distributed `CopyAgent` on external nodes without disrupting a

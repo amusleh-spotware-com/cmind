@@ -51,6 +51,8 @@ public sealed class LiveTokenBootstrapTests
             .ToList();
 
         Assert.NotEmpty(accounts);
-        LiveCopySecrets.SaveTokens(new LiveCopySecrets.TokenCache(refresh, access, auth.IsLive, accounts));
+        var existing = LiveCopySecrets.LoadTokens()?.Cids.Where(c => c.Cid != "volume").ToList() ?? [];
+        existing.Add(new LiveCopySecrets.CidTokens("volume", refresh, access, auth.IsLive, accounts));
+        LiveCopySecrets.SaveTokens(new LiveCopySecrets.TokenCache(existing));
     }
 }

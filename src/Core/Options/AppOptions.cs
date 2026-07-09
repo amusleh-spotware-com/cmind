@@ -25,6 +25,23 @@ public sealed record AppOptions
     public AgentOptions Agent { get; init; } = new();
     public AlertOptions Alerts { get; init; } = new();
     public PropGuardOptions PropGuard { get; init; } = new();
+    public OpenApiOptions OpenApi { get; init; } = new();
+}
+
+public sealed record OpenApiOptions
+{
+    public bool Enabled { get; init; }
+    public string AuthBaseUrl { get; init; } = Constants.OpenApiEndpoints.AuthBaseUrl;
+    public string LiveHost { get; init; } = Constants.OpenApiEndpoints.LiveHost;
+    public string DemoHost { get; init; } = Constants.OpenApiEndpoints.DemoHost;
+    public int Port { get; init; } = Constants.OpenApiEndpoints.Port;
+    public TimeSpan TokenRefreshThreshold { get; init; } = TimeSpan.FromDays(3);
+    public TimeSpan TokenRefreshInterval { get; init; } = TimeSpan.FromHours(1);
+    public TimeSpan HeartbeatInterval { get; init; } = TimeSpan.FromSeconds(10);
+    public TimeSpan RequestTimeout { get; init; } = TimeSpan.FromSeconds(30);
+    public TimeSpan InboundWatchdogTimeout { get; init; } = TimeSpan.FromSeconds(30);
+    public TimeSpan BackoffInitial { get; init; } = TimeSpan.FromSeconds(1);
+    public TimeSpan BackoffMax { get; init; } = TimeSpan.FromSeconds(60);
 }
 
 public sealed record PropGuardOptions

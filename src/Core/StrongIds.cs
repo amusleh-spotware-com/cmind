@@ -146,6 +146,20 @@ public readonly record struct PropRuleId(Guid Value) : IStronglyTypedId<PropRule
     public override string ToString() => Value.ToString();
 }
 
+public readonly record struct OpenApiApplicationId(Guid Value) : IStronglyTypedId<OpenApiApplicationId>
+{
+    public static OpenApiApplicationId New() => new(Guid.NewGuid());
+    public static OpenApiApplicationId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
+public readonly record struct OpenApiAuthorizationId(Guid Value) : IStronglyTypedId<OpenApiAuthorizationId>
+{
+    public static OpenApiAuthorizationId New() => new(Guid.NewGuid());
+    public static OpenApiAuthorizationId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct Email
 {
     public string Value { get; }

@@ -17,6 +17,12 @@ public static class DomainErrors
     public const string ProposalNotPending = "domain.agent.proposal_not_pending";
     public const string McpKeyAlreadyRevoked = "domain.mcp.key_already_revoked";
 
+    public const string OpenApiClientIdRequired = "domain.openapi.client_id_required";
+    public const string OpenApiSecretRequired = "domain.openapi.secret_required";
+    public const string OpenApiRedirectUriInvalid = "domain.openapi.redirect_uri_invalid";
+    public const string OpenApiTokenRequired = "domain.openapi.token_required";
+    public const string CtidTraderAccountInvalid = "domain.openapi.ctid_trader_account_invalid";
+
     public const string InstanceTransitionInvalid = "domain.instance.transition_invalid";
     public const string NodeMaxInstancesInvalid = "domain.node.max_instances_invalid";
     public const string NodeEndpointUrlInvalid = "domain.node.endpoint_url_invalid";

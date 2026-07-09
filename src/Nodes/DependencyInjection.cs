@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddHostedService<PortfolioAgentService>();
         services.AddHostedService<AlertEvaluator>();
         services.AddHostedService<PropGuardService>();
+        services.AddHostedService<Nodes.CopyTrading.OpenApiTokenRefreshService>();
         return services;
     }
 }

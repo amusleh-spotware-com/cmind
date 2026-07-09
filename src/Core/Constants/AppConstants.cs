@@ -33,6 +33,9 @@ public static class EncryptionPurposes
     public const string CbotAlgo = "cbot.algo";
     public const string CbotSource = "cbot.source";
     public const string NodeApiSecret = "node.api.secret";
+    public const string OpenApiClientSecret = "openapi.client_secret";
+    public const string OpenApiAccessToken = "openapi.access_token";
+    public const string OpenApiRefreshToken = "openapi.refresh_token";
 }
 
 public static class NodeAgentAuth
@@ -79,6 +82,16 @@ public static class NodeAgentRoutes
 public static class ConfigSections
 {
     public const string App = "App";
+}
+
+public static class OpenApiEndpoints
+{
+    public const string AuthBaseUrl = "https://openapi.ctrader.com/";
+    public const string AuthorizePath = "apps/auth";
+    public const string TokenPath = "apps/token";
+    public const string LiveHost = "live.ctraderapi.com";
+    public const string DemoHost = "demo.ctraderapi.com";
+    public const int Port = 5035;
 }
 
 public static class ObservabilityDefaults

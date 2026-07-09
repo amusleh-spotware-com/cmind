@@ -27,6 +27,34 @@ public sealed class CTraderIdAccountRepository(DataContext db) : ICTraderIdAccou
     public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
 }
 
+public sealed class OpenApiApplicationRepository(DataContext db) : IOpenApiApplicationRepository
+{
+    public Task<OpenApiApplication?> GetByIdAsync(OpenApiApplicationId id, UserId owner, CancellationToken ct) =>
+        db.OpenApiApplications.FirstOrDefaultAsync(a => a.Id == id && a.UserId == owner, ct);
+
+    public async Task AddAsync(OpenApiApplication application, CancellationToken ct) =>
+        await db.OpenApiApplications.AddAsync(application, ct);
+
+    public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
+}
+
+public sealed class OpenApiAuthorizationRepository(DataContext db) : IOpenApiAuthorizationRepository
+{
+    public Task<OpenApiAuthorization?> GetByIdAsync(OpenApiAuthorizationId id, UserId owner, CancellationToken ct) =>
+        db.OpenApiAuthorizations.FirstOrDefaultAsync(a => a.Id == id && a.UserId == owner, ct);
+
+    public Task<OpenApiAuthorization?> GetByCtidTraderAccountAsync(long ctidTraderAccountId, UserId owner, CancellationToken ct) =>
+        db.OpenApiAuthorizations.FirstOrDefaultAsync(a => a.CtidTraderAccountId == ctidTraderAccountId && a.UserId == owner, ct);
+
+    public async Task<IReadOnlyList<OpenApiAuthorization>> GetExpiringAsync(DateTimeOffset threshold, CancellationToken ct) =>
+        await db.OpenApiAuthorizations.Where(a => a.AccessTokenExpiresAt <= threshold).ToListAsync(ct);
+
+    public async Task AddAsync(OpenApiAuthorization authorization, CancellationToken ct) =>
+        await db.OpenApiAuthorizations.AddAsync(authorization, ct);
+
+    public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
+}
+
 public sealed class McpApiKeyRepository(DataContext db) : IMcpApiKeyRepository
 {
     public Task<McpApiKey?> GetByIdAsync(McpApiKeyId id, UserId owner, CancellationToken ct) =>

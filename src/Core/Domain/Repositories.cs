@@ -15,6 +15,22 @@ public interface ICTraderIdAccountRepository
     Task SaveChangesAsync(CancellationToken ct);
 }
 
+public interface IOpenApiApplicationRepository
+{
+    Task<OpenApiApplication?> GetByIdAsync(OpenApiApplicationId id, UserId owner, CancellationToken ct);
+    Task AddAsync(OpenApiApplication application, CancellationToken ct);
+    Task SaveChangesAsync(CancellationToken ct);
+}
+
+public interface IOpenApiAuthorizationRepository
+{
+    Task<OpenApiAuthorization?> GetByIdAsync(OpenApiAuthorizationId id, UserId owner, CancellationToken ct);
+    Task<OpenApiAuthorization?> GetByCtidTraderAccountAsync(long ctidTraderAccountId, UserId owner, CancellationToken ct);
+    Task<IReadOnlyList<OpenApiAuthorization>> GetExpiringAsync(DateTimeOffset threshold, CancellationToken ct);
+    Task AddAsync(OpenApiAuthorization authorization, CancellationToken ct);
+    Task SaveChangesAsync(CancellationToken ct);
+}
+
 public interface IMcpApiKeyRepository
 {
     Task<McpApiKey?> GetByIdAsync(McpApiKeyId id, UserId owner, CancellationToken ct);

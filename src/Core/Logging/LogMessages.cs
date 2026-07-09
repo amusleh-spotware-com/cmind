@@ -114,4 +114,16 @@ public static partial class LogMessages
 
     [LoggerMessage(EventId = 1037, Level = LogLevel.Warning, Message = "Node {Name} re-registered with mode {Requested} but is persisted as {Current}; mode change ignored (delete + re-register to change mode)")]
     public static partial void NodeModeChangeIgnored(this ILogger logger, string name, string requested, string current);
+
+    [LoggerMessage(EventId = 1038, Level = LogLevel.Error, Message = "Open API token refresh cycle failed")]
+    public static partial void OpenApiTokenRefreshCycleFailed(this ILogger logger, Exception ex);
+
+    [LoggerMessage(EventId = 1039, Level = LogLevel.Information, Message = "Open API access token refreshed for account {CtidTraderAccountId}")]
+    public static partial void OpenApiTokenRefreshed(this ILogger logger, long ctidTraderAccountId);
+
+    [LoggerMessage(EventId = 1040, Level = LogLevel.Warning, Message = "Open API token refresh failed for account {CtidTraderAccountId}: {Error}")]
+    public static partial void OpenApiTokenRefreshFailedFor(this ILogger logger, long ctidTraderAccountId, string error);
+
+    [LoggerMessage(EventId = 1041, Level = LogLevel.Warning, Message = "Open API token refresh skipped for account {CtidTraderAccountId}: application {ApplicationId} not found")]
+    public static partial void OpenApiTokenRefreshApplicationMissing(this ILogger logger, long ctidTraderAccountId, Guid applicationId);
 }

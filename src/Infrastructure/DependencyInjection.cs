@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure;
 
@@ -44,6 +45,19 @@ public static class DependencyInjection
         services.AddScoped<Core.Domain.IAgentMandateRepository, AgentMandateRepository>();
         services.AddScoped<Core.Domain.IAlertRuleRepository, AlertRuleRepository>();
         services.AddScoped<Core.Domain.IPropRuleRepository, PropRuleRepository>();
+        services.AddScoped<Core.Domain.IOpenApiApplicationRepository, OpenApiApplicationRepository>();
+        services.AddScoped<Core.Domain.IOpenApiAuthorizationRepository, OpenApiAuthorizationRepository>();
+        services.AddSingleton<CTraderOpenApi.Transport.IOpenApiTransportFactory,
+            CTraderOpenApi.Transport.TcpSslOpenApiTransportFactory>();
+        services.AddSingleton<CTraderOpenApi.Client.IOpenApiConnectionFactory,
+            Infrastructure.OpenApi.OpenApiConnectionFactory>();
+        services.AddScoped<CTraderOpenApi.Client.IOpenApiClient, CTraderOpenApi.Client.OpenApiClient>();
+        services.AddHttpClient<CTraderOpenApi.Auth.IOpenApiTokenClient, CTraderOpenApi.Auth.OpenApiTokenClient>(
+            (sp, client) =>
+            {
+                var settings = sp.GetRequiredService<IOptionsMonitor<AppOptions>>().CurrentValue.OpenApi;
+                client.BaseAddress = new Uri(settings.AuthBaseUrl);
+            });
         services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
         services.AddSingleton<IPasswordHasher, Argon2PasswordHasher>();
         services.AddMemoryCache();

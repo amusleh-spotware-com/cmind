@@ -30,6 +30,8 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<AlertRule> AlertRules => Set<AlertRule>();
     public DbSet<AlertEvent> AlertEvents => Set<AlertEvent>();
     public DbSet<PropRule> PropRules => Set<PropRule>();
+    public DbSet<OpenApiApplication> OpenApiApplications => Set<OpenApiApplication>();
+    public DbSet<OpenApiAuthorization> OpenApiAuthorizations => Set<OpenApiAuthorization>();
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     public override int SaveChanges() { ApplySoftDelete(); return base.SaveChanges(); }
@@ -70,6 +72,8 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<AlertRuleId>().HaveConversion<StrongIdConverter<AlertRuleId>>();
         configurationBuilder.Properties<AlertEventId>().HaveConversion<StrongIdConverter<AlertEventId>>();
         configurationBuilder.Properties<PropRuleId>().HaveConversion<StrongIdConverter<PropRuleId>>();
+        configurationBuilder.Properties<OpenApiApplicationId>().HaveConversion<StrongIdConverter<OpenApiApplicationId>>();
+        configurationBuilder.Properties<OpenApiAuthorizationId>().HaveConversion<StrongIdConverter<OpenApiAuthorizationId>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -220,6 +224,19 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.HasIndex(x => new { x.UserId, x.TradingAccountId }).IsUnique().HasFilter("\"IsDeleted\" = false");
             e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(x => x.TradingAccount).WithMany().HasForeignKey(x => x.TradingAccountId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<OpenApiApplication>(e =>
+        {
+            e.HasIndex(x => new { x.UserId, x.Name }).IsUnique().HasFilter("\"IsDeleted\" = false");
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<OpenApiAuthorization>(e =>
+        {
+            e.HasIndex(x => new { x.UserId, x.CtidTraderAccountId }).IsUnique().HasFilter("\"IsDeleted\" = false");
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.Scope).HasConversion<string>().HasMaxLength(16);
         });
 
         modelBuilder.Entity<CTraderIdAccount>().Navigation(x => x.TradingAccounts)

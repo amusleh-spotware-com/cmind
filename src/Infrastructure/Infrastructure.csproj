@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.csproj" />
+    <ProjectReference Include="..\CTraderOpenApi\CTraderOpenApi.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Builder\Templates\**\*" />

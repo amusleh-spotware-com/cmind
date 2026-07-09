@@ -17,7 +17,7 @@
                 }
             </MudSelect>
             <MudSelect T="long" MultiSelection="true" @bind-SelectedValues="_destinations"
-                       Label="Destination (slave) accounts" MultiSelectionTextFunc="@(v => $"{v.Count} account(s) selected")"
+                       Label="Destination (slave) accounts" MultiSelectionTextFunc="@(v => $"{v?.Count ?? 0} account(s) selected")"
                        HelperText="Select one or more accounts to copy trades into">
                 @foreach (var a in Accounts.Where(a => a.Number != _source))
                 {

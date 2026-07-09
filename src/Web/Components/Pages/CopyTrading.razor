@@ -59,7 +59,7 @@
                 <MudItem xs="6" md="3">
                     <MudSelect T="long" MultiSelection="true" @bind-SelectedValues="_destAccounts"
                                Label="Destination (slave) accounts"
-                               MultiSelectionTextFunc="@(v => $"{v.Count} account(s)")">
+                               MultiSelectionTextFunc="@(v => $"{v?.Count ?? 0} account(s)")">
                         @foreach (var a in _accounts)
                         {
                             <MudSelectItem T="long" Value="@((long)a.accountNumber)">@a.accountNumber</MudSelectItem>

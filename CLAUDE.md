@@ -316,6 +316,20 @@ Existing entities anemic (public setters, logic in pollers/services). Not requir
 - Prefer `Read`/`Edit`/`Write` over `cat`/`sed`/`echo` redirection.
 - Use JetBrains Rider MCP tools when available for navigation, tests, inspection.
 
+## Fix ALL errors — including non-build-breaking ones — MANDATORY
+
+Before declaring any work done you MUST fix **every** error/warning surfaced by the IDE analyzer, not
+just what breaks `dotnet build`. This explicitly includes **`.razor` files** and analyzer/inspection
+errors that don't fail the build (e.g. "Dereference of a possibly null reference" in a Razor lambda,
+nullable warnings, unused-symbol errors). They are real errors and must be resolved.
+
+- Run Rider `get_file_problems` on **every** file you touched — `.cs` **and** `.razor` — and fix all
+  findings. If Rider's index is stale, confirm with a clean `dotnet build` (0 warnings, 0 errors), but
+  never dismiss an analyzer error as "non-blocking".
+- Razor nullable lambdas: guard the parameter (`v => $"{v?.Count ?? 0}"`), don't leave the deref.
+- No "looks fine", no "small change", no "build passes so ignore the inspection" — zero outstanding
+  problems is the bar.
+
 ## Code style
 
 - No comments except `TODO`/`FIXME`. No hardcoded strings — use a constants class.

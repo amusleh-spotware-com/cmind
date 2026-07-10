@@ -16,6 +16,7 @@ public enum FeatureFlag
     PortfolioAgent,
     Alerts,
     PropGuard,
+    PropFirm,
     Accounts,
     OpenApi,
     Mcp

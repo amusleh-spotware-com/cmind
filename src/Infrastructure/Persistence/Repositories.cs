@@ -129,3 +129,20 @@ public sealed class PropRuleRepository(DataContext db) : IPropRuleRepository
 
     public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
 }
+
+public sealed class PropFirmChallengeRepository(DataContext db) : IPropFirmChallengeRepository
+{
+    public Task<PropFirmChallenge?> GetByIdAsync(PropFirmChallengeId id, UserId owner, CancellationToken ct) =>
+        db.PropFirmChallenges.FirstOrDefaultAsync(c => c.Id == id && c.UserId == owner, ct);
+
+    public async Task<IReadOnlyList<PropFirmChallenge>> ListByUserAsync(UserId owner, CancellationToken ct) =>
+        await db.PropFirmChallenges.Where(c => c.UserId == owner)
+            .OrderByDescending(c => c.CreatedAt).ToListAsync(ct);
+
+    public async Task AddAsync(PropFirmChallenge challenge, CancellationToken ct) =>
+        await db.PropFirmChallenges.AddAsync(challenge, ct);
+
+    public void Remove(PropFirmChallenge challenge) => db.PropFirmChallenges.Remove(challenge);
+
+    public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
+}

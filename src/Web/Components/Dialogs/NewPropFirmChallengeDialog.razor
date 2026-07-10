@@ -1,0 +1,73 @@
+@using Core.PropFirm
+@* Modal dialog to create a prop-firm evaluation challenge for a trading account. Returns
+   NewPropFirmChallengeResult on confirm. *@
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">New Prop-Firm Challenge</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="_name" Label="Challenge name" Required="true"
+                          RequiredError="Name is required" Class="mb-2" Immediate="true" />
+            <MudSelect T="Guid" @bind-Value="_account" Label="Trading account" Required="true"
+                       RequiredError="Account is required" Class="mb-2">
+                @foreach (var a in Accounts)
+                {
+                    <MudSelectItem T="Guid" Value="@a.Id">@a.Label</MudSelectItem>
+                }
+            </MudSelect>
+            <MudNumericField T="decimal" @bind-Value="_startingBalance" Label="Starting balance" Class="mb-2" />
+            <MudNumericField T="double" @bind-Value="_profitTarget" Label="Profit target %" Class="mb-2" />
+            <MudNumericField T="double" @bind-Value="_maxDailyLoss" Label="Max daily loss %" Class="mb-2" />
+            <MudNumericField T="double" @bind-Value="_maxDrawdown" Label="Max total drawdown %" Class="mb-2" />
+            <MudSelect T="DrawdownMode" @bind-Value="_drawdownMode" Label="Drawdown mode" Class="mb-2">
+                @foreach (var m in Enum.GetValues<DrawdownMode>())
+                {
+                    <MudSelectItem T="DrawdownMode" Value="@m">@m</MudSelectItem>
+                }
+            </MudSelect>
+            <MudNumericField T="int" @bind-Value="_minTradingDays" Label="Min trading days" Class="mb-2" />
+            <MudSwitch T="bool" @bind-Value="_singleStep" Label="Single-step (skip verification)" Color="Color.Primary" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public IReadOnlyList<PropFirmAccountOption> Accounts { get; set; } = [];
+
+    private MudForm? _form;
+    private string _name = "";
+    private Guid _account;
+    private decimal _startingBalance = 100000;
+    private double _profitTarget = 8;
+    private double _maxDailyLoss = 5;
+    private double _maxDrawdown = 10;
+    private DrawdownMode _drawdownMode = DrawdownMode.Static;
+    private int _minTradingDays;
+    private bool _singleStep = true;
+
+    private async Task Submit()
+    {
+        if (_form is not null) await _form.Validate();
+        if (string.IsNullOrWhiteSpace(_name) || _account == Guid.Empty) return;
+        Dialog.Close(DialogResult.Ok(new NewPropFirmChallengeResult(
+            _name.Trim(), _account, _startingBalance, _profitTarget, _maxDailyLoss, _maxDrawdown,
+            _drawdownMode, _minTradingDays, _singleStep)));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    public sealed record PropFirmAccountOption(Guid Id, string Label);
+
+    public sealed record NewPropFirmChallengeResult(
+        string Name, Guid TradingAccountId, decimal StartingBalance, double ProfitTargetPercent,
+        double MaxDailyLossPercent, double MaxTotalDrawdownPercent, DrawdownMode DrawdownMode,
+        int MinTradingDays, bool SingleStep);
+}

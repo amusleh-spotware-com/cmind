@@ -44,4 +44,11 @@ public static class DomainErrors
     public const string FeatureFlagUnknown = "domain.feature.flag_unknown";
 
     public const string BrandingColorInvalid = "domain.branding.color_invalid";
+
+    public const string PropFirmMoneyNegative = "domain.propfirm.money_negative";
+    public const string PropFirmPercentOutOfRange = "domain.propfirm.percent_out_of_range";
+    public const string PropFirmTradingDaysOutOfRange = "domain.propfirm.trading_days_out_of_range";
+    public const string PropFirmStartingBalanceInvalid = "domain.propfirm.starting_balance_invalid";
+    public const string PropFirmChallengeNotActive = "domain.propfirm.challenge_not_active";
+    public const string PropFirmEquityOutOfOrder = "domain.propfirm.equity_out_of_order";
 }

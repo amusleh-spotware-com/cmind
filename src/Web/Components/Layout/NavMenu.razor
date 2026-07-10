@@ -33,6 +33,10 @@
     {
         <MudNavLink Href="/prop-guard" Icon="@Icons.Material.Filled.Shield">Prop Guard</MudNavLink>
     }
+    @if (Gate.IsEnabled(FeatureFlag.PropFirm))
+    {
+        <MudNavLink Href="/prop-firm" Icon="@Icons.Material.Filled.EmojiEvents">Prop Firm</MudNavLink>
+    }
     @if (Gate.IsEnabled(FeatureFlag.Accounts))
     {
         <MudNavLink Href="/accounts" Icon="@Icons.Material.Filled.AccountBalance">cTrader Accounts</MudNavLink>

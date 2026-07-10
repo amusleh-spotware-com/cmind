@@ -1,4 +1,5 @@
 using Core.Agent;
+using Core.PropFirm;
 
 namespace Core.Domain;
 
@@ -52,3 +53,13 @@ public sealed record NodeRegistered(NodeId NodeId, string Name) : DomainEventBas
 public sealed record NodeWentOffline(NodeId NodeId, string Name) : DomainEventBase;
 
 public sealed record NodeCameOnline(NodeId NodeId, string Name) : DomainEventBase;
+
+public sealed record PropFirmChallengeStarted(PropFirmChallengeId ChallengeId, UserId UserId) : DomainEventBase;
+
+public sealed record PropFirmPhasePassed(PropFirmChallengeId ChallengeId, UserId UserId, ChallengePhase NewPhase)
+    : DomainEventBase;
+
+public sealed record PropFirmChallengePassed(PropFirmChallengeId ChallengeId, UserId UserId) : DomainEventBase;
+
+public sealed record PropFirmChallengeBreached(PropFirmChallengeId ChallengeId, UserId UserId, BreachReason Reason)
+    : DomainEventBase;

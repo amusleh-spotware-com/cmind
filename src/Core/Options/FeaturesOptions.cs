@@ -18,6 +18,7 @@ public sealed record FeaturesOptions
     public bool PortfolioAgent { get; init; } = true;
     public bool Alerts { get; init; } = true;
     public bool PropGuard { get; init; } = true;
+    public bool PropFirm { get; init; } = true;
     public bool Accounts { get; init; } = true;
     public bool OpenApi { get; init; } = true;
     public bool Mcp { get; init; } = true;
@@ -32,6 +33,7 @@ public sealed record FeaturesOptions
         FeatureFlag.PortfolioAgent => PortfolioAgent,
         FeatureFlag.Alerts => Alerts,
         FeatureFlag.PropGuard => PropGuard,
+        FeatureFlag.PropFirm => PropFirm,
         FeatureFlag.Accounts => Accounts,
         FeatureFlag.OpenApi => OpenApi,
         FeatureFlag.Mcp => Mcp,

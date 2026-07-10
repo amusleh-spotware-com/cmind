@@ -30,6 +30,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<AlertRule> AlertRules => Set<AlertRule>();
     public DbSet<AlertEvent> AlertEvents => Set<AlertEvent>();
     public DbSet<PropRule> PropRules => Set<PropRule>();
+    public DbSet<PropFirmChallenge> PropFirmChallenges => Set<PropFirmChallenge>();
     public DbSet<OpenApiApplication> OpenApiApplications => Set<OpenApiApplication>();
     public DbSet<OpenApiAuthorization> OpenApiAuthorizations => Set<OpenApiAuthorization>();
     public DbSet<CopyProfile> CopyProfiles => Set<CopyProfile>();
@@ -78,6 +79,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<CopyProfileId>().HaveConversion<StrongIdConverter<CopyProfileId>>();
         configurationBuilder.Properties<CopyDestinationId>().HaveConversion<StrongIdConverter<CopyDestinationId>>();
         configurationBuilder.Properties<CopyRunId>().HaveConversion<StrongIdConverter<CopyRunId>>();
+        configurationBuilder.Properties<PropFirmChallengeId>().HaveConversion<StrongIdConverter<PropFirmChallengeId>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -229,6 +231,16 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.HasIndex(x => new { x.UserId, x.TradingAccountId }).IsUnique().HasFilter("\"IsDeleted\" = false");
             e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(x => x.TradingAccount).WithMany().HasForeignKey(x => x.TradingAccountId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PropFirmChallenge>(e =>
+        {
+            e.HasIndex(x => new { x.UserId, x.CreatedAt });
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.Phase).HasConversion<string>().HasMaxLength(16);
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
+            e.Property(x => x.DrawdownMode).HasConversion<string>().HasMaxLength(16);
+            e.Property(x => x.Breach).HasConversion<string>().HasMaxLength(16);
         });
 
         modelBuilder.Entity<OpenApiApplication>(e =>

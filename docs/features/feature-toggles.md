@@ -7,7 +7,7 @@ redeploy. **All features default to enabled**; a deployment only lists the ones 
 ## Model
 
 - `Core.Features.FeatureFlag` — the enum of gateable features: `Authoring`, `Backtesting`, `Execution`,
-  `CopyTrading`, `Ai`, `PortfolioAgent`, `Alerts`, `PropGuard`, `Accounts`, `OpenApi`, `Mcp`. Core admin
+  `CopyTrading`, `Ai`, `PortfolioAgent`, `Alerts`, `PropGuard`, `PropFirm`, `Accounts`, `OpenApi`, `Mcp`. Core admin
   surfaces (dashboard, users, nodes, auth) are never gateable and do not appear here.
 - `Core.Options.FeaturesOptions` — the configuration baseline, bound from `App:Features`. Every property
   defaults to `true`.
@@ -82,6 +82,7 @@ navigation no longer surfaces it.
 | PortfolioAgent | `/api/agent` | Portfolio Agent | `PortfolioAgentService` |
 | Alerts | `/api/alerts` | Alerts | `AlertEvaluator` |
 | PropGuard | `/api/prop` | Prop Guard | `PropGuardService` |
+| PropFirm | `/api/prop-firm` | Prop Firm | — |
 | Accounts | `/api/ctids` | cTrader Accounts | — |
 | OpenApi | `/api/openapi` | Open API Apps | — |
 | Mcp | `/api/mcp-keys` | MCP Keys | — |

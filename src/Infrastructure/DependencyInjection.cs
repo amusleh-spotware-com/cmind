@@ -49,6 +49,7 @@ public static class DependencyInjection
         services.AddScoped<Core.Domain.IAgentMandateRepository, AgentMandateRepository>();
         services.AddScoped<Core.Domain.IAlertRuleRepository, AlertRuleRepository>();
         services.AddScoped<Core.Domain.IPropRuleRepository, PropRuleRepository>();
+        services.AddScoped<Core.Domain.IPropFirmChallengeRepository, PropFirmChallengeRepository>();
         services.AddScoped<Core.Domain.IOpenApiApplicationRepository, OpenApiApplicationRepository>();
         services.AddScoped<Core.Domain.IOpenApiAuthorizationRepository, OpenApiAuthorizationRepository>();
         services.AddSingleton<CTraderOpenApi.Transport.IOpenApiTransportFactory,

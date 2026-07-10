@@ -76,3 +76,12 @@ public interface IPropRuleRepository
     Task AddAsync(PropRule rule, CancellationToken ct);
     Task SaveChangesAsync(CancellationToken ct);
 }
+
+public interface IPropFirmChallengeRepository
+{
+    Task<PropFirmChallenge?> GetByIdAsync(PropFirmChallengeId id, UserId owner, CancellationToken ct);
+    Task<IReadOnlyList<PropFirmChallenge>> ListByUserAsync(UserId owner, CancellationToken ct);
+    Task AddAsync(PropFirmChallenge challenge, CancellationToken ct);
+    void Remove(PropFirmChallenge challenge);
+    Task SaveChangesAsync(CancellationToken ct);
+}

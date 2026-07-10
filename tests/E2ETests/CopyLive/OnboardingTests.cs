@@ -61,6 +61,15 @@ public sealed class OnboardingTests(ITestOutputHelper output)
 
     private static (string ClientId, string ClientSecret)? LoadApp()
     {
+        var unified = Find("dev-credentials.local.json");
+        if (unified is not null)
+        {
+            using var dev = JsonDocument.Parse(File.ReadAllText(unified));
+            if (dev.RootElement.TryGetProperty("OpenApi", out var oa) && oa.TryGetProperty("App", out var app)
+                && app.TryGetProperty("ClientId", out var clientId) && !string.IsNullOrWhiteSpace(clientId.GetString()))
+                return (clientId.GetString()!, app.GetProperty("ClientSecret").GetString()!);
+        }
+
         var path = Find("openapi-test-app.local.json");
         if (path is null) return null;
         using var doc = JsonDocument.Parse(File.ReadAllText(path));
@@ -69,6 +78,18 @@ public sealed class OnboardingTests(ITestOutputHelper output)
 
     private static IReadOnlyList<(string Cid, string Username, string Password)> LoadCids()
     {
+        var unified = Find("dev-credentials.local.json");
+        if (unified is not null)
+        {
+            using var dev = JsonDocument.Parse(File.ReadAllText(unified));
+            if (dev.RootElement.TryGetProperty("OpenApi", out var oa) && oa.TryGetProperty("Cids", out var cids)
+                && cids.ValueKind == JsonValueKind.Array && cids.GetArrayLength() > 0)
+                return cids.EnumerateArray()
+                    .Where(c => !string.IsNullOrWhiteSpace(c.GetProperty("Cid").GetString()))
+                    .Select(c => (c.GetProperty("Cid").GetString()!, c.GetProperty("Username").GetString()!, c.GetProperty("Password").GetString()!))
+                    .ToList();
+        }
+
         var path = Find("openapi-cids.local.json");
         if (path is null) return [];
         using var doc = JsonDocument.Parse(File.ReadAllText(path));

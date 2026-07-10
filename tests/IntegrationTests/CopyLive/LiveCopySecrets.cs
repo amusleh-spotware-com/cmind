@@ -41,9 +41,21 @@ public static class LiveCopySecrets
 
     public static TokenCache? LoadTokens() => Load<TokenCache>(TokensFileName);
 
-    public static void SaveTokens(TokenCache tokens) =>
-        File.WriteAllText(Path.Combine(SecretsDirectory, TokensFileName),
-            JsonSerializer.Serialize(tokens, new JsonSerializerOptions { WriteIndented = true }));
+    // Best-effort: the refreshed access token is only cached to speed up the next local run. When the
+    // secrets directory is a read-only mount (e.g. a Kubernetes Secret in the in-cluster test Job),
+    // writing back is neither possible nor needed, so a write failure must not fail the run.
+    public static void SaveTokens(TokenCache tokens)
+    {
+        try
+        {
+            File.WriteAllText(Path.Combine(SecretsDirectory, TokensFileName),
+                JsonSerializer.Serialize(tokens, new JsonSerializerOptions { WriteIndented = true }));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // read-only or absent secrets mount — keep the freshly refreshed tokens in memory only.
+        }
+    }
 
     private static T? Load<T>(string fileName) where T : class
     {

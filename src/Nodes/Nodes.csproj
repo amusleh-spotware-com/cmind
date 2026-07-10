@@ -9,4 +9,7 @@
     <PackageReference Include="Microsoft.Extensions.Http" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="IntegrationTests" />
+  </ItemGroup>
 </Project>

@@ -83,6 +83,37 @@ public sealed class CopyTradingLiveTests(LiveCopyFixture fixture, ITestOutputHel
             "a master partial close must shrink the mirrored copy");
     }
 
+    [Fact]
+    public async Task Pending_limit_order_is_mirrored_and_cancel_propagates()
+    {
+        if (!fixture.Available) { output.WriteLine(fixture.SkipReason); return; }
+        var accounts = SameCid(1);
+        var slave = new LiveCopyScenario.SlaveSetup(accounts[1],
+            LiveCopyScenario.Destination(d => d.SetPendingOrderCopying(true)));
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        var result = await new LiveCopyScenario(fixture, output).RunPendingAsync(accounts[0], slave, cts.Token);
+
+        if (result.Inconclusive) { output.WriteLine($"INCONCLUSIVE: {result.Reason}"); return; }
+        result.SlavePendingAppeared.Should().BeTrue("a master limit order must be mirrored onto the slave");
+        result.SlavePendingCancelled.Should().BeTrue("cancelling the master pending must cancel the slave pending");
+    }
+
+    [Fact]
+    public async Task Trailing_stop_is_mirrored_onto_the_slave_copy()
+    {
+        if (!fixture.Available) { output.WriteLine(fixture.SkipReason); return; }
+        var accounts = SameCid(1);
+        var slave = new LiveCopyScenario.SlaveSetup(accounts[1],
+            LiveCopyScenario.Destination(d => { d.SetCopyProtection(true, false); d.SetTrailingStopCopying(true); }));
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        var result = await new LiveCopyScenario(fixture, output).RunTrailingAsync(accounts[0], slave, cts.Token);
+
+        if (result.Inconclusive) { output.WriteLine($"INCONCLUSIVE: {result.Reason}"); return; }
+        result.SlaveTrailing.Should().BeTrue("a master trailing stop must be mirrored onto the slave copy");
+    }
+
     private async Task RunAsync(IReadOnlyList<LiveCopyFixture.LiveAccount> accounts, bool masterIsBuy,
         bool reverse, Action<LiveCopyScenario.ScenarioResult> assert)
     {

@@ -153,36 +153,42 @@ privileged node agents.
 One-shot, reproducible (kind up → build+load images → deploy → run Job → assert exit 0 → tear down):
 
 ```bash
-scripts/k8s-e2e.sh                                   # live copy suite (needs ./secrets)
-TEST_FILTER='FullyQualifiedName~CopyTrading' scripts/k8s-e2e.sh   # deterministic suite, no secrets
+scripts/k8s-e2e.sh                                   # deterministic copy suite (no secrets)
 USE_EXISTING_CLUSTER=1 scripts/k8s-e2e.sh            # reuse current kube context
+TEST_FILTER='FullyQualifiedName~CopyTradingLiveTests' COPY_SECRET=cmind-copy-secrets scripts/k8s-e2e.sh  # live
 ```
 
-Manual / CI wiring:
+Manual / CI wiring — **deterministic (default, no secrets):**
 
 ```bash
 docker build -f Dockerfile.tests -t cmind-tests:e2e .          # runner image (SDK + built test projects)
-kubectl -n cmind create secret generic cmind-copy-secrets \
-  --from-file=secrets/                                          # token cache — never baked into the image
-helm upgrade cmind deploy/helm/cmind -n cmind --reuse-values \
-  --set tests.enabled=true \
-  --set tests.filter='FullyQualifiedName~CopyTradingLiveTests' \
-  --set tests.copySecret=cmind-copy-secrets
+helm upgrade cmind deploy/helm/cmind -n cmind --reuse-values --set tests.enabled=true
 kubectl -n cmind wait --for=condition=complete --timeout=15m job/cmind-cmind-tests
 kubectl -n cmind logs job/cmind-cmind-tests
+```
+
+**Live suite** additionally needs a token cache. cTrader **refresh tokens are single-use**, so the cache
+must be **writable**: the Job copies the Secret into an emptyDir at `/app/secrets` via an init-container.
+
+```bash
+kubectl -n cmind create secret generic cmind-copy-secrets --from-file=secrets/   # never baked into the image
+helm upgrade cmind deploy/helm/cmind -n cmind --reuse-values --set tests.enabled=true \
+  --set tests.project='tests/IntegrationTests/IntegrationTests.csproj' \
+  --set tests.filter='FullyQualifiedName~CopyTradingLiveTests' \
+  --set tests.copySecret=cmind-copy-secrets
 ```
 
 | Value | Purpose |
 |-------|---------|
 | `tests.enabled` | Render the test `Job` (default `false`). |
-| `tests.project` / `tests.filter` | Which project + `dotnet test --filter` to run. |
-| `tests.copySecret` | Secret holding the gitignored `openapi-*.local.json`, mounted at `/app/secrets`. |
+| `tests.project` / `tests.filter` | Which project + `dotnet test --filter` to run (default: deterministic). |
+| `tests.copySecret` | Optional Secret with the gitignored `openapi-*.local.json`; copied into a **writable** emptyDir at `/app/secrets` for the live suite. Empty ⇒ no secret mount. |
 | `tests.backoffLimit` | Job retry count (default `0`). |
 
-The Job mounts the token cache read-only (`LiveCopySecrets` walks up from `/app` to find `secrets/`),
-connects to the in-cluster Postgres via the chart connection string, and skips the live tests cleanly
-when the secret is absent. `Dockerfile.tests` is SDK-based so it runs the same assertions as a local
-`dotnet test`.
+`LiveCopySecrets` walks up from `/app` to find `secrets/`; the live tests skip cleanly when the cache is
+absent. `Dockerfile.tests` is SDK-based so it runs the same assertions as a local `dotnet test` — both
+the deterministic (`101 passed`) and full live (`8 passed`) suites were verified running inside this
+image locally against Docker before shipping.
 
 ## Teardown
 

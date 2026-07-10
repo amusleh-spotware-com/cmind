@@ -13,9 +13,11 @@ COPY . .
 RUN dotnet build tests/IntegrationTests/IntegrationTests.csproj -c Release --nologo \
     && dotnet build tests/UnitTests/UnitTests.csproj -c Release --nologo
 
-# Which tests to run. Override with e.g. TEST_FILTER="FullyQualifiedName~CopyTrading" for the full
-# deterministic suite, or the default live copy suite below.
-ENV TEST_PROJECT=tests/IntegrationTests/IntegrationTests.csproj
-ENV TEST_FILTER=FullyQualifiedName~CopyTradingLiveTests
+# Which tests to run. Default = the deterministic copy suite (no secrets, no rotating tokens — safe
+# in-cluster). For the live suite set TEST_PROJECT=tests/IntegrationTests/IntegrationTests.csproj +
+# TEST_FILTER=FullyQualifiedName~CopyTradingLiveTests AND mount a *writable* token cache (cTrader
+# refresh tokens are single-use, so a read-only Secret mount would self-invalidate).
+ENV TEST_PROJECT=tests/UnitTests/UnitTests.csproj
+ENV TEST_FILTER=FullyQualifiedName~CopyTrading
 
 ENTRYPOINT ["/bin/sh", "-c", "dotnet test $TEST_PROJECT -c Release --no-restore --nologo --filter \"$TEST_FILTER\""]

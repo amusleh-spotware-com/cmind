@@ -25,6 +25,17 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.tests.copySecret }}
+      # cTrader refresh tokens are single-use, so the live suite must persist rotated tokens. Copy the
+      # read-only Secret into a writable emptyDir at start so the run can write back within its lifetime.
+      initContainers:
+        - name: seed-secrets
+          image: busybox:1.36
+          command: ["sh", "-c", "cp -L /secret-src/* /app/secrets/ && chmod -R u+rw /app/secrets"]
+          volumeMounts:
+            - { name: secret-src, mountPath: /secret-src, readOnly: true }
+            - { name: copy-secrets, mountPath: /app/secrets }
+      {{- end }}
       containers:
         - name: tests
           image: "{{ include "cmind.image" . }}-tests:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -45,14 +56,19 @@ spec:
                   key: PG_PASSWORD
             - name: ConnectionStrings__appdb
               value: {{ include "cmind.connectionString" . | quote }}
+          {{- if .Values.tests.copySecret }}
           volumeMounts:
             - name: copy-secrets
               mountPath: /app/secrets
-              readOnly: true
+          {{- end }}
           resources:
             {{- toYaml .Values.tests.resources | nindent 12 }}
+      {{- if .Values.tests.copySecret }}
       volumes:
-        - name: copy-secrets
+        - name: secret-src
           secret:
             secretName: {{ .Values.tests.copySecret | quote }}
+        - name: copy-secrets
+          emptyDir: {}
+      {{- end }}
 {{- end }}

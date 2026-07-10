@@ -108,15 +108,17 @@ discovery:
 ## Postgres + Web + the token cache (no privileged node agents).
 tests:
   enabled: false
-  # Which suite to run. Default = live copy suite; use "FullyQualifiedName~CopyTrading" for the
-  # deterministic suite (no secrets/network needed).
-  project: "tests/IntegrationTests/IntegrationTests.csproj"
-  filter: "FullyQualifiedName~CopyTradingLiveTests"
+  # Which suite to run. Default = the deterministic copy suite (no secrets, no network). For the live
+  # suite set project=tests/IntegrationTests/IntegrationTests.csproj +
+  # filter=FullyQualifiedName~CopyTradingLiveTests AND provide a *writable* token cache (see copySecret):
+  # cTrader refresh tokens are single-use, so a read-only Secret mount would self-invalidate.
+  project: "tests/UnitTests/UnitTests.csproj"
+  filter: "FullyQualifiedName~CopyTrading"
   backoffLimit: 0
-  # Name of the K8s Secret holding the gitignored openapi-*.local.json files (one key per file),
-  # mounted at /app/secrets. Create with:
-  #   kubectl create secret generic cmind-copy-secrets --from-file=secrets/
-  copySecret: "cmind-copy-secrets"
+  # Optional: name of a K8s Secret holding the gitignored openapi-*.local.json files (one key per
+  # file), copied by an init-container into a writable emptyDir at /app/secrets. Only needed for the
+  # live suite. Create with: kubectl create secret generic cmind-copy-secrets --from-file=secrets/
+  copySecret: ""
   resources:
     requests: { cpu: 250m, memory: 512Mi }
     limits: { cpu: "2", memory: 2Gi }

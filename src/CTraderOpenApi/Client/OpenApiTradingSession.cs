@@ -29,7 +29,9 @@ public sealed record ExecutionEvent(
     double? StopPrice = null,
     bool TrailingStopLoss = false);
 
-public sealed record OpenPositionSnapshot(long PositionId, long SymbolId, bool IsBuy, long Volume, string Label);
+public sealed record OpenPositionSnapshot(
+    long PositionId, long SymbolId, bool IsBuy, long Volume, string Label,
+    double? StopLoss = null, bool TrailingStopLoss = false);
 
 public sealed record PendingOrderSnapshot(
     long OrderId, long SymbolId, bool IsBuy, long Volume, CopyOrderKind Kind, double Price, string Label);
@@ -96,6 +98,42 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
             var executionEvent = ProtoOAExecutionEvent.Parser.ParseFrom(message.Payload);
             if (executionEvent.CtidTraderAccountId != ctidTraderAccountId) continue;
 
+            var isPositionOpen = executionEvent.Position is { PositionStatus: ProtoOAPositionStatus.PositionStatusOpen };
+
+            // A resting pending order (limit/stop) carries a non-open Position placeholder, so classify
+            // its placement/cancel as an order event first. A *fill* of a limit/stop (e.g. a triggered
+            // stop-loss that closes a position) is NOT a pending event — let it fall through to the
+            // position branch below so the close mirrors.
+            var pendingCancelled = executionEvent.ExecutionType is ProtoOAExecutionType.OrderCancelled
+                or ProtoOAExecutionType.OrderExpired or ProtoOAExecutionType.OrderRejected;
+            var pendingPlaced = executionEvent.ExecutionType is ProtoOAExecutionType.OrderAccepted
+                or ProtoOAExecutionType.OrderReplaced;
+            if (!isPositionOpen && (pendingPlaced || pendingCancelled) && executionEvent.Order is { } pendingOrder
+                && PendingKind(pendingOrder.OrderType) is { } kind)
+            {
+                var cancelled = pendingCancelled;
+                var tradeData = pendingOrder.TradeData;
+                yield return new ExecutionEvent(
+                    executionEvent.CtidTraderAccountId,
+                    executionEvent.ExecutionType.ToString(),
+                    pendingOrder.HasPositionId ? pendingOrder.PositionId : 0,
+                    tradeData.SymbolId,
+                    tradeData.TradeSide == ProtoOATradeSide.Buy,
+                    tradeData.Volume,
+                    pendingOrder.HasLimitPrice ? pendingOrder.LimitPrice : pendingOrder.HasStopPrice ? pendingOrder.StopPrice : 0,
+                    pendingOrder.HasStopLoss ? pendingOrder.StopLoss : null,
+                    pendingOrder.HasTakeProfit ? pendingOrder.TakeProfit : null,
+                    IsOpen: false,
+                    OrderId: pendingOrder.OrderId,
+                    IsPendingOrder: true,
+                    IsOrderCancelled: cancelled,
+                    OrderKind: kind,
+                    LimitPrice: pendingOrder.HasLimitPrice ? pendingOrder.LimitPrice : null,
+                    StopPrice: pendingOrder.HasStopPrice ? pendingOrder.StopPrice : null,
+                    TrailingStopLoss: pendingOrder.TrailingStopLoss);
+                continue;
+            }
+
             if (executionEvent.Position is { } position)
             {
                 var tradeData = position.TradeData;
@@ -113,33 +151,6 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
                     OrderId: executionEvent.Order?.OrderId ?? 0,
                     TrailingStopLoss: position.TrailingStopLoss);
                 continue;
-            }
-
-            if (executionEvent.Order is { } order && PendingKind(order.OrderType) is { } kind)
-            {
-                var cancelled = executionEvent.ExecutionType is ProtoOAExecutionType.OrderCancelled
-                    or ProtoOAExecutionType.OrderExpired;
-                if (!cancelled && order.OrderStatus != ProtoOAOrderStatus.OrderStatusAccepted) continue;
-
-                var tradeData = order.TradeData;
-                yield return new ExecutionEvent(
-                    executionEvent.CtidTraderAccountId,
-                    executionEvent.ExecutionType.ToString(),
-                    order.HasPositionId ? order.PositionId : 0,
-                    tradeData.SymbolId,
-                    tradeData.TradeSide == ProtoOATradeSide.Buy,
-                    tradeData.Volume,
-                    order.HasLimitPrice ? order.LimitPrice : order.HasStopPrice ? order.StopPrice : 0,
-                    order.HasStopLoss ? order.StopLoss : null,
-                    order.HasTakeProfit ? order.TakeProfit : null,
-                    IsOpen: false,
-                    OrderId: order.OrderId,
-                    IsPendingOrder: true,
-                    IsOrderCancelled: cancelled,
-                    OrderKind: kind,
-                    LimitPrice: order.HasLimitPrice ? order.LimitPrice : null,
-                    StopPrice: order.HasStopPrice ? order.StopPrice : null,
-                    TrailingStopLoss: order.TrailingStopLoss);
             }
         }
     }
@@ -257,8 +268,40 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
         return ProtoOAReconcileRes.Parser.ParseFrom(response.Payload).Position
             .Select(p => new OpenPositionSnapshot(
                 p.PositionId, p.TradeData.SymbolId, p.TradeData.TradeSide == ProtoOATradeSide.Buy,
-                p.TradeData.Volume, p.TradeData.Label ?? string.Empty))
+                p.TradeData.Volume, p.TradeData.Label ?? string.Empty,
+                p.HasStopLoss ? p.StopLoss : null, p.TrailingStopLoss))
             .ToList();
+    }
+
+    public async Task<(double Bid, double Ask)> LoadSpotPriceAsync(long ctidTraderAccountId, long symbolId, CancellationToken ct)
+    {
+        const double priceScale = 100000.0;
+        var subscribe = new ProtoOASubscribeSpotsReq { CtidTraderAccountId = ctidTraderAccountId };
+        subscribe.SymbolId.Add(symbolId);
+        await connection.SendAsync(subscribe, (int)ProtoOAPayloadType.ProtoOaSubscribeSpotsReq, ct);
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeout.CancelAfter(TimeSpan.FromSeconds(10));
+            await foreach (var message in connection.Events.WithCancellation(timeout.Token))
+            {
+                if (message.PayloadType != (uint)ProtoOAPayloadType.ProtoOaSpotEvent) continue;
+                var spot = ProtoOASpotEvent.Parser.ParseFrom(message.Payload);
+                if (spot.CtidTraderAccountId != ctidTraderAccountId || spot.SymbolId != symbolId) continue;
+                if (!spot.HasBid && !spot.HasAsk) continue;
+                var bid = spot.HasBid ? spot.Bid / priceScale : spot.Ask / priceScale;
+                var ask = spot.HasAsk ? spot.Ask / priceScale : spot.Bid / priceScale;
+                return (bid, ask);
+            }
+        }
+        finally
+        {
+            var unsubscribe = new ProtoOAUnsubscribeSpotsReq { CtidTraderAccountId = ctidTraderAccountId };
+            unsubscribe.SymbolId.Add(symbolId);
+            await connection.SendAsync(unsubscribe, (int)ProtoOAPayloadType.ProtoOaUnsubscribeSpotsReq, ct);
+        }
+
+        throw new InvalidOperationException($"No spot price received for symbol {symbolId}.");
     }
 
     public async Task<IReadOnlyList<PendingOrderSnapshot>> ReconcilePendingOrdersAsync(

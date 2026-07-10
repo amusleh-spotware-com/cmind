@@ -54,12 +54,7 @@ public sealed class CopyEngineSupervisor(
         var protector = scope.ServiceProvider.GetRequiredService<ISecretProtector>();
 
         var node = ResolveNode();
-
-        // Claim every unassigned running profile atomically: the first supervisor to run this update
-        // owns them, so a co-located second supervisor never hosts the same profile (no double-copy).
-        await db.CopyProfiles
-            .Where(p => p.Status == CopyProfileStatus.Running && p.AssignedNode == null)
-            .ExecuteUpdateAsync(s => s.SetProperty(p => p.AssignedNode, node.Value), stoppingToken);
+        await ClaimUnassignedProfilesAsync(db, node, stoppingToken);
 
         var mine = await db.CopyProfiles.Include(p => p.Destinations)
             .Where(p => p.Status == CopyProfileStatus.Running && p.AssignedNode == node.Value)
@@ -102,13 +97,20 @@ public sealed class CopyEngineSupervisor(
         }
     }
 
+    // Claim every unassigned running profile atomically: the first supervisor to run this update owns
+    // them, so a co-located second supervisor never hosts the same profile (no double-copy).
+    internal static Task<int> ClaimUnassignedProfilesAsync(DataContext db, NodeIdentity node, CancellationToken ct)
+        => db.CopyProfiles
+            .Where(p => p.Status == CopyProfileStatus.Running && p.AssignedNode == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.AssignedNode, node.Value), ct);
+
     private NodeIdentity ResolveNode()
     {
         var configured = options.CurrentValue.Copy.NodeName;
         return new NodeIdentity(string.IsNullOrWhiteSpace(configured) ? Environment.MachineName : configured);
     }
 
-    private static string TokenSignature(CopyProfilePlan plan)
+    internal static string TokenSignature(CopyProfilePlan plan)
         => string.Join('|', plan.SourceAccessToken, string.Join(',', plan.Destinations.Select(d => d.AccessToken)));
 
     private static async Task<CopyProfilePlan?> BuildPlanAsync(

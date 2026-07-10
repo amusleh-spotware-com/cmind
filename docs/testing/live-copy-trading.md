@@ -203,19 +203,31 @@ default off), guarded by intention methods and jsonb-persisted (migration
 
 | Behaviour | Deterministic test (`CopyEngineHostTests`) | Live test |
 |-----------|--------------------------------------------|-----------|
-| Partial close → proportional slice | `Partial_close_mirrors_a_proportional_slice_on_the_slave` (1.0→0.4 closes 60%) + disabled path | `Partial_close_shrinks_the_slave_copy_proportionally` |
+| Partial close → proportional slice | `Partial_close_mirrors_a_proportional_slice_on_the_slave` (1.0→0.4 closes 60%) + disabled path | `Partial_close_shrinks_the_slave_copy_proportionally` ✅ |
 | Scale-in | `Scale_in_is_ignored_by_default_and_mirrored_when_enabled` | — |
-| Pending limit/stop placed | `Pending_order_is_placed_on_the_slave_when_enabled` (Theory: Limit+Stop) + disabled path | (manual — place a limit away from price) |
-| Pending cancel | `Source_pending_cancel_cancels_the_slave_pending` | — |
+| Pending limit/stop placed | `Pending_order_is_placed_on_the_slave_when_enabled` (Theory: Limit+Stop) + disabled path | `Pending_limit_order_is_mirrored_and_cancel_propagates` ✅ |
+| Pending cancel | `Source_pending_cancel_cancels_the_slave_pending` | (same live test — cancels on master, asserts slave cancels) ✅ |
 | Filled pending no double-open | `Filled_pending_does_not_double_open` (order-id → position-id dedupe) | — |
-| Trailing stop | `Trailing_stop_is_applied_to_the_copy_when_enabled` | — |
+| Trailing stop | `Trailing_stop_is_applied_to_the_copy_when_enabled` | `Trailing_stop_is_mirrored_onto_the_slave_copy` ✅ |
 | Source SL move re-amend | `Source_stop_loss_move_re_amends_the_copy` | — |
 | Audit events fire | `Advanced_mirroring_audit_events_fire` (1056/1058/1059) | — |
 
+All live tests above are **verified green against real cTrader demo accounts** (1:1, 1:many, reverse,
+cross-cID, partial close, pending+cancel, trailing).
+
 Wire additions in `OpenApiTradingSession`: `SendPendingOrderAsync`, `CancelOrderAsync`,
-`ReconcilePendingOrdersAsync`, trailing flag on `AmendPositionSltpAsync`, and order/pending fields on
-`ExecutionEvent`. Destination copies stay labelled by **source position id** (pending copies by source
-**order id**) so reconnect reconcile stays id-based and never duplicates a trade.
+`ReconcilePendingOrdersAsync`, trailing flag on `AmendPositionSltpAsync`, order/pending fields on
+`ExecutionEvent`, `LoadSpotPriceAsync` (spot subscribe → bid/ask, used by the live pending/trailing
+tests to place resting orders away from market), and `StopLoss`/`TrailingStopLoss` on
+`OpenPositionSnapshot` (so a copy's trailing state is observable via reconcile). Destination copies stay
+labelled by **source position id** (pending copies by source **order id**) so reconnect reconcile stays
+id-based and never duplicates a trade.
+
+**cTrader event gotcha (verified live):** a resting pending order's `ORDER_ACCEPTED`/`ORDER_CANCELLED`
+execution event carries a **non-open `Position` placeholder** as well as the `Order`. The stream must
+therefore classify it as an *order* event **before** the position branch (gated on the position not
+being `OPEN`), else a pending placement is mis-read as a position close. `SourceExecutionsAsync` does
+this; missing it silently drops all pending mirroring.
 
 ## Token rotation + node affinity
 
@@ -227,9 +239,27 @@ Wire additions in `OpenApiTradingSession`: `SendPendingOrderAsync`, `CancelOrder
 - **Node affinity (no double-copy).** Both the Web local node and the `CopyAgent` worker run a supervisor.
   Each running profile is claimed by exactly one node (`CopyProfile.AssignedNode`, atomic
   `ExecuteUpdate` claim keyed off `CopyOptions.NodeName`, default machine name). A supervisor hosts only
-  profiles it owns; stop/pause releases the claim. Domain-level coverage:
-  `AssignToNode_makes_profile_hosted_by_only_that_node`,
-  `Stopping_a_profile_releases_its_node_assignment`, `NodeIdentity_rejects_blank`.
+  profiles it owns; stop/pause releases the claim. Coverage:
+  - Domain (unit): `AssignToNode_makes_profile_hosted_by_only_that_node`,
+    `Stopping_a_profile_releases_its_node_assignment`, `NodeIdentity_rejects_blank`.
+  - **Integration (real Postgres, Testcontainers)**: `CopyNodeAffinityTests` drives the supervisor's
+    real `ClaimUnassignedProfilesAsync` — asserts the first node claims all 3 running profiles and the
+    second claims **0** (no double-host), and that pause→restart frees the claim for another node.
+  - Rotation detection (`TokenRotationSignatureTests`): the supervisor's `TokenSignature` changes when
+    the source or a destination token rotates, and is stable otherwise (so a running host restarts only
+    on a real rotation).
+
+### Single-use refresh tokens (important)
+
+cTrader **refresh tokens are single-use** — each refresh returns a *new* refresh token and invalidates
+the old one. The live fixture refreshes on start and persists the rotated token to
+`secrets/openapi-tokens.local.json`. Consequences:
+- If a run refreshes but **cannot persist** the new token (e.g. a read-only mount), the cached token is
+  dead and the next run fails `ACCESS_DENIED`. Regenerate with the headless onboarding:
+  `CMIND_ONBOARD=1 dotnet test tests/E2ETests --filter FullyQualifiedName~OnboardingTests`.
+- `LiveCopySecrets.SaveTokens` swallows write failures so a read-only cache doesn't crash a run, but the
+  **live** in-cluster suite still needs a **writable** cache (the K8s Job copies the Secret into an
+  emptyDir — see the deployment doc).
 
 ## Running the suite in a Kubernetes cluster
 
@@ -237,11 +267,19 @@ The whole suite runs in-cluster against the Helm-deployed app, so a regression i
 same as locally. See [`docs/deployment/kubernetes.md`](../deployment/kubernetes.md#in-cluster-test-suite).
 
 ```bash
-scripts/k8s-e2e.sh                                   # kind cluster, live copy suite (needs ./secrets)
-TEST_FILTER='FullyQualifiedName~CopyTrading' scripts/k8s-e2e.sh   # deterministic suite, no secrets
+scripts/k8s-e2e.sh                                   # kind cluster, deterministic suite (no secrets)
+TEST_FILTER='FullyQualifiedName~CopyTradingLiveTests' COPY_SECRET=cmind-copy-secrets scripts/k8s-e2e.sh  # live
 ```
 
-`Dockerfile.tests` builds the runner image; the Helm `tests-job.yaml` (gated `tests.enabled=false`)
-mounts the gitignored token cache from a `cmind-copy-secrets` Secret at `/app/secrets` and talks to the
-in-cluster Postgres + Web. The copy tests need only Web + Postgres + the token cache — no privileged node
-agents. The script asserts the Job exits 0 and its logs contain `Passed!`/`copied=True`.
+`Dockerfile.tests` builds the runner image; the Helm `tests-job.yaml` (gated `tests.enabled=false`) runs
+it against the in-cluster Postgres + Web. **Default = the deterministic copy suite** (no secrets, no
+rotating tokens). For the live suite, set `tests.copySecret` to a Secret holding the gitignored
+`openapi-*.local.json`; an init-container copies it into a **writable** emptyDir at `/app/secrets`
+(required — single-use refresh tokens must be persistable). The copy tests need only Web + Postgres +
+the token cache — no privileged node agents. The script asserts the Job exits 0 and its logs contain
+`Passed!`.
+
+**Verified here (Docker, no cluster):** the test image runs the deterministic suite (`101 passed`) and,
+with a writable `secrets/` mount, the full **live** suite (`8 passed`) — i.e. the exact Job path minus
+Kubernetes. `kind`/`kubectl`/`helm` were not available in the authoring environment, so the full
+`k8s-e2e.sh` cluster run is the one step not executed here.

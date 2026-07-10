@@ -25,7 +25,7 @@ RELEASE="${RELEASE:-cmind}"
 NAMESPACE="${NAMESPACE:-cmind}"
 IMAGE_REPO="${IMAGE_REPO:-cmind}"
 IMAGE_TAG="${IMAGE_TAG:-e2e}"
-TEST_FILTER="${TEST_FILTER:-FullyQualifiedName~CopyTradingLiveTests}"
+TEST_FILTER="${TEST_FILTER:-FullyQualifiedName~CopyTrading}"   # deterministic by default (no secrets)
 USE_EXISTING_CLUSTER="${USE_EXISTING_CLUSTER:-0}"
 KEEP_CLUSTER="${KEEP_CLUSTER:-0}"
 

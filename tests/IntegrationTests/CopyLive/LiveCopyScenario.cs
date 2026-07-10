@@ -14,6 +14,7 @@ namespace IntegrationTests.CopyLive;
 public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper output)
 {
     private static readonly string[] SymbolPreference = ["BTCUSD", "EURUSD", "GBPUSD", "XAUUSD"];
+    private static readonly string[] FxPreference = ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD"];
     private static readonly TimeSpan HostWarmup = TimeSpan.FromSeconds(6);
     private static readonly TimeSpan CopyTimeout = TimeSpan.FromSeconds(30);
 
@@ -137,8 +138,145 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
         return new PartialCloseResult(false, null, before, after);
     }
 
+    public sealed record PendingResult(bool Inconclusive, string? Reason, bool SlavePendingAppeared, bool SlavePendingCancelled);
+
+    // Places a resting limit order on the master (away from market so it won't fill), asserts a
+    // matching pending appears on the slave, cancels it on the master, and asserts the slave pending
+    // is cancelled too. Demo only; cancels every order it created.
+    public async Task<PendingResult> RunPendingAsync(LiveCopyFixture.LiveAccount master,
+        SlaveSetup slave, CancellationToken ct)
+    {
+        var masterCtid = master.Ctid;
+        var plan = new CopyProfilePlan(CopyProfileId.New(), Live: false, fixture.ClientId, fixture.ClientSecret,
+            masterCtid, master.AccessToken,
+            [new CopyDestinationPlan(slave.Account.Ctid, slave.Account.AccessToken, slave.Config)]);
+        var host = new CopyEngineHost(plan, new OpenApiTradingSessionFactory(fixture.ConnectionFactory),
+            new CopyDecisionEngine(new CopySizingCalculator()), NullLogger.Instance);
+        using var hostCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var hostTask = Task.Run(() => host.RunAsync(hostCts.Token), CancellationToken.None);
+
+        await using var probe = fixture.NewSession(new[] { master, slave.Account });
+        await probe.StartAsync(ct);
+
+        var symbolId = await ResolveSymbolAsync(probe, masterCtid, [slave.Account.Ctid], ct, FxPreference);
+        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct)).First();
+        var volume = details.MinVolume > 0 ? details.MinVolume : details.StepVolume;
+        var (bid, _) = await probe.LoadSpotPriceAsync(masterCtid, symbolId, ct);
+        var limitPrice = Math.Round(bid * 0.98, 5); // resting buy well below market — will not fill
+
+        var label = $"cmind-pn-{Guid.NewGuid():N}"[..24];
+        await Task.Delay(HostWarmup, ct);
+        await probe.SendPendingOrderAsync(masterCtid, symbolId, isBuy: true, volume, CopyOrderKind.Limit, limitPrice, label, ct);
+
+        var masterOrder = await PollAsync(async () =>
+            (await probe.ReconcilePendingOrdersAsync(masterCtid, ct)).FirstOrDefault(o => o.Label == label),
+            TimeSpan.FromSeconds(12), ct);
+        if (masterOrder is null)
+        {
+            await StopHostAsync(hostCts, hostTask);
+            return new PendingResult(true, "Master pending order was not accepted.", false, false);
+        }
+
+        var masterOrderId = masterOrder.OrderId.ToString();
+        var slavePending = await PollAsync(async () =>
+            (await probe.ReconcilePendingOrdersAsync(slave.Account.Ctid, ct)).FirstOrDefault(o => o.Label == masterOrderId),
+            CopyTimeout, ct);
+        var appeared = slavePending is not null;
+        output.WriteLine($"pending: slave pending appeared={appeared}");
+
+        await probe.CancelOrderAsync(masterCtid, masterOrder.OrderId, ct);
+        var cancelled = await PollUntilAsync(async () =>
+            (await probe.ReconcilePendingOrdersAsync(slave.Account.Ctid, ct)).All(o => o.Label != masterOrderId),
+            CopyTimeout, ct);
+        output.WriteLine($"pending: slave pending cancelled={cancelled}");
+
+        await CancelPendingsAsync(probe, masterCtid, label, ct);
+        await CancelPendingsAsync(probe, slave.Account.Ctid, masterOrderId, ct);
+        await StopHostAsync(hostCts, hostTask);
+        return new PendingResult(false, null, appeared, cancelled);
+    }
+
+    public sealed record TrailingResult(bool Inconclusive, string? Reason, bool SlaveTrailing);
+
+    // Opens a master position, then sets a trailing stop on it; asserts the slave copy also becomes a
+    // trailing stop. Demo only; cleans up.
+    public async Task<TrailingResult> RunTrailingAsync(LiveCopyFixture.LiveAccount master,
+        SlaveSetup slave, CancellationToken ct)
+    {
+        var masterCtid = master.Ctid;
+        var plan = new CopyProfilePlan(CopyProfileId.New(), Live: false, fixture.ClientId, fixture.ClientSecret,
+            masterCtid, master.AccessToken,
+            [new CopyDestinationPlan(slave.Account.Ctid, slave.Account.AccessToken, slave.Config)]);
+        var host = new CopyEngineHost(plan, new OpenApiTradingSessionFactory(fixture.ConnectionFactory),
+            new CopyDecisionEngine(new CopySizingCalculator()), NullLogger.Instance);
+        using var hostCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var hostTask = Task.Run(() => host.RunAsync(hostCts.Token), CancellationToken.None);
+
+        await using var probe = fixture.NewSession(new[] { master, slave.Account });
+        await probe.StartAsync(ct);
+
+        var symbolId = await ResolveSymbolAsync(probe, masterCtid, [slave.Account.Ctid], ct, FxPreference);
+        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct)).First();
+        var volume = details.MinVolume > 0 ? details.MinVolume : details.StepVolume;
+        var (bid, _) = await probe.LoadSpotPriceAsync(masterCtid, symbolId, ct);
+
+        var label = $"cmind-tr-{Guid.NewGuid():N}"[..24];
+        await Task.Delay(HostWarmup, ct);
+        await probe.SendMarketOrderAsync(masterCtid, symbolId, isBuy: true, volume, label, ct);
+
+        var masterPosition = await PollAsync(() => FindByLabelAsync(probe, masterCtid, label, ct), TimeSpan.FromSeconds(12), ct);
+        if (masterPosition is null)
+        {
+            await StopHostAsync(hostCts, hostTask);
+            return new TrailingResult(true, "Master order did not fill (market likely closed).", false);
+        }
+
+        var sourceId = masterPosition.PositionId.ToString();
+        var copy = await PollAsync(() => FindByLabelAsync(probe, slave.Account.Ctid, sourceId, ct), CopyTimeout, ct);
+        if (copy is null)
+        {
+            await CleanupAsync(probe, masterCtid, sourceId, [slave], ct);
+            await StopHostAsync(hostCts, hostTask);
+            return new TrailingResult(true, "Slave copy never appeared.", false);
+        }
+
+        var stopLoss = Math.Round(bid * 0.99, 5); // SL below market for a long, as a trailing stop
+        await probe.AmendPositionSltpAsync(masterCtid, masterPosition.PositionId, stopLoss, null, trailingStopLoss: true, ct);
+
+        var trailingCopy = await PollAsync(async () =>
+        {
+            var current = await FindByLabelAsync(probe, slave.Account.Ctid, sourceId, ct);
+            return current is { TrailingStopLoss: true } ? current : null;
+        }, CopyTimeout, ct);
+        var slaveTrailing = trailingCopy is not null;
+        output.WriteLine($"trailing: slave copy trailing={slaveTrailing}");
+
+        await CleanupAsync(probe, masterCtid, sourceId, [slave], ct);
+        await StopHostAsync(hostCts, hostTask);
+        return new TrailingResult(false, null, slaveTrailing);
+    }
+
+    private static async Task<bool> PollUntilAsync(Func<Task<bool>> condition, TimeSpan timeout, CancellationToken ct)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            if (await condition()) return true;
+            await Task.Delay(TimeSpan.FromMilliseconds(800), ct);
+        }
+        return false;
+    }
+
+    private async Task CancelPendingsAsync(OpenApiTradingSession probe, long ctid, string label, CancellationToken ct)
+    {
+        foreach (var pending in await probe.ReconcilePendingOrdersAsync(ctid, ct))
+            if (pending.Label == label)
+                try { await probe.CancelOrderAsync(ctid, pending.OrderId, ct); }
+                catch (Exception ex) { output.WriteLine($"cleanup cancel failed for {ctid}/{pending.OrderId}: {ex.Message}"); }
+    }
+
     private async Task<long> ResolveSymbolAsync(OpenApiTradingSession probe, long masterCtid,
-        IReadOnlyList<long> slaveCtids, CancellationToken ct)
+        IReadOnlyList<long> slaveCtids, CancellationToken ct, IReadOnlyList<string>? preference = null)
     {
         var masterIds = await probe.LoadSymbolIdsAsync(masterCtid, ct);
 
@@ -151,7 +289,7 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
             common.IntersectWith(slaveIds.Keys);
         }
 
-        foreach (var preferred in SymbolPreference)
+        foreach (var preferred in preference ?? SymbolPreference)
             if (common.Contains(preferred) && masterIds.TryGetValue(preferred, out var id)) return id;
 
         var fallback = common.FirstOrDefault();

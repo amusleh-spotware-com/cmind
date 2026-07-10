@@ -1,10 +1,12 @@
 # Contributing to cMind
 
-Thanks for your interest! cMind is an experimental, entirely AI-generated reference
-project. Contributions, bug reports, and ideas are welcome.
+Thanks for your interest! cMind is a multi-tenant trading operations platform for cTrader.
+Contributions, bug reports, and ideas are welcome.
 
-> **Heads up:** the codebase is generated and driven through [Claude Code](https://claude.com/claude-code).
-> Expect rough edges and design inconsistencies. When in doubt, open an issue first.
+> The codebase follows strict Domain-Driven Design and ships every feature with unit,
+> integration, and E2E tests plus a matching doc under `docs/features/`. See
+> [CLAUDE.md](CLAUDE.md) for the conventions before opening a PR. When in doubt, open an
+> issue first.
 
 ## Ground rules
 

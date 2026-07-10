@@ -4,7 +4,26 @@ Guidance for future Claude Code sessions on this repo.
 
 > **MANDATORY — Domain-Driven Design.** Solution developed **strictly** under DDD.
 > Before you write **or modify any C# under `src/`**, invoke **`ddd-dotnet`** skill and obey it.
-> Binding rules live in [`## Domain-Driven Design — MANDATORY`](#domain-driven-design--mandatory)
+> Binding rules live in [`## Testing & docs — MANDATORY
+
+Binding, no exceptions, no "small change" skips. This is a trading and financial app; an untested
+bug can cost users money, and stale docs mislead the AI agents that build on this repo.
+
+1. **Every feature or fix ships all three test tiers.** Unit **and** integration **and** E2E —
+   whichever the change can be exercised at, it must be. New behavior with only one tier is not
+   "done". Unit tests assert invariants/transitions (not getters); integration uses real Postgres
+   (Testcontainers); E2E drives the API/UI. Copy-trading and distributed/multi-node behavior must
+   be covered including failure paths (connection drop, order-placement failure, desync/resync,
+   token rotation/invalidation, node death + lease reclaim). `dotnet test` green before "done".
+2. **The fake trading simulator stays cTrader-faithful.** `tests/UnitTests/CopyTrading/FakeTradingSession.cs`
+   must faithfully mimic real cTrader behavior (order types, expiry, slippage, partial close, SL/TP
+   amend, trailing, disconnect/reconnect desync, token swap, rejections). Extend it when you add a
+   behavior; do not weaken it to make a test pass.
+3. **Docs stay in sync.** Each major feature has a doc under `docs/features/`. Any change to a
+   feature updates its `docs/features/*.md` **in the same commit** (and `docs/` deployment/ops docs
+   when behavior there changes). No feature is "done" until its doc matches the code.
+
+## Domain-Driven Design — MANDATORY`](#domain-driven-design--mandatory)
 > below. No feature/fix/refactor "done" until it passes DDD checklist there. Overrides
 > convenience — no anemic entities, primitive-obsessed signatures, or domain logic in
 > endpoints/services because "quicker".
@@ -14,9 +33,8 @@ Guidance for future Claude Code sessions on this repo.
 Multi-tenant Blazor Server + Minimal API app. Builds, runs, backtests cTrader cBots
 through `ghcr.io/spotware/ctrader-console`, scheduled across remote nodes (each running
 `ExternalNode` HTTP agent) and/or local web host. In-browser Monaco editor builds cBot
-projects (C# + Python, both .NET) via `dotnet build`.
-
-Entirely Claude Code generated — no human-written code.
+projects (C# + Python, both .NET) via `dotnet build`. Also mirrors trades across accounts
+(copy trading) over the cTrader Open API.
 
 ## Solution structure
 
@@ -179,6 +197,25 @@ No optimization (unsupported by cTrader Console) · no email/SMTP (manual reset 
 6. **Summarize** — changes, deviations + why, test results, known limits.
 
 Checklist: tests written · `dotnet test` passes · no new warnings.
+
+## Testing & docs — MANDATORY
+
+Binding, no exceptions, no "small change" skips. This is a trading and financial app; an untested
+bug can cost users money, and stale docs mislead the AI agents that build on this repo.
+
+1. **Every feature or fix ships all three test tiers.** Unit **and** integration **and** E2E —
+   whichever the change can be exercised at, it must be. New behavior with only one tier is not
+   "done". Unit tests assert invariants/transitions (not getters); integration uses real Postgres
+   (Testcontainers); E2E drives the API/UI. Copy-trading and distributed/multi-node behavior must
+   be covered including failure paths (connection drop, order-placement failure, desync/resync,
+   token rotation/invalidation, node death + lease reclaim). `dotnet test` green before "done".
+2. **The fake trading simulator stays cTrader-faithful.** `tests/UnitTests/CopyTrading/FakeTradingSession.cs`
+   must faithfully mimic real cTrader behavior (order types, expiry, slippage, partial close, SL/TP
+   amend, trailing, disconnect/reconnect desync, token swap, rejections). Extend it when you add a
+   behavior; do not weaken it to make a test pass.
+3. **Docs stay in sync.** Each major feature has a doc under `docs/features/`. Any change to a
+   feature updates its `docs/features/*.md` **in the same commit** (and `docs/` deployment/ops docs
+   when behavior there changes). No feature is "done" until its doc matches the code.
 
 ## Domain-Driven Design — MANDATORY
 

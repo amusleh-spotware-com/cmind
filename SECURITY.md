@@ -1,8 +1,8 @@
 # Security Policy
 
-cMind is an **experimental, AI-generated reference project — not production-ready**.
-Do not deploy it to handle real funds or live trading credentials without a thorough
-independent security review.
+cMind self-hosts and handles trading credentials, so security matters. As with any
+platform that touches live funds, run your own security review and follow the hardening
+guidance in [docs/deployment/](docs/deployment/) before production use.
 
 ## Reporting a vulnerability
 
@@ -22,7 +22,7 @@ fix before public disclosure.
 
 ## Supported versions
 
-This is an experimental project; only the latest `main` is supported.
+Only the latest `main` is supported.
 
 ## Security model & hardening notes
 

@@ -1,25 +1,32 @@
+using Core.Branding;
+using Core.Options;
 using MudBlazor;
 
 namespace Web.Components;
 
 public static class Theme
 {
-    public static MudTheme Dark { get; } = new()
+    /// <summary>
+    /// Builds the MudBlazor theme from white-label <see cref="BrandingOptions"/>. Only the branded palette
+    /// entries come from configuration (validated through <see cref="HexColor"/>); typography, layout and
+    /// neutral surface tones stay fixed so the product keeps a coherent look across resellers.
+    /// </summary>
+    public static MudTheme Build(BrandingOptions branding) => new()
     {
         PaletteDark = new PaletteDark
         {
-            Primary = "#26C281",
+            Primary = new HexColor(branding.PrimaryColor).Value,
             PrimaryContrastText = "#FFFFFF",
-            Secondary = "#1FB97A",
+            Secondary = new HexColor(branding.SecondaryColor).Value,
             Tertiary = "#3A3A3A",
-            Background = "#1A1A1A",
+            Background = new HexColor(branding.BackgroundColor).Value,
             BackgroundGray = "#141414",
-            Surface = "#262626",
-            AppbarBackground = "#141414",
+            Surface = new HexColor(branding.SurfaceColor).Value,
+            AppbarBackground = new HexColor(branding.AppBarColor).Value,
             AppbarText = "#E6E6E6",
             DrawerBackground = "#1F1F1F",
             DrawerText = "#E6E6E6",
-            DrawerIcon = "#26C281",
+            DrawerIcon = new HexColor(branding.PrimaryColor).Value,
             TextPrimary = "#E6E6E6",
             TextSecondary = "#A0A0A0",
             TextDisabled = "#6B6B6B",
@@ -35,10 +42,10 @@ public static class Theme
             DividerLight = "#3A3A3A",
             OverlayDark = "rgba(0,0,0,0.6)",
             OverlayLight = "rgba(255,255,255,0.04)",
-            Success = "#26C281",
-            Error = "#E74C3C",
-            Warning = "#F39C12",
-            Info = "#3498DB",
+            Success = new HexColor(branding.SuccessColor).Value,
+            Error = new HexColor(branding.ErrorColor).Value,
+            Warning = new HexColor(branding.WarningColor).Value,
+            Info = new HexColor(branding.InfoColor).Value,
             Dark = "#0E0E0E"
         },
         LayoutProperties = new LayoutProperties

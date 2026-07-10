@@ -1,5 +1,6 @@
 @inherits LayoutComponentBase
-<MudThemeProvider Theme="@Theme.Dark" IsDarkMode="true" />
+@inject Web.Branding.IBrandingThemeProvider Branding
+<MudThemeProvider Theme="@Branding.Theme" IsDarkMode="true" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />

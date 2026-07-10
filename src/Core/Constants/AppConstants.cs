@@ -85,6 +85,23 @@ public static class ConfigSections
     public const string App = "App";
 }
 
+public static class BrandingDefaults
+{
+    public const string ProductName = "cMind";
+    public const string Description =
+        "cMind — build, run, and backtest cTrader cBots across remote nodes and the local host.";
+    public const string FaviconUrl = "favicon.svg";
+    public const string PrimaryColor = "#26C281";
+    public const string SecondaryColor = "#1FB97A";
+    public const string AppBarColor = "#141414";
+    public const string BackgroundColor = "#1A1A1A";
+    public const string SurfaceColor = "#262626";
+    public const string SuccessColor = "#26C281";
+    public const string ErrorColor = "#E74C3C";
+    public const string WarningColor = "#F39C12";
+    public const string InfoColor = "#3498DB";
+}
+
 public static class FeatureSettings
 {
     // AppSetting key namespace for owner-set runtime feature overrides. A key of the form

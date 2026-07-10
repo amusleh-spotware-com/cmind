@@ -42,4 +42,6 @@ public static class DomainErrors
     public const string JoinTokenTooShort = "domain.node.join_token_too_short";
 
     public const string FeatureFlagUnknown = "domain.feature.flag_unknown";
+
+    public const string BrandingColorInvalid = "domain.branding.color_invalid";
 }

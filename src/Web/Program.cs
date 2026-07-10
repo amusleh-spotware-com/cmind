@@ -94,6 +94,8 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy(AuthPolicies.AdminOrAbove, p => p.RequireRole("Owner", "Admin"))
     .AddPolicy(AuthPolicies.UserOrAbove, p => p.RequireRole("Owner", "Admin", "User"));
 
+builder.Services.AddSingleton<Microsoft.Extensions.Options.IValidateOptions<AppOptions>, Web.Branding.BrandingOptionsValidator>();
+builder.Services.AddSingleton<Web.Branding.IBrandingThemeProvider, Web.Branding.BrandingThemeProvider>();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<CookieForwardingHandler>();

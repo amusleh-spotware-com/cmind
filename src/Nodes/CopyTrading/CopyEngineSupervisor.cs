@@ -80,19 +80,21 @@ public sealed class CopyEngineSupervisor(
             var signature = TokenSignature(plan);
             if (_running.TryGetValue(profile.Id, out var existing))
             {
-                // A rotated access token invalidates the token the running host still holds; restart it
-                // with a fresh plan (ResyncAsync rebuilds state without duplicating trades).
+                // A rotated access token invalidates the token the running host still holds. Push the new
+                // token so the host re-authorises the affected accounts in place on the live socket
+                // (graceful, no event-stream drop) instead of tearing the host down and restarting.
                 if (existing.TokenSignature == signature) continue;
-                existing.Cts.Cancel();
-                _running.TryRemove(profile.Id, out _);
+                existing.Host.PushTokenUpdate(PlanTokens(plan));
+                _running[profile.Id] = existing with { TokenSignature = signature };
                 log.CopyHostTokenRotated(profile.Id.Value);
+                continue;
             }
 
             var cts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
             var host = new CopyEngineHost(plan, sessionFactory,
                 new CopyDecisionEngine(new CopySizingCalculator()), loggerFactory.CreateLogger<CopyEngineHost>());
             var task = Task.Run(() => host.RunAsync(cts.Token), CancellationToken.None);
-            _running[profile.Id] = new HostHandle(task, cts, signature);
+            _running[profile.Id] = new HostHandle(task, cts, host, signature);
             log.CopyProfileHosted(profile.Id.Value);
         }
     }
@@ -111,7 +113,16 @@ public sealed class CopyEngineSupervisor(
     }
 
     internal static string TokenSignature(CopyProfilePlan plan)
-        => string.Join('|', plan.SourceAccessToken, string.Join(',', plan.Destinations.Select(d => d.AccessToken)));
+        => string.Join('|',
+            $"{plan.SourceAccessToken}:{plan.SourceTokenVersion}",
+            string.Join(',', plan.Destinations.Select(d => $"{d.AccessToken}:{d.TokenVersion}")));
+
+    private static IReadOnlyList<(long Ctid, string Token)> PlanTokens(CopyProfilePlan plan)
+    {
+        var tokens = new List<(long Ctid, string Token)> { (plan.SourceCtidTraderAccountId, plan.SourceAccessToken) };
+        tokens.AddRange(plan.Destinations.Select(d => (d.CtidTraderAccountId, d.AccessToken)));
+        return tokens;
+    }
 
     private static async Task<CopyProfilePlan?> BuildPlanAsync(
         DataContext db, ISecretProtector protector, CopyProfile profile, CancellationToken ct)
@@ -141,17 +152,18 @@ public sealed class CopyEngineSupervisor(
             destinations.Add(new CopyDestinationPlan(
                 account.CtidTraderAccountId.Value,
                 Decrypt(protector, auth.EncryptedAccessToken, EncryptionPurposes.OpenApiAccessToken),
+                auth.TokenVersion,
                 destination));
         }
 
         if (destinations.Count == 0) return null;
 
         return new CopyProfilePlan(profile.Id, source.IsLive, application.ClientId, clientSecret,
-            source.CtidTraderAccountId.Value, sourceToken, destinations);
+            source.CtidTraderAccountId.Value, sourceToken, sourceAuth.TokenVersion, destinations);
     }
 
     private static string Decrypt(ISecretProtector protector, byte[] ciphertext, string purpose)
         => Encoding.UTF8.GetString(protector.Unprotect(ciphertext, purpose));
 
-    private sealed record HostHandle(Task Task, CancellationTokenSource Cts, string TokenSignature);
+    private sealed record HostHandle(Task Task, CancellationTokenSource Cts, CopyEngineHost Host, string TokenSignature);
 }

@@ -208,4 +208,20 @@ public static partial class LogMessages
     [LoggerMessage(EventId = 1062, Level = LogLevel.Information,
         Message = "Copy host restarted for token rotation: profile {ProfileId}")]
     public static partial void CopyHostTokenRotated(this ILogger logger, Guid profileId);
+
+    [LoggerMessage(EventId = 1063, Level = LogLevel.Information,
+        Message = "Copy pending order amended: profile {ProfileId} dest {DestinationCtid} order {OrderId} (source order {SourceOrderId})")]
+    public static partial void CopyPendingOrderAmended(this ILogger logger, Guid profileId, long destinationCtid, long orderId, long sourceOrderId);
+
+    [LoggerMessage(EventId = 1064, Level = LogLevel.Information,
+        Message = "Copy market-range slippage mirrored: profile {ProfileId} dest {DestinationCtid} source {SourceId} slippagePoints {SlippagePoints}")]
+    public static partial void CopyMarketRangeSlippage(this ILogger logger, Guid profileId, long destinationCtid, long sourceId, int slippagePoints);
+
+    [LoggerMessage(EventId = 1065, Level = LogLevel.Information,
+        Message = "Copy pending expiry mirrored: profile {ProfileId} dest {DestinationCtid} source order {SourceOrderId} expiry {ExpirationTimestamp}")]
+    public static partial void CopyPendingExpiryMirrored(this ILogger logger, Guid profileId, long destinationCtid, long sourceOrderId, long expirationTimestamp);
+
+    [LoggerMessage(EventId = 1066, Level = LogLevel.Information,
+        Message = "Copy host token swapped in place: profile {ProfileId} account {Ctid}")]
+    public static partial void CopyHostTokenSwapped(this ILogger logger, Guid profileId, long ctid);
 }

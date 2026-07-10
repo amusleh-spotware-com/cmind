@@ -30,8 +30,8 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
     {
         var masterCtid = master.Ctid;
         var plan = new CopyProfilePlan(CopyProfileId.New(), Live: false, fixture.ClientId, fixture.ClientSecret,
-            masterCtid, master.AccessToken,
-            slaves.Select(s => new CopyDestinationPlan(s.Account.Ctid, s.Account.AccessToken, s.Config)).ToList());
+            masterCtid, master.AccessToken, 1,
+            slaves.Select(s => new CopyDestinationPlan(s.Account.Ctid, s.Account.AccessToken, 1, s.Config)).ToList());
 
         var host = new CopyEngineHost(plan, new OpenApiTradingSessionFactory(fixture.ConnectionFactory),
             new CopyDecisionEngine(new CopySizingCalculator()), NullLogger.Instance);
@@ -87,8 +87,8 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
     {
         var masterCtid = master.Ctid;
         var plan = new CopyProfilePlan(CopyProfileId.New(), Live: false, fixture.ClientId, fixture.ClientSecret,
-            masterCtid, master.AccessToken,
-            [new CopyDestinationPlan(slave.Account.Ctid, slave.Account.AccessToken, slave.Config)]);
+            masterCtid, master.AccessToken, 1,
+            [new CopyDestinationPlan(slave.Account.Ctid, slave.Account.AccessToken, 1, slave.Config)]);
 
         var host = new CopyEngineHost(plan, new OpenApiTradingSessionFactory(fixture.ConnectionFactory),
             new CopyDecisionEngine(new CopySizingCalculator()), NullLogger.Instance);
@@ -148,8 +148,8 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
     {
         var masterCtid = master.Ctid;
         var plan = new CopyProfilePlan(CopyProfileId.New(), Live: false, fixture.ClientId, fixture.ClientSecret,
-            masterCtid, master.AccessToken,
-            [new CopyDestinationPlan(slave.Account.Ctid, slave.Account.AccessToken, slave.Config)]);
+            masterCtid, master.AccessToken, 1,
+            [new CopyDestinationPlan(slave.Account.Ctid, slave.Account.AccessToken, 1, slave.Config)]);
         var host = new CopyEngineHost(plan, new OpenApiTradingSessionFactory(fixture.ConnectionFactory),
             new CopyDecisionEngine(new CopySizingCalculator()), NullLogger.Instance);
         using var hostCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -205,8 +205,8 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
     {
         var masterCtid = master.Ctid;
         var plan = new CopyProfilePlan(CopyProfileId.New(), Live: false, fixture.ClientId, fixture.ClientSecret,
-            masterCtid, master.AccessToken,
-            [new CopyDestinationPlan(slave.Account.Ctid, slave.Account.AccessToken, slave.Config)]);
+            masterCtid, master.AccessToken, 1,
+            [new CopyDestinationPlan(slave.Account.Ctid, slave.Account.AccessToken, 1, slave.Config)]);
         var host = new CopyEngineHost(plan, new OpenApiTradingSessionFactory(fixture.ConnectionFactory),
             new CopyDecisionEngine(new CopySizingCalculator()), NullLogger.Instance);
         using var hostCts = CancellationTokenSource.CreateLinkedTokenSource(ct);

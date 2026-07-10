@@ -29,6 +29,18 @@ public enum SymbolFilterMode
     Blacklist = 2
 }
 
+[Flags]
+public enum CopyOrderTypes
+{
+    None = 0,
+    Market = 1,
+    MarketRange = 2,
+    Limit = 4,
+    Stop = 8,
+    StopLimit = 16,
+    All = Market | MarketRange | Limit | Stop | StopLimit
+}
+
 public enum CopyProfileStatus
 {
     Draft = 0,

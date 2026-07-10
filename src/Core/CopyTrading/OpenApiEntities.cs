@@ -61,6 +61,7 @@ public class OpenApiAuthorization : AuditedEntity<OpenApiAuthorizationId>
     public OpenApiScope Scope { get; private set; }
     public DateTimeOffset? LastRefreshedAt { get; private set; }
     public DateTimeOffset? RefreshFailedAt { get; private set; }
+    public long TokenVersion { get; private set; } = 1;
 
     public static OpenApiAuthorization Create(
         UserId userId,
@@ -95,6 +96,7 @@ public class OpenApiAuthorization : AuditedEntity<OpenApiAuthorizationId>
         AccessTokenExpiresAt = accessTokenExpiresAt;
         LastRefreshedAt = DateTimeOffset.UtcNow;
         RefreshFailedAt = null;
+        TokenVersion++;
         Touch();
         RaiseDomainEvent(new AccessTokenRefreshed(Id, UserId, CtidUserId));
     }

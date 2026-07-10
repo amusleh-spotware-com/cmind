@@ -7,7 +7,9 @@ public enum CopyOrderKind
 {
     Market = 0,
     Limit = 1,
-    Stop = 2
+    Stop = 2,
+    MarketRange = 3,
+    StopLimit = 4
 }
 
 public sealed record ExecutionEvent(
@@ -27,7 +29,10 @@ public sealed record ExecutionEvent(
     CopyOrderKind OrderKind = CopyOrderKind.Market,
     double? LimitPrice = null,
     double? StopPrice = null,
-    bool TrailingStopLoss = false);
+    bool TrailingStopLoss = false,
+    long? ExpirationTimestamp = null,
+    int? SlippageInPoints = null,
+    double? BaseSlippagePrice = null);
 
 public sealed record OpenPositionSnapshot(
     long PositionId, long SymbolId, bool IsBuy, long Volume, string Label,
@@ -44,14 +49,20 @@ public interface IOpenApiTradingSession : IAsyncDisposable
     Func<CancellationToken, Task>? OnReconnected { get; set; }
 
     void AttachAccount(long ctidTraderAccountId, string accessToken);
+    Task SwapAccessTokenAsync(long ctidTraderAccountId, string accessToken, CancellationToken ct);
     Task StartAsync(CancellationToken ct);
     Task<double> LoadBalanceAsync(long ctidTraderAccountId, CancellationToken ct);
     IAsyncEnumerable<ExecutionEvent> SourceExecutionsAsync(long ctidTraderAccountId, CancellationToken ct);
     Task<IReadOnlyDictionary<string, long>> LoadSymbolIdsAsync(long ctidTraderAccountId, CancellationToken ct);
     Task<IReadOnlyDictionary<long, string>> LoadSymbolNamesAsync(long ctidTraderAccountId, CancellationToken ct);
-    Task SendMarketOrderAsync(long ctidTraderAccountId, long symbolId, bool isBuy, long volume, string label, CancellationToken ct);
+    Task SendMarketOrderAsync(long ctidTraderAccountId, long symbolId, bool isBuy, long volume, string label,
+        CancellationToken ct, int? slippageInPoints = null, double? baseSlippagePrice = null);
     Task SendPendingOrderAsync(long ctidTraderAccountId, long symbolId, bool isBuy, long volume,
-        CopyOrderKind kind, double price, string label, CancellationToken ct);
+        CopyOrderKind kind, double price, string label, CancellationToken ct,
+        long? expirationTimestamp = null, int? slippageInPoints = null);
+    Task AmendPendingOrderAsync(long ctidTraderAccountId, long orderId, CopyOrderKind kind, long volume, double price,
+        long? expirationTimestamp, int? slippageInPoints, CancellationToken ct);
+    Task<(double Bid, double Ask)> LoadSpotPriceAsync(long ctidTraderAccountId, long symbolId, CancellationToken ct);
     Task CancelOrderAsync(long ctidTraderAccountId, long orderId, CancellationToken ct);
     Task ClosePositionAsync(long ctidTraderAccountId, long positionId, long volume, CancellationToken ct);
     Task AmendPositionSltpAsync(long ctidTraderAccountId, long positionId, double? stopLoss, double? takeProfit,
@@ -85,6 +96,9 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
 
     public void AttachAccount(long ctidTraderAccountId, string accessToken)
         => connection.AttachAccount(ctidTraderAccountId, accessToken);
+
+    public Task SwapAccessTokenAsync(long ctidTraderAccountId, string accessToken, CancellationToken ct)
+        => connection.AuthorizeAccountAsync(ctidTraderAccountId, accessToken, ct);
 
     public Task StartAsync(CancellationToken ct) => connection.StartAsync(ct);
 
@@ -130,7 +144,10 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
                     OrderKind: kind,
                     LimitPrice: pendingOrder.HasLimitPrice ? pendingOrder.LimitPrice : null,
                     StopPrice: pendingOrder.HasStopPrice ? pendingOrder.StopPrice : null,
-                    TrailingStopLoss: pendingOrder.TrailingStopLoss);
+                    TrailingStopLoss: pendingOrder.TrailingStopLoss,
+                    ExpirationTimestamp: pendingOrder.HasExpirationTimestamp ? pendingOrder.ExpirationTimestamp : null,
+                    SlippageInPoints: pendingOrder.HasSlippageInPoints ? (int)pendingOrder.SlippageInPoints : null,
+                    BaseSlippagePrice: pendingOrder.HasBaseSlippagePrice ? pendingOrder.BaseSlippagePrice : null);
                 continue;
             }
 
@@ -149,7 +166,10 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
                     position.HasTakeProfit ? position.TakeProfit : null,
                     position.PositionStatus == ProtoOAPositionStatus.PositionStatusOpen,
                     OrderId: executionEvent.Order?.OrderId ?? 0,
-                    TrailingStopLoss: position.TrailingStopLoss);
+                    OrderKind: MarketKind(executionEvent.Order?.OrderType),
+                    TrailingStopLoss: position.TrailingStopLoss,
+                    SlippageInPoints: executionEvent.Order is { HasSlippageInPoints: true } slipOrder ? (int)slipOrder.SlippageInPoints : null,
+                    BaseSlippagePrice: executionEvent.Order is { HasBaseSlippagePrice: true } baseOrder ? baseOrder.BaseSlippagePrice : null);
                 continue;
             }
         }
@@ -159,7 +179,14 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
     {
         ProtoOAOrderType.Limit => CopyOrderKind.Limit,
         ProtoOAOrderType.Stop => CopyOrderKind.Stop,
+        ProtoOAOrderType.StopLimit => CopyOrderKind.StopLimit,
         _ => null
+    };
+
+    private static CopyOrderKind MarketKind(ProtoOAOrderType? orderType) => orderType switch
+    {
+        ProtoOAOrderType.MarketRange => CopyOrderKind.MarketRange,
+        _ => CopyOrderKind.Market
     };
 
     public async Task<IReadOnlyDictionary<string, long>> LoadSymbolIdsAsync(long ctidTraderAccountId, CancellationToken ct)
@@ -183,35 +210,66 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
     }
 
     public async Task SendMarketOrderAsync(
-        long ctidTraderAccountId, long symbolId, bool isBuy, long volume, string label, CancellationToken ct)
+        long ctidTraderAccountId, long symbolId, bool isBuy, long volume, string label,
+        CancellationToken ct, int? slippageInPoints = null, double? baseSlippagePrice = null)
     {
         var request = new ProtoOANewOrderReq
         {
             CtidTraderAccountId = ctidTraderAccountId,
             SymbolId = symbolId,
-            OrderType = ProtoOAOrderType.Market,
+            OrderType = slippageInPoints.HasValue ? ProtoOAOrderType.MarketRange : ProtoOAOrderType.Market,
             TradeSide = isBuy ? ProtoOATradeSide.Buy : ProtoOATradeSide.Sell,
             Volume = volume,
             Label = label
         };
+        if (slippageInPoints.HasValue) request.SlippageInPoints = slippageInPoints.Value;
+        if (baseSlippagePrice.HasValue) request.BaseSlippagePrice = baseSlippagePrice.Value;
         await connection.SendAsync(request, (int)ProtoOAPayloadType.ProtoOaNewOrderReq, ct);
     }
 
     public async Task SendPendingOrderAsync(long ctidTraderAccountId, long symbolId, bool isBuy, long volume,
-        CopyOrderKind kind, double price, string label, CancellationToken ct)
+        CopyOrderKind kind, double price, string label, CancellationToken ct,
+        long? expirationTimestamp = null, int? slippageInPoints = null)
     {
         var request = new ProtoOANewOrderReq
         {
             CtidTraderAccountId = ctidTraderAccountId,
             SymbolId = symbolId,
-            OrderType = kind == CopyOrderKind.Stop ? ProtoOAOrderType.Stop : ProtoOAOrderType.Limit,
+            OrderType = kind switch
+            {
+                CopyOrderKind.Stop => ProtoOAOrderType.Stop,
+                CopyOrderKind.StopLimit => ProtoOAOrderType.StopLimit,
+                _ => ProtoOAOrderType.Limit
+            },
             TradeSide = isBuy ? ProtoOATradeSide.Buy : ProtoOATradeSide.Sell,
             Volume = volume,
             Label = label
         };
-        if (kind == CopyOrderKind.Stop) request.StopPrice = price;
+        if (kind is CopyOrderKind.Stop or CopyOrderKind.StopLimit) request.StopPrice = price;
         else request.LimitPrice = price;
+        if (kind == CopyOrderKind.StopLimit && slippageInPoints.HasValue) request.SlippageInPoints = slippageInPoints.Value;
+        if (expirationTimestamp.HasValue)
+        {
+            request.TimeInForce = ProtoOATimeInForce.GoodTillDate;
+            request.ExpirationTimestamp = expirationTimestamp.Value;
+        }
         await connection.SendAsync(request, (int)ProtoOAPayloadType.ProtoOaNewOrderReq, ct);
+    }
+
+    public async Task AmendPendingOrderAsync(long ctidTraderAccountId, long orderId, CopyOrderKind kind, long volume,
+        double price, long? expirationTimestamp, int? slippageInPoints, CancellationToken ct)
+    {
+        var request = new ProtoOAAmendOrderReq
+        {
+            CtidTraderAccountId = ctidTraderAccountId,
+            OrderId = orderId,
+            Volume = volume
+        };
+        if (kind is CopyOrderKind.Stop or CopyOrderKind.StopLimit) request.StopPrice = price;
+        else request.LimitPrice = price;
+        if (kind == CopyOrderKind.StopLimit && slippageInPoints.HasValue) request.SlippageInPoints = slippageInPoints.Value;
+        if (expirationTimestamp.HasValue) request.ExpirationTimestamp = expirationTimestamp.Value;
+        await connection.SendAsync(request, (int)ProtoOAPayloadType.ProtoOaAmendOrderReq, ct);
     }
 
     public async Task CancelOrderAsync(long ctidTraderAccountId, long orderId, CancellationToken ct)

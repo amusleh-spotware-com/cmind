@@ -47,6 +47,9 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public bool MirrorScaleIn { get; private set; }
     public bool CopyPendingOrders { get; private set; }
     public bool CopyTrailingStop { get; private set; }
+    public CopyOrderTypes CopyOrderTypes { get; private set; } = CopyOrderTypes.All;
+    public bool CopyPendingExpiry { get; private set; } = true;
+    public bool CopyMasterSlippage { get; private set; } = true;
     public CopyDirectionFilter Direction { get; private set; } = CopyDirectionFilter.Both;
     public double MinLot { get; private set; }
     public double MaxLot { get; private set; }
@@ -81,6 +84,21 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public void SetPartialCloseMirroring(bool mirrorPartialClose, bool mirrorScaleIn) { MirrorPartialClose = mirrorPartialClose; MirrorScaleIn = mirrorScaleIn; Touch(); }
     public void SetPendingOrderCopying(bool copyPendingOrders) { CopyPendingOrders = copyPendingOrders; Touch(); }
     public void SetTrailingStopCopying(bool copyTrailingStop) { CopyTrailingStop = copyTrailingStop; Touch(); }
+
+    public void SetOrderTypeFilter(CopyOrderTypes orderTypes)
+    {
+        if (orderTypes == CopyOrderTypes.None)
+            throw new DomainException(DomainErrors.CopyOrderTypesInvalid);
+        CopyOrderTypes = orderTypes;
+        Touch();
+    }
+
+    public void SetExpiryCopying(bool copyPendingExpiry) { CopyPendingExpiry = copyPendingExpiry; Touch(); }
+
+    public void SetSlippageCopying(bool copyMasterSlippage) { CopyMasterSlippage = copyMasterSlippage; Touch(); }
+
+    public bool IsOrderTypeAllowed(CopyOrderTypes orderType)
+        => orderType != CopyOrderTypes.None && (CopyOrderTypes & orderType) == orderType;
 
     public void SetGuards(DrawdownPercent maxDrawdown, double dailyLossLimit)
     {

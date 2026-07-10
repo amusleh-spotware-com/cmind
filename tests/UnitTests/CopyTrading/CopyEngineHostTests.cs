@@ -32,7 +32,7 @@ public sealed class CopyEngineHostTests
     }
 
     private static CopyProfilePlan Plan(params CopyDestinationPlan[] destinations)
-        => new(CopyProfileId.New(), Live: false, "client", "secret", Source, "token", destinations);
+        => new(CopyProfileId.New(), Live: false, "client", "secret", Source, "token", 1, destinations);
 
     private static async Task DriveAsync(FakeTradingSession session, CopyProfilePlan plan,
         Func<Task> act, CapturingLogger? logger = null)
@@ -60,7 +60,7 @@ public sealed class CopyEngineHostTests
     public async Task Open_mirrors_market_order_with_same_side_and_volume()
     {
         var session = NewSession();
-        var plan = Plan(new CopyDestinationPlan(Slave, "t", Destination(Slave)));
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave)));
 
         await DriveAsync(session, plan, async () =>
         {
@@ -80,7 +80,7 @@ public sealed class CopyEngineHostTests
     public async Task Reverse_flips_side_and_swaps_stop_loss_and_take_profit()
     {
         var session = NewSession();
-        var plan = Plan(new CopyDestinationPlan(Slave, "t",
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
             Destination(Slave, d => { d.SetReverse(true); d.SetCopyProtection(true, true); })));
 
         await DriveAsync(session, plan, async () =>
@@ -99,7 +99,7 @@ public sealed class CopyEngineHostTests
     public async Task Symbol_map_resolves_destination_symbol()
     {
         var session = NewSession(new Dictionary<string, long> { ["EURUSDX"] = 2 });
-        var plan = Plan(new CopyDestinationPlan(Slave, "t",
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
             Destination(Slave, d => d.SetSymbolMap([new SymbolMapEntry(new Symbol("EURUSD"), new Symbol("EURUSD.x"))]))));
 
         await DriveAsync(session, plan, async () =>
@@ -117,8 +117,8 @@ public sealed class CopyEngineHostTests
         var session = NewSession();
         session.FailOrdersForCtid.Add(Slave); // first slave rejects
         var plan = Plan(
-            new CopyDestinationPlan(Slave, "t", Destination(Slave)),
-            new CopyDestinationPlan(Slave2, "t", Destination(Slave2)));
+            new CopyDestinationPlan(Slave, "t", 1, Destination(Slave)),
+            new CopyDestinationPlan(Slave2, "t", 1, Destination(Slave2)));
 
         await DriveAsync(session, plan, async () =>
         {
@@ -134,7 +134,7 @@ public sealed class CopyEngineHostTests
     public async Task Source_close_closes_the_mirrored_copy()
     {
         var session = NewSession();
-        var plan = Plan(new CopyDestinationPlan(Slave, "t", Destination(Slave)));
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave)));
 
         await DriveAsync(session, plan, async () =>
         {
@@ -152,7 +152,7 @@ public sealed class CopyEngineHostTests
     {
         var session = NewSession();
         var log = new CapturingLogger();
-        var plan = Plan(new CopyDestinationPlan(Slave, "t", Destination(Slave)));
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave)));
 
         await DriveAsync(session, plan, async () =>
         {
@@ -179,7 +179,7 @@ public sealed class CopyEngineHostTests
         var session = NewSession();
         // A leftover copy on the slave whose source position is no longer open (closed while offline).
         session.SeedPosition(Slave, positionId: 7777, SymbolId, isBuy: true, volume: 100, label: "9999");
-        var plan = Plan(new CopyDestinationPlan(Slave, "t", Destination(Slave)));
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave)));
 
         await DriveAsync(session, plan, () =>
             WaitUntil(() => session.Closes.Any(c => c.Ctid == Slave && c.PositionId == 7777)));
@@ -191,7 +191,7 @@ public sealed class CopyEngineHostTests
     public async Task Partial_close_mirrors_a_proportional_slice_on_the_slave()
     {
         var session = NewSession();
-        var plan = Plan(new CopyDestinationPlan(Slave, "t", Destination(Slave)));
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave)));
 
         await DriveAsync(session, plan, async () =>
         {
@@ -208,7 +208,7 @@ public sealed class CopyEngineHostTests
     public async Task Partial_close_is_ignored_when_mirroring_disabled()
     {
         var session = NewSession();
-        var plan = Plan(new CopyDestinationPlan(Slave, "t",
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
             Destination(Slave, d => d.SetPartialCloseMirroring(false, false))));
 
         await DriveAsync(session, plan, async () =>
@@ -226,7 +226,7 @@ public sealed class CopyEngineHostTests
     public async Task Scale_in_is_ignored_by_default_and_mirrored_when_enabled()
     {
         var offSession = NewSession();
-        var offPlan = Plan(new CopyDestinationPlan(Slave, "t", Destination(Slave)));
+        var offPlan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave)));
         await DriveAsync(offSession, offPlan, async () =>
         {
             offSession.PushOpen(Source, 3201, SymbolId, isBuy: true, volume: 100);
@@ -237,7 +237,7 @@ public sealed class CopyEngineHostTests
         offSession.Orders.Should().HaveCount(1, "scale-ins are ignored by default");
 
         var onSession = NewSession();
-        var onPlan = Plan(new CopyDestinationPlan(Slave, "t", Destination(Slave, d => d.SetPartialCloseMirroring(true, true))));
+        var onPlan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d => d.SetPartialCloseMirroring(true, true))));
         await DriveAsync(onSession, onPlan, async () =>
         {
             onSession.PushOpen(Source, 3202, SymbolId, isBuy: true, volume: 100);
@@ -255,7 +255,7 @@ public sealed class CopyEngineHostTests
     public async Task Pending_order_is_placed_on_the_slave_when_enabled(CopyOrderKind kind)
     {
         var session = NewSession();
-        var plan = Plan(new CopyDestinationPlan(Slave, "t", Destination(Slave, d => d.SetPendingOrderCopying(true))));
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d => d.SetPendingOrderCopying(true))));
 
         await DriveAsync(session, plan, async () =>
         {
@@ -275,7 +275,7 @@ public sealed class CopyEngineHostTests
     public async Task Pending_order_is_not_placed_when_disabled()
     {
         var session = NewSession();
-        var plan = Plan(new CopyDestinationPlan(Slave, "t", Destination(Slave)));
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave)));
 
         await DriveAsync(session, plan, async () =>
         {
@@ -290,7 +290,7 @@ public sealed class CopyEngineHostTests
     public async Task Source_pending_cancel_cancels_the_slave_pending()
     {
         var session = NewSession();
-        var plan = Plan(new CopyDestinationPlan(Slave, "t", Destination(Slave, d => d.SetPendingOrderCopying(true))));
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d => d.SetPendingOrderCopying(true))));
 
         await DriveAsync(session, plan, async () =>
         {
@@ -307,7 +307,7 @@ public sealed class CopyEngineHostTests
     public async Task Filled_pending_does_not_double_open()
     {
         var session = NewSession();
-        var plan = Plan(new CopyDestinationPlan(Slave, "t", Destination(Slave, d => d.SetPendingOrderCopying(true))));
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d => d.SetPendingOrderCopying(true))));
 
         await DriveAsync(session, plan, async () =>
         {
@@ -327,7 +327,7 @@ public sealed class CopyEngineHostTests
     public async Task Trailing_stop_is_applied_to_the_copy_when_enabled()
     {
         var session = NewSession();
-        var plan = Plan(new CopyDestinationPlan(Slave, "t",
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
             Destination(Slave, d => { d.SetCopyProtection(true, false); d.SetTrailingStopCopying(true); })));
 
         await DriveAsync(session, plan, async () =>
@@ -343,7 +343,7 @@ public sealed class CopyEngineHostTests
     public async Task Source_stop_loss_move_re_amends_the_copy()
     {
         var session = NewSession();
-        var plan = Plan(new CopyDestinationPlan(Slave, "t", Destination(Slave, d => d.SetCopyProtection(true, false))));
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d => d.SetCopyProtection(true, false))));
 
         await DriveAsync(session, plan, async () =>
         {
@@ -361,7 +361,7 @@ public sealed class CopyEngineHostTests
     {
         var session = NewSession();
         var log = new CapturingLogger();
-        var plan = Plan(new CopyDestinationPlan(Slave, "t", Destination(Slave, d => d.SetPendingOrderCopying(true))));
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d => d.SetPendingOrderCopying(true))));
 
         await DriveAsync(session, plan, async () =>
         {

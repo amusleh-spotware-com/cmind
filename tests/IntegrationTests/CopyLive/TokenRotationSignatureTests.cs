@@ -13,8 +13,8 @@ namespace IntegrationTests.CopyLive;
 public sealed class TokenRotationSignatureTests
 {
     private static CopyProfilePlan Plan(string sourceToken, string destToken)
-        => new(CopyProfileId.New(), Live: false, "client", "secret", 100, sourceToken,
-            [new CopyDestinationPlan(200, destToken, Destination())]);
+        => new(CopyProfileId.New(), Live: false, "client", "secret", 100, sourceToken, 1,
+            [new CopyDestinationPlan(200, destToken, 1, Destination())]);
 
     private static CopyDestination Destination()
         => CopyProfile.Create(UserId.New(), "p", TradingAccountId.New())

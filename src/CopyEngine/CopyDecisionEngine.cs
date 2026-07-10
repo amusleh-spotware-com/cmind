@@ -1,5 +1,6 @@
 using Core;
 using Core.Domain;
+using CTraderOpenApi.Client;
 
 namespace CopyEngine;
 
@@ -9,7 +10,7 @@ public enum CopyActionKind
     Skip
 }
 
-public sealed record CopyAction(CopyActionKind Kind, double Lots, bool Reversed, string? SkipReason)
+public sealed record CopyAction(CopyActionKind Kind, double Lots, bool Reversed, string? SkipReason, int? SlippageInPoints = null)
 {
     public static CopyAction Skip(string reason) => new(CopyActionKind.Skip, 0, false, reason);
 }
@@ -31,7 +32,9 @@ public sealed record OpenDecisionContext(
     SymbolSpec DestinationSymbol,
     double DestinationPrice,
     double DestinationPipSize,
-    TimeSpan EventAge);
+    TimeSpan EventAge,
+    CopyOrderTypes OrderType = CopyOrderTypes.Market,
+    int? MasterSlippageInPoints = null);
 
 /// <summary>
 /// Pure copy-decision logic shared by every host. Applies direction, latency and slippage filters,
@@ -44,6 +47,9 @@ public sealed class CopyDecisionEngine(ICopySizingCalculator calculator)
     {
         if (!destination.IsSymbolAllowed(context.Source.Symbol))
             return CopyAction.Skip("symbol_filter");
+
+        if (!destination.IsOrderTypeAllowed(context.OrderType))
+            return CopyAction.Skip("order_type");
 
         var effectiveLong = destination.Reverse ? !context.Source.IsLong : context.Source.IsLong;
 
@@ -71,10 +77,23 @@ public sealed class CopyDecisionEngine(ICopySizingCalculator calculator)
             destination.Risk,
             destination.Bounds));
 
+        var slippageInPoints = context.OrderType == CopyOrderTypes.MarketRange && destination.CopyMasterSlippage
+            ? context.MasterSlippageInPoints
+            : null;
+
         return volume.Skipped
             ? CopyAction.Skip("size_zero")
-            : new CopyAction(CopyActionKind.Open, volume.Lots, destination.Reverse, null);
+            : new CopyAction(CopyActionKind.Open, volume.Lots, destination.Reverse, null, slippageInPoints);
     }
+
+    public static CopyOrderTypes ToOrderTypes(CopyOrderKind kind) => kind switch
+    {
+        CopyOrderKind.MarketRange => CopyOrderTypes.MarketRange,
+        CopyOrderKind.Limit => CopyOrderTypes.Limit,
+        CopyOrderKind.Stop => CopyOrderTypes.Stop,
+        CopyOrderKind.StopLimit => CopyOrderTypes.StopLimit,
+        _ => CopyOrderTypes.Market
+    };
 
     public IReadOnlyList<long> PositionsToOpen(
         IReadOnlyCollection<long> sourceOpenPositionIds, IReadOnlyDictionary<long, long> positionMap)

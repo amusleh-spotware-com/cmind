@@ -54,7 +54,10 @@ public sealed class CopyEngineSupervisor(
         var protector = scope.ServiceProvider.GetRequiredService<ISecretProtector>();
 
         var node = ResolveNode();
-        await ClaimUnassignedProfilesAsync(db, node, stoppingToken);
+        var now = DateTimeOffset.UtcNow;
+        var leaseTtl = options.CurrentValue.Copy.LeaseTtl;
+        await ClaimProfilesAsync(db, node, now, leaseTtl, stoppingToken);
+        await RenewLeasesAsync(db, node, now + leaseTtl, stoppingToken);
 
         var mine = await db.CopyProfiles.Include(p => p.Destinations)
             .Where(p => p.Status == CopyProfileStatus.Running && p.AssignedNode == node.Value)
@@ -99,12 +102,24 @@ public sealed class CopyEngineSupervisor(
         }
     }
 
-    // Claim every unassigned running profile atomically: the first supervisor to run this update owns
-    // them, so a co-located second supervisor never hosts the same profile (no double-copy).
-    internal static Task<int> ClaimUnassignedProfilesAsync(DataContext db, NodeIdentity node, CancellationToken ct)
+    // Claim every running profile that is unassigned OR whose lease has lapsed (its node died).
+    // ExecuteUpdate is atomic per row, so two supervisors racing never both claim the same profile
+    // (no double-copy), and a crashed node's profiles are picked up once the lease expires (self-heal).
+    internal static Task<int> ClaimProfilesAsync(
+        DataContext db, NodeIdentity node, DateTimeOffset now, TimeSpan leaseTtl, CancellationToken ct)
         => db.CopyProfiles
-            .Where(p => p.Status == CopyProfileStatus.Running && p.AssignedNode == null)
-            .ExecuteUpdateAsync(s => s.SetProperty(p => p.AssignedNode, node.Value), ct);
+            .Where(p => p.Status == CopyProfileStatus.Running
+                && (p.AssignedNode == null || p.LeaseExpiresAt == null || p.LeaseExpiresAt < now))
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(p => p.AssignedNode, node.Value)
+                .SetProperty(p => p.LeaseExpiresAt, now + leaseTtl), ct);
+
+    // Renew the lease on the profiles this node hosts so a live node keeps its claim across cycles.
+    internal static Task<int> RenewLeasesAsync(
+        DataContext db, NodeIdentity node, DateTimeOffset leaseUntil, CancellationToken ct)
+        => db.CopyProfiles
+            .Where(p => p.Status == CopyProfileStatus.Running && p.AssignedNode == node.Value)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.LeaseExpiresAt, leaseUntil), ct);
 
     private NodeIdentity ResolveNode()
     {

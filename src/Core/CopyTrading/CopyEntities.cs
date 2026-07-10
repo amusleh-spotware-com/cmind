@@ -146,6 +146,7 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
     public TradingAccountId SourceAccountId { get; private set; }
     public CopyProfileStatus Status { get; private set; } = CopyProfileStatus.Draft;
     [MaxLength(64)] public string? AssignedNode { get; private set; }
+    public DateTimeOffset? LeaseExpiresAt { get; private set; }
     public IReadOnlyList<CopyDestination> Destinations => _destinations;
 
     public static CopyProfile Create(UserId userId, string name, TradingAccountId sourceAccountId)
@@ -163,7 +164,22 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
 
     public void AssignToNode(NodeIdentity node) { AssignedNode = node.Value; Touch(); }
 
-    public void ReleaseAssignment() { AssignedNode = null; Touch(); }
+    // A node claims a running profile for a bounded lease, renews it while alive, and — if it dies —
+    // the lease lapses so any other node can reclaim the profile. This is what makes copy hosting
+    // self-heal across a horizontally scaled cluster.
+    public void ClaimBy(NodeIdentity node, DateTimeOffset leaseUntil)
+    {
+        AssignedNode = node.Value;
+        LeaseExpiresAt = leaseUntil;
+        Touch();
+    }
+
+    public void RenewLease(DateTimeOffset leaseUntil) { LeaseExpiresAt = leaseUntil; Touch(); }
+
+    public bool IsLeaseHeldBy(NodeIdentity node, DateTimeOffset now)
+        => string.Equals(AssignedNode, node.Value, StringComparison.Ordinal) && LeaseExpiresAt > now;
+
+    public void ReleaseAssignment() { AssignedNode = null; LeaseExpiresAt = null; Touch(); }
 
     public CopyDestination AddDestination(TradingAccountId destinationAccountId, RiskSettings risk)
     {
@@ -201,6 +217,7 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
             throw new DomainException(DomainErrors.CopyProfileTransitionInvalid);
         Status = CopyProfileStatus.Paused;
         AssignedNode = null;
+        LeaseExpiresAt = null;
         Touch();
         RaiseDomainEvent(new CopyProfilePaused(Id, UserId));
     }
@@ -209,6 +226,7 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
     {
         Status = CopyProfileStatus.Stopped;
         AssignedNode = null;
+        LeaseExpiresAt = null;
         Touch();
         RaiseDomainEvent(new CopyProfileStopped(Id, UserId));
     }

@@ -62,8 +62,10 @@ public sealed class CopyNodeAffinityTests : IAsyncLifetime
         var nodeA = new NodeIdentity("node-a");
         var nodeB = new NodeIdentity("node-b");
 
-        var claimedByA = await CopyEngineSupervisor.ClaimUnassignedProfilesAsync(db, nodeA, default);
-        var claimedByB = await CopyEngineSupervisor.ClaimUnassignedProfilesAsync(db, nodeB, default);
+        var now = DateTimeOffset.UtcNow;
+        var ttl = TimeSpan.FromMinutes(2);
+        var claimedByA = await CopyEngineSupervisor.ClaimProfilesAsync(db, nodeA, now, ttl, default);
+        var claimedByB = await CopyEngineSupervisor.ClaimProfilesAsync(db, nodeB, now, ttl, default);
 
         claimedByA.Should().Be(3, "the first node to run the claim owns every unassigned running profile");
         claimedByB.Should().Be(0, "nothing is left for the second node — no double-hosting");
@@ -86,7 +88,9 @@ public sealed class CopyNodeAffinityTests : IAsyncLifetime
         var nodeA = new NodeIdentity("node-a");
         var nodeB = new NodeIdentity("node-b");
 
-        await CopyEngineSupervisor.ClaimUnassignedProfilesAsync(db, nodeA, default);
+        var now = DateTimeOffset.UtcNow;
+        var ttl = TimeSpan.FromMinutes(2);
+        await CopyEngineSupervisor.ClaimProfilesAsync(db, nodeA, now, ttl, default);
         db.ChangeTracker.Clear();
         var owned = await db.CopyProfiles.FirstAsync(p => p.Id == profile.Id);
         owned.IsHostedBy(nodeA).Should().BeTrue();
@@ -96,8 +100,34 @@ public sealed class CopyNodeAffinityTests : IAsyncLifetime
         owned.Start();
         await db.SaveChangesAsync();
 
-        var reclaimed = await CopyEngineSupervisor.ClaimUnassignedProfilesAsync(db, nodeB, default);
+        var reclaimed = await CopyEngineSupervisor.ClaimProfilesAsync(db, nodeB, now, ttl, default);
         reclaimed.Should().Be(1, "a released profile can be claimed by a different node");
+        db.ChangeTracker.Clear();
+        (await db.CopyProfiles.FirstAsync(p => p.Id == profile.Id)).IsHostedBy(nodeB).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Expired_lease_is_reclaimed_by_another_node()
+    {
+        await using var db = NewContext();
+        var userId = await SeedUserAsync(db);
+        var profile = RunningProfile(userId, $"p-{Guid.NewGuid():N}");
+        db.Add(profile);
+        await db.SaveChangesAsync();
+
+        var nodeA = new NodeIdentity("node-a");
+        var nodeB = new NodeIdentity("node-b");
+
+        // node-a claims with a lease that is already in the past (simulates a node that then dies).
+        var claimedByA = await CopyEngineSupervisor.ClaimProfilesAsync(
+            db, nodeA, DateTimeOffset.UtcNow.AddMinutes(-5), TimeSpan.FromSeconds(1), default);
+        claimedByA.Should().Be(1);
+        db.ChangeTracker.Clear();
+
+        // A live node-b sees the lapsed lease and reclaims the profile — copying self-heals.
+        var claimedByB = await CopyEngineSupervisor.ClaimProfilesAsync(
+            db, nodeB, DateTimeOffset.UtcNow, TimeSpan.FromMinutes(2), default);
+        claimedByB.Should().Be(1, "an expired lease lets another node take over a dead node's profile");
         db.ChangeTracker.Clear();
         (await db.CopyProfiles.FirstAsync(p => p.Id == profile.Id)).IsHostedBy(nodeB).Should().BeTrue();
     }

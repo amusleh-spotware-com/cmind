@@ -62,6 +62,21 @@ public sealed class CopyRulesDomainTests
     }
 
     [Fact]
+    public void Lease_is_held_only_by_the_claiming_node_until_it_expires()
+    {
+        var profile = CopyProfile.Create(UserId.New(), "p", TradingAccountId.New());
+        profile.Start();
+        var node = new NodeIdentity("node-a");
+        var now = DateTimeOffset.UtcNow;
+
+        profile.ClaimBy(node, now.AddMinutes(1));
+
+        profile.IsLeaseHeldBy(node, now).Should().BeTrue();
+        profile.IsLeaseHeldBy(new NodeIdentity("node-b"), now).Should().BeFalse();
+        profile.IsLeaseHeldBy(node, now.AddMinutes(2)).Should().BeFalse();
+    }
+
+    [Fact]
     public void Refreshing_the_authorization_bumps_the_token_version()
     {
         var authorization = OpenApiAuthorization.Create(UserId.New(), OpenApiApplicationId.New(),

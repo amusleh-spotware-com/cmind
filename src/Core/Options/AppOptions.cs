@@ -35,6 +35,14 @@ public sealed record CopyOptions
     public TimeSpan ReconcileInterval { get; init; } = TimeSpan.FromSeconds(30);
 
     /// <summary>
+    /// How long a node's claim on a running copy profile stays valid without renewal. A node renews the
+    /// lease every reconcile; if a node dies, its profiles become reclaimable by any other node once the
+    /// lease expires, so copying self-heals across a horizontally scaled cluster. Keep it a few reconcile
+    /// intervals so a slow cycle does not cause a spurious hand-off.
+    /// </summary>
+    public TimeSpan LeaseTtl { get; init; } = TimeSpan.FromSeconds(120);
+
+    /// <summary>
     /// Stable identity of the node hosting copy engines. Each running profile is claimed by exactly
     /// one node so co-located supervisors (Web local node + CopyAgent worker) never double-execute.
     /// Defaults to the machine name; set distinctly when two supervisors share a host.

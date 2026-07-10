@@ -18,7 +18,8 @@ public sealed class CBotBuilder(
     DataContext db,
     ISecretProtector protector,
     IOptionsMonitor<AppOptions> options,
-    ILogger<CBotBuilder> log)
+    ILogger<CBotBuilder> log,
+    TimeProvider timeProvider)
 {
     private const string DockerExe = "docker";
     private const int MaxLogChars = 4000;
@@ -52,7 +53,7 @@ public sealed class CBotBuilder(
         var projectFile = Directory.EnumerateFiles(workDir, "*.csproj", SearchOption.TopDirectoryOnly).FirstOrDefault();
         if (projectFile is null)
         {
-            project.RecordBuild(NoProjectFileMessage, false);
+            project.RecordBuild(NoProjectFileMessage, false, timeProvider.GetUtcNow());
             await db.SaveChangesAsync(ct);
             return new BuildResult(false, NoProjectFileMessage, null);
         }
@@ -77,7 +78,7 @@ public sealed class CBotBuilder(
             else { success = false; buildLog += NoAlgoMessage; }
         }
 
-        project.RecordBuild(buildLog, success);
+        project.RecordBuild(buildLog, success, timeProvider.GetUtcNow());
 
         if (success && algoBytes is not null)
         {

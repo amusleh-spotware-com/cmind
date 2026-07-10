@@ -13,7 +13,8 @@ namespace Nodes;
 public sealed class NodeStatsPoller(
     IServiceScopeFactory scopeFactory,
     IOptionsMonitor<AppOptions> options,
-    ILogger<NodeStatsPoller> log) : BackgroundService
+    ILogger<NodeStatsPoller> log,
+    TimeProvider timeProvider) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -43,7 +44,7 @@ public sealed class NodeStatsPoller(
                     i.NodeId == node.Id && i is RunningRunInstance, ct);
                 var backtestCount = await db.Instances.CountAsync(i =>
                     i.NodeId == node.Id && i is RunningBacktestInstance, ct);
-                stats.SetInstanceCounts(runningCount, backtestCount);
+                stats.SetInstanceCounts(runningCount, backtestCount, timeProvider.GetUtcNow());
 
                 var existing = await db.NodeStats.FindAsync([node.Id], ct);
                 if (existing is null) db.NodeStats.Add(stats);

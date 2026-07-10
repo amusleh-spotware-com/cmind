@@ -16,7 +16,8 @@ namespace Nodes.Agent;
 public sealed class PortfolioAgentService(
     IServiceScopeFactory scopeFactory,
     IOptionsMonitor<AppOptions> options,
-    ILogger<PortfolioAgentService> logger) : BackgroundService
+    ILogger<PortfolioAgentService> logger,
+    TimeProvider timeProvider) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -43,7 +44,7 @@ public sealed class PortfolioAgentService(
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
         var executor = scope.ServiceProvider.GetRequiredService<IAgentExecutor>();
 
-        var cutoff = DateTimeOffset.UtcNow - config.Interval;
+        var cutoff = timeProvider.GetUtcNow() - config.Interval;
         var due = await db.AgentMandates.Include(m => m.CBot)
             .Where(m => m.Enabled && (m.LastRunAt == null || m.LastRunAt < cutoff))
             .OrderBy(m => m.LastRunAt)
@@ -74,7 +75,7 @@ public sealed class PortfolioAgentService(
         var result = await ai.ProposeAgentActionAsync(
             mandate.CBot.Name, objective, currentParams, lastReport, AgentConstants.ActionMaxTokens, ct);
 
-        mandate.RecordRun();
+        mandate.RecordRun(timeProvider.GetUtcNow());
 
         if (!result.Success)
         {

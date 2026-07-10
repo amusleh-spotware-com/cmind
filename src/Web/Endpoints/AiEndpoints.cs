@@ -252,7 +252,7 @@ public static class AiEndpoints
         g.MapPost("/optimize-run/{cbotId:guid}", async (
             Guid cbotId, OptimizeRunRequest req, DataContext db, ICurrentUser u, IAiFeatureService ai,
             ISecretProtector protector, INodeScheduler scheduler, IContainerDispatcherFactory factory,
-            CancellationToken ct) =>
+            TimeProvider timeProvider, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             if (!ai.Enabled) return Results.Ok(new { success = false, error = AiConstants.DisabledMessage });
@@ -307,7 +307,7 @@ public static class AiEndpoints
                 try
                 {
                     var containerId = await factory.For(node).StartAsync(starting, algo, json, ct);
-                    var running = starting.ToRunning(containerId);
+                    var running = starting.ToRunning(containerId, timeProvider.GetUtcNow());
                     db.Instances.Remove(starting);
                     db.Instances.Add(running);
                     await db.SaveChangesAsync(ct);
@@ -315,7 +315,7 @@ public static class AiEndpoints
                 }
                 catch (Exception ex)
                 {
-                    var failed = starting.ToFailed(ex.Message);
+                    var failed = starting.ToFailed(ex.Message, timeProvider.GetUtcNow());
                     db.Instances.Remove(starting);
                     db.Instances.Add(failed);
                     await db.SaveChangesAsync(ct);

@@ -47,8 +47,9 @@ public sealed class CopyEngineHostTests
 
     private static async Task WaitUntil(Func<bool> condition, TimeSpan? timeout = null)
     {
-        var deadline = DateTime.UtcNow + (timeout ?? TimeSpan.FromSeconds(3));
-        while (DateTime.UtcNow < deadline)
+        var limit = timeout ?? TimeSpan.FromSeconds(3);
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        while (stopwatch.Elapsed < limit)
         {
             if (condition()) return;
             await Task.Delay(20);

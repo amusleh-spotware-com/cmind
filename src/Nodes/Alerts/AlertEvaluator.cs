@@ -16,7 +16,8 @@ namespace Nodes.Alerts;
 public sealed class AlertEvaluator(
     IServiceScopeFactory scopeFactory,
     IOptionsMonitor<AppOptions> options,
-    ILogger<AlertEvaluator> logger) : BackgroundService
+    ILogger<AlertEvaluator> logger,
+    TimeProvider timeProvider) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -41,7 +42,7 @@ public sealed class AlertEvaluator(
         if (!ai.Enabled) return;
 
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var now = DateTimeOffset.UtcNow;
+        var now = timeProvider.GetUtcNow();
 
         // Coarse, translatable SQL prefilter at the minimum interval (a superset of what's due),
         // then exact per-rule interval check in memory (EF/Npgsql can't translate AddMinutes on a column).
@@ -76,13 +77,14 @@ public sealed class AlertEvaluator(
         var rule = await db.AlertRules.FirstOrDefaultAsync(r => r.Id == ruleId, ct);
         if (rule is null) return;
 
-        rule.MarkEvaluated();
+        var now = timeProvider.GetUtcNow();
+        rule.MarkEvaluated(now);
         if (result.Success)
         {
             var assessment = AlertJson.Parse(result.Text);
             if (assessment is { Alert: true })
             {
-                rule.Raise(new AlertSeverity(assessment.Severity), assessment.Message);
+                rule.Raise(new AlertSeverity(assessment.Severity), assessment.Message, now);
                 logger.AlertRaised(rule.Id.Value, assessment.Severity);
             }
         }

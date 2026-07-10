@@ -67,7 +67,7 @@ public sealed class CopyRulesDomainTests
         var profile = CopyProfile.Create(UserId.New(), "p", TradingAccountId.New());
         profile.Start();
         var node = new NodeIdentity("node-a");
-        var now = DateTimeOffset.UtcNow;
+        var now = TestClock.Now;
 
         profile.ClaimBy(node, now.AddMinutes(1));
 
@@ -80,10 +80,10 @@ public sealed class CopyRulesDomainTests
     public void Refreshing_the_authorization_bumps_the_token_version()
     {
         var authorization = OpenApiAuthorization.Create(UserId.New(), OpenApiApplicationId.New(),
-            new CtidUserId(42), isLive: false, [1], [2], DateTimeOffset.UtcNow.AddHours(1), OpenApiScope.Trade);
+            new CtidUserId(42), isLive: false, [1], [2], TestClock.Now.AddHours(1), OpenApiScope.Trade);
         var initial = authorization.TokenVersion;
 
-        authorization.Refresh([3], [4], DateTimeOffset.UtcNow.AddHours(2));
+        authorization.Refresh([3], [4], TestClock.Now.AddHours(2), TestClock.Now);
 
         authorization.TokenVersion.Should().Be(initial + 1);
     }

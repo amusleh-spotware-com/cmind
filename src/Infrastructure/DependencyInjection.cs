@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure;
@@ -35,9 +36,12 @@ public static class DependencyInjection
             dp.ProtectKeysWithCertificate(cert);
         }
 
+        services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<Core.Domain.IDomainEventDispatcher, DomainEventDispatcher>();
         services.AddSingleton<Microsoft.EntityFrameworkCore.Diagnostics.ISaveChangesInterceptor,
             Infrastructure.Persistence.DomainEventDispatchInterceptor>();
+        services.AddSingleton<Microsoft.EntityFrameworkCore.Diagnostics.ISaveChangesInterceptor,
+            Infrastructure.Persistence.AuditStampingInterceptor>();
         services.AddScoped<Core.Domain.IAppUserRepository, AppUserRepository>();
         services.AddScoped<Core.Domain.ICTraderIdAccountRepository, CTraderIdAccountRepository>();
         services.AddScoped<Core.Domain.IMcpApiKeyRepository, McpApiKeyRepository>();

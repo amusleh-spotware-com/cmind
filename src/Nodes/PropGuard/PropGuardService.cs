@@ -16,7 +16,8 @@ public sealed record PropRuleSnapshot(PropRuleId Id, UserId UserId, TradingAccou
 public sealed class PropGuardService(
     IServiceScopeFactory scopeFactory,
     IOptionsMonitor<AppOptions> options,
-    ILogger<PropGuardService> logger) : BackgroundService
+    ILogger<PropGuardService> logger,
+    TimeProvider timeProvider) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -79,7 +80,7 @@ public sealed class PropGuardService(
             .ToListAsync(ct);
         if (live.Count == 0) return;
 
-        var now = DateTimeOffset.UtcNow;
+        var now = timeProvider.GetUtcNow();
         foreach (var instance in live)
         {
             if (instance.Node is not null)
@@ -92,7 +93,7 @@ public sealed class PropGuardService(
 
         db.AuditLogs.Add(AuditLog.Record(
             PropGuardConstants.AuditAction, PropGuardConstants.AuditEntityType,
-            live[0].UserId, accountId.Value, detailsJson: $"{{\"flattened\":{live.Count}}}"));
+            now, live[0].UserId, accountId.Value, detailsJson: $"{{\"flattened\":{live.Count}}}"));
         await db.SaveChangesAsync(ct);
         logger.PropGuardFlattened(accountId.Value, live.Count);
     }

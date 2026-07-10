@@ -81,7 +81,8 @@ public static class NodeEndpoints
             return Results.Ok(new { node.Id, node.Enabled });
         });
 
-        g.MapDelete("/{id:guid}", async (Guid id, DataContext db, IContainerDispatcherFactory factory) =>
+        g.MapDelete("/{id:guid}", async (Guid id, DataContext db, IContainerDispatcherFactory factory,
+            TimeProvider timeProvider) =>
         {
             var nid = NodeId.From(id);
             var node = await db.Nodes.Include(n => n.LatestStats).FirstOrDefaultAsync(n => n.Id == nid);
@@ -94,7 +95,7 @@ public static class NodeEndpoints
             foreach (var i in active)
             {
                 try { await factory.For(node).StopAsync(i, default); } catch { /* swallow */ }
-                var now = DateTimeOffset.UtcNow;
+                var now = timeProvider.GetUtcNow();
                 Instance? terminal = i switch
                 {
                     RunningRunInstance rri => rri.ToStopped(now),
@@ -133,7 +134,8 @@ public static class NodeEndpoints
         DataContext db,
         ISecretProtector protector,
         IOptionsMonitor<AppOptions> options,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        TimeProvider timeProvider)
     {
         var discovery = options.CurrentValue.Discovery;
         if (!discovery.Enabled || string.IsNullOrWhiteSpace(discovery.JoinToken))
@@ -173,7 +175,7 @@ public static class NodeEndpoints
         {
             if (!string.Equals(existing.ModeName, mode.Name, StringComparison.Ordinal))
                 log.NodeModeChangeIgnored(existing.Name, mode.Name, existing.ModeName);
-            existing.RecordHeartbeat(endpoint, maxInstances);
+            existing.RecordHeartbeat(endpoint, maxInstances, timeProvider.GetUtcNow());
             await db.SaveChangesAsync();
             return Results.Ok(new NodeRegistrationResponse(existing.Id.Value, heartbeatSeconds));
         }
@@ -181,7 +183,8 @@ public static class NodeEndpoints
             return Results.Conflict("node name already in use by a non-remote node");
 
         var secret = protector.Protect(Encoding.UTF8.GetBytes(discovery.JoinToken), EncryptionPurposes.NodeApiSecret);
-        var node = RemoteNode.SelfRegister(mode, req.Name, endpoint, secret, dataDir, maxInstances);
+        var node = RemoteNode.SelfRegister(mode, req.Name, endpoint, secret, dataDir, maxInstances,
+            timeProvider.GetUtcNow());
         db.Nodes.Add(node);
         await db.SaveChangesAsync();
         log.NodeSelfRegistered(node.Name, endpoint.Value);

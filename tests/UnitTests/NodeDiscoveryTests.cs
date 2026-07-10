@@ -44,7 +44,7 @@ public sealed class NodeDiscoveryTests
     public void SelfRegister_marks_reachable_and_raises_registered_event()
     {
         var node = RemoteNode.SelfRegister(NodeMode.Mixed, "node-1",
-            new NodeEndpointUrl("http://node-1:8080"), [1, 2, 3], DataDir, 5);
+            new NodeEndpointUrl("http://node-1:8080"), [1, 2, 3], DataDir, 5, TestClock.Now);
 
         node.Should().BeOfType<ActiveMixedNode>();
         node.IsReachable.Should().BeTrue();
@@ -75,7 +75,7 @@ public sealed class NodeDiscoveryTests
         node.MarkUnreachable();
         node.ClearDomainEvents();
 
-        node.RecordHeartbeat(new NodeEndpointUrl("http://node-1:9090"), 12);
+        node.RecordHeartbeat(new NodeEndpointUrl("http://node-1:9090"), 12, TestClock.Now);
 
         node.IsReachable.Should().BeTrue();
         node.IsActive.Should().BeTrue();
@@ -90,7 +90,7 @@ public sealed class NodeDiscoveryTests
         var node = NewNode();
         node.ClearDomainEvents();
 
-        node.RecordHeartbeat(new NodeEndpointUrl("http://node-1:8080"), 5);
+        node.RecordHeartbeat(new NodeEndpointUrl("http://node-1:8080"), 5, TestClock.Now);
 
         node.DomainEvents.OfType<NodeCameOnline>().Should().BeEmpty();
     }
@@ -100,7 +100,7 @@ public sealed class NodeDiscoveryTests
     {
         var node = NewNode();
 
-        var act = () => node.RecordHeartbeat(new NodeEndpointUrl("http://node-1:8080"), 0);
+        var act = () => node.RecordHeartbeat(new NodeEndpointUrl("http://node-1:8080"), 0, TestClock.Now);
 
         act.Should().Throw<DomainException>().Which.Code.Should().Be(DomainErrors.NodeMaxInstancesInvalid);
     }
@@ -129,5 +129,5 @@ public sealed class NodeDiscoveryTests
 
     private static RemoteNode NewNode()
         => RemoteNode.SelfRegister(NodeMode.Mixed, "node-1",
-            new NodeEndpointUrl("http://node-1:8080"), [1, 2, 3], DataDir, 5);
+            new NodeEndpointUrl("http://node-1:8080"), [1, 2, 3], DataDir, 5, TestClock.Now);
 }

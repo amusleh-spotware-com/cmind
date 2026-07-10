@@ -30,7 +30,8 @@ public sealed class OpenApiLiveConnectionTests
 
         await using var connection = new OpenApiConnection(
             new TcpSslOpenApiTransportFactory(), DemoHost, Port,
-            credentials.ClientId, credentials.ClientSecret, options, NullLogger<OpenApiConnection>.Instance);
+            credentials.ClientId, credentials.ClientSecret, options, NullLogger<OpenApiConnection>.Instance,
+            TimeProvider.System);
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         await connection.StartAsync(cts.Token);

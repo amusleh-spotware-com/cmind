@@ -13,14 +13,15 @@ namespace UnitTests;
 public class ContainerDispatcherFactoryTests
 {
     private static HttpContainerDispatcher CreateHttp() =>
-        new(Substitute.For<IHttpClientFactory>(), Substitute.For<ISecretProtector>());
+        new(Substitute.For<IHttpClientFactory>(), Substitute.For<ISecretProtector>(), TimeProvider.System);
 
     [Fact]
     public void For_LocalNode_returns_local_dispatcher()
     {
         var http = CreateHttp();
         var opts = new TestMonitor(new AppOptions());
-        var local = new LocalContainerDispatcher(Substitute.For<ISecretProtector>(), opts, NullLogger<LocalContainerDispatcher>.Instance);
+        var local = new LocalContainerDispatcher(Substitute.For<ISecretProtector>(), opts,
+            NullLogger<LocalContainerDispatcher>.Instance, TimeProvider.System);
         var factory = new ContainerDispatcherFactory(http, local);
 
         factory.For(new LocalNode()).Should().BeSameAs(local);
@@ -31,7 +32,8 @@ public class ContainerDispatcherFactoryTests
     {
         var http = CreateHttp();
         var opts = new TestMonitor(new AppOptions());
-        var local = new LocalContainerDispatcher(Substitute.For<ISecretProtector>(), opts, NullLogger<LocalContainerDispatcher>.Instance);
+        var local = new LocalContainerDispatcher(Substitute.For<ISecretProtector>(), opts,
+            NullLogger<LocalContainerDispatcher>.Instance, TimeProvider.System);
         var factory = new ContainerDispatcherFactory(http, local);
 
         factory.For(new ActiveMixedNode()).Should().BeSameAs(http);

@@ -27,7 +27,8 @@ public sealed class CopyEngineSupervisor(
     IOpenApiTradingSessionFactory sessionFactory,
     IOptionsMonitor<AppOptions> options,
     ILoggerFactory loggerFactory,
-    ILogger<CopyEngineSupervisor> log) : BackgroundService
+    ILogger<CopyEngineSupervisor> log,
+    TimeProvider timeProvider) : BackgroundService
 {
     private readonly ConcurrentDictionary<CopyProfileId, HostHandle> _running = new();
 
@@ -54,7 +55,7 @@ public sealed class CopyEngineSupervisor(
         var protector = scope.ServiceProvider.GetRequiredService<ISecretProtector>();
 
         var node = ResolveNode();
-        var now = DateTimeOffset.UtcNow;
+        var now = timeProvider.GetUtcNow();
         var leaseTtl = options.CurrentValue.Copy.LeaseTtl;
         await ClaimProfilesAsync(db, node, now, leaseTtl, stoppingToken);
         await RenewLeasesAsync(db, node, now + leaseTtl, stoppingToken);

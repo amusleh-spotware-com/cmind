@@ -15,7 +15,7 @@ namespace Web.OpenApi;
 /// <see cref="CTraderIdAccount"/> for grouping, and a linked (or merged) <see cref="TradingAccount"/>
 /// per discovered account. Each aggregate is mutated in its own transaction.
 /// </summary>
-public sealed class OpenApiAccountLinker(DataContext db, ISecretProtector protector)
+public sealed class OpenApiAccountLinker(DataContext db, ISecretProtector protector, TimeProvider timeProvider)
 {
     private const string DefaultBroker = "cTrader";
 
@@ -30,7 +30,8 @@ public sealed class OpenApiAccountLinker(DataContext db, ISecretProtector protec
             Encoding.UTF8.GetBytes(tokens.AccessToken), EncryptionPurposes.OpenApiAccessToken);
         var encryptedRefresh = protector.Protect(
             Encoding.UTF8.GetBytes(tokens.RefreshToken), EncryptionPurposes.OpenApiRefreshToken);
-        var expiry = DateTimeOffset.UtcNow.AddSeconds(tokens.ExpiresInSeconds);
+        var now = timeProvider.GetUtcNow();
+        var expiry = now.AddSeconds(tokens.ExpiresInSeconds);
         var isLive = grant.Accounts.Count == 0 || grant.Accounts.Any(a => a.IsLive);
 
         var authorization = await db.OpenApiAuthorizations
@@ -43,7 +44,7 @@ public sealed class OpenApiAccountLinker(DataContext db, ISecretProtector protec
         }
         else
         {
-            authorization.Refresh(encryptedAccess, encryptedRefresh, expiry);
+            authorization.Refresh(encryptedAccess, encryptedRefresh, expiry, now);
         }
 
         await db.SaveChangesAsync(ct);

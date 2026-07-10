@@ -21,7 +21,8 @@ namespace Nodes.CopyTrading;
 public sealed class OpenApiTokenRefreshService(
     IServiceScopeFactory scopeFactory,
     IOptionsMonitor<AppOptions> options,
-    ILogger<OpenApiTokenRefreshService> log) : BackgroundService
+    ILogger<OpenApiTokenRefreshService> log,
+    TimeProvider timeProvider) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -52,7 +53,7 @@ public sealed class OpenApiTokenRefreshService(
         var tokenClient = scope.ServiceProvider.GetRequiredService<IOpenApiTokenClient>();
         var protector = scope.ServiceProvider.GetRequiredService<ISecretProtector>();
 
-        var cutoff = DateTimeOffset.UtcNow + settings.TokenRefreshThreshold;
+        var cutoff = timeProvider.GetUtcNow() + settings.TokenRefreshThreshold;
         var expiring = await authorizations.GetExpiringAsync(cutoff, ct);
 
         foreach (var authorization in expiring)
@@ -79,13 +80,14 @@ public sealed class OpenApiTokenRefreshService(
                 var encryptedRefresh = protector.Protect(
                     Encoding.UTF8.GetBytes(response.RefreshToken), EncryptionPurposes.OpenApiRefreshToken);
 
+                var now = timeProvider.GetUtcNow();
                 authorization.Refresh(
-                    encryptedAccess, encryptedRefresh, DateTimeOffset.UtcNow.AddSeconds(response.ExpiresInSeconds));
+                    encryptedAccess, encryptedRefresh, now.AddSeconds(response.ExpiresInSeconds), now);
                 log.OpenApiTokenRefreshed(authorization.CtidUserId);
             }
             catch (Exception ex)
             {
-                authorization.MarkRefreshFailed(ex.Message);
+                authorization.MarkRefreshFailed(ex.Message, timeProvider.GetUtcNow());
                 log.OpenApiTokenRefreshFailedFor(authorization.CtidUserId, ex.Message);
             }
 

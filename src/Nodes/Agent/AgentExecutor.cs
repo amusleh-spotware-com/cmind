@@ -13,7 +13,8 @@ public sealed class AgentExecutor(
     ISecretProtector protector,
     INodeScheduler scheduler,
     IContainerDispatcherFactory factory,
-    ILogger<AgentExecutor> logger) : IAgentExecutor
+    ILogger<AgentExecutor> logger,
+    TimeProvider timeProvider) : IAgentExecutor
 {
     public async Task<bool> ExecuteAsync(AgentProposalId proposalId, UserId actor, CancellationToken ct)
     {
@@ -71,7 +72,7 @@ public sealed class AgentExecutor(
         try
         {
             var containerId = await factory.For(node).StartAsync(starting, algo, paramSet.JsonContent, ct);
-            var running = starting.ToRunning(containerId);
+            var running = starting.ToRunning(containerId, timeProvider.GetUtcNow());
             db.Instances.Remove(starting);
             db.Instances.Add(running);
             await db.SaveChangesAsync(ct);
@@ -87,7 +88,7 @@ public sealed class AgentExecutor(
 
     private async Task MarkFailedAsync(AgentProposal proposal, UserId actor, string reason, CancellationToken ct)
     {
-        proposal.MarkFailed(actor, Clip(reason));
+        proposal.MarkFailed(actor, Clip(reason), timeProvider.GetUtcNow());
         try { await db.SaveChangesAsync(ct); }
         catch (Exception ex) when (ex is not OperationCanceledException) { logger.AgentMandateFailed(proposal.MandateId.Value, ex); }
     }

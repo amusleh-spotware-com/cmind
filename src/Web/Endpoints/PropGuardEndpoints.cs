@@ -87,7 +87,8 @@ public static class PropGuardEndpoints
         });
 
         g.MapPost("/flatten/{accountId:guid}", async (
-            Guid accountId, DataContext db, ICurrentUser u, IContainerDispatcherFactory factory, CancellationToken ct) =>
+            Guid accountId, DataContext db, ICurrentUser u, IContainerDispatcherFactory factory,
+            TimeProvider timeProvider, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             var aid = TradingAccountId.From(accountId);
@@ -100,7 +101,7 @@ public static class PropGuardEndpoints
                 .Where(i => i.UserId == uid && i.TradingAccountId == aid)
                 .ToListAsync(ct);
 
-            var now = DateTimeOffset.UtcNow;
+            var now = timeProvider.GetUtcNow();
             foreach (var instance in live)
             {
                 if (instance.Node is not null)

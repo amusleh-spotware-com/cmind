@@ -12,6 +12,7 @@ public class AlertPersistenceTests(PostgresFixture fixture) : IClassFixture<Post
     private DataContext CreateContext() =>
         new(new DbContextOptionsBuilder<DataContext>()
             .UseNpgsql(fixture.Container.GetConnectionString())
+            .AddInterceptors(new AuditStampingInterceptor(TimeProvider.System))
             .Options);
 
     [Fact]
@@ -24,7 +25,7 @@ public class AlertPersistenceTests(PostgresFixture fixture) : IClassFixture<Post
             Guid.NewGuid().ToByteArray());
         var rule = AlertRule.Create(user.Id, $"rule-{Guid.NewGuid():N}", new Symbol("EURUSD"),
             new EvaluationInterval(30));
-        rule.Raise(AlertSeverity.Critical, "ECB surprise");
+        rule.Raise(AlertSeverity.Critical, "ECB surprise", TestClock.Now);
 
         await using (var write = CreateContext())
         {

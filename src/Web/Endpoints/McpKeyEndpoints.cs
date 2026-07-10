@@ -35,14 +35,14 @@ public static class McpKeyEndpoints
             return Results.Ok(new { token = raw });
         });
 
-        g.MapDelete("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u) =>
+        g.MapDelete("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u, TimeProvider timeProvider) =>
         {
             var uid = u.UserId!.Value;
             var kid = McpApiKeyId.From(id);
             var k = await db.McpApiKeys.FirstOrDefaultAsync(x => x.Id == kid && x.UserId == uid);
             if (k is null) return Results.NotFound();
             if (k.RevokedAt is not null) return Results.NoContent();
-            k.Revoke();
+            k.Revoke(timeProvider.GetUtcNow());
             await db.SaveChangesAsync();
             return Results.NoContent();
         });

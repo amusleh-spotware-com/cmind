@@ -17,7 +17,8 @@ namespace Nodes;
 /// </summary>
 public sealed class HttpContainerDispatcher(
     IHttpClientFactory httpClientFactory,
-    ISecretProtector protector) : IContainerDispatcher
+    ISecretProtector protector,
+    TimeProvider timeProvider) : IContainerDispatcher
 {
     public const string HttpClientName = "node-agent";
 
@@ -114,7 +115,7 @@ public sealed class HttpContainerDispatcher(
         var stats = await client.GetFromJsonAsync<NodeStatsResponse>(NodeAgentRoutes.NodeStats, ct)
                     ?? throw new InvalidOperationException("Agent returned empty stats.");
         return NodeStats.Create(node.Id, stats.CpuPercent, stats.MemUsedBytes, stats.MemTotalBytes,
-            stats.DiskUsedBytes, stats.DiskTotalBytes, stats.BacktestDataUsedBytes);
+            stats.DiskUsedBytes, stats.DiskTotalBytes, stats.BacktestDataUsedBytes, timeProvider.GetUtcNow());
     }
 
     public async Task<long> GetBacktestDataSizeAsync(Node node, CancellationToken ct)
@@ -147,16 +148,16 @@ public sealed class HttpContainerDispatcher(
         var client = httpClientFactory.CreateClient(HttpClientName);
         client.BaseAddress = new Uri(node.BaseUrl);
         var secret = Encoding.UTF8.GetString(protector.Unprotect(node.EncryptedApiSecret, EncryptionPurposes.NodeApiSecret));
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CreateToken(secret));
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", CreateToken(secret, timeProvider.GetUtcNow().UtcDateTime));
         client.DefaultRequestHeaders.Add(NodeAgentProtocol.HeaderName, NodeAgentProtocol.Version.ToString());
         return client;
     }
 
-    private static string CreateToken(string secret)
+    private static string CreateToken(string secret, DateTime now)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var now = DateTime.UtcNow;
         var token = new JwtSecurityToken(
             issuer: NodeAgentAuth.Issuer,
             audience: NodeAgentAuth.Audience,

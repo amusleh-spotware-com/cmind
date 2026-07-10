@@ -10,8 +10,8 @@ public sealed class InstanceTransitionsTests
     [Fact]
     public void StoppedFrom_carries_container_and_identity_and_sets_stopped_time()
     {
-        var startedAt = DateTimeOffset.UtcNow.AddHours(-2);
-        var stoppedAt = DateTimeOffset.UtcNow;
+        var startedAt = TestClock.Now.AddHours(-2);
+        var stoppedAt = TestClock.Now;
         var running = new RunningRunInstance
         {
             UserId = UserId.New(),

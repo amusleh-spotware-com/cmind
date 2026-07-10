@@ -46,7 +46,7 @@ public sealed class OpenApiResilienceTests
     [Fact]
     public void Classify_marks_maintenance_when_end_timestamp_present()
     {
-        var endsAt = DateTimeOffset.UtcNow.AddHours(2);
+        var endsAt = TestClock.Now.AddHours(2);
 
         var error = OpenApiError.Classify("ANY", null, endsAt);
 

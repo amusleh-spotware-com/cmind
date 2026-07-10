@@ -15,7 +15,8 @@ public sealed class McpKeyAuthHandler(
     IOptionsMonitor<AuthenticationSchemeOptions> options,
     ILoggerFactory logger,
     UrlEncoder encoder,
-    DataContext db) : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
+    DataContext db,
+    TimeProvider timeProvider) : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
     private const string AuthorizationHeader = "Authorization";
     private const int KeyPrefixLength = 16;
@@ -40,7 +41,7 @@ public sealed class McpKeyAuthHandler(
                 Encoding.UTF8.GetBytes(key.KeyHash), Encoding.UTF8.GetBytes(hash)))
             return AuthenticateResult.Fail("invalid key");
 
-        key.MarkUsed();
+        key.MarkUsed(timeProvider.GetUtcNow());
         await db.SaveChangesAsync();
 
         var claims = new[]

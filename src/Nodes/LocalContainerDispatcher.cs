@@ -13,7 +13,8 @@ namespace Nodes;
 public sealed class LocalContainerDispatcher(
     ISecretProtector protector,
     IOptionsMonitor<AppOptions> options,
-    ILogger<LocalContainerDispatcher> log) : IContainerDispatcher
+    ILogger<LocalContainerDispatcher> log,
+    TimeProvider timeProvider) : IContainerDispatcher
 {
     private const string WorkMount = FilePaths.ContainerWorkMount;
     private const string AlgoFile = FilePaths.CbotAlgoFile;
@@ -127,7 +128,8 @@ public sealed class LocalContainerDispatcher(
         }
         catch { /* swallow */ }
         var backtestUsed = SafeDirSize(workRoot);
-        return NodeStats.Create(node.Id, cpu, memUsed, memTotal, diskUsed, diskTotal, backtestUsed);
+        return NodeStats.Create(node.Id, cpu, memUsed, memTotal, diskUsed, diskTotal, backtestUsed,
+            timeProvider.GetUtcNow());
     }
 
     public async Task<bool?> IsRunningAsync(Instance instance, CancellationToken ct)

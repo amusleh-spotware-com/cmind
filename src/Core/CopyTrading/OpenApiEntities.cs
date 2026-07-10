@@ -39,7 +39,6 @@ public class OpenApiApplication : AuditedEntity<OpenApiApplicationId>
         ClientId = clientId.Value;
         EncryptedClientSecret = GuardSecret(encryptedClientSecret);
         RedirectUri = redirectUri.Value;
-        Touch();
     }
 
     private static byte[] GuardSecret(byte[] secret)
@@ -89,22 +88,21 @@ public class OpenApiAuthorization : AuditedEntity<OpenApiAuthorizationId>
         return authorization;
     }
 
-    public void Refresh(byte[] encryptedAccessToken, byte[] encryptedRefreshToken, DateTimeOffset accessTokenExpiresAt)
+    public void Refresh(byte[] encryptedAccessToken, byte[] encryptedRefreshToken, DateTimeOffset accessTokenExpiresAt,
+        DateTimeOffset now)
     {
         EncryptedAccessToken = GuardToken(encryptedAccessToken);
         EncryptedRefreshToken = GuardToken(encryptedRefreshToken);
         AccessTokenExpiresAt = accessTokenExpiresAt;
-        LastRefreshedAt = DateTimeOffset.UtcNow;
+        LastRefreshedAt = now;
         RefreshFailedAt = null;
         TokenVersion++;
-        Touch();
         RaiseDomainEvent(new AccessTokenRefreshed(Id, UserId, CtidUserId));
     }
 
-    public void MarkRefreshFailed(string reason)
+    public void MarkRefreshFailed(string reason, DateTimeOffset now)
     {
-        RefreshFailedAt = DateTimeOffset.UtcNow;
-        Touch();
+        RefreshFailedAt = now;
         RaiseDomainEvent(new AccessTokenRefreshFailed(Id, UserId, reason ?? string.Empty));
     }
 

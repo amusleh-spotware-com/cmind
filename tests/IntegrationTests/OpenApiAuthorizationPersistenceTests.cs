@@ -12,6 +12,7 @@ public class OpenApiAuthorizationPersistenceTests(PostgresFixture fixture) : ICl
     private DataContext CreateContext() =>
         new(new DbContextOptionsBuilder<DataContext>()
             .UseNpgsql(fixture.Container.GetConnectionString())
+            .AddInterceptors(new AuditStampingInterceptor(TimeProvider.System))
             .Options);
 
     [Fact]
@@ -26,7 +27,7 @@ public class OpenApiAuthorizationPersistenceTests(PostgresFixture fixture) : ICl
             new OpenApiClientId("client-123"), [1, 2, 3], new OpenApiRedirectUri("https://app.test/callback"));
         var ctid = Math.Abs(Guid.NewGuid().GetHashCode()) + 1L;
         var authorization = OpenApiAuthorization.Create(user.Id, application.Id, new CtidUserId(ctid),
-            isLive: true, [9, 9], [8, 8], DateTimeOffset.UtcNow.AddDays(30), OpenApiScope.Trade);
+            isLive: true, [9, 9], [8, 8], TestClock.Now.AddDays(30), OpenApiScope.Trade);
 
         await using (var write = CreateContext())
         {
@@ -67,7 +68,7 @@ public class OpenApiAuthorizationPersistenceTests(PostgresFixture fixture) : ICl
             new OpenApiClientId("client-123"), [1, 2, 3], new OpenApiRedirectUri("https://app.test/callback"));
         var ctid = Math.Abs(Guid.NewGuid().GetHashCode()) + 1L;
         var authorization = OpenApiAuthorization.Create(user.Id, application.Id, new CtidUserId(ctid),
-            isLive: false, [9, 9], [8, 8], DateTimeOffset.UtcNow.AddDays(30), OpenApiScope.Trade);
+            isLive: false, [9, 9], [8, 8], TestClock.Now.AddDays(30), OpenApiScope.Trade);
         var initialVersion = authorization.TokenVersion;
 
         await using (var write = CreateContext())
@@ -83,7 +84,7 @@ public class OpenApiAuthorizationPersistenceTests(PostgresFixture fixture) : ICl
         await using (var rotate = CreateContext())
         {
             var loaded = await rotate.OpenApiAuthorizations.FirstAsync(a => a.Id == authorization.Id);
-            loaded.Refresh([7, 7], [6, 6], DateTimeOffset.UtcNow.AddDays(60));
+            loaded.Refresh([7, 7], [6, 6], TestClock.Now.AddDays(60), TestClock.Now);
             await rotate.SaveChangesAsync();
         }
 

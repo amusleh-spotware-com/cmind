@@ -13,7 +13,8 @@ namespace Web.Auth;
 public sealed class InstanceReconciler(
     IServiceScopeFactory scopeFactory,
     IOptionsMonitor<AppOptions> options,
-    ILogger<InstanceReconciler> log) : BackgroundService
+    ILogger<InstanceReconciler> log,
+    TimeProvider timeProvider) : BackgroundService
 {
     private const string ReconcileTimeoutReason = "Reconcile timeout";
 
@@ -25,7 +26,8 @@ public sealed class InstanceReconciler(
             {
                 using var scope = scopeFactory.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<DataContext>();
-                var cutoff = DateTimeOffset.UtcNow - options.CurrentValue.InstanceStartupTimeout;
+                var now = timeProvider.GetUtcNow();
+                var cutoff = now - options.CurrentValue.InstanceStartupTimeout;
                 var stale = await db.Instances
                     .Where(i => (i is PendingRunInstance || i is StartingRunInstance
                                  || i is PendingBacktestInstance || i is StartingBacktestInstance)
@@ -35,8 +37,8 @@ public sealed class InstanceReconciler(
                 {
                     Instance replacement = i switch
                     {
-                        RunInstance r => r.ToFailed(ReconcileTimeoutReason),
-                        BacktestInstance b => b.ToFailed(ReconcileTimeoutReason),
+                        RunInstance r => r.ToFailed(ReconcileTimeoutReason, now),
+                        BacktestInstance b => b.ToFailed(ReconcileTimeoutReason, now),
                         _ => throw new InvalidOperationException()
                     };
                     db.Instances.Remove(i);

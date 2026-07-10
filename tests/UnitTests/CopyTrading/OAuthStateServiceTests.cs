@@ -15,7 +15,7 @@ public sealed class OAuthStateServiceTests
     {
         var provider = new ServiceCollection().AddDataProtection().Services
             .BuildServiceProvider().GetRequiredService<IDataProtectionProvider>();
-        return new OAuthStateService(new DataProtectionSecretProtector(provider));
+        return new OAuthStateService(new DataProtectionSecretProtector(provider), TimeProvider.System);
     }
 
     [Fact]

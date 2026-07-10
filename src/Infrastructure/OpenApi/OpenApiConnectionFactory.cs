@@ -10,7 +10,8 @@ namespace Infrastructure.OpenApi;
 public sealed class OpenApiConnectionFactory(
     IOptionsMonitor<AppOptions> options,
     IOpenApiTransportFactory transportFactory,
-    ILoggerFactory loggerFactory) : IOpenApiConnectionFactory
+    ILoggerFactory loggerFactory,
+    TimeProvider timeProvider) : IOpenApiConnectionFactory
 {
     public OpenApiConnection Create(bool live, string clientId, string clientSecret)
     {
@@ -32,6 +33,7 @@ public sealed class OpenApiConnectionFactory(
             clientId,
             clientSecret,
             connectionOptions,
-            loggerFactory.CreateLogger<OpenApiConnection>());
+            loggerFactory.CreateLogger<OpenApiConnection>(),
+            timeProvider);
     }
 }

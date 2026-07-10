@@ -18,7 +18,8 @@ namespace Nodes;
 public sealed class NodeHeartbeatMonitor(
     IServiceScopeFactory scopeFactory,
     IOptionsMonitor<AppOptions> options,
-    ILogger<NodeHeartbeatMonitor> log) : BackgroundService
+    ILogger<NodeHeartbeatMonitor> log,
+    TimeProvider timeProvider) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -38,7 +39,7 @@ public sealed class NodeHeartbeatMonitor(
     {
         using var scope = scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var now = DateTimeOffset.UtcNow;
+        var now = timeProvider.GetUtcNow();
 
         // OfType<RemoteNode>() over the soft-delete-filtered TPH set does not translate on Npgsql;
         // enumerate the concrete remote subtypes, then filter reachability in memory.

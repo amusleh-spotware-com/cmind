@@ -176,5 +176,6 @@ internal sealed class OnboardConnectionFactory : IOpenApiConnectionFactory
             RequestTimeout = TimeSpan.FromSeconds(20),
             InboundWatchdogTimeout = TimeSpan.FromSeconds(30)
         },
-        NullLogger<OpenApiConnection>.Instance);
+        NullLogger<OpenApiConnection>.Instance,
+        TimeProvider.System);
 }

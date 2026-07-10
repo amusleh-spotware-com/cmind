@@ -18,17 +18,15 @@ public abstract class AuditedEntity<TId> : ISoftDeletable, IHasDomainEvents, IAg
     private readonly List<IDomainEvent> _domainEvents = [];
 
     public TId Id { get; private set; } = TId.New();
-    public DateTimeOffset CreatedAt { get; private set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? UpdatedAt { get; private set; }
     public bool IsDeleted { get; set; }
     public DateTimeOffset? DeletedAt { get; set; }
 
-    [NotMapped]
-    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents;
+    [NotMapped] public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents;
 
     protected internal void RaiseDomainEvent(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
     public void ClearDomainEvents() => _domainEvents.Clear();
-    protected internal void Touch() => UpdatedAt = DateTimeOffset.UtcNow;
     protected internal void PreserveCreatedAt(DateTimeOffset createdAt) => CreatedAt = createdAt;
 }
 
@@ -64,13 +62,17 @@ public abstract class AppUser : AuditedEntity<UserId>
         return user;
     }
 
-    public bool RecordFailedLogin(int maxAttempts, TimeSpan lockoutDuration)
+    public bool RecordFailedLogin(int maxAttempts, TimeSpan lockoutDuration, DateTimeOffset now)
     {
         AccessFailedCount++;
-        if (AccessFailedCount < maxAttempts) { Touch(); return false; }
-        LockoutEnd = DateTimeOffset.UtcNow.Add(lockoutDuration);
+        if (AccessFailedCount < maxAttempts)
+        {
+            return false;
+        }
+
+        LockoutEnd = now.Add(lockoutDuration);
         AccessFailedCount = 0;
-        Touch();
+
         return true;
     }
 
@@ -78,17 +80,15 @@ public abstract class AppUser : AuditedEntity<UserId>
     {
         AccessFailedCount = 0;
         LockoutEnd = null;
-        Touch();
     }
 
-    public bool IsCurrentlyLockedOut() =>
-        IsLockedOut || (LockoutEnd is { } end && end > DateTimeOffset.UtcNow);
+    public bool IsCurrentlyLockedOut(DateTimeOffset now) =>
+        IsLockedOut || (LockoutEnd is { } end && end > now);
 
     public void ChangePassword(string passwordHash)
     {
         PasswordHash = DomainGuard.AgainstNullOrWhiteSpace(passwordHash, DomainErrors.NameRequired);
         MustChangePassword = false;
-        Touch();
     }
 
     public void ResetPassword(string passwordHash, byte[] securityStamp)
@@ -99,21 +99,18 @@ public abstract class AppUser : AuditedEntity<UserId>
         IsLockedOut = false;
         AccessFailedCount = 0;
         LockoutEnd = null;
-        Touch();
     }
 
     public void EnableMfa(string secret)
     {
         MfaSecret = DomainGuard.AgainstNullOrWhiteSpace(secret, DomainErrors.NameRequired);
         MfaEnabled = true;
-        Touch();
     }
 
     public void DisableMfa()
     {
         MfaSecret = null;
         MfaEnabled = false;
-        Touch();
     }
 }
 
@@ -195,20 +192,18 @@ public class CTraderIdAccount : AuditedEntity<CtidId>
     public void UpdateUsername(string username)
     {
         Username = DomainGuard.AgainstNullOrWhiteSpace(username, DomainErrors.NameRequired);
-        Touch();
     }
 
     public void UpdatePassword(byte[] encryptedPassword)
     {
         EncryptedPassword = encryptedPassword;
-        Touch();
     }
 
     public TradingAccount AddTradingAccount(long accountNumber, string broker, bool isLive, string? label)
     {
         var account = TradingAccount.Create(Id, accountNumber, broker, isLive, label);
         _tradingAccounts.Add(account);
-        Touch();
+
         return account;
     }
 
@@ -219,14 +214,14 @@ public class CTraderIdAccount : AuditedEntity<CtidId>
         if (existing is not null)
         {
             existing.LinkOpenApi(ctidTraderAccountId, authorizationId);
-            Touch();
+
             return existing;
         }
 
         var account = TradingAccount.CreateFromOpenApi(
             Id, accountNumber, broker, isLive, ctidTraderAccountId, authorizationId, label);
         _tradingAccounts.Add(account);
-        Touch();
+
         return account;
     }
 }
@@ -272,7 +267,6 @@ public class TradingAccount : AuditedEntity<TradingAccountId>
     public void SetToken(byte[]? encryptedToken)
     {
         EncryptedToken = encryptedToken;
-        Touch();
     }
 
     public void LinkOpenApi(CtidTraderAccountId ctidTraderAccountId, OpenApiAuthorizationId authorizationId)
@@ -280,7 +274,6 @@ public class TradingAccount : AuditedEntity<TradingAccountId>
         CtidTraderAccountId = ctidTraderAccountId.Value;
         OpenApiAuthorizationId = authorizationId;
         LinkMethod |= AccountLinkMethod.OpenApi;
-        Touch();
     }
 }
 
@@ -313,7 +306,6 @@ public class CBot : AuditedEntity<CBotId>
     public void Rename(string name)
     {
         Name = DomainGuard.AgainstNullOrWhiteSpace(name, DomainErrors.NameRequired);
-        Touch();
     }
 
     public void UpdateAlgo(byte[] encryptedAlgo, CBotSourceProjectId? sourceProjectId = null)
@@ -321,14 +313,13 @@ public class CBot : AuditedEntity<CBotId>
         EncryptedAlgo = encryptedAlgo;
         if (sourceProjectId is { } sid) SourceProjectId = sid;
         Version++;
-        Touch();
     }
 
     public ParamSet AddParamSet(string name, string jsonContent)
     {
         var paramSet = ParamSet.Create(UserId, Id, name, jsonContent);
         _paramSets.Add(paramSet);
-        Touch();
+
         return paramSet;
     }
 }
@@ -359,15 +350,13 @@ public abstract class CBotSourceProject : AuditedEntity<CBotSourceProjectId>
     public void SetFiles(byte[] encryptedProjectFiles)
     {
         EncryptedProjectFiles = encryptedProjectFiles;
-        Touch();
     }
 
-    public void RecordBuild(string log, bool succeeded)
+    public void RecordBuild(string log, bool succeeded, DateTimeOffset now)
     {
         LastBuildLog = log;
-        LastBuildAt = DateTimeOffset.UtcNow;
+        LastBuildAt = now;
         LastBuildSucceeded = succeeded;
-        Touch();
     }
 }
 
@@ -411,7 +400,6 @@ public class ParamSet : AuditedEntity<ParamSetId>
     {
         Name = DomainGuard.AgainstNullOrWhiteSpace(name, DomainErrors.NameRequired);
         JsonContent = string.IsNullOrWhiteSpace(jsonContent) ? "{}" : jsonContent;
-        Touch();
     }
 }
 
@@ -466,24 +454,24 @@ public abstract class RemoteNode : Node
     }
 
     public static RemoteNode SelfRegister(NodeMode mode, string name, NodeEndpointUrl endpoint,
-        byte[] encryptedApiSecret, string dataDirPath, int maxInstances)
+        byte[] encryptedApiSecret, string dataDirPath, int maxInstances, DateTimeOffset now)
     {
         var node = Create(mode, name, endpoint.Value, encryptedApiSecret, dataDirPath, maxInstances);
-        node.LastHeartbeatAt = DateTimeOffset.UtcNow;
+        node.LastHeartbeatAt = now;
         node.IsReachable = true;
         node.RaiseDomainEvent(new NodeRegistered(node.Id, node.Name));
         return node;
     }
 
-    public void RecordHeartbeat(NodeEndpointUrl endpoint, int maxInstances)
+    public void RecordHeartbeat(NodeEndpointUrl endpoint, int maxInstances, DateTimeOffset now)
     {
         if (maxInstances <= 0) throw new DomainException(DomainErrors.NodeMaxInstancesInvalid);
         BaseUrl = endpoint.Value;
         MaxInstances = maxInstances;
-        LastHeartbeatAt = DateTimeOffset.UtcNow;
+        LastHeartbeatAt = now;
         var wasUnreachable = !IsReachable;
         IsReachable = true;
-        Touch();
+
         if (wasUnreachable) RaiseDomainEvent(new NodeCameOnline(Id, Name));
     }
 
@@ -494,7 +482,7 @@ public abstract class RemoteNode : Node
     {
         if (!IsReachable) return;
         IsReachable = false;
-        Touch();
+
         RaiseDomainEvent(new NodeWentOffline(Id, Name));
     }
 }
@@ -565,7 +553,6 @@ public sealed class LocalNode : Node
     public void SetEnabled(bool enabled)
     {
         Enabled = enabled;
-        Touch();
     }
 }
 
@@ -584,7 +571,7 @@ public class NodeStats
     public DateTimeOffset UpdatedAt { get; private set; }
 
     public static NodeStats Create(NodeId nodeId, double cpuPercent, long memUsedBytes, long memTotalBytes,
-        long diskUsedBytes, long diskTotalBytes, long backtestDataUsedBytes,
+        long diskUsedBytes, long diskTotalBytes, long backtestDataUsedBytes, DateTimeOffset now,
         int runningCount = 0, int backtestCount = 0)
         => new()
         {
@@ -597,14 +584,14 @@ public class NodeStats
             BacktestDataUsedBytes = backtestDataUsedBytes,
             RunningCount = runningCount,
             BacktestCount = backtestCount,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = now
         };
 
-    public void SetInstanceCounts(int runningCount, int backtestCount)
+    public void SetInstanceCounts(int runningCount, int backtestCount, DateTimeOffset now)
     {
         RunningCount = runningCount;
         BacktestCount = backtestCount;
-        UpdatedAt = DateTimeOffset.UtcNow;
+        UpdatedAt = now;
     }
 }
 
@@ -661,7 +648,7 @@ public abstract class RunInstance : Instance
 {
     public sealed override string KindName => "Run";
 
-    public FailedRunInstance ToFailed(string reason) => FailedRunInstance.From(this, reason);
+    public FailedRunInstance ToFailed(string reason, DateTimeOffset now) => FailedRunInstance.From(this, reason, now);
 
     public static StartingRunInstance CreateStarting(UserId userId, CBotId cbotId, NodeId nodeId,
         DockerImageTag imageTag, Symbol symbol, Timeframe timeframe,
@@ -720,9 +707,9 @@ public sealed class StartingRunInstance : RunInstance
     public override bool IsTerminal => false;
     public override bool IsActive => true;
 
-    public RunningRunInstance ToRunning(string containerId)
+    public RunningRunInstance ToRunning(string containerId, DateTimeOffset now)
     {
-        var running = new RunningRunInstance { ContainerId = containerId, StartedAt = DateTimeOffset.UtcNow };
+        var running = new RunningRunInstance {ContainerId = containerId, StartedAt = now};
         CopyExecutionState(this, running);
         running.RaiseDomainEvent(new InstanceStarted(running.Id, running.UserId, containerId));
         return running;
@@ -730,7 +717,7 @@ public sealed class StartingRunInstance : RunInstance
 
     public StoppedRunInstance ToStopped(DateTimeOffset stoppedAt)
     {
-        var stopped = new StoppedRunInstance { ContainerId = ContainerId, StoppedAt = stoppedAt };
+        var stopped = new StoppedRunInstance {ContainerId = ContainerId, StoppedAt = stoppedAt};
         CopyExecutionState(this, stopped);
         return stopped;
     }
@@ -787,7 +774,7 @@ public sealed class FailedRunInstance : RunInstance
     public override bool IsTerminal => true;
     public override bool IsActive => false;
 
-    internal static FailedRunInstance From(RunInstance source, string reason)
+    internal static FailedRunInstance From(RunInstance source, string reason, DateTimeOffset now)
     {
         var failed = new FailedRunInstance
         {
@@ -795,7 +782,7 @@ public sealed class FailedRunInstance : RunInstance
             ContainerId = (source as StartingRunInstance)?.ContainerId
                           ?? (source as RunningRunInstance)?.ContainerId,
             StartedAt = (source as RunningRunInstance)?.StartedAt,
-            StoppedAt = DateTimeOffset.UtcNow
+            StoppedAt = now
         };
         CopyExecutionState(source, failed);
         failed.RaiseDomainEvent(new InstanceFailed(failed.Id, failed.UserId, reason));
@@ -810,7 +797,7 @@ public abstract class BacktestInstance : Instance
     public sealed override string KindName => "Backtest";
     public string? BacktestSettingsJson { get; internal set; }
 
-    public FailedBacktestInstance ToFailed(string reason) => FailedBacktestInstance.From(this, reason);
+    public FailedBacktestInstance ToFailed(string reason, DateTimeOffset now) => FailedBacktestInstance.From(this, reason, now);
 
     public static StartingBacktestInstance CreateStarting(UserId userId, CBotId cbotId, NodeId nodeId,
         DockerImageTag imageTag, Symbol symbol, Timeframe timeframe, string? backtestSettingsJson,
@@ -877,9 +864,9 @@ public sealed class StartingBacktestInstance : BacktestInstance
     public override bool IsTerminal => false;
     public override bool IsActive => true;
 
-    public RunningBacktestInstance ToRunning(string containerId)
+    public RunningBacktestInstance ToRunning(string containerId, DateTimeOffset now)
     {
-        var running = new RunningBacktestInstance { ContainerId = containerId, StartedAt = DateTimeOffset.UtcNow };
+        var running = new RunningBacktestInstance {ContainerId = containerId, StartedAt = now};
         CopyBacktestState(this, running);
         running.RaiseDomainEvent(new InstanceStarted(running.Id, running.UserId, containerId));
         return running;
@@ -942,7 +929,7 @@ public sealed class FailedBacktestInstance : BacktestInstance
     public override bool IsTerminal => true;
     public override bool IsActive => false;
 
-    internal static FailedBacktestInstance From(BacktestInstance source, string reason)
+    internal static FailedBacktestInstance From(BacktestInstance source, string reason, DateTimeOffset now)
     {
         var failed = new FailedBacktestInstance
         {
@@ -950,7 +937,7 @@ public sealed class FailedBacktestInstance : BacktestInstance
             ContainerId = (source as StartingBacktestInstance)?.ContainerId
                           ?? (source as RunningBacktestInstance)?.ContainerId,
             StartedAt = (source as RunningBacktestInstance)?.StartedAt,
-            StoppedAt = DateTimeOffset.UtcNow
+            StoppedAt = now
         };
         CopyBacktestState(source, failed);
         failed.RaiseDomainEvent(new InstanceFailed(failed.Id, failed.UserId, reason));
@@ -992,13 +979,13 @@ public class ViewerGrant : ISoftDeletable
     public bool IsDeleted { get; set; }
     public DateTimeOffset? DeletedAt { get; set; }
 
-    public static ViewerGrant Create(UserId viewerId, InstanceId instanceId, UserId grantedByUserId)
+    public static ViewerGrant Create(UserId viewerId, InstanceId instanceId, UserId grantedByUserId, DateTimeOffset now)
         => new()
         {
             ViewerId = viewerId,
             InstanceId = instanceId,
             GrantedByUserId = grantedByUserId,
-            GrantedAt = DateTimeOffset.UtcNow
+            GrantedAt = now
         };
 }
 
@@ -1047,23 +1034,66 @@ public class AgentMandate : AuditedEntity<AgentMandateId>
             TradingAccountId = tradingAccountId
         };
 
-    public void Enable() { Enabled = true; Touch(); }
-    public void Disable() { Enabled = false; Touch(); }
-    public void RecordRun() { LastRunAt = DateTimeOffset.UtcNow; Touch(); }
-    public void Rename(string name) { Name = DomainGuard.AgainstNullOrWhiteSpace(name, DomainErrors.NameRequired); Touch(); }
-    public void SetObjective(string objective) { Objective = objective ?? string.Empty; Touch(); }
-    public void SetRiskPerTrade(RiskPercent risk) { RiskPercentPerTrade = risk.Value; Touch(); }
-    public void SetMaxDrawdown(DrawdownPercent drawdown) { MaxDrawdownPercent = drawdown.Value; Touch(); }
-    public void SetSymbol(Symbol symbol) { Symbol = symbol.Value; Touch(); }
-    public void SetTimeframe(Timeframe timeframe) { Timeframe = timeframe.Value; Touch(); }
-    public void SetAutonomy(AgentAutonomy autonomy) { Autonomy = autonomy; Touch(); }
-    public void SetTradingAccount(TradingAccountId tradingAccountId) { TradingAccountId = tradingAccountId; Touch(); }
+    public void Enable()
+    {
+        Enabled = true;
+    }
+
+    public void Disable()
+    {
+        Enabled = false;
+    }
+
+    public void RecordRun(DateTimeOffset now)
+    {
+        LastRunAt = now;
+    }
+
+    public void Rename(string name)
+    {
+        Name = DomainGuard.AgainstNullOrWhiteSpace(name, DomainErrors.NameRequired);
+    }
+
+    public void SetObjective(string objective)
+    {
+        Objective = objective ?? string.Empty;
+    }
+
+    public void SetRiskPerTrade(RiskPercent risk)
+    {
+        RiskPercentPerTrade = risk.Value;
+    }
+
+    public void SetMaxDrawdown(DrawdownPercent drawdown)
+    {
+        MaxDrawdownPercent = drawdown.Value;
+    }
+
+    public void SetSymbol(Symbol symbol)
+    {
+        Symbol = symbol.Value;
+    }
+
+    public void SetTimeframe(Timeframe timeframe)
+    {
+        Timeframe = timeframe.Value;
+    }
+
+    public void SetAutonomy(AgentAutonomy autonomy)
+    {
+        Autonomy = autonomy;
+    }
+
+    public void SetTradingAccount(TradingAccountId tradingAccountId)
+    {
+        TradingAccountId = tradingAccountId;
+    }
 
     public AgentProposal AddProposal(string kind, string reasoning, string payloadJson, string proposedName)
     {
         var proposal = AgentProposal.Create(Id, UserId, kind, reasoning, payloadJson, proposedName);
         _proposals.Add(proposal);
-        Touch();
+
         RaiseDomainEvent(new AgentProposalCreated(proposal.Id, Id, UserId));
         return proposal;
     }
@@ -1097,16 +1127,16 @@ public class AgentProposal : AuditedEntity<AgentProposalId>
             ProposedName = DomainGuard.AgainstNullOrWhiteSpace(proposedName, DomainErrors.NameRequired)
         };
 
-    public void Approve(UserId decidedBy) => Decide(AgentProposalStatus.Approved, decidedBy);
-    public void Reject(UserId decidedBy) => Decide(AgentProposalStatus.Rejected, decidedBy);
+    public void Approve(UserId decidedBy, DateTimeOffset now) => Decide(AgentProposalStatus.Approved, decidedBy, now);
+    public void Reject(UserId decidedBy, DateTimeOffset now) => Decide(AgentProposalStatus.Rejected, decidedBy, now);
 
-    private void Decide(AgentProposalStatus status, UserId decidedBy)
+    private void Decide(AgentProposalStatus status, UserId decidedBy, DateTimeOffset now)
     {
         if (Status != AgentProposalStatus.Pending) throw new DomainException(DomainErrors.ProposalNotPending);
         Status = status;
         DecidedByUserId = decidedBy;
-        DecidedAt = DateTimeOffset.UtcNow;
-        Touch();
+        DecidedAt = now;
+
         RaiseDomainEvent(new AgentProposalDecided(Id, MandateId, status));
     }
 
@@ -1115,17 +1145,17 @@ public class AgentProposal : AuditedEntity<AgentProposalId>
         Status = AgentProposalStatus.Executed;
         CreatedParamSetId = createdParamSetId;
         CreatedInstanceId = createdInstanceId;
-        Touch();
+
         RaiseDomainEvent(new AgentProposalDecided(Id, MandateId, Status));
     }
 
-    public void MarkFailed(UserId decidedBy, string reason)
+    public void MarkFailed(UserId decidedBy, string reason, DateTimeOffset now)
     {
         Status = AgentProposalStatus.Failed;
         FailureReason = reason;
         DecidedByUserId = decidedBy;
-        DecidedAt = DateTimeOffset.UtcNow;
-        Touch();
+        DecidedAt = now;
+
         RaiseDomainEvent(new AgentProposalDecided(Id, MandateId, Status));
     }
 }
@@ -1155,20 +1185,43 @@ public class AlertRule : AuditedEntity<AlertRuleId>
             Enabled = true
         };
 
-    public void SetInterval(EvaluationInterval interval) { IntervalMinutes = interval.Minutes; Touch(); }
-    public void Rename(string name) { Name = DomainGuard.AgainstNullOrWhiteSpace(name, DomainErrors.NameRequired); Touch(); }
-    public void SetSymbol(Symbol symbol) { Symbol = symbol.Value; Touch(); }
-    public void Enable() { Enabled = true; Touch(); }
-    public void Disable() { Enabled = false; Touch(); }
-    public void MarkEvaluated() { LastEvaluatedAt = DateTimeOffset.UtcNow; Touch(); }
+    public void SetInterval(EvaluationInterval interval)
+    {
+        IntervalMinutes = interval.Minutes;
+    }
 
-    public AlertEvent Raise(AlertSeverity severity, string message)
+    public void Rename(string name)
+    {
+        Name = DomainGuard.AgainstNullOrWhiteSpace(name, DomainErrors.NameRequired);
+    }
+
+    public void SetSymbol(Symbol symbol)
+    {
+        Symbol = symbol.Value;
+    }
+
+    public void Enable()
+    {
+        Enabled = true;
+    }
+
+    public void Disable()
+    {
+        Enabled = false;
+    }
+
+    public void MarkEvaluated(DateTimeOffset now)
+    {
+        LastEvaluatedAt = now;
+    }
+
+    public AlertEvent Raise(AlertSeverity severity, string message, DateTimeOffset now)
     {
         if (!Enabled) throw new DomainException(DomainErrors.AlertRuleDisabled);
         var alertEvent = AlertEvent.Create(Id, UserId, severity, message);
         _events.Add(alertEvent);
-        LastEvaluatedAt = DateTimeOffset.UtcNow;
-        Touch();
+        LastEvaluatedAt = now;
+
         RaiseDomainEvent(new AlertRaised(Id, UserId, severity.Value));
         return alertEvent;
     }
@@ -1192,7 +1245,10 @@ public class AlertEvent : AuditedEntity<AlertEventId>
             Message = message ?? string.Empty
         };
 
-    public void Acknowledge() { Acknowledged = true; Touch(); }
+    public void Acknowledge()
+    {
+        Acknowledged = true;
+    }
 }
 
 // ---------------- Prop-firm guardian (exposure caps + auto-flatten) ----------------
@@ -1242,11 +1298,17 @@ public class PropRule : AuditedEntity<PropRuleId>
         MaxDrawdownPercent = maxDrawdownPercent;
         AutoFlatten = autoFlatten;
         Enabled = enabled;
-        Touch();
     }
 
-    public void RecordFlattened() { LastFlattenedAt = DateTimeOffset.UtcNow; Touch(); }
-    public void SetEnabled(bool enabled) { Enabled = enabled; Touch(); }
+    public void RecordFlattened(DateTimeOffset now)
+    {
+        LastFlattenedAt = now;
+    }
+
+    public void SetEnabled(bool enabled)
+    {
+        Enabled = enabled;
+    }
 }
 
 // ---------------- Access: MCP / Audit / Settings ----------------
@@ -1270,13 +1332,16 @@ public class McpApiKey : AuditedEntity<McpApiKeyId>
             Label = DomainGuard.AgainstNullOrWhiteSpace(label, DomainErrors.NameRequired)
         };
 
-    public void MarkUsed() { LastUsedAt = DateTimeOffset.UtcNow; Touch(); }
+    public void MarkUsed(DateTimeOffset now)
+    {
+        LastUsedAt = now;
+    }
 
-    public void Revoke()
+    public void Revoke(DateTimeOffset now)
     {
         if (RevokedAt is not null) throw new DomainException(DomainErrors.McpKeyAlreadyRevoked);
-        RevokedAt = DateTimeOffset.UtcNow;
-        Touch();
+        RevokedAt = now;
+
         RaiseDomainEvent(new McpApiKeyRevoked(Id, UserId));
     }
 }
@@ -1285,14 +1350,14 @@ public class AuditLog
 {
     public long Id { get; private set; }
     public UserId? UserId { get; private set; }
-    public DateTimeOffset Time { get; private set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset Time { get; private set; }
     [MaxLength(64)] public string Action { get; private set; } = default!;
     [MaxLength(64)] public string EntityType { get; private set; } = default!;
     public Guid? EntityId { get; private set; }
     [MaxLength(45)] public string? Ip { get; private set; }
     public string? DetailsJson { get; private set; }
 
-    public static AuditLog Record(string action, string entityType, UserId? userId = null,
+    public static AuditLog Record(string action, string entityType, DateTimeOffset now, UserId? userId = null,
         Guid? entityId = null, string? ip = null, string? detailsJson = null)
         => new()
         {
@@ -1302,7 +1367,7 @@ public class AuditLog
             EntityId = entityId,
             Ip = ip,
             DetailsJson = detailsJson,
-            Time = DateTimeOffset.UtcNow
+            Time = now
         };
 }
 
@@ -1310,14 +1375,14 @@ public class AppSetting
 {
     [MaxLength(64)] public string Key { get; private set; } = default!;
     public string Value { get; private set; } = default!;
-    public DateTimeOffset UpdatedAt { get; private set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset UpdatedAt { get; private set; }
 
-    public static AppSetting Create(string key, string value)
-        => new() { Key = key, Value = value, UpdatedAt = DateTimeOffset.UtcNow };
+    public static AppSetting Create(string key, string value, DateTimeOffset now)
+        => new() {Key = key, Value = value, UpdatedAt = now};
 
-    public void SetValue(string value)
+    public void SetValue(string value, DateTimeOffset now)
     {
         Value = value;
-        UpdatedAt = DateTimeOffset.UtcNow;
+        UpdatedAt = now;
     }
 }

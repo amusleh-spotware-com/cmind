@@ -101,8 +101,8 @@ public sealed class AppFixture : IAsyncLifetime
     private async Task WaitForLoginReadyAsync()
     {
         using var http = new HttpClient { BaseAddress = new Uri(BaseUrl) };
-        var deadline = DateTime.UtcNow.AddMinutes(2);
-        while (DateTime.UtcNow < deadline)
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        while (stopwatch.Elapsed < TimeSpan.FromMinutes(2))
         {
             if (_app is { HasExited: true })
                 throw new InvalidOperationException($"Web app exited early.\n{_appLog}");

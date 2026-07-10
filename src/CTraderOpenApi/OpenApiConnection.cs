@@ -17,6 +17,7 @@ public sealed class OpenApiConnection : IAsyncDisposable
     private readonly string _clientSecret;
     private readonly OpenApiConnectionOptions _options;
     private readonly ILogger _logger;
+    private readonly TimeProvider _timeProvider;
     private readonly BackoffPolicy _backoff;
 
     private readonly Channel<ProtoMessage> _outbound =
@@ -40,7 +41,8 @@ public sealed class OpenApiConnection : IAsyncDisposable
         string clientId,
         string clientSecret,
         OpenApiConnectionOptions options,
-        ILogger logger)
+        ILogger logger,
+        TimeProvider timeProvider)
     {
         _transportFactory = transportFactory;
         _host = host;
@@ -49,6 +51,7 @@ public sealed class OpenApiConnection : IAsyncDisposable
         _clientSecret = clientSecret;
         _options = options;
         _logger = logger;
+        _timeProvider = timeProvider;
         _backoff = new BackoffPolicy(options.BackoffInitial, options.BackoffMax, options.BackoffFactor);
     }
 
@@ -153,7 +156,7 @@ public sealed class OpenApiConnection : IAsyncDisposable
         var transport = _transportFactory.Create(_host, _port);
         _transport = transport;
         await transport.ConnectAsync(ct);
-        Volatile.Write(ref _lastInboundTicks, DateTime.UtcNow.Ticks);
+        Volatile.Write(ref _lastInboundTicks, _timeProvider.GetUtcNow().UtcTicks);
 
         var receive = Task.Run(() => ReceivePumpAsync(transport, ct), CancellationToken.None);
         var send = Task.Run(() => SendPumpAsync(transport, ct), CancellationToken.None);
@@ -233,7 +236,7 @@ public sealed class OpenApiConnection : IAsyncDisposable
     {
         await foreach (var bytes in transport.ReceiveAsync(ct))
         {
-            Volatile.Write(ref _lastInboundTicks, DateTime.UtcNow.Ticks);
+            Volatile.Write(ref _lastInboundTicks, _timeProvider.GetUtcNow().UtcTicks);
             var msg = ProtoMessage.Parser.ParseFrom(bytes);
             Dispatch(msg);
         }
@@ -298,7 +301,7 @@ public sealed class OpenApiConnection : IAsyncDisposable
         {
             await Task.Delay(interval, ct);
             var last = new DateTime(Volatile.Read(ref _lastInboundTicks), DateTimeKind.Utc);
-            if (DateTime.UtcNow - last > _options.InboundWatchdogTimeout)
+            if (_timeProvider.GetUtcNow().UtcDateTime - last > _options.InboundWatchdogTimeout)
                 throw new IOException("Inbound watchdog timeout.");
         }
     }
@@ -308,7 +311,7 @@ public sealed class OpenApiConnection : IAsyncDisposable
         if (endsAt is null)
             return _options.BackoffMax;
 
-        var remaining = endsAt.Value - DateTimeOffset.UtcNow + _options.MaintenanceMinDelay;
+        var remaining = endsAt.Value - _timeProvider.GetUtcNow() + _options.MaintenanceMinDelay;
         if (remaining < _options.MaintenanceMinDelay) remaining = _options.MaintenanceMinDelay;
         if (remaining > _options.MaintenanceMaxDelay) remaining = _options.MaintenanceMaxDelay;
         return remaining;

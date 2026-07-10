@@ -1,6 +1,7 @@
 @* Modal dialog for starting a new backtest. Returns BacktestDialogResult on confirm. *@
 @using Web.Json
 @inject HttpClient Http
+@inject TimeProvider TimeProvider
 
 <MudDialog>
     <TitleContent>
@@ -39,10 +40,13 @@
     private dynamic[] _cbots = [], _accts = [], _paramsets = [];
     private Guid? _cbotId, _acctId, _psId;
     private string _symbol = "EURUSD", _timeframe = "h1", _image = "latest";
-    private DateTime? _from = DateTime.UtcNow.AddMonths(-1), _to = DateTime.UtcNow;
+    private DateTime? _from, _to;
 
     protected override async Task OnInitializedAsync()
     {
+        var now = TimeProvider.GetUtcNow().UtcDateTime;
+        _from = now.AddMonths(-1);
+        _to = now;
         _cbots = await Http.GetDynamicArrayAsync("/api/cbots/");
         _accts = await Http.GetDynamicArrayAsync("/api/accounts/");
     }

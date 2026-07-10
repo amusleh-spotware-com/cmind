@@ -159,14 +159,15 @@ public static class AgentEndpoints
             return Results.Ok(new { success = true });
         });
 
-        g.MapPost("/proposals/{id:guid}/reject", async (Guid id, DataContext db, ICurrentUser u, CancellationToken ct) =>
+        g.MapPost("/proposals/{id:guid}/reject", async (Guid id, DataContext db, ICurrentUser u,
+            TimeProvider timeProvider, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             var pid = AgentProposalId.From(id);
             var proposal = await db.AgentProposals.FirstOrDefaultAsync(p => p.Id == pid && p.UserId == uid, ct);
             if (proposal is null) return Results.NotFound();
             if (proposal.Status is AgentProposalStatus.Executed) return Results.BadRequest("proposal already executed");
-            if (proposal.Status is AgentProposalStatus.Pending) proposal.Reject(uid);
+            if (proposal.Status is AgentProposalStatus.Pending) proposal.Reject(uid, timeProvider.GetUtcNow());
             await db.SaveChangesAsync(ct);
             return Results.Ok(new { success = true });
         });

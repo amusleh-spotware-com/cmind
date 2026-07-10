@@ -13,7 +13,8 @@ namespace Nodes;
 public sealed class BacktestCompletionPoller(
     IServiceScopeFactory scopeFactory,
     IOptionsMonitor<AppOptions> options,
-    ILogger<BacktestCompletionPoller> log) : BackgroundService
+    ILogger<BacktestCompletionPoller> log,
+    TimeProvider timeProvider) : BackgroundService
 {
     private const string ContainerExitedReason = "Container exited without producing a report";
 
@@ -46,10 +47,10 @@ public sealed class BacktestCompletionPoller(
             if (isRunning != false) continue;
 
             var reportJson = await TryReadReportAsync(factory, instance, ct);
-            var now = DateTimeOffset.UtcNow;
+            var now = timeProvider.GetUtcNow();
             Instance terminal = reportJson is not null
                 ? instance.ToCompleted(now, reportJson, instance.DataDirSubPath)
-                : instance.ToFailed(ContainerExitedReason);
+                : instance.ToFailed(ContainerExitedReason, now);
             db.Instances.Remove(instance);
             db.Instances.Add(terminal);
 

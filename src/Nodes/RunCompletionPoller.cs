@@ -13,7 +13,8 @@ namespace Nodes;
 public sealed class RunCompletionPoller(
     IServiceScopeFactory scopeFactory,
     IOptionsMonitor<AppOptions> options,
-    ILogger<RunCompletionPoller> log) : BackgroundService
+    ILogger<RunCompletionPoller> log,
+    TimeProvider timeProvider) : BackgroundService
 {
     private const string ContainerExitedReason = "Container exited with non-zero code ";
 
@@ -49,10 +50,10 @@ public sealed class RunCompletionPoller(
             try { exitCode = await factory.For(instance).GetExitCodeAsync(instance, ct); }
             catch { exitCode = null; }
 
-            var now = DateTimeOffset.UtcNow;
+            var now = timeProvider.GetUtcNow();
             Instance terminal = exitCode is null or 0
                 ? instance.ToStopped(now)
-                : instance.ToFailed($"{ContainerExitedReason}{exitCode}");
+                : instance.ToFailed($"{ContainerExitedReason}{exitCode}", now);
             db.Instances.Remove(instance);
             db.Instances.Add(terminal);
 

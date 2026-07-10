@@ -13,6 +13,7 @@ public class AgentPersistenceTests(PostgresFixture fixture) : IClassFixture<Post
     private DataContext CreateContext() =>
         new(new DbContextOptionsBuilder<DataContext>()
             .UseNpgsql(fixture.Container.GetConnectionString())
+            .AddInterceptors(new AuditStampingInterceptor(TimeProvider.System))
             .Options);
 
     [Fact]

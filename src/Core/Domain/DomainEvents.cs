@@ -4,7 +4,12 @@ namespace Core.Domain;
 
 public abstract record DomainEventBase : IDomainEvent
 {
-    public DateTimeOffset OccurredAt { get; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset OccurredAt { get; private set; }
+
+    public void StampOccurredAt(DateTimeOffset occurredAt)
+    {
+        if (OccurredAt == default) OccurredAt = occurredAt;
+    }
 }
 
 public sealed record AlertRaised(AlertRuleId RuleId, UserId UserId, string Severity) : DomainEventBase;

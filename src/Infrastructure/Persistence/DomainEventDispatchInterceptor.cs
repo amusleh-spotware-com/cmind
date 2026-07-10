@@ -5,7 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Persistence;
 
-public sealed class DomainEventDispatchInterceptor(IServiceScopeFactory scopeFactory) : SaveChangesInterceptor
+public sealed class DomainEventDispatchInterceptor(IServiceScopeFactory scopeFactory, TimeProvider timeProvider)
+    : SaveChangesInterceptor
 {
     public override async ValueTask<int> SavedChangesAsync(
         SaveChangesCompletedEventData eventData, int result, CancellationToken ct = default)
@@ -28,6 +29,9 @@ public sealed class DomainEventDispatchInterceptor(IServiceScopeFactory scopeFac
             .ToList();
         if (entities.Count == 0) return;
         var events = entities.SelectMany(e => e.DomainEvents).ToList();
+        var now = timeProvider.GetUtcNow();
+        foreach (var domainEvent in events)
+            (domainEvent as DomainEventBase)?.StampOccurredAt(now);
         foreach (var entity in entities) entity.ClearDomainEvents();
         using var scope = scopeFactory.CreateScope();
         var dispatcher = scope.ServiceProvider.GetRequiredService<IDomainEventDispatcher>();

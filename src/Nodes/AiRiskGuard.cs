@@ -15,7 +15,8 @@ namespace Nodes;
 public sealed class AiRiskGuard(
     IServiceScopeFactory scopeFactory,
     IOptionsMonitor<AppOptions> options,
-    ILogger<AiRiskGuard> logger) : BackgroundService
+    ILogger<AiRiskGuard> logger,
+    TimeProvider timeProvider) : BackgroundService
 {
     private const int MaxSummaryChars = 500;
 
@@ -94,12 +95,13 @@ public sealed class AiRiskGuard(
                 try { await factory.For(instance).StopAsync(instance, ct); }
                 catch (Exception ex) when (ex is not OperationCanceledException) { /* best effort */ }
 
-            var terminal = instance.ToStopped(DateTimeOffset.UtcNow);
+            var now = timeProvider.GetUtcNow();
+            var terminal = instance.ToStopped(now);
             db.Instances.Remove(instance);
             db.Instances.Add(terminal);
             db.AuditLogs.Add(AuditLog.Record(
                 RiskGuardConstants.AuditAction, RiskGuardConstants.AuditEntityType,
-                instance.UserId, id.Value, detailsJson: reason));
+                now, instance.UserId, id.Value, detailsJson: reason));
             await db.SaveChangesAsync(ct);
             logger.RiskGuardStopped(id.Value, Truncate(reason, MaxSummaryChars));
         }

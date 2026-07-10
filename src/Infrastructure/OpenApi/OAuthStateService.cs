@@ -6,7 +6,7 @@ using Core.Domain;
 
 namespace Infrastructure.OpenApi;
 
-public sealed class OAuthStateService(ISecretProtector protector) : IOAuthStateService
+public sealed class OAuthStateService(ISecretProtector protector, TimeProvider timeProvider) : IOAuthStateService
 {
     public string CreateState(UserId userId, OpenApiApplicationId applicationId, TimeSpan ttl, bool isInvite)
     {
@@ -14,7 +14,7 @@ public sealed class OAuthStateService(ISecretProtector protector) : IOAuthStateS
             userId.Value,
             applicationId.Value,
             isInvite,
-            DateTimeOffset.UtcNow.Add(ttl).ToUnixTimeSeconds(),
+            timeProvider.GetUtcNow().Add(ttl).ToUnixTimeSeconds(),
             Guid.NewGuid().ToString("N"));
 
         return protector.ProtectString(JsonSerializer.Serialize(payload), EncryptionPurposes.OpenApiOAuthState);
@@ -36,7 +36,7 @@ public sealed class OAuthStateService(ISecretProtector protector) : IOAuthStateS
         }
 
         if (payload is null) return null;
-        if (DateTimeOffset.FromUnixTimeSeconds(payload.ExpiresAt) < DateTimeOffset.UtcNow) return null;
+        if (DateTimeOffset.FromUnixTimeSeconds(payload.ExpiresAt) < timeProvider.GetUtcNow()) return null;
 
         return new OAuthStateResult(
             UserId.From(payload.UserId), OpenApiApplicationId.From(payload.ApplicationId), payload.IsInvite);

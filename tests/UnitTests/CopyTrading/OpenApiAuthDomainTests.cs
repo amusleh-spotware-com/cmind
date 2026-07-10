@@ -47,7 +47,7 @@ public sealed class OpenApiAuthDomainTests
     [Fact]
     public void Authorization_Create_raises_authorized_event()
     {
-        var authorization = CreateAuthorization(DateTimeOffset.UtcNow.AddDays(30));
+        var authorization = CreateAuthorization(TestClock.Now.AddDays(30));
 
         authorization.DomainEvents.OfType<OpenApiAccountAuthorized>().Should().ContainSingle();
         authorization.RefreshFailedAt.Should().BeNull();
@@ -56,7 +56,7 @@ public sealed class OpenApiAuthDomainTests
     [Fact]
     public void IsExpiring_true_only_within_threshold()
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = TestClock.Now;
         var authorization = CreateAuthorization(now.AddDays(30));
 
         authorization.IsExpiring(TimeSpan.FromDays(1), now).Should().BeFalse();
@@ -66,12 +66,12 @@ public sealed class OpenApiAuthDomainTests
     [Fact]
     public void Refresh_rotates_tokens_clears_failure_and_raises_event()
     {
-        var authorization = CreateAuthorization(DateTimeOffset.UtcNow.AddMinutes(1));
-        authorization.MarkRefreshFailed("boom");
+        var authorization = CreateAuthorization(TestClock.Now.AddMinutes(1));
+        authorization.MarkRefreshFailed("boom", TestClock.Now);
         authorization.RefreshFailedAt.Should().NotBeNull();
 
-        var newExpiry = DateTimeOffset.UtcNow.AddDays(30);
-        authorization.Refresh([9, 9], [8, 8], newExpiry);
+        var newExpiry = TestClock.Now.AddDays(30);
+        authorization.Refresh([9, 9], [8, 8], newExpiry, TestClock.Now);
 
         authorization.EncryptedAccessToken.Should().Equal(new byte[] { 9, 9 });
         authorization.EncryptedRefreshToken.Should().Equal(new byte[] { 8, 8 });
@@ -84,9 +84,9 @@ public sealed class OpenApiAuthDomainTests
     [Fact]
     public void MarkRefreshFailed_raises_failed_event()
     {
-        var authorization = CreateAuthorization(DateTimeOffset.UtcNow.AddMinutes(1));
+        var authorization = CreateAuthorization(TestClock.Now.AddMinutes(1));
 
-        authorization.MarkRefreshFailed("network down");
+        authorization.MarkRefreshFailed("network down", TestClock.Now);
 
         authorization.DomainEvents.OfType<AccessTokenRefreshFailed>().Should().ContainSingle()
             .Which.Reason.Should().Be("network down");

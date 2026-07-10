@@ -217,6 +217,25 @@ bug can cost users money, and stale docs mislead the AI agents that build on thi
    feature updates its `docs/features/*.md` **in the same commit** (and `docs/` deployment/ops docs
    when behavior there changes). No feature is "done" until its doc matches the code.
 
+## Time — MANDATORY (`TimeProvider`, never `DateTime.UtcNow`)
+
+Binding, no exceptions. Wall-clock reads through `DateTime.UtcNow`/`DateTime.Now`/`DateTimeOffset.UtcNow`
+are untestable — they make "now" non-deterministic, which produces flaky time-dependent tests (lease
+expiry, heartbeat staleness, token rotation, order expiry). This is a trading app; time bugs cost money.
+
+1. **Production code never calls `DateTime.UtcNow`/`DateTime.Now`/`DateTimeOffset.UtcNow`/`Now` directly.**
+   Inject `System.TimeProvider` and read `timeProvider.GetUtcNow()`. Register the singleton
+   `TimeProvider.System` in DI; take `TimeProvider` as a constructor dependency (ordered with the other
+   service deps per Code style). Domain methods that need "now" take a `DateTimeOffset now` (or `DateTime`)
+   parameter supplied by the caller — the aggregate does not read the clock itself.
+2. **Tests never use `DateTime.UtcNow`/`DateTime.Now`.** Hardcode explicit timestamps
+   (`new DateTimeOffset(2026, 07, 10, 12, 00, 00, TimeSpan.Zero)`) or drive a
+   `Microsoft.Extensions.Time.Testing.FakeTimeProvider` so time is fully controlled. A test that reads the
+   real clock can pass or fail depending on when it runs — that is a bug, not a test.
+3. **When you touch time-dependent code, migrate it.** Existing `DateTime.UtcNow` call sites are debt;
+   convert the one you touch to `TimeProvider`/injected-now, and add a `FakeTimeProvider`-driven test that
+   asserts the boundary (e.g. lease reclaim exactly at expiry `<= now`). Leave it better than you found it.
+
 ## Domain-Driven Design — MANDATORY
 
 Binding contract. `ddd-dotnet` skill = long-form playbook; this section = law. When they agree,
@@ -370,6 +389,8 @@ nullable warnings, unused-symbol errors). They are real errors and must be resol
 ## Code style
 
 - No comments except `TODO`/`FIXME`. No hardcoded strings — use a constants class.
+- **Never `DateTime.UtcNow`/`DateTime.Now`.** Inject `TimeProvider` (`GetUtcNow()`) in code; hardcode
+  timestamps or use `FakeTimeProvider` in tests. See [`## Time — MANDATORY`](#time--mandatory-timeprovider-never-datetimeutcnow).
 - File-scoped namespaces. `sealed` by default. Injected fields `private readonly`.
 - Early returns over nested `if`.
 - Naming: `_camelCase` private fields, `I`-prefixed interfaces, `Async`-suffixed async methods, `var` when type obvious. Spell identifiers in full (no `Tp`/`Sl`/`Tcs`/`Vm`) — established initialisms (`UI`, `DI`, `ASP`, `DOM`) fine. Wire-format string literals keep literal form.

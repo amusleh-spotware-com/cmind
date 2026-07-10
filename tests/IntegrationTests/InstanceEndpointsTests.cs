@@ -10,7 +10,7 @@ public class InstanceEndpointsTests
     [Fact]
     public void GetStartedAt_reads_the_right_column_for_every_active_or_terminal_state()
     {
-        var startedAt = DateTimeOffset.UtcNow.AddHours(-1);
+        var startedAt = TestClock.Now.AddHours(-1);
 
         InstanceEndpoints.GetStartedAt(new RunningRunInstance { StartedAt = startedAt }).Should().Be(startedAt);
         InstanceEndpoints.GetStartedAt(new RunningBacktestInstance { StartedAt = startedAt }).Should().Be(startedAt);
@@ -23,7 +23,7 @@ public class InstanceEndpointsTests
     [Fact]
     public void GetStoppedAt_reads_the_right_column_for_every_terminal_state()
     {
-        var stoppedAt = DateTimeOffset.UtcNow;
+        var stoppedAt = TestClock.Now;
 
         InstanceEndpoints.GetStoppedAt(new StoppedRunInstance { StoppedAt = stoppedAt }).Should().Be(stoppedAt);
         InstanceEndpoints.GetStoppedAt(new CompletedBacktestInstance { StoppedAt = stoppedAt }).Should().Be(stoppedAt);

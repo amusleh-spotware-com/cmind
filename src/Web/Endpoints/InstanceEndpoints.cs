@@ -89,7 +89,8 @@ public static class InstanceEndpoints
         });
 
         g.MapPost("/", async (StartRequest req, DataContext db, ICurrentUser u,
-            INodeScheduler scheduler, IContainerDispatcherFactory factory, ISecretProtector protector) =>
+            INodeScheduler scheduler, IContainerDispatcherFactory factory, ISecretProtector protector,
+            TimeProvider timeProvider) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             if (u.IsInRole("Viewer")) return Results.Forbid();
@@ -132,8 +133,8 @@ public static class InstanceEndpoints
             // Transition to Running by replacing entity (TPH discriminator cannot change)
             Instance running = starting switch
             {
-                StartingBacktestInstance sb => sb.ToRunning(containerId),
-                StartingRunInstance sr => sr.ToRunning(containerId),
+                StartingBacktestInstance sb => sb.ToRunning(containerId, timeProvider.GetUtcNow()),
+                StartingRunInstance sr => sr.ToRunning(containerId, timeProvider.GetUtcNow()),
                 _ => throw new InvalidOperationException()
             };
             db.Instances.Remove(starting);
@@ -143,7 +144,7 @@ public static class InstanceEndpoints
         });
 
         g.MapPost("/{id:guid}/stop", async (Guid id, DataContext db, ICurrentUser u,
-            IContainerDispatcherFactory factory) =>
+            IContainerDispatcherFactory factory, TimeProvider timeProvider) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             var iid = InstanceId.From(id);
@@ -156,7 +157,7 @@ public static class InstanceEndpoints
                 try { await factory.For(i).StopAsync(i, default); } catch { /* swallow */ }
 
             // Replace with Stopped/Completed entity
-            var now = DateTimeOffset.UtcNow;
+            var now = timeProvider.GetUtcNow();
             Instance terminal;
             if (i is RunningRunInstance rri) terminal = rri.ToStopped(now);
             else if (i is RunningBacktestInstance rbi) terminal = rbi.ToCompleted(now);

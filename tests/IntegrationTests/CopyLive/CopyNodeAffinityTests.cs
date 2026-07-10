@@ -28,7 +28,8 @@ public sealed class CopyNodeAffinityTests : IAsyncLifetime
     public Task DisposeAsync() => _postgres.DisposeAsync().AsTask();
 
     private DataContext NewContext()
-        => new(new DbContextOptionsBuilder<DataContext>().UseNpgsql(_connectionString).Options);
+        => new(new DbContextOptionsBuilder<DataContext>().UseNpgsql(_connectionString)
+            .AddInterceptors(new AuditStampingInterceptor(TimeProvider.System)).Options);
 
     private async Task<UserId> SeedUserAsync(DataContext db)
     {
@@ -62,7 +63,7 @@ public sealed class CopyNodeAffinityTests : IAsyncLifetime
         var nodeA = new NodeIdentity("node-a");
         var nodeB = new NodeIdentity("node-b");
 
-        var now = DateTimeOffset.UtcNow;
+        var now = TestClock.Now;
         var ttl = TimeSpan.FromMinutes(2);
         var claimedByA = await CopyEngineSupervisor.ClaimProfilesAsync(db, nodeA, now, ttl, default);
         var claimedByB = await CopyEngineSupervisor.ClaimProfilesAsync(db, nodeB, now, ttl, default);
@@ -88,7 +89,7 @@ public sealed class CopyNodeAffinityTests : IAsyncLifetime
         var nodeA = new NodeIdentity("node-a");
         var nodeB = new NodeIdentity("node-b");
 
-        var now = DateTimeOffset.UtcNow;
+        var now = TestClock.Now;
         var ttl = TimeSpan.FromMinutes(2);
         await CopyEngineSupervisor.ClaimProfilesAsync(db, nodeA, now, ttl, default);
         db.ChangeTracker.Clear();
@@ -120,13 +121,13 @@ public sealed class CopyNodeAffinityTests : IAsyncLifetime
 
         // node-a claims with a lease that is already in the past (simulates a node that then dies).
         var claimedByA = await CopyEngineSupervisor.ClaimProfilesAsync(
-            db, nodeA, DateTimeOffset.UtcNow.AddMinutes(-5), TimeSpan.FromSeconds(1), default);
+            db, nodeA, TestClock.Now.AddMinutes(-5), TimeSpan.FromSeconds(1), default);
         claimedByA.Should().Be(1);
         db.ChangeTracker.Clear();
 
         // A live node-b sees the lapsed lease and reclaims the profile — copying self-heals.
         var claimedByB = await CopyEngineSupervisor.ClaimProfilesAsync(
-            db, nodeB, DateTimeOffset.UtcNow, TimeSpan.FromMinutes(2), default);
+            db, nodeB, TestClock.Now, TimeSpan.FromMinutes(2), default);
         claimedByB.Should().Be(1, "an expired lease lets another node take over a dead node's profile");
         db.ChangeTracker.Clear();
         (await db.CopyProfiles.FirstAsync(p => p.Id == profile.Id)).IsHostedBy(nodeB).Should().BeTrue();

@@ -11,7 +11,9 @@ public sealed class CopySymbolMapEntry
     public string Source { get; private set; } = default!;
     public string Destination { get; private set; } = default!;
 
-    private CopySymbolMapEntry() { }
+    private CopySymbolMapEntry()
+    {
+    }
 
     public CopySymbolMapEntry(Symbol source, Symbol destination)
     {
@@ -24,7 +26,9 @@ public sealed class CopySymbolFilter
 {
     public string Symbol { get; private set; } = default!;
 
-    private CopySymbolFilter() { }
+    private CopySymbolFilter()
+    {
+    }
 
     public CopySymbolFilter(Symbol symbol) => Symbol = symbol.Value;
 }
@@ -60,9 +64,12 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public IReadOnlyList<CopySymbolMapEntry> SymbolMaps => _symbolMaps;
     public IReadOnlyList<CopySymbolFilter> SymbolFilters => _symbolFilters;
 
-    private CopyDestination() { }
+    private CopyDestination()
+    {
+    }
 
-    public static CopyDestination Create(CopyProfileId profileId, TradingAccountId destinationAccountId, RiskSettings risk)
+    public static CopyDestination Create(CopyProfileId profileId, TradingAccountId destinationAccountId,
+        RiskSettings risk)
         => new()
         {
             ProfileId = profileId,
@@ -74,28 +81,77 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public RiskSettings Risk => new(RiskMode, RiskParameter);
     public LotBounds Bounds => new(MinLot, MaxLot, ForceMinLot);
 
-    public void ConfigureRisk(RiskSettings risk) { RiskMode = risk.Mode; RiskParameter = risk.Parameter; Touch(); }
-    public void ConfigureBounds(LotBounds bounds) { MinLot = bounds.MinLot; MaxLot = bounds.MaxLot; ForceMinLot = bounds.ForceMinLot; Touch(); }
-    public void ConfigureSlippage(SlippagePips slippage) { SlippagePips = slippage.Value; Touch(); }
-    public void ConfigureMaxDelay(MaxCopyDelay delay) { MaxDelaySeconds = (int)delay.Value.TotalSeconds; Touch(); }
-    public void SetReverse(bool reverse) { Reverse = reverse; Touch(); }
-    public void SetCopyProtection(bool copyStopLoss, bool copyTakeProfit) { CopyStopLoss = copyStopLoss; CopyTakeProfit = copyTakeProfit; Touch(); }
-    public void SetDirection(CopyDirectionFilter direction) { Direction = direction; Touch(); }
-    public void SetPartialCloseMirroring(bool mirrorPartialClose, bool mirrorScaleIn) { MirrorPartialClose = mirrorPartialClose; MirrorScaleIn = mirrorScaleIn; Touch(); }
-    public void SetPendingOrderCopying(bool copyPendingOrders) { CopyPendingOrders = copyPendingOrders; Touch(); }
-    public void SetTrailingStopCopying(bool copyTrailingStop) { CopyTrailingStop = copyTrailingStop; Touch(); }
+    public void ConfigureRisk(RiskSettings risk)
+    {
+        RiskMode = risk.Mode;
+        RiskParameter = risk.Parameter;
+    }
+
+    public void ConfigureBounds(LotBounds bounds)
+    {
+        MinLot = bounds.MinLot;
+        MaxLot = bounds.MaxLot;
+        ForceMinLot = bounds.ForceMinLot;
+    }
+
+    public void ConfigureSlippage(SlippagePips slippage)
+    {
+        SlippagePips = slippage.Value;
+    }
+
+    public void ConfigureMaxDelay(MaxCopyDelay delay)
+    {
+        MaxDelaySeconds = (int) delay.Value.TotalSeconds;
+    }
+
+    public void SetReverse(bool reverse)
+    {
+        Reverse = reverse;
+    }
+
+    public void SetCopyProtection(bool copyStopLoss, bool copyTakeProfit)
+    {
+        CopyStopLoss = copyStopLoss;
+        CopyTakeProfit = copyTakeProfit;
+    }
+
+    public void SetDirection(CopyDirectionFilter direction)
+    {
+        Direction = direction;
+    }
+
+    public void SetPartialCloseMirroring(bool mirrorPartialClose, bool mirrorScaleIn)
+    {
+        MirrorPartialClose = mirrorPartialClose;
+        MirrorScaleIn = mirrorScaleIn;
+    }
+
+    public void SetPendingOrderCopying(bool copyPendingOrders)
+    {
+        CopyPendingOrders = copyPendingOrders;
+    }
+
+    public void SetTrailingStopCopying(bool copyTrailingStop)
+    {
+        CopyTrailingStop = copyTrailingStop;
+    }
 
     public void SetOrderTypeFilter(CopyOrderTypes orderTypes)
     {
         if (orderTypes == CopyOrderTypes.None)
             throw new DomainException(DomainErrors.CopyOrderTypesInvalid);
         CopyOrderTypes = orderTypes;
-        Touch();
     }
 
-    public void SetExpiryCopying(bool copyPendingExpiry) { CopyPendingExpiry = copyPendingExpiry; Touch(); }
+    public void SetExpiryCopying(bool copyPendingExpiry)
+    {
+        CopyPendingExpiry = copyPendingExpiry;
+    }
 
-    public void SetSlippageCopying(bool copyMasterSlippage) { CopyMasterSlippage = copyMasterSlippage; Touch(); }
+    public void SetSlippageCopying(bool copyMasterSlippage)
+    {
+        CopyMasterSlippage = copyMasterSlippage;
+    }
 
     public bool IsOrderTypeAllowed(CopyOrderTypes orderType)
         => orderType != CopyOrderTypes.None && (CopyOrderTypes & orderType) == orderType;
@@ -105,7 +161,6 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
         DomainGuard.AgainstNegative(dailyLossLimit, DomainErrors.DrawdownOutOfRange);
         MaxDrawdownPercent = maxDrawdown.Value;
         DailyLossLimit = dailyLossLimit;
-        Touch();
     }
 
     public void SetSymbolMap(IEnumerable<SymbolMapEntry> entries)
@@ -113,12 +168,11 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
         _symbolMaps.Clear();
         foreach (var entry in entries)
             _symbolMaps.Add(new CopySymbolMapEntry(entry.Source, entry.Destination));
-        Touch();
     }
 
     public string ResolveDestinationSymbol(string sourceSymbol)
         => _symbolMaps.FirstOrDefault(m => string.Equals(m.Source, sourceSymbol, StringComparison.OrdinalIgnoreCase))
-               ?.Destination ?? sourceSymbol;
+            ?.Destination ?? sourceSymbol;
 
     public void SetSymbolFilter(SymbolFilterMode mode, IEnumerable<Symbol> symbols)
     {
@@ -126,13 +180,14 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
         _symbolFilters.Clear();
         foreach (var symbol in symbols)
             _symbolFilters.Add(new CopySymbolFilter(symbol));
-        Touch();
     }
 
     public bool IsSymbolAllowed(string sourceSymbol) => SymbolFilterMode switch
     {
-        SymbolFilterMode.Whitelist => _symbolFilters.Any(f => string.Equals(f.Symbol, sourceSymbol, StringComparison.OrdinalIgnoreCase)),
-        SymbolFilterMode.Blacklist => !_symbolFilters.Any(f => string.Equals(f.Symbol, sourceSymbol, StringComparison.OrdinalIgnoreCase)),
+        SymbolFilterMode.Whitelist => _symbolFilters.Any(f =>
+            string.Equals(f.Symbol, sourceSymbol, StringComparison.OrdinalIgnoreCase)),
+        SymbolFilterMode.Blacklist => !_symbolFilters.Any(f =>
+            string.Equals(f.Symbol, sourceSymbol, StringComparison.OrdinalIgnoreCase)),
         _ => true
     };
 }
@@ -158,11 +213,17 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
             Status = CopyProfileStatus.Draft
         };
 
-    public void Rename(string name) { Name = DomainGuard.AgainstNullOrWhiteSpace(name, DomainErrors.NameRequired); Touch(); }
+    public void Rename(string name)
+    {
+        Name = DomainGuard.AgainstNullOrWhiteSpace(name, DomainErrors.NameRequired);
+    }
 
     public bool IsHostedBy(NodeIdentity node) => string.Equals(AssignedNode, node.Value, StringComparison.Ordinal);
 
-    public void AssignToNode(NodeIdentity node) { AssignedNode = node.Value; Touch(); }
+    public void AssignToNode(NodeIdentity node)
+    {
+        AssignedNode = node.Value;
+    }
 
     // A node claims a running profile for a bounded lease, renews it while alive, and — if it dies —
     // the lease lapses so any other node can reclaim the profile. This is what makes copy hosting
@@ -171,15 +232,21 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
     {
         AssignedNode = node.Value;
         LeaseExpiresAt = leaseUntil;
-        Touch();
     }
 
-    public void RenewLease(DateTimeOffset leaseUntil) { LeaseExpiresAt = leaseUntil; Touch(); }
+    public void RenewLease(DateTimeOffset leaseUntil)
+    {
+        LeaseExpiresAt = leaseUntil;
+    }
 
     public bool IsLeaseHeldBy(NodeIdentity node, DateTimeOffset now)
         => string.Equals(AssignedNode, node.Value, StringComparison.Ordinal) && LeaseExpiresAt > now;
 
-    public void ReleaseAssignment() { AssignedNode = null; LeaseExpiresAt = null; Touch(); }
+    public void ReleaseAssignment()
+    {
+        AssignedNode = null;
+        LeaseExpiresAt = null;
+    }
 
     public CopyDestination AddDestination(TradingAccountId destinationAccountId, RiskSettings risk)
     {
@@ -190,7 +257,7 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
 
         var destination = CopyDestination.Create(Id, destinationAccountId, risk);
         _destinations.Add(destination);
-        Touch();
+
         return destination;
     }
 
@@ -199,7 +266,6 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
         var destination = _destinations.FirstOrDefault(d => d.Id == destinationId);
         if (destination is null) return;
         _destinations.Remove(destination);
-        Touch();
     }
 
     public void Start()
@@ -207,7 +273,7 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
         if (Status is not (CopyProfileStatus.Draft or CopyProfileStatus.Paused or CopyProfileStatus.Stopped))
             throw new DomainException(DomainErrors.CopyProfileTransitionInvalid);
         Status = CopyProfileStatus.Running;
-        Touch();
+
         RaiseDomainEvent(new CopyProfileStarted(Id, UserId));
     }
 
@@ -218,7 +284,7 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
         Status = CopyProfileStatus.Paused;
         AssignedNode = null;
         LeaseExpiresAt = null;
-        Touch();
+
         RaiseDomainEvent(new CopyProfilePaused(Id, UserId));
     }
 
@@ -227,14 +293,14 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
         Status = CopyProfileStatus.Stopped;
         AssignedNode = null;
         LeaseExpiresAt = null;
-        Touch();
+
         RaiseDomainEvent(new CopyProfileStopped(Id, UserId));
     }
 
     public void MarkError(string reason)
     {
         Status = CopyProfileStatus.Error;
-        Touch();
+
         RaiseDomainEvent(new CopyProfileErrored(Id, UserId, reason));
     }
 }

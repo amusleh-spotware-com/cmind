@@ -96,7 +96,8 @@ internal sealed class LiveConnectionFactory(IOpenApiTransportFactory transportFa
             BackoffInitial = TimeSpan.FromMilliseconds(200),
             BackoffMax = TimeSpan.FromSeconds(5)
         },
-        NullLogger<OpenApiConnection>.Instance);
+        NullLogger<OpenApiConnection>.Instance,
+        TimeProvider.System);
 }
 
 [CollectionDefinition(Name)]

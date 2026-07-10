@@ -258,8 +258,8 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
 
     private static async Task<bool> PollUntilAsync(Func<Task<bool>> condition, TimeSpan timeout, CancellationToken ct)
     {
-        var deadline = DateTime.UtcNow + timeout;
-        while (DateTime.UtcNow < deadline)
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        while (stopwatch.Elapsed < timeout)
         {
             if (await condition()) return true;
             await Task.Delay(TimeSpan.FromMilliseconds(800), ct);
@@ -306,8 +306,8 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
     private static async Task<T?> PollAsync<T>(Func<Task<T?>> probe, TimeSpan timeout, CancellationToken ct)
         where T : class
     {
-        var deadline = DateTime.UtcNow + timeout;
-        while (DateTime.UtcNow < deadline)
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        while (stopwatch.Elapsed < timeout)
         {
             var result = await probe();
             if (result is not null) return result;

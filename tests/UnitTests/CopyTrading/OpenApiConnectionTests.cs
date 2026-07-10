@@ -17,7 +17,8 @@ public sealed class OpenApiConnectionTests
     };
 
     private static OpenApiConnection Create(FakeOpenApiTransportFactory factory)
-        => new(factory, "host", 5035, "client", "secret", FastOptions, NullLogger<OpenApiConnection>.Instance);
+        => new(factory, "host", 5035, "client", "secret", FastOptions, NullLogger<OpenApiConnection>.Instance,
+            TimeProvider.System);
 
     [Fact]
     public async Task StartAsync_reaches_connected_after_app_auth()

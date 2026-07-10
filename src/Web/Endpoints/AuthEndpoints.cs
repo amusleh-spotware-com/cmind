@@ -21,7 +21,8 @@ public static class AuthEndpoints
     {
         var g = app.MapGroup("/api/auth").RequireRateLimiting(RateLimitPolicies.Auth);
 
-        g.MapPost("/login", async (HttpContext ctx, DataContext db, IPasswordHasher hasher) =>
+        g.MapPost("/login", async (HttpContext ctx, DataContext db, IPasswordHasher hasher,
+            TimeProvider timeProvider) =>
         {
             string email;
             string password;
@@ -45,15 +46,16 @@ public static class AuthEndpoints
                 rememberMe = req.RememberMe;
             }
 
+            var now = timeProvider.GetUtcNow();
             var normalized = email.ToUpperInvariant();
             var user = await db.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == normalized);
-            var lockedOut = user is not null && user.IsCurrentlyLockedOut();
+            var lockedOut = user is not null && user.IsCurrentlyLockedOut(now);
             if (user is null || lockedOut || !hasher.Verify(password, user.PasswordHash))
             {
                 if (user is not null && !lockedOut)
                 {
                     user.RecordFailedLogin(AuthLockout.MaxFailedAttempts,
-                        TimeSpan.FromMinutes(AuthLockout.LockoutMinutes));
+                        TimeSpan.FromMinutes(AuthLockout.LockoutMinutes), now);
                     await db.SaveChangesAsync();
                 }
                 if (ctx.Request.HasFormContentType)
@@ -73,7 +75,7 @@ public static class AuthEndpoints
             var authProps = new AuthenticationProperties
             {
                 IsPersistent = rememberMe,
-                ExpiresUtc = rememberMe ? DateTimeOffset.UtcNow.AddDays(30) : null
+                ExpiresUtc = rememberMe ? now.AddDays(30) : null
             };
             await ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(identity), authProps);

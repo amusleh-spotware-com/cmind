@@ -133,7 +133,7 @@ public static class BuilderEndpoints
 
         g.MapPost("/projects/{id:guid}/quick-run", async (Guid id, DataContext db, ICurrentUser u,
             CBotBuilder builder, IContainerDispatcherFactory factory, ISecretProtector protector,
-            INodeScheduler scheduler) =>
+            INodeScheduler scheduler, TimeProvider timeProvider) =>
         {
             var uid = u.UserId!.Value;
             var pid = CBotSourceProjectId.From(id);
@@ -160,14 +160,14 @@ public static class BuilderEndpoints
             }
             catch (Exception ex)
             {
-                var failed = starting.ToFailed(ex.Message);
+                var failed = starting.ToFailed(ex.Message, timeProvider.GetUtcNow());
                 db.Instances.Remove(starting);
                 db.Instances.Add(failed);
                 await db.SaveChangesAsync();
                 return Results.Ok(new { success = false, output = ex.Message, instanceId = (Guid?)null });
             }
 
-            var running = starting.ToRunning(containerId);
+            var running = starting.ToRunning(containerId, timeProvider.GetUtcNow());
             db.Instances.Remove(starting);
             db.Instances.Add(running);
             await db.SaveChangesAsync();

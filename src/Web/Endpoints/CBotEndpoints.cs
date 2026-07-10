@@ -55,7 +55,8 @@ public static class CBotEndpoints
         });
 
         g.MapPost("/{id:guid}/quick-run", async (Guid id, DataContext db, ICurrentUser u,
-            INodeScheduler scheduler, IContainerDispatcherFactory factory, ISecretProtector protector) =>
+            INodeScheduler scheduler, IContainerDispatcherFactory factory, ISecretProtector protector,
+            TimeProvider timeProvider) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             var cid = CBotId.From(id);
@@ -79,14 +80,14 @@ public static class CBotEndpoints
             }
             catch (Exception ex)
             {
-                var failed = starting.ToFailed(ex.Message);
+                var failed = starting.ToFailed(ex.Message, timeProvider.GetUtcNow());
                 db.Instances.Remove(starting);
                 db.Instances.Add(failed);
                 await db.SaveChangesAsync();
                 return Results.Ok(new { success = false, output = ex.Message, instanceId = (Guid?)null });
             }
 
-            var running = starting.ToRunning(containerId);
+            var running = starting.ToRunning(containerId, timeProvider.GetUtcNow());
             db.Instances.Remove(starting);
             db.Instances.Add(running);
             await db.SaveChangesAsync();

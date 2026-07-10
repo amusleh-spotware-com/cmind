@@ -52,7 +52,6 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             {
                 entry.State = EntityState.Modified;
                 entry.Entity.IsDeleted = true;
-                entry.Entity.DeletedAt = DateTimeOffset.UtcNow;
             }
         }
     }

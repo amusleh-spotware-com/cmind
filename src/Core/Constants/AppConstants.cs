@@ -85,6 +85,17 @@ public static class ConfigSections
     public const string App = "App";
 }
 
+public static class FeatureSettings
+{
+    // AppSetting key namespace for owner-set runtime feature overrides. A key of the form
+    // "feature.<FeatureFlag>" stores "true"/"false"; absence means "use the config baseline".
+    public const string OverrideKeyPrefix = "feature.";
+    public const string OverrideCacheKey = "features.overrides";
+    public static readonly TimeSpan OverrideCacheTtl = TimeSpan.FromSeconds(10);
+
+    public static string OverrideKey(Features.FeatureFlag flag) => OverrideKeyPrefix + flag;
+}
+
 public static class OpenApiEndpoints
 {
     public const string AuthBaseUrl = "https://openapi.ctrader.com/";

@@ -23,7 +23,8 @@ public static class OpenApiEndpoints
 
     public static IEndpointRouteBuilder MapOpenApiEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/api/openapi").RequireAuthorization(AuthPolicies.UserOrAbove);
+        var g = app.MapGroup("/api/openapi").RequireAuthorization(AuthPolicies.UserOrAbove)
+            .RequireFeature(Core.Features.FeatureFlag.OpenApi);
 
         g.MapGet("/application", async (IOpenApiApplicationRepository apps, ICurrentUser u, DataContext db,
             HttpContext ctx, CancellationToken ct) =>

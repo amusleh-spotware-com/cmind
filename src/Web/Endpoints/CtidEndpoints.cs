@@ -18,7 +18,8 @@ public static class CtidEndpoints
 {
     public static IEndpointRouteBuilder MapCtidEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/api/ctids").RequireAuthorization("UserOrAbove");
+        var g = app.MapGroup("/api/ctids").RequireAuthorization("UserOrAbove")
+            .RequireFeature(Core.Features.FeatureFlag.Accounts);
 
         g.MapGet("/", async (DataContext db, ICurrentUser u) =>
         {

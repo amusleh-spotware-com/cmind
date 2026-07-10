@@ -16,7 +16,8 @@ public static class AiEndpoints
 {
     public static IEndpointRouteBuilder MapAiEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/api/ai").RequireAuthorization("UserOrAbove");
+        var g = app.MapGroup("/api/ai").RequireAuthorization("UserOrAbove")
+            .RequireFeature(Core.Features.FeatureFlag.Ai);
 
         g.MapPost("/generate", async (GenerateCBotRequest req, IAiFeatureService ai, CancellationToken ct) =>
             Results.Ok(await ai.GenerateCBotAsync(req.Language ?? "CSharp", req.Description ?? "", ct)));

@@ -1,0 +1,44 @@
+@page "/settings/features"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "Owner")]
+@using Web.Json
+@inject HttpClient Http
+@inject ISnackbar Snack
+
+<PageTitle>Features</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Features</MudText>
+    <MudSpacer />
+</MudStack>
+
+<MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">
+    Turn main product features on or off for this deployment. Changes take effect immediately; disabled
+    features are hidden from navigation and their APIs and background workers stop responding.
+</MudText>
+
+<MudTable Items="_items" Dense="true" Hover="true">
+    <HeaderContent><MudTh>Feature</MudTh><MudTh>Enabled</MudTh></HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.flag</MudTd>
+        <MudTd>
+            <MudSwitch T="bool" Value="@((bool)context.enabled)" Color="Color.Primary"
+                       ValueChanged="@(v => Toggle((string)context.flag, v))" />
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    private dynamic[] _items = [];
+
+    protected override Task OnInitializedAsync() => Load();
+
+    private async Task Load() => _items = await Http.GetDynamicArrayAsync("/api/features/");
+
+    private async Task Toggle(string flag, bool enabled)
+    {
+        var r = await Http.PutAsJsonAsync($"/api/features/{flag}", new { Enabled = enabled });
+        Snack.Add(r.IsSuccessStatusCode ? $"{flag} {(enabled ? "enabled" : "disabled")}" : "Failed",
+            r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        await Load();
+    }
+}

@@ -14,7 +14,8 @@ public static class ParamSetEndpoints
 {
     public static IEndpointRouteBuilder MapParamSetEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/api/paramsets").RequireAuthorization("UserOrAbove");
+        var g = app.MapGroup("/api/paramsets").RequireAuthorization("UserOrAbove")
+            .RequireFeature(Core.Features.FeatureFlag.Authoring);
 
         g.MapGet("/", async (Guid? cbotId, DataContext db, ICurrentUser u) =>
         {

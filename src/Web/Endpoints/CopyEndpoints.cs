@@ -45,7 +45,8 @@ public static class CopyEndpoints
 {
     public static IEndpointRouteBuilder MapCopyEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/api/copy").RequireAuthorization(AuthPolicies.UserOrAbove);
+        var g = app.MapGroup("/api/copy").RequireAuthorization(AuthPolicies.UserOrAbove)
+            .RequireFeature(Core.Features.FeatureFlag.CopyTrading);
 
         g.MapGet("/profiles", async (DataContext db, ICurrentUser u) =>
         {

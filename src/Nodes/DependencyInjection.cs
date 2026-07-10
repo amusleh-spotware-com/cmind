@@ -1,5 +1,7 @@
 using Core;
 using Core.Agent;
+using Core.Options;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Nodes.Agent;
 using Nodes.Alerts;
@@ -9,8 +11,10 @@ namespace Nodes;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddNodes(this IServiceCollection services)
+    public static IServiceCollection AddNodes(this IServiceCollection services, IConfiguration config)
     {
+        var features = config.GetSection(AppOptions.SectionName).Get<AppOptions>()?.Features ?? new FeaturesOptions();
+
         services.AddScoped<INodeScheduler, NodeScheduler>();
         services.AddHttpClient(HttpContainerDispatcher.HttpClientName);
         services.AddSingleton<HttpContainerDispatcher>();
@@ -21,13 +25,18 @@ public static class DependencyInjection
         services.AddHostedService<NodeHeartbeatMonitor>();
         services.AddHostedService<BacktestCompletionPoller>();
         services.AddHostedService<RunCompletionPoller>();
-        services.AddHostedService<AiRiskGuard>();
         services.AddScoped<IAgentExecutor, AgentExecutor>();
-        services.AddHostedService<PortfolioAgentService>();
-        services.AddHostedService<AlertEvaluator>();
-        services.AddHostedService<PropGuardService>();
-        services.AddHostedService<Nodes.CopyTrading.OpenApiTokenRefreshService>();
-        services.AddHostedService<Nodes.CopyTrading.CopyEngineSupervisor>();
+
+        if (features.Ai) services.AddHostedService<AiRiskGuard>();
+        if (features.PortfolioAgent) services.AddHostedService<PortfolioAgentService>();
+        if (features.Alerts) services.AddHostedService<AlertEvaluator>();
+        if (features.PropGuard) services.AddHostedService<PropGuardService>();
+        if (features.CopyTrading)
+        {
+            services.AddHostedService<Nodes.CopyTrading.OpenApiTokenRefreshService>();
+            services.AddHostedService<Nodes.CopyTrading.CopyEngineSupervisor>();
+        }
+
         return services;
     }
 }

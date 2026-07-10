@@ -14,7 +14,8 @@ public static class AgentEndpoints
 {
     public static IEndpointRouteBuilder MapAgentEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/api/agent").RequireAuthorization(AuthPolicies.UserOrAbove);
+        var g = app.MapGroup("/api/agent").RequireAuthorization(AuthPolicies.UserOrAbove)
+            .RequireFeature(Core.Features.FeatureFlag.PortfolioAgent);
 
         g.MapGet("/mandates", async (DataContext db, ICurrentUser u, CancellationToken ct) =>
         {

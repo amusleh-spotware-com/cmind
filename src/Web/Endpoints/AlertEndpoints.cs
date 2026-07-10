@@ -13,7 +13,8 @@ public static class AlertEndpoints
 {
     public static IEndpointRouteBuilder MapAlertEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/api/alerts").RequireAuthorization(AuthPolicies.UserOrAbove);
+        var g = app.MapGroup("/api/alerts").RequireAuthorization(AuthPolicies.UserOrAbove)
+            .RequireFeature(Core.Features.FeatureFlag.Alerts);
 
         g.MapGet("/rules", async (DataContext db, ICurrentUser u, CancellationToken ct) =>
         {

@@ -16,7 +16,8 @@ public static class BuilderEndpoints
 {
     public static IEndpointRouteBuilder MapBuilderEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/api/builder").RequireAuthorization("UserOrAbove");
+        var g = app.MapGroup("/api/builder").RequireAuthorization("UserOrAbove")
+            .RequireFeature(Core.Features.FeatureFlag.Authoring);
 
         g.MapGet("/projects", async (DataContext db, ICurrentUser u) =>
         {

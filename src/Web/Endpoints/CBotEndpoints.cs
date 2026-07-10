@@ -14,7 +14,8 @@ public static class CBotEndpoints
 
     public static IEndpointRouteBuilder MapCBotEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/api/cbots").RequireAuthorization("UserOrAbove").DisableAntiforgery();
+        var g = app.MapGroup("/api/cbots").RequireAuthorization("UserOrAbove").DisableAntiforgery()
+            .RequireFeature(Core.Features.FeatureFlag.Authoring);
 
         g.MapGet("/", async (DataContext db, ICurrentUser u) =>
         {

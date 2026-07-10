@@ -15,7 +15,8 @@ public static class McpKeyEndpoints
 {
     public static IEndpointRouteBuilder MapMcpKeyEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/api/mcp-keys").RequireAuthorization();
+        var g = app.MapGroup("/api/mcp-keys").RequireAuthorization()
+            .RequireFeature(Core.Features.FeatureFlag.Mcp);
 
         g.MapGet("/", async (DataContext db, ICurrentUser u) =>
         {

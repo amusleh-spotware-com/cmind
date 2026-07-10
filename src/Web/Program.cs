@@ -28,7 +28,7 @@ builder.Services
     .ValidateOnStart();
 
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddNodes();
+builder.Services.AddNodes(builder.Configuration);
 
 builder.Services.AddHealthChecks()
     .AddNpgSql(sp => builder.Configuration.GetConnectionString(ConnectionStrings.AppDb)
@@ -147,6 +147,7 @@ app.MapParamSetEndpoints();
 app.MapMcpKeyEndpoints();
 app.MapBuilderEndpoints();
 app.MapDashboardEndpoints();
+app.MapFeatureEndpoints();
 app.MapAiEndpoints();
 app.MapAgentEndpoints();
 app.MapAlertEndpoints();

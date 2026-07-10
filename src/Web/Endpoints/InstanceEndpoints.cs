@@ -18,7 +18,8 @@ public static class InstanceEndpoints
 {
     public static IEndpointRouteBuilder MapInstanceEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/api/instances").RequireAuthorization();
+        var g = app.MapGroup("/api/instances").RequireAuthorization()
+            .RequireFeature(Core.Features.FeatureFlag.Execution);
 
         g.MapGet("/", async (DataContext db, ICurrentUser u) =>
         {

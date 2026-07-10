@@ -20,12 +20,14 @@ builder.Services.AddAuthentication(AuthSchemes.McpKey)
         AuthSchemes.McpKey, _ => { });
 builder.Services.AddAuthorization();
 
-builder.Services.AddMcpServer()
-    .WithHttpTransport(o => o.Stateless = true)
-    .WithTools<CBotTools>()
-    .WithTools<InstanceTools>()
-    .WithTools<AiTools>()
-    .WithTools<CopyTools>();
+var features = builder.Configuration.GetSection(Core.Options.AppOptions.SectionName)
+    .Get<Core.Options.AppOptions>()?.Features ?? new Core.Options.FeaturesOptions();
+
+var mcp = builder.Services.AddMcpServer().WithHttpTransport(o => o.Stateless = true);
+if (features.Authoring) mcp.WithTools<CBotTools>();
+if (features.Execution) mcp.WithTools<InstanceTools>();
+if (features.Ai) mcp.WithTools<AiTools>();
+if (features.CopyTrading) mcp.WithTools<CopyTools>();
 
 var app = builder.Build();
 app.UseSerilogRequestLogging();

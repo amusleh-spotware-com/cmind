@@ -27,6 +27,7 @@ public sealed record AppOptions
     public PropGuardOptions PropGuard { get; init; } = new();
     public OpenApiOptions OpenApi { get; init; } = new();
     public CopyOptions Copy { get; init; } = new();
+    public FeaturesOptions Features { get; init; } = new();
 }
 
 public sealed record CopyOptions

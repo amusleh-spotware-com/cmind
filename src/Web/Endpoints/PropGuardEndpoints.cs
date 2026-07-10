@@ -13,7 +13,8 @@ public static class PropGuardEndpoints
 {
     public static IEndpointRouteBuilder MapPropGuardEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/api/prop").RequireAuthorization(AuthPolicies.UserOrAbove);
+        var g = app.MapGroup("/api/prop").RequireAuthorization(AuthPolicies.UserOrAbove)
+            .RequireFeature(Core.Features.FeatureFlag.PropGuard);
 
         g.MapGet("/rules", async (DataContext db, ICurrentUser u, CancellationToken ct) =>
         {

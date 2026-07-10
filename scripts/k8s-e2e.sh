@@ -23,8 +23,10 @@ set -euo pipefail
 CLUSTER_NAME="${CLUSTER_NAME:-cmind-e2e}"
 RELEASE="${RELEASE:-cmind}"
 NAMESPACE="${NAMESPACE:-cmind}"
+IMAGE_REGISTRY="${IMAGE_REGISTRY:-kind.local}"
 IMAGE_REPO="${IMAGE_REPO:-cmind}"
 IMAGE_TAG="${IMAGE_TAG:-e2e}"
+IMG="${IMAGE_REGISTRY}/${IMAGE_REPO}"
 TEST_FILTER="${TEST_FILTER:-FullyQualifiedName~CopyTrading}"   # deterministic by default (no secrets)
 USE_EXISTING_CLUSTER="${USE_EXISTING_CLUSTER:-0}"
 KEEP_CLUSTER="${KEEP_CLUSTER:-0}"
@@ -49,13 +51,13 @@ if [[ "$USE_EXISTING_CLUSTER" != "1" ]]; then
 fi
 
 log "Building images (web, tests)"
-docker build -f "$ROOT/Dockerfile.web"   -t "${IMAGE_REPO}-web:${IMAGE_TAG}"   "$ROOT"
-docker build -f "$ROOT/Dockerfile.tests" -t "${IMAGE_REPO}-tests:${IMAGE_TAG}" "$ROOT"
+docker build -f "$ROOT/Dockerfile.web"   -t "${IMG}-web:${IMAGE_TAG}"   "$ROOT"
+docker build -f "$ROOT/Dockerfile.tests" -t "${IMG}-tests:${IMAGE_TAG}" "$ROOT"
 
 if [[ "$USE_EXISTING_CLUSTER" != "1" ]]; then
   log "Loading images into kind"
-  kind load docker-image "${IMAGE_REPO}-web:${IMAGE_TAG}"   --name "$CLUSTER_NAME"
-  kind load docker-image "${IMAGE_REPO}-tests:${IMAGE_TAG}" --name "$CLUSTER_NAME"
+  kind load docker-image "${IMG}-web:${IMAGE_TAG}"   --name "$CLUSTER_NAME"
+  kind load docker-image "${IMG}-tests:${IMAGE_TAG}" --name "$CLUSTER_NAME"
 fi
 
 kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
@@ -70,8 +72,8 @@ fi
 
 log "Deploying chart (Web + Postgres only; node agents not needed for copy tests)"
 helm upgrade --install "$RELEASE" "$CHART" -n "$NAMESPACE" \
-  --set image.repository="$IMAGE_REPO" --set image.registry="" \
-  --set image.tag="$IMAGE_TAG" --set image.pullPolicy=IfNotPresent \
+  --set image.registry="$IMAGE_REGISTRY" --set image.repository="$IMAGE_REPO" \
+  --set image.tag="$IMAGE_TAG" --set image.pullPolicy=Never \
   --set nodeAgent.enabled=false --set mcp.replicas=0 --set web.replicas=1 \
   --set web.dockerSocket.enabled=false \
   --wait --timeout 5m

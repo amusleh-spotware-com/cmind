@@ -53,21 +53,28 @@ public sealed class CopyEngineSupervisor(
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
         var protector = scope.ServiceProvider.GetRequiredService<ISecretProtector>();
 
-        var running = await db.CopyProfiles.Include(p => p.Destinations)
-            .Where(p => p.Status == CopyProfileStatus.Running).ToListAsync(stoppingToken);
-        var runningIds = running.Select(p => p.Id).ToHashSet();
+        var node = ResolveNode();
+
+        // Claim every unassigned running profile atomically: the first supervisor to run this update
+        // owns them, so a co-located second supervisor never hosts the same profile (no double-copy).
+        await db.CopyProfiles
+            .Where(p => p.Status == CopyProfileStatus.Running && p.AssignedNode == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.AssignedNode, node.Value), stoppingToken);
+
+        var mine = await db.CopyProfiles.Include(p => p.Destinations)
+            .Where(p => p.Status == CopyProfileStatus.Running && p.AssignedNode == node.Value)
+            .ToListAsync(stoppingToken);
+        var mineIds = mine.Select(p => p.Id).ToHashSet();
 
         foreach (var (id, handle) in _running.ToArray())
         {
-            if (runningIds.Contains(id)) continue;
+            if (mineIds.Contains(id)) continue;
             handle.Cts.Cancel();
             _running.TryRemove(id, out _);
         }
 
-        foreach (var profile in running)
+        foreach (var profile in mine)
         {
-            if (_running.ContainsKey(profile.Id)) continue;
-
             var plan = await BuildPlanAsync(db, protector, profile, stoppingToken);
             if (plan is null)
             {
@@ -75,14 +82,34 @@ public sealed class CopyEngineSupervisor(
                 continue;
             }
 
+            var signature = TokenSignature(plan);
+            if (_running.TryGetValue(profile.Id, out var existing))
+            {
+                // A rotated access token invalidates the token the running host still holds; restart it
+                // with a fresh plan (ResyncAsync rebuilds state without duplicating trades).
+                if (existing.TokenSignature == signature) continue;
+                existing.Cts.Cancel();
+                _running.TryRemove(profile.Id, out _);
+                log.CopyHostTokenRotated(profile.Id.Value);
+            }
+
             var cts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
             var host = new CopyEngineHost(plan, sessionFactory,
                 new CopyDecisionEngine(new CopySizingCalculator()), loggerFactory.CreateLogger<CopyEngineHost>());
             var task = Task.Run(() => host.RunAsync(cts.Token), CancellationToken.None);
-            _running[profile.Id] = new HostHandle(task, cts);
+            _running[profile.Id] = new HostHandle(task, cts, signature);
             log.CopyProfileHosted(profile.Id.Value);
         }
     }
+
+    private NodeIdentity ResolveNode()
+    {
+        var configured = options.CurrentValue.Copy.NodeName;
+        return new NodeIdentity(string.IsNullOrWhiteSpace(configured) ? Environment.MachineName : configured);
+    }
+
+    private static string TokenSignature(CopyProfilePlan plan)
+        => string.Join('|', plan.SourceAccessToken, string.Join(',', plan.Destinations.Select(d => d.AccessToken)));
 
     private static async Task<CopyProfilePlan?> BuildPlanAsync(
         DataContext db, ISecretProtector protector, CopyProfile profile, CancellationToken ct)
@@ -124,5 +151,5 @@ public sealed class CopyEngineSupervisor(
     private static string Decrypt(ISecretProtector protector, byte[] ciphertext, string purpose)
         => Encoding.UTF8.GetString(protector.Unprotect(ciphertext, purpose));
 
-    private sealed record HostHandle(Task Task, CancellationTokenSource Cts);
+    private sealed record HostHandle(Task Task, CancellationTokenSource Cts, string TokenSignature);
 }

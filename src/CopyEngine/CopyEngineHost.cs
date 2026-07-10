@@ -18,10 +18,12 @@ public sealed record CopyProfilePlan(
     IReadOnlyList<CopyDestinationPlan> Destinations);
 
 /// <summary>
-/// Runs one copy profile against a live authorised Open API session: mirrors source position opens
-/// and closes onto every destination, sized by <see cref="CopyDecisionEngine"/>. Destination copies
-/// are labelled with the source position id so state can be rebuilt from a reconcile after any
-/// reconnect (open-missing / close-orphaned) without duplicating trades.
+/// Runs one copy profile against a live authorised Open API session: mirrors source position opens,
+/// partial closes, scale-ins, full closes, pending limit/stop orders and stop-loss/trailing changes
+/// onto every destination, sized by <see cref="CopyDecisionEngine"/>. Destination copies are labelled
+/// with the source position id (or, for a resting pending order, the source order id) so state can be
+/// rebuilt from a reconcile after any reconnect (open-missing / close-orphaned) without duplicating
+/// trades.
 /// </summary>
 public sealed class CopyEngineHost(
     CopyProfilePlan plan,
@@ -33,6 +35,9 @@ public sealed class CopyEngineHost(
     private readonly Dictionary<long, IReadOnlyDictionary<string, long>> _destinationSymbolIds = new();
     private readonly Dictionary<(long Ctid, long SymbolId), SymbolDetails> _symbolDetails = new();
     private readonly HashSet<long> _openSourcePositions = [];
+    private readonly Dictionary<long, long> _sourceVolumes = new();
+    private readonly Dictionary<long, double?> _sourceStops = new();
+    private readonly HashSet<long> _mirroredPendingOrders = [];
 
     public async Task RunAsync(CancellationToken ct)
     {
@@ -52,7 +57,12 @@ public sealed class CopyEngineHost(
         {
             try
             {
-                if (execution.IsOpen) await HandleOpenAsync(session, execution, ct);
+                if (execution.IsPendingOrder)
+                {
+                    if (execution.IsOrderCancelled) await HandlePendingCancelledAsync(session, execution, ct);
+                    else await HandlePendingPlacedAsync(session, execution, ct);
+                }
+                else if (execution.IsOpen) await HandleOpenAsync(session, execution, ct);
                 else await HandleCloseAsync(session, execution.PositionId, ct);
             }
             catch (Exception ex)
@@ -74,8 +84,22 @@ public sealed class CopyEngineHost(
 
     private async Task HandleOpenAsync(IOpenApiTradingSession session, ExecutionEvent execution, CancellationToken ct)
     {
-        if (!_openSourcePositions.Add(execution.PositionId)) return;
+        if (_openSourcePositions.Contains(execution.PositionId))
+        {
+            await HandlePositionUpdateAsync(session, execution, ct);
+            return;
+        }
+
         if (!_sourceSymbolNames.TryGetValue(execution.SymbolId, out var sourceName)) return;
+
+        // A mirrored pending order just filled into this position: retire the resting destination
+        // pending(s) so the copy re-opens as a labelled market position (uniform id-based reconcile).
+        if (execution.OrderId != 0 && _mirroredPendingOrders.Remove(execution.OrderId))
+            await CancelDestinationPendingsAsync(session, execution.OrderId, ct);
+
+        _openSourcePositions.Add(execution.PositionId);
+        _sourceVolumes[execution.PositionId] = execution.Volume;
+        _sourceStops[execution.PositionId] = execution.StopLoss;
 
         var sourceDetail = await SymbolDetailAsync(session, plan.SourceCtidTraderAccountId, execution.SymbolId, ct);
         var sourceLots = VolumeConversion.LotsFromProtocol(execution.Volume, sourceDetail.LotSize);
@@ -85,12 +109,10 @@ public sealed class CopyEngineHost(
 
         foreach (var destination in plan.Destinations)
         {
-            // Isolate each destination: a failure copying to one slave (rejected order, symbol issue,
-            // transient error) must not stop the copy reaching the other slaves.
             try
             {
-                await CopyOpenToDestinationAsync(session, destination, execution, sourceName, sourceLots,
-                    sourceDetail, sourceBalance, ct);
+                await CopyOpenToDestinationAsync(session, destination, execution, sourceName,
+                    sourceDetail, sourceBalance, applyProtection: true, isScaleIn: false, ct);
             }
             catch (Exception ex)
             {
@@ -99,9 +121,197 @@ public sealed class CopyEngineHost(
         }
     }
 
+    private async Task HandlePositionUpdateAsync(IOpenApiTradingSession session, ExecutionEvent execution, CancellationToken ct)
+    {
+        var previousVolume = _sourceVolumes.GetValueOrDefault(execution.PositionId, execution.Volume);
+        var previousStop = _sourceStops.GetValueOrDefault(execution.PositionId);
+        _sourceVolumes[execution.PositionId] = execution.Volume;
+        _sourceStops[execution.PositionId] = execution.StopLoss;
+
+        if (execution.Volume < previousVolume)
+        {
+            await MirrorPartialCloseAsync(session, execution, previousVolume, ct);
+            return;
+        }
+
+        if (execution.Volume > previousVolume)
+        {
+            await MirrorScaleInAsync(session, execution, execution.Volume - previousVolume, ct);
+            return;
+        }
+
+        if (!Equals(previousStop, execution.StopLoss) || execution.TrailingStopLoss)
+            await MirrorStopChangeAsync(session, execution, ct);
+    }
+
+    private async Task MirrorPartialCloseAsync(
+        IOpenApiTradingSession session, ExecutionEvent execution, long previousVolume, CancellationToken ct)
+    {
+        var closedFraction = previousVolume <= 0 ? 0 : (double)(previousVolume - execution.Volume) / previousVolume;
+        if (closedFraction <= 0) return;
+        var label = execution.PositionId.ToString();
+
+        foreach (var destination in plan.Destinations)
+        {
+            if (!destination.Config.MirrorPartialClose) continue;
+            try
+            {
+                var positions = await session.ReconcileAsync(destination.CtidTraderAccountId, ct);
+                foreach (var position in positions.Where(p => p.Label == label))
+                {
+                    var detail = await SymbolDetailAsync(session, destination.CtidTraderAccountId, position.SymbolId, ct);
+                    var slice = SliceVolume(position.Volume * closedFraction, position.Volume, detail);
+                    if (slice <= 0) continue;
+                    await session.ClosePositionAsync(destination.CtidTraderAccountId, position.PositionId, slice, ct);
+                    logger.CopyPartialClose(plan.ProfileId.Value, destination.CtidTraderAccountId,
+                        position.PositionId, slice, execution.PositionId);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.CopyCloseFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, ex);
+            }
+        }
+    }
+
+    private async Task MirrorScaleInAsync(
+        IOpenApiTradingSession session, ExecutionEvent execution, long addedVolume, CancellationToken ct)
+    {
+        if (!_sourceSymbolNames.TryGetValue(execution.SymbolId, out var sourceName)) return;
+        var sourceDetail = await SymbolDetailAsync(session, plan.SourceCtidTraderAccountId, execution.SymbolId, ct);
+        var sourceBalance = await session.LoadBalanceAsync(plan.SourceCtidTraderAccountId, ct);
+        var scaleInExecution = execution with { Volume = addedVolume };
+
+        foreach (var destination in plan.Destinations)
+        {
+            if (!destination.Config.MirrorScaleIn) continue;
+            try
+            {
+                await CopyOpenToDestinationAsync(session, destination, scaleInExecution, sourceName,
+                    sourceDetail, sourceBalance, applyProtection: false, isScaleIn: true, ct);
+            }
+            catch (Exception ex)
+            {
+                logger.CopyOpenFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, ex);
+            }
+        }
+    }
+
+    private async Task MirrorStopChangeAsync(IOpenApiTradingSession session, ExecutionEvent execution, CancellationToken ct)
+    {
+        var label = execution.PositionId.ToString();
+        foreach (var destination in plan.Destinations)
+        {
+            if (!destination.Config.CopyStopLoss && !destination.Config.CopyTrailingStop) continue;
+            try
+            {
+                var positions = await session.ReconcileAsync(destination.CtidTraderAccountId, ct);
+                var match = positions.FirstOrDefault(p => p.Label == label);
+                if (match is null) continue;
+
+                var trailing = destination.Config.CopyTrailingStop && execution.TrailingStopLoss;
+                var stopLoss = destination.Config.CopyStopLoss ? execution.StopLoss : null;
+                if (destination.Config.Reverse) stopLoss = destination.Config.CopyTakeProfit ? execution.TakeProfit : stopLoss;
+                await session.AmendPositionSltpAsync(destination.CtidTraderAccountId, match.PositionId, stopLoss, null, trailing, ct);
+
+                if (trailing) logger.CopyTrailingApplied(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId);
+                else logger.CopyStopLossAmended(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, stopLoss ?? 0);
+            }
+            catch (Exception ex)
+            {
+                logger.CopyOpenFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, ex);
+            }
+        }
+    }
+
+    private async Task HandlePendingPlacedAsync(IOpenApiTradingSession session, ExecutionEvent execution, CancellationToken ct)
+    {
+        if (!_sourceSymbolNames.TryGetValue(execution.SymbolId, out var sourceName)) return;
+        var sourceDetail = await SymbolDetailAsync(session, plan.SourceCtidTraderAccountId, execution.SymbolId, ct);
+        var sourceBalance = await session.LoadBalanceAsync(plan.SourceCtidTraderAccountId, ct);
+        var price = execution.OrderKind == CopyOrderKind.Stop ? execution.StopPrice ?? 0 : execution.LimitPrice ?? 0;
+        var placedAny = false;
+
+        foreach (var destination in plan.Destinations)
+        {
+            if (!destination.Config.CopyPendingOrders) continue;
+            try
+            {
+                if (await PlacePendingToDestinationAsync(session, destination, execution, sourceName,
+                        sourceDetail, sourceBalance, price, ct))
+                    placedAny = true;
+            }
+            catch (Exception ex)
+            {
+                logger.CopyOpenFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.OrderId, ex);
+            }
+        }
+
+        if (placedAny) _mirroredPendingOrders.Add(execution.OrderId);
+    }
+
+    private async Task<bool> PlacePendingToDestinationAsync(IOpenApiTradingSession session, CopyDestinationPlan destination,
+        ExecutionEvent execution, string sourceName, SymbolDetails sourceDetail, double sourceBalance, double price,
+        CancellationToken ct)
+    {
+        var destinationName = destination.Config.ResolveDestinationSymbol(sourceName);
+        if (!_destinationSymbolIds[destination.CtidTraderAccountId].TryGetValue(Normalize(destinationName), out var destinationSymbolId))
+            return false;
+
+        var destinationDetail = await SymbolDetailAsync(session, destination.CtidTraderAccountId, destinationSymbolId, ct);
+        var destinationBalance = await session.LoadBalanceAsync(destination.CtidTraderAccountId, ct);
+        var sourceLots = VolumeConversion.LotsFromProtocol(execution.Volume, sourceDetail.LotSize);
+
+        var decision = decisions.DecideOpen(destination.Config, new OpenDecisionContext(
+            new SourcePosition(execution.OrderId, sourceName, execution.IsBuy, sourceLots, price,
+                execution.StopLoss, execution.TakeProfit),
+            Snapshot(sourceBalance), Snapshot(destinationBalance),
+            Spec(sourceDetail), Spec(destinationDetail), price, Math.Pow(10, -destinationDetail.PipPosition),
+            TimeSpan.Zero));
+        if (decision.Kind != CopyActionKind.Open) return false;
+
+        var wireVolume = VolumeConversion.ProtocolFromLots(decision.Lots, destinationDetail.LotSize);
+        if (wireVolume <= 0) return false;
+
+        var effectiveBuy = destination.Config.Reverse ? !execution.IsBuy : execution.IsBuy;
+        await session.SendPendingOrderAsync(destination.CtidTraderAccountId, destinationSymbolId, effectiveBuy,
+            wireVolume, execution.OrderKind, price, execution.OrderId.ToString(), ct);
+        logger.CopyPendingOrderPlaced(plan.ProfileId.Value, destination.CtidTraderAccountId, destinationName,
+            execution.OrderKind.ToString(), effectiveBuy ? "Buy" : "Sell", wireVolume, price, execution.OrderId);
+        return true;
+    }
+
+    private async Task HandlePendingCancelledAsync(IOpenApiTradingSession session, ExecutionEvent execution, CancellationToken ct)
+    {
+        _mirroredPendingOrders.Remove(execution.OrderId);
+        await CancelDestinationPendingsAsync(session, execution.OrderId, ct);
+    }
+
+    private async Task CancelDestinationPendingsAsync(IOpenApiTradingSession session, long sourceOrderId, CancellationToken ct)
+    {
+        var label = sourceOrderId.ToString();
+        foreach (var destination in plan.Destinations)
+        {
+            try
+            {
+                var pendings = await session.ReconcilePendingOrdersAsync(destination.CtidTraderAccountId, ct);
+                foreach (var pending in pendings.Where(o => o.Label == label))
+                {
+                    await session.CancelOrderAsync(destination.CtidTraderAccountId, pending.OrderId, ct);
+                    logger.CopyPendingOrderCancelled(plan.ProfileId.Value, destination.CtidTraderAccountId,
+                        pending.OrderId, sourceOrderId);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.CopyCloseFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, sourceOrderId, ex);
+            }
+        }
+    }
+
     private async Task CopyOpenToDestinationAsync(IOpenApiTradingSession session, CopyDestinationPlan destination,
-        ExecutionEvent execution, string sourceName, double sourceLots, SymbolDetails sourceDetail,
-        double sourceBalance, CancellationToken ct)
+        ExecutionEvent execution, string sourceName, SymbolDetails sourceDetail, double sourceBalance,
+        bool applyProtection, bool isScaleIn, CancellationToken ct)
     {
         var destinationName = destination.Config.ResolveDestinationSymbol(sourceName);
         if (!_destinationSymbolIds[destination.CtidTraderAccountId].TryGetValue(Normalize(destinationName), out var destinationSymbolId))
@@ -109,6 +319,7 @@ public sealed class CopyEngineHost(
 
         var destinationDetail = await SymbolDetailAsync(session, destination.CtidTraderAccountId, destinationSymbolId, ct);
         var destinationBalance = await session.LoadBalanceAsync(destination.CtidTraderAccountId, ct);
+        var sourceLots = VolumeConversion.LotsFromProtocol(execution.Volume, sourceDetail.LotSize);
 
         var decision = decisions.DecideOpen(destination.Config, new OpenDecisionContext(
             new SourcePosition(execution.PositionId, sourceName, execution.IsBuy, sourceLots,
@@ -138,10 +349,13 @@ public sealed class CopyEngineHost(
 
         await session.SendMarketOrderAsync(destination.CtidTraderAccountId, destinationSymbolId,
             effectiveBuy, wireVolume, execution.PositionId.ToString(), ct);
-        logger.CopyOrderPlaced(plan.ProfileId.Value, destination.CtidTraderAccountId, destinationName,
-            effectiveBuy ? "Buy" : "Sell", wireVolume, execution.PositionId);
+        if (isScaleIn)
+            logger.CopyScaleIn(plan.ProfileId.Value, destination.CtidTraderAccountId, destinationName, wireVolume, execution.PositionId);
+        else
+            logger.CopyOrderPlaced(plan.ProfileId.Value, destination.CtidTraderAccountId, destinationName,
+                effectiveBuy ? "Buy" : "Sell", wireVolume, execution.PositionId);
 
-        await ApplyProtectionAsync(session, destination, execution, ct);
+        if (applyProtection) await ApplyProtectionAsync(session, destination, execution, ct);
     }
 
     private async Task ApplyProtectionAsync(
@@ -150,7 +364,8 @@ public sealed class CopyEngineHost(
         double? stopLoss = destination.Config.CopyStopLoss ? source.StopLoss : null;
         double? takeProfit = destination.Config.CopyTakeProfit ? source.TakeProfit : null;
         if (destination.Config.Reverse) (stopLoss, takeProfit) = (takeProfit, stopLoss);
-        if (stopLoss is null && takeProfit is null) return;
+        var trailing = destination.Config.CopyTrailingStop && source.TrailingStopLoss;
+        if (stopLoss is null && takeProfit is null && !trailing) return;
 
         var label = source.PositionId.ToString();
         for (var attempt = 0; attempt < 3; attempt++)
@@ -159,9 +374,10 @@ public sealed class CopyEngineHost(
             var match = positions.FirstOrDefault(p => p.Label == label);
             if (match is not null)
             {
-                await session.AmendPositionSltpAsync(destination.CtidTraderAccountId, match.PositionId, stopLoss, takeProfit, ct);
+                await session.AmendPositionSltpAsync(destination.CtidTraderAccountId, match.PositionId, stopLoss, takeProfit, trailing, ct);
                 logger.CopyProtectionApplied(plan.ProfileId.Value, destination.CtidTraderAccountId,
                     source.PositionId, stopLoss ?? 0, takeProfit ?? 0);
+                if (trailing) logger.CopyTrailingApplied(plan.ProfileId.Value, destination.CtidTraderAccountId, source.PositionId);
                 return;
             }
 
@@ -172,6 +388,8 @@ public sealed class CopyEngineHost(
     private async Task HandleCloseAsync(IOpenApiTradingSession session, long sourcePositionId, CancellationToken ct)
     {
         _openSourcePositions.Remove(sourcePositionId);
+        _sourceVolumes.Remove(sourcePositionId);
+        _sourceStops.Remove(sourcePositionId);
         var label = sourcePositionId.ToString();
         logger.CopySourceClose(plan.ProfileId.Value, sourcePositionId);
 
@@ -199,7 +417,17 @@ public sealed class CopyEngineHost(
         var sourcePositions = await session.ReconcileAsync(plan.SourceCtidTraderAccountId, ct);
         var sourceOpenIds = sourcePositions.Select(p => p.PositionId).ToHashSet();
         _openSourcePositions.Clear();
-        foreach (var id in sourceOpenIds) _openSourcePositions.Add(id);
+        _sourceVolumes.Clear();
+        _sourceStops.Clear();
+        foreach (var position in sourcePositions)
+        {
+            _openSourcePositions.Add(position.PositionId);
+            _sourceVolumes[position.PositionId] = position.Volume;
+        }
+
+        var sourcePendingIds = (await session.ReconcilePendingOrdersAsync(plan.SourceCtidTraderAccountId, ct))
+            .Select(o => o.OrderId).ToHashSet();
+        _mirroredPendingOrders.RemoveWhere(id => !sourcePendingIds.Contains(id));
 
         var orphansClosed = 0;
         foreach (var destination in plan.Destinations)
@@ -213,6 +441,11 @@ public sealed class CopyEngineHost(
                     orphansClosed++;
                 }
             }
+
+            var destinationPendings = await session.ReconcilePendingOrdersAsync(destination.CtidTraderAccountId, ct);
+            foreach (var pending in destinationPendings)
+                if (long.TryParse(pending.Label, out var sourceOrderId) && !sourcePendingIds.Contains(sourceOrderId))
+                    await session.CancelOrderAsync(destination.CtidTraderAccountId, pending.OrderId, ct);
         }
 
         logger.CopyResync(plan.ProfileId.Value, sourceOpenIds.Count, orphansClosed);
@@ -226,6 +459,14 @@ public sealed class CopyEngineHost(
         var detail = details.FirstOrDefault() ?? new SymbolDetails(symbolId, 0, 0, 0, 0);
         _symbolDetails[(ctid, symbolId)] = detail;
         return detail;
+    }
+
+    private static long SliceVolume(double raw, long available, SymbolDetails detail)
+    {
+        var step = detail.StepVolume > 0 ? detail.StepVolume : 1;
+        var steps = (long)Math.Round(raw / step, MidpointRounding.AwayFromZero);
+        var slice = Math.Min(steps * step, available);
+        return slice < detail.MinVolume ? 0 : slice;
     }
 
     private static AccountSnapshot Snapshot(double balance) => new(balance, balance, balance);

@@ -102,3 +102,21 @@ discovery:
   heartbeatTtl: "00:01:30"
   monitorInterval: "00:00:30"
   heartbeatInterval: "00:00:30"
+
+## In-cluster test runner. Disabled by default; enable to run the copy-trading suite as a K8s Job
+## against the deployed Postgres + Web using a mounted token cache. The copy tests need only
+## Postgres + Web + the token cache (no privileged node agents).
+tests:
+  enabled: false
+  # Which suite to run. Default = live copy suite; use "FullyQualifiedName~CopyTrading" for the
+  # deterministic suite (no secrets/network needed).
+  project: "tests/IntegrationTests/IntegrationTests.csproj"
+  filter: "FullyQualifiedName~CopyTradingLiveTests"
+  backoffLimit: 0
+  # Name of the K8s Secret holding the gitignored openapi-*.local.json files (one key per file),
+  # mounted at /app/secrets. Create with:
+  #   kubectl create secret generic cmind-copy-secrets --from-file=secrets/
+  copySecret: "cmind-copy-secrets"
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { cpu: "2", memory: 2Gi }

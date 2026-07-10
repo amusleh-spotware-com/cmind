@@ -76,6 +76,67 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
         return new ScenarioResult(false, null, masterIsBuy, volume, slaveResults);
     }
 
+    public sealed record PartialCloseResult(bool Inconclusive, string? Reason, long SlaveVolumeBefore, long SlaveVolumeAfter);
+
+    // Opens a master position sized to at least two lot steps, waits for the slave copy, partial-closes
+    // the master by half, and reports the slave copy volume before/after so the test can assert it
+    // shrank proportionally. Demo only; cleans up everything it opened.
+    public async Task<PartialCloseResult> RunPartialCloseAsync(LiveCopyFixture.LiveAccount master,
+        SlaveSetup slave, CancellationToken ct)
+    {
+        var masterCtid = master.Ctid;
+        var plan = new CopyProfilePlan(CopyProfileId.New(), Live: false, fixture.ClientId, fixture.ClientSecret,
+            masterCtid, master.AccessToken,
+            [new CopyDestinationPlan(slave.Account.Ctid, slave.Account.AccessToken, slave.Config)]);
+
+        var host = new CopyEngineHost(plan, new OpenApiTradingSessionFactory(fixture.ConnectionFactory),
+            new CopyDecisionEngine(new CopySizingCalculator()), NullLogger.Instance);
+        using var hostCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var hostTask = Task.Run(() => host.RunAsync(hostCts.Token), CancellationToken.None);
+
+        await using var probe = fixture.NewSession(new[] { master, slave.Account });
+        await probe.StartAsync(ct);
+
+        var symbolId = await ResolveSymbolAsync(probe, masterCtid, [slave.Account.Ctid], ct);
+        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct)).First();
+        var step = details.StepVolume > 0 ? details.StepVolume : 1;
+        var volume = Math.Max(details.MinVolume, step * 2);
+
+        var label = $"cmind-pc-{Guid.NewGuid():N}"[..24];
+        await Task.Delay(HostWarmup, ct);
+        await probe.SendMarketOrderAsync(masterCtid, symbolId, isBuy: true, volume, label, ct);
+
+        var masterPosition = await PollAsync(() => FindByLabelAsync(probe, masterCtid, label, ct), TimeSpan.FromSeconds(12), ct);
+        if (masterPosition is null)
+        {
+            await StopHostAsync(hostCts, hostTask);
+            return new PartialCloseResult(true, "Master order did not fill (market likely closed).", 0, 0);
+        }
+
+        var sourceId = masterPosition.PositionId.ToString();
+        var copy = await PollAsync(() => FindByLabelAsync(probe, slave.Account.Ctid, sourceId, ct), CopyTimeout, ct);
+        if (copy is null)
+        {
+            await CleanupAsync(probe, masterCtid, sourceId, [slave], ct);
+            await StopHostAsync(hostCts, hostTask);
+            return new PartialCloseResult(true, "Slave copy never appeared.", 0, 0);
+        }
+
+        var before = copy.Volume;
+        await probe.ClosePositionAsync(masterCtid, masterPosition.PositionId, volume / 2, ct); // close half the master
+        var shrunk = await PollAsync(async () =>
+        {
+            var current = await FindByLabelAsync(probe, slave.Account.Ctid, sourceId, ct);
+            return current is not null && current.Volume < before ? current : null;
+        }, CopyTimeout, ct);
+
+        var after = shrunk?.Volume ?? before;
+        output.WriteLine($"partial close: slave volume {before} -> {after}");
+        await CleanupAsync(probe, masterCtid, sourceId, [slave], ct);
+        await StopHostAsync(hostCts, hostTask);
+        return new PartialCloseResult(false, null, before, after);
+    }
+
     private async Task<long> ResolveSymbolAsync(OpenApiTradingSession probe, long masterCtid,
         IReadOnlyList<long> slaveCtids, CancellationToken ct)
     {

@@ -1,0 +1,21 @@
+# In-cluster test runner: builds the solution and runs the copy-trading test suite against the
+# Helm-deployed Postgres + Web services, using a token cache mounted from a K8s Secret at /app/secrets.
+# Kept SDK-based (not a published binary) so `dotnet test` runs the same assertions as locally.
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY . .
+# Warm the build so the container start runs tests without a cold restore/compile.
+RUN dotnet build tests/IntegrationTests/IntegrationTests.csproj -c Release --nologo \
+    && dotnet build tests/UnitTests/UnitTests.csproj -c Release --nologo
+
+# Which tests to run. Override with e.g. TEST_FILTER="FullyQualifiedName~CopyTrading" for the full
+# deterministic suite, or the default live copy suite below.
+ENV TEST_PROJECT=tests/IntegrationTests/IntegrationTests.csproj
+ENV TEST_FILTER=FullyQualifiedName~CopyTradingLiveTests
+
+ENTRYPOINT ["/bin/sh", "-c", "dotnet test $TEST_PROJECT -c Release --no-restore --nologo --filter \"$TEST_FILTER\""]

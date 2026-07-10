@@ -158,6 +158,13 @@ Every copy trading operation is logged through source-generated structured event
 | CopySourceClose / CopyPositionClosed | 1052 / 1053 | master closed → slave copy closed |
 | CopyCloseFailed | 1054 | a slave copy-close failed |
 | CopyResync | 1055 | reconnect reconciliation (source open count, orphans closed) |
+| CopyPartialClose | 1056 | master partial close mirrored — proportional slice closed on a slave |
+| CopyScaleIn | 1057 | master scale-in mirrored (opt-in) — added volume copied to a slave |
+| CopyPendingOrderPlaced | 1058 | pending limit/stop mirrored to a slave (opt-in) |
+| CopyPendingOrderCancelled | 1059 | source pending cancelled → slave pending cancelled |
+| CopyTrailingApplied | 1060 | trailing stop applied to a slave copy (opt-in) |
+| CopyStopLossAmended | 1061 | a source SL move re-amended the slave copy |
+| CopyHostTokenRotated | 1062 | supervisor restarted a running host after its access token rotated |
 
 Logs are emitted as Serilog compact JSON (structured properties: `ProfileId`, `DestinationCtid`,
 `SourcePositionId`, `Symbol`, `Side`, `Volume`, …) and shipped to OTLP when
@@ -187,12 +194,54 @@ direction filters, and orphan cleanup after a disconnect are all covered above. 
 [why copy trading fails](https://xtsupport.zendesk.com/hc/en-us/articles/51566808595993-Why-Copy-Trading-Fails-Causes-Prevention-Guide) ·
 [risk parameters](https://www.mt4copier.com/risk-parameters/).
 
-## Known gaps / next
+## Advanced mirroring coverage (partial close · pending orders · SL-trailing)
 
-- **Token rotation across external nodes.** Each run rotates the access token via the refresh token
-  (exercised by `LiveCopyFixture`). `OpenApiTokenRefreshService` refreshes near expiry in-process; a test
-  that a refreshed token propagates to the distributed `CopyAgent` on external nodes without disrupting a
-  running profile is still to be written.
-- **Partial close / order types / SL-trailing.** The host copies on position open as a market order and
-  closes the full copy when the source closes; partial-close mirroring, non-market order types, and
-  trailing-stop replication are not implemented and therefore not tested.
+The host mirrors more than market open/close. Each behaviour is a per-destination opt-in flag on
+`CopyDestination` (`MirrorPartialClose` default on, `MirrorScaleIn`/`CopyPendingOrders`/`CopyTrailingStop`
+default off), guarded by intention methods and jsonb-persisted (migration
+`CopyAdvancedMirroringAndNodeAffinity`).
+
+| Behaviour | Deterministic test (`CopyEngineHostTests`) | Live test |
+|-----------|--------------------------------------------|-----------|
+| Partial close → proportional slice | `Partial_close_mirrors_a_proportional_slice_on_the_slave` (1.0→0.4 closes 60%) + disabled path | `Partial_close_shrinks_the_slave_copy_proportionally` |
+| Scale-in | `Scale_in_is_ignored_by_default_and_mirrored_when_enabled` | — |
+| Pending limit/stop placed | `Pending_order_is_placed_on_the_slave_when_enabled` (Theory: Limit+Stop) + disabled path | (manual — place a limit away from price) |
+| Pending cancel | `Source_pending_cancel_cancels_the_slave_pending` | — |
+| Filled pending no double-open | `Filled_pending_does_not_double_open` (order-id → position-id dedupe) | — |
+| Trailing stop | `Trailing_stop_is_applied_to_the_copy_when_enabled` | — |
+| Source SL move re-amend | `Source_stop_loss_move_re_amends_the_copy` | — |
+| Audit events fire | `Advanced_mirroring_audit_events_fire` (1056/1058/1059) | — |
+
+Wire additions in `OpenApiTradingSession`: `SendPendingOrderAsync`, `CancelOrderAsync`,
+`ReconcilePendingOrdersAsync`, trailing flag on `AmendPositionSltpAsync`, and order/pending fields on
+`ExecutionEvent`. Destination copies stay labelled by **source position id** (pending copies by source
+**order id**) so reconnect reconcile stays id-based and never duplicates a trade.
+
+## Token rotation + node affinity
+
+- **Rotation into running hosts.** `CopyEngineSupervisor` records a token signature on each running host
+  and, every reconcile, rebuilds the plan from the DB (freshly rotated by `OpenApiTokenRefreshService`).
+  A changed signature restarts the host (`CopyHostTokenRotated`, 1062); the new host's `ResyncAsync`
+  rebuilds state without duplicating trades. Force a rotation mid-run via
+  `IOpenApiTokenClient.RefreshAsync` to verify the live host keeps copying.
+- **Node affinity (no double-copy).** Both the Web local node and the `CopyAgent` worker run a supervisor.
+  Each running profile is claimed by exactly one node (`CopyProfile.AssignedNode`, atomic
+  `ExecuteUpdate` claim keyed off `CopyOptions.NodeName`, default machine name). A supervisor hosts only
+  profiles it owns; stop/pause releases the claim. Domain-level coverage:
+  `AssignToNode_makes_profile_hosted_by_only_that_node`,
+  `Stopping_a_profile_releases_its_node_assignment`, `NodeIdentity_rejects_blank`.
+
+## Running the suite in a Kubernetes cluster
+
+The whole suite runs in-cluster against the Helm-deployed app, so a regression is caught in-cluster the
+same as locally. See [`docs/deployment/kubernetes.md`](../deployment/kubernetes.md#in-cluster-test-suite).
+
+```bash
+scripts/k8s-e2e.sh                                   # kind cluster, live copy suite (needs ./secrets)
+TEST_FILTER='FullyQualifiedName~CopyTrading' scripts/k8s-e2e.sh   # deterministic suite, no secrets
+```
+
+`Dockerfile.tests` builds the runner image; the Helm `tests-job.yaml` (gated `tests.enabled=false`)
+mounts the gitignored token cache from a `cmind-copy-secrets` Secret at `/app/secrets` and talks to the
+in-cluster Postgres + Web. The copy tests need only Web + Postgres + the token cache — no privileged node
+agents. The script asserts the Job exits 0 and its logs contain `Passed!`/`copied=True`.

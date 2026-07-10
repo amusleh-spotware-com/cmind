@@ -42,13 +42,16 @@
             <MudText Typo="Typo.h6">Destinations — @_detail.name</MudText>
             <MudTable Items="@(((IEnumerable<dynamic>)_detail.destinations))" Dense="true" Class="mb-3">
                 <HeaderContent>
-                    <MudTh>Account</MudTh><MudTh>Mode</MudTh><MudTh>Param</MudTh><MudTh>Reverse</MudTh><MudTh>Direction</MudTh><MudTh /></HeaderContent>
+                    <MudTh>Account</MudTh><MudTh>Mode</MudTh><MudTh>Param</MudTh><MudTh>Reverse</MudTh><MudTh>Direction</MudTh><MudTh>Partial</MudTh><MudTh>Pending</MudTh><MudTh>Trailing</MudTh><MudTh /></HeaderContent>
                 <RowTemplate>
                     <MudTd>@context.destinationAccountId</MudTd>
                     <MudTd>@context.mode</MudTd>
                     <MudTd>@context.riskParameter</MudTd>
                     <MudTd>@context.reverse</MudTd>
                     <MudTd>@context.direction</MudTd>
+                    <MudTd>@context.mirrorPartialClose</MudTd>
+                    <MudTd>@context.copyPendingOrders</MudTd>
+                    <MudTd>@context.copyTrailingStop</MudTd>
                     <MudTd><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
                                           OnClick="@(() => RemoveDestination((Guid)context.id))" /></MudTd>
                 </RowTemplate>
@@ -93,6 +96,10 @@
                 <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_forceMin" Label="Force min lot" Color="Color.Primary" /></MudItem>
                 <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyStopLoss" Label="Copy SL" Color="Color.Primary" /></MudItem>
                 <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyTakeProfit" Label="Copy TP" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_mirrorPartialClose" Label="Partial close" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_mirrorScaleIn" Label="Scale-in" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyPending" Label="Pending orders" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyTrailing" Label="Trailing stop" Color="Color.Primary" /></MudItem>
                 <MudItem xs="12" md="6"><MudTextField @bind-Value="_symbolMapText" Label="Symbol map (SRC=DST, comma separated)" /></MudItem>
                 <MudItem xs="6" md="3">
                     <MudSelect T="SymbolFilterMode" @bind-Value="_filterMode" Label="Symbol filter">
@@ -138,6 +145,10 @@
     private bool _forceMin;
     private bool _copyStopLoss = true;
     private bool _copyTakeProfit = true;
+    private bool _mirrorPartialClose = true;
+    private bool _mirrorScaleIn;
+    private bool _copyPending;
+    private bool _copyTrailing;
     private string _symbolMapText = "";
     private string _filterText = "";
     private SymbolFilterMode _filterMode = SymbolFilterMode.None;
@@ -234,7 +245,11 @@
                 DailyLossLimit = _dailyLoss,
                 SymbolFilterMode = _filterMode,
                 SymbolFilters = ParseCsv(_filterText),
-                SymbolMap = ParseMap(_symbolMapText)
+                SymbolMap = ParseMap(_symbolMapText),
+                MirrorPartialClose = _mirrorPartialClose,
+                MirrorScaleIn = _mirrorScaleIn,
+                CopyPendingOrders = _copyPending,
+                CopyTrailingStop = _copyTrailing
             });
             if (!r.IsSuccessStatusCode) failed = true;
         }

@@ -43,6 +43,10 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public bool Reverse { get; private set; }
     public bool CopyStopLoss { get; private set; } = true;
     public bool CopyTakeProfit { get; private set; } = true;
+    public bool MirrorPartialClose { get; private set; } = true;
+    public bool MirrorScaleIn { get; private set; }
+    public bool CopyPendingOrders { get; private set; }
+    public bool CopyTrailingStop { get; private set; }
     public CopyDirectionFilter Direction { get; private set; } = CopyDirectionFilter.Both;
     public double MinLot { get; private set; }
     public double MaxLot { get; private set; }
@@ -74,6 +78,9 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public void SetReverse(bool reverse) { Reverse = reverse; Touch(); }
     public void SetCopyProtection(bool copyStopLoss, bool copyTakeProfit) { CopyStopLoss = copyStopLoss; CopyTakeProfit = copyTakeProfit; Touch(); }
     public void SetDirection(CopyDirectionFilter direction) { Direction = direction; Touch(); }
+    public void SetPartialCloseMirroring(bool mirrorPartialClose, bool mirrorScaleIn) { MirrorPartialClose = mirrorPartialClose; MirrorScaleIn = mirrorScaleIn; Touch(); }
+    public void SetPendingOrderCopying(bool copyPendingOrders) { CopyPendingOrders = copyPendingOrders; Touch(); }
+    public void SetTrailingStopCopying(bool copyTrailingStop) { CopyTrailingStop = copyTrailingStop; Touch(); }
 
     public void SetGuards(DrawdownPercent maxDrawdown, double dailyLossLimit)
     {
@@ -120,6 +127,7 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
     [MaxLength(128)] public string Name { get; private set; } = default!;
     public TradingAccountId SourceAccountId { get; private set; }
     public CopyProfileStatus Status { get; private set; } = CopyProfileStatus.Draft;
+    [MaxLength(64)] public string? AssignedNode { get; private set; }
     public IReadOnlyList<CopyDestination> Destinations => _destinations;
 
     public static CopyProfile Create(UserId userId, string name, TradingAccountId sourceAccountId)
@@ -132,6 +140,12 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
         };
 
     public void Rename(string name) { Name = DomainGuard.AgainstNullOrWhiteSpace(name, DomainErrors.NameRequired); Touch(); }
+
+    public bool IsHostedBy(NodeIdentity node) => string.Equals(AssignedNode, node.Value, StringComparison.Ordinal);
+
+    public void AssignToNode(NodeIdentity node) { AssignedNode = node.Value; Touch(); }
+
+    public void ReleaseAssignment() { AssignedNode = null; Touch(); }
 
     public CopyDestination AddDestination(TradingAccountId destinationAccountId, RiskSettings risk)
     {
@@ -168,6 +182,7 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
         if (Status != CopyProfileStatus.Running)
             throw new DomainException(DomainErrors.CopyProfileTransitionInvalid);
         Status = CopyProfileStatus.Paused;
+        AssignedNode = null;
         Touch();
         RaiseDomainEvent(new CopyProfilePaused(Id, UserId));
     }
@@ -175,6 +190,7 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
     public void Stop()
     {
         Status = CopyProfileStatus.Stopped;
+        AssignedNode = null;
         Touch();
         RaiseDomainEvent(new CopyProfileStopped(Id, UserId));
     }

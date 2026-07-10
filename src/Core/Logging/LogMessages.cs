@@ -180,4 +180,32 @@ public static partial class LogMessages
     [LoggerMessage(EventId = 1055, Level = LogLevel.Information,
         Message = "Copy resync: profile {ProfileId} {SourceOpen} source position(s) open, closed {OrphansClosed} orphaned copy(ies)")]
     public static partial void CopyResync(this ILogger logger, Guid profileId, int sourceOpen, int orphansClosed);
+
+    [LoggerMessage(EventId = 1056, Level = LogLevel.Information,
+        Message = "Copy partial close: profile {ProfileId} dest {DestinationCtid} position {PositionId} volume {Volume} (source {SourcePositionId})")]
+    public static partial void CopyPartialClose(this ILogger logger, Guid profileId, long destinationCtid, long positionId, long volume, long sourcePositionId);
+
+    [LoggerMessage(EventId = 1057, Level = LogLevel.Information,
+        Message = "Copy scale-in: profile {ProfileId} dest {DestinationCtid} {Symbol} volume {Volume} (source {SourcePositionId})")]
+    public static partial void CopyScaleIn(this ILogger logger, Guid profileId, long destinationCtid, string symbol, long volume, long sourcePositionId);
+
+    [LoggerMessage(EventId = 1058, Level = LogLevel.Information,
+        Message = "Copy pending order placed: profile {ProfileId} dest {DestinationCtid} {Symbol} {Kind} {Side} volume {Volume} price {Price} (source order {SourceOrderId})")]
+    public static partial void CopyPendingOrderPlaced(this ILogger logger, Guid profileId, long destinationCtid, string symbol, string kind, string side, long volume, double price, long sourceOrderId);
+
+    [LoggerMessage(EventId = 1059, Level = LogLevel.Information,
+        Message = "Copy pending order cancelled: profile {ProfileId} dest {DestinationCtid} order {OrderId} (source order {SourceOrderId})")]
+    public static partial void CopyPendingOrderCancelled(this ILogger logger, Guid profileId, long destinationCtid, long orderId, long sourceOrderId);
+
+    [LoggerMessage(EventId = 1060, Level = LogLevel.Information,
+        Message = "Copy trailing stop applied: profile {ProfileId} dest {DestinationCtid} source {SourcePositionId}")]
+    public static partial void CopyTrailingApplied(this ILogger logger, Guid profileId, long destinationCtid, long sourcePositionId);
+
+    [LoggerMessage(EventId = 1061, Level = LogLevel.Information,
+        Message = "Copy stop-loss amended: profile {ProfileId} dest {DestinationCtid} source {SourcePositionId} SL {StopLoss}")]
+    public static partial void CopyStopLossAmended(this ILogger logger, Guid profileId, long destinationCtid, long sourcePositionId, double stopLoss);
+
+    [LoggerMessage(EventId = 1062, Level = LogLevel.Information,
+        Message = "Copy host restarted for token rotation: profile {ProfileId}")]
+    public static partial void CopyHostTokenRotated(this ILogger logger, Guid profileId);
 }

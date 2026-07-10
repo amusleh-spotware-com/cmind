@@ -33,6 +33,7 @@ public static class DomainErrors
     public const string CopySourceEqualsDestination = "domain.copy.source_equals_destination";
     public const string CopyDestinationDuplicate = "domain.copy.destination_duplicate";
     public const string CopyProfileTransitionInvalid = "domain.copy.profile_transition_invalid";
+    public const string CopyNodeIdentityInvalid = "domain.copy.node_identity_invalid";
 
     public const string InstanceTransitionInvalid = "domain.instance.transition_invalid";
     public const string NodeMaxInstancesInvalid = "domain.node.max_instances_invalid";

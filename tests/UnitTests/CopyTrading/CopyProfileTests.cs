@@ -92,4 +92,58 @@ public sealed class CopyProfileTests
         destination.ResolveDestinationSymbol("BTCUSD").Should().Be("BTCUSD.X");
         destination.ResolveDestinationSymbol("EURUSD").Should().Be("EURUSD");
     }
+
+    [Fact]
+    public void Destination_defaults_mirror_partial_close_on_and_advanced_flags_off()
+    {
+        var destination = NewProfile(out _).AddDestination(TradingAccountId.New(), Mirror);
+        destination.MirrorPartialClose.Should().BeTrue();
+        destination.MirrorScaleIn.Should().BeFalse();
+        destination.CopyPendingOrders.Should().BeFalse();
+        destination.CopyTrailingStop.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Destination_flag_intention_methods_mutate_state()
+    {
+        var destination = NewProfile(out _).AddDestination(TradingAccountId.New(), Mirror);
+        destination.SetPartialCloseMirroring(false, true);
+        destination.SetPendingOrderCopying(true);
+        destination.SetTrailingStopCopying(true);
+
+        destination.MirrorPartialClose.Should().BeFalse();
+        destination.MirrorScaleIn.Should().BeTrue();
+        destination.CopyPendingOrders.Should().BeTrue();
+        destination.CopyTrailingStop.Should().BeTrue();
+    }
+
+    [Fact]
+    public void NodeIdentity_rejects_blank()
+    {
+        var act = () => _ = new NodeIdentity("  ");
+        act.Should().Throw<DomainException>().Which.Code.Should().Be(DomainErrors.CopyNodeIdentityInvalid);
+    }
+
+    [Fact]
+    public void AssignToNode_makes_profile_hosted_by_only_that_node()
+    {
+        var profile = NewProfile(out _);
+        profile.AssignToNode(new NodeIdentity("node-a"));
+
+        profile.AssignedNode.Should().Be("node-a");
+        profile.IsHostedBy(new NodeIdentity("node-a")).Should().BeTrue();
+        profile.IsHostedBy(new NodeIdentity("node-b")).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Stopping_a_profile_releases_its_node_assignment()
+    {
+        var profile = NewProfile(out _);
+        profile.Start();
+        profile.AssignToNode(new NodeIdentity("node-a"));
+        profile.Stop();
+
+        profile.AssignedNode.Should().BeNull("a stopped profile can be re-claimed by any node");
+        profile.IsHostedBy(new NodeIdentity("node-a")).Should().BeFalse();
+    }
 }

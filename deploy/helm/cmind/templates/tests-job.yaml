@@ -1,0 +1,58 @@
+{{- if .Values.tests.enabled }}
+# In-cluster test Job. Runs the copy-trading suite against the deployed Postgres + Web, with the
+# gitignored token-cache Secret mounted at /app/secrets (where LiveCopySecrets walks up to find it).
+# Never bake secrets into the image — they come from tests.copySecret.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "cmind.fullname" . }}-tests
+  labels:
+    {{- include "cmind.labels" . | nindent 4 }}
+    app.kubernetes.io/component: tests
+  annotations:
+    # Re-run on every `helm upgrade` even if unchanged.
+    helm.sh/hook-weight: "0"
+spec:
+  backoffLimit: {{ .Values.tests.backoffLimit | default 0 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: tests
+    spec:
+      restartPolicy: Never
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: tests
+          image: "{{ include "cmind.image" . }}-tests:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: DOTNET_ENVIRONMENT
+              value: Production
+            - name: TEST_PROJECT
+              value: {{ .Values.tests.project | quote }}
+            - name: TEST_FILTER
+              value: {{ .Values.tests.filter | quote }}
+            - name: CMIND_WEB_URL
+              value: {{ include "cmind.webUrl" . | quote }}
+            - name: PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "cmind.secretName" . }}
+                  key: PG_PASSWORD
+            - name: ConnectionStrings__appdb
+              value: {{ include "cmind.connectionString" . | quote }}
+          volumeMounts:
+            - name: copy-secrets
+              mountPath: /app/secrets
+              readOnly: true
+          resources:
+            {{- toYaml .Values.tests.resources | nindent 12 }}
+      volumes:
+        - name: copy-secrets
+          secret:
+            secretName: {{ .Values.tests.copySecret | quote }}
+{{- end }}

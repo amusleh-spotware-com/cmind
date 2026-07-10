@@ -33,6 +33,13 @@ public sealed record CopyOptions
 {
     public bool Enabled { get; init; }
     public TimeSpan ReconcileInterval { get; init; } = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// Stable identity of the node hosting copy engines. Each running profile is claimed by exactly
+    /// one node so co-located supervisors (Web local node + CopyAgent worker) never double-execute.
+    /// Defaults to the machine name; set distinctly when two supervisors share a host.
+    /// </summary>
+    public string NodeName { get; init; } = string.Empty;
 }
 
 public sealed record OpenApiOptions

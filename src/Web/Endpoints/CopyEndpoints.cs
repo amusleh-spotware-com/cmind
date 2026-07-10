@@ -30,7 +30,11 @@ public record AddCopyDestinationRequest(
     double DailyLossLimit,
     SymbolFilterMode SymbolFilterMode = SymbolFilterMode.None,
     IReadOnlyList<string>? SymbolFilters = null,
-    IReadOnlyList<SymbolMapPair>? SymbolMap = null);
+    IReadOnlyList<SymbolMapPair>? SymbolMap = null,
+    bool MirrorPartialClose = true,
+    bool MirrorScaleIn = false,
+    bool CopyPendingOrders = false,
+    bool CopyTrailingStop = false);
 
 public record SymbolMapPair(string Source, string Destination);
 
@@ -104,6 +108,10 @@ public static class CopyEndpoints
                     d.Reverse,
                     d.CopyStopLoss,
                     d.CopyTakeProfit,
+                    d.MirrorPartialClose,
+                    d.MirrorScaleIn,
+                    d.CopyPendingOrders,
+                    d.CopyTrailingStop,
                     Direction = d.Direction.ToString(),
                     d.MinLot,
                     d.MaxLot,
@@ -153,6 +161,9 @@ public static class CopyEndpoints
             destination.SetReverse(req.Reverse);
             destination.SetCopyProtection(req.CopyStopLoss, req.CopyTakeProfit);
             destination.SetDirection(req.Direction);
+            destination.SetPartialCloseMirroring(req.MirrorPartialClose, req.MirrorScaleIn);
+            destination.SetPendingOrderCopying(req.CopyPendingOrders);
+            destination.SetTrailingStopCopying(req.CopyTrailingStop);
             destination.SetGuards(new DrawdownPercent(req.MaxDrawdownPercent), req.DailyLossLimit);
             if (req.SymbolMap is { Count: > 0 })
                 destination.SetSymbolMap(req.SymbolMap.Select(m => new SymbolMapEntry(new Symbol(m.Source), new Symbol(m.Destination))));

@@ -131,6 +131,19 @@ public readonly record struct RiskSettings
     }
 }
 
+public readonly record struct NodeIdentity
+{
+    public string Value { get; }
+
+    public NodeIdentity(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) throw new DomainException(DomainErrors.CopyNodeIdentityInvalid);
+        Value = value.Trim();
+    }
+
+    public override string ToString() => Value;
+}
+
 public readonly record struct AccountSnapshot(double Balance, double Equity, double FreeMargin);
 
 public readonly record struct SymbolSpec(double ContractSize, double LotStep, double MinLot, double MaxLot);

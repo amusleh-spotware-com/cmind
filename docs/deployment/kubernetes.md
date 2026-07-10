@@ -144,6 +144,46 @@ see [../operations/node-discovery.md](../operations/node-discovery.md).
 liveness `/alive`, readiness `/health` (Web) · `/version` (MCP) · `/health` (agent) — mapped in all
 environments.
 
+## In-cluster test suite
+
+Run the copy-trading suite as a Kubernetes `Job` against the deployed app, so a regression is caught
+in-cluster the same as locally. The copy tests need only Web + Postgres + a token cache — **no**
+privileged node agents.
+
+One-shot, reproducible (kind up → build+load images → deploy → run Job → assert exit 0 → tear down):
+
+```bash
+scripts/k8s-e2e.sh                                   # live copy suite (needs ./secrets)
+TEST_FILTER='FullyQualifiedName~CopyTrading' scripts/k8s-e2e.sh   # deterministic suite, no secrets
+USE_EXISTING_CLUSTER=1 scripts/k8s-e2e.sh            # reuse current kube context
+```
+
+Manual / CI wiring:
+
+```bash
+docker build -f Dockerfile.tests -t cmind-tests:e2e .          # runner image (SDK + built test projects)
+kubectl -n cmind create secret generic cmind-copy-secrets \
+  --from-file=secrets/                                          # token cache — never baked into the image
+helm upgrade cmind deploy/helm/cmind -n cmind --reuse-values \
+  --set tests.enabled=true \
+  --set tests.filter='FullyQualifiedName~CopyTradingLiveTests' \
+  --set tests.copySecret=cmind-copy-secrets
+kubectl -n cmind wait --for=condition=complete --timeout=15m job/cmind-cmind-tests
+kubectl -n cmind logs job/cmind-cmind-tests
+```
+
+| Value | Purpose |
+|-------|---------|
+| `tests.enabled` | Render the test `Job` (default `false`). |
+| `tests.project` / `tests.filter` | Which project + `dotnet test --filter` to run. |
+| `tests.copySecret` | Secret holding the gitignored `openapi-*.local.json`, mounted at `/app/secrets`. |
+| `tests.backoffLimit` | Job retry count (default `0`). |
+
+The Job mounts the token cache read-only (`LiveCopySecrets` walks up from `/app` to find `secrets/`),
+connects to the in-cluster Postgres via the chart connection string, and skips the live tests cleanly
+when the secret is absent. `Dockerfile.tests` is SDK-based so it runs the same assertions as a local
+`dotnet test`.
+
 ## Teardown
 
 ```bash

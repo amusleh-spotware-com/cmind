@@ -67,6 +67,22 @@ public sealed class CopyTradingLiveTests(LiveCopyFixture fixture, ITestOutputHel
         result.Slaves[0].Copied.Should().BeTrue("a master under one cID must copy to a slave under another cID");
     }
 
+    [Fact]
+    public async Task Partial_close_shrinks_the_slave_copy_proportionally()
+    {
+        if (!fixture.Available) { output.WriteLine(fixture.SkipReason); return; }
+        var accounts = SameCid(1);
+        var master = accounts[0];
+        var slave = new LiveCopyScenario.SlaveSetup(accounts[1], LiveCopyScenario.Destination());
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        var result = await new LiveCopyScenario(fixture, output).RunPartialCloseAsync(master, slave, cts.Token);
+
+        if (result.Inconclusive) { output.WriteLine($"INCONCLUSIVE: {result.Reason}"); return; }
+        result.SlaveVolumeAfter.Should().BeLessThan(result.SlaveVolumeBefore,
+            "a master partial close must shrink the mirrored copy");
+    }
+
     private async Task RunAsync(IReadOnlyList<LiveCopyFixture.LiveAccount> accounts, bool masterIsBuy,
         bool reverse, Action<LiveCopyScenario.ScenarioResult> assert)
     {

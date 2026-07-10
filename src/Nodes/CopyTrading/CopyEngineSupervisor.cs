@@ -109,7 +109,7 @@ public sealed class CopyEngineSupervisor(
         DataContext db, NodeIdentity node, DateTimeOffset now, TimeSpan leaseTtl, CancellationToken ct)
         => db.CopyProfiles
             .Where(p => p.Status == CopyProfileStatus.Running
-                && (p.AssignedNode == null || p.LeaseExpiresAt == null || p.LeaseExpiresAt < now))
+                && (p.AssignedNode == null || p.LeaseExpiresAt == null || p.LeaseExpiresAt <= now))
             .ExecuteUpdateAsync(s => s
                 .SetProperty(p => p.AssignedNode, node.Value)
                 .SetProperty(p => p.LeaseExpiresAt, now + leaseTtl), ct);

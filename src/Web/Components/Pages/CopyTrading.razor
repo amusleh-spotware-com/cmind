@@ -100,6 +100,14 @@
                 <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_mirrorScaleIn" Label="Scale-in" Color="Color.Primary" /></MudItem>
                 <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyPending" Label="Pending orders" Color="Color.Primary" /></MudItem>
                 <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyTrailing" Label="Trailing stop" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyPendingExpiry" Label="Copy expiry" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyMasterSlippage" Label="Copy slippage" Color="Color.Primary" /></MudItem>
+                <MudItem xs="12"><MudText Typo="Typo.caption">Copy order types</MudText></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyMarket" Label="Market" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyMarketRange" Label="Market range" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyLimit" Label="Limit" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyStop" Label="Stop" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyStopLimit" Label="Stop limit" Color="Color.Primary" /></MudItem>
                 <MudItem xs="12" md="6"><MudTextField @bind-Value="_symbolMapText" Label="Symbol map (SRC=DST, comma separated)" /></MudItem>
                 <MudItem xs="6" md="3">
                     <MudSelect T="SymbolFilterMode" @bind-Value="_filterMode" Label="Symbol filter">
@@ -149,6 +157,13 @@
     private bool _mirrorScaleIn;
     private bool _copyPending;
     private bool _copyTrailing;
+    private bool _copyPendingExpiry = true;
+    private bool _copyMasterSlippage = true;
+    private bool _copyMarket = true;
+    private bool _copyMarketRange = true;
+    private bool _copyLimit = true;
+    private bool _copyStop = true;
+    private bool _copyStopLimit = true;
     private string _symbolMapText = "";
     private string _filterText = "";
     private SymbolFilterMode _filterMode = SymbolFilterMode.None;
@@ -249,7 +264,10 @@
                 MirrorPartialClose = _mirrorPartialClose,
                 MirrorScaleIn = _mirrorScaleIn,
                 CopyPendingOrders = _copyPending,
-                CopyTrailingStop = _copyTrailing
+                CopyTrailingStop = _copyTrailing,
+                OrderTypes = SelectedOrderTypes(),
+                CopyPendingExpiry = _copyPendingExpiry,
+                CopyMasterSlippage = _copyMasterSlippage
             });
             if (!r.IsSuccessStatusCode) failed = true;
         }
@@ -257,6 +275,17 @@
         if (failed) Snack.Add("Some destinations could not be added", Severity.Error);
         _destAccounts = new HashSet<long>();
         await Select(id);
+    }
+
+    private CopyOrderTypes SelectedOrderTypes()
+    {
+        var types = CopyOrderTypes.None;
+        if (_copyMarket) types |= CopyOrderTypes.Market;
+        if (_copyMarketRange) types |= CopyOrderTypes.MarketRange;
+        if (_copyLimit) types |= CopyOrderTypes.Limit;
+        if (_copyStop) types |= CopyOrderTypes.Stop;
+        if (_copyStopLimit) types |= CopyOrderTypes.StopLimit;
+        return types == CopyOrderTypes.None ? CopyOrderTypes.All : types;
     }
 
     private async Task RemoveDestination(Guid destinationId)

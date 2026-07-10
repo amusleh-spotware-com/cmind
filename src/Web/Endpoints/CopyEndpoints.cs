@@ -34,7 +34,10 @@ public record AddCopyDestinationRequest(
     bool MirrorPartialClose = true,
     bool MirrorScaleIn = false,
     bool CopyPendingOrders = false,
-    bool CopyTrailingStop = false);
+    bool CopyTrailingStop = false,
+    CopyOrderTypes OrderTypes = CopyOrderTypes.All,
+    bool CopyPendingExpiry = true,
+    bool CopyMasterSlippage = true);
 
 public record SymbolMapPair(string Source, string Destination);
 
@@ -112,6 +115,9 @@ public static class CopyEndpoints
                     d.MirrorScaleIn,
                     d.CopyPendingOrders,
                     d.CopyTrailingStop,
+                    OrderTypes = d.CopyOrderTypes.ToString(),
+                    d.CopyPendingExpiry,
+                    d.CopyMasterSlippage,
                     Direction = d.Direction.ToString(),
                     d.MinLot,
                     d.MaxLot,
@@ -164,6 +170,9 @@ public static class CopyEndpoints
             destination.SetPartialCloseMirroring(req.MirrorPartialClose, req.MirrorScaleIn);
             destination.SetPendingOrderCopying(req.CopyPendingOrders);
             destination.SetTrailingStopCopying(req.CopyTrailingStop);
+            destination.SetOrderTypeFilter(req.OrderTypes);
+            destination.SetExpiryCopying(req.CopyPendingExpiry);
+            destination.SetSlippageCopying(req.CopyMasterSlippage);
             destination.SetGuards(new DrawdownPercent(req.MaxDrawdownPercent), req.DailyLossLimit);
             if (req.SymbolMap is { Count: > 0 })
                 destination.SetSymbolMap(req.SymbolMap.Select(m => new SymbolMapEntry(new Symbol(m.Source), new Symbol(m.Destination))));

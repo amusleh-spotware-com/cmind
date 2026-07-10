@@ -109,7 +109,10 @@ public sealed class CopyTradingTests(AppFixture app)
                 DailyLossLimit = 500.0,
                 SymbolFilterMode = (int)SymbolFilterMode.Whitelist,
                 SymbolFilters = new[] { "EURUSD", "GBPUSD" },
-                SymbolMap = new[] { new { Source = "EURUSD", Destination = "EURUSD.x" } }
+                SymbolMap = new[] { new { Source = "EURUSD", Destination = "EURUSD.x" } },
+                OrderTypes = (int)(CopyOrderTypes.Limit | CopyOrderTypes.Stop),
+                CopyPendingExpiry = false,
+                CopyMasterSlippage = false
             }
         });
         Assert.True(addDest.Ok, $"add destination failed: {addDest.Status}");
@@ -128,6 +131,9 @@ public sealed class CopyTradingTests(AppFixture app)
         var map = dest.GetProperty("symbolMaps").EnumerateArray().Single();
         Assert.Equal("EURUSD", map.GetProperty("source").GetString());
         Assert.Equal("EURUSD.X", map.GetProperty("destination").GetString());
+        Assert.Equal("Limit, Stop", dest.GetProperty("orderTypes").GetString());
+        Assert.False(dest.GetProperty("copyPendingExpiry").GetBoolean());
+        Assert.False(dest.GetProperty("copyMasterSlippage").GetBoolean());
 
         // Lifecycle: Draft -> Running -> Paused -> Running -> Stopped.
         Assert.Equal("Running", await ActAsync(api, profileId, "start"));

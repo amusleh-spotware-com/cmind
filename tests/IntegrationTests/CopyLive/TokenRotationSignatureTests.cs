@@ -12,9 +12,9 @@ namespace IntegrationTests.CopyLive;
 // tracks exactly the source + destination tokens.
 public sealed class TokenRotationSignatureTests
 {
-    private static CopyProfilePlan Plan(string sourceToken, string destToken)
-        => new(CopyProfileId.New(), Live: false, "client", "secret", 100, sourceToken, 1,
-            [new CopyDestinationPlan(200, destToken, 1, Destination())]);
+    private static CopyProfilePlan Plan(string sourceToken, string destToken, long version = 1)
+        => new(CopyProfileId.New(), Live: false, "client", "secret", 100, sourceToken, version,
+            [new CopyDestinationPlan(200, destToken, version, Destination())]);
 
     private static CopyDestination Destination()
         => CopyProfile.Create(UserId.New(), "p", TradingAccountId.New())
@@ -39,5 +39,12 @@ public sealed class TokenRotationSignatureTests
     {
         CopyEngineSupervisor.TokenSignature(Plan("s", "d"))
             .Should().Be(CopyEngineSupervisor.TokenSignature(Plan("s", "d")));
+    }
+
+    [Fact]
+    public void Signature_changes_when_the_token_version_bumps_even_if_the_string_is_unchanged()
+    {
+        CopyEngineSupervisor.TokenSignature(Plan("s", "d", version: 1))
+            .Should().NotBe(CopyEngineSupervisor.TokenSignature(Plan("s", "d", version: 2)));
     }
 }

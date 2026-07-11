@@ -43,6 +43,9 @@ public sealed class CopyEngineHost(
     private readonly Dictionary<long, long> _sourceVolumes = new();
     private readonly Dictionary<long, double?> _sourceStops = new();
     private readonly HashSet<long> _mirroredPendingOrders = [];
+    // C13: when each mirrored pending was placed, so a slave copy whose master pending later vanishes can be
+    // cancelled after the correlation timeout.
+    private readonly Dictionary<long, DateTimeOffset> _mirroredPendingPlacedAt = new();
     // Distinguishes the profile's first resync (start) from a later reconnect resync, so the Sync-Open /
     // Sync-Closed-on-start toggles apply only at start; a mid-run reconnect always reconciles fully.
     private bool _hasResynced;
@@ -110,6 +113,7 @@ public sealed class CopyEngineHost(
         var tokenSwapLoop = Task.Run(() => ConsumeTokenUpdatesAsync(session, loopCts.Token), CancellationToken.None);
         var equityGuardLoop = Task.Run(() => EquityGuardLoopAsync(session, loopCts.Token), CancellationToken.None);
         var flattenLoop = Task.Run(() => ConsumeFlattenSignalsAsync(session, loopCts.Token), CancellationToken.None);
+        var pendingTimeoutLoop = Task.Run(() => PendingTimeoutLoopAsync(session, loopCts.Token), CancellationToken.None);
         try
         {
             await foreach (var execution in session.SourceExecutionsAsync(plan.SourceCtidTraderAccountId, ct))
@@ -143,6 +147,7 @@ public sealed class CopyEngineHost(
             try { await tokenSwapLoop; } catch { /* swap loop cancellation is expected on shutdown */ }
             try { await equityGuardLoop; } catch { /* equity guard cancellation is expected on shutdown */ }
             try { await flattenLoop; } catch { /* flatten loop cancellation is expected on shutdown */ }
+            try { await pendingTimeoutLoop; } catch { /* pending-timeout loop cancellation is expected on shutdown */ }
         }
     }
 
@@ -307,6 +312,40 @@ public sealed class CopyEngineHost(
         }
     }
 
+    // C13 slave-pending fill-correlation timeout: periodically cancels a mirrored slave pending whose master
+    // pending has vanished (neither still resting nor freshly filled) after the correlation timeout, so a
+    // slave copy can't fill uncorrelated into an unmanaged position.
+    private async Task PendingTimeoutLoopAsync(IOpenApiTradingSession session, CancellationToken ct)
+    {
+        if (plan.Destinations.All(d => !d.Config.CopyPendingOrders)) return;
+
+        using var timer = new PeriodicTimer(CopyDefaults.PendingCheckInterval, timeProvider);
+        while (await timer.WaitForNextTickAsync(ct))
+        {
+            await _stateGate.WaitAsync(ct);
+            try { await CheckPendingTimeoutsAsync(session, ct); }
+            catch (Exception ex) { logger.LogWarning(ex, "Copy pending-timeout check failed for profile {ProfileId}", plan.ProfileId.Value); }
+            finally { _stateGate.Release(); }
+        }
+    }
+
+    private async Task CheckPendingTimeoutsAsync(IOpenApiTradingSession session, CancellationToken ct)
+    {
+        if (_mirroredPendingPlacedAt.Count == 0) return;
+        var now = timeProvider.GetUtcNow();
+        var masterPendingIds = (await session.ReconcilePendingOrdersAsync(plan.SourceCtidTraderAccountId, ct))
+            .Select(o => o.OrderId).ToHashSet();
+
+        foreach (var (orderId, placedAt) in _mirroredPendingPlacedAt.ToArray())
+        {
+            if (masterPendingIds.Contains(orderId) || now - placedAt < CopyDefaults.PendingCorrelationTimeout) continue;
+            await CancelDestinationPendingsAsync(session, orderId, ct);
+            _mirroredPendingOrders.Remove(orderId);
+            _mirroredPendingPlacedAt.Remove(orderId);
+            logger.CopyPendingTimedOut(plan.ProfileId.Value, orderId);
+        }
+    }
+
     private async Task LoadReferenceDataAsync(IOpenApiTradingSession session, CancellationToken ct)
     {
         foreach (var (id, name) in await session.LoadSymbolNamesAsync(plan.SourceCtidTraderAccountId, ct))
@@ -330,7 +369,10 @@ public sealed class CopyEngineHost(
         // A mirrored pending order just filled into this position: retire the resting destination
         // pending(s) so the copy re-opens as a labelled market position (uniform id-based reconcile).
         if (execution.OrderId != 0 && _mirroredPendingOrders.Remove(execution.OrderId))
+        {
+            _mirroredPendingPlacedAt.Remove(execution.OrderId);
             await CancelDestinationPendingsAsync(session, execution.OrderId, ct);
+        }
 
         _openSourcePositions.Add(execution.PositionId);
         _sourceVolumes[execution.PositionId] = execution.Volume;
@@ -518,7 +560,11 @@ public sealed class CopyEngineHost(
             }
         }
 
-        if (placedAny) _mirroredPendingOrders.Add(execution.OrderId);
+        if (placedAny)
+        {
+            _mirroredPendingOrders.Add(execution.OrderId);
+            _mirroredPendingPlacedAt[execution.OrderId] = timeProvider.GetUtcNow();
+        }
     }
 
     private async Task<bool> PlacePendingToDestinationAsync(IOpenApiTradingSession session, CopyDestinationPlan destination,
@@ -597,6 +643,7 @@ public sealed class CopyEngineHost(
     private async Task HandlePendingCancelledAsync(IOpenApiTradingSession session, ExecutionEvent execution, CancellationToken ct)
     {
         _mirroredPendingOrders.Remove(execution.OrderId);
+        _mirroredPendingPlacedAt.Remove(execution.OrderId);
         await CancelDestinationPendingsAsync(session, execution.OrderId, ct);
     }
 
@@ -812,6 +859,8 @@ public sealed class CopyEngineHost(
         var sourcePendingIds = (await session.ReconcilePendingOrdersAsync(plan.SourceCtidTraderAccountId, ct))
             .Select(o => o.OrderId).ToHashSet();
         _mirroredPendingOrders.RemoveWhere(id => !sourcePendingIds.Contains(id));
+        foreach (var id in _mirroredPendingPlacedAt.Keys.Where(id => !sourcePendingIds.Contains(id)).ToArray())
+            _mirroredPendingPlacedAt.Remove(id);
 
         var orphansClosed = 0;
         var sourceSnapshot = await AccountSnapshotAsync(session, plan.SourceCtidTraderAccountId, AnyDestinationNeedsEquity(), ct);

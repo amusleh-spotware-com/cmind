@@ -156,6 +156,10 @@ public static class CopyDefaults
     // Account-protection equity-guard poll interval: how often each destination's live equity is checked
     // against its protection policy.
     public static readonly TimeSpan EquityGuardInterval = TimeSpan.FromSeconds(15);
+    // C13 slave-pending fill-correlation: how often to check mirrored pendings, and how long a mirrored
+    // pending may rest after the master's has vanished before the slave copy is cancelled.
+    public static readonly TimeSpan PendingCheckInterval = TimeSpan.FromSeconds(20);
+    public static readonly TimeSpan PendingCorrelationTimeout = TimeSpan.FromSeconds(120);
 }
 
 public static class AiConstants

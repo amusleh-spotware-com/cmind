@@ -1,10 +1,12 @@
 using Core;
+using Core.Constants;
 using Core.Domain;
 using CopyEngine;
 using CTraderOpenApi.Client;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Time.Testing;
 using Xunit;
 
 namespace UnitTests.CopyTrading;
@@ -197,6 +199,31 @@ public sealed class CopyAdvancedScenariosTests
         }, logger);
 
         session.Pendings.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Slave_pending_is_cancelled_when_the_master_pending_vanishes_past_the_timeout()
+    {
+        var clock = new FakeTimeProvider(new DateTimeOffset(2026, 07, 11, 12, 00, 00, TimeSpan.Zero));
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(d => d.SetPendingOrderCopying(true))));
+        var host = new CopyEngineHost(plan, new FakeTradingSessionFactory(session),
+            new CopyDecisionEngine(new CopySizingCalculator()), clock, NullLogger.Instance);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var run = Task.Run(() => host.RunAsync(cts.Token), CancellationToken.None);
+        try
+        {
+            session.PushPending(Source, orderId: 4001, SymbolId, isBuy: true, volume: 100, CopyOrderKind.Limit, price: 1.05);
+            await WaitUntil(() => session.Pendings.Count == 1); // slave pending placed + tracked
+
+            // The master's pending never appears in reconcile (it vanished) -> after the correlation timeout
+            // the uncorrelated slave pending is cancelled.
+            clock.Advance(CopyDefaults.PendingCorrelationTimeout + CopyDefaults.PendingCheckInterval + TimeSpan.FromSeconds(1));
+            await WaitUntil(() => session.Cancels.Any(c => c.Ctid == Slave));
+        }
+        finally { cts.Cancel(); try { await run; } catch { /* cancellation */ } }
+
+        session.Cancels.Should().Contain(c => c.Ctid == Slave, "an uncorrelated slave pending is cancelled after the timeout");
     }
 
     [Fact]

@@ -152,6 +152,10 @@ Set in the New Profile dialog, on the Copy Trading page's per-destination panel,
 
 The engine is built for the reality that anything can fail at any time:
 
+- **Slave-pending fill-correlation timeout** (C13) — a mirrored slave pending whose master pending has
+  vanished (neither still resting nor freshly filled) is cancelled after a correlation timeout, so a slave
+  copy can't fill uncorrelated into an unmanaged position (`CopyPendingTimedOut`). Resync also cleans an
+  order-id-labelled filled-pending orphan.
 - **Robust close/flatten** (M8) — closing an orphan on resync, or flattening on a guard breach, tolerates
   a position the broker already closed (`POSITION_NOT_FOUND`): each close runs independently, so one stale
   id never aborts the resync or leaves the rest of the account un-flattened.

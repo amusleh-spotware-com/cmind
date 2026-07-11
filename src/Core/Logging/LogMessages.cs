@@ -253,6 +253,10 @@ public static partial class LogMessages
         Message = "Copy flatten-all: profile {ProfileId} closed and locked {DestinationCount} destination(s) on request")]
     public static partial void CopyFlattenAll(this ILogger logger, Guid profileId, int destinationCount);
 
+    [LoggerMessage(EventId = 1085, Level = LogLevel.Warning,
+        Message = "Copy pending timed out: profile {ProfileId} source order {SourceOrderId} — master pending vanished, slave copy cancelled")]
+    public static partial void CopyPendingTimedOut(this ILogger logger, Guid profileId, long sourceOrderId);
+
     // ---- Prop-firm challenge tracking ----
 
     [LoggerMessage(EventId = 1067, Level = LogLevel.Error, Message = "Prop-firm tracking supervisor cycle failed")]

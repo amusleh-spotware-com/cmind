@@ -43,16 +43,16 @@ else
                 @if ((string)context.status == "Stopped")
                 {
                     <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" Color="Color.Success"
-                                   OnClick="@(() => Start((Guid)context.id))" />
+                                   aria-label="Start challenge" OnClick="@(() => Start((Guid)context.id))" />
                 }
                 else if ((string)context.status == "Active")
                 {
                     <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Small" Color="Color.Warning"
-                                   OnClick="@(() => Stop((Guid)context.id))" />
+                                   aria-label="Stop challenge" OnClick="@(() => Stop((Guid)context.id))" />
                 }
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
                                Disabled="@((string)context.status == "Active")"
-                               OnClick="@(() => Remove((Guid)context.id))" />
+                               aria-label="Delete challenge" OnClick="@(() => Remove((Guid)context.id))" />
             </MudTd>
         </RowTemplate>
     </MudTable>

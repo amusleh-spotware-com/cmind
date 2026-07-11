@@ -35,12 +35,12 @@
             {
                 <MudSwitch T="bool" Value="@((bool)context.enabled)" Color="Color.Primary"
                            ValueChanged="@((bool v) => ToggleLocal(v))" Label="Enabled" />
-                <MudIconButton Icon="@Icons.Material.Filled.CleaningServices" Size="Size.Small" OnClick="@(() => Clean((Guid)context.id))" />
+                <MudIconButton Icon="@Icons.Material.Filled.CleaningServices" Size="Size.Small" aria-label="Clean backtest data" OnClick="@(() => Clean((Guid)context.id))" />
             }
             else
             {
-                <MudIconButton Icon="@Icons.Material.Filled.CleaningServices" Size="Size.Small" OnClick="@(() => Clean((Guid)context.id))" />
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => Remove((Guid)context.id))" />
+                <MudIconButton Icon="@Icons.Material.Filled.CleaningServices" Size="Size.Small" aria-label="Clean backtest data" OnClick="@(() => Clean((Guid)context.id))" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="Delete node" OnClick="@(() => Remove((Guid)context.id))" />
             }
         </MudTd>
     </RowTemplate>

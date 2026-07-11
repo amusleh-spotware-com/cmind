@@ -24,7 +24,7 @@
         <MudTd DataLabel="Label">@context.label</MudTd>
         <MudTd DataLabel="Prefix">@context.keyPrefix</MudTd>
         <MudTd DataLabel="Last used">@((string?)(context.lastUsedAt?.ToString()) ?? "—")</MudTd>
-        <MudTd DataLabel=""><MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => Revoke((Guid)context.id))" /></MudTd>
+        <MudTd DataLabel=""><MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" aria-label="Revoke key" OnClick="@(() => Revoke((Guid)context.id))" /></MudTd>
     </RowTemplate>
 </MudTable>
 

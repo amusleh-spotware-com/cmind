@@ -12,9 +12,9 @@
         <MudTd DataLabel="Status"><MudChip T="string" Size="Size.Small">@context.status</MudChip></MudTd>
         <MudTd DataLabel="Node">@context.node</MudTd>
         <MudTd DataLabel="">
-            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" OnClick="@(() => Open((Guid)context.id))" />
-            <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Small" Color="Color.Warning" OnClick="@(() => Stop((Guid)context.id))" />
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => Delete((Guid)context.id))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" aria-label="View instance" OnClick="@(() => Open((Guid)context.id))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Small" Color="Color.Warning" aria-label="Stop instance" OnClick="@(() => Stop((Guid)context.id))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="Delete instance" OnClick="@(() => Delete((Guid)context.id))" />
         </MudTd>
     </RowTemplate>
 </MudTable>

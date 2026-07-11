@@ -29,7 +29,7 @@
                 <MudChip T="string" Size="Size.Small" Color="Color.Primary" Icon="@Icons.Material.Filled.Api">Open API</MudChip>
             }
         </MudTd>
-        <MudTd DataLabel=""><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => Remove(context.id))" /></MudTd>
+        <MudTd DataLabel=""><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="Remove account" OnClick="@(() => Remove(context.id))" /></MudTd>
     </RowTemplate>
 </MudTable>
 

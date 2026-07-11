@@ -46,7 +46,7 @@
                        OnClick="@(() => Action((Guid)context.id, "stop"))" data-testid="copy-stop">Stop</MudButton>
             <MudTooltip Text="@(IsRunning((string)context.status) ? "Stop the profile before deleting" : "Delete profile")">
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
-                               Disabled="@IsRunning((string)context.status)"
+                               Disabled="@IsRunning((string)context.status)" aria-label="Delete profile"
                                OnClick="@(() => DeleteProfile((Guid)context.id, (string)context.name))" data-testid="copy-delete" />
             </MudTooltip>
         </MudTd>
@@ -71,7 +71,7 @@
                     <MudTd DataLabel="Pending">@context.copyPendingOrders</MudTd>
                     <MudTd DataLabel="Trailing">@context.copyTrailingStop</MudTd>
                     <MudTd DataLabel=""><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
-                                          OnClick="@(() => RemoveDestination((Guid)context.id))" /></MudTd>
+                                          aria-label="Remove destination" OnClick="@(() => RemoveDestination((Guid)context.id))" /></MudTd>
                 </RowTemplate>
             </MudTable>
 

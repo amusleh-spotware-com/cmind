@@ -9,6 +9,7 @@
 <MudLayout>
     <MudAppBar Elevation="1" Dense="true">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
+                       aria-label="Toggle navigation menu"
                        OnClick="@(() => _drawerOpen = !_drawerOpen)" />
         @if (!string.IsNullOrWhiteSpace(Branding.Branding.LogoUrl))
         {
@@ -17,7 +18,7 @@
         <MudText Typo="Typo.h6" data-testid="app-product-name">@Branding.Branding.ProductName</MudText>
         <MudText Typo="Typo.caption" Class="ml-2 mud-text-disabled" data-testid="app-version">v@(Core.VersionInfo.Product)</MudText>
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" Href="/account" />
+        <MudIconButton Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" Href="/account" aria-label="Account" />
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Variant="@DrawerVariant.Responsive" Breakpoint="Breakpoint.Md" Elevation="1">
         <NavMenu />

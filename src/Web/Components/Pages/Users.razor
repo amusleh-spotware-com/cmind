@@ -25,8 +25,8 @@
         <MudTd DataLabel="Role">@context.role</MudTd>
         <MudTd DataLabel="Locked">@context.isLockedOut</MudTd>
         <MudTd DataLabel="">
-            <MudIconButton Icon="@Icons.Material.Filled.LockReset" Size="Size.Small" OnClick="@(() => Reset((Guid)context.id))" />
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => Remove((Guid)context.id))" />
+            <MudIconButton Icon="@Icons.Material.Filled.LockReset" Size="Size.Small" aria-label="Reset password" OnClick="@(() => Reset((Guid)context.id))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="Delete user" OnClick="@(() => Remove((Guid)context.id))" />
         </MudTd>
     </RowTemplate>
 </MudTable>

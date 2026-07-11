@@ -19,8 +19,13 @@ cycle a supervisor:
 If a node crashes, it stops renewing; once `App:Copy:LeaseTtl` passes, any surviving node
 reclaims its profiles on the next cycle and rebuilds state from a reconcile without
 duplicating trades. **Scaling out** = add replicas; unassigned/free profiles are picked up
-automatically. **Scaling in** = remove a replica; its profiles are reclaimed within one
-lease TTL.
+automatically.
+
+**Graceful scale-in / rolling update (S1)** = on `SIGTERM`, `CopyEngineSupervisor.StopAsync`
+**releases this node's leases** (`AssignedNode`/`LeaseExpiresAt` → null) so a survivor reclaims them
+on its *very next* reconcile cycle — **not** after the full `LeaseTtl`. Only a hard crash waits the TTL.
+The copy-agent's `terminationGracePeriodSeconds` (default 30) gives the release time to complete before
+the pod is killed.
 
 ### Knobs (`App:Copy`)
 

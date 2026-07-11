@@ -48,6 +48,37 @@ public sealed class CopyEngineSupervisor(
         foreach (var handle in _running.Values) handle.Cts.Cancel();
     }
 
+    // S1 graceful lease release: on shutdown (SIGTERM / rolling update) release this node's copy-profile
+    // leases so a survivor reclaims them on its very next cycle, instead of the profile being un-hosted for
+    // up to LeaseTtl. Runs after ExecuteAsync has been signalled to stop.
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
+        await base.StopAsync(cancellationToken);
+        foreach (var handle in _running.Values) handle.Cts.Cancel();
+
+        try
+        {
+            using var scope = scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+            var node = ResolveNode();
+            var released = await ReleaseLeasesAsync(db, node, CancellationToken.None);
+            if (released > 0) log.CopyLeasesReleased(node.Value, released);
+        }
+        catch (Exception ex)
+        {
+            log.CopySupervisorFailed(ex);
+        }
+    }
+
+    // Clears this node's assignment/lease on every profile it holds. Atomic ExecuteUpdate, so a survivor's
+    // ClaimProfilesAsync (which grabs unassigned/lapsed profiles) picks them up on its next cycle.
+    internal static Task<int> ReleaseLeasesAsync(DataContext db, NodeIdentity node, CancellationToken ct)
+        => db.CopyProfiles
+            .Where(p => p.Status == CopyProfileStatus.Running && p.AssignedNode == node.Value)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(p => p.AssignedNode, (string?)null)
+                .SetProperty(p => p.LeaseExpiresAt, (DateTimeOffset?)null), ct);
+
     private async Task ReconcileAsync(CancellationToken stoppingToken)
     {
         using var scope = scopeFactory.CreateScope();

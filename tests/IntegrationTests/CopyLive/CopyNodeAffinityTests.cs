@@ -108,6 +108,32 @@ public sealed class CopyNodeAffinityTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Releasing_leases_on_shutdown_lets_another_node_reclaim_immediately()
+    {
+        await using var db = NewContext();
+        var userId = await SeedUserAsync(db);
+        var profile = RunningProfile(userId, $"p-{Guid.NewGuid():N}");
+        db.Add(profile);
+        await db.SaveChangesAsync();
+
+        var nodeA = new NodeIdentity("node-a");
+        var nodeB = new NodeIdentity("node-b");
+        var now = TestClock.Now;
+        var ttl = TimeSpan.FromMinutes(2);
+
+        await CopyEngineSupervisor.ClaimProfilesAsync(db, nodeA, now, ttl, default);
+        // node-a gracefully releases on shutdown (S1), long before its 2-minute lease would lapse.
+        var released = await CopyEngineSupervisor.ReleaseLeasesAsync(db, nodeA, default);
+        released.Should().Be(1);
+        db.ChangeTracker.Clear();
+
+        var reclaimed = await CopyEngineSupervisor.ClaimProfilesAsync(db, nodeB, now, ttl, default);
+        reclaimed.Should().Be(1, "a gracefully-released profile is reclaimable at once, not after LeaseTtl");
+        db.ChangeTracker.Clear();
+        (await db.CopyProfiles.FirstAsync(p => p.Id == profile.Id)).IsHostedBy(nodeB).Should().BeTrue();
+    }
+
+    [Fact]
     public async Task Expired_lease_is_reclaimed_by_another_node()
     {
         await using var db = NewContext();

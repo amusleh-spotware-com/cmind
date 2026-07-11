@@ -20,6 +20,9 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: copy-agent
     spec:
+      # S1 fast failover: give the supervisor time on SIGTERM to release its copy-profile leases
+      # (CopyEngineSupervisor.StopAsync) so a survivor reclaims them immediately instead of after LeaseTtl.
+      terminationGracePeriodSeconds: {{ .Values.copyAgent.terminationGracePeriodSeconds | default 30 }}
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

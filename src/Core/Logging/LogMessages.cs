@@ -139,6 +139,10 @@ public static partial class LogMessages
     [LoggerMessage(EventId = 1045, Level = LogLevel.Warning, Message = "Copy profile {ProfileId} skipped: source or destinations are not Open API linked")]
     public static partial void CopyProfileNotLinkable(this ILogger logger, Guid profileId);
 
+    [LoggerMessage(EventId = 1086, Level = LogLevel.Information,
+        Message = "Copy supervisor released {Count} lease(s) on shutdown for node {Node} — a survivor can reclaim immediately")]
+    public static partial void CopyLeasesReleased(this ILogger logger, string node, int count);
+
     // ---- Copy trading audit trail (every trading operation is logged for auditability) ----
 
     [LoggerMessage(EventId = 1046, Level = LogLevel.Information,

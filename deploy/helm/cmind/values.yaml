@@ -93,9 +93,21 @@ copyAgent:
   # default; enable and set App:Copy:Enabled=false on the web host to move copy hosting here.
   enabled: false
   replicas: 1
+  # S1 fast failover: seconds K8s waits on SIGTERM for the supervisor to release its leases.
+  terminationGracePeriodSeconds: 30
   resources:
     requests: { cpu: 250m, memory: 256Mi }
     limits: { cpu: "1", memory: 1Gi }
+  # S2 KEDA autoscaling on running-profile count (off by default; requires KEDA in the cluster).
+  keda:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    profilesPerPod: 25
+    pollingIntervalSeconds: 30
+    cooldownSeconds: 120
+    # Secret key holding a libpq connection string KEDA uses to read the running-profile count.
+    connectionSecretKey: COPY_KEDA_PG_CONNECTION
 
 discovery:
   enabled: true

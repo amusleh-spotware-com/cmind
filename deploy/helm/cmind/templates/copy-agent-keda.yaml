@@ -1,0 +1,42 @@
+{{- if and .Values.copyAgent.enabled .Values.copyAgent.keda.enabled }}
+# S2: autoscale the copy-agent on WORK (running copy-profile count), not CPU — long-lived sockets make
+# CPU-based HPA wrong. KEDA queries Postgres for the number of running profiles and scales replicas so
+# each pod hosts about `profilesPerPod`. Gated on copyAgent.keda.enabled (off by default).
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: {{ include "cmind.fullname" . }}-copy-agent-pg
+  labels:
+    {{- include "cmind.labels" . | nindent 4 }}
+    app.kubernetes.io/component: copy-agent
+spec:
+  secretTargetRef:
+    - parameter: connection
+      name: {{ include "cmind.secretName" . }}
+      key: {{ .Values.copyAgent.keda.connectionSecretKey | default "COPY_KEDA_PG_CONNECTION" }}
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "cmind.fullname" . }}-copy-agent
+  labels:
+    {{- include "cmind.labels" . | nindent 4 }}
+    app.kubernetes.io/component: copy-agent
+spec:
+  scaleTargetRef:
+    name: {{ include "cmind.fullname" . }}-copy-agent
+  minReplicaCount: {{ .Values.copyAgent.keda.minReplicas | default 1 }}
+  maxReplicaCount: {{ .Values.copyAgent.keda.maxReplicas | default 5 }}
+  pollingInterval: {{ .Values.copyAgent.keda.pollingIntervalSeconds | default 30 }}
+  cooldownPeriod: {{ .Values.copyAgent.keda.cooldownSeconds | default 120 }}
+  triggers:
+    - type: postgresql
+      metadata:
+        # Scales replicas ~= ceil(runningProfiles / profilesPerPod): the query returns the running count,
+        # and KEDA drives that toward targetQueryValue (= profiles a single pod should host).
+        query: >-
+          SELECT count(*) FROM "CopyProfiles" WHERE "Status" = 1 AND "IsDeleted" = false
+        targetQueryValue: "{{ .Values.copyAgent.keda.profilesPerPod | default 25 }}"
+      authenticationRef:
+        name: {{ include "cmind.fullname" . }}-copy-agent-pg
+{{- end }}

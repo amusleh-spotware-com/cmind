@@ -127,6 +127,18 @@ advertises `http://<pod>.<svc>.<ns>.svc.cluster.local:8080` and self-registers u
 This is the same discovery mechanism bare external nodes use —
 see [../operations/node-discovery.md](../operations/node-discovery.md).
 
+## Copy-agent autoscaling & resilience
+
+The copy-agent hosts long-lived trading sockets, so it scales on **work, not CPU**. With
+`copyAgent.keda.enabled=true` the chart installs a KEDA `ScaledObject` that queries Postgres for the
+running copy-profile count and scales replicas so each pod hosts about `copyAgent.keda.profilesPerPod`
+(default 25), between `minReplicas`/`maxReplicas`. KEDA reads the DB via a `TriggerAuthentication` bound to
+the `copyAgent.keda.connectionSecretKey` secret key. When `copyAgent.replicas > 1` (or KEDA scales past 1)
+the chart also adds `topologySpreadConstraints` (spread across nodes) and a `PodDisruptionBudget`
+(`minAvailable: 1`); on scale-in / rolling update each pod releases its leases on `SIGTERM`
+(`terminationGracePeriodSeconds`, default 30) so a survivor reclaims immediately — see
+[scaling.md](scaling.md).
+
 ## Key values
 
 | Value | Purpose |

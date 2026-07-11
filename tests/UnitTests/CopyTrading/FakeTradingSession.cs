@@ -5,6 +5,38 @@ using Microsoft.Extensions.Logging;
 
 namespace UnitTests.CopyTrading;
 
+// Typed cTrader Open API rejection reasons (ProtoOAErrorRes / order-error codes). Lets a test make the
+// fake reject an order/close the exact way the real server does (F12), so the host's graceful paths are
+// unit-tested instead of only exercised live.
+internal enum CtraderRejectReason
+{
+    None = 0,
+    NotEnoughMoney,
+    MarketClosed,
+    TradingDisabled,
+    OffQuotes,
+    PositionNotFound,
+    OrderNotFound,
+    InvalidStopLossTakeProfit,
+    VolumeTooLow,
+    VolumeTooHigh,
+    MarketRangeExceeded
+}
+
+// Thrown by the fake to model a server-side order rejection with a typed reason (F12). Mirrors how the
+// real session surfaces a ProtoOAErrorRes to the caller — the host treats a failed send uniformly, but
+// the reason is asserted in tests.
+internal sealed class CtraderRejectException(CtraderRejectReason reason)
+    : InvalidOperationException($"cTrader reject: {reason}")
+{
+    public CtraderRejectReason Reason { get; } = reason;
+}
+
+// Thrown when an order/close is issued on an account whose access token was invalidated (F13). The real
+// server answers a stale token with an auth error; modeling it here feeds the token-robustness tests (M1).
+internal sealed class CtraderTokenInvalidException(long ctidTraderAccountId)
+    : InvalidOperationException($"access token invalidated for account {ctidTraderAccountId}");
+
 // Captures log records so tests can assert the copy audit trail fires.
 internal sealed class CapturingLogger : ILogger
 {
@@ -66,6 +98,20 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
     public HashSet<long> FailOrdersForCtid { get; } = [];
     public HashSet<long> RejectMarketRangeForCtid { get; } = [];
 
+    // ---- fidelity config (F1/F2/F5/F12/F13): opt-in; defaults preserve the legacy always-fill stub ----
+
+    // Per-account one-shot typed rejection: the next order/close on this account rejects with this reason,
+    // then the entry is cleared (F12). Use for graceful-path coverage (e.g. cMAM "position ID not found").
+    public Dictionary<long, CtraderRejectReason> RejectReasonForCtid { get; } = [];
+    // Per-account volume normalization: orders are rounded down to Step, and rejected below Min / above Max
+    // exactly as the real server normalizes ProtoOANewOrderReq volumes (F2). Absent = unconstrained (legacy).
+    public Dictionary<long, (long Step, long Min, long Max)> VolumeBoundsForCtid { get; } = [];
+    // Per-account partial-fill fraction in (0,1]: an open fills only this fraction of requested volume, so a
+    // later reconcile shows the gap the Phase-1 true-up must close (F1/G5). Absent = full fill (legacy).
+    public Dictionary<long, double> PartialFillFractionForCtid { get; } = [];
+    // Access tokens that were invalidated (F13); using one throws CtraderTokenInvalidException.
+    private readonly HashSet<string> _invalidTokens = new(StringComparer.Ordinal);
+
     public FakeTradingSession(
         IReadOnlyDictionary<long, string> symbolNames,
         IReadOnlyDictionary<string, long> symbolIds,
@@ -85,7 +131,15 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
     {
         Swaps.Add(new SwapCall(ctidTraderAccountId, accessToken));
         _accountTokens[ctidTraderAccountId] = accessToken;
+        _invalidTokens.Remove(accessToken); // a fresh token is valid again (the in-place swap recovery path)
         return Task.CompletedTask;
+    }
+
+    // Marks the account's currently-attached token invalid (F13): subsequent trading calls on it throw
+    // CtraderTokenInvalidException until a SwapAccessTokenAsync installs a fresh token.
+    public void InvalidateToken(long ctidTraderAccountId)
+    {
+        if (_accountTokens.TryGetValue(ctidTraderAccountId, out var token)) _invalidTokens.Add(token);
     }
 
     public string? CurrentToken(long ctidTraderAccountId)
@@ -201,12 +255,15 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
     public Task SendMarketOrderAsync(long ctidTraderAccountId, long symbolId, bool isBuy, long volume, string label,
         CancellationToken ct, int? slippageInPoints = null, double? baseSlippagePrice = null)
     {
+        EnsureTokenValid(ctidTraderAccountId);
+        ThrowIfTypedReject(ctidTraderAccountId);
         if (FailOrdersForCtid.Contains(ctidTraderAccountId))
             throw new InvalidOperationException("simulated order rejection");
-        if (slippageInPoints.HasValue && RejectMarketRangeForCtid.Contains(ctidTraderAccountId))
-            throw new InvalidOperationException("simulated market-range slippage rejection");
+        if (slippageInPoints.HasValue && IsMarketRangeRejected(ctidTraderAccountId, symbolId, isBuy, slippageInPoints.Value, baseSlippagePrice))
+            throw new CtraderRejectException(CtraderRejectReason.MarketRangeExceeded);
+        var filled = NormalizeVolume(ctidTraderAccountId, volume);
         Orders.Add(new OrderCall(ctidTraderAccountId, symbolId, isBuy, volume, label, slippageInPoints, baseSlippagePrice));
-        PositionStore(ctidTraderAccountId).Add(new OpenPositionSnapshot(++_positionSeq, symbolId, isBuy, volume, label));
+        PositionStore(ctidTraderAccountId).Add(new OpenPositionSnapshot(++_positionSeq, symbolId, isBuy, filled, label));
         return Task.CompletedTask;
     }
 
@@ -214,17 +271,21 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
         CopyOrderKind kind, double price, string label, CancellationToken ct,
         long? expirationTimestamp = null, int? slippageInPoints = null)
     {
+        EnsureTokenValid(ctidTraderAccountId);
+        ThrowIfTypedReject(ctidTraderAccountId);
         if (FailOrdersForCtid.Contains(ctidTraderAccountId))
             throw new InvalidOperationException("simulated order rejection");
+        var normalized = NormalizeVolume(ctidTraderAccountId, volume);
         Pendings.Add(new PendingCall(ctidTraderAccountId, symbolId, isBuy, volume, kind, price, label,
             expirationTimestamp, slippageInPoints));
-        PendingStore(ctidTraderAccountId).Add(new PendingOrderSnapshot(++_orderSeq, symbolId, isBuy, volume, kind, price, label));
+        PendingStore(ctidTraderAccountId).Add(new PendingOrderSnapshot(++_orderSeq, symbolId, isBuy, normalized, kind, price, label));
         return Task.CompletedTask;
     }
 
     public Task AmendPendingOrderAsync(long ctidTraderAccountId, long orderId, CopyOrderKind kind, long volume,
         double price, long? expirationTimestamp, int? slippageInPoints, CancellationToken ct)
     {
+        EnsureTokenValid(ctidTraderAccountId);
         AmendedPendings.Add(new AmendPendingCall(ctidTraderAccountId, orderId, kind, volume, price, expirationTimestamp, slippageInPoints));
         var store = PendingStore(ctidTraderAccountId);
         var index = store.FindIndex(o => o.OrderId == orderId);
@@ -234,6 +295,7 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
 
     public Task CancelOrderAsync(long ctidTraderAccountId, long orderId, CancellationToken ct)
     {
+        EnsureTokenValid(ctidTraderAccountId);
         Cancels.Add(new CancelCall(ctidTraderAccountId, orderId));
         PendingStore(ctidTraderAccountId).RemoveAll(o => o.OrderId == orderId);
         return Task.CompletedTask;
@@ -241,6 +303,8 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
 
     public Task ClosePositionAsync(long ctidTraderAccountId, long positionId, long volume, CancellationToken ct)
     {
+        EnsureTokenValid(ctidTraderAccountId);
+        ThrowIfTypedReject(ctidTraderAccountId);
         Closes.Add(new CloseCall(ctidTraderAccountId, positionId, volume));
         var store = PositionStore(ctidTraderAccountId);
         var index = store.FindIndex(p => p.PositionId == positionId);
@@ -256,6 +320,7 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
     public Task AmendPositionSltpAsync(long ctidTraderAccountId, long positionId, double? stopLoss,
         double? takeProfit, bool trailingStopLoss, CancellationToken ct)
     {
+        EnsureTokenValid(ctidTraderAccountId);
         Amends.Add(new AmendCall(ctidTraderAccountId, positionId, stopLoss, takeProfit, trailingStopLoss));
         return Task.CompletedTask;
     }
@@ -272,6 +337,52 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
             symbolIds.Select(id => _details with { SymbolId = id }).ToList());
 
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
+    private void EnsureTokenValid(long ctid)
+    {
+        if (_accountTokens.TryGetValue(ctid, out var token) && _invalidTokens.Contains(token))
+            throw new CtraderTokenInvalidException(ctid);
+    }
+
+    // Consumes a one-shot typed rejection queued for this account (F12), throwing the exact reason once.
+    private void ThrowIfTypedReject(long ctid)
+    {
+        if (!RejectReasonForCtid.TryGetValue(ctid, out var reason) || reason == CtraderRejectReason.None) return;
+        RejectReasonForCtid.Remove(ctid);
+        throw new CtraderRejectException(reason);
+    }
+
+    // Rounds volume down to the account's step and rejects out-of-bounds, mirroring server-side
+    // ProtoOANewOrderReq normalization (F2). Absent bounds = pass through (legacy always-fill behavior).
+    private long NormalizeVolume(long ctid, long volume)
+    {
+        if (!VolumeBoundsForCtid.TryGetValue(ctid, out var bounds)) return ApplyPartialFill(ctid, volume);
+        var (step, min, max) = bounds;
+        var normalized = step > 0 ? volume - volume % step : volume;
+        if (normalized < min) throw new CtraderRejectException(CtraderRejectReason.VolumeTooLow);
+        if (max > 0 && normalized > max) throw new CtraderRejectException(CtraderRejectReason.VolumeTooHigh);
+        return ApplyPartialFill(ctid, normalized);
+    }
+
+    // Applies a configured partial-fill fraction (F1/G5), rounding down to at least one unit so a filled
+    // position always exists — the reconcile then exposes the (target - filled) gap for the true-up.
+    private long ApplyPartialFill(long ctid, long volume)
+    {
+        if (!PartialFillFractionForCtid.TryGetValue(ctid, out var fraction) || fraction >= 1.0) return volume;
+        return Math.Max(1, (long)(volume * Math.Clamp(fraction, 0.0, 1.0)));
+    }
+
+    // Market-range order fills only when the live spot sits within baseSlippagePrice ± slippage points,
+    // else the server rejects it (F5). The legacy RejectMarketRangeForCtid flag forces a reject regardless.
+    private bool IsMarketRangeRejected(long ctid, long symbolId, bool isBuy, int slippageInPoints, double? baseSlippagePrice)
+    {
+        if (RejectMarketRangeForCtid.Contains(ctid)) return true;
+        if (baseSlippagePrice is not { } basePrice || !_spots.TryGetValue(symbolId, out var spot)) return false;
+        var point = Math.Pow(10, -_details.PipPosition);
+        var tolerance = slippageInPoints * point;
+        var executionPrice = isBuy ? spot.Ask : spot.Bid;
+        return Math.Abs(executionPrice - basePrice) > tolerance;
+    }
 
     private List<OpenPositionSnapshot> PositionStore(long ctid)
         => _positions.TryGetValue(ctid, out var list) ? list : _positions[ctid] = [];

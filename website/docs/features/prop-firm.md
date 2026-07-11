@@ -1,3 +1,7 @@
+---
+description: "Retail prop firms (FTMO-style) sell evaluation accounts: trader must hit profit target while staying inside risk limits (max daily loss, max…"
+---
+
 # Prop-firm challenge simulation
 
 Retail prop firms (FTMO-style) sell **evaluation accounts**: trader must hit profit target while

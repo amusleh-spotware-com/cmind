@@ -1,3 +1,7 @@
+---
+description: "All three services (Web, MCP, ExternalNode) log via Serilog as compact JSON on stdout — container runtimes and log collectors (Loki, ELK, CloudWatch…"
+---
+
 # Logging & observability
 
 All three services (Web, MCP, ExternalNode) log via **Serilog** as **compact JSON on stdout** —

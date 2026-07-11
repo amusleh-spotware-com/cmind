@@ -1,3 +1,7 @@
+---
+description: "cMind ship Model Context Protocol (MCP) server as separate process/Deployment — scale + redeploy independent of Web app. Expose cBot, instance, AI tools…"
+---
+
 # MCP server
 
 cMind ship Model Context Protocol (MCP) server as **separate process/Deployment** — scale + redeploy independent of Web app. Expose cBot, instance, AI tools to MCP clients (e.g. AI assistants) over HTTP + SSE transport.

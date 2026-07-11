@@ -1,3 +1,7 @@
+---
+description: "Money-manager performance fees on a high-water-mark, the standard copy-trading model (cTrader Copy, Darwinex, ZuluTrade profit-share): a provider charges…"
+---
+
 # Copy performance fees (Phase 4)
 
 Money-manager **performance fees on a high-water-mark**, the standard copy-trading model (cTrader Copy,

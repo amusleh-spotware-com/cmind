@@ -1,3 +1,7 @@
+---
+description: "External nodes join cluster by self-registration + heartbeat — no manual entry. Same pattern as Consul/Nomad/kubeadm agents: agent boots knowing main node…"
+---
+
 # Node auto-discovery
 
 External nodes join cluster by **self-registration + heartbeat** — no manual entry. Same pattern as Consul/Nomad/kubeadm agents: agent boots knowing main node location + shared cluster secret, then continuously announces itself.

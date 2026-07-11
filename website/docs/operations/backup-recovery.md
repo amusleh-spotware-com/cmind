@@ -1,3 +1,7 @@
+---
+description: "This is a trading/financial app: the database holds trading accounts, copy profiles, prop-firm challenges, audit chains, and the Data Protection key ring…"
+---
+
 # Backup & disaster recovery
 
 This is a trading/financial app: the database holds trading accounts, copy profiles, prop-firm

@@ -1,3 +1,7 @@
+---
+description: "Reseller rebrand app — product name, logo, favicon, colours, custom CSS — via deployment config, no code change. Every branding value defaults to stock…"
+---
+
 # White-label branding
 
 Reseller rebrand app — product name, logo, favicon, colours, custom CSS — via deployment config, no code change. Every branding value **defaults to stock identity**: unconfigured deployment look same as before; reseller override only what need.

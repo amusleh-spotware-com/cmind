@@ -1,3 +1,7 @@
+---
+description: "Build, run, backtest cTrader cBots (C and Python, both .NET) from in-browser Monaco IDE, run on official ghcr.io/spotware/ctrader-console image."
+---
+
 # Build & backtest cBots
 
 Build, run, backtest cTrader cBots (C# **and** Python, both .NET) from in-browser Monaco

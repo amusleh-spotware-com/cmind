@@ -1,3 +1,7 @@
+---
+description: "deploy/azure/main.bicep provisions stateless tier on Azure Container Apps plus Postgres Flexible Server + Log Analytics."
+---
+
 # Azure deployment — step by step
 
 `deploy/azure/main.bicep` provisions stateless tier on **Azure Container Apps** plus **Postgres Flexible Server** + Log Analytics.

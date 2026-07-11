@@ -1,3 +1,7 @@
+---
+description: "Binding for every new or changed piece of UI in this app (Blazor pages, dialogs, components). This is the source of truth referenced by CLAUDE.md. If a…"
+---
+
 # UI Design Guidelines — MANDATORY
 
 Binding for **every** new or changed piece of UI in this app (Blazor pages, dialogs, components).

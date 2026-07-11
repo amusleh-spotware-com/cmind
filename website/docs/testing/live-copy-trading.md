@@ -1,3 +1,7 @@
+---
+description: "Full reproducible copy-trading test suite. Two layers:"
+---
+
 # Copy-trading test suite (deterministic + live)
 
 Full reproducible copy-trading test suite. Two layers:

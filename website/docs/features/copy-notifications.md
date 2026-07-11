@@ -1,3 +1,7 @@
+---
+description: "Per-owner feed of safety-relevant copy events — destination tripping rejection breaker, account-protection or prop-rule breach, panic flatten. On by…"
+---
+
 # Copy operational notifications (Phase 2b)
 
 Per-owner feed of safety-relevant copy events — destination tripping rejection breaker, account-protection or prop-rule breach, panic flatten. **On by default** (`App:Copy:NotificationsEnabled`, default `true`); set false to silence. Own concept in Copy context, separate from market/AI `AlertRule` aggregate.

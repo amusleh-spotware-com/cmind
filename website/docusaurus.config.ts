@@ -97,7 +97,7 @@ const config: Config = {
   ],
 
   themeConfig: {
-    image: 'img/brand/banner.svg',
+    image: 'img/brand/og-image.png',
     metadata: [
       {
         name: 'description',
@@ -105,7 +105,14 @@ const config: Config = {
           'cMind — a self-hostable, white-label trading operations platform for cTrader. Build, backtest, run and copy trading strategies at scale, with AI built in.',
       },
       { name: 'twitter:card', content: 'summary_large_image' },
-      { name: 'og:type', content: 'website' },
+      { name: 'twitter:title', content: 'cMind — your entire cTrader trading desk, in one app' },
+      { name: 'twitter:description', content: 'Open-source, self-hostable, white-label trading operations platform for cTrader — build, backtest, run & copy strategies at scale, with AI built in.' },
+      { name: 'twitter:image:alt', content: 'cMind — your entire cTrader trading desk, in one calm dark app.' },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:site_name', content: 'cMind' },
+      { property: 'og:image:width', content: '1200' },
+      { property: 'og:image:height', content: '630' },
+      { property: 'og:image:alt', content: 'cMind — your entire cTrader trading desk, in one calm dark app.' },
     ],
     colorMode: {
       defaultMode: 'dark',

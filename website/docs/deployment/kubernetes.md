@@ -1,3 +1,7 @@
+---
+description: "Helm chart: deploy/helm/cmind. Deploys Web, MCP, self-registering node agents, optional in-cluster Postgres."
+---
+
 # Kubernetes deployment — step by step
 
 Helm chart: `deploy/helm/cmind`. Deploys Web, MCP, self-registering node agents, optional

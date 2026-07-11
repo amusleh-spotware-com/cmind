@@ -1,3 +1,7 @@
+---
+description: "cTrader's Open API allows one valid access token per cTrader ID (cID) at a time. The moment a new token is issued — a scheduled refresh, or a…"
+---
+
 # Open API token lifecycle
 
 cTrader's Open API allows **one valid access token per cTrader ID (cID) at a time**. The moment

@@ -1,3 +1,7 @@
+---
+description: "cMind installs to a phone or desktop like a native app — home-screen icon, standalone window, splash, and a friendly offline page. It is mobile-first and…"
+---
+
 # Installable app (PWA)
 
 cMind installs to a phone or desktop like a native app — home-screen icon, standalone window, splash,

@@ -1,3 +1,7 @@
+---
+description: "Browsable directory of copy strategies. Provider publishes copy profile as listing with verified-live badge (strategy source account trade real money, not…"
+---
+
 # Copy provider marketplace (Phase 4)
 
 Browsable directory of copy strategies. Provider **publishes** copy profile as listing with **verified-live** badge (strategy source account trade real money, not demo) plus performance fee. Followers browse marketplace, ranked by performance score projected from execution-transparency data.

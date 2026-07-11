@@ -1,3 +1,7 @@
+---
+description: "All credentials the test suites need live in a single gitignored file: secrets/dev-credentials.local.json. Copy the committed template and fill in what you"
+---
+
 # Dev credentials — one file for every test
 
 All credentials the test suites need live in a single gitignored file:

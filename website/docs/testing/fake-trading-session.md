@@ -1,3 +1,7 @@
+---
+description: "tests/UnitTests/CopyTrading/FakeTradingSession.cs = in-memory IOpenApiTradingSession all copy-trading unit tests run against. Job: mimic real cTrader Open…"
+---
+
 # FakeTradingSession — cTrader Open API fidelity contract
 
 `tests/UnitTests/CopyTrading/FakeTradingSession.cs` = in-memory `IOpenApiTradingSession` all copy-trading unit tests run against. Job: mimic **real cTrader Open API server** close enough that unit tests cover behavior only live tier used to catch. This doc = fidelity contract: what fake models, how faithfully, and rule keeping it honest.

@@ -1,3 +1,7 @@
+---
+description: "Mirror master cTrader account onto one+ slave accounts — cross-broker, cross-cID — with per-destination control + money-grade reconciliation."
+---
+
 # Copy trading
 
 Mirror **master** cTrader account onto one+ **slave** accounts — cross-broker, cross-cID — with per-destination control + money-grade reconciliation.

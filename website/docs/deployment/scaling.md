@@ -1,3 +1,7 @@
+---
+description: "cMind scales out with minimal operator effort. Two stateful workloads — run/backtest execution, copy-trading — both use database as coordination point, so…"
+---
+
 # Horizontal scaling
 
 cMind scales out with minimal operator effort. Two stateful workloads — run/backtest

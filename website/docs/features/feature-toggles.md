@@ -1,3 +1,7 @@
+---
+description: "White-label deploy rarely ship every capability. Feature toggles let operator turn main product features on/off — at deploy time via config, or later at…"
+---
+
 # Feature toggles
 
 White-label deploy rarely ship every capability. Feature toggles let operator turn main

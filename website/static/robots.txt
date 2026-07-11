@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://amusleh-spotware-com.github.io/cmind/sitemap.xml

@@ -1,3 +1,7 @@
+---
+description: "cMind AI layer Claude-powered, gated on Anthropic API key present. Key set two ways: deploy-time via App:Ai:ApiKey, or runtime by owner in Settings → AI…"
+---
+
 # AI features
 
 cMind AI layer Claude-powered, gated on Anthropic API key present. Key set two ways: deploy-time via `App:Ai:ApiKey`, or runtime by owner in **Settings → AI** (`/settings/ai`). UI-entered key stored **encrypted** as `AppSetting` (`IAiKeyStore` + `ISecretProtector`, `EncryptionPurposes.AiApiKey`) and **overrides** config value. No key either source → every AI feature returns disabled result, rest of app unchanged (no key needed to build, test, run platform). API called over raw HTTP via typed `HttpClient` (`AnthropicAiClient`), reads current key from `IAiKeyStore` per request. `AiFeatureService` = single orchestrator shared by Web endpoints, MCP `AiTools`, background risk guard.

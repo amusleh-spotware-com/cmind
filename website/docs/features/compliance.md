@@ -1,3 +1,7 @@
+---
+description: "Retail FX/CFD/crypto brokerage carry legal + record-keeping duties. Module implement four industry-standard pillars: risk-disclosure consent…"
+---
+
 # Legal & compliance
 
 Retail FX/CFD/crypto brokerage carry legal + record-keeping duties. Module implement four industry-standard pillars: **risk-disclosure consent**, **tamper-evident audit trail**, **MiFID/ESMA-style record-keeping**, **GDPR data rights**. All gated by `Compliance` feature flag.

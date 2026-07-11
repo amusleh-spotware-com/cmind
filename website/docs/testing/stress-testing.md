@@ -1,3 +1,7 @@
+---
+description: "Stress suite. Hammers app parts whose failure cost users money — chiefly copy trading — with hostile, randomized, fault-injected workloads. Asserts system…"
+---
+
 # Stress testing
 
 Stress suite. Hammers app parts whose failure cost users money — chiefly **copy trading** — with hostile, randomized, fault-injected workloads. Asserts system stay correct. Lives in `tests/StressTests`, runs in normal `dotnet test` green gate.

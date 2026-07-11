@@ -1,3 +1,7 @@
+---
+description: "AI helper. Recommend safe copy-trading destination settings from follower risk profile + source (master) account description. Exposed over REST API, MCP…"
+---
+
 # AI copy-profile recommender
 
 AI helper. Recommend safe copy-trading destination settings from follower risk profile + source (master) account description. Exposed over REST API, MCP tool, Copy Trading page. Advisory only — never create/mutate profile; human (or follow-up MCP call) apply settings.

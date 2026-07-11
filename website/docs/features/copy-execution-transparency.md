@@ -1,3 +1,7 @@
+---
+description: "Per-copy execution facts — latency, realized slippage, fill vs failure — captured every copy attempt, surfaced as per-profile transparency report. Off by…"
+---
+
 # Copy execution transparency (Phase 3)
 
 Per-copy execution facts — latency, realized slippage, fill vs failure — captured every copy attempt,

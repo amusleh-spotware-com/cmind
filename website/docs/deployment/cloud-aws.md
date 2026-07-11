@@ -1,3 +1,7 @@
+---
+description: "deploy/aws = Terraform module: ECS Fargate (Web + MCP) behind ALB, RDS Postgres, CloudWatch logs."
+---
+
 # AWS deployment — step by step
 
 `deploy/aws` = Terraform module: **ECS Fargate** (Web + MCP) behind **ALB**, **RDS Postgres**, CloudWatch logs.

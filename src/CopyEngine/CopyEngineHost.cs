@@ -62,6 +62,14 @@ public sealed class CopyEngineHost(
     // time until new opens resume. Thread-safe: written from the G4 bounded-parallel open fan-out, where
     // each destination (distinct ctid key) is touched by exactly one task at a time.
     private readonly ConcurrentDictionary<long, (int ConsecutiveFailures, DateTimeOffset? TrippedUntil)> _destinationHealth = new();
+    // G7 local position cache: a per-destination mirror of the slave's open positions so the read-heavy
+    // mirror paths (partial close, stop/trailing change, full close) don't re-Reconcile on every source
+    // event. A missing/null entry = cold (the next read reconciles and warms it); a warm entry is kept
+    // coherent by the host's own writes (close removes, partial close reduces, amend updates the stop). Any
+    // open invalidates it (the broker assigns the new position id, unknowable without a reconcile), and a
+    // resync rebuilds truth. Keyed per destination, so each ctid entry is touched by one fan-out task at a
+    // time; resync (under the state gate) never races the fan-out.
+    private readonly ConcurrentDictionary<long, List<OpenPositionSnapshot>?> _destinationBook = new();
     // G5 partial-fill true-up: the wire volume a fresh copy open requested, per (destination, source id),
     // awaiting one fill-verification pass. If the broker partially filled the open (filled < requested by a
     // whole lot-step) the next resync tops the slave up to target, then clears the entry. One-shot: a
@@ -284,6 +292,7 @@ public sealed class CopyEngineHost(
     // slippage guarantee). Shared by SellOut account-protection and prop-rule auto-flatten.
     private async Task FlattenDestinationAsync(IOpenApiTradingSession session, long ctid, CancellationToken ct)
     {
+        InvalidateBook(ctid); // G7: positions are being closed out from under the cache — force a rebuild
         foreach (var position in await session.ReconcileAsync(ctid, ct))
         {
             // Tolerate a position the broker already closed (POSITION_NOT_FOUND) — close each independently
@@ -464,13 +473,14 @@ public sealed class CopyEngineHost(
             _pendingTrueUp.TryRemove((destination.CtidTraderAccountId, execution.PositionId), out _);
             try
             {
-                var positions = await session.ReconcileAsync(destination.CtidTraderAccountId, token);
-                foreach (var position in positions.Where(p => p.Label == label))
+                var positions = await DestinationPositionsAsync(session, destination.CtidTraderAccountId, token);
+                foreach (var position in positions.Where(p => p.Label == label).ToList())
                 {
                     var detail = await SymbolDetailAsync(session, destination.CtidTraderAccountId, position.SymbolId, token);
                     var slice = SliceVolume(position.Volume * closedFraction, position.Volume, detail);
                     if (slice <= 0) continue;
                     await session.ClosePositionAsync(destination.CtidTraderAccountId, position.PositionId, slice, token);
+                    BookReduce(destination.CtidTraderAccountId, position.PositionId, slice);
                     logger.CopyPartialClose(plan.ProfileId.Value, destination.CtidTraderAccountId,
                         position.PositionId, slice, execution.PositionId);
                 }
@@ -517,7 +527,7 @@ public sealed class CopyEngineHost(
             if (!destination.Config.CopyStopLoss && !destination.Config.CopyTrailingStop) return;
             try
             {
-                var positions = await session.ReconcileAsync(destination.CtidTraderAccountId, token);
+                var positions = await DestinationPositionsAsync(session, destination.CtidTraderAccountId, token);
                 var match = positions.FirstOrDefault(p => p.Label == label);
                 if (match is null) return;
 
@@ -525,8 +535,10 @@ public sealed class CopyEngineHost(
                 var stopLoss = destination.Config.CopyStopLoss ? execution.StopLoss : null;
                 if (destination.Config.Reverse) stopLoss = destination.Config.CopyTakeProfit ? execution.TakeProfit : stopLoss;
                 var detail = await SymbolDetailAsync(session, destination.CtidTraderAccountId, match.SymbolId, token);
+                var roundedStop = RoundToDigits(stopLoss, detail.Digits);
                 await session.AmendPositionSltpAsync(destination.CtidTraderAccountId, match.PositionId,
-                    RoundToDigits(stopLoss, detail.Digits), null, trailing, token);
+                    roundedStop, null, trailing, token);
+                BookSetStop(destination.CtidTraderAccountId, match.PositionId, roundedStop, trailing);
 
                 if (trailing) logger.CopyTrailingApplied(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId);
                 else logger.CopyStopLossAmended(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, stopLoss ?? 0);
@@ -804,6 +816,9 @@ public sealed class CopyEngineHost(
         // target. Only a fresh open is tracked; a scale-in is proportional management, not a fill to verify.
         if (!isScaleIn)
             _pendingTrueUp[(destination.CtidTraderAccountId, execution.PositionId)] = wireVolume;
+        // G7: a new slave position now exists whose broker-assigned id we can't know without a reconcile —
+        // mark the cache cold so the next mirror read rebuilds it.
+        InvalidateBook(destination.CtidTraderAccountId);
         if (decision.SlippageInPoints is { } slippagePoints)
         {
             CopyMetrics.Instance.RecordSlippage(slippagePoints);
@@ -860,10 +875,11 @@ public sealed class CopyEngineHost(
             _pendingTrueUp.TryRemove((destination.CtidTraderAccountId, sourcePositionId), out _); // G5: position gone
             try
             {
-                var positions = await session.ReconcileAsync(destination.CtidTraderAccountId, token);
-                foreach (var position in positions.Where(p => p.Label == label))
+                var positions = await DestinationPositionsAsync(session, destination.CtidTraderAccountId, token);
+                foreach (var position in positions.Where(p => p.Label == label).ToList())
                 {
                     await session.ClosePositionAsync(destination.CtidTraderAccountId, position.PositionId, position.Volume, token);
+                    BookRemove(destination.CtidTraderAccountId, position.PositionId);
                     logger.CopyPositionClosed(plan.ProfileId.Value, destination.CtidTraderAccountId,
                         position.PositionId, sourcePositionId);
                 }
@@ -964,6 +980,10 @@ public sealed class CopyEngineHost(
             foreach (var pending in destinationPendings)
                 if (long.TryParse(pending.Label, out var sourceOrderId) && !sourcePendingIds.Contains(sourceOrderId))
                     await session.CancelOrderAsync(destination.CtidTraderAccountId, pending.OrderId, ct);
+
+            // G7: the resync mutated the slave book (opened missing, closed orphans, trued up) — drop the
+            // cache so the next mirror read reconciles the freshly converged state.
+            InvalidateBook(destination.CtidTraderAccountId);
         }
 
         _hasResynced = true;
@@ -1013,6 +1033,45 @@ public sealed class CopyEngineHost(
                 logger.CopyOpenFailed(plan.ProfileId.Value, ctid, key.SourceId, ex);
             }
         }
+    }
+
+    // G7: the destination's open positions from the local cache when warm, else a reconcile that warms it.
+    // Used by the mirror read paths (partial close, stop change, full close). ApplyProtection and the
+    // resync/true-up deliberately keep direct reconciles — they poll for or rebuild fresh state.
+    private async Task<IReadOnlyList<OpenPositionSnapshot>> DestinationPositionsAsync(
+        IOpenApiTradingSession session, long ctid, CancellationToken ct)
+    {
+        if (_destinationBook.TryGetValue(ctid, out var cached) && cached is not null) return cached;
+        var fresh = (await session.ReconcileAsync(ctid, ct)).ToList();
+        _destinationBook[ctid] = fresh;
+        return fresh;
+    }
+
+    // Marks the destination's cached book cold: the next read reconciles it. Called after any open (the new
+    // position id is broker-assigned and unknowable without a reconcile) and after a flatten.
+    private void InvalidateBook(long ctid) => _destinationBook[ctid] = null;
+
+    private void BookRemove(long ctid, long positionId)
+    {
+        if (_destinationBook.TryGetValue(ctid, out var book) && book is not null)
+            book.RemoveAll(p => p.PositionId == positionId);
+    }
+
+    private void BookReduce(long ctid, long positionId, long by)
+    {
+        if (!_destinationBook.TryGetValue(ctid, out var book) || book is null) return;
+        var index = book.FindIndex(p => p.PositionId == positionId);
+        if (index < 0) return;
+        var remaining = book[index].Volume - by;
+        if (remaining <= 0) book.RemoveAt(index);
+        else book[index] = book[index] with { Volume = remaining };
+    }
+
+    private void BookSetStop(long ctid, long positionId, double? stopLoss, bool trailing)
+    {
+        if (!_destinationBook.TryGetValue(ctid, out var book) || book is null) return;
+        var index = book.FindIndex(p => p.PositionId == positionId);
+        if (index >= 0) book[index] = book[index] with { StopLoss = stopLoss, TrailingStopLoss = trailing };
     }
 
     private async Task<SymbolDetails> SymbolDetailAsync(

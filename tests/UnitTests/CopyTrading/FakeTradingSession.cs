@@ -324,8 +324,15 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
         return Task.CompletedTask;
     }
 
+    // Per-account count of position reconciles, so a test can assert the G7 local cache actually spares
+    // round-trips (a warm book serves reads without hitting the server).
+    public Dictionary<long, int> ReconcileCountByCtid { get; } = [];
+
     public Task<IReadOnlyList<OpenPositionSnapshot>> ReconcileAsync(long ctidTraderAccountId, CancellationToken ct)
-        => Task.FromResult<IReadOnlyList<OpenPositionSnapshot>>(PositionStore(ctidTraderAccountId).ToList());
+    {
+        ReconcileCountByCtid[ctidTraderAccountId] = ReconcileCountByCtid.GetValueOrDefault(ctidTraderAccountId) + 1;
+        return Task.FromResult<IReadOnlyList<OpenPositionSnapshot>>(PositionStore(ctidTraderAccountId).ToList());
+    }
 
     public Task<IReadOnlyList<PendingOrderSnapshot>> ReconcilePendingOrdersAsync(long ctidTraderAccountId, CancellationToken ct)
         => Task.FromResult<IReadOnlyList<PendingOrderSnapshot>>(PendingStore(ctidTraderAccountId).ToList());

@@ -1,0 +1,18 @@
+# Default owner for everything.
+*                           @amusleh-spotware-com
+
+# Money path — copy trading engine + cTrader Open API transport.
+/src/CopyEngine/            @amusleh-spotware-com
+/src/CTraderOpenApi/        @amusleh-spotware-com
+/src/Nodes/CopyTrading/     @amusleh-spotware-com
+
+# Domain core — invariants live here.
+/src/Core/                  @amusleh-spotware-com
+
+# Persistence + migrations.
+/src/Infrastructure/Persistence/  @amusleh-spotware-com
+
+# CI / infra / agentic tooling.
+/.github/                   @amusleh-spotware-com
+/scripts/                   @amusleh-spotware-com
+/.claude/                   @amusleh-spotware-com

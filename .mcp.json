@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/mcp.json",
+  "mcpServers": {
+    "jetbrains": {
+      "command": "npx",
+      "args": ["-y", "@jetbrains/mcp-proxy"],
+      "env": {}
+    }
+  },
+  "_comment": "Project-scoped MCP servers agents are expected to use in this repo. 'jetbrains' (Rider MCP) is the mandated way to read/search/edit/build C#/.NET here — see CLAUDE.md HARD GATE. Requires JetBrains Rider open on this solution with the MCP plugin/proxy enabled; the proxy connects to the running IDE. Secrets and per-user servers (air-api, youtrack) are configured per-user, not committed."
+}

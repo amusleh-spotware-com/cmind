@@ -24,6 +24,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<CopyExecution> CopyExecutions => Set<CopyExecution>();
     public DbSet<CopyNotification> CopyNotifications => Set<CopyNotification>();
     public DbSet<CopyFeeAccrual> CopyFeeAccruals => Set<CopyFeeAccrual>();
+    public DbSet<CopyProviderListing> CopyProviderListings => Set<CopyProviderListing>();
     public DbSet<ViewerGrant> ViewerGrants => Set<ViewerGrant>();
     public DbSet<McpApiKey> McpApiKeys => Set<McpApiKey>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
@@ -83,6 +84,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<OpenApiAuthorizationId>().HaveConversion<StrongIdConverter<OpenApiAuthorizationId>>();
         configurationBuilder.Properties<CopyProfileId>().HaveConversion<StrongIdConverter<CopyProfileId>>();
         configurationBuilder.Properties<CopyDestinationId>().HaveConversion<StrongIdConverter<CopyDestinationId>>();
+        configurationBuilder.Properties<CopyProviderListingId>().HaveConversion<StrongIdConverter<CopyProviderListingId>>();
         configurationBuilder.Properties<CopyRunId>().HaveConversion<StrongIdConverter<CopyRunId>>();
         configurationBuilder.Properties<PropFirmChallengeId>().HaveConversion<StrongIdConverter<PropFirmChallengeId>>();
         configurationBuilder.Properties<LegalDocumentId>().HaveConversion<StrongIdConverter<LegalDocumentId>>();
@@ -311,6 +313,13 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         });
 
         modelBuilder.Entity<CopyFeeAccrual>(e => e.HasIndex(x => new { x.UserId, x.SettledAt }));
+
+        modelBuilder.Entity<CopyProviderListing>(e =>
+        {
+            e.HasIndex(x => x.ProfileId).IsUnique().HasFilter("\"IsDeleted\" = false"); // one listing per profile
+            e.HasIndex(x => x.Published);
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
 
         modelBuilder.Entity<CopyProfile>().Navigation(x => x.Destinations)
             .UsePropertyAccessMode(PropertyAccessMode.Field);

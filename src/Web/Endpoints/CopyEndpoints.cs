@@ -61,6 +61,8 @@ public record SymbolMapPair(string Source, string Destination, double VolumeMult
 
 public record LockCopyDestinationRequest(int Minutes);
 
+public record PublishProviderRequest(string DisplayName, string? Description = null, double PerformanceFeePercent = 0);
+
 public static class CopyEndpoints
 {
     public static IEndpointRouteBuilder MapCopyEndpoints(this IEndpointRouteBuilder app)
@@ -347,6 +349,96 @@ public static class CopyEndpoints
             });
         });
 
+        // Phase 4 marketplace: publish a profile as a public provider listing (verified-live if its source
+        // account trades real money), update it, or unpublish it.
+        g.MapPost("/profiles/{id:guid}/publish", async (Guid id, PublishProviderRequest req, DataContext db,
+            ICurrentUser u, TimeProvider time, CancellationToken ct) =>
+        {
+            var uid = u.UserId!.Value;
+            var pid = CopyProfileId.From(id);
+            var profile = await db.CopyProfiles.FirstOrDefaultAsync(p => p.Id == pid && p.UserId == uid, ct);
+            if (profile is null) return Results.NotFound();
+
+            var sourceLive = await db.TradingAccounts.Where(a => a.Id == profile.SourceAccountId)
+                .Select(a => (bool?)a.IsLive).FirstOrDefaultAsync(ct) ?? false;
+
+            var listing = await db.CopyProviderListings.FirstOrDefaultAsync(l => l.ProfileId == pid, ct);
+            if (listing is null)
+            {
+                listing = CopyProviderListing.Create(uid, pid, req.DisplayName, req.Description,
+                    req.PerformanceFeePercent, sourceLive);
+                listing.Publish(time.GetUtcNow());
+                db.CopyProviderListings.Add(listing);
+            }
+            else
+            {
+                listing.UpdateDetails(req.DisplayName, req.Description, req.PerformanceFeePercent, sourceLive);
+                listing.Publish(time.GetUtcNow());
+            }
+            try
+            {
+                await db.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException)
+            {
+                // Concurrent publish for the same profile hit the one-listing-per-profile unique index.
+                return Results.Conflict("This profile is already being published; retry.");
+            }
+            return Results.Ok(new { listing.Id, listing.VerifiedLive, listing.Published });
+        });
+
+        g.MapDelete("/profiles/{id:guid}/publish", async (Guid id, DataContext db, ICurrentUser u, CancellationToken ct) =>
+        {
+            var pid = CopyProfileId.From(id);
+            var listing = await db.CopyProviderListings.FirstOrDefaultAsync(l => l.ProfileId == pid && l.UserId == u.UserId!.Value, ct);
+            if (listing is null) return Results.NotFound();
+            listing.Unpublish();
+            await db.SaveChangesAsync(ct);
+            return Results.NoContent();
+        });
+
+        // Browsable provider marketplace: every published listing, ranked, with a performance summary
+        // projected from the CopyExecution transparency log (fill rate, avg latency, avg realized slippage).
+        g.MapGet("/marketplace", async (DataContext db, CancellationToken ct) =>
+        {
+            var listings = await db.CopyProviderListings.Where(l => l.Published).ToListAsync(ct);
+            if (listings.Count == 0) return Results.Ok(Array.Empty<object>());
+
+            var profileIds = listings.Select(l => l.ProfileId.Value).ToList();
+            var executions = await db.CopyExecutions.Where(x => profileIds.Contains(x.ProfileId)).ToListAsync(ct);
+            var byProfile = executions.GroupBy(x => x.ProfileId).ToDictionary(grp => grp.Key, grp => grp.ToList());
+
+            var result = listings.Select(l =>
+            {
+                var rows = byProfile.GetValueOrDefault(l.ProfileId.Value) ?? [];
+                var opened = rows.Count(x => x.Kind == CopyExecutionKind.Opened);
+                var failed = rows.Count(x => x.Kind == CopyExecutionKind.Failed);
+                var attempts = opened + failed;
+                var fillRate = attempts == 0 ? 0d : (double)opened / attempts;
+                var avgLatency = rows.Where(x => x.Kind == CopyExecutionKind.Opened)
+                    .Select(x => x.LatencyMilliseconds).DefaultIfEmpty(0d).Average();
+                var avgSlippage = rows.Where(x => x.SlippagePoints.HasValue)
+                    .Select(x => (double)x.SlippagePoints!.Value).DefaultIfEmpty(0d).Average();
+                return new
+                {
+                    l.Id,
+                    ProfileId = l.ProfileId.Value,
+                    l.DisplayName,
+                    l.Description,
+                    l.PerformanceFeePercent,
+                    l.VerifiedLive,
+                    l.PublishedAt,
+                    Executions = rows.Count,
+                    FillRate = fillRate,
+                    AvgLatencyMs = avgLatency,
+                    AvgSlippagePoints = avgSlippage,
+                    Score = MarketplaceScore(fillRate, avgLatency, avgSlippage, l.VerifiedLive)
+                };
+            }).OrderByDescending(x => x.Score).ToList();
+
+            return Results.Ok(result);
+        });
+
         // 2b copy notification feed: the signed-in user's recent operational notifications across all their
         // profiles (destination tripped, account-protection/prop breach, flatten), plus an unacknowledged count.
         g.MapGet("/notifications", async (DataContext db, ICurrentUser u, CancellationToken ct) =>
@@ -409,5 +501,15 @@ public static class CopyEndpoints
         });
 
         return app;
+    }
+
+    // A 0-100 ranking score: fill rate dominates, low latency and low slippage add, a verified-live badge
+    // gives a small trust bonus. Deterministic and monotonic so the marketplace ordering is stable.
+    internal static double MarketplaceScore(double fillRate, double avgLatencyMs, double avgSlippagePoints, bool verifiedLive)
+    {
+        var latencyScore = Math.Clamp(1 - avgLatencyMs / 2000.0, 0, 1);
+        var slippageScore = Math.Clamp(1 - avgSlippagePoints / 10.0, 0, 1);
+        var score = fillRate * 60 + latencyScore * 20 + slippageScore * 20;
+        return Math.Round(verifiedLive ? Math.Min(100, score + 10) : score, 1);
     }
 }

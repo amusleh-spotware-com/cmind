@@ -1079,6 +1079,51 @@ public class CopyFeeAccrual : ISoftDeletable
         };
 }
 
+// Phase 4 marketplace: a provider's public listing of one copy profile (strategy), with a verified-live
+// badge (the source account trades real money) and the performance fee. The browsable performance stats
+// are a read-model projection over the CopyExecution transparency log, not stored here.
+public class CopyProviderListing : AuditedEntity<CopyProviderListingId>
+{
+    public UserId UserId { get; private set; }
+    public CopyProfileId ProfileId { get; private set; }
+    [MaxLength(128)] public string DisplayName { get; private set; } = default!;
+    [MaxLength(1024)] public string Description { get; private set; } = string.Empty;
+    public double PerformanceFeePercent { get; private set; }
+    // Verified-live: the strategy's source account is a real-money (live) account, not a demo — the trust
+    // signal followers look for. Set from the source TradingAccount at publish time.
+    public bool VerifiedLive { get; private set; }
+    public bool Published { get; private set; }
+    public DateTimeOffset? PublishedAt { get; private set; }
+
+    public static CopyProviderListing Create(UserId userId, CopyProfileId profileId, string displayName,
+        string? description, double performanceFeePercent, bool verifiedLive)
+        => new()
+        {
+            UserId = userId,
+            ProfileId = profileId,
+            DisplayName = DomainGuard.AgainstNullOrWhiteSpace(displayName, DomainErrors.NameRequired),
+            Description = description ?? string.Empty,
+            PerformanceFeePercent = performanceFeePercent,
+            VerifiedLive = verifiedLive
+        };
+
+    public void UpdateDetails(string displayName, string? description, double performanceFeePercent, bool verifiedLive)
+    {
+        DisplayName = DomainGuard.AgainstNullOrWhiteSpace(displayName, DomainErrors.NameRequired);
+        Description = description ?? string.Empty;
+        PerformanceFeePercent = performanceFeePercent;
+        VerifiedLive = verifiedLive;
+    }
+
+    public void Publish(DateTimeOffset now)
+    {
+        Published = true;
+        PublishedAt = now;
+    }
+
+    public void Unpublish() => Published = false;
+}
+
 public class ViewerGrant : ISoftDeletable
 {
     public UserId ViewerId { get; private set; }

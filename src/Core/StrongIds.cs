@@ -181,6 +181,13 @@ public readonly record struct CopyRunId(Guid Value) : IStronglyTypedId<CopyRunId
     public override string ToString() => Value.ToString();
 }
 
+public readonly record struct CopyProviderListingId(Guid Value) : IStronglyTypedId<CopyProviderListingId>
+{
+    public static CopyProviderListingId New() => new(Guid.NewGuid());
+    public static CopyProviderListingId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct PropFirmChallengeId(Guid Value) : IStronglyTypedId<PropFirmChallengeId>
 {
     public static PropFirmChallengeId New() => new(Guid.NewGuid());

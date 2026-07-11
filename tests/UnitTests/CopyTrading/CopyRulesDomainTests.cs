@@ -122,6 +122,14 @@ public sealed class CopyRulesDomainTests
     }
 
     [Fact]
+    public void Consistency_threshold_rejects_a_negative_percent()
+    {
+        var destination = Destination();
+        var act = () => destination.SetConsistencyThreshold(-1);
+        act.Should().Throw<DomainException>().Which.Message.Should().Be(DomainErrors.CopyRiskParameterInvalid);
+    }
+
+    [Fact]
     public void Source_label_filter_matches_exactly_and_allows_all_when_unset()
     {
         var destination = Destination();

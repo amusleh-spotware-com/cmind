@@ -81,6 +81,9 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public double? AccountProtectionTakeEquity { get; private set; }
     public double PropRuleDailyLossCap { get; private set; }
     public double PropRuleTrailingDrawdown { get; private set; }
+    // Consistency pre-alert (C10): warn when a destination's daily profit reaches this percent of the day's
+    // opening equity, so a prop-firm consistency rule can be respected before it trips. 0 = off.
+    public double ConsistencyThresholdPercent { get; private set; }
     public SymbolFilterMode SymbolFilterMode { get; private set; } = SymbolFilterMode.None;
     public IReadOnlyList<CopySymbolMapEntry> SymbolMaps => _symbolMaps;
     public IReadOnlyList<CopySymbolFilter> SymbolFilters => _symbolFilters;
@@ -143,6 +146,12 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     {
         PropRuleDailyLossCap = guard.DailyLossCap;
         PropRuleTrailingDrawdown = guard.TrailingDrawdown;
+    }
+
+    public void SetConsistencyThreshold(double percent)
+    {
+        DomainGuard.AgainstNegative(percent, DomainErrors.CopyRiskParameterInvalid);
+        ConsistencyThresholdPercent = percent;
     }
 
     public void ConfigureSlippage(SlippagePips slippage)

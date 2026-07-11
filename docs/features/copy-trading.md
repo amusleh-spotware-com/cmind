@@ -96,6 +96,10 @@ Set in the New Profile dialog, on the Copy Trading page's per-destination panel,
   (every copy closed) and **locked out** for the rest of the UTC day (new opens skipped as `prop_lockout`);
   a `CopyPropRuleBreached` alert fires. The lockout clears when the UTC day rolls over (a fresh
   baseline/peak is taken). Shares the same live-equity poll as account protection.
+- **Consistency pre-alert** (C10) — warn (once per UTC day) when a destination's **daily profit** reaches
+  a configured percent of the day's opening equity (`CopyConsistencyThresholdApproaching`), so a
+  prop-firm consistency rule can be respected *before* it trips. Profit-side, independent of the loss-side
+  lockout; runs off the same day baseline as the prop-rule guard.
 - **Order-type filter** — choose exactly which master order types to copy: market, market-range,
   limit, stop, stop-limit (`CopyOrderTypes` flags; default all). cMAM-style selectivity.
 - **Copy SL / Copy TP** — mirror the master's stop-loss / take-profit, or manage protection

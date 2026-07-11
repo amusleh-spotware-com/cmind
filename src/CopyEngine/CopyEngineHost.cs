@@ -60,6 +60,8 @@ public sealed class CopyEngineHost(
     // current day (cleared when the UTC day rolls over). Mutated only under _stateGate.
     private readonly Dictionary<long, (DateOnly Day, double DayStartEquity, double PeakEquity)> _propGuardState = new();
     private readonly HashSet<long> _lockedOutDestinations = [];
+    // Destinations already warned about the consistency threshold today (one alert per UTC day).
+    private readonly HashSet<long> _consistencyAlerted = [];
 
     // Pushed by the supervisor when a cID's single valid access token rotates (refresh or re-auth after
     // the user links another account on the same cID, which invalidates the old token). The host
@@ -164,7 +166,8 @@ public sealed class CopyEngineHost(
     // destination's live equity against its protection policy and, on breach, applies the mode.
     private async Task EquityGuardLoopAsync(IOpenApiTradingSession session, CancellationToken ct)
     {
-        if (plan.Destinations.All(d => d.Config.AccountProtection.Mode == AccountProtectionMode.Off && !d.Config.PropRules.IsEnabled))
+        if (plan.Destinations.All(d => d.Config.AccountProtection.Mode == AccountProtectionMode.Off
+                && !d.Config.PropRules.IsEnabled && d.Config.ConsistencyThresholdPercent <= 0))
             return;
 
         using var timer = new PeriodicTimer(CopyDefaults.EquityGuardInterval, timeProvider);
@@ -185,7 +188,8 @@ public sealed class CopyEngineHost(
             var policy = destination.Config.AccountProtection;
             var propRules = destination.Config.PropRules;
             var protectionActive = policy.Mode != AccountProtectionMode.Off && !_protectedDestinations.Contains(ctid);
-            if (!protectionActive && !propRules.IsEnabled) continue;
+            var dayGuardsActive = propRules.IsEnabled || destination.Config.ConsistencyThresholdPercent > 0;
+            if (!protectionActive && !dayGuardsActive) continue;
 
             var equity = (await AccountSnapshotAsync(session, ctid, needsEquity: true, ct)).Equity;
 
@@ -198,37 +202,57 @@ public sealed class CopyEngineHost(
                     await FlattenDestinationAsync(session, ctid, ct);
             }
 
-            if (propRules.IsEnabled)
-                await EvaluatePropRulesAsync(session, ctid, propRules, equity, ct);
+            if (dayGuardsActive)
+                await EvaluateDayGuardsAsync(session, destination, equity, ct);
         }
     }
 
-    // Prop-rule guard (C7): track the trading day's opening equity + running peak; on a daily-loss or
-    // trailing-drawdown breach, auto-flatten the destination and lock it out for the rest of the UTC day.
-    // The lockout clears when the day rolls over (a fresh baseline/peak is taken).
-    private async Task EvaluatePropRulesAsync(
-        IOpenApiTradingSession session, long ctid, PropRuleGuard rules, double equity, CancellationToken ct)
+    // Day-based guards off a shared per-destination day baseline + running peak equity:
+    //  - Prop-rule guard (C7): on a daily-loss / trailing-drawdown breach, auto-flatten + lock out for the day.
+    //  - Consistency pre-alert (C10): warn once/day when daily profit reaches the configured percent.
+    // The day baseline/peak and both per-day latches reset when the UTC day rolls over.
+    private async Task EvaluateDayGuardsAsync(
+        IOpenApiTradingSession session, CopyDestinationPlan destination, double equity, CancellationToken ct)
     {
+        var ctid = destination.CtidTraderAccountId;
         var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
         if (!_propGuardState.TryGetValue(ctid, out var state) || state.Day != today)
         {
             _propGuardState[ctid] = (today, equity, equity); // new trading day: reset baseline + peak
-            _lockedOutDestinations.Remove(ctid);             // and clear the day's lockout
+            _lockedOutDestinations.Remove(ctid);             // and clear the day's latches
+            _consistencyAlerted.Remove(ctid);
             return;
         }
 
         var peak = Math.Max(state.PeakEquity, equity);
         _propGuardState[ctid] = (today, state.DayStartEquity, peak);
-        if (_lockedOutDestinations.Contains(ctid)) return; // already locked out today
 
-        var rule = rules.DailyLossBreached(state.DayStartEquity, equity) ? "daily_loss"
-            : rules.TrailingDrawdownBreached(peak, equity) ? "trailing_drawdown"
-            : null;
-        if (rule is null) return;
+        // Loss side: prop-rule breach -> flatten + lock out (once per day).
+        var rules = destination.Config.PropRules;
+        if (rules.IsEnabled && !_lockedOutDestinations.Contains(ctid))
+        {
+            var rule = rules.DailyLossBreached(state.DayStartEquity, equity) ? "daily_loss"
+                : rules.TrailingDrawdownBreached(peak, equity) ? "trailing_drawdown"
+                : null;
+            if (rule is not null)
+            {
+                _lockedOutDestinations.Add(ctid);
+                logger.CopyPropRuleBreached(plan.ProfileId.Value, ctid, rule, equity);
+                await FlattenDestinationAsync(session, ctid, ct);
+            }
+        }
 
-        _lockedOutDestinations.Add(ctid);
-        logger.CopyPropRuleBreached(plan.ProfileId.Value, ctid, rule, equity);
-        await FlattenDestinationAsync(session, ctid, ct);
+        // Profit side: consistency pre-alert (once per day) — independent of the loss-side lockout.
+        var consistencyThreshold = destination.Config.ConsistencyThresholdPercent;
+        if (consistencyThreshold > 0 && state.DayStartEquity > 0 && !_consistencyAlerted.Contains(ctid))
+        {
+            var dailyProfitPercent = (equity - state.DayStartEquity) / state.DayStartEquity * 100.0;
+            if (dailyProfitPercent >= consistencyThreshold)
+            {
+                _consistencyAlerted.Add(ctid);
+                logger.CopyConsistencyThresholdApproaching(plan.ProfileId.Value, ctid, dailyProfitPercent, consistencyThreshold);
+            }
+        }
     }
 
     // Closes every copied position on a destination immediately (best-effort market execution — no

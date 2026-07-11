@@ -245,6 +245,10 @@ public static partial class LogMessages
         Message = "Copy prop-rule breached: profile {ProfileId} dest {DestinationCtid} {Rule} at equity {Equity} — auto-flattened and locked out for the day")]
     public static partial void CopyPropRuleBreached(this ILogger logger, Guid profileId, long destinationCtid, string rule, double equity);
 
+    [LoggerMessage(EventId = 1083, Level = LogLevel.Information,
+        Message = "Copy consistency threshold approaching: profile {ProfileId} dest {DestinationCtid} daily profit {DailyProfitPercent}% >= {ThresholdPercent}%")]
+    public static partial void CopyConsistencyThresholdApproaching(this ILogger logger, Guid profileId, long destinationCtid, double dailyProfitPercent, double thresholdPercent);
+
     // ---- Prop-firm challenge tracking ----
 
     [LoggerMessage(EventId = 1067, Level = LogLevel.Error, Message = "Prop-firm tracking supervisor cycle failed")]

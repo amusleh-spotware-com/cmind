@@ -306,6 +306,28 @@ public sealed class CopyEngineHostTests
     }
 
     [Fact]
+    public async Task Consistency_threshold_alerts_when_daily_profit_approaches_the_limit()
+    {
+        var clock = new FakeTimeProvider(new DateTimeOffset(2026, 07, 11, 12, 00, 00, TimeSpan.Zero));
+        var session = NewSession();
+        session.Balance = 10000;
+        var log = new CapturingLogger();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d => d.SetConsistencyThreshold(5))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            await Task.Delay(150);
+            clock.Advance(CopyDefaults.EquityGuardInterval + TimeSpan.FromSeconds(1)); // tick 1: baseline 10000
+            await Task.Delay(120);
+            session.Balance = 10600; // +6% daily profit, past the 5% consistency threshold
+            clock.Advance(CopyDefaults.EquityGuardInterval + TimeSpan.FromSeconds(1)); // tick 2: alert
+            await WaitUntil(() => log.Records.Any(r => r.EventId == 1083));
+        }, log, clock);
+
+        log.Records.Should().Contain(r => r.EventId == 1083, "the consistency pre-alert fires as daily profit approaches the limit");
+    }
+
+    [Fact]
     public async Task Source_close_closes_the_mirrored_copy()
     {
         var session = NewSession();

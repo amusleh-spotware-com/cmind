@@ -50,7 +50,8 @@ public record AddCopyDestinationRequest(
     double AccountProtectionStopEquity = 0,
     double? AccountProtectionTakeEquity = null,
     double PropRuleDailyLossCap = 0,
-    double PropRuleTrailingDrawdown = 0);
+    double PropRuleTrailingDrawdown = 0,
+    double ConsistencyThresholdPercent = 0);
 
 public record SymbolMapPair(string Source, string Destination);
 
@@ -151,6 +152,7 @@ public static class CopyEndpoints
                     d.AccountProtectionTakeEquity,
                     d.PropRuleDailyLossCap,
                     d.PropRuleTrailingDrawdown,
+                    d.ConsistencyThresholdPercent,
                     SymbolFilterMode = d.SymbolFilterMode.ToString(),
                     SymbolFilters = d.SymbolFilters.Select(f => f.Symbol),
                     SymbolMaps = d.SymbolMaps.Select(m => new { m.Source, m.Destination })
@@ -209,6 +211,7 @@ public static class CopyEndpoints
             destination.SetAccountProtection(new AccountProtectionPolicy(
                 req.AccountProtectionMode, req.AccountProtectionStopEquity, req.AccountProtectionTakeEquity));
             destination.SetPropRuleGuard(new PropRuleGuard(req.PropRuleDailyLossCap, req.PropRuleTrailingDrawdown));
+            destination.SetConsistencyThreshold(req.ConsistencyThresholdPercent);
             if (req.SymbolMap is { Count: > 0 })
                 destination.SetSymbolMap(req.SymbolMap.Select(m => new SymbolMapEntry(new Symbol(m.Source), new Symbol(m.Destination))));
             if (req.SymbolFilterMode != SymbolFilterMode.None && req.SymbolFilters is { Count: > 0 })

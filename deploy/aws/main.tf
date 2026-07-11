@@ -27,6 +27,56 @@ data "aws_subnets" "default" {
 
 locals {
   connection_string = "Host=${aws_db_instance.pg.address};Port=5432;Database=appdb;Username=cmindadmin;Password=${var.pg_password};SSL Mode=Require;Trust Server Certificate=true"
+
+  # ADOT collector config: receive OTLP from the app on localhost, ship traces to X-Ray and
+  # metrics to CloudWatch (EMF). Logs stay on the awslogs driver (compact JSON -> Logs Insights).
+  adot_config = <<-YAML
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+    processors:
+      batch:
+    exporters:
+      awsxray:
+      awsemf:
+        namespace: cmind
+        log_group_name: /ecs/${var.name_prefix}/metrics
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [awsxray]
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [awsemf]
+  YAML
+}
+
+# Reusable ADOT collector sidecar definition. Sits in the same task as an app container; the app
+# reaches it over localhost (awsvpc network mode shares the loopback).
+locals {
+  adot_container = {
+    name      = "adot"
+    image     = "public.ecr.aws/aws-observability/aws-otel-collector:latest"
+    essential = false
+    environment = [
+      { name = "AOT_CONFIG_CONTENT", value = local.adot_config }
+    ]
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        "awslogs-group"         = aws_cloudwatch_log_group.this.name
+        "awslogs-region"        = var.region
+        "awslogs-stream-prefix" = "adot"
+      }
+    }
+  }
 }
 
 # ---------------- Security groups ----------------
@@ -116,6 +166,26 @@ resource "aws_iam_role_policy_attachment" "exec" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# Task role — grants the ADOT collector sidecar rights to ship traces to X-Ray and metrics to
+# CloudWatch (EMF). The app containers export OTLP to the sidecar on localhost.
+resource "aws_iam_role" "task" {
+  name_prefix        = "${var.name_prefix}-task-"
+  assume_role_policy = jsonencode({
+    Version   = "2012-10-17"
+    Statement = [{ Action = "sts:AssumeRole", Effect = "Allow", Principal = { Service = "ecs-tasks.amazonaws.com" } }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "task_xray" {
+  role       = aws_iam_role.task.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "task_cw" {
+  role       = aws_iam_role.task.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
 resource "aws_lb" "this" {
   name               = "${var.name_prefix}-alb"
   load_balancer_type = "application"
@@ -178,28 +248,33 @@ resource "aws_ecs_task_definition" "web" {
   cpu                      = "1024"
   memory                   = "2048"
   execution_role_arn       = aws_iam_role.exec.arn
-  container_definitions = jsonencode([{
-    name      = "web"
-    image     = "${var.image_registry}-web:${var.image_tag}"
-    essential = true
-    portMappings = [{ containerPort = 8080 }]
-    environment = [
-      { name = "ASPNETCORE_ENVIRONMENT", value = "Production" },
-      { name = "ConnectionStrings__appdb", value = local.connection_string },
-      { name = "App__OwnerEmail", value = var.owner_email },
-      { name = "App__OwnerPassword", value = var.owner_password },
-      { name = "App__Discovery__Enabled", value = "true" },
-      { name = "App__Discovery__JoinToken", value = var.discovery_join_token }
-    ]
-    logConfiguration = {
-      logDriver = "awslogs"
-      options = {
-        "awslogs-group"         = aws_cloudwatch_log_group.this.name
-        "awslogs-region"        = var.region
-        "awslogs-stream-prefix" = "web"
+  task_role_arn            = aws_iam_role.task.arn
+  container_definitions = jsonencode([
+    {
+      name      = "web"
+      image     = "${var.image_registry}-web:${var.image_tag}"
+      essential = true
+      portMappings = [{ containerPort = 8080 }]
+      environment = [
+        { name = "ASPNETCORE_ENVIRONMENT", value = "Production" },
+        { name = "ConnectionStrings__appdb", value = local.connection_string },
+        { name = "App__OwnerEmail", value = var.owner_email },
+        { name = "App__OwnerPassword", value = var.owner_password },
+        { name = "App__Discovery__Enabled", value = "true" },
+        { name = "App__Discovery__JoinToken", value = var.discovery_join_token },
+        { name = "OTEL_EXPORTER_OTLP_ENDPOINT", value = "http://localhost:4317" }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.this.name
+          "awslogs-region"        = var.region
+          "awslogs-stream-prefix" = "web"
+        }
       }
-    }
-  }])
+    },
+    local.adot_container
+  ])
 }
 
 resource "aws_ecs_task_definition" "mcp" {
@@ -209,24 +284,29 @@ resource "aws_ecs_task_definition" "mcp" {
   cpu                      = "512"
   memory                   = "1024"
   execution_role_arn       = aws_iam_role.exec.arn
-  container_definitions = jsonencode([{
-    name      = "mcp"
-    image     = "${var.image_registry}-mcp:${var.image_tag}"
-    essential = true
-    portMappings = [{ containerPort = 8080 }]
-    environment = [
-      { name = "ASPNETCORE_ENVIRONMENT", value = "Production" },
-      { name = "ConnectionStrings__appdb", value = local.connection_string }
-    ]
-    logConfiguration = {
-      logDriver = "awslogs"
-      options = {
-        "awslogs-group"         = aws_cloudwatch_log_group.this.name
-        "awslogs-region"        = var.region
-        "awslogs-stream-prefix" = "mcp"
+  task_role_arn            = aws_iam_role.task.arn
+  container_definitions = jsonencode([
+    {
+      name      = "mcp"
+      image     = "${var.image_registry}-mcp:${var.image_tag}"
+      essential = true
+      portMappings = [{ containerPort = 8080 }]
+      environment = [
+        { name = "ASPNETCORE_ENVIRONMENT", value = "Production" },
+        { name = "ConnectionStrings__appdb", value = local.connection_string },
+        { name = "OTEL_EXPORTER_OTLP_ENDPOINT", value = "http://localhost:4317" }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.this.name
+          "awslogs-region"        = var.region
+          "awslogs-stream-prefix" = "mcp"
+        }
       }
-    }
-  }])
+    },
+    local.adot_container
+  ])
 }
 
 resource "aws_ecs_service" "web" {

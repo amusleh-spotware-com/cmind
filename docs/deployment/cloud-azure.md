@@ -26,7 +26,11 @@ az deployment group create -g cmind-rg -f deploy/azure/main.bicep \
 ```
 
 This creates: Container Apps environment, Web (external ingress), MCP (external ingress), Postgres
-Flexible Server + `appdb`, and Log Analytics. Discovery is enabled on Web.
+Flexible Server + `appdb`, Log Analytics, and a **workspace-based Application Insights** component.
+Discovery is enabled on Web. Its connection string is injected into Web and MCP as
+`APPLICATIONINSIGHTS_CONNECTION_STRING`, so traces + metrics export natively to App Insights while
+logs land in the same Log Analytics workspace — no collector needed. Pass `-p otlpEndpoint=...` to
+*also* forward to an OTLP collector.
 
 ## 4. Get the URLs
 
@@ -61,5 +65,8 @@ curl -s <webUrl>/version
 - Front Web with Azure Front Door / App Gateway for TLS + WAF.
 - Store secrets in Key Vault; pass a stable Data Protection cert
   (`App__DataProtectionCertBase64` / `...Password`) so the key ring survives replica restarts.
-- Set `OTEL_EXPORTER_OTLP_ENDPOINT` on the apps to forward logs+traces+metrics to a collector.
+- App Insights (traces+metrics) + Log Analytics (logs) are wired automatically; correlate on
+  `trace_id`. See [../operations/logging.md](../operations/logging.md#azure--application-insights--log-analytics).
+- Set the `otlpEndpoint` param (or `OTEL_EXPORTER_OTLP_ENDPOINT` on the apps) to *also* forward to a
+  collector.
 - Container Apps `scale` rules (min/max) are wired in the Bicep.

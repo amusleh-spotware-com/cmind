@@ -12,12 +12,18 @@ using Serilog.Formatting.Compact;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var serviceVersion = VersionInfo.Product;
+var environmentName = builder.Environment.EnvironmentName;
 builder.Services.AddSerilog((sp, lc) =>
 {
     lc.MinimumLevel.Information()
         .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
         .Enrich.FromLogContext()
+        .Enrich.With<TraceActivityEnricher>()
         .Enrich.WithProperty(ObservabilityDefaults.ServiceNameProperty, ObservabilityDefaults.NodeAgentServiceName)
+        .Enrich.WithProperty(ObservabilityDefaults.ServiceVersionProperty, serviceVersion)
+        .Enrich.WithProperty(ObservabilityDefaults.ServiceNamespaceProperty, ObservabilityDefaults.ServiceNamespace)
+        .Enrich.WithProperty(ObservabilityDefaults.DeploymentEnvironmentProperty, environmentName)
         .ReadFrom.Configuration(builder.Configuration)
         .ReadFrom.Services(sp)
         .WriteTo.Console(new RenderedCompactJsonFormatter());
@@ -30,7 +36,10 @@ builder.Services.AddSerilog((sp, lc) =>
             o.Endpoint = otlpEndpoint;
             o.ResourceAttributes = new Dictionary<string, object>
             {
-                [ObservabilityDefaults.ServiceNameProperty] = ObservabilityDefaults.NodeAgentServiceName
+                [ObservabilityDefaults.ServiceNameProperty] = ObservabilityDefaults.NodeAgentServiceName,
+                [ObservabilityDefaults.ServiceVersionProperty] = serviceVersion,
+                [ObservabilityDefaults.ServiceNamespaceProperty] = ObservabilityDefaults.ServiceNamespace,
+                [ObservabilityDefaults.DeploymentEnvironmentProperty] = environmentName
             };
         });
     }

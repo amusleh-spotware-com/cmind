@@ -2,8 +2,6 @@ using Core.Constants;
 using Infrastructure.Observability;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Trace;
 
 namespace Web;
 
@@ -12,23 +10,10 @@ internal static class HostDefaults
     public static TBuilder AddObservabilityDefaults<TBuilder>(this TBuilder builder)
         where TBuilder : IHostApplicationBuilder
     {
-        builder.Services.AddStructuredLogging(builder.Configuration, ObservabilityDefaults.WebServiceName);
-
-        builder.Services.AddOpenTelemetry()
-            .WithMetrics(m => m
-                .AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation()
-                .AddRuntimeInstrumentation())
-            .WithTracing(t => t
-                .AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation());
-
-        if (!string.IsNullOrWhiteSpace(builder.Configuration[ObservabilityDefaults.OtlpEndpointKey]))
-        {
-            builder.Services.AddOpenTelemetry()
-                .WithMetrics(m => m.AddOtlpExporter())
-                .WithTracing(t => t.AddOtlpExporter());
-        }
+        builder.Services.AddStructuredLogging(
+            builder.Configuration, ObservabilityDefaults.WebServiceName, builder.Environment.EnvironmentName);
+        builder.Services.AddAppTelemetry(
+            builder.Configuration, ObservabilityDefaults.WebServiceName, builder.Environment.EnvironmentName);
 
         builder.Services.AddServiceDiscovery();
         builder.Services.ConfigureHttpClientDefaults(http =>

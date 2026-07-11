@@ -26,6 +26,9 @@ param ownerPassword string
 @secure()
 param discoveryJoinToken string
 
+@description('Optional OTLP endpoint to ALSO export logs/traces/metrics to a collector (leave empty to use Azure Monitor only)')
+param otlpEndpoint string = ''
+
 var pgAdmin = 'cmindadmin'
 var connectionString = 'Host=${pg.properties.fullyQualifiedDomainName};Port=5432;Database=appdb;Username=${pgAdmin};Password=${pgPassword};SSL Mode=Require;Trust Server Certificate=true'
 
@@ -35,6 +38,16 @@ resource logs 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   properties: {
     sku: { name: 'PerGB2018' }
     retentionInDays: 30
+  }
+}
+
+resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: '${namePrefix}-appi'
+  location: location
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: logs.id
   }
 }
 
@@ -87,6 +100,7 @@ resource web 'Microsoft.App/containerApps@2024-03-01' = {
         { name: 'connstr', value: connectionString }
         { name: 'owner-password', value: ownerPassword }
         { name: 'join-token', value: discoveryJoinToken }
+        { name: 'appi-conn', value: appInsights.properties.ConnectionString }
       ]
     }
     template: {
@@ -102,6 +116,8 @@ resource web 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'App__OwnerPassword', secretRef: 'owner-password' }
             { name: 'App__Discovery__Enabled', value: 'true' }
             { name: 'App__Discovery__JoinToken', secretRef: 'join-token' }
+            { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', secretRef: 'appi-conn' }
+            { name: 'OTEL_EXPORTER_OTLP_ENDPOINT', value: otlpEndpoint }
           ]
         }
       ]
@@ -117,7 +133,10 @@ resource mcp 'Microsoft.App/containerApps@2024-03-01' = {
     managedEnvironmentId: env.id
     configuration: {
       ingress: { external: true, targetPort: 8080, transport: 'auto' }
-      secrets: [ { name: 'connstr', value: connectionString } ]
+      secrets: [
+        { name: 'connstr', value: connectionString }
+        { name: 'appi-conn', value: appInsights.properties.ConnectionString }
+      ]
     }
     template: {
       containers: [
@@ -128,6 +147,8 @@ resource mcp 'Microsoft.App/containerApps@2024-03-01' = {
           env: [
             { name: 'ASPNETCORE_ENVIRONMENT', value: 'Production' }
             { name: 'ConnectionStrings__appdb', secretRef: 'connstr' }
+            { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', secretRef: 'appi-conn' }
+            { name: 'OTEL_EXPORTER_OTLP_ENDPOINT', value: otlpEndpoint }
           ]
         }
       ]
@@ -138,3 +159,4 @@ resource mcp 'Microsoft.App/containerApps@2024-03-01' = {
 
 output webUrl string = 'https://${web.properties.configuration.ingress.fqdn}'
 output mcpUrl string = 'https://${mcp.properties.configuration.ingress.fqdn}/mcp'
+output appInsightsName string = appInsights.name

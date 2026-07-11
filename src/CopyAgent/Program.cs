@@ -1,11 +1,15 @@
 using Core.Constants;
 using Core.Options;
 using Infrastructure;
+using Infrastructure.Observability;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Nodes.CopyTrading;
 
 var builder = Host.CreateApplicationBuilder(args);
+
+builder.Services.AddStructuredLogging(
+    builder.Configuration, ObservabilityDefaults.CopyAgentServiceName, builder.Environment.EnvironmentName);
 
 builder.Services
     .AddOptions<AppOptions>()

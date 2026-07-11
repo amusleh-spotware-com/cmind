@@ -29,7 +29,11 @@ terraform apply \
 ```
 
 Creates: RDS Postgres (`appdb`), ECS cluster, Fargate services for Web + MCP, an ALB (Web at `/`,
-MCP at `/mcp`), security groups, and a CloudWatch log group. Discovery is enabled on Web.
+MCP at `/mcp`), security groups, a CloudWatch log group, and an **ADOT (AWS Distro for
+OpenTelemetry) collector sidecar** in each task. The app exports OTLP to the sidecar, which ships
+traces to **X-Ray** and metrics to **CloudWatch** (EMF, namespace `cmind`); logs stay on the
+`awslogs` driver as compact JSON. Discovery is enabled on Web. A task role grants the sidecar
+X-Ray + CloudWatch write access — no collector to run yourself.
 
 > Uses the account's **default VPC/subnets** for brevity. For production, wire your own VPC, private
 > subnets, and an HTTPS listener (ACM cert).
@@ -68,4 +72,8 @@ curl -s "$(terraform output -raw web_url)/version"
 - Store secrets in AWS Secrets Manager / SSM and inject via task-definition `secrets` instead of
   plaintext `environment`.
 - Enable RDS Multi-AZ + backups.
-- Set `OTEL_EXPORTER_OTLP_ENDPOINT` in the task definitions to forward logs+traces+metrics.
+- Traces (X-Ray), metrics (CloudWatch EMF), and logs (CloudWatch Logs) are wired automatically via
+  the ADOT sidecar; correlate on `trace_id`. See
+  [../operations/logging.md](../operations/logging.md#aws--x-ray--cloudwatch-adot-sidecar).
+- The app already points `OTEL_EXPORTER_OTLP_ENDPOINT` at the in-task sidecar; repoint it to an
+  external collector if you prefer to centralize.

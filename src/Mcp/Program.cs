@@ -10,7 +10,10 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddStructuredLogging(builder.Configuration, ObservabilityDefaults.McpServiceName);
+builder.Services.AddStructuredLogging(
+    builder.Configuration, ObservabilityDefaults.McpServiceName, builder.Environment.EnvironmentName);
+builder.Services.AddAppTelemetry(
+    builder.Configuration, ObservabilityDefaults.McpServiceName, builder.Environment.EnvironmentName);
 builder.AddNpgsqlDbContext<DataContext>(ConnectionStrings.AppDb);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddHttpContextAccessor();

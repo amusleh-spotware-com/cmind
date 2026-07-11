@@ -133,8 +133,16 @@ public static class ObservabilityDefaults
     public const string WebServiceName = "cmind-web";
     public const string McpServiceName = "cmind-mcp";
     public const string NodeAgentServiceName = "cmind-node-agent";
+    public const string CopyAgentServiceName = "cmind-copy-agent";
+    public const string ServiceNamespace = "cmind";
     public const string OtlpEndpointKey = "OTEL_EXPORTER_OTLP_ENDPOINT";
+    public const string AzureMonitorConnectionStringKey = "APPLICATIONINSIGHTS_CONNECTION_STRING";
     public const string ServiceNameProperty = "service.name";
+    public const string ServiceVersionProperty = "service.version";
+    public const string ServiceNamespaceProperty = "service.namespace";
+    public const string DeploymentEnvironmentProperty = "deployment.environment";
+    public const string TraceIdProperty = "trace_id";
+    public const string SpanIdProperty = "span_id";
 }
 
 public static class AiConstants

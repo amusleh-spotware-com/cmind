@@ -10,6 +10,7 @@
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
     <MudText Typo="Typo.h5">Nodes</MudText>
+    <HelpTip Text="Nodes are the machines that run your cBot containers. The local node is the web host; remote nodes are ExternalNode agents reached over HTTP." />
     <MudSpacer />
     <MudButton Color="Color.Primary" Variant="Variant.Filled"
                StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew">
@@ -17,19 +18,19 @@
     </MudButton>
 </MudStack>
 
-<MudTable Items="_items" Class="mt-3" Dense="true">
+<MudTable Items="_items" Class="mt-3" Dense="true" Breakpoint="Breakpoint.Sm">
     <HeaderContent>
         <MudTh>Name</MudTh><MudTh>Host</MudTh><MudTh>Mode</MudTh><MudTh>Status</MudTh><MudTh>CPU</MudTh><MudTh>Mem</MudTh><MudTh>Disk</MudTh><MudTh>Backtest</MudTh><MudTh /></HeaderContent>
     <RowTemplate>
-        <MudTd>@context.name</MudTd>
-        <MudTd>@context.host</MudTd>
-        <MudTd>@context.mode</MudTd>
-        <MudTd>@context.status</MudTd>
-        <MudTd>@(((double?)context.stats?.cpuPercent ?? 0).ToString("F1"))%</MudTd>
-        <MudTd>@Fmt(context.stats?.memUsedBytes) / @Fmt(context.stats?.memTotalBytes)</MudTd>
-        <MudTd>@Fmt(context.stats?.diskUsedBytes) / @Fmt(context.stats?.diskTotalBytes)</MudTd>
-        <MudTd>@Fmt(context.stats?.backtestDataUsedBytes)</MudTd>
-        <MudTd>
+        <MudTd DataLabel="Name">@context.name</MudTd>
+        <MudTd DataLabel="Host">@context.host</MudTd>
+        <MudTd DataLabel="Mode">@context.mode</MudTd>
+        <MudTd DataLabel="Status">@context.status</MudTd>
+        <MudTd DataLabel="CPU">@(((double?)context.stats?.cpuPercent ?? 0).ToString("F1"))%</MudTd>
+        <MudTd DataLabel="Mem">@Fmt(context.stats?.memUsedBytes) / @Fmt(context.stats?.memTotalBytes)</MudTd>
+        <MudTd DataLabel="Disk">@Fmt(context.stats?.diskUsedBytes) / @Fmt(context.stats?.diskTotalBytes)</MudTd>
+        <MudTd DataLabel="Backtest">@Fmt(context.stats?.backtestDataUsedBytes)</MudTd>
+        <MudTd DataLabel="">
             @if ((bool?)context.isLocal == true)
             {
                 <MudSwitch T="bool" Value="@((bool)context.enabled)" Color="Color.Primary"

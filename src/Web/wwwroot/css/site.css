@@ -315,6 +315,19 @@ html, body {
     margin-top: -8px;
 }
 
+/* ---- Inline help affordance ----------------------------------------------- */
+
+.app-help-tip {
+    display: inline-flex;
+    align-items: center;
+    color: var(--app-text-muted);
+    cursor: help;
+    vertical-align: middle;
+    margin-left: 4px;
+}
+.app-help-tip:hover,
+.app-help-tip:focus-visible { color: var(--app-primary); outline: none; }
+
 /* ---- Auth split-screen (login) -------------------------------------------- */
 
 .app-auth {

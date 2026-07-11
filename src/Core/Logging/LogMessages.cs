@@ -106,6 +106,12 @@ public static partial class LogMessages
     [LoggerMessage(EventId = 1034, Level = LogLevel.Error, Message = "Node heartbeat monitor cycle failed")]
     public static partial void HeartbeatMonitorFailed(this ILogger logger, Exception ex);
 
+    [LoggerMessage(EventId = 1033, Level = LogLevel.Warning, Message = "Instance {InstanceId} on unreachable node {NodeName} reclaimed and marked failed")]
+    public static partial void InstanceReclaimedFromDeadNode(this ILogger logger, Guid instanceId, string nodeName);
+
+    [LoggerMessage(EventId = 1092, Level = LogLevel.Error, Message = "Node instance-reclaim cycle failed")]
+    public static partial void InstanceReclaimFailed(this ILogger logger, Exception ex);
+
     [LoggerMessage(EventId = 1035, Level = LogLevel.Information, Message = "Agent registered with main at {MainUrl} as node {NodeId}")]
     public static partial void AgentRegistered(this ILogger logger, string mainUrl, Guid nodeId);
 

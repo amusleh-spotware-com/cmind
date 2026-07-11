@@ -21,6 +21,7 @@ POST /api/nodes/register  ── join token ──▶ verify token (constant-tim
 
 - **Registration == heartbeat.** Agent re-POSTs on `HeartbeatIntervalSeconds`. First call creates node (`NodeRegistered` event); later calls refresh liveness. Resumed heartbeat after outage flips node back reachable (`NodeCameOnline`).
 - **Liveness reconciliation.** `NodeHeartbeatMonitor` marks nodes whose last heartbeat exceeds `HeartbeatTtl` unreachable. Scheduler (`IsActive`/`AcceptsRun`/`AcceptsBacktest` gated on reachability) stops placing work until they report again.
+- **Orphaned-instance reclaim.** `NodeInstanceReclaimer` (background) transitions any non-terminal instance stranded on an unreachable node to **Failed** (`FailureReason = "Node unreachable - instance reclaimed"`, `InstanceFailed` domain event → user notification), so a crashed/partitioned node can never leave an instance stuck "Running" forever. Reclaim only fires once the node's last heartbeat is stale beyond `HeartbeatTtl + InstanceReclaimGrace`, giving a brief-blip a chance to recover first. Reclaimed **runs are not auto-rescheduled**: a partitioned-but-alive node may still be executing the container and there is no container-level fencing, so re-launching would risk double execution — the user restarts a reclaimed run deliberately. Backtests self-exit, so a reclaimed backtest is simply re-run.
 - **Identity is node name.** Main upserts by `NodeName`, so pod whose IP/URL changes on restart keeps identity, re-registers new `AdvertiseUrl`.
 - **Mode fixed at first registration.** Node mode (`Run`/`Backtest`/`Mixed`) is persisted type, cannot change on heartbeat; re-registration with different mode honoured for liveness but mode change ignored (logged as warning). To change mode: delete node, let it re-register.
 
@@ -33,7 +34,8 @@ Main (Web) — `App:Discovery`:
 | `Enabled` | `false` | Master switch for register endpoint + monitor. |
 | `JoinToken` | — | Shared cluster secret (≥ 32 chars) agents must present. |
 | `HeartbeatTtl` | `00:01:30` | Grace before silent node marked unreachable. |
-| `MonitorInterval` | `00:00:30` | How often monitor sweeps. |
+| `InstanceReclaimGrace` | `00:01:00` | Extra margin beyond `HeartbeatTtl` before a stranded instance on an unreachable node is reclaimed (failed). |
+| `MonitorInterval` | `00:00:30` | How often the monitor and instance-reclaimer sweep. |
 | `HeartbeatInterval` | `00:00:30` | Value returned to agents as suggested cadence. |
 
 Agent (ExternalNode) — `NodeAgent`:

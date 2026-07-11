@@ -165,6 +165,10 @@ public sealed record DiscoveryOptions
     public TimeSpan HeartbeatTtl { get; init; } = TimeSpan.FromSeconds(90);
     public TimeSpan MonitorInterval { get; init; } = TimeSpan.FromSeconds(30);
     public TimeSpan HeartbeatInterval { get; init; } = TimeSpan.FromSeconds(30);
+
+    // Extra margin beyond HeartbeatTtl before a non-terminal instance on an unreachable node is
+    // reclaimed (failed). Guards against reclaiming during a brief heartbeat gap that recovers.
+    public TimeSpan InstanceReclaimGrace { get; init; } = TimeSpan.FromSeconds(60);
 }
 
 public sealed record LocalNodeOptions

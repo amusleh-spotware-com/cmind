@@ -12,6 +12,13 @@
 <MudButton OnClick="Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-2">Update</MudButton>
 <MudButton OnClick="Logout" Variant="Variant.Outlined" Class="mt-2 ml-2">Logout</MudButton>
 
+<MudDivider Class="my-6" />
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+    <MudText Typo="Typo.subtitle1">Install app</MudText>
+    <HelpTip Text="Install this app on your device for a full-screen, home-screen experience. On iPhone/iPad use Safari's Share → Add to Home Screen." />
+</MudStack>
+<InstallAppButton />
+
 @code {
     private string _cur = "", _new = "";
     private async Task Submit()

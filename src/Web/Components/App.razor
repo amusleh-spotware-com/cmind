@@ -49,6 +49,17 @@
             e.preventDefault();
             window.deferredInstallPrompt = e;
         });
+        window.appInstall = {
+            available: () => !!window.deferredInstallPrompt,
+            prompt: async () => {
+                const p = window.deferredInstallPrompt;
+                if (!p) return 'unavailable';
+                p.prompt();
+                const choice = await p.userChoice;
+                window.deferredInstallPrompt = null;
+                return (choice && choice.outcome) ? choice.outcome : 'dismissed';
+            }
+        };
     </script>
 </body>
 </html>

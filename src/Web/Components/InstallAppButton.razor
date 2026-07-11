@@ -1,0 +1,46 @@
+﻿@inject IJSRuntime JS
+@inject ISnackbar Snack
+
+@* Shows an install button only when the browser has offered an install prompt (Chromium/Android). On
+   iOS there is no beforeinstallprompt — users install via Safari's Add to Home Screen. *@
+
+@if (_available)
+{
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.InstallMobile"
+               OnClick="Install" data-testid="install-app">Install app</MudButton>
+}
+
+@code {
+    private bool _available;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try
+        {
+            if (await JS.InvokeAsync<bool>("appInstall.available"))
+            {
+                _available = true;
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+            // JS interop unavailable during prerender — ignore; the button stays hidden.
+        }
+    }
+
+    private async Task Install()
+    {
+        var outcome = await JS.InvokeAsync<string>("appInstall.prompt");
+        if (outcome == "unavailable")
+        {
+            Snack.Add("To install, use your browser's Add to Home Screen.", Severity.Info);
+        }
+        else if (outcome == "accepted")
+        {
+            _available = false;
+            Snack.Add("App installed.", Severity.Success);
+        }
+    }
+}

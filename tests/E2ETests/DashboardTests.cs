@@ -62,6 +62,29 @@ public sealed class DashboardTests(AppFixture app)
         (await page.Locator("[data-testid=page-error]").IsVisibleAsync()).Should().BeFalse();
     }
 
+    // Regression: switching period must NOT crash the page or drop the circuit. Previously the dashboard
+    // nulled its data on switch, which remounted the ApexChart and raced its JS interop into an
+    // ErrorBoundary + reconnect. Rapidly cycle every period and assert the chart survives each time.
+    [Fact]
+    public async Task Cycling_every_period_never_crashes_the_page_or_drops_the_circuit()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await WaitLoadedAsync(page);
+
+        foreach (var period in new[] { "period-1h", "period-7d", "period-30d", "period-24h", "period-1h" })
+        {
+            await page.Locator($"[data-testid={period}]").ClickAsync();
+            await page.Locator("[data-testid=kpi-active]").WaitForAsync(new() { Timeout = 15000 });
+
+            (await page.Locator("[data-testid=page-error]").IsVisibleAsync())
+                .Should().BeFalse($"clicking {period} must not trip the ErrorBoundary");
+            (await page.Locator(".blazor-error-ui").IsVisibleAsync())
+                .Should().BeFalse($"clicking {period} must not break the circuit");
+            (await page.Locator("#components-reconnect-modal").IsVisibleAsync())
+                .Should().BeFalse($"clicking {period} must not drop the connection");
+        }
+    }
+
     [Fact]
     public async Task Powered_by_link_is_shown_by_default_and_points_to_the_site()
     {

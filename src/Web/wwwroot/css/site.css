@@ -420,8 +420,13 @@ html, body {
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(2px);
 }
+/* .NET 10 toggles the full reconnect state set (show/retrying/failed/paused/resume-failed/rejected) on
+   this element — every visible state must overlay so the terminal "session expired" state also blocks. */
 #components-reconnect-modal.components-reconnect-show,
+#components-reconnect-modal.components-reconnect-retrying,
 #components-reconnect-modal.components-reconnect-failed,
+#components-reconnect-modal.components-reconnect-paused,
+#components-reconnect-modal.components-reconnect-resume-failed,
 #components-reconnect-modal.components-reconnect-rejected { display: flex; }
 
 .app-reconnect-card {
@@ -463,15 +468,23 @@ html, body {
 .app-reconnect-when-show,
 .app-reconnect-when-failed,
 .app-reconnect-when-rejected { display: none; }
+/* show/retrying → "reconnecting"; failed/paused → "connection lost, retrying"; rejected/resume-failed
+   → terminal "session expired, reload". */
 #components-reconnect-modal.components-reconnect-show .app-reconnect-when-show,
+#components-reconnect-modal.components-reconnect-retrying .app-reconnect-when-show,
 #components-reconnect-modal.components-reconnect-failed .app-reconnect-when-failed,
-#components-reconnect-modal.components-reconnect-rejected .app-reconnect-when-rejected { display: inline; }
+#components-reconnect-modal.components-reconnect-paused .app-reconnect-when-failed,
+#components-reconnect-modal.components-reconnect-rejected .app-reconnect-when-rejected,
+#components-reconnect-modal.components-reconnect-resume-failed .app-reconnect-when-rejected { display: inline; }
 #components-reconnect-modal.components-reconnect-failed .app-reconnect-btn.app-reconnect-when-failed,
-#components-reconnect-modal.components-reconnect-rejected .app-reconnect-btn.app-reconnect-when-rejected {
+#components-reconnect-modal.components-reconnect-paused .app-reconnect-btn.app-reconnect-when-failed,
+#components-reconnect-modal.components-reconnect-rejected .app-reconnect-btn.app-reconnect-when-rejected,
+#components-reconnect-modal.components-reconnect-resume-failed .app-reconnect-btn.app-reconnect-when-rejected {
     display: inline-flex;
     align-items: center;
 }
-#components-reconnect-modal.components-reconnect-rejected .app-reconnect-spinner { display: none; }
+#components-reconnect-modal.components-reconnect-rejected .app-reconnect-spinner,
+#components-reconnect-modal.components-reconnect-resume-failed .app-reconnect-spinner { display: none; }
 
 /* ---- Inline help affordance ----------------------------------------------- */
 

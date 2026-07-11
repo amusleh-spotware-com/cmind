@@ -38,25 +38,65 @@ public sealed class MiscUiTests(AppFixture app)
         bg.Should().NotBe("rgb(255, 255, 255)", "the reconnect card must not be the default white");
     }
 
-    [Fact]
-    public async Task Reconnect_modal_overlays_and_shows_only_active_state()
+    // Every .NET 10 reconnect state that should be visible must overlay full-screen (position:fixed),
+    // never render inline in the page flow — including the terminal "session expired" states.
+    [Theory]
+    [InlineData("components-reconnect-show")]
+    [InlineData("components-reconnect-retrying")]
+    [InlineData("components-reconnect-failed")]
+    [InlineData("components-reconnect-paused")]
+    [InlineData("components-reconnect-rejected")]
+    [InlineData("components-reconnect-resume-failed")]
+    public async Task Reconnect_modal_overlays_full_screen_for_every_visible_state(string stateClass)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
 
-        // Blazor toggles reconnect state by replacing the element's class list (dropping our own class),
-        // so the styling must key off the #id. Simulate the "failed" state exactly as Blazor does.
+        // Blazor toggles reconnect state by setting the element's class list; style keys off the #id.
         await page.EvaluateAsync(
-            "() => { document.getElementById('components-reconnect-modal').className = 'components-reconnect-failed'; }");
+            $"() => {{ document.getElementById('components-reconnect-modal').className = '{stateClass}'; }}");
 
         var modal = page.Locator("#components-reconnect-modal");
-        (await modal.IsVisibleAsync()).Should().BeTrue("the failed state must show the modal");
+        (await modal.IsVisibleAsync()).Should().BeTrue($"{stateClass} must show the modal");
 
         var position = await page.EvaluateAsync<string>(
             "() => getComputedStyle(document.getElementById('components-reconnect-modal')).position");
-        position.Should().Be("fixed", "the modal must overlay the app, not render inline in the page flow");
+        position.Should().Be("fixed", $"{stateClass} must overlay the app, not render inline in the page flow");
 
-        // Only the failed copy is shown — not all three states jammed together.
+        var zIndex = await page.EvaluateAsync<string>(
+            "() => getComputedStyle(document.getElementById('components-reconnect-modal')).zIndex");
+        int.Parse(zIndex).Should().BeGreaterThan(1000, "the overlay must sit above the app shell/drawer");
+    }
+
+    [Fact]
+    public async Task Reconnect_modal_session_expired_state_shows_reload_and_hides_spinner()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+
+        // "Session could not be resumed" is the terminal resume-failed state in .NET 10.
+        await page.EvaluateAsync(
+            "() => { document.getElementById('components-reconnect-modal').className = 'components-reconnect-resume-failed'; }");
+
+        (await page.Locator("#components-reconnect-modal").IsVisibleAsync()).Should().BeTrue();
+        (await page.Locator(".app-reconnect-when-rejected").First.IsVisibleAsync())
+            .Should().BeTrue("the session-expired copy must show");
+        (await page.Locator(".app-reconnect-when-show").First.IsVisibleAsync()).Should().BeFalse();
+        (await page.Locator(".app-reconnect-when-failed").First.IsVisibleAsync()).Should().BeFalse();
+        (await page.GetByRole(AriaRole.Button, new() { Name = "Reload" }).IsVisibleAsync()).Should().BeTrue();
+        (await page.Locator(".app-reconnect-spinner").IsVisibleAsync())
+            .Should().BeFalse("a terminal state has no spinner");
+    }
+
+    [Fact]
+    public async Task Reconnect_modal_failed_state_shows_only_failed_copy_and_retry()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+
+        await page.EvaluateAsync(
+            "() => { document.getElementById('components-reconnect-modal').className = 'components-reconnect-failed'; }");
+
         (await page.Locator(".app-reconnect-when-failed").First.IsVisibleAsync()).Should().BeTrue();
         (await page.Locator(".app-reconnect-when-show").First.IsVisibleAsync()).Should().BeFalse();
         (await page.Locator(".app-reconnect-when-rejected").First.IsVisibleAsync()).Should().BeFalse();

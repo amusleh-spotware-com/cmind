@@ -31,8 +31,13 @@
             background: rgba(0, 0, 0, 0.72);
             backdrop-filter: blur(3px);
         }
+        /* .NET 10 toggles the full state set on this element; every visible state must overlay, so the
+           terminal "session could not be resumed" (resume-failed) / "rejected" states block the app too. */
         #components-reconnect-modal.components-reconnect-show,
+        #components-reconnect-modal.components-reconnect-retrying,
         #components-reconnect-modal.components-reconnect-failed,
+        #components-reconnect-modal.components-reconnect-paused,
+        #components-reconnect-modal.components-reconnect-resume-failed,
         #components-reconnect-modal.components-reconnect-rejected { display: flex; }
     </style>
     <link rel="manifest" href="manifest.webmanifest" />

@@ -5,7 +5,7 @@
 // Static assets are served NETWORK-FIRST: CSS/JS/icon updates are always fresh when online, and the cache
 // is only a fallback for offline. This avoids serving a stale stylesheet after a deploy. Bump CACHE when
 // changing the precached shell so old caches are cleared on activate.
-const CACHE = 'cmind-shell-v2';
+const CACHE = 'cmind-shell-v3';
 const SHELL = [
     '/offline.html',
     '/css/site.css',

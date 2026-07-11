@@ -62,6 +62,12 @@ public sealed class CopyEngineHost(
     // time until new opens resume. Thread-safe: written from the G4 bounded-parallel open fan-out, where
     // each destination (distinct ctid key) is touched by exactly one task at a time.
     private readonly ConcurrentDictionary<long, (int ConsecutiveFailures, DateTimeOffset? TrippedUntil)> _destinationHealth = new();
+    // G5 partial-fill true-up: the wire volume a fresh copy open requested, per (destination, source id),
+    // awaiting one fill-verification pass. If the broker partially filled the open (filled < requested by a
+    // whole lot-step) the next resync tops the slave up to target, then clears the entry. One-shot: a
+    // lifecycle event (partial close, scale-in, close) removes the entry so the true-up never fights the
+    // proportional management of a position. Thread-safe (written from the parallel open fan-out).
+    private readonly ConcurrentDictionary<(long Ctid, long SourceId), long> _pendingTrueUp = new();
     // Account-protection latch: once a destination's equity guard fires, it stops receiving new opens until
     // the host restarts (a deliberate, non-silent safety stop). Mutated only under _stateGate.
     private readonly HashSet<long> _protectedDestinations = [];
@@ -454,6 +460,8 @@ public sealed class CopyEngineHost(
         await ForEachDestinationAsync(async (destination, token) =>
         {
             if (!destination.Config.MirrorPartialClose) return;
+            // G5: a partial close is proportional management — the open fill is no longer the target.
+            _pendingTrueUp.TryRemove((destination.CtidTraderAccountId, execution.PositionId), out _);
             try
             {
                 var positions = await session.ReconcileAsync(destination.CtidTraderAccountId, token);
@@ -486,6 +494,8 @@ public sealed class CopyEngineHost(
         await ForEachDestinationAsync(async (destination, token) =>
         {
             if (!destination.Config.MirrorScaleIn) return;
+            // G5: the position is now under proportional management — stop trying to true up its open fill.
+            _pendingTrueUp.TryRemove((destination.CtidTraderAccountId, execution.PositionId), out _);
             try
             {
                 await CopyOpenToDestinationAsync(session, destination, scaleInExecution, sourceName,
@@ -790,6 +800,10 @@ public sealed class CopyEngineHost(
         CopyMetrics.Instance.CopyPlaced(destination.CtidTraderAccountId);
         CopyMetrics.Instance.RecordLatency(EventAge(execution).TotalMilliseconds);
         RecordCopySuccess(destination.CtidTraderAccountId);
+        // G5: remember the requested wire volume so the next resync can true up a broker partial fill to
+        // target. Only a fresh open is tracked; a scale-in is proportional management, not a fill to verify.
+        if (!isScaleIn)
+            _pendingTrueUp[(destination.CtidTraderAccountId, execution.PositionId)] = wireVolume;
         if (decision.SlippageInPoints is { } slippagePoints)
         {
             CopyMetrics.Instance.RecordSlippage(slippagePoints);
@@ -843,6 +857,7 @@ public sealed class CopyEngineHost(
 
         await ForEachDestinationAsync(async (destination, token) =>
         {
+            _pendingTrueUp.TryRemove((destination.CtidTraderAccountId, sourcePositionId), out _); // G5: position gone
             try
             {
                 var positions = await session.ReconcileAsync(destination.CtidTraderAccountId, token);
@@ -905,6 +920,7 @@ public sealed class CopyEngineHost(
                     {
                         await session.ClosePositionAsync(destination.CtidTraderAccountId, position.PositionId, position.Volume, ct);
                         orphansClosed++;
+                        _pendingTrueUp.TryRemove((destination.CtidTraderAccountId, sourceId), out _); // G5: gone
                     }
                     catch (Exception ex)
                     {
@@ -942,6 +958,8 @@ public sealed class CopyEngineHost(
                 }
             }
 
+            await TrueUpPartialFillsAsync(session, destination.CtidTraderAccountId, sourceOpenIds, ct);
+
             var destinationPendings = await session.ReconcilePendingOrdersAsync(destination.CtidTraderAccountId, ct);
             foreach (var pending in destinationPendings)
                 if (long.TryParse(pending.Label, out var sourceOrderId) && !sourcePendingIds.Contains(sourceOrderId))
@@ -950,6 +968,51 @@ public sealed class CopyEngineHost(
 
         _hasResynced = true;
         logger.CopyResync(plan.ProfileId.Value, sourceOpenIds.Count, orphansClosed);
+    }
+
+    // G5 partial-fill true-up: for each fresh copy open awaiting fill verification on this destination,
+    // compare the slave's filled volume (summed over any copies carrying the source label) against the
+    // requested target. If the broker filled short by at least one whole lot-step, place a top-up market
+    // order to reach target and emit SlaveVolumeReconciled. One-shot: every entry is cleared after this pass
+    // (a lifecycle event already removes it earlier), so a subsequent partial close / scale-in is never
+    // undone. A source id no longer open is dropped; a missing copy is left for the open-missing pass.
+    private async Task TrueUpPartialFillsAsync(
+        IOpenApiTradingSession session, long ctid, IReadOnlySet<long> sourceOpenIds, CancellationToken ct)
+    {
+        var keys = _pendingTrueUp.Keys.Where(k => k.Ctid == ctid).ToArray();
+        if (keys.Length == 0) return;
+
+        var positions = await session.ReconcileAsync(ctid, ct);
+        foreach (var key in keys)
+        {
+            if (!_pendingTrueUp.TryGetValue(key, out var requested)) continue;
+            var matches = positions.Where(p => p.Label == key.SourceId.ToString()).ToList();
+            if (matches.Count == 0)
+            {
+                if (!sourceOpenIds.Contains(key.SourceId)) _pendingTrueUp.TryRemove(key, out _);
+                continue; // copy not present yet — the open-missing pass reopens it and re-arms the true-up
+            }
+
+            _pendingTrueUp.TryRemove(key, out _); // one-shot regardless of outcome
+            var filled = matches.Sum(p => p.Volume);
+            var template = matches[0];
+            var detail = await SymbolDetailAsync(session, ctid, template.SymbolId, ct);
+            var step = detail.StepVolume > 0 ? detail.StepVolume : 1;
+            var shortfall = requested - filled;
+            if (shortfall < step || shortfall < detail.MinVolume) continue;
+            try
+            {
+                await session.SendMarketOrderAsync(ctid, template.SymbolId, template.IsBuy, shortfall,
+                    key.SourceId.ToString(), ct);
+                logger.CopySlaveVolumeReconciled(plan.ProfileId.Value, ctid, template.PositionId,
+                    shortfall, requested, filled);
+            }
+            catch (Exception ex)
+            {
+                NoteIfTokenInvalidated(ex, ctid);
+                logger.CopyOpenFailed(plan.ProfileId.Value, ctid, key.SourceId, ex);
+            }
+        }
     }
 
     private async Task<SymbolDetails> SymbolDetailAsync(

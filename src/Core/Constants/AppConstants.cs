@@ -164,6 +164,12 @@ public static class CopyDefaults
     // the Nth slave doesn't queue behind the first N-1. Per-destination host state is thread-safe
     // (ConcurrentDictionary) and network I/O is isolated per destination, so this is a pure latency win.
     public const int MaxDestinationConcurrency = 4;
+    // Phase 3 execution transparency: bounded buffer between the copy host (producer, hot path) and the DB
+    // drainer (consumer). Full = drop the oldest fact rather than block trading. Drainer flushes a batch on
+    // this interval.
+    public const int CopyExecutionChannelCapacity = 10_000;
+    public const int CopyExecutionDrainBatchSize = 500;
+    public static readonly TimeSpan CopyExecutionDrainInterval = TimeSpan.FromSeconds(5);
 }
 
 public static class AiConstants

@@ -978,6 +978,44 @@ public class InstanceLog : ISoftDeletable
         };
 }
 
+// Append-only execution-transparency record: one row per copy attempt on one destination, written
+// out-of-band by the copy event sink. Not an aggregate — a fact log queried by the transparency read model.
+public class CopyExecution : ISoftDeletable
+{
+    public long Id { get; private set; }
+    public Guid ProfileId { get; private set; }
+    public long DestinationCtidTraderAccountId { get; private set; }
+    public long SourcePositionId { get; private set; }
+    [MaxLength(64)] public string Symbol { get; private set; } = default!;
+    public Core.CopyTrading.CopyExecutionKind Kind { get; private set; }
+    public bool IsBuy { get; private set; }
+    public long Volume { get; private set; }
+    public double MasterPrice { get; private set; }
+    public int? SlippagePoints { get; private set; }
+    public double LatencyMilliseconds { get; private set; }
+    [MaxLength(128)] public string? Reason { get; private set; }
+    public DateTimeOffset OccurredAt { get; private set; }
+    public bool IsDeleted { get; set; }
+    public DateTimeOffset? DeletedAt { get; set; }
+
+    public static CopyExecution From(Core.CopyTrading.CopyExecutionRecord record)
+        => new()
+        {
+            ProfileId = record.ProfileId.Value,
+            DestinationCtidTraderAccountId = record.DestinationCtidTraderAccountId,
+            SourcePositionId = record.SourcePositionId,
+            Symbol = record.Symbol,
+            Kind = record.Kind,
+            IsBuy = record.IsBuy,
+            Volume = record.Volume,
+            MasterPrice = record.MasterPrice,
+            SlippagePoints = record.SlippagePoints,
+            LatencyMilliseconds = record.LatencyMilliseconds,
+            Reason = record.Reason,
+            OccurredAt = record.OccurredAt
+        };
+}
+
 public class ViewerGrant : ISoftDeletable
 {
     public UserId ViewerId { get; private set; }

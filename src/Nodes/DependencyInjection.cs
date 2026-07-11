@@ -13,7 +13,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddNodes(this IServiceCollection services, IConfiguration config)
     {
-        var features = config.GetSection(AppOptions.SectionName).Get<AppOptions>()?.Features ?? new FeaturesOptions();
+        var appOptions = config.GetSection(AppOptions.SectionName).Get<AppOptions>();
+        var features = appOptions?.Features ?? new FeaturesOptions();
 
         services.AddScoped<INodeScheduler, NodeScheduler>();
         services.AddHttpClient(HttpContainerDispatcher.HttpClientName);
@@ -34,6 +35,22 @@ public static class DependencyInjection
         if (features.CopyTrading)
         {
             services.AddHostedService<Nodes.CopyTrading.OpenApiTokenRefreshService>();
+
+            // Phase 3 execution transparency: when enabled, the host emits per-copy facts to a channel sink
+            // that a background drainer persists; otherwise the host gets the no-op sink (unchanged engine).
+            var copy = appOptions?.Copy ?? new CopyOptions();
+            if (copy.TransparencyEnabled)
+            {
+                services.AddSingleton<Nodes.CopyTrading.ChannelCopyEventSink>();
+                services.AddSingleton<Core.CopyTrading.ICopyEventSink>(
+                    sp => sp.GetRequiredService<Nodes.CopyTrading.ChannelCopyEventSink>());
+                services.AddHostedService<Nodes.CopyTrading.CopyExecutionDrainer>();
+            }
+            else
+            {
+                services.AddSingleton<Core.CopyTrading.ICopyEventSink>(Core.CopyTrading.NullCopyEventSink.Instance);
+            }
+
             services.AddHostedService<Nodes.CopyTrading.CopyEngineSupervisor>();
         }
 

@@ -266,6 +266,9 @@ public static partial class LogMessages
     public static partial void CopySlaveVolumeReconciled(this ILogger logger, Guid profileId, long destinationCtid,
         long positionId, long topUpVolume, long targetVolume, long filledVolume);
 
+    [LoggerMessage(EventId = 1088, Level = LogLevel.Warning, Message = "Copy execution drain cycle failed")]
+    public static partial void CopyExecutionDrainFailed(this ILogger logger, Exception ex);
+
     // ---- Prop-firm challenge tracking ----
 
     [LoggerMessage(EventId = 1067, Level = LogLevel.Error, Message = "Prop-firm tracking supervisor cycle failed")]

@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Threading.Channels;
 using Core;
+using Core.CopyTrading;
 using Core.Constants;
 using Core.Domain;
 using Core.Logging;
@@ -35,8 +36,12 @@ public sealed class CopyEngineHost(
     IOpenApiTradingSessionFactory sessionFactory,
     CopyDecisionEngine decisions,
     TimeProvider timeProvider,
-    ILogger logger)
+    ILogger logger,
+    ICopyEventSink? sink = null)
 {
+    // Execution-transparency sink (Phase 3). Defaults to the no-op sink so the engine is unchanged when
+    // transparency is off and in every test; the supervisor passes a channel-backed sink when enabled.
+    private readonly ICopyEventSink _sink = sink ?? NullCopyEventSink.Instance;
     private readonly Dictionary<long, string> _sourceSymbolNames = new();
     private readonly Dictionary<long, IReadOnlyDictionary<string, long>> _destinationSymbolIds = new();
     // Thread-safe: read+populated from the G4 bounded-parallel destination fan-out (distinct keys per
@@ -431,6 +436,10 @@ public sealed class CopyEngineHost(
                 if (!NoteIfTokenInvalidated(ex, destination.CtidTraderAccountId))
                     RecordCopyFailure(destination.CtidTraderAccountId);
                 logger.CopyOpenFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, ex);
+                _sink.Record(new CopyExecutionRecord(plan.ProfileId, destination.CtidTraderAccountId,
+                    execution.PositionId, sourceName, CopyExecutionKind.Failed, execution.IsBuy, execution.Volume,
+                    execution.Price, null, EventAge(execution).TotalMilliseconds, ex.GetType().Name,
+                    timeProvider.GetUtcNow()));
             }
         }, ct);
         CopyMetrics.Instance.RecordDispatchDuration(timeProvider.GetElapsedTime(dispatchStart).TotalMilliseconds);
@@ -819,6 +828,10 @@ public sealed class CopyEngineHost(
         // G7: a new slave position now exists whose broker-assigned id we can't know without a reconcile —
         // mark the cache cold so the next mirror read rebuilds it.
         InvalidateBook(destination.CtidTraderAccountId);
+        _sink.Record(new CopyExecutionRecord(plan.ProfileId, destination.CtidTraderAccountId,
+            execution.PositionId, destinationName, CopyExecutionKind.Opened, effectiveBuy, wireVolume,
+            execution.Price, decision.SlippageInPoints, EventAge(execution).TotalMilliseconds, null,
+            timeProvider.GetUtcNow()));
         if (decision.SlippageInPoints is { } slippagePoints)
         {
             CopyMetrics.Instance.RecordSlippage(slippagePoints);

@@ -58,6 +58,14 @@ public sealed record CopyOptions
     /// first supervisor grabbing them all. 0 = unbounded (a single node hosts everything — the default).
     /// </summary>
     public int MaxProfilesPerNode { get; init; }
+
+    /// <summary>
+    /// Execution transparency (Phase 3): when true the copy host emits a per-copy execution fact
+    /// (latency, slippage, fill vs failure) that a background drainer persists to the CopyExecution log,
+    /// powering the transparency read model. Off by default — the host emits to a no-op sink, so the
+    /// trading hot path and every test are unaffected.
+    /// </summary>
+    public bool TransparencyEnabled { get; init; }
 }
 
 public sealed record PropFirmOptions

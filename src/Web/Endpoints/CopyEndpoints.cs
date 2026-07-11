@@ -1,6 +1,7 @@
 using System.Text;
 using Core;
 using Core.Constants;
+using Core.CopyTrading;
 using Core.Domain;
 using CTraderOpenApi.Client;
 using Infrastructure.Persistence;
@@ -273,6 +274,50 @@ public static class CopyEndpoints
             destination.LockConfig(time.GetUtcNow().AddMinutes(req.Minutes));
             await repo.SaveChangesAsync(ct);
             return Results.Ok(new { destination.ConfigLockedUntil });
+        });
+
+        // Phase 3 execution-transparency read model (CQRS-lite): query the CopyExecution log directly and
+        // aggregate in memory. Returns a per-profile summary (fill rate, avg latency, avg realized slippage)
+        // plus the most recent copy facts. Empty unless App:Copy:TransparencyEnabled has been populating it.
+        g.MapGet("/profiles/{id:guid}/transparency", async (Guid id, DataContext db, ICurrentUser u, CancellationToken ct) =>
+        {
+            var owns = await db.CopyProfiles.AnyAsync(p => p.Id == CopyProfileId.From(id) && p.UserId == u.UserId!.Value, ct);
+            if (!owns) return Results.NotFound();
+
+            var rows = await db.CopyExecutions.Where(x => x.ProfileId == id)
+                .OrderByDescending(x => x.OccurredAt).ThenByDescending(x => x.Id).Take(500).ToListAsync(ct);
+
+            var opened = rows.Where(x => x.Kind == CopyExecutionKind.Opened).ToList();
+            var failed = rows.Count(x => x.Kind == CopyExecutionKind.Failed);
+            var attempts = opened.Count + failed;
+            var summary = new
+            {
+                Total = rows.Count,
+                Opened = opened.Count,
+                Failed = failed,
+                FillRate = attempts == 0 ? 0d : (double)opened.Count / attempts,
+                AvgLatencyMs = opened.Count == 0 ? 0d : opened.Average(x => x.LatencyMilliseconds),
+                AvgSlippagePoints = opened.Where(x => x.SlippagePoints.HasValue)
+                    .Select(x => (double)x.SlippagePoints!.Value).DefaultIfEmpty(0d).Average()
+            };
+            return Results.Ok(new
+            {
+                Summary = summary,
+                Recent = rows.Select(x => new
+                {
+                    x.DestinationCtidTraderAccountId,
+                    x.SourcePositionId,
+                    x.Symbol,
+                    Kind = x.Kind.ToString(),
+                    x.IsBuy,
+                    x.Volume,
+                    x.MasterPrice,
+                    x.SlippagePoints,
+                    x.LatencyMilliseconds,
+                    x.Reason,
+                    x.OccurredAt
+                })
+            });
         });
 
         g.MapPost("/profiles/{id:guid}/flatten", async (Guid id, ICopyProfileRepository repo, ICurrentUser u,

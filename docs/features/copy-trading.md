@@ -96,6 +96,10 @@ Set in the New Profile dialog, on the Copy Trading page's per-destination panel,
   (every copy closed) and **locked out** for the rest of the UTC day (new opens skipped as `prop_lockout`);
   a `CopyPropRuleBreached` alert fires. The lockout clears when the UTC day rolls over (a fresh
   baseline/peak is taken). Shares the same live-equity poll as account protection.
+- **Execution jitter** (C11, off by default) — a random `0..N` ms delay before placing each copy, to
+  de-correlate otherwise near-identical order timestamps across the user's **own** accounts. **Compliance
+  caveat:** this is an aid for prop firms that *permit* copying — it is **not** a tool to evade a firm
+  that forbids it; staying within your firm's rules is your responsibility.
 - **Config lock** (C9) — freeze a destination's settings for a period (`POST …/destinations/{id}/lock`
   with minutes). While locked, the destination cannot be removed (the aggregate rejects it with
   `CopyDestinationConfigLocked`) — a deliberate guard against impulsive changes during a drawdown. The

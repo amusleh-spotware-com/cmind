@@ -172,6 +172,21 @@ public sealed class CopyEngineHostTests
     }
 
     [Fact]
+    public async Task Execution_jitter_delays_but_still_places_the_copy()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d => d.SetExecutionJitter(10))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushOpen(Source, 1001, SymbolId, isBuy: true, volume: 100);
+            await WaitUntil(() => session.Orders.Count == 1);
+        });
+
+        session.Orders.Should().ContainSingle("execution jitter delays the copy but never drops it");
+    }
+
+    [Fact]
     public async Task Symbol_map_resolves_destination_symbol()
     {
         var session = NewSession(new Dictionary<string, long> { ["EURUSDX"] = 2 });

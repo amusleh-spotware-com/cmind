@@ -665,6 +665,11 @@ public sealed class CopyEngineHost(
             baseSlippagePrice = effectiveBuy ? ask : bid;
         }
 
+        // C11 execution jitter: a small random delay de-correlates order timestamps across the user's own
+        // accounts (opt-in; compliance aid for firms that permit copying, not evasion of one that forbids it).
+        if (destination.Config.ExecutionJitterMaxMs > 0)
+            await Task.Delay(TimeSpan.FromMilliseconds(Random.Shared.Next(destination.Config.ExecutionJitterMaxMs + 1)), timeProvider, ct);
+
         await session.SendMarketOrderAsync(destination.CtidTraderAccountId, destinationSymbolId,
             effectiveBuy, wireVolume, execution.PositionId.ToString(), ct, decision.SlippageInPoints, baseSlippagePrice);
         CopyMetrics.Instance.CopyPlaced(destination.CtidTraderAccountId);

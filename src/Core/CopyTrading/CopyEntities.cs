@@ -87,6 +87,10 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     // Config lock (C9): while set and in the future, the destination's settings are frozen against edits/
     // removal — a deliberate guard against impulsive changes during a drawdown.
     public DateTimeOffset? ConfigLockedUntil { get; private set; }
+    // Execution jitter (C11): a random 0..N ms delay before placing a copy, to de-correlate otherwise
+    // microsecond-identical order timestamps across the user's own accounts. 0 = off. A compliance aid for
+    // firms that PERMIT copying — never a tool to evade a firm that forbids it (the user's responsibility).
+    public int ExecutionJitterMaxMs { get; private set; }
     public SymbolFilterMode SymbolFilterMode { get; private set; } = SymbolFilterMode.None;
     public IReadOnlyList<CopySymbolMapEntry> SymbolMaps => _symbolMaps;
     public IReadOnlyList<CopySymbolFilter> SymbolFilters => _symbolFilters;
@@ -160,6 +164,12 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public void LockConfig(DateTimeOffset until)
     {
         ConfigLockedUntil = until;
+    }
+
+    public void SetExecutionJitter(int maxMilliseconds)
+    {
+        DomainGuard.AgainstNegative(maxMilliseconds, DomainErrors.CopyRiskParameterInvalid);
+        ExecutionJitterMaxMs = maxMilliseconds;
     }
 
     public bool IsConfigLocked(DateTimeOffset now) => ConfigLockedUntil is { } until && until > now;

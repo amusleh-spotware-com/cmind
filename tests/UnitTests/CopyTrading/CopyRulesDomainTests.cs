@@ -145,6 +145,14 @@ public sealed class CopyRulesDomainTests
     }
 
     [Fact]
+    public void Execution_jitter_rejects_a_negative_value()
+    {
+        var destination = Destination();
+        var act = () => destination.SetExecutionJitter(-1);
+        act.Should().Throw<DomainException>().Which.Message.Should().Be(DomainErrors.CopyRiskParameterInvalid);
+    }
+
+    [Fact]
     public void Source_label_filter_matches_exactly_and_allows_all_when_unset()
     {
         var destination = Destination();

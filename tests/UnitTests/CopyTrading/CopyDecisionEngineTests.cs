@@ -146,6 +146,15 @@ public sealed class CopyDecisionEngineTests
     }
 
     [Fact]
+    public void Per_symbol_multiplier_is_applied_inside_sizing_and_still_bound_by_lot_sanity()
+    {
+        // Master 1 lot; a 10x per-symbol multiplier -> 10 lots, which exceeds the 3x-of-master sanity ceiling.
+        var destination = Destination(d => d.ConfigureLotSanity(new LotSanityCeiling(0, 3)));
+        var context = Context() with { VolumeMultiplier = 10 };
+        _engine.DecideOpen(destination, context).SkipReason.Should().Be("lot_sanity");
+    }
+
+    [Fact]
     public void Lot_sanity_within_the_ceiling_allows_the_copy()
     {
         var destination = Destination(d => d.ConfigureLotSanity(new LotSanityCeiling(2, 3)));

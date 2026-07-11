@@ -54,7 +54,7 @@ public record AddCopyDestinationRequest(
     double ConsistencyThresholdPercent = 0,
     int ExecutionJitterMaxMs = 0);
 
-public record SymbolMapPair(string Source, string Destination);
+public record SymbolMapPair(string Source, string Destination, double VolumeMultiplier = 1);
 
 public record LockCopyDestinationRequest(int Minutes);
 
@@ -159,7 +159,7 @@ public static class CopyEndpoints
                     d.ExecutionJitterMaxMs,
                     SymbolFilterMode = d.SymbolFilterMode.ToString(),
                     SymbolFilters = d.SymbolFilters.Select(f => f.Symbol),
-                    SymbolMaps = d.SymbolMaps.Select(m => new { m.Source, m.Destination })
+                    SymbolMaps = d.SymbolMaps.Select(m => new { m.Source, m.Destination, m.VolumeMultiplier })
                 })
             });
         });
@@ -218,7 +218,7 @@ public static class CopyEndpoints
             destination.SetConsistencyThreshold(req.ConsistencyThresholdPercent);
             destination.SetExecutionJitter(req.ExecutionJitterMaxMs);
             if (req.SymbolMap is { Count: > 0 })
-                destination.SetSymbolMap(req.SymbolMap.Select(m => new SymbolMapEntry(new Symbol(m.Source), new Symbol(m.Destination))));
+                destination.SetSymbolMap(req.SymbolMap.Select(m => new SymbolMapEntry(new Symbol(m.Source), new Symbol(m.Destination), m.VolumeMultiplier)));
             if (req.SymbolFilterMode != SymbolFilterMode.None && req.SymbolFilters is { Count: > 0 })
                 destination.SetSymbolFilter(req.SymbolFilterMode, req.SymbolFilters.Select(s => new Symbol(s)));
             await repo.SaveChangesAsync(ct);

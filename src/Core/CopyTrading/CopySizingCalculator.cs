@@ -9,7 +9,10 @@ public sealed class CopySizingCalculator : ICopySizingCalculator
 {
     public CopyVolume Calculate(CopySizingInput input)
     {
-        var raw = RawVolume(input);
+        // The per-symbol volume multiplier scales the sized result, then bounds (min/max lot) are applied to
+        // the scaled value — and the decision engine's lot-sanity ceiling also sees the scaled result — so a
+        // per-symbol override can't smuggle a runaway size past those guards.
+        var raw = RawVolume(input) * input.VolumeMultiplier;
         if (raw <= 0 || double.IsNaN(raw) || double.IsInfinity(raw)) return CopyVolume.Skip;
         return Normalize(raw, input.DestinationSymbol, input.Bounds);
     }

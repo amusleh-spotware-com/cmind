@@ -539,7 +539,8 @@ public sealed class CopyEngineHost(
                 execution.StopLoss, execution.TakeProfit),
             sourceSnapshot, destinationSnapshot,
             Spec(sourceDetail), Spec(destinationDetail), price, Math.Pow(10, -destinationDetail.PipPosition),
-            EventAge(execution), CopyDecisionEngine.ToOrderTypes(execution.OrderKind), execution.SlippageInPoints));
+            EventAge(execution), CopyDecisionEngine.ToOrderTypes(execution.OrderKind), execution.SlippageInPoints,
+            destination.Config.ResolveVolumeMultiplier(sourceName)));
         if (decision.Kind != CopyActionKind.Open) return false;
 
         var wireVolume = VolumeConversion.ProtocolFromLots(decision.Lots, destinationDetail.LotSize);
@@ -683,7 +684,8 @@ public sealed class CopyEngineHost(
             Math.Pow(10, -destinationDetail.PipPosition),
             EventAge(execution),
             CopyDecisionEngine.ToOrderTypes(execution.OrderKind),
-            execution.SlippageInPoints));
+            execution.SlippageInPoints,
+            destination.Config.ResolveVolumeMultiplier(sourceName)));
 
         if (decision.Kind != CopyActionKind.Open)
         {

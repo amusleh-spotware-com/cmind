@@ -222,11 +222,17 @@ public readonly record struct SymbolMapEntry
 {
     public Symbol Source { get; }
     public Symbol Destination { get; }
+    // Per-symbol volume multiplier (cMAM per-symbol override): scales the copy size for this symbol on top
+    // of the destination's sizing. 1 = no adjustment. Must be positive.
+    public double VolumeMultiplier { get; }
 
-    public SymbolMapEntry(Symbol source, Symbol destination)
+    public SymbolMapEntry(Symbol source, Symbol destination, double volumeMultiplier = 1)
     {
+        if (volumeMultiplier <= 0 || double.IsNaN(volumeMultiplier) || double.IsInfinity(volumeMultiplier))
+            throw new DomainException(DomainErrors.CopyMultiplierInvalid);
         Source = source;
         Destination = destination;
+        VolumeMultiplier = volumeMultiplier;
     }
 }
 
@@ -292,7 +298,8 @@ public readonly record struct CopySizingInput(
     SymbolSpec DestinationSymbol,
     RiskSettings Risk,
     LotBounds Bounds,
-    double MasterStopDistance = 0);
+    double MasterStopDistance = 0,
+    double VolumeMultiplier = 1);
 
 public readonly record struct CopyVolume(double Lots, bool Skipped)
 {

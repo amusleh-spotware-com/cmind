@@ -34,7 +34,8 @@ public sealed record OpenDecisionContext(
     double DestinationPipSize,
     TimeSpan EventAge,
     CopyOrderTypes OrderType = CopyOrderTypes.Market,
-    int? MasterSlippageInPoints = null);
+    int? MasterSlippageInPoints = null,
+    double VolumeMultiplier = 1);
 
 /// <summary>
 /// Pure copy-decision logic shared by every host. Applies direction, latency and slippage filters,
@@ -84,7 +85,8 @@ public sealed class CopyDecisionEngine(ICopySizingCalculator calculator)
             context.DestinationSymbol,
             destination.Risk,
             destination.Bounds,
-            masterStopDistance));
+            masterStopDistance,
+            context.VolumeMultiplier));
 
         var slippageInPoints = context.OrderType == CopyOrderTypes.MarketRange && destination.CopyMasterSlippage
             ? context.MasterSlippageInPoints

@@ -153,6 +153,13 @@ public sealed class CopyRulesDomainTests
     }
 
     [Fact]
+    public void Symbol_map_entry_rejects_a_non_positive_volume_multiplier()
+    {
+        var act = () => new SymbolMapEntry(new Symbol("EURUSD"), new Symbol("EURUSD"), volumeMultiplier: 0);
+        act.Should().Throw<DomainException>().Which.Message.Should().Be(DomainErrors.CopyMultiplierInvalid);
+    }
+
+    [Fact]
     public void Source_label_filter_matches_exactly_and_allows_all_when_unset()
     {
         var destination = Destination();

@@ -10,15 +10,17 @@ public sealed class CopySymbolMapEntry
 {
     public string Source { get; private set; } = default!;
     public string Destination { get; private set; } = default!;
+    public double VolumeMultiplier { get; private set; } = 1;
 
     private CopySymbolMapEntry()
     {
     }
 
-    public CopySymbolMapEntry(Symbol source, Symbol destination)
+    public CopySymbolMapEntry(Symbol source, Symbol destination, double volumeMultiplier = 1)
     {
         Source = source.Value;
         Destination = destination.Value;
+        VolumeMultiplier = volumeMultiplier;
     }
 }
 
@@ -266,12 +268,17 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     {
         _symbolMaps.Clear();
         foreach (var entry in entries)
-            _symbolMaps.Add(new CopySymbolMapEntry(entry.Source, entry.Destination));
+            _symbolMaps.Add(new CopySymbolMapEntry(entry.Source, entry.Destination, entry.VolumeMultiplier));
     }
 
     public string ResolveDestinationSymbol(string sourceSymbol)
         => _symbolMaps.FirstOrDefault(m => string.Equals(m.Source, sourceSymbol, StringComparison.OrdinalIgnoreCase))
             ?.Destination ?? sourceSymbol;
+
+    // Per-symbol volume multiplier for a source symbol (1 when unmapped or unset).
+    public double ResolveVolumeMultiplier(string sourceSymbol)
+        => _symbolMaps.FirstOrDefault(m => string.Equals(m.Source, sourceSymbol, StringComparison.OrdinalIgnoreCase))
+            ?.VolumeMultiplier ?? 1;
 
     public void SetSymbolFilter(SymbolFilterMode mode, IEnumerable<Symbol> symbols)
     {

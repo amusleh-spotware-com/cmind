@@ -221,6 +221,22 @@ public sealed class CopyEngineHostTests
     }
 
     [Fact]
+    public async Task Per_symbol_volume_multiplier_scales_the_copy_size()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d =>
+            d.SetSymbolMap([new SymbolMapEntry(new Symbol("EURUSD"), new Symbol("EURUSD"), volumeMultiplier: 2)]))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushOpen(Source, 1001, SymbolId, isBuy: true, volume: 100);
+            await WaitUntil(() => session.Orders.Count == 1);
+        });
+
+        session.Orders.Single().Volume.Should().Be(200, "the per-symbol 2x override doubles the copied volume");
+    }
+
+    [Fact]
     public async Task Order_failure_on_one_slave_still_copies_to_others()
     {
         var session = NewSession();

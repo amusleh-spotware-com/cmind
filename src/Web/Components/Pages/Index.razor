@@ -144,7 +144,8 @@ else
     {
         if (_period == period) return;
         _period = period;
-        _data = null;
+        // Keep the current widgets mounted and refresh in place — nulling _data here would unmount and
+        // immediately remount the ApexChart, which races its JS interop and can crash the circuit.
         await RefreshAsync();
     }
 

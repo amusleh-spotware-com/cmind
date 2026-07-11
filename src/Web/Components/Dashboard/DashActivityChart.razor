@@ -34,8 +34,16 @@
     private readonly ApexChartOptions<Point> _options = new();
     private bool _themed;
 
-    protected override void OnParametersSet() =>
+    protected override async Task OnParametersSetAsync()
+    {
         _points = [.. Buckets.Select(b => new Point(b.Start.UtcDateTime, b.Started, b.Completed, b.Failed))];
+        // Refresh the existing chart in place (period change / live poll) rather than remounting it.
+        if (_chart is not null)
+        {
+            try { await _chart.UpdateSeriesAsync(true); }
+            catch { /* chart JS not ready or transient — the next render reconciles it */ }
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -75,6 +83,10 @@
             _options.Colors = [.. colors];
         }
 
-        if (_chart is not null) await _chart.UpdateOptionsAsync(true, true, false);
+        try
+        {
+            if (_chart is not null) await _chart.UpdateOptionsAsync(true, true, false);
+        }
+        catch { /* chart JS not ready or transient — options apply on the next render */ }
     }
 }

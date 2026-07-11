@@ -125,3 +125,47 @@ h1, h2, h3 {
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* ---------- Footer — match the app's near-black app bar + mint accent ---------- */
+.footer {
+  --ifm-footer-background-color: #141414;
+  background: radial-gradient(80% 140% at 50% 0%, rgba(38, 194, 129, 0.06), transparent 60%), #141414;
+  border-top: 1px solid rgba(38, 194, 129, 0.18);
+  color: #9aa0a8;
+  padding-top: 3rem;
+  padding-bottom: 2.5rem;
+}
+.footer__title {
+  color: #e6e6e6;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.footer__link-item {
+  color: #9aa0a8;
+  transition: color 0.15s ease;
+}
+.footer__link-item:hover {
+  color: var(--cmind-mint);
+  text-decoration: none;
+}
+.footer__item {
+  line-height: 1.9;
+}
+.footer__col {
+  margin-bottom: 1.5rem;
+}
+.footer__bottom {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #262626;
+}
+.footer__copyright {
+  color: #6f767f;
+  font-size: 0.86rem;
+}
+/* mint hairline separators like the app's dividers */
+.footer a:hover {
+  color: var(--cmind-mint);
+}

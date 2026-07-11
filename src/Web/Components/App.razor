@@ -17,6 +17,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/site.css" />
     @((MarkupString)$"<style>{Web.Branding.BrandingCss.BuildRootVariables(branding)}</style>")
+    @* Critical reconnect/session-expired overlay styling, inlined so the blocking full-screen overlay is
+       GUARANTEED present even if css/site.css is delayed or served stale from the service-worker cache.
+       It must never render inline in page flow. The card/text styling in site.css enhances it. *@
+    <style>
+        #components-reconnect-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.72);
+            backdrop-filter: blur(3px);
+        }
+        #components-reconnect-modal.components-reconnect-show,
+        #components-reconnect-modal.components-reconnect-failed,
+        #components-reconnect-modal.components-reconnect-rejected { display: flex; }
+    </style>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="@branding.FaviconUrl" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />

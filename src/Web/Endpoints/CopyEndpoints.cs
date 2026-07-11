@@ -54,7 +54,8 @@ public record AddCopyDestinationRequest(
     double PropRuleTrailingDrawdown = 0,
     double ConsistencyThresholdPercent = 0,
     int ExecutionJitterMaxMs = 0,
-    double RiskFallbackLots = 0);
+    double RiskFallbackLots = 0,
+    double PerformanceFeePercent = 0);
 
 public record SymbolMapPair(string Source, string Destination, double VolumeMultiplier = 1);
 
@@ -160,6 +161,8 @@ public static class CopyEndpoints
                     d.ConsistencyThresholdPercent,
                     d.ExecutionJitterMaxMs,
                     d.RiskFallbackLots,
+                    d.PerformanceFeePercent,
+                    d.HighWaterMarkEquity,
                     SymbolFilterMode = d.SymbolFilterMode.ToString(),
                     SymbolFilters = d.SymbolFilters.Select(f => f.Symbol),
                     SymbolMaps = d.SymbolMaps.Select(m => new { m.Source, m.Destination, m.VolumeMultiplier })
@@ -221,6 +224,7 @@ public static class CopyEndpoints
             destination.SetConsistencyThreshold(req.ConsistencyThresholdPercent);
             destination.SetExecutionJitter(req.ExecutionJitterMaxMs);
             destination.SetRiskFallbackLots(req.RiskFallbackLots);
+            destination.SetPerformanceFee(new PerformanceFee(req.PerformanceFeePercent));
             if (req.SymbolMap is { Count: > 0 })
                 destination.SetSymbolMap(req.SymbolMap.Select(m => new SymbolMapEntry(new Symbol(m.Source), new Symbol(m.Destination), m.VolumeMultiplier)));
             if (req.SymbolFilterMode != SymbolFilterMode.None && req.SymbolFilters is { Count: > 0 })
@@ -316,6 +320,29 @@ public static class CopyEndpoints
                     x.LatencyMilliseconds,
                     x.Reason,
                     x.OccurredAt
+                })
+            });
+        });
+
+        // Phase 4 fee report: a profile's performance-fee accruals (high-water-mark settlements) + total charged.
+        g.MapGet("/profiles/{id:guid}/fees", async (Guid id, DataContext db, ICurrentUser u, CancellationToken ct) =>
+        {
+            var owns = await db.CopyProfiles.AnyAsync(p => p.Id == CopyProfileId.From(id) && p.UserId == u.UserId!.Value, ct);
+            if (!owns) return Results.NotFound();
+
+            var rows = await db.CopyFeeAccruals.Where(x => x.ProfileId == id)
+                .OrderByDescending(x => x.SettledAt).ThenByDescending(x => x.Id).Take(500).ToListAsync(ct);
+            return Results.Ok(new
+            {
+                TotalFee = rows.Sum(x => x.FeeAmount),
+                Accruals = rows.Select(x => new
+                {
+                    x.DestinationId,
+                    x.HighWaterMarkBefore,
+                    x.Equity,
+                    x.FeePercent,
+                    x.FeeAmount,
+                    x.SettledAt
                 })
             });
         });

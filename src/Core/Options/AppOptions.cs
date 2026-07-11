@@ -74,6 +74,16 @@ public sealed record CopyOptions
     /// silence the feed. When false the host emits to a no-op sink (unchanged engine).
     /// </summary>
     public bool NotificationsEnabled { get; init; } = true;
+
+    /// <summary>
+    /// Money-manager performance fees (Phase 4): when true a background service periodically settles each
+    /// fee-configured destination's high-water-mark performance fee against its live equity and records a
+    /// CopyFeeAccrual. Off by default — the money-manager layer is opt-in.
+    /// </summary>
+    public bool FeesEnabled { get; init; }
+
+    /// <summary>How often the fee settlement service polls equity and settles high-water-mark fees.</summary>
+    public TimeSpan FeeSettlementInterval { get; init; } = TimeSpan.FromHours(1);
 }
 
 public sealed record PropFirmOptions

@@ -65,6 +65,14 @@ public static class DependencyInjection
                 services.AddSingleton<Core.CopyTrading.ICopyNotificationSink>(Core.CopyTrading.NullCopyNotificationSink.Instance);
             }
 
+            // Phase 4 money-manager performance fees (opt-in): the settlement service polls destination
+            // equity and settles high-water-mark fees into the CopyFeeAccrual log.
+            if (copy.FeesEnabled)
+            {
+                services.AddSingleton<Core.CopyTrading.ICopyEquityReader, Nodes.CopyTrading.OpenApiCopyEquityReader>();
+                services.AddHostedService<Nodes.CopyTrading.CopyFeeSettlementService>();
+            }
+
             services.AddHostedService<Nodes.CopyTrading.CopyEngineSupervisor>();
         }
 

@@ -96,6 +96,12 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     // microsecond-identical order timestamps across the user's own accounts. 0 = off. A compliance aid for
     // firms that PERMIT copying — never a tool to evade a firm that forbids it (the user's responsibility).
     public int ExecutionJitterMaxMs { get; private set; }
+    // Phase 4 performance fee (high-water-mark model, as cTrader Copy / Darwinex / ZuluTrade profit-share):
+    // the provider charges this percent of NEW profit above the follower's peak equity only. 0 = no fee.
+    public double PerformanceFeePercent { get; private set; }
+    // The follower's highest settled equity. Fees accrue only on gains above it and it never decreases, so a
+    // follower recovering a drawdown is never charged twice for ground already settled.
+    public double HighWaterMarkEquity { get; private set; }
     public SymbolFilterMode SymbolFilterMode { get; private set; } = SymbolFilterMode.None;
     public IReadOnlyList<CopySymbolMapEntry> SymbolMaps => _symbolMaps;
     public IReadOnlyList<CopySymbolFilter> SymbolFilters => _symbolFilters;
@@ -175,6 +181,28 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     {
         DomainGuard.AgainstNegative(maxMilliseconds, DomainErrors.CopyRiskParameterInvalid);
         ExecutionJitterMaxMs = maxMilliseconds;
+    }
+
+    public void SetPerformanceFee(PerformanceFee fee) => PerformanceFeePercent = fee.Percent;
+
+    // High-water-mark settlement (the standard copy-trading performance-fee model): returns the fee accrued
+    // for this period and advances the HWM. The first settlement seeds the HWM at the current equity, so the
+    // follower is never charged on their opening balance; thereafter a fee is charged only on equity ABOVE
+    // the previous peak, and at or below the peak nothing is charged and the peak is unchanged (the follower
+    // must first recover past it). Fee logic lives on the aggregate — the settlement service only supplies
+    // the polled equity and records the returned amount.
+    public double SettleFee(double equity)
+    {
+        if (PerformanceFeePercent <= 0) return 0;
+        if (HighWaterMarkEquity <= 0)
+        {
+            HighWaterMarkEquity = equity > 0 ? equity : 0;
+            return 0;
+        }
+        if (equity <= HighWaterMarkEquity) return 0;
+        var fee = (equity - HighWaterMarkEquity) * PerformanceFeePercent / 100.0;
+        HighWaterMarkEquity = equity;
+        return fee;
     }
 
     public bool IsConfigLocked(DateTimeOffset now) => ConfigLockedUntil is { } until && until > now;

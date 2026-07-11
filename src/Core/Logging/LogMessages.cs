@@ -272,6 +272,13 @@ public static partial class LogMessages
     [LoggerMessage(EventId = 1089, Level = LogLevel.Warning, Message = "Copy notification drain cycle failed")]
     public static partial void CopyNotificationDrainFailed(this ILogger logger, Exception ex);
 
+    [LoggerMessage(EventId = 1090, Level = LogLevel.Error, Message = "Copy fee settlement cycle failed")]
+    public static partial void CopyFeeSettlementFailed(this ILogger logger, Exception ex);
+
+    [LoggerMessage(EventId = 1091, Level = LogLevel.Information,
+        Message = "Copy performance fee accrued: profile {ProfileId} destination {DestinationId} amount {FeeAmount}")]
+    public static partial void CopyFeeAccrued(this ILogger logger, Guid profileId, Guid destinationId, double feeAmount);
+
     // ---- Prop-firm challenge tracking ----
 
     [LoggerMessage(EventId = 1067, Level = LogLevel.Error, Message = "Prop-firm tracking supervisor cycle failed")]

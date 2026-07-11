@@ -190,6 +190,24 @@ public readonly record struct PropRuleGuard
         => TrailingDrawdown > 0 && peakEquity - equity >= TrailingDrawdown;
 }
 
+// Phase 4 performance fee: the percent of new high-water-mark profit a provider charges a follower, as on
+// cTrader Copy / Darwinex / ZuluTrade. Capped at a sane ceiling so a misconfiguration can't charge away a
+// follower's whole gain; 0 = no fee.
+public readonly record struct PerformanceFee
+{
+    public const double MaxPercent = 50;
+    public double Percent { get; }
+
+    public PerformanceFee(double percent)
+    {
+        if (percent < 0 || percent > MaxPercent || double.IsNaN(percent))
+            throw new DomainException(DomainErrors.CopyRiskParameterInvalid);
+        Percent = percent;
+    }
+
+    public static PerformanceFee None => new(0);
+}
+
 // C18: a per-destination daily trading-hours window (UTC minutes-of-day). New opens outside the window
 // are skipped. Start == End means "all day" (disabled). A window whose Start > End wraps past midnight
 // (e.g. 22:00–06:00). End is exclusive.

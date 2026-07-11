@@ -1048,6 +1048,37 @@ public class CopyNotification : ISoftDeletable
     public void Acknowledge() => Acknowledged = true;
 }
 
+// Append-only performance-fee accrual: one row per destination per settlement, recording the high-water-mark
+// model's inputs and the fee charged. A fact log for the fee report + billing, not an aggregate.
+public class CopyFeeAccrual : ISoftDeletable
+{
+    public long Id { get; private set; }
+    public Guid ProfileId { get; private set; }
+    public Guid DestinationId { get; private set; }
+    public UserId UserId { get; private set; }
+    public double HighWaterMarkBefore { get; private set; }
+    public double Equity { get; private set; }
+    public double FeePercent { get; private set; }
+    public double FeeAmount { get; private set; }
+    public DateTimeOffset SettledAt { get; private set; }
+    public bool IsDeleted { get; set; }
+    public DateTimeOffset? DeletedAt { get; set; }
+
+    public static CopyFeeAccrual Create(Guid profileId, Guid destinationId, UserId userId,
+        double highWaterMarkBefore, double equity, double feePercent, double feeAmount, DateTimeOffset settledAt)
+        => new()
+        {
+            ProfileId = profileId,
+            DestinationId = destinationId,
+            UserId = userId,
+            HighWaterMarkBefore = highWaterMarkBefore,
+            Equity = equity,
+            FeePercent = feePercent,
+            FeeAmount = feeAmount,
+            SettledAt = settledAt
+        };
+}
+
 public class ViewerGrant : ISoftDeletable
 {
     public UserId ViewerId { get; private set; }

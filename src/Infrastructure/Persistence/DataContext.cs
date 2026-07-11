@@ -23,6 +23,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<InstanceLog> InstanceLogs => Set<InstanceLog>();
     public DbSet<CopyExecution> CopyExecutions => Set<CopyExecution>();
     public DbSet<CopyNotification> CopyNotifications => Set<CopyNotification>();
+    public DbSet<CopyFeeAccrual> CopyFeeAccruals => Set<CopyFeeAccrual>();
     public DbSet<ViewerGrant> ViewerGrants => Set<ViewerGrant>();
     public DbSet<McpApiKey> McpApiKeys => Set<McpApiKey>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
@@ -308,6 +309,8 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.Property(x => x.Kind).HasConversion<string>().HasMaxLength(32);
             e.Property(x => x.Severity).HasConversion<string>().HasMaxLength(16);
         });
+
+        modelBuilder.Entity<CopyFeeAccrual>(e => e.HasIndex(x => new { x.UserId, x.SettledAt }));
 
         modelBuilder.Entity<CopyProfile>().Navigation(x => x.Destinations)
             .UsePropertyAccessMode(PropertyAccessMode.Field);

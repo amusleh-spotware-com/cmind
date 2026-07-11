@@ -127,6 +127,14 @@ advertises `http://<pod>.<svc>.<ns>.svc.cluster.local:8080` and self-registers u
 This is the same discovery mechanism bare external nodes use —
 see [../operations/node-discovery.md](../operations/node-discovery.md).
 
+## Web scale-out (SignalR backplane, S6)
+
+The Web app is Blazor Server + SignalR (live dashboard, logs hub). To run **more than one Web replica**,
+set the `signalr` connection string to a Redis endpoint — the app then registers a **SignalR Redis
+backplane** (`AddStackExchangeRedis`) so hub messages and circuit negotiation fan across replicas and a
+reconnect landing on a different pod stays live. With no `signalr` connection string it stays single-replica
+in-memory (unchanged). Pair with session affinity at the ingress for the smoothest Blazor Server circuits.
+
 ## Copy-agent autoscaling & resilience
 
 The copy-agent hosts long-lived trading sockets, so it scales on **work, not CPU**. With

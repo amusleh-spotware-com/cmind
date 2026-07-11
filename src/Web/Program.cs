@@ -38,7 +38,13 @@ builder.Services.AddHealthChecks()
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents(o => o.DetailedErrors = builder.Environment.IsDevelopment());
 builder.Services.AddMudServices();
-builder.Services.AddSignalR();
+// S6 Web scale-out: with multiple Web replicas, a Redis backplane fans SignalR hub messages (logs hub,
+// Blazor Server negotiation) across replicas so a circuit reconnecting to a different pod stays live.
+// Absent connection string => single-replica in-memory (unchanged).
+var signalR = builder.Services.AddSignalR();
+var signalRBackplane = builder.Configuration.GetConnectionString("signalr");
+if (!string.IsNullOrWhiteSpace(signalRBackplane))
+    signalR.AddStackExchangeRedis(signalRBackplane);
 if (builder.Environment.IsDevelopment())
     builder.Services.AddOpenApi();
 builder.Services.AddAntiforgery();

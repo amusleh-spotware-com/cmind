@@ -10,6 +10,49 @@
 
 ---
 
+## Progress — overnight autonomous run (2026-07-12)
+
+Shipped to `main` this run (each an atomic, always-green commit):
+
+- ✅ **§4 agentic infra** — CI restructured into jobs (build 0-warn · analyzer-sweep on *changed*
+  files · unit/integration/e2e tiers with Playwright browser install + trx/coverage artifacts · PR
+  docs link-check) + nightly DST workflow + NuGet cache; `scripts/` task runner (sweep/test/migration/
+  site + pre-commit format hook + hook installer); `.claude/commands/` slash commands (`/sweep`
+  `/test-tier` `/migration` `/site` `/done`); `.mcp.json`; `CODEOWNERS`; `.devcontainer/`.
+  (`.gitignore` now tracks `.claude/commands` only.)
+- ✅ **§5.4 architecture-guard tests** — `ArchitectureGuardTests` fails the build on a Core infra dep,
+  an ambient-clock read, or a direct `ILogger.Log*` outside the standalone agents.
+- ✅ **§1.4/§2.2 analyzer cleanup (safe subset)** — CA1806 unchecked `TryParse` (latent bug), CA1865
+  `EndsWith(char)`, CA1859 concrete return; `.editorconfig` marks EF migrations generated + drops
+  CA1861/CA1825 there.
+- ✅ **§3.1/§3.2 docs** — `website/docs/architecture.md` (module map + mermaid diagram + request flows)
+  and six ADRs promoting the non-inferable decisions; wired into the sidebar.
+
+Verified already-satisfied (no action needed):
+
+- **§5.3 route smoke** — every static page route is already in `PageSmokeTests` (only dynamic
+  `/builder/{id}`, `/instance/{id}` and anonymous `/login` excluded, correctly).
+- **§3.4 docs consolidation** — top-level `docs/` removed and brand assets moved to root `design/` in
+  commit `f3d3140` (concurrent working-tree process); `ReadmeScreenshotsTests` path already updated.
+
+**Deferred — needs a human in the loop, NOT done unattended:**
+
+- ⛔ **§1.2 CopyEngineHost decomposition** — the 1222-line trade-mirroring core. Its "self-contained"
+  pieces (health/circuit-breaker, position book) are woven into `logger`, `_notifications`, `plan`,
+  and `timeProvider`, so extraction is a design change, not a pure move. Green DST is **insufficient
+  assurance** for a rushed extraction of the money path; the downside (a subtle double/miss-copy on
+  real capital) is severe and asymmetric. Do this in a focused, supervised session.
+- ⛔ **§1.1 Entities.cs split · §1.3 endpoint splits** — safe in principle but *multi-step*: they pass
+  through intermediate non-compiling states. A `git add -A` auto-committer is active on this tree, so
+  an intermediate state could be pushed broken. Do these when commits are controlled end-to-end.
+
+**Remaining (safe, not yet done):** §2.1 EF query audit · §2.2 remaining CA1873 (8 sites, per-site
+judgement) + CA1822 statics on injected services · §5.2 failure-path scenario→test map in
+`tests/CLAUDE.md` · §3.3 AGENTS.md audit · flip Docusaurus `onBrokenLinks` to `throw` once the tree
+is link-clean (currently `warn`, so the CI docs job catches build errors but not dangling links).
+
+---
+
 ## Executive summary — top 10 by value/risk
 
 | # | Item | Axis | Effort | Risk |

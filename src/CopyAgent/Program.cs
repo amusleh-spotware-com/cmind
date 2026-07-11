@@ -19,7 +19,7 @@ builder.Services
 var connectionString = builder.Configuration.GetConnectionString(ConnectionStrings.AppDb)
     ?? throw new InvalidOperationException("Missing connection string 'appdb'.");
 
-builder.Services.AddDbContext<DataContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<DataContext>(options => options.UseAppNpgsql(connectionString));
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // Standing per-node copy host. Runs the same in-process supervisor against the shared database;

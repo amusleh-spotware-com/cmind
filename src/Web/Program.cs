@@ -20,7 +20,11 @@ using Web.Security;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddObservabilityDefaults();
-builder.AddNpgsqlDbContext<DataContext>(ConnectionStrings.AppDb);
+builder.AddNpgsqlDbContext<DataContext>(ConnectionStrings.AppDb, settings =>
+{
+    settings.DisableRetry = false;
+    settings.CommandTimeout = DatabaseDefaults.CommandTimeoutSeconds;
+});
 
 builder.Services
     .AddOptions<AppOptions>()

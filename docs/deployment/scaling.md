@@ -65,6 +65,22 @@ Web (Blazor Server + API) and MCP server are stateless behind database, replicat
 Auth is cookie-based; scale Web horizontally behind load balancer. MCP server is separate
 process/Deployment so it scales independently of Web.
 
+## Database connection resilience
+
+Every host that opens the database uses a **retrying execution strategy** so a transient
+disconnect or a managed-Postgres failover (RDS / Flexible Server patching) is retried instead of
+surfacing as an error to the user:
+
+- Web and MCP register the context through the Aspire Npgsql component with `DisableRetry=false`
+  and an explicit `CommandTimeout` (`DatabaseDefaults.CommandTimeoutSeconds`).
+- CopyAgent (non-Aspire) registers via `UseAppNpgsql`, which applies the same
+  `EnableRetryOnFailure(MaxRetryCount, MaxRetryDelay)` + command timeout from `DatabaseDefaults`.
+
+All writes are single `SaveChanges` / single `ExecuteUpdate` / single `ExecuteSql` statements, so the
+retrying strategy is safe (no multi-statement transaction needs manual `strategy.ExecuteAsync`
+wrapping). If you add a manual transaction or multiple `SaveChanges` in one logical operation, wrap
+it in `db.Database.CreateExecutionStrategy().ExecuteAsync(...)` — otherwise it throws under retry.
+
 ## Checklist for scaling out
 
 - [ ] Postgres sized for added connection load (each Web/MCP/node replica opens a pool).

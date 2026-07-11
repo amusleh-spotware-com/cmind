@@ -20,6 +20,13 @@ public static class AuthLockout
     public const int LockoutMinutes = 15;
 }
 
+public static class DatabaseDefaults
+{
+    public const int MaxRetryCount = 6;
+    public const int MaxRetryDelaySeconds = 30;
+    public const int CommandTimeoutSeconds = 30;
+}
+
 public static class AuthSchemes
 {
     public const string McpKey = nameof(McpKey);

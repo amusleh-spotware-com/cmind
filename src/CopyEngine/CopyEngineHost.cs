@@ -48,6 +48,8 @@ public sealed class CopyEngineHost(
     private bool _hasResynced;
     private readonly Channel<IReadOnlyList<(long Ctid, string Token)>> _tokenUpdates =
         Channel.CreateUnbounded<IReadOnlyList<(long Ctid, string Token)>>(new UnboundedChannelOptions { SingleReader = true });
+    private readonly Channel<byte> _flattenSignals =
+        Channel.CreateUnbounded<byte>(new UnboundedChannelOptions { SingleReader = true });
     private readonly SemaphoreSlim _stateGate = new(1, 1);
     private readonly PropFirmEquityCalculator _equityCalculator = new();
     // G8 rejection circuit breaker: per-destination consecutive open-failure count and, once tripped, the
@@ -67,6 +69,11 @@ public sealed class CopyEngineHost(
     // the user links another account on the same cID, which invalidates the old token). The host
     // re-authorises the affected accounts in place on the live socket without dropping the event stream.
     public void PushTokenUpdate(IReadOnlyList<(long Ctid, string Token)> tokens) => _tokenUpdates.Writer.TryWrite(tokens);
+
+    // Flatten-all panic button (C8): pushed by the supervisor when the user requests an immediate flatten.
+    // The host closes every copied position on every destination and latches them against new opens. Returns
+    // false if the signal could not be enqueued (host shutting down) so the caller keeps the request pending.
+    public bool PushFlatten() => _flattenSignals.Writer.TryWrite(0);
 
     public async Task RunAsync(CancellationToken ct)
     {
@@ -102,6 +109,7 @@ public sealed class CopyEngineHost(
         using var loopCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         var tokenSwapLoop = Task.Run(() => ConsumeTokenUpdatesAsync(session, loopCts.Token), CancellationToken.None);
         var equityGuardLoop = Task.Run(() => EquityGuardLoopAsync(session, loopCts.Token), CancellationToken.None);
+        var flattenLoop = Task.Run(() => ConsumeFlattenSignalsAsync(session, loopCts.Token), CancellationToken.None);
         try
         {
             await foreach (var execution in session.SourceExecutionsAsync(plan.SourceCtidTraderAccountId, ct))
@@ -130,9 +138,11 @@ public sealed class CopyEngineHost(
         finally
         {
             _tokenUpdates.Writer.TryComplete();
+            _flattenSignals.Writer.TryComplete();
             loopCts.Cancel();
             try { await tokenSwapLoop; } catch { /* swap loop cancellation is expected on shutdown */ }
             try { await equityGuardLoop; } catch { /* equity guard cancellation is expected on shutdown */ }
+            try { await flattenLoop; } catch { /* flatten loop cancellation is expected on shutdown */ }
         }
     }
 
@@ -268,6 +278,31 @@ public sealed class CopyEngineHost(
             {
                 NoteIfTokenInvalidated(ex, ctid);
                 logger.CopyCloseFailed(plan.ProfileId.Value, ctid, position.PositionId, ex);
+            }
+        }
+    }
+
+    private async Task ConsumeFlattenSignalsAsync(IOpenApiTradingSession session, CancellationToken ct)
+    {
+        await foreach (var _ in _flattenSignals.Reader.ReadAllAsync(ct))
+        {
+            await _stateGate.WaitAsync(ct);
+            try
+            {
+                foreach (var destination in plan.Destinations)
+                {
+                    await FlattenDestinationAsync(session, destination.CtidTraderAccountId, ct);
+                    _protectedDestinations.Add(destination.CtidTraderAccountId); // block re-opens after the panic flatten
+                }
+                logger.CopyFlattenAll(plan.ProfileId.Value, plan.Destinations.Count);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Copy flatten-all failed for profile {ProfileId}", plan.ProfileId.Value);
+            }
+            finally
+            {
+                _stateGate.Release();
             }
         }
     }

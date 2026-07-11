@@ -111,6 +111,18 @@ public sealed class CopyEngineSupervisor(
             _running[profile.Id] = new HostHandle(task, cts, host, signature);
             log.CopyProfileHosted(profile.Id.Value);
         }
+
+        // Flatten-all routing (C8): a user-requested flatten is delivered to the running host, then cleared
+        // so it fires exactly once. The host closes + locks every destination in place.
+        var flattenedAny = false;
+        foreach (var profile in mine)
+        {
+            if (profile.FlattenRequestedAt is null || !_running.TryGetValue(profile.Id, out var handle)) continue;
+            if (!handle.Host.PushFlatten()) continue; // host shutting down — keep the request pending
+            profile.ClearFlattenRequest();
+            flattenedAny = true;
+        }
+        if (flattenedAny) await db.SaveChangesAsync(stoppingToken);
     }
 
     // Claim every running profile that is unassigned OR whose lease has lapsed (its node died).

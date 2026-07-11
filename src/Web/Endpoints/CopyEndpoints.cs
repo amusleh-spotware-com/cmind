@@ -247,6 +247,16 @@ public static class CopyEndpoints
             return Results.Ok(new { destination.ConfigLockedUntil });
         });
 
+        g.MapPost("/profiles/{id:guid}/flatten", async (Guid id, ICopyProfileRepository repo, ICurrentUser u,
+            TimeProvider time, CancellationToken ct) =>
+        {
+            var profile = await repo.GetByIdAsync(CopyProfileId.From(id), u.UserId!.Value, ct);
+            if (profile is null) return Results.NotFound();
+            profile.RequestFlatten(time.GetUtcNow());
+            await repo.SaveChangesAsync(ct);
+            return Results.Accepted($"/api/copy/profiles/{id}");
+        });
+
         g.MapPost("/profiles/{id:guid}/{action}", async (Guid id, string action,
             ICopyProfileRepository repo, ICurrentUser u, CancellationToken ct) =>
         {

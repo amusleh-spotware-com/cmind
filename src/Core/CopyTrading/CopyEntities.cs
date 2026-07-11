@@ -301,6 +301,9 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
     public CopyProfileStatus Status { get; private set; } = CopyProfileStatus.Draft;
     [MaxLength(64)] public string? AssignedNode { get; private set; }
     public DateTimeOffset? LeaseExpiresAt { get; private set; }
+    // Flatten-all panic request (C8): set by the user via the API; the supervisor routes it to the running
+    // host (which closes + locks every destination), then clears it.
+    public DateTimeOffset? FlattenRequestedAt { get; private set; }
     public IReadOnlyList<CopyDestination> Destinations => _destinations;
 
     public static CopyProfile Create(UserId userId, string name, TradingAccountId sourceAccountId)
@@ -345,6 +348,16 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
     {
         AssignedNode = null;
         LeaseExpiresAt = null;
+    }
+
+    public void RequestFlatten(DateTimeOffset now)
+    {
+        FlattenRequestedAt = now;
+    }
+
+    public void ClearFlattenRequest()
+    {
+        FlattenRequestedAt = null;
     }
 
     public CopyDestination AddDestination(TradingAccountId destinationAccountId, RiskSettings risk)

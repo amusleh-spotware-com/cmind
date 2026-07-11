@@ -90,6 +90,11 @@ Set in the New Profile dialog, on the Copy Trading page's per-destination panel,
   `StopEquity`; a `TakeEquity` must sit above the `StopEquity`. **No-guarantee caveat:** sell-out uses
   market execution — like every competitor's equivalent it can't guarantee a fill price in a fast or
   gapped market.
+- **Flatten-All panic button** (C8) — `POST /api/copy/profiles/{id}/flatten` immediately closes **every**
+  copied position on every destination and locks them against new opens. Routed cross-process: the API
+  sets a flag, the supervisor delivers it to the running host (reusing the token-rotation channel), which
+  flattens in place; the flag is cleared so it fires exactly once (`CopyFlattenAll` alert). The user then
+  pauses/stops the profile.
 - **Prop-firm rule guard** (C7) — the enforcement prop-firm copier users ask for. Per destination, a
   **daily-loss cap** (loss from the day's opening equity) and/or a **trailing-drawdown** limit (loss from
   the running peak equity), both in the deposit currency. On breach the destination is **auto-flattened**

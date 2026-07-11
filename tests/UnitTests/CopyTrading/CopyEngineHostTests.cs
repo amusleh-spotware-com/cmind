@@ -360,6 +360,32 @@ public sealed class CopyEngineHostTests
     }
 
     [Fact]
+    public async Task Flatten_all_closes_every_copy_and_blocks_new_opens()
+    {
+        var session = NewSession();
+        session.SeedPosition(Source, positionId: 5001, SymbolId, isBuy: true, volume: 100, label: "5001");
+        session.SeedPosition(Slave, positionId: 9001, SymbolId, isBuy: true, volume: 100, label: "5001");
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave)));
+        var host = new CopyEngineHost(plan, new FakeTradingSessionFactory(session),
+            new CopyDecisionEngine(new CopySizingCalculator()), TimeProvider.System, (ILogger)NullLogger.Instance);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var run = Task.Run(() => host.RunAsync(cts.Token), CancellationToken.None);
+        try
+        {
+            await Task.Delay(200); // let the initial resync settle
+            host.PushFlatten();
+            await WaitUntil(() => session.Closes.Any(c => c.PositionId == 9001));
+
+            session.PushOpen(Source, positionId: 6001, SymbolId, isBuy: true, volume: 100);
+            await Task.Delay(150);
+        }
+        finally { cts.Cancel(); try { await run; } catch { /* cancellation */ } }
+
+        session.Closes.Should().Contain(c => c.PositionId == 9001, "flatten-all closes every copied position");
+        session.Orders.Should().BeEmpty("after a panic flatten the destinations are locked against new opens");
+    }
+
+    [Fact]
     public async Task Audit_log_records_every_trading_operation()
     {
         var session = NewSession();

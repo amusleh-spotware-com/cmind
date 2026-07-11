@@ -249,6 +249,10 @@ public static partial class LogMessages
         Message = "Copy consistency threshold approaching: profile {ProfileId} dest {DestinationCtid} daily profit {DailyProfitPercent}% >= {ThresholdPercent}%")]
     public static partial void CopyConsistencyThresholdApproaching(this ILogger logger, Guid profileId, long destinationCtid, double dailyProfitPercent, double thresholdPercent);
 
+    [LoggerMessage(EventId = 1084, Level = LogLevel.Warning,
+        Message = "Copy flatten-all: profile {ProfileId} closed and locked {DestinationCount} destination(s) on request")]
+    public static partial void CopyFlattenAll(this ILogger logger, Guid profileId, int destinationCount);
+
     // ---- Prop-firm challenge tracking ----
 
     [LoggerMessage(EventId = 1067, Level = LogLevel.Error, Message = "Prop-firm tracking supervisor cycle failed")]

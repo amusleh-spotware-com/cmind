@@ -389,6 +389,16 @@ nullable warnings, unused-symbol errors). They are real errors and must be resol
 - No "looks fine", no "small change", no "build passes so ignore the inspection" — zero outstanding
   problems is the bar.
 
+**This includes Rider code-quality INSPECTIONS / SUGGESTIONS, not just errors + warnings.** `dotnet build`
+(even with `TreatWarningsAsErrors`) does **not** surface these — only Rider `get_file_problems` does, so
+running it on every touched file after finishing a task is non-negotiable. Resolve every inspection, e.g.:
+- `CancellationTokenSource.Cancel()` inside an `async` method → `await CancelAsync()`.
+- Prefer collection expressions (`[]`), pattern matching, `is null` / `is not null`, target-typed `new`.
+- Remove redundant `.ToList()`/`ToArray()`, redundant `using`s, unused parameters/fields, dead code.
+- `await using` / `await foreach` / `static` where Rider flags it.
+Only a genuine false positive may remain, and only with an inline justification. Zero outstanding Rider
+inspections on every touched file is the definition of done.
+
 ## Code style
 
 - No comments except `TODO`/`FIXME`. No hardcoded strings — use a constants class.

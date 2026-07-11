@@ -17,7 +17,7 @@ public sealed class LiveCopyMatrix(LiveCopyFixture fixture, ITestOutputHelper ou
     public static IEnumerable<object[]> Cases() =>
     [
         ["one_to_one"],
-        ["half_multiplier"],
+        ["double_multiplier"],
         ["reverse"],
         ["manage_only"],
         ["trading_hours_closed"],
@@ -52,8 +52,10 @@ public sealed class LiveCopyMatrix(LiveCopyFixture fixture, ITestOutputHelper ou
     private static CaseSpec Resolve(string caseName) => caseName switch
     {
         "one_to_one" => new CaseSpec(_ => { }, MasterIsBuy: true, ExpectCopied: true, ExpectBuy: true),
-        "half_multiplier" => new CaseSpec(
-            d => d.ConfigureRisk(new RiskSettings(MoneyManagementMode.LotMultiplier, 0.5)),
+        // A 2x multiplier keeps the copy at or above the destination's min volume even when the master opens
+        // at min (a 0.5x copy of a min-volume master would floor below min and be correctly skipped).
+        "double_multiplier" => new CaseSpec(
+            d => d.ConfigureRisk(new RiskSettings(MoneyManagementMode.LotMultiplier, 2.0)),
             true, true, true),
         "reverse" => new CaseSpec(d => d.SetReverse(true), true, true, ExpectBuy: false),
         "manage_only" => new CaseSpec(d => d.SetManageOnly(true), true, ExpectCopied: false, null),

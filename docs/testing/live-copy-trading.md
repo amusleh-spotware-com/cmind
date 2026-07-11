@@ -305,3 +305,52 @@ cleans up the positions it opened (demo accounts only).
 **Fixture robustness:** `LiveCopyFixture` now degrades to a clean skip when the cached tokens can't be
 refreshed (cTrader refresh tokens are single-use — a stale cache or an offline run no longer faults the
 whole live collection; re-run the OAuth onboarding to refresh the cache).
+
+## Running the live + cluster suites yourself (NO excuses — everything is self-serviceable)
+
+Everything below is available in this environment. Do **not** claim "creds unavailable", "token stale", or
+"kind/helm not installed" — set them up and run them.
+
+### 1. Get a fresh Open API token (headless OAuth, no browser interaction)
+
+cTrader refresh tokens are single-use, so a cached token WILL go stale. Re-mint it yourself from the saved
+cID username/password (`secrets/openapi-cids.local.json` + `secrets/openapi-test-app.local.json`, or the
+unified `secrets/dev-credentials.local.json`). The onboarding test drives a **headless Edge** OAuth via
+Playwright and writes `secrets/openapi-tokens.local.json`:
+
+```bash
+CMIND_ONBOARD=1 dotnet test tests/E2ETests --filter FullyQualifiedName~OnboardingTests
+```
+
+~13s; authorizes every cID and caches fresh tokens. Re-run whenever the live suite reports the fixture is
+unavailable due to a refresh failure.
+
+### 2. Run the live copy suites (real cTrader demo accounts)
+
+```bash
+dotnet test tests/IntegrationTests --filter FullyQualifiedName~CopyTradingLiveTests   # core mirroring (8)
+dotnet test tests/IntegrationTests --filter FullyQualifiedName~LiveCopyMatrix          # option matrix (7)
+dotnet test tests/IntegrationTests --filter FullyQualifiedName~LiveCopyChaos           # resync chaos (2)
+```
+
+They place + clean up real DEMO orders (never live accounts), and report **Inconclusive** on a closed
+market. Verified green end to end.
+
+### 3. Bootstrap tokens from a running app volume (alternative)
+
+If the app has been run and a cID linked in-app, extract the app's latest refresh token straight from the
+`app-pg-data` Postgres volume instead of re-authorizing — see `LiveTokenBootstrapTests` and set
+`CMIND_VOLUME_CONN`.
+
+### 4. Kubernetes cluster E2E
+
+`kind`, `helm`, and Docker are available (install kind/helm via `go install`/release binaries or
+`choco install kind kubernetes-helm` if not already on PATH). The one-shot script builds+loads images,
+deploys the chart, runs the in-cluster test Job, and asserts exit 0:
+
+```bash
+scripts/k8s-e2e.sh                                 # deterministic copy suite (no secrets)
+TEST_FILTER='FullyQualifiedName~CopyTradingLiveTests' COPY_SECRET=cmind-copy-secrets scripts/k8s-e2e.sh   # live in-cluster
+```
+
+See [../deployment/kubernetes.md](../deployment/kubernetes.md).

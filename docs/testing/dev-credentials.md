@@ -18,6 +18,7 @@ cp dev-credentials.example.json secrets/dev-credentials.local.json
 | **Integration** (`tests/IntegrationTests`) | Postgres | Testcontainers (Docker) — auto |
 | **Live copy** (`tests/IntegrationTests/CopyLive`) | OpenAPI app + token cache | `OpenApi.App`, `OpenApi.Tokens` |
 | **E2E onboarding** (`tests/E2ETests/CopyLive`) | OpenAPI app + cID logins | `OpenApi.App`, `OpenApi.Cids` |
+| **E2E real run/backtest** (`CBotRealRunBacktestTests`) | a cID login + a **demo** account number | `OpenApi.Cids[].{Username,Password,Accounts}` |
 | **AI features** | Anthropic key | `Ai.ApiKey` (unset ⇒ AI features return disabled, app still runs) |
 
 ## Schema
@@ -25,7 +26,13 @@ cp dev-credentials.example.json secrets/dev-credentials.local.json
 See `dev-credentials.example.json` at the repo root. Sections:
 
 - `OpenApi.App` — `{ ClientId, ClientSecret }` of the cTrader Open API application.
-- `OpenApi.Cids` — cTrader ID logins used only by the headless OAuth onboarding.
+- `OpenApi.Cids` — cTrader ID logins used by the headless OAuth onboarding. Each entry also
+  carries an **`Accounts`** array — the cTrader trading-account numbers (the login/account number,
+  e.g. `3635817`) under that cID that the test infrastructure is allowed to link into the app and
+  drive. `CBotRealRunBacktestTests` reads the first entry that has a non-empty `Accounts` array,
+  adds that cID + account to the app, then really runs and backtests a cBot on it. **Put only
+  demo account numbers here** — never a live account; the run/backtest tests place real orders on
+  whatever account you list. Empty/omitted `Accounts` ⇒ the real run/backtest test skips cleanly.
 - `OpenApi.Tokens` — the multi-cID token cache (one entry per authorized cID with its
   refresh/access token + account list). Written automatically by onboarding and by the
   token-refresh step; you rarely edit it by hand.

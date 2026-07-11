@@ -6,7 +6,7 @@ AI unconfigured → AI pages dim actions, show banner plus one-time dialog promp
 
 ## Capabilities
 
-- **Build Bot** — plain-English prompt → runnable cBot via **generate → build → AI-fix** self-repair loop (`build-strategy`). Tab on Assistant page (former standalone Strategy Builder page folded in, killed redundancy).
+- **Build cBot** — plain-English prompt → runnable cBot via **generate → build → AI-fix** self-repair loop (`build-strategy`), at `/ai/build`. Supersedes the old "Generate cBot" (source-only) feature, which was removed as redundant.
 - **Parameter optimization** — closed loop: AI proposes param sets, each persisted + backtested across nodes, results feed next round (`optimize-run` / `optimize-params`).
 - **Autonomous portfolio agent** — mandate-driven proposals with full decision journal (`AgentMandate` → `AgentProposal`).
 - **Acting risk guard** — `AiRiskGuard` background service assesses running bots, can **auto-stop** on critical risk (opt-in).
@@ -18,7 +18,7 @@ AI unconfigured → AI pages dim actions, show banner plus one-time dialog promp
 
 - Web endpoints under `/api/ai/*` (generate, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate).
 - MCP tools (`AiTools`) for AI clients — see [mcp.md](mcp.md).
-- **AI** (Assistant) Blazor page, grouped in nav under **AI** alongside Portfolio Agent, Alerts, MCP Keys. Tabs: Build Bot, Generate cBot, Review, Debate, Market Sentiment, Exposure Check, Portfolio Digest, Tune Advisor, Optimize.
+- **AI** nav group — one Blazor **page per feature** (no more tabbed Assistant hub): Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), plus Portfolio Agent, Alerts, MCP Keys. Pages share `AiFeaturePageBase` + `AiOutputPanel`; each shows `AiFeatureNotice` when no key is configured.
 - **Settings → AI** (`/settings/ai`, owner-only) to add/replace/remove API key.
 
 ## Configuration

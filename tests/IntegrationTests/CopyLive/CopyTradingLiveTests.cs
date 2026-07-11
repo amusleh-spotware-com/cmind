@@ -135,6 +135,9 @@ public sealed class CopyTradingLiveTests(LiveCopyFixture fixture, ITestOutputHel
     // Master + N slaves all under the same cID (so symbols/specs match exactly).
     private IReadOnlyList<LiveCopyFixture.LiveAccount> SameCid(int slaveCount)
     {
+        // Called as an eager argument before the caller's Available check, so return empty (the caller then
+        // skips) when the fixture is unavailable; only assert on account count when credentials are present.
+        if (!fixture.Available) return [];
         var byCid = fixture.DemoAccounts.GroupBy(a => a.Cid)
             .FirstOrDefault(g => g.Count() > slaveCount);
         byCid.Should().NotBeNull($"need a cID with at least {slaveCount + 1} demo accounts");

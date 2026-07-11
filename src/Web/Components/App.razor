@@ -16,7 +16,12 @@
     @((MarkupString)$"<style>{Web.Branding.BrandingCss.BuildRootVariables(branding)}</style>")
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="@branding.FaviconUrl" />
-    <meta name="theme-color" content="@branding.BackgroundColor" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="theme-color" content="@branding.AppBarColor" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="@branding.ProductName" />
     @if (!string.IsNullOrWhiteSpace(branding.CustomCss))
     {
         @((MarkupString)$"<style>{branding.CustomCss}</style>")
@@ -32,6 +37,18 @@
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script>
         window.copyToClipboard = (text) => navigator.clipboard.writeText(text);
+
+        // PWA: register the app-shell service worker and capture the install prompt.
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () =>
+                navigator.serviceWorker.register('/service-worker.js', { updateViaCache: 'none' })
+                    .catch(() => { /* installability is best-effort */ }));
+        }
+        window.deferredInstallPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            window.deferredInstallPrompt = e;
+        });
     </script>
 </body>
 </html>

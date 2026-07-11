@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Offline</title>
+    <link rel="stylesheet" href="/css/site.css" />
+    <style>
+        .offline-wrap {
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 24px;
+            text-align: center;
+        }
+        .offline-wrap img { width: 88px; height: 88px; opacity: 0.9; }
+        .offline-wrap h1 { font-size: 22px; font-weight: 700; margin: 0; color: var(--app-text); }
+        .offline-wrap p { color: var(--app-text-secondary); max-width: 32ch; margin: 0; }
+        .offline-retry {
+            margin-top: 8px;
+            min-height: var(--app-touch-target);
+            padding: 12px 24px;
+            background: var(--app-primary);
+            color: var(--app-primary-contrast);
+            border: none;
+            border-radius: var(--app-radius);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-wrap">
+        <img src="/icons/icon-192.png" alt="" />
+        <h1>You're offline</h1>
+        <p>This app needs a live connection to run. We'll reconnect as soon as you're back online.</p>
+        <button class="offline-retry" onclick="location.reload()">Retry</button>
+    </div>
+</body>
+</html>

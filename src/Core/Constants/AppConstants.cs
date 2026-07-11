@@ -292,6 +292,19 @@ public static class HealthEndpoints
     public const string Version = "/version";
 }
 
+public static class PwaRoutes
+{
+    public const string Manifest = "/manifest.webmanifest";
+    public const string ServiceWorker = "/service-worker.js";
+    public const string OfflinePage = "/offline.html";
+    public const string Icon192 = "/icons/icon-192.png";
+    public const string Icon512 = "/icons/icon-512.png";
+    public const string Icon512Maskable = "/icons/icon-512-maskable.png";
+    public const string AppleTouchIcon = "/icons/apple-touch-icon.png";
+    public const string ManifestContentType = "application/manifest+json";
+    public const string StartUrl = "/";
+}
+
 public static class DockerLabels
 {
     public const string User = "app.user";

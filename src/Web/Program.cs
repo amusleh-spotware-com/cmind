@@ -167,6 +167,7 @@ app.MapPropGuardEndpoints();
 app.MapPropFirmEndpoints();
 app.MapComplianceEndpoints();
 app.MapImageEndpoints();
+app.MapPwaEndpoints();
 app.MapHub<LogsHub>(HubRoutes.Logs);
 
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();

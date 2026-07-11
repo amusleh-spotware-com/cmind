@@ -79,6 +79,8 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public AccountProtectionMode AccountProtectionMode { get; private set; } = AccountProtectionMode.Off;
     public double AccountProtectionStopEquity { get; private set; }
     public double? AccountProtectionTakeEquity { get; private set; }
+    public double PropRuleDailyLossCap { get; private set; }
+    public double PropRuleTrailingDrawdown { get; private set; }
     public SymbolFilterMode SymbolFilterMode { get; private set; } = SymbolFilterMode.None;
     public IReadOnlyList<CopySymbolMapEntry> SymbolMaps => _symbolMaps;
     public IReadOnlyList<CopySymbolFilter> SymbolFilters => _symbolFilters;
@@ -103,6 +105,7 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public TradingWindow TradingHours => new(TradingHoursStartMinuteUtc, TradingHoursEndMinuteUtc);
     public AccountProtectionPolicy AccountProtection =>
         new(AccountProtectionMode, AccountProtectionStopEquity, AccountProtectionTakeEquity);
+    public PropRuleGuard PropRules => new(PropRuleDailyLossCap, PropRuleTrailingDrawdown);
 
     public void ConfigureRisk(RiskSettings risk)
     {
@@ -134,6 +137,12 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
         AccountProtectionMode = policy.Mode;
         AccountProtectionStopEquity = policy.StopEquity;
         AccountProtectionTakeEquity = policy.TakeEquity;
+    }
+
+    public void SetPropRuleGuard(PropRuleGuard guard)
+    {
+        PropRuleDailyLossCap = guard.DailyLossCap;
+        PropRuleTrailingDrawdown = guard.TrailingDrawdown;
     }
 
     public void ConfigureSlippage(SlippagePips slippage)

@@ -163,6 +163,33 @@ public readonly record struct AccountProtectionPolicy
            && ((StopEquity > 0 && equity <= StopEquity) || (TakeEquity is { } take && equity >= take));
 }
 
+// Prop-firm risk guard (C7): a per-destination daily-loss cap and/or trailing-drawdown limit (both in the
+// deposit currency; 0 disables that rule). Daily loss is measured from the day's opening equity;
+// trailing drawdown from the running peak equity. On breach the destination is auto-flattened and locked
+// out for the rest of the trading day — the enforcement prop-firm copier users ask for and few deliver.
+public readonly record struct PropRuleGuard
+{
+    public double DailyLossCap { get; }
+    public double TrailingDrawdown { get; }
+
+    public PropRuleGuard(double dailyLossCap, double trailingDrawdown)
+    {
+        if (dailyLossCap < 0 || trailingDrawdown < 0 || double.IsNaN(dailyLossCap) || double.IsNaN(trailingDrawdown))
+            throw new DomainException(DomainErrors.CopyPropRuleInvalid);
+        DailyLossCap = dailyLossCap;
+        TrailingDrawdown = trailingDrawdown;
+    }
+
+    public static PropRuleGuard Disabled => new(0, 0);
+    public bool IsEnabled => DailyLossCap > 0 || TrailingDrawdown > 0;
+
+    public bool DailyLossBreached(double dayStartEquity, double equity)
+        => DailyLossCap > 0 && dayStartEquity - equity >= DailyLossCap;
+
+    public bool TrailingDrawdownBreached(double peakEquity, double equity)
+        => TrailingDrawdown > 0 && peakEquity - equity >= TrailingDrawdown;
+}
+
 // C18: a per-destination daily trading-hours window (UTC minutes-of-day). New opens outside the window
 // are skipped. Start == End means "all day" (disabled). A window whose Start > End wraps past midnight
 // (e.g. 22:00–06:00). End is exclusive.

@@ -276,6 +276,36 @@ public sealed class CopyEngineHostTests
     }
 
     [Fact]
+    public async Task Prop_rule_daily_loss_breach_flattens_and_locks_out_the_destination()
+    {
+        var clock = new FakeTimeProvider(new DateTimeOffset(2026, 07, 11, 12, 00, 00, TimeSpan.Zero));
+        var session = NewSession();
+        session.Balance = 10000;
+        session.SeedPosition(Source, positionId: 5001, SymbolId, isBuy: true, volume: 100, label: "5001");
+        session.SeedPosition(Slave, positionId: 9001, SymbolId, isBuy: true, volume: 100, label: "5001");
+        var log = new CapturingLogger();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d =>
+            d.SetPropRuleGuard(new PropRuleGuard(dailyLossCap: 1500, trailingDrawdown: 0)))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            await Task.Delay(150);
+            clock.Advance(CopyDefaults.EquityGuardInterval + TimeSpan.FromSeconds(1)); // tick 1: baseline 10000
+            await Task.Delay(120);
+            session.Balance = 8000; // equity falls 2000, past the 1500 daily-loss cap
+            clock.Advance(CopyDefaults.EquityGuardInterval + TimeSpan.FromSeconds(1)); // tick 2: breach
+            await WaitUntil(() => log.Records.Any(r => r.EventId == 1082));
+
+            session.PushOpen(Source, positionId: 6001, SymbolId, isBuy: true, volume: 100);
+            await Task.Delay(120);
+        }, log, clock);
+
+        session.Closes.Should().Contain(c => c.PositionId == 9001, "a daily-loss breach auto-flattens the destination");
+        session.Orders.Should().BeEmpty("a locked-out destination opens nothing further");
+        log.Records.Should().Contain(r => r.EventId == 1082, "the prop-rule breach alert fires");
+    }
+
+    [Fact]
     public async Task Source_close_closes_the_mirrored_copy()
     {
         var session = NewSession();

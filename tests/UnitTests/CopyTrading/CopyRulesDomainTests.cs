@@ -102,6 +102,26 @@ public sealed class CopyRulesDomainTests
     }
 
     [Fact]
+    public void Prop_rule_guard_evaluates_daily_loss_and_trailing_drawdown()
+    {
+        var guard = new PropRuleGuard(dailyLossCap: 1500, trailingDrawdown: 800);
+
+        guard.IsEnabled.Should().BeTrue();
+        guard.DailyLossBreached(dayStartEquity: 10000, equity: 8400).Should().BeTrue("loss 1600 >= 1500 cap");
+        guard.DailyLossBreached(dayStartEquity: 10000, equity: 9000).Should().BeFalse("loss 1000 < cap");
+        guard.TrailingDrawdownBreached(peakEquity: 11000, equity: 10100).Should().BeTrue("drawdown 900 >= 800");
+        guard.TrailingDrawdownBreached(peakEquity: 11000, equity: 10500).Should().BeFalse("drawdown 500 < limit");
+        PropRuleGuard.Disabled.IsEnabled.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Prop_rule_guard_rejects_a_negative_limit()
+    {
+        var act = () => new PropRuleGuard(-1, 0);
+        act.Should().Throw<DomainException>().Which.Message.Should().Be(DomainErrors.CopyPropRuleInvalid);
+    }
+
+    [Fact]
     public void Source_label_filter_matches_exactly_and_allows_all_when_unset()
     {
         var destination = Destination();

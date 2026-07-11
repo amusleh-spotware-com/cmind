@@ -90,6 +90,12 @@ Set in the New Profile dialog, on the Copy Trading page's per-destination panel,
   `StopEquity`; a `TakeEquity` must sit above the `StopEquity`. **No-guarantee caveat:** sell-out uses
   market execution — like every competitor's equivalent it can't guarantee a fill price in a fast or
   gapped market.
+- **Prop-firm rule guard** (C7) — the enforcement prop-firm copier users ask for. Per destination, a
+  **daily-loss cap** (loss from the day's opening equity) and/or a **trailing-drawdown** limit (loss from
+  the running peak equity), both in the deposit currency. On breach the destination is **auto-flattened**
+  (every copy closed) and **locked out** for the rest of the UTC day (new opens skipped as `prop_lockout`);
+  a `CopyPropRuleBreached` alert fires. The lockout clears when the UTC day rolls over (a fresh
+  baseline/peak is taken). Shares the same live-equity poll as account protection.
 - **Order-type filter** — choose exactly which master order types to copy: market, market-range,
   limit, stop, stop-limit (`CopyOrderTypes` flags; default all). cMAM-style selectivity.
 - **Copy SL / Copy TP** — mirror the master's stop-loss / take-profit, or manage protection

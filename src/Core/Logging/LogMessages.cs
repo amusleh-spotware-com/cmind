@@ -241,6 +241,10 @@ public static partial class LogMessages
         Message = "Copy account protection triggered: profile {ProfileId} dest {DestinationCtid} mode {Mode} at equity {Equity} (stop {StopEquity})")]
     public static partial void CopyAccountProtectionTriggered(this ILogger logger, Guid profileId, long destinationCtid, string mode, double equity, double stopEquity);
 
+    [LoggerMessage(EventId = 1082, Level = LogLevel.Warning,
+        Message = "Copy prop-rule breached: profile {ProfileId} dest {DestinationCtid} {Rule} at equity {Equity} — auto-flattened and locked out for the day")]
+    public static partial void CopyPropRuleBreached(this ILogger logger, Guid profileId, long destinationCtid, string rule, double equity);
+
     // ---- Prop-firm challenge tracking ----
 
     [LoggerMessage(EventId = 1067, Level = LogLevel.Error, Message = "Prop-firm tracking supervisor cycle failed")]

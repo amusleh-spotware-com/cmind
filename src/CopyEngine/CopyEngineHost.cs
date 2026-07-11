@@ -56,6 +56,10 @@ public sealed class CopyEngineHost(
     // Account-protection latch: once a destination's equity guard fires, it stops receiving new opens until
     // the host restarts (a deliberate, non-silent safety stop). Mutated only under _stateGate.
     private readonly HashSet<long> _protectedDestinations = [];
+    // Prop-rule state: per-destination trading-day baseline + peak equity, and the set locked out for the
+    // current day (cleared when the UTC day rolls over). Mutated only under _stateGate.
+    private readonly Dictionary<long, (DateOnly Day, double DayStartEquity, double PeakEquity)> _propGuardState = new();
+    private readonly HashSet<long> _lockedOutDestinations = [];
 
     // Pushed by the supervisor when a cID's single valid access token rotates (refresh or re-auth after
     // the user links another account on the same cID, which invalidates the old token). The host
@@ -160,39 +164,79 @@ public sealed class CopyEngineHost(
     // destination's live equity against its protection policy and, on breach, applies the mode.
     private async Task EquityGuardLoopAsync(IOpenApiTradingSession session, CancellationToken ct)
     {
-        if (plan.Destinations.All(d => d.Config.AccountProtection.Mode == AccountProtectionMode.Off)) return;
+        if (plan.Destinations.All(d => d.Config.AccountProtection.Mode == AccountProtectionMode.Off && !d.Config.PropRules.IsEnabled))
+            return;
 
         using var timer = new PeriodicTimer(CopyDefaults.EquityGuardInterval, timeProvider);
         while (await timer.WaitForNextTickAsync(ct))
         {
             await _stateGate.WaitAsync(ct);
-            try { await EvaluateAccountProtectionAsync(session, ct); }
+            try { await EvaluateGuardsAsync(session, ct); }
             catch (Exception ex) { logger.LogWarning(ex, "Copy equity guard failed for profile {ProfileId}", plan.ProfileId.Value); }
             finally { _stateGate.Release(); }
         }
     }
 
-    private async Task EvaluateAccountProtectionAsync(IOpenApiTradingSession session, CancellationToken ct)
+    private async Task EvaluateGuardsAsync(IOpenApiTradingSession session, CancellationToken ct)
     {
         foreach (var destination in plan.Destinations)
         {
+            var ctid = destination.CtidTraderAccountId;
             var policy = destination.Config.AccountProtection;
-            if (policy.Mode == AccountProtectionMode.Off || _protectedDestinations.Contains(destination.CtidTraderAccountId))
-                continue;
+            var propRules = destination.Config.PropRules;
+            var protectionActive = policy.Mode != AccountProtectionMode.Off && !_protectedDestinations.Contains(ctid);
+            if (!protectionActive && !propRules.IsEnabled) continue;
 
-            var equity = (await AccountSnapshotAsync(session, destination.CtidTraderAccountId, needsEquity: true, ct)).Equity;
-            if (!policy.IsTriggered(equity)) continue;
+            var equity = (await AccountSnapshotAsync(session, ctid, needsEquity: true, ct)).Equity;
 
-            _protectedDestinations.Add(destination.CtidTraderAccountId); // latch: no more new opens
-            logger.CopyAccountProtectionTriggered(plan.ProfileId.Value, destination.CtidTraderAccountId,
-                policy.Mode.ToString(), equity, policy.StopEquity);
+            // Account protection (ZuluGuard): latch against new opens on breach; SellOut also liquidates.
+            if (protectionActive && policy.IsTriggered(equity))
+            {
+                _protectedDestinations.Add(ctid);
+                logger.CopyAccountProtectionTriggered(plan.ProfileId.Value, ctid, policy.Mode.ToString(), equity, policy.StopEquity);
+                if (policy.Mode == AccountProtectionMode.SellOut)
+                    await FlattenDestinationAsync(session, ctid, ct);
+            }
 
-            // SellOut closes every copy on the destination immediately (best-effort, market execution —
-            // no slippage guarantee, as competitors' equivalents also caveat).
-            if (policy.Mode == AccountProtectionMode.SellOut)
-                foreach (var position in await session.ReconcileAsync(destination.CtidTraderAccountId, ct))
-                    await session.ClosePositionAsync(destination.CtidTraderAccountId, position.PositionId, position.Volume, ct);
+            if (propRules.IsEnabled)
+                await EvaluatePropRulesAsync(session, ctid, propRules, equity, ct);
         }
+    }
+
+    // Prop-rule guard (C7): track the trading day's opening equity + running peak; on a daily-loss or
+    // trailing-drawdown breach, auto-flatten the destination and lock it out for the rest of the UTC day.
+    // The lockout clears when the day rolls over (a fresh baseline/peak is taken).
+    private async Task EvaluatePropRulesAsync(
+        IOpenApiTradingSession session, long ctid, PropRuleGuard rules, double equity, CancellationToken ct)
+    {
+        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+        if (!_propGuardState.TryGetValue(ctid, out var state) || state.Day != today)
+        {
+            _propGuardState[ctid] = (today, equity, equity); // new trading day: reset baseline + peak
+            _lockedOutDestinations.Remove(ctid);             // and clear the day's lockout
+            return;
+        }
+
+        var peak = Math.Max(state.PeakEquity, equity);
+        _propGuardState[ctid] = (today, state.DayStartEquity, peak);
+        if (_lockedOutDestinations.Contains(ctid)) return; // already locked out today
+
+        var rule = rules.DailyLossBreached(state.DayStartEquity, equity) ? "daily_loss"
+            : rules.TrailingDrawdownBreached(peak, equity) ? "trailing_drawdown"
+            : null;
+        if (rule is null) return;
+
+        _lockedOutDestinations.Add(ctid);
+        logger.CopyPropRuleBreached(plan.ProfileId.Value, ctid, rule, equity);
+        await FlattenDestinationAsync(session, ctid, ct);
+    }
+
+    // Closes every copied position on a destination immediately (best-effort market execution — no
+    // slippage guarantee). Shared by SellOut account-protection and prop-rule auto-flatten.
+    private async Task FlattenDestinationAsync(IOpenApiTradingSession session, long ctid, CancellationToken ct)
+    {
+        foreach (var position in await session.ReconcileAsync(ctid, ct))
+            await session.ClosePositionAsync(ctid, position.PositionId, position.Volume, ct);
     }
 
     private async Task LoadReferenceDataAsync(IOpenApiTradingSession session, CancellationToken ct)
@@ -516,6 +560,12 @@ public sealed class CopyEngineHost(
         if (_protectedDestinations.Contains(destination.CtidTraderAccountId))
         {
             CopyMetrics.Instance.CopySkipped("account_protection");
+            return;
+        }
+
+        if (_lockedOutDestinations.Contains(destination.CtidTraderAccountId))
+        {
+            CopyMetrics.Instance.CopySkipped("prop_lockout");
             return;
         }
 

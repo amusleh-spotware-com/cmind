@@ -65,8 +65,20 @@ public sealed class CopyEngineHost(
         };
         await session.StartAsync(ct);
         logger.CopyHostStarted(plan.ProfileId.Value, plan.SourceCtidTraderAccountId, plan.Destinations.Count);
-        await LoadReferenceDataAsync(session, ct);
-        await ResyncAsync(session, ct);
+
+        // Hold the state gate across the initial reference-data load and first resync: OnReconnected is
+        // already wired, so a socket flap during startup would otherwise run a second resync concurrently
+        // and corrupt the host's non-concurrent state dictionaries.
+        await _stateGate.WaitAsync(ct);
+        try
+        {
+            await LoadReferenceDataAsync(session, ct);
+            await ResyncAsync(session, ct);
+        }
+        finally
+        {
+            _stateGate.Release();
+        }
 
         using var loopCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         var tokenSwapLoop = Task.Run(() => ConsumeTokenUpdatesAsync(session, loopCts.Token), CancellationToken.None);

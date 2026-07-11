@@ -99,6 +99,13 @@ compliance and dispute resolution.
 - **Integration** (`tests/IntegrationTests/CopyLive`) — node-affinity/lease claim, token-version
   propagation on real Postgres.
 - **E2E** (`tests/E2ETests`) — destination-option round-trip through the API + UI, full lifecycle.
+- **Stress / DST** (`tests/StressTests`) — deterministic-simulation testing: seeded randomized
+  workloads + fault injection (socket flap, order rejection, market-range rejection, token
+  rotation, node death) drive `CopyEngineHost` to quiescence and assert convergence invariants.
+  See [testing/stress-testing.md](../testing/stress-testing.md). This suite surfaced and fixed a
+  real startup race: `OnReconnected` was wired before the initial reference-load + resync, so a
+  socket flap during startup could run a second resync concurrently and corrupt the host's
+  non-concurrent state dictionaries — the startup load + first resync now run under `_stateGate`.
 - **Live** — real cTrader demo accounts; see [testing/live-copy-trading.md](../testing/live-copy-trading.md).
 
 See [dev-credentials.md](../testing/dev-credentials.md) for the single credentials file the live

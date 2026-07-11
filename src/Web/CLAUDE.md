@@ -2,7 +2,7 @@
 
 Application/presentation layer: endpoints, hosted services, and Razor components **orchestrate** —
 they never decide. Any `if` encoding a business rule belongs on an aggregate or domain service, not
-here. Full UI contract: [docs/ui-guidelines.md](../../docs/ui-guidelines.md).
+here. Full UI contract: [website/docs/ui-guidelines.md](website/docs/ui-guidelines.md).
 
 ## UI — MANDATORY (blocking for every user-facing change)
 

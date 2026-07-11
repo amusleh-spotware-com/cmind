@@ -9,7 +9,7 @@ namespace E2ETests;
 // demo trading account (declared in OpenApi.Cids[].Accounts) through the app's own API, build a cBot, then
 // actually run and backtest it on that account via the endpoints the pages call. Demo accounts only —
 // never a live account (the dev only lists demo account numbers in the creds file, see
-// docs/testing/dev-credentials.md). Skips cleanly when no cID with an Accounts entry is present. A
+// website/docs/testing/dev-credentials.md). Skips cleanly when no cID with an Accounts entry is present. A
 // container-infrastructure failure (console image not pullable / no node) is reported inconclusive rather
 // than failing the suite — the linking + launch pipeline up to dispatch is still exercised.
 [Collection(AppCollection.Name)]

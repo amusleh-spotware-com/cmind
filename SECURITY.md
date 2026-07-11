@@ -1,6 +1,6 @@
 # Security Policy
 
-cMind self-hosts, handles trading credentials — security matters. Like any platform touching live funds, run own security review, follow hardening guidance in [docs/deployment/](docs/deployment/) before production.
+cMind self-hosts, handles trading credentials — security matters. Like any platform touching live funds, run own security review, follow hardening guidance in [website/docs/deployment/](website/docs/deployment/) before production.
 
 ## Reporting a vulnerability
 

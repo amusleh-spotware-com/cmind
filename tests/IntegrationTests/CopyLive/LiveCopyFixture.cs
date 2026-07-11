@@ -33,7 +33,7 @@ public sealed class LiveCopyFixture : IAsyncLifetime
         {
             SkipReason = $"Live copy secrets missing (need secrets/{LiveCopySecrets.AppFileName} and " +
                          $"secrets/{LiveCopySecrets.TokensFileName}). Run the OAuth onboarding once " +
-                         "(see docs/testing/live-copy-trading.md).";
+                         "(see website/docs/testing/live-copy-trading.md).";
             return;
         }
 
@@ -63,7 +63,7 @@ public sealed class LiveCopyFixture : IAsyncLifetime
             // cTrader refresh tokens are single-use; a stale cache (or no network) can't be refreshed. Degrade
             // to a clean skip like a missing cache, rather than faulting the whole live collection.
             SkipReason = $"Live copy token refresh failed (stale single-use token or offline): {ex.Message}. " +
-                         "Re-run the OAuth onboarding to refresh the cache (see docs/testing/live-copy-trading.md).";
+                         "Re-run the OAuth onboarding to refresh the cache (see website/docs/testing/live-copy-trading.md).";
             return;
         }
 

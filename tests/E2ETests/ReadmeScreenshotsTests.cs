@@ -4,12 +4,12 @@ using Xunit;
 namespace E2ETests;
 
 // Generates the README screenshot gallery from a live app boot. Skipped in normal runs; set
-// CAPTURE_SCREENSHOTS=1 to write PNGs into docs/design/screenshots/.
+// CAPTURE_SCREENSHOTS=1 to write PNGs into design/screenshots/.
 [Collection(AppCollection.Name)]
 public sealed class ReadmeScreenshotsTests(AppFixture app)
 {
     private static readonly string OutDir = Path.GetFullPath(
-        Path.Combine(AppContext.BaseDirectory, "../../../../../docs/design/screenshots"));
+        Path.Combine(AppContext.BaseDirectory, "../../../../../design/screenshots"));
 
     [Fact]
     public async Task Capture_readme_gallery()

@@ -9,7 +9,7 @@ cMind welcome AI-assisted contribution — repo built agent-friendly. Follow rul
 1. **[CLAUDE.md](CLAUDE.md)** — authoritative ruleset: architecture, strict DDD law, testing/time mandates, modern-C# + coding style, hard-won gotchas. Non-negotiable.
 2. **Nested `CLAUDE.md`** in the tree you edit — `src/Core`, `src/Infrastructure`, `src/Web`, `tests` carry layer-specific rules and gotchas. They auto-load in Claude Code; in other tools open the one for your area.
 3. **[CONTRIBUTING.md](CONTRIBUTING.md)** — PR/issue standards, accepted vs rejected, dos/don'ts.
-4. **Relevant `website/docs/features/*.md`** for the area you touch (canonical docs; published at
+4. **Relevant `website/website/docs/features/*.md`** for the area you touch (canonical docs; published at
    https://amusleh-spotware-com.github.io/cmind — top-level `docs/` are redirect stubs).
 
 ## What cMind is
@@ -30,7 +30,7 @@ tests/UnitTests         — xUnit + FluentAssertions + NSubstitute.
 tests/IntegrationTests  — Testcontainers PostgreSQL.
 tests/StressTests       — deterministic-simulation copy-trading stress suite.
 website/docs/       — CANONICAL docs (Docusaurus site, published to GitHub Pages).
-docs/               — redirect stubs → site; only docs/design/ (assets) is real.
+design/             — brand assets (logo/banner SVGs, brand brief, app screenshots) at repo root.
 ```
 
 ## Hard rules (do not violate)
@@ -43,7 +43,7 @@ docs/               — redirect stubs → site; only docs/design/ (assets) is r
 - **Modern C# 14 / .NET 10** (`LangVersion=latest`). Collection expressions `[]` (not `new List<T>()`/`Array.Empty`); primary constructors; `field` keyword; target-typed `new`; `is null`/`is not null` (never `== null`); switch expressions/pattern matching; file-scoped namespaces; `required`/`init` over setters; raw string literals for JSON/SQL. No legacy syntax an analyzer flags. Modernize the lines you touch.
 - **No secrets** in code, tests, fixtures, logs, prompts. Use `ISecretProtector`; strings live in `Core/Constants/`; log via source-generated `LogMessages`.
 - **UI:** every add/create/edit action use MudBlazor dialog, never inline page form.
-- **Docs in same PR.** Update `website/docs/features/*.md` (canonical) when behavior changes.
+- **Docs in same PR.** Update `website/website/docs/features/*.md` (canonical) when behavior changes.
 
 ## Definition of done (self-check before opening a PR)
 
@@ -57,7 +57,7 @@ docs/               — redirect stubs → site; only docs/design/ (assets) is r
 
 ## Recommended agent workflow
 
-1. Read `AGENTS.md` + `CLAUDE.md` + relevant `website/docs/features/*.md`.
+1. Read `AGENTS.md` + `CLAUDE.md` + relevant `website/website/docs/features/*.md`.
 2. Take one scoped task tied to single issue.
 3. **Plan by layer** (Core / Infrastructure / Nodes / Web / Mcp / tests) before editing; confirm fit DDD checklist.
 4. Implement → `dotnet build` → `dotnet test` → fix every analyzer/`.razor` problem → repeat till clean.

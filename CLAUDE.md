@@ -27,8 +27,8 @@ dotnet format analyzers <proj>.csproj --verify-no-changes --severity info
 
 The public docs + landing page live in `website/` (a Docusaurus app) and publish to GitHub Pages at
 **https://amusleh-spotware-com.github.io/cmind**. The Markdown under `website/docs/` is now the
-canonical documentation; the top-level `docs/` folder holds redirect stubs (only `docs/design/` —
-brand assets + screenshots — is real). Node 20+ (22 recommended); no .NET needed for the site.
+**only** copy of the documentation — the old top-level `docs/` folder has been removed; brand assets
+and screenshots now live in the root `design/` folder. Node 20+ (22 recommended); no .NET needed.
 
 ```bash
 cd website
@@ -42,7 +42,7 @@ npm run serve               # preview the production build → http://localhost:
   sidebar: `website/sidebars.ts`; config/SEO: `website/docusaurus.config.ts`.
 - New page → add the file under `website/docs/` **and** its id to `website/sidebars.ts`.
 - Screenshots are captured by the E2E test: `CAPTURE_SCREENSHOTS=1 dotnet test tests/E2ETests
-  --filter ReadmeScreenshotsTests` → `docs/design/screenshots/`, then copy into
+  --filter ReadmeScreenshotsTests` → `design/screenshots/`, then copy into
   `website/static/img/screenshots/`.
 - Deploy is automatic on push to `main` touching `website/**` via `.github/workflows/docs.yml`.
   Requires *Settings → Pages → Source: GitHub Actions*. Pages on a **private** repo needs a paid
@@ -70,7 +70,7 @@ src/AppHost         — .NET Aspire orchestrator.
 tests/UnitTests · IntegrationTests (Testcontainers PG) · E2ETests (Playwright) · StressTests (DST).
 website/docs/       — CANONICAL docs (Docusaurus site): features/, deployment/, operations/,
                       testing/, ui-guidelines.md. Published to https://amusleh-spotware-com.github.io/cmind.
-docs/               — redirect stubs → site; only docs/design/ (brand assets + screenshots) is real.
+design/             — brand assets: logo/banner SVGs, brand brief, app screenshots (root folder).
 ```
 
 Detailed per-file annotations are inferable from the code — read the tree, don't ask for a manual.
@@ -107,8 +107,8 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
    `ILogger.LogInformation(...)`). Never commit/log/store a secret in plaintext.
 7. **UI = dialogs, mobile-first, branded.** Every add/create/edit action opens a MudBlazor dialog —
    never an inline page form. Author for a 360px phone; no horizontal scroll 320–1920px; design
-   tokens only. → `src/Web/CLAUDE.md` + [website/docs/ui-guidelines.md](website/docs/ui-guidelines.md).
-8. **Docs in the same commit.** Every feature has `website/docs/features/*.md` (canonical — the
+   tokens only. → `src/Web/CLAUDE.md` + [website/website/docs/ui-guidelines.md](website/website/docs/ui-guidelines.md).
+8. **Docs in the same commit.** Every feature has `website/website/docs/features/*.md` (canonical — the
    published Docusaurus site; the top-level `docs/` copies are redirect stubs); behavior change →
    update its doc (and `website/docs/deployment`/`operations` when relevant). Not "done" until the
    doc matches the code.

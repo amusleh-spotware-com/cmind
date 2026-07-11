@@ -182,7 +182,7 @@ Provide MCP server URL so AI models access user cBots, run/backtest them, etc., 
 
 ## Features added after the initial build
 
-Original spec above shipped. Since then app grew several major capabilities, each documented under `docs/features/`, covered by unit + integration + Playwright/API E2E tests.
+Original spec above shipped. Since then app grew several major capabilities, each documented under `website/docs/features/`, covered by unit + integration + Playwright/API E2E tests.
 
 ### Copy trading (cTrader Open API)
 
@@ -242,7 +242,7 @@ Original spec above shipped. Since then app grew several major capabilities, eac
   auto-expiring login lockout, hardened auth cookie.
 - **Deploy artifacts** — `Dockerfile.{web,mcp,node-agent}`, docker-compose, Helm chart
   (`deploy/helm/cmind`, node agents = privileged StatefulSet), Azure bicep (Container Apps),
-  AWS Terraform (ECS Fargate + RDS). See `docs/deployment/`.
+  AWS Terraform (ECS Fargate + RDS). See `website/docs/deployment/`.
 - **UI convention** — all add/create/edit actions use MudBlazor dialogs (no inline page forms);
   grouped nav with Settings section; per-cBot Parameter Sets dialog.
 

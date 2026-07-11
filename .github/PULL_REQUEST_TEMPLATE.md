@@ -21,7 +21,7 @@ Closes #
 - [ ] Domain logic on aggregate / value object / domain service, not endpoint/tool/component/hosted service ([DDD checklist](../blob/main/CLAUDE.md#hard-mandates))
 - [ ] No `DateTime.UtcNow`/`Now` in production code (inject `TimeProvider`)
 - [ ] No secrets committed
-- [ ] Docs updated (`docs/features/*.md` / `README.md` / `CLAUDE.md`) if behavior or setup changed
+- [ ] Docs updated (`website/docs/features/*.md` / `README.md` / `CLAUDE.md`) if behavior or setup changed
 - [ ] EF migration added if schema changed
 
 ## AI assistance

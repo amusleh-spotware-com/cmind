@@ -4,7 +4,7 @@
 # Web -> http://localhost:8080  (owner login from .env), MCP -> http://localhost:8081/mcp
 #
 # The Web container mounts the host Docker socket so the in-app builder and the seeded
-# LocalNode can run cTrader Console containers on your machine. See docs/deployment/local.md.
+# LocalNode can run cTrader Console containers on your machine. See website/docs/deployment/local.md.
 name: cmind
 
 services:

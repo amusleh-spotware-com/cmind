@@ -63,7 +63,7 @@ edge cases, and writers who fix docs are as valuable as the people writing aggre
 | 🎯 Report real cTrader behavior we mis-model | 20 min | Open an issue tagged `copy-trading` with the exact cTrader flow |
 | 🛠️ Fix a `good first issue` | 1–2 hrs | [Quick wins](#quick-wins--good-first-issues) |
 | 🚀 Build a feature | varies | [Open an issue first](#issue-standard), then a PR |
-| 🌐 Improve deploy/ops docs (K8s, Azure, AWS) | varies | `docs/deployment/`, `docs/operations/` |
+| 🌐 Improve deploy/ops docs (K8s, Azure, AWS) | varies | `website/docs/deployment/`, `website/docs/operations/` |
 
 ## Your first contribution in 10 minutes
 
@@ -92,7 +92,7 @@ Then open a PR against `main` using the template. That's it — you're a contrib
 
 - Browse issues labeled [`good first issue`](https://github.com/amusleh-spotware-com/cmind/labels/good%20first%20issue)
   and [`help wanted`](https://github.com/amusleh-spotware-com/cmind/labels/help%20wanted).
-- Fix a doc that drifted from the code (compare a `docs/features/*.md` with its source).
+- Fix a doc that drifted from the code (compare a `website/docs/features/*.md` with its source).
 - Add a unit test for an untested invariant or state transition on an aggregate.
 - Extend `tests/UnitTests/CopyTrading/FakeTradingSession.cs` with a cTrader behavior it doesn't yet
   model (and a test that exercises it).
@@ -126,7 +126,7 @@ dotnet run --project src/AppHost   # full stack via Aspire (Postgres, Web, MCP)
 ```
 
 For a Web-only run and step-by-step setup, see
-**[docs/deployment/local.md](docs/deployment/local.md)**. AI features stay off until you set an API
+**[website/docs/deployment/local.md](website/docs/deployment/local.md)**. AI features stay off until you set an API
 key — you never need one to build, test, or run the app.
 
 ## Development workflow
@@ -143,7 +143,7 @@ key — you never need one to build, test, or run the app.
    including pre-existing tests.
 6. **Never call `DateTime.UtcNow`/`Now`** in production code — inject `TimeProvider`. Tests hardcode
    timestamps or use `FakeTimeProvider`.
-7. **Update the docs** in the same PR. Each feature has a `docs/features/*.md`; a feature isn't
+7. **Update the docs** in the same PR. Each feature has a `website/docs/features/*.md`; a feature isn't
    "done" until its doc matches the code.
 8. **Add an EF migration** if the schema changed.
 9. **Open a PR** using the template. Link the related issue.
@@ -198,7 +198,7 @@ A PR is **ready to review** when every box below is true. This is the bar we hol
       entities; no primitive-obsessed domain signatures. See the
       [DDD checklist](CLAUDE.md#hard-mandates).
 - [ ] **No secrets committed.**
-- [ ] **Docs updated** in the same PR (`docs/features/*.md`, `README.md`, `CLAUDE.md`) if behavior or
+- [ ] **Docs updated** in the same PR (`website/docs/features/*.md`, `README.md`, `CLAUDE.md`) if behavior or
       setup changed.
 - [ ] **EF migration** added if the schema changed.
 - [ ] **Conventional Commit** title (see [Commit messages](#commit-messages)).
@@ -228,7 +228,7 @@ checklist passes.
   token rotation, node death + lease reclaim).
 - Docs: clarity, accuracy, examples, deployment/ops guides.
 - Performance and safety improvements with before/after evidence.
-- Accessibility and UX polish that follows the [UI dialog convention](docs/ui-guidelines.md).
+- Accessibility and UX polish that follows the [UI dialog convention](website/docs/ui-guidelines.md).
 
 ### We will ask you to change, or decline ❌
 
@@ -327,7 +327,7 @@ The repo is **agent-ready**:
 ### How to use an agent to contribute (recommended flow)
 
 1. **Feed it the rules.** Start your session by having the agent read `AGENTS.md` and `CLAUDE.md`, plus
-   the relevant `docs/features/*.md`. In Claude Code these load automatically; in other tools, paste or
+   the relevant `website/docs/features/*.md`. In Claude Code these load automatically; in other tools, paste or
    `@`-reference them.
 2. **Give it a scoped task** tied to one issue. Agents excel at focused work and drift on vague ones.
 3. **Have it plan before coding** — list changes by layer (Core / Infra / Web / Mcp / tests), and

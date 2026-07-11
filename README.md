@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/design/banner.svg" alt="cMind — build, run &amp; backtest cTrader bots across a distributed fleet, with an AI core watching the risk." width="100%" />
+  <img src="design/banner.svg" alt="cMind — build, run &amp; backtest cTrader bots across a distributed fleet, with an AI core watching the risk." width="100%" />
 </p>
 
 <h1 align="center">cMind</h1>
@@ -51,16 +51,16 @@
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/design/screenshots/login-desktop.png" alt="Login" /></td>
-    <td width="50%"><img src="docs/design/screenshots/dashboard-desktop.png" alt="Dashboard" /></td>
+    <td width="50%"><img src="design/screenshots/login-desktop.png" alt="Login" /></td>
+    <td width="50%"><img src="design/screenshots/dashboard-desktop.png" alt="Dashboard" /></td>
   </tr>
   <tr>
     <td align="center"><b>Branded split-screen login</b></td>
     <td align="center"><b>Live operations dashboard</b></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/design/screenshots/ai-build-desktop.png" alt="AI build a cBot" /></td>
-    <td width="50%"><img src="docs/design/screenshots/copy-trading-desktop.png" alt="Copy trading" /></td>
+    <td width="50%"><img src="design/screenshots/ai-build-desktop.png" alt="AI build a cBot" /></td>
+    <td width="50%"><img src="design/screenshots/copy-trading-desktop.png" alt="Copy trading" /></td>
   </tr>
   <tr>
     <td align="center"><b>AI — build a cBot from a prompt</b></td>
@@ -70,9 +70,9 @@
 
 <p align="center">
   <i>Mobile-first &amp; installable —</i><br/>
-  <img src="docs/design/screenshots/login-mobile.png" alt="Login on mobile" height="380" />
+  <img src="design/screenshots/login-mobile.png" alt="Login on mobile" height="380" />
   &nbsp;&nbsp;
-  <img src="docs/design/screenshots/dashboard-mobile.png" alt="Dashboard on mobile" height="380" />
+  <img src="design/screenshots/dashboard-mobile.png" alt="Dashboard on mobile" height="380" />
 </p>
 
 ---

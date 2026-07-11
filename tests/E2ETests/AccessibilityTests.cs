@@ -6,7 +6,7 @@ namespace E2ETests;
 
 // Runs axe-core against key screens and fails on critical/serious accessibility violations. Colour-contrast
 // is theme-dependent (white-label sets the palette) so it is checked separately, not here — see
-// docs/ui-guidelines.md §8.
+// website/docs/ui-guidelines.md §8.
 [Collection(AppCollection.Name)]
 public sealed class AccessibilityTests(AppFixture app)
 {

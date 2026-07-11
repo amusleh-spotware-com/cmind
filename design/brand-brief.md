@@ -232,7 +232,7 @@ via `App:Branding` (`BrandingOptions`). Design accordingly:
 
 ## 11. Screenshots of the app UI
 
-*(Space reserved — add exported PNGs under `docs/design/screenshots/` and reference them here.)*
+*(Space reserved — add exported PNGs under `design/screenshots/` and reference them here.)*
 
 The app is a **dark, mobile-first, installable** Blazor Server + MudBlazor dashboard. A mobile-first UI
 overhaul is in flight (bottom-nav, drawer-closed-on-mobile, responsive tables→cards, redesigned login,
@@ -245,7 +245,7 @@ existing PNGs in `tmp-onboard/` are the *external* cTrader OAuth page, not cMind
   screenshot: **Login**, **Dashboard/Index**, **CBots list**, **Monaco BuilderEditor**, **Backtest +
   equity curve (InstanceDetail)**, **Nodes**, **Assistant (AI)** — each at a **mobile (≈390px)** and a
   **desktop (≈1440px)** viewport for a paired before/after-style gallery.
-- Save to `docs/design/screenshots/<page>-<device>.png` and embed:
+- Save to `design/screenshots/<page>-<device>.png` and embed:
 
 ```markdown
 ![Dashboard — mobile](screenshots/dashboard-mobile.png)

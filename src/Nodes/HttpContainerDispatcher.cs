@@ -20,7 +20,9 @@ public sealed class HttpContainerDispatcher(
     ISecretProtector protector,
     TimeProvider timeProvider) : IContainerDispatcher
 {
-    public const string HttpClientName = "node-agent";
+    public const string ReadClientName = "node-agent-read";
+    public const string WriteClientName = "node-agent-write";
+    public const string StreamClientName = "node-agent-stream";
 
     private const string AlgoFile = FilePaths.CbotAlgoFile;
     private const string ParamsFile = FilePaths.ParamsCbotsetFile;
@@ -47,7 +49,7 @@ public sealed class HttpContainerDispatcher(
         var image = $"{DockerImages.CtraderConsole}:{instance.DockerImageTag}";
         var request = new StartContainerRequest(instance.Id.Value, instance.UserId.Value, instance.KindName, image, args, files);
 
-        using var client = CreateClient(node);
+        using var client = CreateClient(node, WriteClientName);
         using var response = await client.PostAsJsonAsync(NodeAgentRoutes.Start, request, ct);
         if (!response.IsSuccessStatusCode)
             throw new InvalidOperationException($"Agent start failed ({(int)response.StatusCode}): {await response.Content.ReadAsStringAsync(ct)}");
@@ -61,7 +63,7 @@ public sealed class HttpContainerDispatcher(
     {
         if (instance.Node is not RemoteNode node) return;
         if (ContainerCommandHelpers.GetContainerId(instance) is not { } containerId) return;
-        using var client = CreateClient(node);
+        using var client = CreateClient(node, WriteClientName);
         using var response = await client.PostAsync(NodeAgentRoutes.Stop(containerId), null, ct);
     }
 
@@ -86,7 +88,7 @@ public sealed class HttpContainerDispatcher(
     {
         if (instance.Node is not RemoteNode node) return null;
         if (ContainerCommandHelpers.GetContainerId(instance) is not { } containerId) return null;
-        using var client = CreateClient(node);
+        using var client = CreateClient(node, ReadClientName);
         using var response = await client.GetAsync(NodeAgentRoutes.Report(containerId), ct);
         if (response.StatusCode == HttpStatusCode.NotFound) return null;
         response.EnsureSuccessStatusCode();
@@ -97,7 +99,7 @@ public sealed class HttpContainerDispatcher(
     {
         if (instance.Node is not RemoteNode node) yield break;
         if (ContainerCommandHelpers.GetContainerId(instance) is not { } containerId) yield break;
-        using var client = CreateClient(node);
+        using var client = CreateClient(node, StreamClientName);
         using var stream = await client.GetStreamAsync(NodeAgentRoutes.Logs(containerId), ct);
         using var reader = new StreamReader(stream);
         while (!ct.IsCancellationRequested)
@@ -111,7 +113,7 @@ public sealed class HttpContainerDispatcher(
     public async Task<NodeStats> CollectStatsAsync(Node node, CancellationToken ct)
     {
         var remote = node as RemoteNode ?? throw new InvalidOperationException("Not a remote node.");
-        using var client = CreateClient(remote);
+        using var client = CreateClient(remote, ReadClientName);
         var stats = await client.GetFromJsonAsync<NodeStatsResponse>(NodeAgentRoutes.NodeStats, ct)
                     ?? throw new InvalidOperationException("Agent returned empty stats.");
         return NodeStats.Create(node.Id, stats.CpuPercent, stats.MemUsedBytes, stats.MemTotalBytes,
@@ -121,7 +123,7 @@ public sealed class HttpContainerDispatcher(
     public async Task<long> GetBacktestDataSizeAsync(Node node, CancellationToken ct)
     {
         if (node is not RemoteNode remote) return 0;
-        using var client = CreateClient(remote);
+        using var client = CreateClient(remote, ReadClientName);
         var stats = await client.GetFromJsonAsync<NodeStatsResponse>(NodeAgentRoutes.NodeStats, ct);
         return stats?.BacktestDataUsedBytes ?? 0;
     }
@@ -129,23 +131,23 @@ public sealed class HttpContainerDispatcher(
     public async Task CleanBacktestDataAsync(Node node, UserId? userId, CancellationToken ct)
     {
         if (node is not RemoteNode remote) return;
-        using var client = CreateClient(remote);
+        using var client = CreateClient(remote, WriteClientName);
         var url = userId is { } uid ? $"{NodeAgentRoutes.NodeClean}?userId={uid.Value}" : NodeAgentRoutes.NodeClean;
         using var response = await client.PostAsync(url, null, ct);
     }
 
     private async Task<ContainerStatusResponse?> GetStatusAsync(RemoteNode node, string containerId, CancellationToken ct)
     {
-        using var client = CreateClient(node);
+        using var client = CreateClient(node, ReadClientName);
         return await client.GetFromJsonAsync<ContainerStatusResponse>(NodeAgentRoutes.Status(containerId), ct);
     }
 
     private static RemoteNode RequireRemote(Instance instance) =>
         instance.Node as RemoteNode ?? throw new InvalidOperationException("Instance has no remote node.");
 
-    private HttpClient CreateClient(RemoteNode node)
+    private HttpClient CreateClient(RemoteNode node, string clientName)
     {
-        var client = httpClientFactory.CreateClient(HttpClientName);
+        var client = httpClientFactory.CreateClient(clientName);
         client.BaseAddress = new Uri(node.BaseUrl);
         var secret = Encoding.UTF8.GetString(protector.Unprotect(node.EncryptedApiSecret, EncryptionPurposes.NodeApiSecret));
         client.DefaultRequestHeaders.Authorization =

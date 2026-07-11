@@ -59,6 +59,21 @@ self-register and heartbeat (`App:Discovery`), `NodeHeartbeatMonitor` marks node
 when heartbeat exceeds `Discovery:HeartbeatTtl`. Add node agents to add execution capacity;
 dead agent routed around automatically.
 
+## Node-agent HTTP resilience
+
+The main node talks to each `ExternalNode` agent over HTTP through three purpose-split clients so a
+flaky node or network never corrupts state:
+
+- **read** (`status` / `report` / `stats`) — idempotent GETs, retried on transient failures
+  (exponential backoff + jitter, `NodeAgentHttp.ReadRetryCount`) with per-attempt and total timeouts.
+- **write** (`start` / `stop` / `clean`) — non-idempotent POSTs, timed out but **never retried**: a
+  retried `start` could double-launch a container.
+- **stream** (`logs`) — the long-lived `docker logs -f` stream gets an infinite timeout and no
+  resilience pipeline, so tailing is never cut off.
+
+A node that stays unreachable is handled by heartbeat + [orphaned-instance reclaim](../operations/node-discovery.md);
+the HTTP layer only smooths transient blips.
+
 ## Stateless tiers
 
 Web (Blazor Server + API) and MCP server are stateless behind database, replicate freely.

@@ -27,6 +27,18 @@ public static class DatabaseDefaults
     public const int CommandTimeoutSeconds = 30;
 }
 
+public static class NodeAgentHttp
+{
+    // Idempotent reads (status/report/stats) are retried on transient node/network failures.
+    public const int ReadRetryCount = 3;
+    public const int ReadRetryBaseDelayMilliseconds = 200;
+    public const int ReadTotalTimeoutSeconds = 30;
+    public const int ReadAttemptTimeoutSeconds = 10;
+    // Non-idempotent writes (start/stop/clean) get a timeout but are never retried — a retried start
+    // could double-launch a container.
+    public const int WriteTimeoutSeconds = 30;
+}
+
 public static class AuthSchemes
 {
     public const string McpKey = nameof(McpKey);

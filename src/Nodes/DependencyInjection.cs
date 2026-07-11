@@ -17,7 +17,7 @@ public static class DependencyInjection
         var features = appOptions?.Features ?? new FeaturesOptions();
 
         services.AddScoped<INodeScheduler, NodeScheduler>();
-        services.AddHttpClient(HttpContainerDispatcher.HttpClientName);
+        services.AddNodeAgentHttpClients();
         services.AddSingleton<HttpContainerDispatcher>();
         services.AddSingleton<LocalContainerDispatcher>();
         services.AddSingleton<IContainerDispatcher>(sp => sp.GetRequiredService<HttpContainerDispatcher>());

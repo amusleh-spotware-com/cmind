@@ -36,3 +36,9 @@ variable "discovery_join_token" {
   type      = string
   sensitive = true
 }
+
+variable "copy_agent_count" {
+  type        = number
+  default     = 1
+  description = "Number of copy-trading agent tasks (each hosts a share of running copy profiles via the DB lease)."
+}

@@ -70,3 +70,14 @@ curl -s <webUrl>/version
 - Set the `otlpEndpoint` param (or `OTEL_EXPORTER_OTLP_ENDPOINT` on the apps) to *also* forward to a
   collector.
 - Container Apps `scale` rules (min/max) are wired in the Bicep.
+
+## Copy-trading agent + Key Vault (S5)
+
+`deploy/azure/main.bicep` also provisions a **copy-agent** Container App that hosts the
+`CopyEngineSupervisor` (`App:Copy:Enabled=true`, `App:Features:CopyTrading=true`) with **no ingress** — a
+worker holding the long-lived cTrader sockets. It reads the DB connection string from an **Azure Key Vault**
+secret via a **user-assigned managed identity** (Key Vault Secrets User role) rather than an inline plaintext
+secret. Each replica's `NodeName` defaults to its container hostname (unique), so the DB lease attributes
+running profiles per replica and two replicas never double-host one. Scale `minReplicas`/`maxReplicas` to add
+copy capacity; the DataProtection key ring is shared through Postgres, so any replica can decrypt the stored
+Open API tokens. Outputs: `copyAgentName`, `keyVaultName`.

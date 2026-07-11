@@ -77,3 +77,14 @@ curl -s "$(terraform output -raw web_url)/version"
   [../operations/logging.md](../operations/logging.md#aws--x-ray--cloudwatch-adot-sidecar).
 - The app already points `OTEL_EXPORTER_OTLP_ENDPOINT` at the in-task sidecar; repoint it to an
   external collector if you prefer to centralize.
+
+## Copy-trading agent + Secrets Manager (S5)
+
+`deploy/aws/copy-agent.tf` adds a **copy-agent** ECS Fargate service that hosts the `CopyEngineSupervisor`
+(`App:Copy:Enabled=true`, `App:Features:CopyTrading=true`) with **no ALB** — a worker holding the long-lived
+cTrader sockets. The DB connection string is stored in **AWS Secrets Manager** and injected through the
+task's `secrets` block (the execution role is granted `secretsmanager:GetSecretValue` on just that secret),
+not as plaintext env. Each task's `NodeName` defaults to its container hostname (unique per Fargate task), so
+the DB lease attributes running profiles per task and two tasks never double-host one. Scale
+`copy_agent_count` to add copy capacity; the DataProtection key ring is shared through Postgres, so any task
+can decrypt the stored Open API tokens.

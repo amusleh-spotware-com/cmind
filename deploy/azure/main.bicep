@@ -157,6 +157,84 @@ resource mcp 'Microsoft.App/containerApps@2024-03-01' = {
   }
 }
 
+// ---------------- S5: copy-trading agent + Key Vault ----------------
+// A user-assigned identity lets the copy-agent read the DB connection string from Key Vault instead of
+// an inline plaintext secret. The copy-agent hosts CopyEngineSupervisor (App:Copy:Enabled) with no
+// ingress; each replica NodeName defaults to its container hostname (unique), so the DB lease attributes
+// profiles per replica and none double-host. The DataProtection key ring is shared through Postgres.
+
+resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: '${namePrefix}-copy-id'
+  location: location
+}
+
+resource vault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: '${namePrefix}-kv-${uniqueString(resourceGroup().id)}'
+  location: location
+  properties: {
+    sku: { family: 'A', name: 'standard' }
+    tenantId: subscription().tenantId
+    enableRbacAuthorization: true
+  }
+}
+
+resource vaultConnStr 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: vault
+  name: 'app-connstr'
+  properties: { value: connectionString }
+}
+
+// Key Vault Secrets User role on the vault for the copy-agent identity.
+resource kvSecretsUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: vault
+  name: guid(vault.id, identity.id, '4633458b-17de-408a-b874-0445c86b69e6')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
+    principalId: identity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource copyAgent 'Microsoft.App/containerApps@2024-03-01' = {
+  name: '${namePrefix}-copy-agent'
+  location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: { '${identity.id}': {} }
+  }
+  dependsOn: [ kvSecretsUser ]
+  properties: {
+    managedEnvironmentId: env.id
+    configuration: {
+      // No ingress — a worker hosting trading sockets, not a web tier.
+      secrets: [
+        { name: 'connstr', keyVaultUrl: vaultConnStr.properties.secretUri, identity: identity.id }
+        { name: 'appi-conn', value: appInsights.properties.ConnectionString }
+      ]
+    }
+    template: {
+      containers: [
+        {
+          name: 'copy-agent'
+          image: '${imageRegistry}-web:${imageTag}'
+          resources: { cpu: json('0.5'), memory: '1Gi' }
+          env: [
+            { name: 'ASPNETCORE_ENVIRONMENT', value: 'Production' }
+            { name: 'ConnectionStrings__appdb', secretRef: 'connstr' }
+            { name: 'App__Features__CopyTrading', value: 'true' }
+            { name: 'App__Copy__Enabled', value: 'true' }
+            { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', secretRef: 'appi-conn' }
+            { name: 'OTEL_EXPORTER_OTLP_ENDPOINT', value: otlpEndpoint }
+          ]
+        }
+      ]
+      scale: { minReplicas: 1, maxReplicas: 4 }
+    }
+  }
+}
+
 output webUrl string = 'https://${web.properties.configuration.ingress.fqdn}'
 output mcpUrl string = 'https://${mcp.properties.configuration.ingress.fqdn}/mcp'
 output appInsightsName string = appInsights.name
+output copyAgentName string = copyAgent.name
+output keyVaultName string = vault.name

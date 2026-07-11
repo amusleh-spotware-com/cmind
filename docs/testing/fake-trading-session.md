@@ -23,7 +23,7 @@ extended) · ⬜ not yet modeled.
 | F6 | **Pending trigger→fill** dual event (Order carries `positionId` + OPEN Position) | ◑ | `PushOpen(..., orderId:)` reproduces the filled-pending event; the FX‑Blue/cMAM double-copy dedupe is covered in `CopyEngineHostTests.Filled_pending_does_not_double_open`. |
 | F7 | **Server-driven closes** (SL/TP hit, stop-out) | ⬜ | Today closes are test-pushed (`PushClose`); price-driven SL/TP-hit + stop-out closes planned. |
 | F8 | **Per-account** symbol tables / details | ◑ | Symbol names/ids are per-fake; per-account divergent tables (cross-broker) pending. |
-| F9 | Full **account state** (balance, equity, margin, freeMargin) | ◑ | `Balance` + `LoadPositionValuationsAsync` (entry/swap/commission via `SetPositionValuation`) feed equity; margin/freeMargin land with Phase 0 G2. |
+| F9 | Full **account state** (balance, equity, margin, freeMargin) | ◑ | `Balance` + `LoadPositionValuationsAsync` (entry/swap/commission via `SetPositionValuation`) + `SetSpot` feed real equity into proportional-equity sizing (G2, unit-tested in `CopyEquitySizingTests`). Used margin isn't exposed by the reconcile API, so free-margin is reported as equity. |
 | F10 | Events carry **server timestamps** | ✅ | `ExecutionEvent.ServerTimestamp` (unix ms) — real session reads it from the deal's `ExecutionTimestamp`; `PushOpen`/`PushPending` accept `serverTimestamp:` so a `FakeTimeProvider`-driven test drives real copy latency (G1). |
 | F11 | **Trading mode / schedule** (disabled / close-only / closed) | ⬜ | Planned Phase 2b. |
 | F12 | **Typed error taxonomy** (`ProtoOAErrorRes` codes) | ✅ | `RejectReasonForCtid[ctid] = CtraderRejectReason.X` throws one-shot `CtraderRejectException(reason)` (NotEnoughMoney, MarketClosed, PositionNotFound, …). |

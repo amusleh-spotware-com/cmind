@@ -55,7 +55,11 @@ Set in the New Profile dialog, on the Copy Trading page's per-destination panel,
 
 - **Sizing** (`MoneyManagementMode` + parameter): fixed lot, lot/notional multiplier,
   proportional balance/equity/free-margin, fixed risk %, fixed leverage, auto-proportional.
-  Plus min/max lot bounds and force-min-lot.
+  Plus min/max lot bounds and force-min-lot. Proportional-**equity**/**free-margin** size off real
+  account **equity** (`balance + Σ floating P&L`, derived per the cTrader Open API which doesn't deliver
+  equity), not plain balance — so a master sitting on open profit/loss sizes copies correctly. Used
+  margin isn't exposed by the reconcile API, so free-margin is treated as equity (an honest available-funds
+  proxy); the other modes read balance and skip the extra revaluation round-trip.
 - **Direction filter**: both / long-only / short-only. **Reverse**: flip the side (and swap
   SL↔TP) to run a contrarian copy.
 - **Symbol map** and **symbol filter** (whitelist / blacklist).

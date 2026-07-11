@@ -44,6 +44,7 @@ public sealed class CopyEngineHost(
     private readonly Channel<IReadOnlyList<(long Ctid, string Token)>> _tokenUpdates =
         Channel.CreateUnbounded<IReadOnlyList<(long Ctid, string Token)>>(new UnboundedChannelOptions { SingleReader = true });
     private readonly SemaphoreSlim _stateGate = new(1, 1);
+    private readonly PropFirmEquityCalculator _equityCalculator = new();
 
     // Pushed by the supervisor when a cID's single valid access token rotates (refresh or re-auth after
     // the user links another account on the same cID, which invalidates the old token). The host
@@ -173,7 +174,7 @@ public sealed class CopyEngineHost(
 
         var sourceDetail = await SymbolDetailAsync(session, plan.SourceCtidTraderAccountId, execution.SymbolId, ct);
         var sourceLots = VolumeConversion.LotsFromProtocol(execution.Volume, sourceDetail.LotSize);
-        var sourceBalance = await session.LoadBalanceAsync(plan.SourceCtidTraderAccountId, ct);
+        var sourceSnapshot = await AccountSnapshotAsync(session, plan.SourceCtidTraderAccountId, AnyDestinationNeedsEquity(), ct);
         logger.CopySourceOpen(plan.ProfileId.Value, execution.PositionId, sourceName,
             execution.IsBuy ? "Buy" : "Sell", sourceLots);
 
@@ -182,7 +183,7 @@ public sealed class CopyEngineHost(
             try
             {
                 await CopyOpenToDestinationAsync(session, destination, execution, sourceName,
-                    sourceDetail, sourceBalance, applyProtection: true, isScaleIn: false, ct);
+                    sourceDetail, sourceSnapshot, applyProtection: true, isScaleIn: false, ct);
             }
             catch (Exception ex)
             {
@@ -249,7 +250,7 @@ public sealed class CopyEngineHost(
     {
         if (!_sourceSymbolNames.TryGetValue(execution.SymbolId, out var sourceName)) return;
         var sourceDetail = await SymbolDetailAsync(session, plan.SourceCtidTraderAccountId, execution.SymbolId, ct);
-        var sourceBalance = await session.LoadBalanceAsync(plan.SourceCtidTraderAccountId, ct);
+        var sourceSnapshot = await AccountSnapshotAsync(session, plan.SourceCtidTraderAccountId, AnyDestinationNeedsEquity(), ct);
         var scaleInExecution = execution with { Volume = addedVolume };
 
         foreach (var destination in plan.Destinations)
@@ -258,7 +259,7 @@ public sealed class CopyEngineHost(
             try
             {
                 await CopyOpenToDestinationAsync(session, destination, scaleInExecution, sourceName,
-                    sourceDetail, sourceBalance, applyProtection: false, isScaleIn: true, ct);
+                    sourceDetail, sourceSnapshot, applyProtection: false, isScaleIn: true, ct);
             }
             catch (Exception ex)
             {
@@ -304,7 +305,7 @@ public sealed class CopyEngineHost(
 
         if (!_sourceSymbolNames.TryGetValue(execution.SymbolId, out var sourceName)) return;
         var sourceDetail = await SymbolDetailAsync(session, plan.SourceCtidTraderAccountId, execution.SymbolId, ct);
-        var sourceBalance = await session.LoadBalanceAsync(plan.SourceCtidTraderAccountId, ct);
+        var sourceSnapshot = await AccountSnapshotAsync(session, plan.SourceCtidTraderAccountId, AnyDestinationNeedsEquity(), ct);
         var price = execution.OrderKind is CopyOrderKind.Stop or CopyOrderKind.StopLimit
             ? execution.StopPrice ?? 0
             : execution.LimitPrice ?? 0;
@@ -321,7 +322,7 @@ public sealed class CopyEngineHost(
             try
             {
                 if (await PlacePendingToDestinationAsync(session, destination, execution, sourceName,
-                        sourceDetail, sourceBalance, price, ct))
+                        sourceDetail, sourceSnapshot, price, ct))
                     placedAny = true;
             }
             catch (Exception ex)
@@ -334,7 +335,7 @@ public sealed class CopyEngineHost(
     }
 
     private async Task<bool> PlacePendingToDestinationAsync(IOpenApiTradingSession session, CopyDestinationPlan destination,
-        ExecutionEvent execution, string sourceName, SymbolDetails sourceDetail, double sourceBalance, double price,
+        ExecutionEvent execution, string sourceName, SymbolDetails sourceDetail, AccountSnapshot sourceSnapshot, double price,
         CancellationToken ct)
     {
         var destinationName = destination.Config.ResolveDestinationSymbol(sourceName);
@@ -342,13 +343,14 @@ public sealed class CopyEngineHost(
             return false;
 
         var destinationDetail = await SymbolDetailAsync(session, destination.CtidTraderAccountId, destinationSymbolId, ct);
-        var destinationBalance = await session.LoadBalanceAsync(destination.CtidTraderAccountId, ct);
+        var destinationSnapshot = await AccountSnapshotAsync(
+            session, destination.CtidTraderAccountId, NeedsEquity(destination.Config.Risk.Mode), ct);
         var sourceLots = VolumeConversion.LotsFromProtocol(execution.Volume, sourceDetail.LotSize);
 
         var decision = decisions.DecideOpen(destination.Config, new OpenDecisionContext(
             new SourcePosition(execution.OrderId, sourceName, execution.IsBuy, sourceLots, price,
                 execution.StopLoss, execution.TakeProfit),
-            Snapshot(sourceBalance), Snapshot(destinationBalance),
+            sourceSnapshot, destinationSnapshot,
             Spec(sourceDetail), Spec(destinationDetail), price, Math.Pow(10, -destinationDetail.PipPosition),
             EventAge(execution), CopyDecisionEngine.ToOrderTypes(execution.OrderKind), execution.SlippageInPoints));
         if (decision.Kind != CopyActionKind.Open) return false;
@@ -431,7 +433,7 @@ public sealed class CopyEngineHost(
     }
 
     private async Task CopyOpenToDestinationAsync(IOpenApiTradingSession session, CopyDestinationPlan destination,
-        ExecutionEvent execution, string sourceName, SymbolDetails sourceDetail, double sourceBalance,
+        ExecutionEvent execution, string sourceName, SymbolDetails sourceDetail, AccountSnapshot sourceSnapshot,
         bool applyProtection, bool isScaleIn, CancellationToken ct)
     {
         var destinationName = destination.Config.ResolveDestinationSymbol(sourceName);
@@ -439,14 +441,15 @@ public sealed class CopyEngineHost(
             return;
 
         var destinationDetail = await SymbolDetailAsync(session, destination.CtidTraderAccountId, destinationSymbolId, ct);
-        var destinationBalance = await session.LoadBalanceAsync(destination.CtidTraderAccountId, ct);
+        var destinationSnapshot = await AccountSnapshotAsync(
+            session, destination.CtidTraderAccountId, NeedsEquity(destination.Config.Risk.Mode), ct);
         var sourceLots = VolumeConversion.LotsFromProtocol(execution.Volume, sourceDetail.LotSize);
 
         var decision = decisions.DecideOpen(destination.Config, new OpenDecisionContext(
             new SourcePosition(execution.PositionId, sourceName, execution.IsBuy, sourceLots,
                 execution.Price, execution.StopLoss, execution.TakeProfit),
-            Snapshot(sourceBalance),
-            Snapshot(destinationBalance),
+            sourceSnapshot,
+            destinationSnapshot,
             Spec(sourceDetail),
             Spec(destinationDetail),
             execution.Price,
@@ -563,7 +566,7 @@ public sealed class CopyEngineHost(
         _mirroredPendingOrders.RemoveWhere(id => !sourcePendingIds.Contains(id));
 
         var orphansClosed = 0;
-        var sourceBalance = await session.LoadBalanceAsync(plan.SourceCtidTraderAccountId, ct);
+        var sourceSnapshot = await AccountSnapshotAsync(session, plan.SourceCtidTraderAccountId, AnyDestinationNeedsEquity(), ct);
         foreach (var destination in plan.Destinations)
         {
             var destinationPositions = await session.ReconcileAsync(destination.CtidTraderAccountId, ct);
@@ -596,7 +599,7 @@ public sealed class CopyEngineHost(
                 try
                 {
                     await CopyOpenToDestinationAsync(session, destination, syntheticOpen, sourceName,
-                        sourceDetail, sourceBalance, applyProtection: true, isScaleIn: false, ct);
+                        sourceDetail, sourceSnapshot, applyProtection: true, isScaleIn: false, ct);
                 }
                 catch (Exception ex)
                 {
@@ -641,7 +644,34 @@ public sealed class CopyEngineHost(
         return age > TimeSpan.Zero ? age : TimeSpan.Zero;
     }
 
-    private static AccountSnapshot Snapshot(double balance) => new(balance, balance, balance);
+    // Real per-account sizing state (fixes G2). Balance is always read; equity is derived (the Open API
+    // never delivers it) as balance + floating P&L only for the equity-proportional modes, so the common
+    // path keeps its single balance round-trip. Free margin is reported as equity: used margin isn't
+    // exposed by the reconcile surface, so equity is the honest available-funds proxy (was plain balance).
+    private async Task<AccountSnapshot> AccountSnapshotAsync(
+        IOpenApiTradingSession session, long ctid, bool needsEquity, CancellationToken ct)
+    {
+        var balance = await session.LoadBalanceAsync(ctid, ct);
+        if (!needsEquity) return new AccountSnapshot(balance, balance, balance);
+
+        var valuations = await session.LoadPositionValuationsAsync(ctid, ct);
+        if (valuations.Count == 0) return new AccountSnapshot(balance, balance, balance);
+
+        var pricing = new Dictionary<long, SymbolPricing>();
+        foreach (var symbolId in valuations.Select(v => v.SymbolId).Distinct())
+        {
+            var (bid, ask) = await session.LoadSpotPriceAsync(ctid, symbolId, ct);
+            pricing[symbolId] = new SymbolPricing(symbolId, bid, ask);
+        }
+
+        var equity = _equityCalculator.Compute(balance, valuations, pricing).Equity;
+        return new AccountSnapshot(balance, equity, equity);
+    }
+
+    private bool AnyDestinationNeedsEquity() => plan.Destinations.Any(d => NeedsEquity(d.Config.Risk.Mode));
+
+    private static bool NeedsEquity(MoneyManagementMode mode)
+        => mode is MoneyManagementMode.ProportionalEquity or MoneyManagementMode.ProportionalFreeMargin;
 
     private static SymbolSpec Spec(SymbolDetails details)
     {

@@ -174,6 +174,24 @@ public sealed class AppFixture : IAsyncLifetime
         return await context.NewPageAsync();
     }
 
+    // Anonymous (signed-out) page — for the login screen and auth redirects.
+    public async Task<IPage> NewAnonymousPageAsync()
+    {
+        var context = await Browser.NewContextAsync(new() { BaseURL = BaseUrl });
+        _contexts.Add(context);
+        return await context.NewPageAsync();
+    }
+
+    // Anonymous page on emulated mobile hardware.
+    public async Task<IPage> NewAnonymousMobilePageAsync(string device = "iPhone 13")
+    {
+        var options = _playwright!.Devices[device];
+        options.BaseURL = BaseUrl;
+        var context = await Browser.NewContextAsync(options);
+        _contexts.Add(context);
+        return await context.NewPageAsync();
+    }
+
     private static int GetFreePort()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);

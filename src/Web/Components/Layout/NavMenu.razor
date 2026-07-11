@@ -1,5 +1,7 @@
 @using Core.Features
+@using Web.Components.Dialogs
 @inject IFeatureGate Gate
+@inject IDialogService Dialogs
 
 @* Expandable, grouped navigation (TradingView/cTrader-inspired). Feature-gated groups collapse to
    nothing when all their children are disabled. Settings is pinned to the bottom of the drawer. *@
@@ -10,7 +12,7 @@
 
         @if (AnyAuthoring)
         {
-            <MudNavGroup Title="cBots" Icon="@Icons.Material.Filled.Memory" Expanded="true">
+            <MudNavGroup Title="cBots" Icon="@Icons.Material.Filled.Memory" Expanded="false">
                 @if (Gate.IsEnabled(FeatureFlag.Authoring))
                 {
                     <MudNavLink Href="/cbots" Icon="@Icons.Material.Filled.Code">cBots</MudNavLink>
@@ -29,7 +31,7 @@
 
         @if (Gate.IsEnabled(FeatureFlag.Ai))
         {
-            <MudNavGroup Title="AI" Icon="@Icons.Material.Filled.AutoAwesome" Expanded="true">
+            <MudNavGroup Title="AI" Icon="@Icons.Material.Filled.AutoAwesome" Expanded="false">
                 <MudNavLink Href="/ai/build" Icon="@Icons.Material.Filled.Bolt">Build cBot</MudNavLink>
                 <MudNavLink Href="/ai/review" Icon="@Icons.Material.Filled.RateReview">Review</MudNavLink>
                 <MudNavLink Href="/ai/debate" Icon="@Icons.Material.Filled.Forum">Debate</MudNavLink>
@@ -37,7 +39,7 @@
                 <MudNavLink Href="/ai/exposure" Icon="@Icons.Material.Filled.Shield">Exposure Check</MudNavLink>
                 <MudNavLink Href="/ai/digest" Icon="@Icons.Material.Filled.Summarize">Portfolio Digest</MudNavLink>
                 <MudNavLink Href="/ai/tune" Icon="@Icons.Material.Filled.TrendingDown">Tune Advisor</MudNavLink>
-                <MudNavLink Href="/ai/optimize" Icon="@Icons.Material.Filled.Tune">Optimize</MudNavLink>
+                <MudNavLink Href="/ai/optimize" Icon="@Icons.Material.Filled.AutoFixHigh">Optimize</MudNavLink>
                 @if (Gate.IsEnabled(FeatureFlag.PortfolioAgent))
                 {
                     <MudNavLink Href="/agent" Icon="@Icons.Material.Filled.SmartToy">Portfolio Agent</MudNavLink>
@@ -55,7 +57,7 @@
 
         @if (AnyProp)
         {
-            <MudNavGroup Title="Prop" Icon="@Icons.Material.Filled.EmojiEvents" Expanded="true">
+            <MudNavGroup Title="Prop" Icon="@Icons.Material.Filled.EmojiEvents" Expanded="false">
                 @if (Gate.IsEnabled(FeatureFlag.PropGuard))
                 {
                     <MudNavLink Href="/prop-guard" Icon="@Icons.Material.Filled.Shield">Prop Guard</MudNavLink>
@@ -73,7 +75,7 @@
         }
         @if (Gate.IsEnabled(FeatureFlag.CopyTrading))
         {
-            <MudNavLink Href="/copy-trading" Icon="@Icons.Material.Filled.ContentCopy">Copy Trading</MudNavLink>
+            <MudNavLink Href="/copy-trading" Icon="@Icons.Material.Filled.Repeat">Copy Trading</MudNavLink>
         }
 
         <AuthorizeView Policy="AdminOrAbove">
@@ -84,25 +86,7 @@
 
     <MudDivider />
     <MudNavMenu>
-        <MudNavGroup Title="Settings" Icon="@Icons.Material.Filled.Settings" Expanded="false" data-testid="nav-settings">
-            @if (Gate.IsEnabled(FeatureFlag.OpenApi))
-            {
-                <MudNavLink Href="/settings/openapi" Icon="@Icons.Material.Filled.Api">Open API</MudNavLink>
-            }
-            @if (Gate.IsEnabled(FeatureFlag.Ai))
-            {
-                <AuthorizeView Policy="Owner">
-                    <MudNavLink Href="/settings/ai" Icon="@Icons.Material.Filled.AutoAwesome">AI</MudNavLink>
-                </AuthorizeView>
-            }
-            <AuthorizeView Policy="Owner">
-                <MudNavLink Href="/settings/features" Icon="@Icons.Material.Filled.ToggleOn">Features</MudNavLink>
-            </AuthorizeView>
-            @if (Gate.IsEnabled(FeatureFlag.Compliance))
-            {
-                <MudNavLink Href="/settings/legal" Icon="@Icons.Material.Filled.Gavel">Legal &amp; Privacy</MudNavLink>
-            }
-        </MudNavGroup>
+        <MudNavLink Icon="@Icons.Material.Filled.Settings" data-testid="nav-settings" OnClick="OpenSettings">Settings</MudNavLink>
     </MudNavMenu>
 </div>
 
@@ -118,4 +102,8 @@
 
     private bool AnyProp =>
         Gate.IsEnabled(FeatureFlag.PropGuard) || Gate.IsEnabled(FeatureFlag.PropFirm);
+
+    private Task OpenSettings() =>
+        Dialogs.ShowAsync<SettingsDialog>(string.Empty,
+            new DialogOptions { FullScreen = true, CloseOnEscapeKey = true });
 }

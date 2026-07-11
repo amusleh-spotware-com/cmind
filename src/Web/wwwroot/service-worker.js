@@ -1,7 +1,11 @@
 // App-shell service worker. Blazor Server needs a live SignalR circuit, so this cannot make the app
-// work fully offline — it makes the app installable, caches the static shell, and shows a friendly
-// offline page when the network is gone. It deliberately never touches the Blazor circuit/framework.
-const CACHE = 'cmind-shell-v1';
+// work fully offline — it makes the app installable and shows a friendly offline page when the network
+// is gone. It deliberately never touches the Blazor circuit/framework.
+//
+// Static assets are served NETWORK-FIRST: CSS/JS/icon updates are always fresh when online, and the cache
+// is only a fallback for offline. This avoids serving a stale stylesheet after a deploy. Bump CACHE when
+// changing the precached shell so old caches are cleared on activate.
+const CACHE = 'cmind-shell-v2';
 const SHELL = [
     '/offline.html',
     '/css/site.css',
@@ -44,17 +48,18 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Static assets: cache-first with background revalidate.
+    // Static assets: network-first so updates are never served stale; cache is the offline fallback.
     if (url.pathname.startsWith('/css') ||
         url.pathname.startsWith('/icons') ||
         url.pathname.startsWith('/_content')) {
         event.respondWith(
-            caches.match(req).then((cached) =>
-                cached || fetch(req).then((res) => {
+            fetch(req)
+                .then((res) => {
                     const copy = res.clone();
                     caches.open(CACHE).then((cache) => cache.put(req, copy));
                     return res;
-                }).catch(() => cached))
+                })
+                .catch(() => caches.match(req))
         );
     }
 });

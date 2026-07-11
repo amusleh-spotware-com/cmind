@@ -1,0 +1,87 @@
+﻿@using Core.Features
+@using Web.Components.Pages
+@inject IFeatureGate Gate
+
+@* Full-screen settings surface: a section list on the left, the selected settings panel on the right
+   (Claude-settings style), replacing the old nested Settings nav items. Opened from the nav. *@
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center" style="width:100%;">
+            <MudIcon Icon="@Icons.Material.Filled.Settings" Class="mr-2" />
+            <MudText Typo="Typo.h6">Settings</MudText>
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Filled.Close" aria-label="Close settings" OnClick="Close" />
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="app-settings" data-testid="settings-dialog">
+            <div class="app-settings-nav">
+                <MudNavMenu>
+                    @if (Gate.IsEnabled(FeatureFlag.OpenApi))
+                    {
+                        <MudNavLink Icon="@Icons.Material.Filled.Api" data-testid="settings-section-openapi"
+                                    OnClick="@(() => _active = Section.OpenApi)"
+                                    Class="@ActiveClass(Section.OpenApi)">Open API</MudNavLink>
+                    }
+                    @if (Gate.IsEnabled(FeatureFlag.Ai))
+                    {
+                        <AuthorizeView Policy="Owner">
+                            <MudNavLink Icon="@Icons.Material.Filled.AutoAwesome" data-testid="settings-section-ai"
+                                        OnClick="@(() => _active = Section.Ai)"
+                                        Class="@ActiveClass(Section.Ai)">AI</MudNavLink>
+                        </AuthorizeView>
+                    }
+                    <AuthorizeView Policy="Owner">
+                        <MudNavLink Icon="@Icons.Material.Filled.ToggleOn" data-testid="settings-section-features"
+                                    OnClick="@(() => _active = Section.Features)"
+                                    Class="@ActiveClass(Section.Features)">Features</MudNavLink>
+                    </AuthorizeView>
+                    @if (Gate.IsEnabled(FeatureFlag.Compliance))
+                    {
+                        <MudNavLink Icon="@Icons.Material.Filled.Gavel" data-testid="settings-section-legal"
+                                    OnClick="@(() => _active = Section.Legal)"
+                                    Class="@ActiveClass(Section.Legal)">Legal &amp; Privacy</MudNavLink>
+                    }
+                </MudNavMenu>
+            </div>
+            <div class="app-settings-content">
+                @switch (_active)
+                {
+                    case Section.OpenApi:
+                        <OpenApiApplications />
+                        break;
+                    case Section.Ai:
+                        <AuthorizeView Policy="Owner"><Authorized><AiSettings /></Authorized></AuthorizeView>
+                        break;
+                    case Section.Features:
+                        <AuthorizeView Policy="Owner"><Authorized><FeatureSettings /></Authorized></AuthorizeView>
+                        break;
+                    case Section.Legal:
+                        <Compliance />
+                        break;
+                }
+            </div>
+        </div>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    private enum Section { OpenApi, Ai, Features, Legal }
+
+    private Section _active = Section.Features;
+
+    protected override void OnInitialized()
+    {
+        // Default to the first section the deployment exposes; owners land on Features otherwise.
+        if (Gate.IsEnabled(FeatureFlag.OpenApi)) _active = Section.OpenApi;
+        else if (Gate.IsEnabled(FeatureFlag.Ai)) _active = Section.Ai;
+        else if (Gate.IsEnabled(FeatureFlag.Compliance)) _active = Section.Legal;
+    }
+
+    private string ActiveClass(Section section) => section == _active ? "app-settings-active" : "";
+
+    private void Close() => Dialog.Close();
+}

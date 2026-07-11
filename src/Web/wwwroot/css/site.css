@@ -315,6 +315,39 @@ html, body {
     margin-top: -8px;
 }
 
+/* ---- Settings full-screen dialog ------------------------------------------ */
+
+.app-settings {
+    display: flex;
+    min-height: 70vh;
+}
+.app-settings-nav {
+    flex: 0 0 220px;
+    border-right: 1px solid var(--app-border);
+    padding-right: 8px;
+}
+.app-settings-content {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 8px 8px 8px 24px;
+    overflow-y: auto;
+}
+.app-settings-active {
+    background: color-mix(in srgb, var(--app-primary) 14%, transparent);
+    border-radius: var(--app-radius);
+}
+
+@media (max-width: 600px) {
+    .app-settings { flex-direction: column; min-height: 0; }
+    .app-settings-nav {
+        flex-basis: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--app-border);
+        padding: 0 0 8px;
+    }
+    .app-settings-content { padding: 16px 0 0; }
+}
+
 /* ---- Coming-soon placeholder ---------------------------------------------- */
 
 .app-coming-soon {
@@ -364,7 +397,9 @@ html, body {
 
 /* ---- Blazor reconnect modal (themed) -------------------------------------- */
 
-#components-reconnect-modal.app-reconnect {
+/* Style off the ID (stable) — Blazor rewrites the element's class list when it toggles reconnect state,
+   so the base overlay must not depend on a custom class. */
+#components-reconnect-modal {
     display: none;
     position: fixed;
     inset: 0;

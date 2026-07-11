@@ -15,6 +15,13 @@ bug can cost users money, and stale docs mislead the AI agents that build on thi
    (Testcontainers); E2E drives the API/UI. Copy-trading and distributed/multi-node behavior must
    be covered including failure paths (connection drop, order-placement failure, desync/resync,
    token rotation/invalidation, node death + lease reclaim). `dotnet test` green before "done".
+
+   **Playwright E2E is MANDATORY for every user-facing feature.** Any new page, dialog, action, nav
+   entry, or endpoint a page calls ships a Playwright test in `tests/E2ETests` that drives the real UI
+   through `AppFixture` — create/edit/save round-trips, the happy path, and that the page renders without
+   tripping the Blazor error UI. A new API-only copy feature ships an authenticated API-level E2E hitting
+   its endpoint. No UI/feature is "done" without it; add it in the same commit. `PageSmokeTests` navigates
+   every static route — add new routes to it.
 2. **The fake trading simulator stays cTrader-faithful.** `tests/UnitTests/CopyTrading/FakeTradingSession.cs`
    must faithfully mimic real cTrader behavior (order types, expiry, slippage, partial close, SL/TP
    amend, trailing, disconnect/reconnect desync, token swap, rejections). Extend it when you add a
@@ -212,6 +219,13 @@ bug can cost users money, and stale docs mislead the AI agents that build on thi
    (Testcontainers); E2E drives the API/UI. Copy-trading and distributed/multi-node behavior must
    be covered including failure paths (connection drop, order-placement failure, desync/resync,
    token rotation/invalidation, node death + lease reclaim). `dotnet test` green before "done".
+
+   **Playwright E2E is MANDATORY for every user-facing feature.** Any new page, dialog, action, nav
+   entry, or endpoint a page calls ships a Playwright test in `tests/E2ETests` that drives the real UI
+   through `AppFixture` — create/edit/save round-trips, the happy path, and that the page renders without
+   tripping the Blazor error UI. A new API-only copy feature ships an authenticated API-level E2E hitting
+   its endpoint. No UI/feature is "done" without it; add it in the same commit. `PageSmokeTests` navigates
+   every static route — add new routes to it.
 2. **The fake trading simulator stays cTrader-faithful.** `tests/UnitTests/CopyTrading/FakeTradingSession.cs`
    must faithfully mimic real cTrader behavior (order types, expiry, slippage, partial close, SL/TP
    amend, trailing, disconnect/reconnect desync, token swap, rejections). Extend it when you add a

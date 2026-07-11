@@ -30,4 +30,31 @@ public sealed class SettingsDialogTests(AppFixture app)
         await page.Locator("[data-testid=settings-section-features]").ClickAsync();
         await page.GetByText("Turn main product features").WaitForAsync(new() { Timeout = 8000 });
     }
+
+    [Fact]
+    public async Task Every_settings_section_renders_and_close_dismisses()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        await page.Locator("[data-testid=nav-settings]").ClickAsync();
+        var dialog = page.Locator("[data-testid=settings-dialog]");
+        await dialog.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
+
+        await page.Locator("[data-testid=settings-section-ai]").ClickAsync();
+        await page.GetByLabel("Anthropic API key").WaitForAsync(new() { Timeout = 8000 });
+
+        await page.Locator("[data-testid=settings-section-openapi]").ClickAsync();
+        await page.GetByText("Open API application", new() { Exact = false }).First
+            .WaitForAsync(new() { Timeout = 8000 });
+
+        await page.Locator("[data-testid=settings-section-legal]").ClickAsync();
+        await page.GetByText("Agreements").WaitForAsync(new() { Timeout = 8000 });
+
+        (await page.Locator("[data-testid=page-error]").IsVisibleAsync()).Should().BeFalse();
+
+        await page.GetByRole(AriaRole.Button, new() { Name = "Close settings" }).ClickAsync();
+        await dialog.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 8000 });
+    }
 }

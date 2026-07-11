@@ -230,7 +230,7 @@ public sealed class DockerService(IOptionsMonitor<NodeAgentOptions> options, ILo
         if (s.EndsWith("GiB", StringComparison.Ordinal)) { mult = 1024L * 1024 * 1024; s = s[..^3]; }
         else if (s.EndsWith("MiB", StringComparison.Ordinal)) { mult = 1024L * 1024; s = s[..^3]; }
         else if (s.EndsWith("KiB", StringComparison.Ordinal)) { mult = 1024L; s = s[..^3]; }
-        else if (s.EndsWith("B", StringComparison.Ordinal)) { s = s[..^1]; }
+        else if (s.EndsWith('B')) { s = s[..^1]; }
         double.TryParse(s, CultureInfo.InvariantCulture, out var v);
         return (long)(v * mult);
     }

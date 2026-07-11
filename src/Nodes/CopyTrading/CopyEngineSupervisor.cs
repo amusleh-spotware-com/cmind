@@ -225,7 +225,7 @@ public sealed class CopyEngineSupervisor(
             $"{plan.SourceAccessToken}:{plan.SourceTokenVersion}",
             string.Join(',', plan.Destinations.Select(d => $"{d.AccessToken}:{d.TokenVersion}")));
 
-    private static IReadOnlyList<(long Ctid, string Token)> PlanTokens(CopyProfilePlan plan)
+    private static List<(long Ctid, string Token)> PlanTokens(CopyProfilePlan plan)
     {
         var tokens = new List<(long Ctid, string Token)> { (plan.SourceCtidTraderAccountId, plan.SourceAccessToken) };
         tokens.AddRange(plan.Destinations.Select(d => (d.CtidTraderAccountId, d.AccessToken)));

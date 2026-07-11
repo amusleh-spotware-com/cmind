@@ -37,6 +37,8 @@ public sealed class MobileLayoutTests(AppFixture app)
 
         (await page.Locator(".blazor-error-ui").IsVisibleAsync())
             .Should().BeFalse($"{route} tripped the Blazor error UI on mobile");
+        (await page.Locator("[data-testid=page-error]").IsVisibleAsync())
+            .Should().BeFalse($"{route} tripped the ErrorBoundary on mobile");
 
         await page.Locator("[data-testid=bottom-nav]").WaitForAsync(new() { State = WaitForSelectorState.Visible });
         (await page.Locator("[data-testid=bottom-nav]").IsVisibleAsync())

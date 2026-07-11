@@ -31,6 +31,11 @@ public sealed class PageSmokeTests(AppFixture app)
         var errorUi = page.Locator(".blazor-error-ui");
         (await errorUi.IsVisibleAsync()).Should().BeFalse($"{route} tripped the Blazor error UI (interactive crash)");
 
+        // The app's ErrorBoundary catches component exceptions without tripping .blazor-error-ui, so
+        // assert it too — otherwise a thrown page (e.g. a gated-off API 404) slips past this smoke test.
+        (await page.Locator("[data-testid=page-error]").IsVisibleAsync())
+            .Should().BeFalse($"{route} tripped the ErrorBoundary (component threw)");
+
         // The app shell rendered (the MudBlazor layout app bar) — the page did not blank out.
         (await page.Locator(".mud-appbar, header, nav").CountAsync()).Should().BeGreaterThan(0, $"{route} did not render the shell");
     }

@@ -27,7 +27,7 @@ extended) · ⬜ not yet modeled.
 | F10 | Events carry **server timestamps** | ✅ | `ExecutionEvent.ServerTimestamp` (unix ms) — real session reads it from the deal's `ExecutionTimestamp`; `PushOpen`/`PushPending` accept `serverTimestamp:` so a `FakeTimeProvider`-driven test drives real copy latency (G1). |
 | F11 | **Trading mode / schedule** (disabled / close-only / closed) | ⬜ | Planned Phase 2b. |
 | F12 | **Typed error taxonomy** (`ProtoOAErrorRes` codes) | ✅ | `RejectReasonForCtid[ctid] = CtraderRejectReason.X` throws one-shot `CtraderRejectException(reason)` (NotEnoughMoney, MarketClosed, PositionNotFound, …). |
-| F13 | **Token invalidation** — stale token → auth error | ✅ | `InvalidateToken(ctid)` marks the attached token stale; trading calls throw `CtraderTokenInvalidException` until `SwapAccessTokenAsync` installs a fresh token. |
+| F13 | **Token invalidation** — stale token → auth error | ✅ | `InvalidateToken(ctid)` marks the attached token stale; trading calls throw the **real** `OpenApiException` with `OpenApiErrorKind.TokenInvalid` (code `CH_ACCESS_TOKEN_INVALID`), exactly as the live server does, until `SwapAccessTokenAsync` installs a fresh token. Feeds the M1 token-robustness test. |
 
 Fidelity tests live in `tests/UnitTests/CopyTrading/FakeTradingSessionFidelityTests.cs`.
 

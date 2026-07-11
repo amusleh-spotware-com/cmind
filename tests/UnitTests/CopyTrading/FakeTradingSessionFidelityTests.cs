@@ -1,4 +1,5 @@
-﻿using CTraderOpenApi.Client;
+﻿using CTraderOpenApi;
+using CTraderOpenApi.Client;
 using FluentAssertions;
 using Xunit;
 
@@ -107,7 +108,8 @@ public sealed class FakeTradingSessionFidelityTests
         session.InvalidateToken(Ctid);
 
         var act = () => session.SendMarketOrderAsync(Ctid, SymbolId, isBuy: true, volume: 100, "l", CancellationToken.None);
-        await act.Should().ThrowAsync<CtraderTokenInvalidException>();
+        (await act.Should().ThrowAsync<OpenApiException>()).Which.Error.Kind
+            .Should().Be(OpenApiErrorKind.TokenInvalid);
 
         await session.SwapAccessTokenAsync(Ctid, "tok-2", CancellationToken.None);
         await session.SendMarketOrderAsync(Ctid, SymbolId, isBuy: true, volume: 100, "l", CancellationToken.None);
@@ -125,10 +127,10 @@ public sealed class FakeTradingSessionFidelityTests
         var cancel = () => session.CancelOrderAsync(Ctid, 8001, CancellationToken.None);
         var amendPending = () => session.AmendPendingOrderAsync(Ctid, 8001, CopyOrderKind.Limit, 100, 1.05, null, null, CancellationToken.None);
 
-        await close.Should().ThrowAsync<CtraderTokenInvalidException>();
-        await amendSltp.Should().ThrowAsync<CtraderTokenInvalidException>();
-        await cancel.Should().ThrowAsync<CtraderTokenInvalidException>();
-        await amendPending.Should().ThrowAsync<CtraderTokenInvalidException>();
+        await close.Should().ThrowAsync<OpenApiException>();
+        await amendSltp.Should().ThrowAsync<OpenApiException>();
+        await cancel.Should().ThrowAsync<OpenApiException>();
+        await amendPending.Should().ThrowAsync<OpenApiException>();
     }
 
     [Fact]

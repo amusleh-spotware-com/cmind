@@ -225,6 +225,14 @@ public static partial class LogMessages
         Message = "Copy host token swapped in place: profile {ProfileId} account {Ctid}")]
     public static partial void CopyHostTokenSwapped(this ILogger logger, Guid profileId, long ctid);
 
+    [LoggerMessage(EventId = 1078, Level = LogLevel.Warning,
+        Message = "Copy access token invalidated: profile {ProfileId} account {Ctid} ({Code}) — awaiting refreshed token to auto-recover")]
+    public static partial void CopyTokenInvalidated(this ILogger logger, Guid profileId, long ctid, string code);
+
+    [LoggerMessage(EventId = 1079, Level = LogLevel.Warning,
+        Message = "Copy host restarted by watchdog: profile {ProfileId} (previous host exited/faulted)")]
+    public static partial void CopyHostRestarted(this ILogger logger, Guid profileId);
+
     // ---- Prop-firm challenge tracking ----
 
     [LoggerMessage(EventId = 1067, Level = LogLevel.Error, Message = "Prop-firm tracking supervisor cycle failed")]

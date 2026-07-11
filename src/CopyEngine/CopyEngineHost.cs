@@ -2,6 +2,7 @@ using System.Threading.Channels;
 using Core;
 using Core.Domain;
 using Core.Logging;
+using CTraderOpenApi;
 using CTraderOpenApi.Client;
 using Microsoft.Extensions.Logging;
 
@@ -189,6 +190,7 @@ public sealed class CopyEngineHost(
             catch (Exception ex)
             {
                 CopyMetrics.Instance.CopyFailed(destination.CtidTraderAccountId);
+                NoteIfTokenInvalidated(ex, destination.CtidTraderAccountId);
                 logger.CopyOpenFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, ex);
             }
         }
@@ -243,6 +245,7 @@ public sealed class CopyEngineHost(
             }
             catch (Exception ex)
             {
+                NoteIfTokenInvalidated(ex, destination.CtidTraderAccountId);
                 logger.CopyCloseFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, ex);
             }
         }
@@ -266,6 +269,7 @@ public sealed class CopyEngineHost(
             }
             catch (Exception ex)
             {
+                NoteIfTokenInvalidated(ex, destination.CtidTraderAccountId);
                 logger.CopyOpenFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, ex);
             }
         }
@@ -293,6 +297,7 @@ public sealed class CopyEngineHost(
             }
             catch (Exception ex)
             {
+                NoteIfTokenInvalidated(ex, destination.CtidTraderAccountId);
                 logger.CopyOpenFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, ex);
             }
         }
@@ -330,6 +335,7 @@ public sealed class CopyEngineHost(
             }
             catch (Exception ex)
             {
+                NoteIfTokenInvalidated(ex, destination.CtidTraderAccountId);
                 logger.CopyOpenFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.OrderId, ex);
             }
         }
@@ -402,6 +408,7 @@ public sealed class CopyEngineHost(
             }
             catch (Exception ex)
             {
+                NoteIfTokenInvalidated(ex, destination.CtidTraderAccountId);
                 logger.CopyOpenFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.OrderId, ex);
             }
         }
@@ -430,6 +437,7 @@ public sealed class CopyEngineHost(
             }
             catch (Exception ex)
             {
+                NoteIfTokenInvalidated(ex, destination.CtidTraderAccountId);
                 logger.CopyCloseFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, sourceOrderId, ex);
             }
         }
@@ -552,6 +560,7 @@ public sealed class CopyEngineHost(
             }
             catch (Exception ex)
             {
+                NoteIfTokenInvalidated(ex, destination.CtidTraderAccountId);
                 logger.CopyCloseFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, sourcePositionId, ex);
             }
         }
@@ -652,6 +661,17 @@ public sealed class CopyEngineHost(
         if (execution.ServerTimestamp is not { } serverTimestamp) return TimeSpan.Zero;
         var age = timeProvider.GetUtcNow() - DateTimeOffset.FromUnixTimeMilliseconds(serverTimestamp);
         return age > TimeSpan.Zero ? age : TimeSpan.Zero;
+    }
+
+    // M1: a trading call rejected because the account's access token was invalidated (a partial/again-auth
+    // on the cID kills the old token). Surface it as a distinct alert so the operator/notification channel
+    // knows to recover; the supervisor's next cycle pushes the refreshed token and the in-place swap
+    // resumes copying — no manual re-add. Returns true when the exception was a token-invalid one.
+    private bool NoteIfTokenInvalidated(Exception ex, long ctid)
+    {
+        if (ex is not OpenApiException { Error.Kind: OpenApiErrorKind.TokenInvalid } tokenException) return false;
+        logger.CopyTokenInvalidated(plan.ProfileId.Value, ctid, tokenException.Error.Code);
+        return true;
     }
 
     // Real per-account sizing state (fixes G2). Balance is always read; equity is derived (the Open API

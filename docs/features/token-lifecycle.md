@@ -40,9 +40,28 @@ on every refresh, so the new refresh token is persisted immediately; a read-only
 persist would self-invalidate (relevant to the in-cluster test Job, which mounts a writable copy
 of the secret).
 
+## Invalidation alert & auto-recovery (M1)
+
+A partial/again-authorization on a cID invalidates the token a running copy host still holds. When a
+trading call rejects with `OpenApiErrorKind.TokenInvalid`, the host raises a distinct
+**`CopyTokenInvalidated`** alert (log 1078) — not a generic failure — so the notification channel knows a
+token needs attention. Recovery is automatic: the supervisor re-reads the authorization each cycle and,
+when the refreshed token changes the token signature, pushes it into the running host for an **in-place
+swap** — copying resumes with no manual re-add. A `NotLinkable` profile (token/auth temporarily
+unresolvable) is likewise re-evaluated every supervisor cycle and hosted the moment its plan builds again.
+
+## Host liveness watchdog (M2)
+
+The supervisor watches each hosted profile's run task. If a host exits or faults while its profile is
+still assigned to this node, the watchdog cancels and **restarts** it next cycle (log
+`CopyHostRestarted`), so a wedged host self-heals instead of needing a manual restart — and one profile's
+failure never stalls the others (per-profile isolation).
+
 ## Tests
 
 - **Unit** — `TokenVersion` bumps on `Refresh`; host performs an in-place swap without restart;
-  cross-cID invalidation swaps source and destination tokens.
+  cross-cID invalidation swaps source and destination tokens; **an invalidated destination token raises
+  `CopyTokenInvalidated` and auto-recovers on the next token push** (M1); the watchdog `IsHostDead`
+  decision restarts a completed/faulted host and leaves a reassigned profile alone (M2).
 - **Integration** — `TokenVersion` persists + increments through EF on real Postgres; the token
   signature changes on a version bump even if the string is unchanged.

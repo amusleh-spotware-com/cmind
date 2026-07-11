@@ -72,6 +72,16 @@ public sealed class CopyEngineSupervisor(
             _running.TryRemove(id, out _);
         }
 
+        // Watchdog (M2): a host whose task has exited or faulted while its profile is still ours is wedged
+        // or dead. Drop it so the hosting loop below restarts it with a fresh plan/token — one profile's
+        // crash never stalls the others (per-profile isolation), and "just restart it" is automatic.
+        foreach (var (id, handle) in _running.ToArray())
+        {
+            if (!IsHostDead(handle.Task, id, mineIds)) continue;
+            handle.Cts.Cancel();
+            if (_running.TryRemove(id, out _)) log.CopyHostRestarted(id.Value);
+        }
+
         foreach (var profile in mine)
         {
             var plan = await BuildPlanAsync(db, protector, profile, stoppingToken);
@@ -121,6 +131,11 @@ public sealed class CopyEngineSupervisor(
         => db.CopyProfiles
             .Where(p => p.Status == CopyProfileStatus.Running && p.AssignedNode == node.Value)
             .ExecuteUpdateAsync(s => s.SetProperty(p => p.LeaseExpiresAt, leaseUntil), ct);
+
+    // A hosted profile's host is dead when its run task has completed (ran to completion or faulted) while
+    // the profile is still assigned to this node. Pure so the watchdog decision is unit-tested without a DB.
+    internal static bool IsHostDead(Task hostTask, CopyProfileId id, IReadOnlySet<CopyProfileId> mineIds)
+        => mineIds.Contains(id) && hostTask.IsCompleted;
 
     private NodeIdentity ResolveNode()
     {

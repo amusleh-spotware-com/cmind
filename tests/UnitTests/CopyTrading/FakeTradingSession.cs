@@ -32,11 +32,6 @@ internal sealed class CtraderRejectException(CtraderRejectReason reason)
     public CtraderRejectReason Reason { get; } = reason;
 }
 
-// Thrown when an order/close is issued on an account whose access token was invalidated (F13). The real
-// server answers a stale token with an auth error; modeling it here feeds the token-robustness tests (M1).
-internal sealed class CtraderTokenInvalidException(long ctidTraderAccountId)
-    : InvalidOperationException($"access token invalidated for account {ctidTraderAccountId}");
-
 // Captures log records so tests can assert the copy audit trail fires.
 internal sealed class CapturingLogger : ILogger
 {
@@ -345,7 +340,7 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
     private void EnsureTokenValid(long ctid)
     {
         if (_accountTokens.TryGetValue(ctid, out var token) && _invalidTokens.Contains(token))
-            throw new CtraderTokenInvalidException(ctid);
+            throw new OpenApiException(OpenApiError.Classify("CH_ACCESS_TOKEN_INVALID", "access token invalidated", null));
     }
 
     // Consumes a one-shot typed rejection queued for this account (F12), throwing the exact reason once.

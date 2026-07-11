@@ -24,3 +24,16 @@ AI unconfigured → AI pages dim actions, show banner plus one-time dialog promp
 ## Configuration
 
 `App:Ai` — `ApiKey`, `Model` (default `claude-opus-4-8`), `BaseUrl`, `MaxTokens`, `RiskGuardEnabled`, `RiskGuardAutoStop`, `RiskGuardInterval`. Runtime key set in Settings → AI stored encrypted, precedes `ApiKey`. For tests/dev, config key lives in unified [dev-credentials file](../testing/dev-credentials.md) under `Ai.ApiKey`.
+## Reliability
+
+The Anthropic provider is treated as unreliable — nothing it does can take the app down:
+
+- **Graceful degradation.** Every failure mode (no key, HTTP 4xx/5xx/429, timeout, malformed body,
+  empty content) returns a typed `AiResult.Fail(reason)` — the client never throws into a page, MCP
+  tool, or hosted service (`AiRiskGuard`). With no key set, all features return the disabled message
+  and the app runs unchanged.
+- **Resilience pipeline.** `AddAiHttpClient` gives the AI `HttpClient` a bounded retry on transient
+  5xx / network failures (exponential backoff + jitter) plus generous per-attempt and total timeouts
+  (`AiHttp` constants) — completions are long-running (web search, vision, self-repair loops).
+- **Tested.** Failure-path unit tests cover disabled / 429 / 5xx / 4xx / malformed / empty / success;
+  an integration test asserts the pipeline retries a transient failure then succeeds.

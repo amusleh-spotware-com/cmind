@@ -86,7 +86,7 @@ public static class DependencyInjection
         services.AddHttpClient<IGithubContainerRegistryTagProvider, GithubContainerRegistryTagProvider>();
         services.AddScoped<CBotBuilder>();
         services.AddScoped<IAiKeyStore, AiKeyStore>();
-        services.AddHttpClient<IAiClient, AnthropicAiClient>();
+        services.AddAiHttpClient();
         services.AddScoped<IAiFeatureService, AiFeatureService>();
         return services;
     }

@@ -43,6 +43,17 @@ public static class NodeAgentHttp
     public const int WriteTimeoutSeconds = 30;
 }
 
+public static class AiHttp
+{
+    // AI completions are long-running (web search, vision, self-repair loops) so the timeouts are
+    // generous. Transient 5xx / network failures are retried; the client always degrades to a typed
+    // AiResult.Fail rather than throwing into a page, tool, or hosted service.
+    public const int RetryCount = 2;
+    public const int RetryBaseDelaySeconds = 1;
+    public const int AttemptTimeoutSeconds = 120;
+    public const int TotalTimeoutSeconds = 300;
+}
+
 public static class AuthSchemes
 {
     public const string McpKey = nameof(McpKey);

@@ -112,3 +112,6 @@ it in `db.Database.CreateExecutionStrategy().ExecuteAsync(...)` — otherwise it
 - [ ] Distinct `App:Copy:NodeName` per co-located supervisor (K8s: default per-pod fine).
 - [ ] `LeaseTtl` ≥ 3× `ReconcileInterval`.
 - [ ] Node agents deployed where privileged Docker available (AKS/EKS/EC2/VM, not Fargate).
+- [ ] Multi-replica Web: set the `signalr` connection string (Redis backplane) **and** enable ingress
+      session affinity (sticky sessions) so a Blazor circuit reconnects to a live pod. A component
+      exception is caught by the `MainLayout` `ErrorBoundary` (friendly retry, circuit stays alive).

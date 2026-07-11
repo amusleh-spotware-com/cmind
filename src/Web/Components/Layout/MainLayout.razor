@@ -24,11 +24,25 @@
     </MudDrawer>
     <MudMainContent>
         <MudContainer MaxWidth="MaxWidth.False" Class="pa-2 pa-md-6">
-            @Body
+            <ErrorBoundary @ref="_errorBoundary">
+                <ChildContent>
+                    @Body
+                </ChildContent>
+                <ErrorContent>
+                    <MudAlert Severity="Severity.Error" Class="my-4" data-testid="page-error">
+                        Something went wrong on this page.
+                        <MudButton Class="ml-2" Variant="Variant.Text" Color="Color.Inherit"
+                                   OnClick="RecoverError">Retry</MudButton>
+                    </MudAlert>
+                </ErrorContent>
+            </ErrorBoundary>
         </MudContainer>
     </MudMainContent>
 </MudLayout>
 
 @code {
     private bool _drawerOpen = true;
+    private ErrorBoundary? _errorBoundary;
+
+    private void RecoverError() => _errorBoundary?.Recover();
 }

@@ -40,7 +40,7 @@ public sealed class CopyMarketplaceTests : IAsyncLifetime
         {
             var user = RegularUser.Create(new Email($"u{Guid.NewGuid():N}@example.com"), "hash", new byte[] { 1 });
             seed.Add(user);
-            var listing = CopyProviderListing.Create(user.Id, profileId, "Alpha", "desc", 20, verifiedLive: true);
+            var listing = CopyProviderListing.Create(user.Id, profileId, "Alpha", "desc", new PerformanceFee(20), verifiedLive: true);
             listing.Publish(TestClock.Now);
             seed.Add(listing);
             await seed.SaveChangesAsync();
@@ -63,12 +63,12 @@ public sealed class CopyMarketplaceTests : IAsyncLifetime
             var user = RegularUser.Create(new Email($"u{Guid.NewGuid():N}@example.com"), "hash", new byte[] { 1 });
             seed.Add(user);
             userId = user.Id;
-            seed.Add(CopyProviderListing.Create(user.Id, profileId, "Alpha", null, 0, false));
+            seed.Add(CopyProviderListing.Create(user.Id, profileId, "Alpha", null, PerformanceFee.None, false));
             await seed.SaveChangesAsync();
         }
 
         await using var db = NewContext();
-        db.Add(CopyProviderListing.Create(userId, profileId, "Beta", null, 0, false));
+        db.Add(CopyProviderListing.Create(userId, profileId, "Beta", null, PerformanceFee.None, false));
         var act = async () => await db.SaveChangesAsync();
         await act.Should().ThrowAsync<DbUpdateException>("the unique index forbids a second listing for the profile");
     }

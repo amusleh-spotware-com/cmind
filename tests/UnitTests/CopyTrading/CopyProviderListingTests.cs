@@ -12,12 +12,12 @@ public sealed class CopyProviderListingTests
     private static readonly DateTimeOffset Now = new(2026, 07, 11, 12, 0, 0, TimeSpan.Zero);
 
     private static CopyProviderListing New(string name = "Alpha Strategy", bool verifiedLive = true)
-        => CopyProviderListing.Create(UserId.New(), CopyProfileId.New(), name, "desc", 20, verifiedLive);
+        => CopyProviderListing.Create(UserId.New(), CopyProfileId.New(), name, "desc", new PerformanceFee(20), verifiedLive);
 
     [Fact]
     public void Create_requires_a_display_name()
     {
-        var act = () => CopyProviderListing.Create(UserId.New(), CopyProfileId.New(), "  ", null, 0, false);
+        var act = () => CopyProviderListing.Create(UserId.New(), CopyProfileId.New(), "  ", null, PerformanceFee.None, false);
         act.Should().Throw<DomainException>();
     }
 
@@ -59,7 +59,7 @@ public sealed class CopyProviderListingTests
     {
         var listing = New();
 
-        listing.UpdateDetails("Beta Strategy", "new desc", 15, verifiedLive: false);
+        listing.UpdateDetails("Beta Strategy", "new desc", new PerformanceFee(15), verifiedLive: false);
 
         listing.DisplayName.Should().Be("Beta Strategy");
         listing.Description.Should().Be("new desc");

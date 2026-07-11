@@ -1096,22 +1096,22 @@ public class CopyProviderListing : AuditedEntity<CopyProviderListingId>
     public DateTimeOffset? PublishedAt { get; private set; }
 
     public static CopyProviderListing Create(UserId userId, CopyProfileId profileId, string displayName,
-        string? description, double performanceFeePercent, bool verifiedLive)
+        string? description, PerformanceFee performanceFee, bool verifiedLive)
         => new()
         {
             UserId = userId,
             ProfileId = profileId,
             DisplayName = DomainGuard.AgainstNullOrWhiteSpace(displayName, DomainErrors.NameRequired),
             Description = description ?? string.Empty,
-            PerformanceFeePercent = performanceFeePercent,
+            PerformanceFeePercent = performanceFee.Percent,
             VerifiedLive = verifiedLive
         };
 
-    public void UpdateDetails(string displayName, string? description, double performanceFeePercent, bool verifiedLive)
+    public void UpdateDetails(string displayName, string? description, PerformanceFee performanceFee, bool verifiedLive)
     {
         DisplayName = DomainGuard.AgainstNullOrWhiteSpace(displayName, DomainErrors.NameRequired);
         Description = description ?? string.Empty;
-        PerformanceFeePercent = performanceFeePercent;
+        PerformanceFeePercent = performanceFee.Percent;
         VerifiedLive = verifiedLive;
     }
 

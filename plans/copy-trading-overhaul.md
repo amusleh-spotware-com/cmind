@@ -686,3 +686,52 @@ Each phase updates the relevant subset below; a final pass reconciles the whole 
   [Tradesyncer troubleshooting](https://help.tradesyncer.com/en/articles/13905201-troubleshoot-trade-copying)
 </content>
 </invoke>
+
+---
+
+## Implementation status — SHIPPED (2026-07-11)
+
+**The whole plan is implemented and on `main`.** Phases 0 / 0a / 0.5 / 1 / 2 / 2b / 2c / 3 / 4 / 5 all complete.
+
+### This session's increments (commits `6866f8a` … `1432240`)
+- **G4** bounded-parallel destination dispatch + the **actual DST root-cause fix**: the failure blamed on
+  G4/G5 was a *pre-existing baseline red* — the G8 rejection breaker was gating **resync heals**, so a
+  tripped destination could never reconverge. Fixed with a `fromResync` bypass (still honors
+  account-protection + prop-lockout latches). `_symbolDetails`/`_destinationHealth` → ConcurrentDictionary.
+- **G5** one-shot partial-fill true-up (`_pendingTrueUp`, cleared by any lifecycle event → no phantom
+  top-up after a master partial close).
+- **G7** local position cache for the mirror read paths (invalidate-on-open, precise close/amend updates).
+- **Phase 3 transparency**: `ICopyEventSink` → `ChannelCopyEventSink` → `CopyExecutionDrainer` →
+  `CopyExecution` log; `GET /api/copy/profiles/{id}/transparency`. Gated `App:Copy:TransparencyEnabled`.
+- **2b notification routing**: dedicated `CopyNotification` feed (NOT bent into the market `AlertRule`
+  aggregate); host raises tripped/protection/prop-breach/flatten; `GET /api/copy/notifications` + ack.
+- **Phase 4 fees**: high-water-mark performance fee (`CopyDestination.SettleFee`, `PerformanceFee` VO ≤50%),
+  `CopyFeeSettlementService` (settles only profiles the node hosts → no multi-node double-charge),
+  `CopyFeeAccrual` log, `GET /profiles/{id}/fees`. Gated `App:Copy:FeesEnabled`.
+- **Phase 4 marketplace**: `CopyProviderListing` aggregate, verified-live from the source account,
+  ranked read model over the transparency log (SQL `GroupBy` aggregation), publish/unpublish + `/marketplace`.
+- **Phase 5 S5**: copy-agent cloud IaC (Azure Container App + Key Vault; AWS ECS + Secrets Manager).
+- **Live framework**: `LiveCopyMatrix` (7-row option matrix) + `LiveCopyChaos` (start-with-open resync),
+  self-cleaning, Inconclusive on closed market.
+
+### Deviations from the plan
+- **Notification routing** → a dedicated copy-notification feed rather than the market `AlertRule` aggregate
+  (the latter is symbol/AI-interval oriented and doesn't fit discrete operational events). Cleaner bounded
+  context; decided with the user.
+- **Fee model** = high-water-mark performance fee (cTrader Copy / Darwinex / ZuluTrade), per the user's
+  "follow other platforms". Settlement gated to the hosting node to avoid double-charge.
+- The host→DB spine (`ICopyEventSink` / `ICopyNotificationSink` / `ICopyEquityReader` + drainers, deduped
+  onto `CopyRecordChannel<T>` / `CopyChannelDrainer<T>`) is the reusable pattern for all host→DB flow.
+
+### Verification
+- Copy **DST 23/23** (gated every host change), copy **unit 214**, copy **integration ~11** (real Postgres).
+- **Live** against real cTrader demo: onboarding (fresh tokens) → CopyTradingLiveTests 8/8 + LiveCopyMatrix
+  7/7 + LiveCopyChaos 2/2.
+- **Kubernetes cluster E2E** (`scripts/k8s-e2e.sh`, kind): images built+loaded, chart deployed, in-cluster
+  test Job green, teardown — verified on Windows via the cygpath path fix.
+- Analyzer-clean on touched files (`dotnet format analyzers --severity info` +
+  `-p:AnalysisLevel=latest-all`); every code commit reviewer-passed.
+
+### Environment/creds-gated tails (self-serviceable — see docs/testing/live-copy-trading.md)
+Refresh live tokens with `CMIND_ONBOARD=1 dotnet test tests/E2ETests --filter ~OnboardingTests`; run the
+cluster suite with `scripts/k8s-e2e.sh` (or `k8s-e2e.ps1 -Wsl`); cloud IaC is declarative (not `apply`-ed here).

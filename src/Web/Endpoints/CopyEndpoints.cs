@@ -362,17 +362,17 @@ public static class CopyEndpoints
             var sourceLive = await db.TradingAccounts.Where(a => a.Id == profile.SourceAccountId)
                 .Select(a => (bool?)a.IsLive).FirstOrDefaultAsync(ct) ?? false;
 
+            var fee = new PerformanceFee(req.PerformanceFeePercent);
             var listing = await db.CopyProviderListings.FirstOrDefaultAsync(l => l.ProfileId == pid, ct);
             if (listing is null)
             {
-                listing = CopyProviderListing.Create(uid, pid, req.DisplayName, req.Description,
-                    req.PerformanceFeePercent, sourceLive);
+                listing = CopyProviderListing.Create(uid, pid, req.DisplayName, req.Description, fee, sourceLive);
                 listing.Publish(time.GetUtcNow());
                 db.CopyProviderListings.Add(listing);
             }
             else
             {
-                listing.UpdateDetails(req.DisplayName, req.Description, req.PerformanceFeePercent, sourceLive);
+                listing.UpdateDetails(req.DisplayName, req.Description, fee, sourceLive);
                 listing.Publish(time.GetUtcNow());
             }
             try

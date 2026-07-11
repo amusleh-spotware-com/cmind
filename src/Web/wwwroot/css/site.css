@@ -448,6 +448,25 @@ html, body {
     .app-login-spinner { animation: none; }
 }
 
+/* ---- Dialogs go near-full-screen on phones -------------------------------- */
+
+@media (max-width: 600px) {
+    .mud-dialog-container { align-items: stretch !important; }
+    .mud-dialog-container .mud-dialog {
+        width: 100vw !important;
+        min-width: 100vw !important;
+        max-width: 100vw !important;
+        margin: 0 !important;
+        max-height: 100dvh;
+        border-radius: 0 !important;
+        display: flex;
+        flex-direction: column;
+    }
+    .mud-dialog-container .mud-dialog .mud-dialog-content { flex: 1 1 auto; overflow-y: auto; }
+    /* Keep the action bar reachable above the on-screen keyboard / home indicator. */
+    .mud-dialog-container .mud-dialog .mud-dialog-actions { padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+}
+
 @media (max-width: 600px) {
     .mobile-stack > * { display: block !important; width: 100% !important; margin-bottom: 8px; }
     .app-login-card { padding: 32px 24px; }

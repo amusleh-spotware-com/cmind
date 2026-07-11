@@ -4,6 +4,9 @@
 [![CodeQL](https://github.com/amusleh-spotware-com/cmind/actions/workflows/codeql.yml/badge.svg)](https://github.com/amusleh-spotware-com/cmind/actions/workflows/codeql.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![.NET 10](https://img.shields.io/badge/.NET-10-512BD4.svg)](https://dotnet.microsoft.com/)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Good first issues](https://img.shields.io/badge/good%20first%20issues-open-7057ff.svg)](https://github.com/amusleh-spotware-com/cmind/labels/good%20first%20issue)
+[![AI-assisted PRs welcome](https://img.shields.io/badge/AI--assisted%20PRs-welcome-8A2BE2.svg)](AGENTS.md)
 
 **cMind is a multi-tenant trading operations platform for cTrader.** Build, backtest, run,
 and copy trading strategies at scale — with AI assistance built in — from one hardened,
@@ -59,8 +62,25 @@ step-by-step setup, see **[docs/deployment/local.md](docs/deployment/local.md)**
 .NET Aspire · Docker · gRPC/Protobuf (cTrader Open API) · Serilog + OpenTelemetry · MCP.
 Architecture follows strict Domain-Driven Design — see [CLAUDE.md](CLAUDE.md).
 
-## Contributing · Security · License
+## Contributing — we'd love your help 💛
 
-- Development guide and conventions: **[CLAUDE.md](CLAUDE.md)** and [CONTRIBUTING.md](CONTRIBUTING.md).
+**cMind is built by and for cTrader traders, quants, and developers.** Every bug report, doc fix, and
+PR makes it better — and you don't need to be a .NET expert to start. Traders who report precise
+cTrader behavior are as valuable as the people writing aggregates.
+
+- 🐛 [Report a bug](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml)
+  · 💡 [Request a feature](https://github.com/amusleh-spotware-com/cmind/issues/new?template=feature_request.yml)
+  · 💬 [Ask in Discussions](https://github.com/amusleh-spotware-com/cmind/discussions)
+- 🚀 **New here?** Start with a [good first issue](https://github.com/amusleh-spotware-com/cmind/labels/good%20first%20issue)
+  or the [10-minute first contribution](CONTRIBUTING.md#your-first-contribution-in-10-minutes).
+- 🤖 **AI-assisted contributions are welcome and encouraged** — the repo is agent-ready. See
+  **[AGENTS.md](AGENTS.md)** and [Contributing with agentic AI](CONTRIBUTING.md#contributing-with-agentic-ai-).
+- 📋 Full guide, PR/issue standards, and what we accept: **[CONTRIBUTING.md](CONTRIBUTING.md)**.
+  Architecture + conventions: **[CLAUDE.md](CLAUDE.md)**.
+
+Every merged contributor is credited. Come build the platform you wish existed. → **[Start here](CONTRIBUTING.md)**
+
+## Security · License
+
 - Report vulnerabilities per [SECURITY.md](SECURITY.md).
 - MIT licensed — see [LICENSE](LICENSE). Built with [Claude Code](https://claude.com/claude-code).

@@ -13,7 +13,9 @@ public sealed class PageSmokeTests(AppFixture app)
     public static IEnumerable<object[]> Routes() => new[]
     {
         "/", "/accounts", "/cbots", "/run", "/backtest", "/nodes", "/copy-trading", "/agent", "/alerts",
-        "/prop-firm", "/prop-guard", "/assistant", "/mcp", "/users", "/account",
+        "/prop-firm", "/prop-guard", "/mcp", "/users", "/account", "/optimize",
+        "/ai/build", "/ai/review", "/ai/debate", "/ai/sentiment", "/ai/exposure", "/ai/digest",
+        "/ai/tune", "/ai/optimize",
         "/settings/ai", "/settings/openapi", "/settings/features", "/settings/legal",
     }.Select(r => new object[] { r });
 

@@ -12,10 +12,13 @@ public sealed class AccessibilityTests(AppFixture app)
 {
     private static readonly string AxePath = Path.Combine(AppContext.BaseDirectory, "axe.min.js");
 
+    // color-contrast is theme-dependent (white-label) and checked separately. aria-dialog-name is a
+    // MudBlazor gap: MudMessageBox (the AI-not-configured popup) doesn't set an accessible name on its
+    // dialog element — framework chrome, not our markup.
     private const string RunAxe = @"async () => {
         const r = await axe.run(document, {
             resultTypes: ['violations'],
-            rules: { 'color-contrast': { enabled: false } }
+            rules: { 'color-contrast': { enabled: false }, 'aria-dialog-name': { enabled: false } }
         });
         return r.violations
             .filter(v => v.impact === 'critical' || v.impact === 'serious')
@@ -27,9 +30,8 @@ public sealed class AccessibilityTests(AppFixture app)
         "/", "/cbots", "/nodes", "/users", "/account",
         "/mcp", "/prop-firm", "/copy-trading", "/accounts", "/alerts", "/agent",
         "/settings/ai", "/settings/openapi", "/settings/features", "/settings/legal",
-        "/run", "/backtest", "/prop-guard",
-        // /assistant excluded: its only violations are MudBlazor's own tab-scroll-button chrome
-        // (unnamed) — a framework gap, not our markup. Its controls are all labelled text buttons.
+        "/run", "/backtest", "/prop-guard", "/optimize",
+        "/ai/build", "/ai/review", "/ai/optimize",
     }.Select(r => new object[] { r });
 
     [Theory]

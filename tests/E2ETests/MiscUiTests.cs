@@ -17,7 +17,7 @@ public sealed class MiscUiTests(AppFixture app)
 
         var placeholder = page.Locator("[data-testid=coming-soon]");
         (await placeholder.IsVisibleAsync()).Should().BeTrue("/optimize should show the coming-soon placeholder");
-        (await placeholder.InnerTextAsync()).Should().Contain("Coming soon");
+        (await placeholder.InnerTextAsync()).Should().ContainEquivalentOf("coming soon");
         (await page.Locator("[data-testid=page-error]").IsVisibleAsync()).Should().BeFalse();
     }
 

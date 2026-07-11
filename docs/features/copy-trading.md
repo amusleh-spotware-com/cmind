@@ -96,6 +96,10 @@ Set in the New Profile dialog, on the Copy Trading page's per-destination panel,
   (every copy closed) and **locked out** for the rest of the UTC day (new opens skipped as `prop_lockout`);
   a `CopyPropRuleBreached` alert fires. The lockout clears when the UTC day rolls over (a fresh
   baseline/peak is taken). Shares the same live-equity poll as account protection.
+- **Config lock** (C9) — freeze a destination's settings for a period (`POST …/destinations/{id}/lock`
+  with minutes). While locked, the destination cannot be removed (the aggregate rejects it with
+  `CopyDestinationConfigLocked`) — a deliberate guard against impulsive changes during a drawdown. The
+  lock expires automatically at its timestamp.
 - **Consistency pre-alert** (C10) — warn (once per UTC day) when a destination's **daily profit** reaches
   a configured percent of the day's opening equity (`CopyConsistencyThresholdApproaching`), so a
   prop-firm consistency rule can be respected *before* it trips. Profit-side, independent of the loss-side

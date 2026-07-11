@@ -55,6 +55,8 @@ public record AddCopyDestinationRequest(
 
 public record SymbolMapPair(string Source, string Destination);
 
+public record LockCopyDestinationRequest(int Minutes);
+
 public static class CopyEndpoints
 {
     public static IEndpointRouteBuilder MapCopyEndpoints(this IEndpointRouteBuilder app)
@@ -221,13 +223,25 @@ public static class CopyEndpoints
         });
 
         g.MapDelete("/profiles/{id:guid}/destinations/{destinationId:guid}", async (Guid id, Guid destinationId,
-            ICopyProfileRepository repo, ICurrentUser u, CancellationToken ct) =>
+            ICopyProfileRepository repo, ICurrentUser u, TimeProvider time, CancellationToken ct) =>
         {
             var profile = await repo.GetWithDestinationsAsync(CopyProfileId.From(id), ct);
             if (profile is null || profile.UserId != u.UserId!.Value) return Results.NotFound();
-            profile.RemoveDestination(CopyDestinationId.From(destinationId));
+            profile.RemoveDestination(CopyDestinationId.From(destinationId), time.GetUtcNow());
             await repo.SaveChangesAsync(ct);
             return Results.NoContent();
+        });
+
+        g.MapPost("/profiles/{id:guid}/destinations/{destinationId:guid}/lock", async (Guid id, Guid destinationId,
+            LockCopyDestinationRequest req, ICopyProfileRepository repo, ICurrentUser u, TimeProvider time, CancellationToken ct) =>
+        {
+            var profile = await repo.GetWithDestinationsAsync(CopyProfileId.From(id), ct);
+            if (profile is null || profile.UserId != u.UserId!.Value) return Results.NotFound();
+            var destination = profile.Destinations.FirstOrDefault(d => d.Id == CopyDestinationId.From(destinationId));
+            if (destination is null) return Results.NotFound();
+            destination.LockConfig(time.GetUtcNow().AddMinutes(req.Minutes));
+            await repo.SaveChangesAsync(ct);
+            return Results.Ok(new { destination.ConfigLockedUntil });
         });
 
         g.MapPost("/profiles/{id:guid}/{action}", async (Guid id, string action,

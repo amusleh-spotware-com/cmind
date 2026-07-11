@@ -130,6 +130,21 @@ public sealed class CopyRulesDomainTests
     }
 
     [Fact]
+    public void Config_locked_destination_cannot_be_removed_until_the_lock_expires()
+    {
+        var now = new DateTimeOffset(2026, 07, 11, 12, 00, 00, TimeSpan.Zero);
+        var profile = CopyProfile.Create(UserId.New(), "p", TradingAccountId.New());
+        var destination = profile.AddDestination(TradingAccountId.New(), RiskSettings.Default);
+        destination.LockConfig(now.AddMinutes(30));
+
+        var locked = () => profile.RemoveDestination(destination.Id, now);
+        locked.Should().Throw<DomainException>().Which.Message.Should().Be(DomainErrors.CopyDestinationConfigLocked);
+
+        profile.RemoveDestination(destination.Id, now.AddMinutes(31)); // lock expired -> removal allowed
+        profile.Destinations.Should().BeEmpty();
+    }
+
+    [Fact]
     public void Source_label_filter_matches_exactly_and_allows_all_when_unset()
     {
         var destination = Destination();

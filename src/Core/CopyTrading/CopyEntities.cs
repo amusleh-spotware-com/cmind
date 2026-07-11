@@ -84,6 +84,9 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     // Consistency pre-alert (C10): warn when a destination's daily profit reaches this percent of the day's
     // opening equity, so a prop-firm consistency rule can be respected before it trips. 0 = off.
     public double ConsistencyThresholdPercent { get; private set; }
+    // Config lock (C9): while set and in the future, the destination's settings are frozen against edits/
+    // removal — a deliberate guard against impulsive changes during a drawdown.
+    public DateTimeOffset? ConfigLockedUntil { get; private set; }
     public SymbolFilterMode SymbolFilterMode { get; private set; } = SymbolFilterMode.None;
     public IReadOnlyList<CopySymbolMapEntry> SymbolMaps => _symbolMaps;
     public IReadOnlyList<CopySymbolFilter> SymbolFilters => _symbolFilters;
@@ -153,6 +156,13 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
         DomainGuard.AgainstNegative(percent, DomainErrors.CopyRiskParameterInvalid);
         ConsistencyThresholdPercent = percent;
     }
+
+    public void LockConfig(DateTimeOffset until)
+    {
+        ConfigLockedUntil = until;
+    }
+
+    public bool IsConfigLocked(DateTimeOffset now) => ConfigLockedUntil is { } until && until > now;
 
     public void ConfigureSlippage(SlippagePips slippage)
     {
@@ -340,10 +350,12 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
         return destination;
     }
 
-    public void RemoveDestination(CopyDestinationId destinationId)
+    public void RemoveDestination(CopyDestinationId destinationId, DateTimeOffset now)
     {
         var destination = _destinations.FirstOrDefault(d => d.Id == destinationId);
         if (destination is null) return;
+        if (destination.IsConfigLocked(now))
+            throw new DomainException(DomainErrors.CopyDestinationConfigLocked);
         _destinations.Remove(destination);
     }
 

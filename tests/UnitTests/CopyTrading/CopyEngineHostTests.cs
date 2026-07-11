@@ -381,6 +381,26 @@ public sealed class CopyEngineHostTests
     }
 
     [Fact]
+    public async Task Stop_loss_price_is_normalized_to_destination_symbol_digits()
+    {
+        // The destination symbol quotes 3 digits; a master SL at finer precision must be rounded before the
+        // amend or the real server rejects it with INVALID_STOPLOSS_TAKEPROFIT (the cMAM M6 bug).
+        var session = new FakeTradingSession(
+            new Dictionary<long, string> { [SymbolId] = "EURUSD" },
+            new Dictionary<string, long> { ["EURUSD"] = SymbolId },
+            new SymbolDetails(SymbolId, LotSize: 100, StepVolume: 1, MinVolume: 1, PipPosition: 5, Digits: 3));
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d => d.SetCopyProtection(true, false))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushOpen(Source, 4801, SymbolId, isBuy: true, volume: 100, stopLoss: 1.23456);
+            await WaitUntil(() => session.Amends.Count == 1);
+        });
+
+        session.Amends.Single().StopLoss.Should().Be(1.235, "the stop-loss is normalized to the destination's 3 digits");
+    }
+
+    [Fact]
     public async Task Source_stop_loss_move_re_amends_the_copy()
     {
         var session = NewSession();

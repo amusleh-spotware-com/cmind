@@ -18,7 +18,7 @@ extended) · ⬜ not yet modeled.
 | F1 | Market order can **partial-fill** | ◑ | `PartialFillFractionForCtid[ctid] = f` fills only `f×volume`; reconcile then shows the gap the Phase‑1 true‑up (G5) closes. Accept→fill event pair still to come. |
 | F2 | Volume normalized to **step**, rejected below **min** / above **max** | ✅ | `VolumeBoundsForCtid[ctid] = (Step, Min, Max)` rounds down to step, throws `CtraderRejectException(VolumeTooLow/High)`. |
 | F3 | **Invalid SL/TP** rejected (side + digits) | ⬜ | Planned Phase 0a/1 (pairs with M6 SL/TP precision normalization). |
-| F4 | Prices **integer-scaled by digits**; `pipPosition` | ◑ | `PipPosition` on `SymbolDetails` drives market-range tolerance; full per-symbol digit scaling pending (needs `SymbolDetails` enrichment in Phase 1). |
+| F4 | Prices **integer-scaled by digits**; `pipPosition` | ◑ | `SymbolDetails` now carries `Digits` (and `MaxVolume`), populated from the real symbol; `PipPosition` drives market-range tolerance, `Digits` drives SL/TP precision normalization (M6). Full integer price scaling still pending. |
 | F5 | **Market-range** fills only if spot within `base ± slippage`, else rejects | ✅ | `IsMarketRangeRejected` compares live spot (`SetSpot`) to `baseSlippagePrice ± slippageInPoints`. Legacy `RejectMarketRangeForCtid` flag still forces a reject. |
 | F6 | **Pending trigger→fill** dual event (Order carries `positionId` + OPEN Position) | ◑ | `PushOpen(..., orderId:)` reproduces the filled-pending event; the FX‑Blue/cMAM double-copy dedupe is covered in `CopyEngineHostTests.Filled_pending_does_not_double_open`. |
 | F7 | **Server-driven closes** (SL/TP hit, stop-out) | ⬜ | Today closes are test-pushed (`PushClose`); price-driven SL/TP-hit + stop-out closes planned. |

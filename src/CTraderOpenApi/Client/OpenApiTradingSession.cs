@@ -42,7 +42,8 @@ public sealed record OpenPositionSnapshot(
 public sealed record PendingOrderSnapshot(
     long OrderId, long SymbolId, bool IsBuy, long Volume, CopyOrderKind Kind, double Price, string Label);
 
-public sealed record SymbolDetails(long SymbolId, long LotSize, long StepVolume, long MinVolume, int PipPosition);
+public sealed record SymbolDetails(long SymbolId, long LotSize, long StepVolume, long MinVolume, int PipPosition,
+    long MaxVolume = 0, int Digits = 0);
 
 public interface IOpenApiTradingSession : IAsyncDisposable
 {
@@ -416,7 +417,8 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
             request, (int)ProtoOAPayloadType.ProtoOaSymbolByIdReq, ct);
 
         return ProtoOASymbolByIdRes.Parser.ParseFrom(response.Payload).Symbol
-            .Select(s => new SymbolDetails(s.SymbolId, s.LotSize, s.StepVolume, s.MinVolume, s.PipPosition))
+            .Select(s => new SymbolDetails(s.SymbolId, s.LotSize, s.StepVolume, s.MinVolume, s.PipPosition,
+                s.MaxVolume, s.Digits))
             .ToList();
     }
 

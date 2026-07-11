@@ -297,7 +297,9 @@ public sealed class CopyEngineHost(
                 var trailing = destination.Config.CopyTrailingStop && execution.TrailingStopLoss;
                 var stopLoss = destination.Config.CopyStopLoss ? execution.StopLoss : null;
                 if (destination.Config.Reverse) stopLoss = destination.Config.CopyTakeProfit ? execution.TakeProfit : stopLoss;
-                await session.AmendPositionSltpAsync(destination.CtidTraderAccountId, match.PositionId, stopLoss, null, trailing, ct);
+                var detail = await SymbolDetailAsync(session, destination.CtidTraderAccountId, match.SymbolId, ct);
+                await session.AmendPositionSltpAsync(destination.CtidTraderAccountId, match.PositionId,
+                    RoundToDigits(stopLoss, detail.Digits), null, trailing, ct);
 
                 if (trailing) logger.CopyTrailingApplied(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId);
                 else logger.CopyStopLossAmended(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, stopLoss ?? 0);
@@ -541,7 +543,9 @@ public sealed class CopyEngineHost(
             var match = positions.FirstOrDefault(p => p.Label == label);
             if (match is not null)
             {
-                await session.AmendPositionSltpAsync(destination.CtidTraderAccountId, match.PositionId, stopLoss, takeProfit, trailing, ct);
+                var detail = await SymbolDetailAsync(session, destination.CtidTraderAccountId, match.SymbolId, ct);
+                await session.AmendPositionSltpAsync(destination.CtidTraderAccountId, match.PositionId,
+                    RoundToDigits(stopLoss, detail.Digits), RoundToDigits(takeProfit, detail.Digits), trailing, ct);
                 logger.CopyProtectionApplied(plan.ProfileId.Value, destination.CtidTraderAccountId,
                     source.PositionId, stopLoss ?? 0, takeProfit ?? 0);
                 if (trailing) logger.CopyTrailingApplied(plan.ProfileId.Value, destination.CtidTraderAccountId, source.PositionId);
@@ -745,6 +749,12 @@ public sealed class CopyEngineHost(
 
     private static bool NeedsEquity(MoneyManagementMode mode)
         => mode is MoneyManagementMode.ProportionalEquity or MoneyManagementMode.ProportionalFreeMargin;
+
+    // M6: normalize an SL/TP price to the destination symbol's digit precision before amending. A master
+    // price at the master symbol's precision (or a cross-broker digit mismatch) otherwise trips the real
+    // server's INVALID_STOPLOSS_TAKEPROFIT. Digits == 0 means "unknown" -> leave the price untouched.
+    private static double? RoundToDigits(double? price, int digits)
+        => price is { } value && digits > 0 ? Math.Round(value, digits, MidpointRounding.AwayFromZero) : price;
 
     private static SymbolSpec Spec(SymbolDetails details)
     {

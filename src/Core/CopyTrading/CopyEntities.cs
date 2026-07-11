@@ -71,6 +71,8 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public double DailyLossLimit { get; private set; }
     public double LotSanityAbsoluteMaxLots { get; private set; }
     public double LotSanityMasterMultiple { get; private set; }
+    public int TradingHoursStartMinuteUtc { get; private set; }
+    public int TradingHoursEndMinuteUtc { get; private set; }
     public SymbolFilterMode SymbolFilterMode { get; private set; } = SymbolFilterMode.None;
     public IReadOnlyList<CopySymbolMapEntry> SymbolMaps => _symbolMaps;
     public IReadOnlyList<CopySymbolFilter> SymbolFilters => _symbolFilters;
@@ -92,6 +94,7 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public RiskSettings Risk => new(RiskMode, RiskParameter);
     public LotBounds Bounds => new(MinLot, MaxLot, ForceMinLot);
     public LotSanityCeiling LotSanity => new(LotSanityAbsoluteMaxLots, LotSanityMasterMultiple);
+    public TradingWindow TradingHours => new(TradingHoursStartMinuteUtc, TradingHoursEndMinuteUtc);
 
     public void ConfigureRisk(RiskSettings risk)
     {
@@ -110,6 +113,12 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     {
         LotSanityAbsoluteMaxLots = ceiling.AbsoluteMaxLots;
         LotSanityMasterMultiple = ceiling.MasterMultiple;
+    }
+
+    public void ConfigureTradingHours(TradingWindow window)
+    {
+        TradingHoursStartMinuteUtc = window.StartMinuteUtc;
+        TradingHoursEndMinuteUtc = window.EndMinuteUtc;
     }
 
     public void ConfigureSlippage(SlippagePips slippage)

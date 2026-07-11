@@ -122,6 +122,34 @@ public readonly record struct LotSanityCeiling
            || (MasterMultiple > 0 && masterLots > 0 && copyLots > MasterMultiple * masterLots);
 }
 
+// C18: a per-destination daily trading-hours window (UTC minutes-of-day). New opens outside the window
+// are skipped. Start == End means "all day" (disabled). A window whose Start > End wraps past midnight
+// (e.g. 22:00–06:00). End is exclusive.
+public readonly record struct TradingWindow
+{
+    public int StartMinuteUtc { get; }
+    public int EndMinuteUtc { get; }
+
+    public TradingWindow(int startMinuteUtc, int endMinuteUtc)
+    {
+        if (startMinuteUtc is < 0 or > 1439 || endMinuteUtc is < 0 or > 1439)
+            throw new DomainException(DomainErrors.CopyTradingWindowInvalid);
+        StartMinuteUtc = startMinuteUtc;
+        EndMinuteUtc = endMinuteUtc;
+    }
+
+    public static TradingWindow AllDay => new(0, 0);
+    public bool IsAllDay => StartMinuteUtc == EndMinuteUtc;
+
+    public bool IsOpenAt(int minuteOfDayUtc)
+    {
+        if (IsAllDay) return true;
+        return StartMinuteUtc <= EndMinuteUtc
+            ? minuteOfDayUtc >= StartMinuteUtc && minuteOfDayUtc < EndMinuteUtc
+            : minuteOfDayUtc >= StartMinuteUtc || minuteOfDayUtc < EndMinuteUtc;
+    }
+}
+
 public readonly record struct SymbolMapEntry
 {
     public Symbol Source { get; }

@@ -334,6 +334,11 @@ public sealed class CopyEngineHost(
         foreach (var destination in plan.Destinations)
         {
             if (!destination.Config.CopyPendingOrders || destination.Config.ManageOnly) continue;
+            if (!destination.Config.TradingHours.IsOpenAt((int)timeProvider.GetUtcNow().TimeOfDay.TotalMinutes))
+            {
+                logger.CopySkipped(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.OrderId, "trading_hours");
+                continue;
+            }
             if (!destination.Config.IsOrderTypeAllowed(CopyDecisionEngine.ToOrderTypes(execution.OrderKind)))
             {
                 logger.CopySkipped(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.OrderId, "order_type");
@@ -462,6 +467,13 @@ public sealed class CopyEngineHost(
         if (destination.Config.ManageOnly)
         {
             CopyMetrics.Instance.CopySkipped("manage_only");
+            return;
+        }
+
+        // C18 trading-hours window: no new opens outside the destination's configured UTC window.
+        if (!destination.Config.TradingHours.IsOpenAt((int)timeProvider.GetUtcNow().TimeOfDay.TotalMinutes))
+        {
+            CopyMetrics.Instance.CopySkipped("trading_hours");
             return;
         }
 

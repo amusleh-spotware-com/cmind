@@ -42,7 +42,9 @@ public record AddCopyDestinationRequest(
     double LotSanityMasterMultiple = 0,
     bool ManageOnly = false,
     bool SyncOpenOnStart = true,
-    bool SyncClosedOnStart = true);
+    bool SyncClosedOnStart = true,
+    int TradingHoursStartMinuteUtc = 0,
+    int TradingHoursEndMinuteUtc = 0);
 
 public record SymbolMapPair(string Source, string Destination);
 
@@ -135,6 +137,8 @@ public static class CopyEndpoints
                     d.ManageOnly,
                     d.SyncOpenOnStart,
                     d.SyncClosedOnStart,
+                    d.TradingHoursStartMinuteUtc,
+                    d.TradingHoursEndMinuteUtc,
                     SymbolFilterMode = d.SymbolFilterMode.ToString(),
                     SymbolFilters = d.SymbolFilters.Select(f => f.Symbol),
                     SymbolMaps = d.SymbolMaps.Select(m => new { m.Source, m.Destination })
@@ -188,6 +192,7 @@ public static class CopyEndpoints
             destination.ConfigureLotSanity(new LotSanityCeiling(req.LotSanityAbsoluteMaxLots, req.LotSanityMasterMultiple));
             destination.SetManageOnly(req.ManageOnly);
             destination.SetSyncPolicy(req.SyncOpenOnStart, req.SyncClosedOnStart);
+            destination.ConfigureTradingHours(new TradingWindow(req.TradingHoursStartMinuteUtc, req.TradingHoursEndMinuteUtc));
             if (req.SymbolMap is { Count: > 0 })
                 destination.SetSymbolMap(req.SymbolMap.Select(m => new SymbolMapEntry(new Symbol(m.Source), new Symbol(m.Destination))));
             if (req.SymbolFilterMode != SymbolFilterMode.None && req.SymbolFilters is { Count: > 0 })

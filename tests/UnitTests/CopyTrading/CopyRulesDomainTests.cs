@@ -63,6 +63,22 @@ public sealed class CopyRulesDomainTests
         LotSanityCeiling.Disabled.IsBreached(1000, 1).Should().BeFalse("a disabled ceiling blocks nothing");
     }
 
+    [Theory]
+    [InlineData(540, 1020, 600, true)]   // 09:00–17:00, now 10:00 -> open
+    [InlineData(540, 1020, 300, false)]  // now 05:00 -> closed
+    [InlineData(1320, 360, 1380, true)]  // 22:00–06:00 wrap, now 23:00 -> open
+    [InlineData(1320, 360, 720, false)]  // wrap window, now 12:00 -> closed
+    [InlineData(0, 0, 720, true)]        // all-day (disabled) -> always open
+    public void Trading_window_open_state(int start, int end, int nowMinute, bool expected)
+        => new TradingWindow(start, end).IsOpenAt(nowMinute).Should().Be(expected);
+
+    [Fact]
+    public void Trading_window_rejects_an_out_of_range_minute()
+    {
+        var act = () => new TradingWindow(-1, 100);
+        act.Should().Throw<DomainException>().Which.Message.Should().Be(DomainErrors.CopyTradingWindowInvalid);
+    }
+
     [Fact]
     public void Expiry_and_slippage_copying_can_be_disabled()
     {

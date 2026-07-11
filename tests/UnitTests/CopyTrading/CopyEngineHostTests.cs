@@ -137,6 +137,40 @@ public sealed class CopyEngineHostTests
     }
 
     [Fact]
+    public async Task Open_outside_the_trading_hours_window_is_skipped()
+    {
+        var clock = new FakeTimeProvider(new DateTimeOffset(2026, 07, 11, 05, 00, 00, TimeSpan.Zero)); // 05:00 UTC
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
+            Destination(Slave, d => d.ConfigureTradingHours(new TradingWindow(540, 1020))))); // 09:00–17:00
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushOpen(Source, 1001, SymbolId, isBuy: true, volume: 100);
+            await Task.Delay(150);
+        }, timeProvider: clock);
+
+        session.Orders.Should().BeEmpty("a copy outside the destination's trading-hours window is skipped");
+    }
+
+    [Fact]
+    public async Task Open_inside_the_trading_hours_window_is_copied()
+    {
+        var clock = new FakeTimeProvider(new DateTimeOffset(2026, 07, 11, 10, 00, 00, TimeSpan.Zero)); // 10:00 UTC
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
+            Destination(Slave, d => d.ConfigureTradingHours(new TradingWindow(540, 1020))))); // 09:00–17:00
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushOpen(Source, 1002, SymbolId, isBuy: true, volume: 100);
+            await WaitUntil(() => session.Orders.Count == 1);
+        }, timeProvider: clock);
+
+        session.Orders.Should().ContainSingle("a copy inside the window is placed normally");
+    }
+
+    [Fact]
     public async Task Symbol_map_resolves_destination_symbol()
     {
         var session = NewSession(new Dictionary<string, long> { ["EURUSDX"] = 2 });

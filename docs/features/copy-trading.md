@@ -74,6 +74,9 @@ Set in the New Profile dialog, on the Copy Trading page's per-destination panel,
   closed while the profile was stopped. Both apply only at start — a mid-run reconnect always reconciles
   fully so a desync recovers regardless.
 - **Symbol map** and **symbol filter** (whitelist / blacklist).
+- **Trading-hours window** (C18) — a per-destination daily UTC window (`start`/`end` minutes-of-day,
+  end exclusive; `start == end` = all-day). New opens outside the window are skipped (`trading_hours`);
+  a window with `start > end` wraps past midnight (e.g. 22:00–06:00). Existing positions stay managed.
 - **Order-type filter** — choose exactly which master order types to copy: market, market-range,
   limit, stop, stop-limit (`CopyOrderTypes` flags; default all). cMAM-style selectivity.
 - **Copy SL / Copy TP** — mirror the master's stop-loss / take-profit, or manage protection

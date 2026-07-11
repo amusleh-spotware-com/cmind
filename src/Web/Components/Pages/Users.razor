@@ -10,6 +10,7 @@
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
     <MudText Typo="Typo.h5">Users</MudText>
+    <HelpTip Text="Team members who can sign in. Roles gate access: Owner > Admin > User > Viewer. Reset issues a temporary password; the user must change it on next sign-in." />
     <MudSpacer />
     <MudButton Color="Color.Primary" Variant="Variant.Filled"
                StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew">
@@ -17,13 +18,13 @@
     </MudButton>
 </MudStack>
 
-<MudTable Items="_items" Dense="true">
+<MudTable Items="_items" Dense="true" Breakpoint="Breakpoint.Sm">
     <HeaderContent><MudTh>Email</MudTh><MudTh>Role</MudTh><MudTh>Locked</MudTh><MudTh /></HeaderContent>
     <RowTemplate>
-        <MudTd>@context.email</MudTd>
-        <MudTd>@context.role</MudTd>
-        <MudTd>@context.isLockedOut</MudTd>
-        <MudTd>
+        <MudTd DataLabel="Email">@context.email</MudTd>
+        <MudTd DataLabel="Role">@context.role</MudTd>
+        <MudTd DataLabel="Locked">@context.isLockedOut</MudTd>
+        <MudTd DataLabel="">
             <MudIconButton Icon="@Icons.Material.Filled.LockReset" Size="Size.Small" OnClick="@(() => Reset((Guid)context.id))" />
             <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => Remove((Guid)context.id))" />
         </MudTd>

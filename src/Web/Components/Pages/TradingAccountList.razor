@@ -12,14 +12,14 @@
     </MudButton>
 </MudStack>
 
-<MudTable Items="_items" Dense="true" Class="mt-2">
+<MudTable Items="_items" Dense="true" Class="mt-2" Breakpoint="Breakpoint.Sm">
     <HeaderContent>
         <MudTh>Account</MudTh><MudTh>Broker</MudTh><MudTh>Live</MudTh><MudTh>Linked via</MudTh><MudTh /></HeaderContent>
     <RowTemplate>
-        <MudTd>@context.accountNumber</MudTd>
-        <MudTd>@context.broker</MudTd>
-        <MudTd>@context.isLive</MudTd>
-        <MudTd>
+        <MudTd DataLabel="Account">@context.accountNumber</MudTd>
+        <MudTd DataLabel="Broker">@context.broker</MudTd>
+        <MudTd DataLabel="Live">@context.isLive</MudTd>
+        <MudTd DataLabel="Linked via">
             @if ((bool)context.linkedViaCid)
             {
                 <MudChip T="string" Size="Size.Small" Color="Color.Default" Icon="@Icons.Material.Filled.Badge">cID</MudChip>
@@ -29,7 +29,7 @@
                 <MudChip T="string" Size="Size.Small" Color="Color.Primary" Icon="@Icons.Material.Filled.Api">Open API</MudChip>
             }
         </MudTd>
-        <MudTd><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => Remove(context.id))" /></MudTd>
+        <MudTd DataLabel=""><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => Remove(context.id))" /></MudTd>
     </RowTemplate>
 </MudTable>
 

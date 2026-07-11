@@ -6,12 +6,12 @@
     <HeaderContent>
         <MudTh>cBot</MudTh><MudTh>Symbol</MudTh><MudTh>TF</MudTh><MudTh>Status</MudTh><MudTh>Node</MudTh><MudTh /></HeaderContent>
     <RowTemplate>
-        <MudTd>@context.cBot</MudTd>
-        <MudTd>@context.symbol</MudTd>
-        <MudTd>@context.timeframe</MudTd>
-        <MudTd><MudChip T="string" Size="Size.Small">@context.status</MudChip></MudTd>
-        <MudTd>@context.node</MudTd>
-        <MudTd>
+        <MudTd DataLabel="cBot">@context.cBot</MudTd>
+        <MudTd DataLabel="Symbol">@context.symbol</MudTd>
+        <MudTd DataLabel="TF">@context.timeframe</MudTd>
+        <MudTd DataLabel="Status"><MudChip T="string" Size="Size.Small">@context.status</MudChip></MudTd>
+        <MudTd DataLabel="Node">@context.node</MudTd>
+        <MudTd DataLabel="">
             <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" OnClick="@(() => Open((Guid)context.id))" />
             <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Small" Color="Color.Warning" OnClick="@(() => Stop((Guid)context.id))" />
             <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => Delete((Guid)context.id))" />

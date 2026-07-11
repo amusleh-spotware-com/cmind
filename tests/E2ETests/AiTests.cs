@@ -1,4 +1,3 @@
-﻿using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 using Xunit;
 
@@ -24,43 +23,21 @@ public sealed class AiTests(AppFixture app)
         await Assertions.Expect(page.GetByText("Portfolio Digest")).ToBeVisibleAsync(Slow);
         await Assertions.Expect(page.GetByText("Debate")).ToBeVisibleAsync(Slow);
         await Assertions.Expect(page.GetByText("Exposure Check")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.GetByText("Build Bot")).ToBeVisibleAsync(Slow);
     }
 
+    // No Anthropic API key is configured in the E2E environment, so AI features are gated:
+    // the "not configured" notice is shown and the action buttons are dimmed/disabled. This proves
+    // the whole gate: GET /api/ai/status -> AiFeatureNotice -> disabled actions + add-key banner.
     [Fact]
-    public async Task Assistant_generate_button_drives_ai_endpoint_end_to_end()
+    public async Task Assistant_dims_actions_and_prompts_for_key_when_unconfigured()
     {
         var page = await OpenAssistantAsync();
-        await ClickUntilFeedbackAsync(page, "button:has-text('Generate cBot')");
-    }
 
-    [Fact]
-    public async Task Assistant_generate_and_build_button_drives_ai_endpoint_end_to_end()
-    {
-        var page = await OpenAssistantAsync();
-        await ClickUntilFeedbackAsync(page, "button:has-text('Generate & build project')");
-    }
-
-    // No Anthropic API key is configured in the E2E environment, so a fully-wired click must
-    // surface the graceful "not configured" result via the snackbar. This proves the whole path:
-    // button -> HttpClient POST /api/ai/* -> endpoint -> AiFeatureService -> IAiClient (disabled) -> UI feedback.
-    private static async Task ClickUntilFeedbackAsync(IPage page, string buttonSelector)
-    {
-        var feedback = page.GetByText(new Regex("not configured", RegexOptions.IgnoreCase));
-        var button = page.Locator(buttonSelector);
-
-        for (var attempt = 0; attempt < 15; attempt++)
-        {
-            await button.ClickAsync();
-            try
-            {
-                await feedback.First.WaitForAsync(new() { Timeout = 2000, State = WaitForSelectorState.Visible });
-                break;
-            }
-            catch (TimeoutException) { /* circuit not interactive yet — retry */ }
-            catch (PlaywrightException) { /* stale locator after circuit reconnect — retry */ }
-        }
-
-        await Assertions.Expect(feedback.First).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.Locator("[data-testid=ai-not-configured]")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.Locator("[data-testid=ai-add-key]")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.Locator("button:has-text('Generate cBot')"))
+            .ToBeDisabledAsync(new() { Timeout = 15000 });
     }
 
     private async Task<IPage> OpenAssistantAsync()

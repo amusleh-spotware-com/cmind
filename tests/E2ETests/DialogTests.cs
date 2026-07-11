@@ -128,11 +128,25 @@ public sealed class DialogTests(AppFixture app)
             catch (PlaywrightException) { /* stale after reconnect — retry */ }
         }
 
+        // The editor is a second dialog stacked over the params list, so wait on its Save button
+        // (only the editor has one) rather than "any dialog visible".
         var paramName = $"pset-{Suffix}";
-        var dialog = await OpenDialogAsync(page, "New Parameter Set");
-        await dialog.GetByLabel("Name").FillAsync(paramName);
-        await dialog.Locator("textarea").First.FillAsync("{\"Period\":14}");
-        await SubmitAsync(dialog, "Save");
+        var newBtn = paramsDialog.Locator("[data-testid=new-paramset]");
+        var save = page.Locator(".mud-dialog button:has-text('Save')");
+        for (var attempt = 0; attempt < 15; attempt++)
+        {
+            await newBtn.ClickAsync();
+            try
+            {
+                await save.First.WaitForAsync(new() { Timeout = 2000, State = WaitForSelectorState.Visible });
+                break;
+            }
+            catch (TimeoutException) { /* circuit not interactive yet — retry */ }
+            catch (PlaywrightException) { /* stale after reconnect — retry */ }
+        }
+        await page.GetByLabel("Name").FillAsync(paramName);
+        await page.Locator(".mud-dialog textarea").Last.FillAsync("{\"Period\":14}");
+        await save.First.ClickAsync();
 
         await Assertions.Expect(page.GetByText(paramName)).ToBeVisibleAsync(Slow);
     }

@@ -178,6 +178,7 @@ public sealed class CopyEngineHost(
         logger.CopySourceOpen(plan.ProfileId.Value, execution.PositionId, sourceName,
             execution.IsBuy ? "Buy" : "Sell", sourceLots);
 
+        var dispatchStart = timeProvider.GetTimestamp();
         foreach (var destination in plan.Destinations)
         {
             try
@@ -187,9 +188,11 @@ public sealed class CopyEngineHost(
             }
             catch (Exception ex)
             {
+                CopyMetrics.Instance.CopyFailed(destination.CtidTraderAccountId);
                 logger.CopyOpenFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, ex);
             }
         }
+        CopyMetrics.Instance.RecordDispatchDuration(timeProvider.GetElapsedTime(dispatchStart).TotalMilliseconds);
     }
 
     private async Task HandlePositionUpdateAsync(IOpenApiTradingSession session, ExecutionEvent execution, CancellationToken ct)
@@ -460,8 +463,9 @@ public sealed class CopyEngineHost(
 
         if (decision.Kind != CopyActionKind.Open)
         {
-            logger.CopySkipped(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId,
-                decision.SkipReason ?? "unknown");
+            var reason = decision.SkipReason ?? "unknown";
+            CopyMetrics.Instance.CopySkipped(reason);
+            logger.CopySkipped(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, reason);
             return;
         }
 
@@ -469,6 +473,7 @@ public sealed class CopyEngineHost(
         var wireVolume = VolumeConversion.ProtocolFromLots(decision.Lots, destinationDetail.LotSize);
         if (wireVolume <= 0)
         {
+            CopyMetrics.Instance.CopySkipped("size_zero");
             logger.CopySkipped(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, "size_zero");
             return;
         }
@@ -482,8 +487,13 @@ public sealed class CopyEngineHost(
 
         await session.SendMarketOrderAsync(destination.CtidTraderAccountId, destinationSymbolId,
             effectiveBuy, wireVolume, execution.PositionId.ToString(), ct, decision.SlippageInPoints, baseSlippagePrice);
+        CopyMetrics.Instance.CopyPlaced(destination.CtidTraderAccountId);
+        CopyMetrics.Instance.RecordLatency(EventAge(execution).TotalMilliseconds);
         if (decision.SlippageInPoints is { } slippagePoints)
+        {
+            CopyMetrics.Instance.RecordSlippage(slippagePoints);
             logger.CopyMarketRangeSlippage(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, slippagePoints);
+        }
         if (isScaleIn)
             logger.CopyScaleIn(plan.ProfileId.Value, destination.CtidTraderAccountId, destinationName, wireVolume, execution.PositionId);
         else

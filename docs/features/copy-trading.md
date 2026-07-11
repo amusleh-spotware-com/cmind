@@ -103,6 +103,13 @@ close, protection applied, trailing applied, pending placed/amended/cancelled, e
 market-range slippage mirrored, token swapped, resync summary. This is the audit trail for
 compliance and dispute resolution.
 
+Alongside the logs the engine emits **OpenTelemetry metrics** on the `cMind.Copy` meter (registered in
+the shared OTel pipeline, exported over OTLP / to Azure Monitor like the rest): `cmind.copy.latency`
+(master-event → dispatch, ms), `cmind.copy.dispatch.duration` (fan-out to all destinations, ms),
+`cmind.copy.slippage.points`, `cmind.copy.placed` (tagged by destination), `cmind.copy.skipped` (tagged
+by reason), and `cmind.copy.failed`. These make a latency/slippage regression measurable, not just
+visible in a log line — the live suite asserts them against a budget.
+
 ## API
 
 - `GET /api/copy/profiles` — list.

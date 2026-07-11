@@ -40,7 +40,8 @@ public static class OpenTelemetryConfigurator
             {
                 m.AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddRuntimeInstrumentation();
+                    .AddRuntimeInstrumentation()
+                    .AddMeter(ObservabilityDefaults.CopyMeterName);
                 if (!string.IsNullOrWhiteSpace(otlpEndpoint))
                     m.AddOtlpExporter();
                 if (!string.IsNullOrWhiteSpace(azureMonitorConnectionString))

@@ -144,6 +144,7 @@ public static class ObservabilityDefaults
     public const string DeploymentEnvironmentProperty = "deployment.environment";
     public const string TraceIdProperty = "trace_id";
     public const string SpanIdProperty = "span_id";
+    public const string CopyMeterName = "cMind.Copy";
 }
 
 public static class AiConstants

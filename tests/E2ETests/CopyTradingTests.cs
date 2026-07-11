@@ -28,13 +28,18 @@ public sealed class CopyTradingTests(AppFixture app)
 
         var master = NextAccountNumber(10);
         await AddTradingAccountAsync(page, master, $"UiMaster-{Suffix}");
+        var slave = NextAccountNumber(11);
+        await AddTradingAccountAsync(page, slave, $"UiSlave-{Suffix}");
 
         await GotoAsync(page, "/copy-trading");
         var profileName = $"ui-profile-{Suffix}";
         var dialog = await OpenDialogAsync(page, "New Profile");
         await dialog.GetByLabel("Profile name").FillAsync(profileName);
+        // Pick the source (master) account from the first select.
         await dialog.Locator(".mud-select").First.ClickAsync();
         await page.Locator($".mud-list-item:has-text('{master}')").First.ClickAsync();
+        // The enriched dialog requires at least one destination — select all remaining accounts.
+        await dialog.Locator("[data-testid=copy-select-all]").ClickAsync();
         await SubmitAsync(dialog, "Create");
 
         var row = page.Locator($"tr:has-text('{profileName}')");

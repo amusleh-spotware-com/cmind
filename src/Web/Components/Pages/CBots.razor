@@ -52,7 +52,7 @@ else
             <MudTh Style="width:64px;text-align:center;">Lang</MudTh>
             <MudTh>Last Build</MudTh>
             <MudTh>Status</MudTh>
-            <MudTh Style="width:160px;" />
+            <MudTh Style="width:200px;" />
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Name">
@@ -94,6 +94,11 @@ else
                     <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" Color="Color.Success"
                                    OnClick="@(() => Run(context))" />
                 </MudTooltip>
+                <MudTooltip Text="@(context.ParamCBotId is null ? "Build the cBot to manage parameter sets" : "Parameter sets")">
+                    <MudIconButton Icon="@Icons.Material.Filled.Tune" Size="Size.Small" Color="Color.Info"
+                                   data-testid="paramsets-btn"
+                                   Disabled="@(context.ParamCBotId is null)" OnClick="@(() => OpenParamSets(context))" />
+                </MudTooltip>
                 <MudTooltip Text="Delete">
                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
                                    OnClick="@(() => Delete(context))" />
@@ -126,15 +131,27 @@ else
             var cbotsTask = Http.GetDynamicArrayAsync("/api/cbots/");
             await Task.WhenAll(projectsTask, cbotsTask);
 
+            var cbots = await cbotsTask;
+
+            // A built source project has a compiled CBot whose SourceProjectId points back at it; that
+            // CBot owns the parameter sets, so map project -> cBot id to open the params dialog per row.
+            var paramCBotByProject = new Dictionary<Guid, Guid>();
+            foreach (var c in cbots)
+            {
+                if (c.sourceProjectId is not null)
+                    paramCBotByProject[(Guid)c.sourceProjectId] = (Guid)c.id;
+            }
+
             var projects = (await projectsTask).Select(p => new CBotRow(
                 Id: (Guid)p.id,
                 Name: (string)p.name,
                 Language: (string?)p.language,
                 LastBuildAt: p.lastBuildAt is null ? null : (DateTimeOffset?)p.lastBuildAt,
                 LastBuildSucceeded: p.lastBuildAt is null ? null : (bool?)p.lastBuildSucceeded,
-                IsUpload: false));
+                IsUpload: false,
+                ParamCBotId: paramCBotByProject.TryGetValue((Guid)p.id, out var mapped) ? mapped : null));
 
-            var uploads = (await cbotsTask)
+            var uploads = cbots
                 .Where(c => (bool)c.hasSource == false)
                 .Select(c => new CBotRow(
                     Id: (Guid)c.id,
@@ -142,14 +159,28 @@ else
                     Language: null,
                     LastBuildAt: (DateTimeOffset?)c.createdAt,
                     LastBuildSucceeded: true,
-                    IsUpload: true));
+                    IsUpload: true,
+                    ParamCBotId: (Guid)c.id));
 
             _projects = projects.Concat(uploads).OrderByDescending(r => r.LastBuildAt ?? DateTimeOffset.MinValue).ToArray();
         }
         finally { _loading = false; }
     }
 
-    private sealed record CBotRow(Guid Id, string Name, string? Language, DateTimeOffset? LastBuildAt, bool? LastBuildSucceeded, bool IsUpload);
+    private sealed record CBotRow(Guid Id, string Name, string? Language, DateTimeOffset? LastBuildAt, bool? LastBuildSucceeded, bool IsUpload, Guid? ParamCBotId);
+
+    private async Task OpenParamSets(CBotRow row)
+    {
+        if (row.ParamCBotId is not { } cbotId) return;
+        var parameters = new DialogParameters<CBotParamSetsDialog>
+        {
+            { x => x.CBotId, cbotId },
+            { x => x.CBotName, row.Name }
+        };
+        var dlg = await Dialogs.ShowAsync<CBotParamSetsDialog>("Parameter Sets",
+            parameters, new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true });
+        await dlg.Result;
+    }
 
     private static string FormatTs(DateTimeOffset? v) =>
         v is null ? "—" : v.Value.LocalDateTime.ToString("yyyy-MM-dd HH:mm");

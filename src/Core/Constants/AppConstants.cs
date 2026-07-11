@@ -37,6 +37,7 @@ public static class EncryptionPurposes
     public const string OpenApiAccessToken = "openapi.access_token";
     public const string OpenApiRefreshToken = "openapi.refresh_token";
     public const string OpenApiOAuthState = "openapi.oauth_state";
+    public const string AiApiKey = "ai.api_key";
 }
 
 public static class NodeAgentAuth
@@ -156,7 +157,13 @@ public static class AiConstants
     public const int DefaultMaxTokens = 8000;
     public const string WebSearchToolType = "web_search_20260209";
     public const string WebSearchToolName = "web_search";
-    public const string DisabledMessage = "AI features are not configured (set App:Ai:ApiKey).";
+    public const string DisabledMessage = "AI features are not configured — add an API key in Settings → AI.";
+
+    // AppSetting key holding the owner-set Anthropic API key, encrypted via ISecretProtector
+    // (EncryptionPurposes.AiApiKey) and base64-encoded. Overrides App:Ai:ApiKey config when present.
+    public const string ApiKeySettingKey = "ai.api_key";
+    public const string ApiKeyCacheKey = "ai.api_key.value";
+    public static readonly TimeSpan ApiKeyCacheTtl = TimeSpan.FromSeconds(30);
     public const int TuneAdviceMaxTokens = 1500;
     public const int DigestMaxTokens = 2000;
     public const int DigestMaxInstances = 60;

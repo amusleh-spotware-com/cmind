@@ -19,6 +19,30 @@ public static class AiEndpoints
         var g = app.MapGroup("/api/ai").RequireAuthorization("UserOrAbove")
             .RequireFeature(Core.Features.FeatureFlag.Ai);
 
+        g.MapGet("/status", (IAiKeyStore keys) => Results.Ok(new { enabled = keys.HasKey }));
+
+        g.MapGet("/key", (
+            IAiKeyStore keys, Microsoft.Extensions.Options.IOptionsMonitor<Core.Options.AppOptions> opt) =>
+            Results.Ok(new
+            {
+                enabled = keys.HasKey,
+                hasStoredKey = keys.HasStoredKey,
+                hasConfigKey = !string.IsNullOrWhiteSpace(opt.CurrentValue.Ai.ApiKey)
+            })).RequireAuthorization(AuthPolicies.Owner);
+
+        g.MapPut("/key", async (SetAiKeyRequest req, IAiKeyStore keys, CancellationToken ct) =>
+        {
+            if (string.IsNullOrWhiteSpace(req.ApiKey)) return Results.BadRequest("API key is required");
+            await keys.SetKeyAsync(req.ApiKey, ct);
+            return Results.Ok(new { enabled = keys.HasKey });
+        }).RequireAuthorization(AuthPolicies.Owner);
+
+        g.MapDelete("/key", async (IAiKeyStore keys, CancellationToken ct) =>
+        {
+            await keys.ClearKeyAsync(ct);
+            return Results.Ok(new { enabled = keys.HasKey });
+        }).RequireAuthorization(AuthPolicies.Owner);
+
         g.MapPost("/generate", async (GenerateCBotRequest req, IAiFeatureService ai, CancellationToken ct) =>
             Results.Ok(await ai.GenerateCBotAsync(req.Language ?? "CSharp", req.Description ?? "", ct)));
 
@@ -415,6 +439,7 @@ public static class AiEndpoints
     };
 }
 
+public sealed record SetAiKeyRequest(string? ApiKey);
 public sealed record GenerateCBotRequest(string? Language, string? Description);
 public sealed record ReviewCBotRequest(string? Language, string? Source);
 public sealed record DebateRequest(string? Name, string? Language, string? Source);

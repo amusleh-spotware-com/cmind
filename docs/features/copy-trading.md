@@ -34,9 +34,24 @@ Every copy is **labelled with the source position/order id**, so after any recon
 rebuilds state from a reconcile: it opens copies the master holds but the slave is missing, and
 closes slave "orphans" the master no longer holds — **without duplicating trades**.
 
+## Creating a profile
+
+The **New Profile** dialog on the Copy Trading page collects everything up front: profile name, the
+source (master) account, the destination (slave) accounts (multi-select with a **Select all** button;
+the chosen master is excluded from the slave list), and the full per-destination option set below.
+All inputs are **validated before saving** — missing name/source/destination, non-positive sizing
+parameter, negative/inconsistent lot bounds, out-of-range drawdown %, no order type enabled, an empty
+symbol filter, or malformed symbol-map pairs are surfaced as an error list and block the save. On
+confirm the profile is created and every selected slave is added with the chosen settings.
+
+Row actions respect the lifecycle: **Start** is enabled only when the profile is not running, **Stop**
+and **Pause** only when it is running, and **Delete** is disabled while running and asks for
+confirmation before removing the profile and its destinations.
+
 ## Per-destination options
 
-Set on the Copy Trading page (or `POST /api/copy/profiles/{id}/destinations`):
+Set in the New Profile dialog, on the Copy Trading page's per-destination panel, or via
+`POST /api/copy/profiles/{id}/destinations`:
 
 - **Sizing** (`MoneyManagementMode` + parameter): fixed lot, lot/notional multiplier,
   proportional balance/equity/free-margin, fixed risk %, fixed leverage, auto-proportional.

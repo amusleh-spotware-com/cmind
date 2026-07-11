@@ -75,19 +75,19 @@ navigation no longer surfaces it.
 
 | Flag | API groups | Nav | Workers / MCP |
 |------|-----------|-----|----------------|
-| Authoring | `/api/cbots`, `/api/paramsets`, `/api/builder` | cBots, Parameter Sets | MCP `CBotTools` |
-| Backtesting | (shares `/api/instances`) | Backtest | — |
-| Execution | `/api/instances` | Run | MCP `InstanceTools` |
+| Authoring | `/api/cbots`, `/api/paramsets`, `/api/builder` | cBots group → cBots (param sets per-cBot dialog) | MCP `CBotTools` |
+| Backtesting | (shares `/api/instances`) | cBots group → Backtest | — |
+| Execution | `/api/instances` | cBots group → Run | MCP `InstanceTools` |
 | CopyTrading | `/api/copy` | Copy Trading | `CopyEngineSupervisor`, `OpenApiTokenRefreshService`, MCP `CopyTools` |
-| Ai | `/api/ai` | AI Assistant, Strategy Builder | `AiRiskGuard`, MCP `AiTools` |
-| PortfolioAgent | `/api/agent` | Portfolio Agent | `PortfolioAgentService` |
-| Alerts | `/api/alerts` | Alerts | `AlertEvaluator` |
-| PropGuard | `/api/prop` | Prop Guard | `PropGuardService` |
-| PropFirm | `/api/prop-firm` | Prop Firm | — |
-| Accounts | `/api/ctids` | cTrader Accounts | — |
-| OpenApi | `/api/openapi` | Open API Apps | — |
-| Mcp | `/api/mcp-keys` | MCP Keys | — |
-| Compliance | `/api/compliance` | Legal & Privacy | — |
+| Ai | `/api/ai` | AI group → AI; Settings → AI (key) | `AiRiskGuard`, MCP `AiTools` |
+| PortfolioAgent | `/api/agent` | AI group → Portfolio Agent | `PortfolioAgentService` |
+| Alerts | `/api/alerts` | AI group → Alerts | `AlertEvaluator` |
+| PropGuard | `/api/prop` | Prop group → Prop Guard | `PropGuardService` |
+| PropFirm | `/api/prop-firm` | Prop group → Challenges | — |
+| Accounts | `/api/ctids` | Trading Accounts | — |
+| OpenApi | `/api/openapi` | Settings → Open API | — |
+| Mcp | `/api/mcp-keys` | AI group → MCP Keys | — |
+| Compliance | `/api/compliance` | Settings → Legal & Privacy | — |
 
 ## Tests
 

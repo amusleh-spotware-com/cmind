@@ -30,7 +30,7 @@ public sealed class OpenApiTests(AppFixture app)
 
         // 1. No app yet: the authorize entrypoint redirects to the setup page, not to cTrader.
         await page.GotoAsync("/api/openapi/authorize");
-        await Assertions.Expect(page).ToHaveURLAsync(new System.Text.RegularExpressions.Regex("/openapi-apps$"));
+        await Assertions.Expect(page).ToHaveURLAsync(new System.Text.RegularExpressions.Regex("/settings/openapi$"));
         await Assertions.Expect(page.GetByText("No Open API application configured")).ToBeVisibleAsync(Slow);
 
         // 2. Configure the single application through the dialog (not an inline page section).

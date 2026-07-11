@@ -29,6 +29,20 @@ public interface IAiClient
     Task<AiResult> CompleteAsync(AiTextRequest request, CancellationToken ct);
 }
 
+/// <summary>
+/// Owner-managed store for the Anthropic API key. A key set through the UI is persisted encrypted and
+/// overrides the <c>App:Ai:ApiKey</c> config value; when neither is present, AI features stay disabled.
+/// Reads are synchronous (cached) so gating checks stay cheap on the request path.
+/// </summary>
+public interface IAiKeyStore
+{
+    bool HasKey { get; }
+    bool HasStoredKey { get; }
+    string? CurrentKey { get; }
+    Task SetKeyAsync(string apiKey, CancellationToken ct);
+    Task ClearKeyAsync(CancellationToken ct);
+}
+
 public interface IAiFeatureService
 {
     bool Enabled { get; }

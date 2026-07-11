@@ -1,0 +1,105 @@
+﻿@page "/settings/ai"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "Owner")]
+@using Web.Json
+@inject HttpClient Http
+@inject ISnackbar Snack
+
+<PageTitle>AI</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">AI</MudText>
+    <MudSpacer />
+    @if (_enabled)
+    {
+        <MudChip T="string" Size="Size.Small" Color="Color.Success" Icon="@Icons.Material.Filled.CheckCircle"
+                 data-testid="ai-enabled-chip">Enabled</MudChip>
+    }
+    else
+    {
+        <MudChip T="string" Size="Size.Small" Color="Color.Default" Icon="@Icons.Material.Filled.Cancel"
+                 data-testid="ai-disabled-chip">Not configured</MudChip>
+    }
+</MudStack>
+
+<MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">
+    Add your Anthropic API key to enable AI features (code generation, review, market sentiment,
+    the portfolio agent, alerts and more). The key is stored encrypted and never shown again.
+    It overrides any key set through configuration.
+</MudText>
+
+<MudPaper Class="pa-4" MaxWidth="640px" Elevation="1">
+    @if (_hasConfigKey && !_hasStoredKey)
+    {
+        <MudAlert Severity="Severity.Info" Class="mb-3" Dense="true">
+            An API key is currently provided by configuration. Saving a key here overrides it.
+        </MudAlert>
+    }
+    <MudTextField @bind-Value="_apiKey" Label="Anthropic API key" Placeholder="sk-ant-..."
+                  InputType="InputType.Password" Immediate="true" data-testid="ai-key-input"
+                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Key" />
+    <MudStack Row="true" Spacing="2" Class="mt-3">
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="Save" Disabled="_busy || string.IsNullOrWhiteSpace(_apiKey)" data-testid="ai-key-save">
+            Save key
+        </MudButton>
+        @if (_hasStoredKey)
+        {
+            <MudButton Color="Color.Error" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Delete"
+                       OnClick="Clear" Disabled="_busy" data-testid="ai-key-clear">
+                Remove stored key
+            </MudButton>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    private string _apiKey = "";
+    private bool _enabled;
+    private bool _hasStoredKey;
+    private bool _hasConfigKey;
+    private bool _busy;
+
+    protected override Task OnInitializedAsync() => Load();
+
+    private async Task Load()
+    {
+        var res = await Http.GetDynamicAsync("/api/ai/key");
+        if (res is null) return;
+        _enabled = (bool)res.enabled;
+        _hasStoredKey = (bool)res.hasStoredKey;
+        _hasConfigKey = (bool)res.hasConfigKey;
+    }
+
+    private async Task Save()
+    {
+        _busy = true;
+        try
+        {
+            var r = await Http.PutAsJsonAsync("/api/ai/key", new { ApiKey = _apiKey });
+            if (r.IsSuccessStatusCode)
+            {
+                Snack.Add("API key saved", Severity.Success);
+                _apiKey = "";
+                await Load();
+            }
+            else
+            {
+                Snack.Add("Failed to save API key", Severity.Error);
+            }
+        }
+        finally { _busy = false; }
+    }
+
+    private async Task Clear()
+    {
+        _busy = true;
+        try
+        {
+            var r = await Http.DeleteAsync("/api/ai/key");
+            Snack.Add(r.IsSuccessStatusCode ? "Stored key removed" : "Failed to remove key",
+                r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+            await Load();
+        }
+        finally { _busy = false; }
+    }
+}

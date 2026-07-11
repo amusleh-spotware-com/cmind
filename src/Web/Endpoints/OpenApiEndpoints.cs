@@ -80,7 +80,7 @@ public static class OpenApiEndpoints
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             var application = await apps.GetByUserAsync(uid, ct);
-            if (application is null) return Results.Redirect("/openapi-apps");
+            if (application is null) return Results.Redirect("/settings/openapi");
             var state = states.CreateState(uid, application.Id, AuthorizeStateTtl, isInvite: false);
             SetStateCookie(ctx, state);
             return Results.Redirect(BuildAuthorizeUrl(options.CurrentValue.OpenApi, application, state));

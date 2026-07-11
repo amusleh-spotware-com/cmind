@@ -98,9 +98,12 @@ src/
                                review/analyze-backtest/optimize-params/optimize-run/post-mortem/
                                sentiment/vision/curate)
     Hubs/LogsHub.cs          — SignalR streaming of `docker logs -f`
-    Components/Pages/        — CBots (list/build/run/edit), BuilderEditor (Monaco IDE), Run,
-                               Backtest, ParamSets, Nodes, Accounts, Users, InstanceTable/Detail,
-                               Login, Index, Mcp, Assistant (AI codegen/review/sentiment)
+    Components/Pages/        — CBots (list/build/run/edit; per-cBot Parameter Sets dialog),
+                               BuilderEditor (Monaco IDE), Run, Backtest, Nodes, Accounts (Trading
+                               Accounts), Users, InstanceTable/Detail, Login, Index (live dashboard),
+                               Mcp, Assistant (AI: Build Bot/codegen/review/sentiment/...),
+                               AiSettings (/settings/ai), FeatureSettings, OpenApiApplications
+                               (/settings/openapi), Compliance (/settings/legal)
     Components/Dialogs/NewProjectDialog.razor
     Components/              — MudBlazor + custom cTrader-style dark theme
   Mcp/           — MCP HTTP+SSE server.

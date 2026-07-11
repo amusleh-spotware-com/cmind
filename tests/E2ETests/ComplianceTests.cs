@@ -13,7 +13,7 @@ public sealed class ComplianceTests(AppFixture app)
     public async Task Legal_page_renders_and_gdpr_export_returns_the_users_data()
     {
         var page = await app.NewAuthedPageAsync();
-        await page.GotoAsync("/compliance");
+        await page.GotoAsync("/settings/legal");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
         await Assertions.Expect(page.GetByText("Your data (GDPR)")).ToBeVisibleAsync(Slow);

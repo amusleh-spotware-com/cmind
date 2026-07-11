@@ -37,11 +37,17 @@
         <MudTd><MudChip T="string" Size="Size.Small" Color="StatusColor((string)context.status)">@context.status</MudChip></MudTd>
         <MudTd>@context.destinationCount</MudTd>
         <MudTd>
-            <MudButton Size="Size.Small" Color="Color.Success" OnClick="@(() => Action((Guid)context.id, "start"))">Start</MudButton>
-            <MudButton Size="Size.Small" Color="Color.Warning" OnClick="@(() => Action((Guid)context.id, "pause"))">Pause</MudButton>
-            <MudButton Size="Size.Small" Color="Color.Default" OnClick="@(() => Action((Guid)context.id, "stop"))">Stop</MudButton>
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
-                           OnClick="@(() => DeleteProfile((Guid)context.id))" />
+            <MudButton Size="Size.Small" Color="Color.Success" Disabled="@IsRunning((string)context.status)"
+                       OnClick="@(() => Action((Guid)context.id, "start"))" data-testid="copy-start">Start</MudButton>
+            <MudButton Size="Size.Small" Color="Color.Warning" Disabled="@(!IsRunning((string)context.status))"
+                       OnClick="@(() => Action((Guid)context.id, "pause"))">Pause</MudButton>
+            <MudButton Size="Size.Small" Color="Color.Default" Disabled="@(!IsRunning((string)context.status))"
+                       OnClick="@(() => Action((Guid)context.id, "stop"))" data-testid="copy-stop">Stop</MudButton>
+            <MudTooltip Text="@(IsRunning((string)context.status) ? "Stop the profile before deleting" : "Delete profile")">
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                               Disabled="@IsRunning((string)context.status)"
+                               OnClick="@(() => DeleteProfile((Guid)context.id, (string)context.name))" data-testid="copy-delete" />
+            </MudTooltip>
         </MudTd>
     </RowTemplate>
 </MudTable>
@@ -198,6 +204,8 @@
         _ => Color.Default
     };
 
+    private static bool IsRunning(string status) => string.Equals(status, "Running", StringComparison.OrdinalIgnoreCase);
+
     private async Task OpenNewProfile()
     {
         var options = ((IEnumerable<dynamic>)_accounts)
@@ -208,21 +216,74 @@
             { nameof(NewCopyProfileDialog.Accounts), (IReadOnlyList<NewCopyProfileDialog.CopyAccountOption>)options }
         };
         var dlg = await Dialogs.ShowAsync<NewCopyProfileDialog>(null,
-            parameters, new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
+            parameters, new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Large, FullWidth = true });
         var res = await dlg.Result;
         if (res is null || res.Canceled) return;
         var data = (NewCopyProfileDialog.NewCopyProfileResult)res.Data!;
 
-        var destinationIds = data.DestinationAccountNumbers
-            .Select(SourceAccountGuid).Where(g => g != Guid.Empty).ToArray();
-        var r = await Http.PostAsJsonAsync("/api/copy/profiles", new
+        // Create the profile with no destinations, then add each with the chosen settings (adding via
+        // the create call would attach them with default settings and duplicate them below).
+        var create = await Http.PostAsJsonAsync("/api/copy/profiles", new
         {
             Name = data.Name,
             SourceAccountId = SourceAccountGuid(data.SourceAccountNumber),
-            DestinationAccountIds = destinationIds
+            DestinationAccountIds = Array.Empty<Guid>()
         });
-        if (r.IsSuccessStatusCode) { Snack.Add("Profile created", Severity.Success); await Load(); }
-        else Snack.Add("Failed to create profile", Severity.Error);
+        if (!create.IsSuccessStatusCode) { Snack.Add("Failed to create profile", Severity.Error); return; }
+
+        var created = await create.Content.ReadFromJsonAsync<CreatedProfileDto>();
+        if (created is not null)
+        {
+            var failed = false;
+            foreach (var accountNumber in data.DestinationAccountNumbers)
+            {
+                var guid = SourceAccountGuid(accountNumber);
+                if (guid == Guid.Empty) continue;
+                if (!await AddDestinationAsync(created.id, guid, data.Settings)) failed = true;
+            }
+            if (failed) Snack.Add("Profile created, but some destination settings could not be applied", Severity.Warning);
+            else Snack.Add("Profile created", Severity.Success);
+        }
+        else
+        {
+            Snack.Add("Profile created", Severity.Success);
+        }
+        await Load();
+    }
+
+    private sealed record CreatedProfileDto(Guid id);
+
+    private async Task<bool> AddDestinationAsync(Guid profileId, Guid destinationAccountId,
+        NewCopyProfileDialog.CopyDestinationSettings s)
+    {
+        var r = await Http.PostAsJsonAsync($"/api/copy/profiles/{profileId}/destinations", new
+        {
+            DestinationAccountId = destinationAccountId,
+            Mode = s.Mode,
+            Parameter = s.Parameter,
+            SlippagePips = s.SlippagePips,
+            MaxDelaySeconds = s.MaxDelaySeconds,
+            Reverse = s.Reverse,
+            CopyStopLoss = s.CopyStopLoss,
+            CopyTakeProfit = s.CopyTakeProfit,
+            Direction = s.Direction,
+            MinLot = s.MinLot,
+            MaxLot = s.MaxLot,
+            ForceMinLot = s.ForceMinLot,
+            MaxDrawdownPercent = s.MaxDrawdownPercent,
+            DailyLossLimit = s.DailyLossLimit,
+            SymbolFilterMode = s.SymbolFilterMode,
+            SymbolFilters = ParseCsv(s.FilterText),
+            SymbolMap = ParseMap(s.SymbolMapText),
+            MirrorPartialClose = s.MirrorPartialClose,
+            MirrorScaleIn = s.MirrorScaleIn,
+            CopyPendingOrders = s.CopyPendingOrders,
+            CopyTrailingStop = s.CopyTrailingStop,
+            OrderTypes = s.OrderTypes == CopyOrderTypes.None ? CopyOrderTypes.All : s.OrderTypes,
+            CopyPendingExpiry = s.CopyPendingExpiry,
+            CopyMasterSlippage = s.CopyMasterSlippage
+        });
+        return r.IsSuccessStatusCode;
     }
 
     private async Task RecommendSettings()
@@ -244,9 +305,23 @@
         if (_selectedId == id) await Select(id);
     }
 
-    private async Task DeleteProfile(Guid id)
+    private async Task DeleteProfile(Guid id, string name)
     {
-        await Http.DeleteAsync($"/api/copy/profiles/{id}");
+        var profile = ((IEnumerable<dynamic>)_profiles).FirstOrDefault(p => (Guid)p.id == id);
+        if (profile is not null && IsRunning((string)profile.status))
+        {
+            Snack.Add("Stop the profile before deleting it", Severity.Warning);
+            return;
+        }
+
+        var ok = await Dialogs.ShowMessageBox("Delete copy profile",
+            $"Delete '{name}'? This removes the profile and all its destinations and cannot be undone.",
+            yesText: "Delete", cancelText: "Cancel");
+        if (ok != true) return;
+
+        var r = await Http.DeleteAsync($"/api/copy/profiles/{id}");
+        if (!r.IsSuccessStatusCode) { Snack.Add("Failed to delete profile", Severity.Error); return; }
+        Snack.Add("Profile deleted", Severity.Success);
         if (_selectedId == id) _detail = null;
         await Load();
     }

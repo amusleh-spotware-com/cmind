@@ -79,6 +79,7 @@ public static class DependencyInjection
         services.AddScoped<Core.Features.IFeatureGate, Infrastructure.Features.FeatureGate>();
         services.AddHttpClient<IGithubContainerRegistryTagProvider, GithubContainerRegistryTagProvider>();
         services.AddScoped<CBotBuilder>();
+        services.AddScoped<IAiKeyStore, AiKeyStore>();
         services.AddHttpClient<IAiClient, AnthropicAiClient>();
         services.AddScoped<IAiFeatureService, AiFeatureService>();
         return services;

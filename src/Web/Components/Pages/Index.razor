@@ -1,11 +1,19 @@
 @page "/"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @using Web.Json
+@implements IDisposable
 @inject HttpClient Http
+@inject TimeProvider Time
 
 <PageTitle>Dashboard</PageTitle>
 
-<MudText Typo="Typo.h5" Class="mb-4">Dashboard</MudText>
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
+    <MudText Typo="Typo.h5">Dashboard</MudText>
+    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text"
+             Icon="@Icons.Material.Filled.FiberManualRecord" Class="live-pulse" data-testid="live-indicator">Live</MudChip>
+    <MudSpacer />
+    <MudText Typo="Typo.caption" Class="mud-text-secondary">Updated @_updatedAt.ToLocalTime().ToString("HH:mm:ss")</MudText>
+</MudStack>
 
 @if (_stats is null)
 {
@@ -26,7 +34,7 @@ else
     <MudText Typo="Typo.subtitle1" Class="mb-2" Style="color:#A0A0A0;">My resources</MudText>
     <MudGrid Class="mb-4">
         <DashStat Label="cBots" Value="@((long)_stats.cBots)" Color="#26C281" Icon="@Icons.Material.Filled.SmartToy" Href="/cbots" />
-        <DashStat Label="Parameter sets" Value="@((long)_stats.paramSets)" Color="#26C281" Icon="@Icons.Material.Filled.Tune" Href="/paramsets" />
+        <DashStat Label="Parameter sets" Value="@((long)_stats.paramSets)" Color="#26C281" Icon="@Icons.Material.Filled.Tune" Href="/cbots" />
         <DashStat Label="Trading accounts" Value="@((long)_stats.tradingAccounts)" Color="#26C281" Icon="@Icons.Material.Filled.AccountBalance" Href="/accounts" />
         <DashStat Label="cTrader IDs" Value="@((long)_stats.ctids)" Color="#26C281" Icon="@Icons.Material.Filled.Person" Href="/accounts" />
         <DashStat Label="MCP keys" Value="@((long)_stats.mcpKeys)" Color="#26C281" Icon="@Icons.Material.Filled.Key" Href="/mcp" />
@@ -44,8 +52,53 @@ else
 }
 
 @code {
-    private dynamic? _stats;
+    private static readonly TimeSpan RefreshInterval = TimeSpan.FromSeconds(10);
 
-    protected override async Task OnInitializedAsync() =>
+    private dynamic? _stats;
+    private DateTimeOffset _updatedAt;
+    private readonly CancellationTokenSource _cts = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshAsync();
+        _ = PollAsync(_cts.Token);
+    }
+
+    private async Task RefreshAsync()
+    {
         _stats = await Http.GetDynamicAsync("/api/dashboard/stats");
+        _updatedAt = Time.GetUtcNow();
+    }
+
+    // Lightweight live refresh so the dashboard reflects running/pending/failed counts without a manual reload.
+    private async Task PollAsync(CancellationToken ct)
+    {
+        try
+        {
+            using var timer = new PeriodicTimer(RefreshInterval);
+            while (await timer.WaitForNextTickAsync(ct))
+            {
+                // A transient stats-fetch failure must not kill the live loop, and StateHasChanged after
+                // disposal is harmless — swallow both so the dashboard keeps refreshing.
+                try
+                {
+                    await InvokeAsync(async () => { await RefreshAsync(); StateHasChanged(); });
+                }
+                catch (ObjectDisposedException) { return; }
+                catch (Exception) { /* transient refresh failure — retry next tick */ }
+            }
+        }
+        catch (OperationCanceledException) { /* disposed */ }
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 }
+
+<style>
+    .live-pulse { animation: livepulse 1.6s ease-in-out infinite; }
+    @@keyframes livepulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+</style>

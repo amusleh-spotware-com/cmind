@@ -113,12 +113,23 @@ public sealed class DialogTests(AppFixture app)
         });
         await Assertions.Expect(page.GetByText(cbotName)).ToBeVisibleAsync(Slow);
 
-        await GotoAsync(page, "/paramsets");
+        // Parameter sets now live per-cBot: open them from the cBot row's params button.
+        var paramsButton = page.Locator($"tr:has-text('{cbotName}') [data-testid=paramsets-btn]").First;
+        var paramsDialog = page.Locator(".mud-dialog:has-text('Parameter Sets')");
+        for (var attempt = 0; attempt < 15; attempt++)
+        {
+            await paramsButton.ClickAsync();
+            try
+            {
+                await paramsDialog.WaitForAsync(new() { Timeout = 2000, State = WaitForSelectorState.Visible });
+                break;
+            }
+            catch (TimeoutException) { /* circuit not interactive yet — retry */ }
+            catch (PlaywrightException) { /* stale after reconnect — retry */ }
+        }
 
         var paramName = $"pset-{Suffix}";
         var dialog = await OpenDialogAsync(page, "New Parameter Set");
-        await dialog.Locator(".mud-select").First.ClickAsync();
-        await page.Locator($".mud-list-item:has-text('{cbotName}')").First.ClickAsync();
         await dialog.GetByLabel("Name").FillAsync(paramName);
         await dialog.Locator("textarea").First.FillAsync("{\"Period\":14}");
         await SubmitAsync(dialog, "Save");

@@ -1,4 +1,5 @@
 @page "/accounts"
+@using Core.Features
 @using Web.Json
 @using Web.Components.Dialogs
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
@@ -6,16 +7,34 @@
 @inject ISnackbar Snack
 @inject IDialogService Dialogs
 @inject NavigationManager Nav
+@inject IJSRuntime JS
+@inject IFeatureGate Gate
 
-<PageTitle>cTrader Accounts</PageTitle>
+<PageTitle>Trading Accounts</PageTitle>
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
-    <MudText Typo="Typo.h5">cTrader Accounts</MudText>
+    <MudText Typo="Typo.h5">Trading Accounts</MudText>
     <MudSpacer />
-    <MudButton Color="Color.Secondary" Variant="Variant.Outlined"
-               StartIcon="@Icons.Material.Filled.Api" OnClick="@(() => Nav.NavigateTo("/api/openapi/authorize", forceLoad: true))">
-        Add via Open API
-    </MudButton>
+    @if (Gate.IsEnabled(FeatureFlag.OpenApi))
+    {
+        <MudButton Color="Color.Secondary" Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.Settings"
+                   OnClick="@(() => Nav.NavigateTo("/settings/openapi"))">
+            Configure Open API app
+        </MudButton>
+        @if (_openApiConfigured)
+        {
+            <MudButton Color="Color.Secondary" Variant="Variant.Outlined"
+                       StartIcon="@Icons.Material.Filled.Share" OnClick="CopyInvite">
+                Copy invite link
+            </MudButton>
+            <MudButton Color="Color.Secondary" Variant="Variant.Outlined"
+                       StartIcon="@Icons.Material.Filled.Api"
+                       OnClick="@(() => Nav.NavigateTo("/api/openapi/authorize", forceLoad: true))">
+                Add via Open API
+            </MudButton>
+        }
+    }
     <MudButton Color="Color.Primary" Variant="Variant.Filled"
                StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew">
         New cID Account
@@ -41,9 +60,37 @@
 
 @code {
     private dynamic[] _cids = [];
+    private bool _openApiConfigured;
 
-    protected override Task OnInitializedAsync() => Load();
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+        if (Gate.IsEnabled(FeatureFlag.OpenApi))
+        {
+            var app = await Http.GetDynamicAsync("/api/openapi/application");
+            _openApiConfigured = app is not null && (bool)app.configured;
+        }
+    }
+
     private async Task Load() => _cids = await Http.GetDynamicArrayAsync("/api/ctids/");
+
+    private async Task CopyInvite()
+    {
+        var r = await Http.PostAsync("/api/openapi/application/invite", null);
+        if (!r.IsSuccessStatusCode) { Snack.Add("Failed to create invite link", Severity.Error); return; }
+        using var doc = System.Text.Json.JsonDocument.Parse(await r.Content.ReadAsStringAsync());
+        var url = doc.RootElement.GetProperty("url").GetString();
+        if (string.IsNullOrEmpty(url)) { Snack.Add("Invite link unavailable", Severity.Error); return; }
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", url);
+            Snack.Add("Invite link copied to clipboard", Severity.Success);
+        }
+        catch
+        {
+            Snack.Add(url, Severity.Info);
+        }
+    }
 
     private async Task OpenNew()
     {

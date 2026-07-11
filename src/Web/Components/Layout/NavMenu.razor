@@ -1,67 +1,113 @@
 @using Core.Features
 @inject IFeatureGate Gate
 
-<MudNavMenu>
-    <MudNavLink Href="/" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
-    @if (Gate.IsEnabled(FeatureFlag.Authoring))
-    {
-        <MudNavLink Href="/cbots" Icon="@Icons.Material.Filled.Memory">cBots</MudNavLink>
-        <MudNavLink Href="/paramsets" Icon="@Icons.Material.Filled.Tune">Parameter Sets</MudNavLink>
-    }
-    @if (Gate.IsEnabled(FeatureFlag.Execution))
-    {
-        <MudNavLink Href="/run" Icon="@Icons.Material.Filled.PlayArrow">Run</MudNavLink>
-    }
-    @if (Gate.IsEnabled(FeatureFlag.Backtesting))
-    {
-        <MudNavLink Href="/backtest" Icon="@Icons.Material.Filled.History">Backtest</MudNavLink>
-    }
-    @if (Gate.IsEnabled(FeatureFlag.Ai))
-    {
-        <MudNavLink Href="/assistant" Icon="@Icons.Material.Filled.AutoAwesome">AI Assistant</MudNavLink>
-        <MudNavLink Href="/strategy-builder" Icon="@Icons.Material.Filled.Bolt">Strategy Builder</MudNavLink>
-    }
-    @if (Gate.IsEnabled(FeatureFlag.PortfolioAgent))
-    {
-        <MudNavLink Href="/agent" Icon="@Icons.Material.Filled.SmartToy">Portfolio Agent</MudNavLink>
-    }
-    @if (Gate.IsEnabled(FeatureFlag.Alerts))
-    {
-        <MudNavLink Href="/alerts" Icon="@Icons.Material.Filled.NotificationsActive">Alerts</MudNavLink>
-    }
-    @if (Gate.IsEnabled(FeatureFlag.PropGuard))
-    {
-        <MudNavLink Href="/prop-guard" Icon="@Icons.Material.Filled.Shield">Prop Guard</MudNavLink>
-    }
-    @if (Gate.IsEnabled(FeatureFlag.PropFirm))
-    {
-        <MudNavLink Href="/prop-firm" Icon="@Icons.Material.Filled.EmojiEvents">Prop Firm</MudNavLink>
-    }
-    @if (Gate.IsEnabled(FeatureFlag.Accounts))
-    {
-        <MudNavLink Href="/accounts" Icon="@Icons.Material.Filled.AccountBalance">cTrader Accounts</MudNavLink>
-    }
-    @if (Gate.IsEnabled(FeatureFlag.CopyTrading))
-    {
-        <MudNavLink Href="/copy-trading" Icon="@Icons.Material.Filled.ContentCopy">Copy Trading</MudNavLink>
-    }
-    @if (Gate.IsEnabled(FeatureFlag.OpenApi))
-    {
-        <MudNavLink Href="/openapi-apps" Icon="@Icons.Material.Filled.Api">Open API Apps</MudNavLink>
-    }
-    <AuthorizeView Policy="AdminOrAbove">
-        <MudNavLink Href="/nodes" Icon="@Icons.Material.Filled.Hub">Nodes</MudNavLink>
-        <MudNavLink Href="/users" Icon="@Icons.Material.Filled.Group">Users</MudNavLink>
-    </AuthorizeView>
-    @if (Gate.IsEnabled(FeatureFlag.Compliance))
-    {
-        <MudNavLink Href="/compliance" Icon="@Icons.Material.Filled.Gavel">Legal &amp; Privacy</MudNavLink>
-    }
-    <AuthorizeView Policy="Owner">
-        <MudNavLink Href="/settings/features" Icon="@Icons.Material.Filled.ToggleOn">Features</MudNavLink>
-    </AuthorizeView>
-    @if (Gate.IsEnabled(FeatureFlag.Mcp))
-    {
-        <MudNavLink Href="/mcp" Icon="@Icons.Material.Filled.Key">MCP Keys</MudNavLink>
-    }
-</MudNavMenu>
+@* Expandable, grouped navigation (TradingView/cTrader-inspired). Feature-gated groups collapse to
+   nothing when all their children are disabled. Settings is pinned to the bottom of the drawer. *@
+
+<div class="nav-shell d-flex flex-column">
+    <MudNavMenu Class="flex-grow-1">
+        <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+
+        @if (AnyAuthoring)
+        {
+            <MudNavGroup Title="cBots" Icon="@Icons.Material.Filled.Memory" Expanded="true">
+                @if (Gate.IsEnabled(FeatureFlag.Authoring))
+                {
+                    <MudNavLink Href="/cbots" Icon="@Icons.Material.Filled.Code">cBots</MudNavLink>
+                }
+                @if (Gate.IsEnabled(FeatureFlag.Execution))
+                {
+                    <MudNavLink Href="/run" Icon="@Icons.Material.Filled.PlayArrow">Run</MudNavLink>
+                }
+                @if (Gate.IsEnabled(FeatureFlag.Backtesting))
+                {
+                    <MudNavLink Href="/backtest" Icon="@Icons.Material.Filled.History">Backtest</MudNavLink>
+                }
+            </MudNavGroup>
+        }
+
+        @if (Gate.IsEnabled(FeatureFlag.Ai))
+        {
+            <MudNavGroup Title="AI" Icon="@Icons.Material.Filled.AutoAwesome" Expanded="true">
+                <MudNavLink Href="/assistant" Icon="@Icons.Material.Filled.AutoAwesome">AI</MudNavLink>
+                @if (Gate.IsEnabled(FeatureFlag.PortfolioAgent))
+                {
+                    <MudNavLink Href="/agent" Icon="@Icons.Material.Filled.SmartToy">Portfolio Agent</MudNavLink>
+                }
+                @if (Gate.IsEnabled(FeatureFlag.Alerts))
+                {
+                    <MudNavLink Href="/alerts" Icon="@Icons.Material.Filled.NotificationsActive">Alerts</MudNavLink>
+                }
+                @if (Gate.IsEnabled(FeatureFlag.Mcp))
+                {
+                    <MudNavLink Href="/mcp" Icon="@Icons.Material.Filled.Key">MCP Keys</MudNavLink>
+                }
+            </MudNavGroup>
+        }
+
+        @if (AnyProp)
+        {
+            <MudNavGroup Title="Prop" Icon="@Icons.Material.Filled.EmojiEvents" Expanded="true">
+                @if (Gate.IsEnabled(FeatureFlag.PropGuard))
+                {
+                    <MudNavLink Href="/prop-guard" Icon="@Icons.Material.Filled.Shield">Prop Guard</MudNavLink>
+                }
+                @if (Gate.IsEnabled(FeatureFlag.PropFirm))
+                {
+                    <MudNavLink Href="/prop-firm" Icon="@Icons.Material.Filled.EmojiEvents">Challenges</MudNavLink>
+                }
+            </MudNavGroup>
+        }
+
+        @if (Gate.IsEnabled(FeatureFlag.Accounts))
+        {
+            <MudNavLink Href="/accounts" Icon="@Icons.Material.Filled.AccountBalance">Trading Accounts</MudNavLink>
+        }
+        @if (Gate.IsEnabled(FeatureFlag.CopyTrading))
+        {
+            <MudNavLink Href="/copy-trading" Icon="@Icons.Material.Filled.ContentCopy">Copy Trading</MudNavLink>
+        }
+
+        <AuthorizeView Policy="AdminOrAbove">
+            <MudNavLink Href="/nodes" Icon="@Icons.Material.Filled.Hub">Nodes</MudNavLink>
+            <MudNavLink Href="/users" Icon="@Icons.Material.Filled.Group">Users</MudNavLink>
+        </AuthorizeView>
+    </MudNavMenu>
+
+    <MudDivider />
+    <MudNavMenu>
+        <MudNavGroup Title="Settings" Icon="@Icons.Material.Filled.Settings" Expanded="false" data-testid="nav-settings">
+            @if (Gate.IsEnabled(FeatureFlag.OpenApi))
+            {
+                <MudNavLink Href="/settings/openapi" Icon="@Icons.Material.Filled.Api">Open API</MudNavLink>
+            }
+            @if (Gate.IsEnabled(FeatureFlag.Ai))
+            {
+                <AuthorizeView Policy="Owner">
+                    <MudNavLink Href="/settings/ai" Icon="@Icons.Material.Filled.AutoAwesome">AI</MudNavLink>
+                </AuthorizeView>
+            }
+            <AuthorizeView Policy="Owner">
+                <MudNavLink Href="/settings/features" Icon="@Icons.Material.Filled.ToggleOn">Features</MudNavLink>
+            </AuthorizeView>
+            @if (Gate.IsEnabled(FeatureFlag.Compliance))
+            {
+                <MudNavLink Href="/settings/legal" Icon="@Icons.Material.Filled.Gavel">Legal &amp; Privacy</MudNavLink>
+            }
+        </MudNavGroup>
+    </MudNavMenu>
+</div>
+
+<style>
+    .nav-shell { height: 100%; min-height: 0; }
+</style>
+
+@code {
+    private bool AnyAuthoring =>
+        Gate.IsEnabled(FeatureFlag.Authoring)
+        || Gate.IsEnabled(FeatureFlag.Execution)
+        || Gate.IsEnabled(FeatureFlag.Backtesting);
+
+    private bool AnyProp =>
+        Gate.IsEnabled(FeatureFlag.PropGuard) || Gate.IsEnabled(FeatureFlag.PropFirm);
+}

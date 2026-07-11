@@ -13,16 +13,17 @@ namespace Infrastructure.Ai;
 public sealed class AnthropicAiClient(
     HttpClient http,
     IOptionsMonitor<AppOptions> options,
+    IAiKeyStore keyStore,
     ILogger<AnthropicAiClient> logger) : IAiClient
 {
     private AiOptions Options => options.CurrentValue.Ai;
 
-    public bool Enabled => Options.Enabled;
+    public bool Enabled => keyStore.HasKey;
 
     public async Task<AiResult> CompleteAsync(AiTextRequest request, CancellationToken ct)
     {
         var ai = Options;
-        if (!ai.Enabled) return AiResult.Fail(AiConstants.DisabledMessage);
+        if (keyStore.CurrentKey is not { } apiKey) return AiResult.Fail(AiConstants.DisabledMessage);
 
         object userContent = request.Image is { } img
             ? new object[]
@@ -43,7 +44,7 @@ public sealed class AnthropicAiClient(
             body["tools"] = new[] { new { type = AiConstants.WebSearchToolType, name = AiConstants.WebSearchToolName } };
 
         using var msg = new HttpRequestMessage(HttpMethod.Post, new Uri(new Uri(ai.BaseUrl), AiConstants.MessagesPath));
-        msg.Headers.Add(AiConstants.ApiKeyHeader, ai.ApiKey);
+        msg.Headers.Add(AiConstants.ApiKeyHeader, apiKey);
         msg.Headers.Add(AiConstants.AnthropicVersionHeader, AiConstants.AnthropicVersion);
         msg.Content = JsonContent.Create(body);
 

@@ -1,16 +1,70 @@
 ﻿@page "/assistant"
 @using System.Net.Http.Json
 @using System.Text.Json
+@using Web.Components
 @using Web.Json
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
+@inject NavigationManager Nav
 
 <PageTitle>AI Assistant</PageTitle>
 
 <MudText Typo="Typo.h5" Class="mb-3">AI Assistant</MudText>
 
+<AiFeatureNotice EnabledChanged="OnAiStatus" />
+
 <MudTabs Elevation="1" Rounded="true" ApplyEffectsToContainer="true">
+    <MudTabPanel Text="Build Bot">
+        <MudPaper Class="pa-4" Elevation="0">
+            <MudText Typo="Typo.body2" Class="mb-2">
+                Describe a strategy in plain English. The AI writes the cBot, builds it, fixes its own
+                compile errors (up to 3 tries), and on success creates a runnable cBot.
+            </MudText>
+            <MudStack Row="true" Spacing="2">
+                <MudSelect T="string" @bind-Value="_language" Label="Language" Dense="true" Style="max-width:180px;">
+                    <MudSelectItem Value="@("CSharp")">C#</MudSelectItem>
+                    <MudSelectItem Value="@("Python")">Python</MudSelectItem>
+                </MudSelect>
+                <MudTextField @bind-Value="_projectName" Label="Bot name" Style="max-width:280px;" Placeholder="MyBot" />
+            </MudStack>
+            <MudTextField @bind-Value="_description" Label="Describe your strategy" Lines="5" Class="mt-3"
+                          Placeholder="e.g. RSI mean-reversion on EURUSD h1, 1.5% risk, ATR stop-loss" />
+            <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Bolt" OnClick="BuildBot" Disabled="Busy">
+                Build my bot
+            </MudButton>
+            @if (_buildResult is not null)
+            {
+                <MudPaper Class="pa-3 mt-3" Elevation="0" Outlined="true">
+                    @if (_buildResult.Success)
+                    {
+                        <MudAlert Severity="Severity.Success" Class="mb-2">
+                            Built in @_buildResult.Attempts attempt(s). Your runnable cBot is ready.
+                        </MudAlert>
+                        <MudStack Row="true" Spacing="2">
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.PlayArrow"
+                                       OnClick="@(() => Nav.NavigateTo($"/run?cbot={_buildResult.CBotId}"))"
+                                       Disabled="@(_buildResult.CBotId is null)">Run it</MudButton>
+                            <MudButton Color="Color.Secondary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit"
+                                       OnClick="@(() => Nav.NavigateTo($"/builder/{_buildResult.ProjectId}"))"
+                                       Disabled="@(_buildResult.ProjectId is null)">Open in editor</MudButton>
+                        </MudStack>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Error" Class="mb-2">
+                            @(_buildResult.Error ?? $"Build failed after {_buildResult.Attempts} attempt(s).")
+                        </MudAlert>
+                    }
+                    @if (!string.IsNullOrEmpty(_buildResult.Log))
+                    {
+                        <pre style="white-space:pre-wrap; margin:0; max-height:280px; overflow:auto;">@_buildResult.Log</pre>
+                    }
+                </MudPaper>
+            }
+        </MudPaper>
+    </MudTabPanel>
     <MudTabPanel Text="Generate cBot">
         <MudPaper Class="pa-4" Elevation="0">
             <MudStack Row="true" Spacing="2">
@@ -24,11 +78,11 @@
                           Placeholder="e.g. RSI mean-reversion on EURUSD, 2% risk, ATR stop" />
             <MudStack Row="true" Spacing="2" Class="mt-3">
                 <MudButton Color="Color.Primary" Variant="Variant.Filled"
-                           StartIcon="@Icons.Material.Filled.AutoAwesome" OnClick="Generate" Disabled="_busy">
+                           StartIcon="@Icons.Material.Filled.AutoAwesome" OnClick="Generate" Disabled="Busy">
                     Generate cBot
                 </MudButton>
                 <MudButton Color="Color.Secondary" Variant="Variant.Filled"
-                           StartIcon="@Icons.Material.Filled.Build" OnClick="GenerateProject" Disabled="_busy">
+                           StartIcon="@Icons.Material.Filled.Build" OnClick="GenerateProject" Disabled="Busy">
                     Generate &amp; build project
                 </MudButton>
             </MudStack>
@@ -39,7 +93,7 @@
             <MudTextField @bind-Value="_reviewSource" Label="cBot source" Lines="10"
                           Placeholder="Paste cBot source to review for bugs and trading risks" />
             <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
-                       StartIcon="@Icons.Material.Filled.RateReview" OnClick="Review" Disabled="_busy">
+                       StartIcon="@Icons.Material.Filled.RateReview" OnClick="Review" Disabled="Busy">
                 Review cBot
             </MudButton>
         </MudPaper>
@@ -52,7 +106,7 @@
             <MudTextField @bind-Value="_debateSource" Label="cBot source" Lines="10"
                           Placeholder="Paste cBot source to put it before the committee" />
             <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
-                       StartIcon="@Icons.Material.Filled.Forum" OnClick="Debate" Disabled="_busy">
+                       StartIcon="@Icons.Material.Filled.Forum" OnClick="Debate" Disabled="Busy">
                 Run the debate
             </MudButton>
         </MudPaper>
@@ -61,7 +115,7 @@
         <MudPaper Class="pa-4" Elevation="0">
             <MudTextField @bind-Value="_symbol" Label="Symbol" Style="max-width:200px;" Placeholder="EURUSD" />
             <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
-                       StartIcon="@Icons.Material.Filled.Insights" OnClick="Sentiment" Disabled="_busy">
+                       StartIcon="@Icons.Material.Filled.Insights" OnClick="Sentiment" Disabled="Busy">
                 Get sentiment
             </MudButton>
         </MudPaper>
@@ -72,7 +126,7 @@
                 Checks current news and sentiment for the symbols your live bots are trading and flags any that warrant de-risking.
             </MudText>
             <MudButton Color="Color.Primary" Variant="Variant.Filled"
-                       StartIcon="@Icons.Material.Filled.Shield" OnClick="ExposureCheck" Disabled="_busy">
+                       StartIcon="@Icons.Material.Filled.Shield" OnClick="ExposureCheck" Disabled="Busy">
                 Check live exposure
             </MudButton>
         </MudPaper>
@@ -83,7 +137,7 @@
                 Reviews your recent and running bots for what's working, concentration/correlation risk, and next steps.
             </MudText>
             <MudButton Color="Color.Primary" Variant="Variant.Filled"
-                       StartIcon="@Icons.Material.Filled.Summarize" OnClick="Digest" Disabled="_busy">
+                       StartIcon="@Icons.Material.Filled.Summarize" OnClick="Digest" Disabled="Busy">
                 Generate digest
             </MudButton>
         </MudPaper>
@@ -97,7 +151,7 @@
                 @foreach (var c in _cbots) { <MudSelectItem T="Guid?" Value="@((Guid?)c.id)">@c.name</MudSelectItem> }
             </MudSelect>
             <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
-                       StartIcon="@Icons.Material.Filled.TrendingDown" OnClick="TuneAdvice" Disabled="_busy">
+                       StartIcon="@Icons.Material.Filled.TrendingDown" OnClick="TuneAdvice" Disabled="Busy">
                 Check for decay
             </MudButton>
         </MudPaper>
@@ -120,7 +174,7 @@
                 <MudTextField @bind-Value="_optTimeframe" Label="Timeframe" Style="max-width:160px;" />
             </MudStack>
             <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
-                       StartIcon="@Icons.Material.Filled.Tune" OnClick="Optimize" Disabled="_busy">
+                       StartIcon="@Icons.Material.Filled.Tune" OnClick="Optimize" Disabled="Busy">
                 Propose &amp; backtest
             </MudButton>
         </MudPaper>
@@ -149,11 +203,59 @@
     private Guid? _optCbotId, _optAcctId, _tuneCbotId;
     private string _optSymbol = "EURUSD", _optTimeframe = "h1";
 
+    private bool _aiEnabled;
+    private BuildResult? _buildResult;
+
+    // Every AI action is dimmed until a key is configured.
+    private bool Busy => _busy || !_aiEnabled;
+
+    private void OnAiStatus(bool enabled)
+    {
+        _aiEnabled = enabled;
+        StateHasChanged();
+    }
+
     protected override async Task OnInitializedAsync()
     {
         _cbots = await Http.GetDynamicArrayAsync("/api/cbots/");
         _accounts = await Http.GetDynamicArrayAsync("/api/accounts/");
     }
+
+    private async Task BuildBot()
+    {
+        if (string.IsNullOrWhiteSpace(_description))
+        {
+            Snack.Add("Describe your strategy first", Severity.Warning);
+            return;
+        }
+        _busy = true;
+        _buildResult = null;
+        try
+        {
+            var response = await Http.PostAsJsonAsync("/api/ai/build-strategy",
+                new { Name = _projectName, Language = _language, Description = _description });
+            var text = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(text);
+            var root = doc.RootElement;
+            _buildResult = new BuildResult(
+                root.TryGetProperty("success", out var s) && s.ValueKind == JsonValueKind.True,
+                root.TryGetProperty("cbotId", out var c) && c.ValueKind == JsonValueKind.String ? c.GetGuid() : null,
+                root.TryGetProperty("projectId", out var p) && p.ValueKind == JsonValueKind.String ? p.GetGuid() : null,
+                root.TryGetProperty("attempts", out var a) && a.ValueKind == JsonValueKind.Number ? a.GetInt32() : 0,
+                root.TryGetProperty("log", out var l) ? l.GetString() : null,
+                root.TryGetProperty("error", out var e) ? e.GetString() : null);
+        }
+        catch
+        {
+            Snack.Add("Request failed", Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private sealed record BuildResult(bool Success, Guid? CBotId, Guid? ProjectId, int Attempts, string? Log, string? Error);
 
     private Task Generate() => PostTextAsync("/api/ai/generate", new { Language = _language, Description = _description });
     private Task Review() => PostTextAsync("/api/ai/review", new { Language = _language, Source = _reviewSource });

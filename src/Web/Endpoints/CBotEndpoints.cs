@@ -21,7 +21,7 @@ public static class CBotEndpoints
         {
             var uid = u.UserId!.Value;
             return await db.CBots.Where(c => c.UserId == uid)
-                .Select(c => new { c.Id, c.Name, c.CreatedAt, HasSource = c.SourceProjectId != null })
+                .Select(c => new { c.Id, c.Name, c.CreatedAt, c.SourceProjectId, HasSource = c.SourceProjectId != null })
                 .ToListAsync();
         });
 

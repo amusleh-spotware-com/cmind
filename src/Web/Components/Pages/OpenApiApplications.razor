@@ -1,4 +1,4 @@
-@page "/openapi-apps"
+@page "/settings/openapi"
 @using System.Text.Json
 @using Web.Json
 @using Web.Components.Dialogs
@@ -8,10 +8,10 @@
 @inject IDialogService Dialogs
 @inject NavigationManager Nav
 
-<PageTitle>Open API Application</PageTitle>
+<PageTitle>Open API</PageTitle>
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
-    <MudText Typo="Typo.h5">Open API Application</MudText>
+    <MudText Typo="Typo.h5">Open API</MudText>
     <MudSpacer />
     @if (_configured)
     {

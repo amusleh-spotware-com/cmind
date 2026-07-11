@@ -1,0 +1,128 @@
+﻿@* Manages the parameter sets belonging to a single cBot. Opened from a cBot row. *@
+@using System.Net.Http.Json
+@using System.Text.Json
+@using Web.Json
+@inject HttpClient Http
+@inject ISnackbar Snack
+@inject IDialogService Dialogs
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Parameter Sets — @CBotName</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+            <MudSpacer />
+            <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Add" OnClick="New" data-testid="new-paramset">
+                New Parameter Set
+            </MudButton>
+        </MudStack>
+        <MudTable Items="_items" Dense="true" Hover="true">
+            <HeaderContent><MudTh>Name</MudTh><MudTh /></HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Name">@context.name</MudTd>
+                <MudTd Style="text-align:right;">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => Edit((Guid)context.id))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                   OnClick="@(() => Delete((Guid)context.id))" />
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent><MudText Class="mud-text-secondary">No parameter sets for this cBot yet.</MudText></NoRecordsContent>
+        </MudTable>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public Guid CBotId { get; set; }
+    [Parameter] public string CBotName { get; set; } = "";
+
+    private dynamic[] _items = [];
+
+    protected override Task OnInitializedAsync() => Load();
+
+    private async Task Load()
+    {
+        var all = await Http.GetDynamicArrayAsync("/api/paramsets");
+        _items = all.Where(i => (Guid)i.cBotId == CBotId).ToArray();
+    }
+
+    private async Task New()
+    {
+        var res = await ShowDialogAsync(null, null);
+        if (res is null) return;
+        await Save(null, res.Name, res.Json);
+    }
+
+    private async Task Edit(Guid id)
+    {
+        var p = await Http.GetDynamicAsync($"/api/paramsets/{id}");
+        if (p is null) return;
+        var res = await ShowDialogAsync((string?)p.name ?? "", (string?)p.jsonContent ?? "{}");
+        if (res is null) return;
+        await Save(id, res.Name, res.Json);
+    }
+
+    private async Task<ParamSetDialog.ParamSetDialogResult?> ShowDialogAsync(string? name, string? json)
+    {
+        var parameters = new DialogParameters<ParamSetDialog>
+        {
+            { x => x.Name, name },
+            { x => x.Json, json },
+            { x => x.IsEdit, name is not null },
+            { x => x.CBots, new List<ParamSetDialog.CBotOption> { new(CBotId, CBotName) } },
+            { x => x.CBotId, CBotId }
+        };
+        var dlg = await Dialogs.ShowAsync<ParamSetDialog>(name is null ? "New Parameter Set" : "Edit Parameter Set",
+            parameters, new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
+        var res = await dlg.Result;
+        if (res is null || res.Canceled) return null;
+        return (ParamSetDialog.ParamSetDialogResult)res.Data!;
+    }
+
+    private async Task Save(Guid? id, string name, string json)
+    {
+        if (!IsNonEmptyJson(json)) { Snack.Add("Content cannot be empty", Severity.Error); return; }
+        var url = id is null ? "/api/paramsets" : $"/api/paramsets/{id}";
+        var method = id is null ? HttpMethod.Post : HttpMethod.Put;
+        var req = new HttpRequestMessage(method, url)
+        {
+            Content = JsonContent.Create(new { CBotId, Name = name, JsonContent = json })
+        };
+        var r = await Http.SendAsync(req);
+        Snack.Add(r.IsSuccessStatusCode ? "Saved" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        await Load();
+    }
+
+    private async Task Delete(Guid id)
+    {
+        var ok = await Dialogs.ShowMessageBox("Delete parameter set",
+            "Delete this parameter set? This cannot be undone.", yesText: "Delete", cancelText: "Cancel");
+        if (ok != true) return;
+        await Http.DeleteAsync($"/api/paramsets/{id}");
+        await Load();
+    }
+
+    private static bool IsNonEmptyJson(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content)) return false;
+        try
+        {
+            using var doc = JsonDocument.Parse(content);
+            return doc.RootElement.ValueKind switch
+            {
+                JsonValueKind.Object => doc.RootElement.EnumerateObject().Any(),
+                JsonValueKind.Array => doc.RootElement.EnumerateArray().Any(),
+                _ => true
+            };
+        }
+        catch { return false; }
+    }
+
+    private void Close() => Dialog.Close();
+}

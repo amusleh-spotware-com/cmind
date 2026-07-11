@@ -1,0 +1,53 @@
+﻿@* Shows a banner + one-time dialog when AI is not configured, and reports enablement to the parent
+   so it can dim its AI actions. Used by every AI feature page (Assistant, Portfolio Agent, Alerts). *@
+@using Web.Json
+@inject HttpClient Http
+@inject IDialogService Dialogs
+@inject NavigationManager Nav
+
+@if (_loaded && !_enabled)
+{
+    <MudAlert Severity="Severity.Warning" Class="mb-3" data-testid="ai-not-configured">
+        <div class="d-flex align-center" style="gap:12px;">
+            <span>AI features are turned off until an Anthropic API key is added in Settings → AI.</span>
+            <MudSpacer />
+            <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled"
+                       Href="/settings/ai" data-testid="ai-add-key">Add API key</MudButton>
+        </div>
+    </MudAlert>
+}
+
+@code {
+    [Parameter] public EventCallback<bool> EnabledChanged { get; set; }
+
+    private bool _enabled;
+    private bool _loaded;
+    private bool _promptPending;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var res = await Http.GetDynamicAsync("/api/ai/status");
+            _enabled = res is not null && (bool)res.enabled;
+        }
+        catch
+        {
+            _enabled = false;
+        }
+        _loaded = true;
+        _promptPending = !_enabled;
+        await EnabledChanged.InvokeAsync(_enabled);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_promptPending) return;
+        _promptPending = false;
+        var ok = await Dialogs.ShowMessageBox(
+            "AI not configured",
+            "Add your Anthropic API key in Settings → AI to use AI features.",
+            yesText: "Open AI settings", cancelText: "Later");
+        if (ok == true) Nav.NavigateTo("/settings/ai");
+    }
+}

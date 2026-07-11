@@ -52,7 +52,7 @@ not purging these tables (they are append-only / soft-delete).
 | POST | `/api/compliance/documents/{id}/publish` | Owner | publish a version |
 | GET | `/api/compliance/audit/verify` | Owner | verify the audit hash chain |
 
-UI: `/compliance` (nav *Legal & Privacy*, gated by `Compliance`) shows outstanding agreements with accept
+UI: `/settings/legal` (nav *Settings → Legal & Privacy*, gated by `Compliance`) shows outstanding agreements with accept
 buttons and the GDPR export/erase actions.
 
 ## Tests

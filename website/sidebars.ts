@@ -41,6 +41,27 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Architecture',
+      collapsed: false,
+      items: [
+        'architecture',
+        {
+          type: 'category',
+          label: 'Decision records',
+          link: { type: 'doc', id: 'adr/README' },
+          items: [
+            'adr/strict-ddd-pure-core',
+            'adr/tph-instance-replaces-entity',
+            'adr/external-nodes-http-jwt',
+            'adr/cbotbuilder-on-web-host',
+            'adr/anthropic-raw-http',
+            'adr/copy-profile-db-lease',
+          ],
+        },
+      ],
+    },
+    {
+      type: 'category',
       label: 'Deployment',
       link: { type: 'doc', id: 'deployment/cloud' },
       items: [

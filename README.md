@@ -4,73 +4,116 @@
 
 <h1 align="center">cMind</h1>
 
-[![CI](https://github.com/amusleh-spotware-com/cmind/actions/workflows/ci.yml/badge.svg)](https://github.com/amusleh-spotware-com/cmind/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/amusleh-spotware-com/cmind/actions/workflows/codeql.yml/badge.svg)](https://github.com/amusleh-spotware-com/cmind/actions/workflows/codeql.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4.svg)](https://dotnet.microsoft.com/)
-[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![Good first issues](https://img.shields.io/badge/good%20first%20issues-open-7057ff.svg)](https://github.com/amusleh-spotware-com/cmind/labels/good%20first%20issue)
-[![AI-assisted PRs welcome](https://img.shields.io/badge/AI--assisted%20PRs-welcome-8A2BE2.svg)](AGENTS.md)
-[![PWA · mobile-first](https://img.shields.io/badge/PWA-mobile--first-26C281.svg)](docs/ui-guidelines.md)
+<p align="center">
+  <b>The self-hostable trading-operations platform for cTrader.</b><br/>
+  Build · backtest · run · copy — across a distributed node fleet, with an AI core watching the risk.
+</p>
 
-**cMind is a multi-tenant trading operations platform for cTrader.** Build, backtest, run,
-and copy trading strategies at scale — with AI assistance built in — from one hardened,
-self-hostable app.
+<p align="center">
+  <a href="https://github.com/amusleh-spotware-com/cmind/actions/workflows/ci.yml"><img src="https://github.com/amusleh-spotware-com/cmind/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
+  <a href="https://github.com/amusleh-spotware-com/cmind/actions/workflows/codeql.yml"><img src="https://github.com/amusleh-spotware-com/cmind/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT"/></a>
+  <img src="https://img.shields.io/badge/.NET-10-512BD4.svg?logo=dotnet&logoColor=white" alt=".NET 10"/>
+  <img src="https://img.shields.io/badge/Blazor-MudBlazor-512BD4.svg?logo=blazor&logoColor=white" alt="Blazor"/>
+  <img src="https://img.shields.io/badge/PostgreSQL-EF%20Core-4169E1.svg?logo=postgresql&logoColor=white" alt="PostgreSQL"/>
+  <img src="https://img.shields.io/badge/PWA-mobile--first-26C281.svg" alt="PWA mobile-first"/>
+  <a href="AGENTS.md"><img src="https://img.shields.io/badge/AI--assisted%20PRs-welcome-8A2BE2.svg" alt="AI-assisted PRs welcome"/></a>
+  <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome"/></a>
+</p>
+
+<p align="center">
+  <a href="#-features">Features</a> ·
+  <a href="#-screenshots">Screenshots</a> ·
+  <a href="#-who-its-for">Who it's for</a> ·
+  <a href="#-quick-start">Quick start</a> ·
+  <a href="#-tech">Tech</a> ·
+  <a href="#contributing--wed-love-your-help-">Contributing</a>
+</p>
 
 ---
 
-## Why teams use cMind
+## 📸 Screenshots
 
-- **Copy trading that holds up with real money.** Mirror a master account onto many
-  accounts across brokers and cTrader IDs, with per-destination control over sizing,
-  direction, symbols, order types (market / market-range / limit / stop / stop-limit),
-  stop-loss/take-profit, pending-order expiry, and exact market-range slippage. Connections
-  drop, orders fail, tokens rotate — cMind reconciles state without duplicating trades and
-  keeps a full audit log for compliance. → [docs/features/copy-trading.md](docs/features/copy-trading.md)
-- **AI that does the work, not just chat.** Plain-English strategy → runnable cBot with a
-  build-and-self-repair loop; closed-loop parameter optimization; a background risk guard
-  that can auto-stop bots; prop-firm exposure guarding; backtest analysis and post-mortems.
-  → [docs/features/ai.md](docs/features/ai.md)
-- **Scales with a click, heals itself.** Run and backtest across an auto-discovering node
-  fleet; copy hosting uses a self-healing lease so a dead node's work is reclaimed
-  automatically. → [docs/deployment/scaling.md](docs/deployment/scaling.md)
-- **Yours to run.** Self-host on Docker, Kubernetes, Azure, or AWS. Argon2id, encrypted key
-  ring, per-node signed tokens, rate limiting, structured logs + OpenTelemetry.
-  → [docs/deployment/](docs/deployment/)
-- **In your pocket.** A mobile-first, fully responsive UI you can **install as an app** on your
-  phone (PWA) — bottom-nav navigation, card layouts, offline shell. Every surface is
-  white-labelable, so resellers ship it as their own. → [docs/ui-guidelines.md](docs/ui-guidelines.md)
+<table>
+  <tr>
+    <td width="50%"><img src="docs/design/screenshots/login-desktop.png" alt="Login" /></td>
+    <td width="50%"><img src="docs/design/screenshots/dashboard-desktop.png" alt="Dashboard" /></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Branded split-screen login</b></td>
+    <td align="center"><b>Live operations dashboard</b></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/design/screenshots/ai-build-desktop.png" alt="AI build a cBot" /></td>
+    <td width="50%"><img src="docs/design/screenshots/copy-trading-desktop.png" alt="Copy trading" /></td>
+  </tr>
+  <tr>
+    <td align="center"><b>AI — build a cBot from a prompt</b></td>
+    <td align="center"><b>Copy trading across accounts</b></td>
+  </tr>
+</table>
 
-## What's inside
+<p align="center">
+  <i>Mobile-first &amp; installable —</i><br/>
+  <img src="docs/design/screenshots/login-mobile.png" alt="Login on mobile" height="380" />
+  &nbsp;&nbsp;
+  <img src="docs/design/screenshots/dashboard-mobile.png" alt="Dashboard on mobile" height="380" />
+</p>
+
+---
+
+## ✨ Features
+
+| | |
+|---|---|
+| 🤖 **AI that does the work** | Plain-English prompt → runnable cBot via a generate → build → self-repair loop. Code review, strategy debate, market sentiment, exposure check, portfolio digest, tune advisor, and a background **risk guard** that can auto-stop bots. |
+| 🔁 **Copy trading, money-grade** | Mirror one master onto many accounts across brokers &amp; cTrader IDs — per-destination sizing, direction, symbols, order types (market / range / limit / stop / stop-limit), SL/TP, expiry, exact slippage. Reconciles through drops, rejections &amp; token rotation without duplicating trades. |
+| 🧠 **Build &amp; backtest cBots** | In-browser Monaco IDE (C# **and** Python), sandboxed `dotnet build` in throwaway containers, parameter sets, live logs and equity curves streamed back. |
+| 🛰️ **Distributed fleet** | Runs &amp; backtests are scheduled onto the least-loaded node; agents self-register and heartbeat; a self-healing lease reclaims a dead node's work automatically. |
+| 🏆 **Prop-firm tooling** | Live challenge tracking (drawdown / daily-loss / target / min-days), an AI exposure guardian, and auto-flatten on breach. |
+| 📱 **Mobile-first &amp; installable** | Fully responsive UI you **install as an app** (PWA) — bottom-nav, card layouts, offline shell, add-to-home-screen. |
+| 🎨 **White-label** | Every deployment re-skins name, logo, colours, and icons from config — resellers ship it as their own. |
+| 🔌 **MCP server** | Exposes tools over HTTP+SSE so external AI clients can drive cMind. |
+| 🔒 **Hardened &amp; yours to run** | Argon2id, encrypted key ring, per-node signed JWTs, rate limiting, structured logs + OpenTelemetry. Self-host on Docker, Kubernetes, Azure, or AWS. |
+
+## 🎯 Who it's for
+
+- **Algorithmic traders &amp; quants** who write cBots and want to run, backtest, and optimize them at scale — not babysit a single terminal.
+- **Prop-firm operators &amp; trading desks** mirroring strategies across many accounts with rule-guards and a full audit trail.
+- **Developers &amp; resellers** who want a hardened, white-labelable, self-hosted trading-ops console — with an MCP + API surface to build on.
+
+## 🗂️ What's inside
 
 | Capability | Docs |
 |------------|------|
 | Copy trading (mirroring, order types, SL/TP, slippage, sync/desync) | [features/copy-trading.md](docs/features/copy-trading.md) |
 | Open API token lifecycle (single valid token per cID, in-place rotation) | [features/token-lifecycle.md](docs/features/token-lifecycle.md) |
 | AI assistant, agent, risk guard, alerts, prop-guard | [features/ai.md](docs/features/ai.md) |
-| Build & backtest cBots (in-browser Monaco IDE, C# + Python) | [features/build-and-backtest.md](docs/features/build-and-backtest.md) |
-| Node fleet & horizontal scaling | [operations/node-discovery.md](docs/operations/node-discovery.md) · [deployment/scaling.md](docs/deployment/scaling.md) |
+| Build &amp; backtest cBots (in-browser Monaco IDE, C# + Python) | [features/build-and-backtest.md](docs/features/build-and-backtest.md) |
+| Node fleet &amp; horizontal scaling | [operations/node-discovery.md](docs/operations/node-discovery.md) · [deployment/scaling.md](docs/deployment/scaling.md) |
 | MCP server (HTTP + SSE tools for AI clients) | [features/mcp.md](docs/features/mcp.md) |
+| Installable app &amp; design system (mobile-first, PWA, white-label) | [features/pwa.md](docs/features/pwa.md) · [ui-guidelines.md](docs/ui-guidelines.md) |
 | Deployment (Compose, K8s/Helm, Azure, AWS) | [deployment/](docs/deployment/) |
-| Design system, mobile-first & PWA, white-label theming | [ui-guidelines.md](docs/ui-guidelines.md) |
-| Testing & dev credentials | [testing/](docs/testing/) · [testing/dev-credentials.md](docs/testing/dev-credentials.md) |
+| Testing &amp; dev credentials | [testing/](docs/testing/) · [testing/dev-credentials.md](docs/testing/dev-credentials.md) |
 
-## Quick start
+## 🚀 Quick start
 
 ```bash
 dotnet restore
 dotnet run --project src/AppHost      # full stack via .NET Aspire (Postgres, Web, MCP)
 ```
 
-Then open the Web URL from the Aspire dashboard. For a Web-only run, deployment, and
-step-by-step setup, see **[docs/deployment/local.md](docs/deployment/local.md)**.
+Open the Web URL from the Aspire dashboard. For a Web-only run, deployment, and step-by-step setup,
+see **[docs/deployment/local.md](docs/deployment/local.md)**.
 
-## Tech
+> 💡 On a phone? Open the app in your browser and **Add to Home Screen** — it installs as a standalone app.
+
+## 🛠️ Tech
 
 .NET 10 · ASP.NET Core Minimal APIs · Blazor Server (SSR) + MudBlazor · mobile-first responsive UI +
 installable PWA · white-label theming · EF Core 10 + PostgreSQL · .NET Aspire · Docker ·
 gRPC/Protobuf (cTrader Open API) · Serilog + OpenTelemetry · MCP · Playwright E2E (mobile + desktop).
-Architecture follows strict Domain-Driven Design — see [CLAUDE.md](CLAUDE.md) and
+Architecture follows **strict Domain-Driven Design** — see [CLAUDE.md](CLAUDE.md) and
 [docs/ui-guidelines.md](docs/ui-guidelines.md).
 
 ## Contributing — we'd love your help 💛
@@ -87,11 +130,10 @@ cTrader behavior are as valuable as the people writing aggregates.
 - 🤖 **AI-assisted contributions are welcome and encouraged** — the repo is agent-ready. See
   **[AGENTS.md](AGENTS.md)** and [Contributing with agentic AI](CONTRIBUTING.md#contributing-with-agentic-ai-).
 - 📋 Full guide, PR/issue standards, and what we accept: **[CONTRIBUTING.md](CONTRIBUTING.md)**.
-  Architecture + conventions: **[CLAUDE.md](CLAUDE.md)**.
 
 Every merged contributor is credited. Come build the platform you wish existed. → **[Start here](CONTRIBUTING.md)**
 
-## Security · License
+## 🔐 Security · License
 
 - Report vulnerabilities per [SECURITY.md](SECURITY.md).
 - MIT licensed — see [LICENSE](LICENSE). Built with [Claude Code](https://claude.com/claude-code).

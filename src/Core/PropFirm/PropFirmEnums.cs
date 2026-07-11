@@ -11,18 +11,42 @@ public enum ChallengeStatus
 {
     Active,
     Passed,
-    Failed
+    Failed,
+    Draft,
+    Stopped
 }
 
 public enum DrawdownMode
 {
     Static,
-    Trailing
+    Trailing,
+    TrailingThreshold
+}
+
+public enum DailyLossBasis
+{
+    Equity,
+    Balance
+}
+
+public enum ChallengeKind
+{
+    OnePhase,
+    TwoPhase,
+    ThreePhase,
+    InstantFunding,
+    Custom
 }
 
 public enum BreachReason
 {
     None,
     DailyLoss,
-    MaxDrawdown
+    MaxDrawdown,
+    Consistency,
+    TimeLimit,
+    Inactivity,
+    WeekendHolding,
+    NewsTrading,
+    MaxExposure
 }

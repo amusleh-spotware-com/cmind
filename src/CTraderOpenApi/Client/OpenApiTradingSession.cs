@@ -52,6 +52,7 @@ public interface IOpenApiTradingSession : IAsyncDisposable
     Task SwapAccessTokenAsync(long ctidTraderAccountId, string accessToken, CancellationToken ct);
     Task StartAsync(CancellationToken ct);
     Task<double> LoadBalanceAsync(long ctidTraderAccountId, CancellationToken ct);
+    Task<IReadOnlyList<PositionValuation>> LoadPositionValuationsAsync(long ctidTraderAccountId, CancellationToken ct);
     IAsyncEnumerable<ExecutionEvent> SourceExecutionsAsync(long ctidTraderAccountId, CancellationToken ct);
     Task<IReadOnlyDictionary<string, long>> LoadSymbolIdsAsync(long ctidTraderAccountId, CancellationToken ct);
     Task<IReadOnlyDictionary<long, string>> LoadSymbolNamesAsync(long ctidTraderAccountId, CancellationToken ct);
@@ -290,6 +291,29 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
         var trader = ProtoOATraderRes.Parser.ParseFrom(response.Payload).Trader;
         var scale = Math.Pow(10, trader.HasMoneyDigits ? trader.MoneyDigits : 2);
         return trader.Balance / scale;
+    }
+
+    public async Task<IReadOnlyList<PositionValuation>> LoadPositionValuationsAsync(
+        long ctidTraderAccountId, CancellationToken ct)
+    {
+        var response = await connection.SendAsync(
+            new ProtoOAReconcileReq { CtidTraderAccountId = ctidTraderAccountId },
+            (int)ProtoOAPayloadType.ProtoOaReconcileReq, ct);
+
+        return ProtoOAReconcileRes.Parser.ParseFrom(response.Payload).Position
+            .Select(p =>
+            {
+                var moneyScale = Math.Pow(10, p.HasMoneyDigits ? p.MoneyDigits : 2);
+                return new PositionValuation(
+                    p.PositionId,
+                    p.TradeData.SymbolId,
+                    p.TradeData.TradeSide == ProtoOATradeSide.Buy,
+                    p.TradeData.Volume,
+                    p.HasPrice ? p.Price : 0,
+                    p.Swap / moneyScale,
+                    p.HasCommission ? p.Commission / moneyScale : 0);
+            })
+            .ToList();
     }
 
     public async Task ClosePositionAsync(long ctidTraderAccountId, long positionId, long volume, CancellationToken ct)

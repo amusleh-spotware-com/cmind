@@ -37,6 +37,9 @@ public static class DependencyInjection
             services.AddHostedService<Nodes.CopyTrading.CopyEngineSupervisor>();
         }
 
+        if (features.PropFirm)
+            services.AddHostedService<Nodes.PropFirm.PropFirmTrackingSupervisor>();
+
         return services;
     }
 }

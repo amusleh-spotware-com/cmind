@@ -224,4 +224,47 @@ public static partial class LogMessages
     [LoggerMessage(EventId = 1066, Level = LogLevel.Information,
         Message = "Copy host token swapped in place: profile {ProfileId} account {Ctid}")]
     public static partial void CopyHostTokenSwapped(this ILogger logger, Guid profileId, long ctid);
+
+    // ---- Prop-firm challenge tracking ----
+
+    [LoggerMessage(EventId = 1067, Level = LogLevel.Error, Message = "Prop-firm tracking supervisor cycle failed")]
+    public static partial void PropFirmSupervisorFailed(this ILogger logger, Exception ex);
+
+    [LoggerMessage(EventId = 1068, Level = LogLevel.Information, Message = "Prop-firm challenge {ChallengeId} tracker hosted")]
+    public static partial void PropFirmChallengeHosted(this ILogger logger, Guid challengeId);
+
+    [LoggerMessage(EventId = 1069, Level = LogLevel.Warning,
+        Message = "Prop-firm challenge {ChallengeId} skipped: trading account is not Open API linked")]
+    public static partial void PropFirmChallengeNotTrackable(this ILogger logger, Guid challengeId);
+
+    [LoggerMessage(EventId = 1070, Level = LogLevel.Information,
+        Message = "Prop-firm tracker started: challenge {ChallengeId} account {Ctid}")]
+    public static partial void PropFirmTrackerStarted(this ILogger logger, Guid challengeId, long ctid);
+
+    [LoggerMessage(EventId = 1071, Level = LogLevel.Information,
+        Message = "Prop-firm equity recorded: challenge {ChallengeId} equity {Equity} status {Status}")]
+    public static partial void PropFirmEquityRecorded(this ILogger logger, Guid challengeId, decimal equity, string status);
+
+    [LoggerMessage(EventId = 1072, Level = LogLevel.Warning, Message = "Prop-firm tracker for challenge {ChallengeId} failed")]
+    public static partial void PropFirmTrackerFailed(this ILogger logger, Guid challengeId, Exception ex);
+
+    [LoggerMessage(EventId = 1073, Level = LogLevel.Information,
+        Message = "Prop-firm tracker token swapped in place: challenge {ChallengeId} account {Ctid}")]
+    public static partial void PropFirmTrackerTokenSwapped(this ILogger logger, Guid challengeId, long ctid);
+
+    [LoggerMessage(EventId = 1074, Level = LogLevel.Information,
+        Message = "Prop-firm challenge {ChallengeId} resolved: {Status} ({Breach})")]
+    public static partial void PropFirmChallengeResolved(this ILogger logger, Guid challengeId, string status, string breach);
+
+    [LoggerMessage(EventId = 1075, Level = LogLevel.Information,
+        Message = "Prop-firm alert: challenge {ChallengeId} PASSED for user {UserId}")]
+    public static partial void PropFirmAlertPassed(this ILogger logger, Guid challengeId, Guid userId);
+
+    [LoggerMessage(EventId = 1076, Level = LogLevel.Warning,
+        Message = "Prop-firm alert: challenge {ChallengeId} FAILED ({Reason}) for user {UserId}")]
+    public static partial void PropFirmAlertBreached(this ILogger logger, Guid challengeId, string reason, Guid userId);
+
+    [LoggerMessage(EventId = 1077, Level = LogLevel.Warning,
+        Message = "Prop-firm alert: challenge {ChallengeId} drawdown at {PercentUsed}% for user {UserId}")]
+    public static partial void PropFirmAlertDrawdownWarning(this ILogger logger, Guid challengeId, double percentUsed, Guid userId);
 }

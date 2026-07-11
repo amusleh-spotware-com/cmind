@@ -49,6 +49,7 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
     private readonly Dictionary<long, string> _accountTokens = new();
     private readonly Dictionary<long, (double Bid, double Ask)> _spots = new();
     private readonly Dictionary<long, long?> _sourceOrderExpiry = new();
+    private readonly Dictionary<long, (double Entry, double Swap, double Commission)> _valuations = new();
     private readonly Dictionary<long, string> _symbolNames;
     private readonly Dictionary<string, long> _symbolIds;
     private readonly SymbolDetails _details;
@@ -95,6 +96,13 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
     // ---- test control surface -------------------------------------------------------------------
 
     public void SetSpot(long symbolId, double bid, double ask) => _spots[symbolId] = (bid, ask);
+
+    public double Balance { get; set; } = 10000.0;
+
+    // Registers a position's valuation inputs (entry price, swap, commission) so LoadPositionValuationsAsync
+    // can revalue it against the current spot — the prop-firm tracker's equity feed.
+    public void SetPositionValuation(long positionId, double entryPrice, double swap = 0, double commission = 0)
+        => _valuations[positionId] = (entryPrice, swap, commission);
 
     public void Disconnect() => State = ConnectionState.Disconnected;
 
@@ -170,7 +178,16 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
                 yield return e;
     }
 
-    public Task<double> LoadBalanceAsync(long ctidTraderAccountId, CancellationToken ct) => Task.FromResult(10000.0);
+    public Task<double> LoadBalanceAsync(long ctidTraderAccountId, CancellationToken ct) => Task.FromResult(Balance);
+
+    public Task<IReadOnlyList<PositionValuation>> LoadPositionValuationsAsync(long ctidTraderAccountId, CancellationToken ct)
+        => Task.FromResult<IReadOnlyList<PositionValuation>>(PositionStore(ctidTraderAccountId)
+            .Select(p =>
+            {
+                var v = _valuations.TryGetValue(p.PositionId, out var val) ? val : (Entry: 1.10, Swap: 0.0, Commission: 0.0);
+                return new PositionValuation(p.PositionId, p.SymbolId, p.IsBuy, p.Volume, v.Entry, v.Swap, v.Commission);
+            })
+            .ToList());
 
     public Task<IReadOnlyDictionary<string, long>> LoadSymbolIdsAsync(long ctidTraderAccountId, CancellationToken ct)
         => Task.FromResult<IReadOnlyDictionary<string, long>>(_symbolIds);

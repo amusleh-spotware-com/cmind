@@ -31,6 +31,7 @@ if (features.Authoring) mcp.WithTools<CBotTools>();
 if (features.Execution) mcp.WithTools<InstanceTools>();
 if (features.Ai) mcp.WithTools<AiTools>();
 if (features.CopyTrading) mcp.WithTools<CopyTools>();
+if (features.PropFirm) mcp.WithTools<PropFirmTools>();
 
 var app = builder.Build();
 app.UseSerilogRequestLogging();

@@ -243,8 +243,10 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
             e.Property(x => x.Phase).HasConversion<string>().HasMaxLength(16);
             e.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
-            e.Property(x => x.DrawdownMode).HasConversion<string>().HasMaxLength(16);
-            e.Property(x => x.Breach).HasConversion<string>().HasMaxLength(16);
+            e.Property(x => x.DrawdownMode).HasConversion<string>().HasMaxLength(24);
+            e.Property(x => x.Breach).HasConversion<string>().HasMaxLength(24);
+            e.Property(x => x.Kind).HasConversion<string>().HasMaxLength(16);
+            e.Property(x => x.DailyLossBasis).HasConversion<string>().HasMaxLength(16);
         });
 
         modelBuilder.Entity<LegalDocument>(e =>

@@ -51,6 +51,9 @@ public static class DomainErrors
     public const string PropFirmStartingBalanceInvalid = "domain.propfirm.starting_balance_invalid";
     public const string PropFirmChallengeNotActive = "domain.propfirm.challenge_not_active";
     public const string PropFirmEquityOutOfOrder = "domain.propfirm.equity_out_of_order";
+    public const string PropFirmDrawdownThresholdInvalid = "domain.propfirm.drawdown_threshold_invalid";
+    public const string PropFirmChallengeTransitionInvalid = "domain.propfirm.challenge_transition_invalid";
+    public const string PropFirmNodeIdentityInvalid = "domain.propfirm.node_identity_invalid";
 
     public const string LegalDocumentBodyRequired = "domain.legal.body_required";
     public const string LegalDocumentVersionInvalid = "domain.legal.version_invalid";

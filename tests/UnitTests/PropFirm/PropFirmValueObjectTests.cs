@@ -36,4 +36,44 @@ public class PropFirmValueObjectTests
         var act = () => new TradingDayRequirement(value);
         act.Should().Throw<DomainException>().Which.Code.Should().Be(DomainErrors.PropFirmTradingDaysOutOfRange);
     }
+
+    [Fact]
+    public void TrailingThreshold_rejects_non_positive_trail_amount()
+    {
+        var act = () => DrawdownLimit.TrailingThreshold(0m, 100m);
+        act.Should().Throw<DomainException>().Which.Code.Should().Be(DomainErrors.PropFirmDrawdownThresholdInvalid);
+    }
+
+    [Fact]
+    public void Static_drawdown_breaches_from_starting_balance()
+    {
+        var limit = DrawdownLimit.Static(new Percent(10));
+        limit.IsBreached(100_000m, 100_000m, 90_000m).Should().BeTrue();
+        limit.IsBreached(100_000m, 100_000m, 91_000m).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Trailing_drawdown_breaches_from_peak_equity()
+    {
+        var limit = DrawdownLimit.Trailing(new Percent(10));
+        limit.IsBreached(100_000m, 120_000m, 108_000m).Should().BeTrue();
+        limit.IsBreached(100_000m, 120_000m, 109_000m).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Daily_loss_limit_uses_the_configured_basis()
+    {
+        var balance = new DailyLossLimit(new Percent(5), DailyLossBasis.Balance);
+        balance.IsBreached(100_000m, 90_000m, 100_000m, 100_000m).Should().BeFalse();
+        balance.IsBreached(100_000m, 100_000m, 100_000m, 94_000m).Should().BeTrue();
+    }
+
+    [Fact]
+    public void Consistency_rule_is_satisfied_when_no_profit_yet()
+    {
+        var rule = new ConsistencyRule(new Percent(40));
+        rule.IsSatisfied(0m, 0m).Should().BeTrue();
+        rule.IsSatisfied(5_000m, 20_000m).Should().BeTrue();
+        rule.IsSatisfied(9_000m, 20_000m).Should().BeFalse();
+    }
 }

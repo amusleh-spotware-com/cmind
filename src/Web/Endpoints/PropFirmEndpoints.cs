@@ -17,7 +17,17 @@ public record CreatePropFirmChallengeRequest(
     double MaxTotalDrawdownPercent,
     DrawdownMode DrawdownMode,
     int MinTradingDays,
-    bool SingleStep);
+    bool SingleStep,
+    ChallengeKind Kind = ChallengeKind.Custom,
+    DailyLossBasis DailyLossBasis = DailyLossBasis.Equity,
+    decimal TrailingThresholdAmount = 0,
+    decimal TrailingLockThreshold = 0,
+    double? ConsistencyMaxDayProfitSharePercent = null,
+    int? MaxCalendarDays = null,
+    int? MaxInactivityDays = null,
+    int? MaxOpenPositions = null,
+    bool AllowWeekendHolding = true,
+    bool AllowNewsTrading = true);
 
 public record RecordEquityRequest(decimal Equity);
 
@@ -40,6 +50,22 @@ public static class PropFirmEndpoints
             return challenge is null ? Results.NotFound() : Results.Ok(Project(challenge));
         });
 
+        g.MapGet("/templates", () => Results.Ok(ChallengeTemplates.All.Select(kind =>
+        {
+            var rules = ChallengeTemplates.For(kind);
+            return new
+            {
+                Kind = kind.ToString(),
+                ProfitTargetPercent = rules.ProfitTarget.Value,
+                MaxDailyLossPercent = rules.MaxDailyLoss.Value,
+                MaxTotalDrawdownPercent = rules.MaxTotalDrawdown.Value,
+                DrawdownMode = rules.DrawdownMode.ToString(),
+                rules.MinTradingDays.Value,
+                rules.SingleStep,
+                DailyLossBasis = rules.DailyLossBasis.ToString()
+            };
+        })));
+
         g.MapPost("/challenges", async (CreatePropFirmChallengeRequest req, IPropFirmChallengeRepository repo,
             ICurrentUser u, CancellationToken ct) =>
         {
@@ -52,12 +78,58 @@ public static class PropFirmEndpoints
                     new Percent(req.MaxTotalDrawdownPercent),
                     req.DrawdownMode,
                     new TradingDayRequirement(req.MinTradingDays),
-                    req.SingleStep);
+                    req.SingleStep)
+                {
+                    Kind = req.Kind,
+                    DailyLossBasis = req.DailyLossBasis,
+                    TrailingThresholdAmount = req.TrailingThresholdAmount,
+                    TrailingLockThreshold = req.TrailingLockThreshold,
+                    ConsistencyMaxDayProfitSharePercent = req.ConsistencyMaxDayProfitSharePercent,
+                    MaxCalendarDays = req.MaxCalendarDays,
+                    MaxInactivityDays = req.MaxInactivityDays,
+                    MaxOpenPositions = req.MaxOpenPositions,
+                    AllowWeekendHolding = req.AllowWeekendHolding,
+                    AllowNewsTrading = req.AllowNewsTrading
+                };
                 var challenge = PropFirmChallenge.Create(uid, TradingAccountId.From(req.TradingAccountId),
                     req.Name, new Money(req.StartingBalance), rules);
                 await repo.AddAsync(challenge, ct);
                 await repo.SaveChangesAsync(ct);
                 return Results.Ok(new { challenge.Id });
+            }
+            catch (DomainException ex)
+            {
+                return Results.BadRequest(new { error = ex.Code });
+            }
+        });
+
+        g.MapPost("/challenges/{id:guid}/start", async (Guid id, IPropFirmChallengeRepository repo,
+            ICurrentUser u, CancellationToken ct) =>
+        {
+            var challenge = await repo.GetByIdAsync(PropFirmChallengeId.From(id), u.UserId!.Value, ct);
+            if (challenge is null) return Results.NotFound();
+            try
+            {
+                challenge.Resume();
+                await repo.SaveChangesAsync(ct);
+                return Results.Ok(Project(challenge));
+            }
+            catch (DomainException ex)
+            {
+                return Results.BadRequest(new { error = ex.Code });
+            }
+        });
+
+        g.MapPost("/challenges/{id:guid}/stop", async (Guid id, IPropFirmChallengeRepository repo,
+            ICurrentUser u, CancellationToken ct) =>
+        {
+            var challenge = await repo.GetByIdAsync(PropFirmChallengeId.From(id), u.UserId!.Value, ct);
+            if (challenge is null) return Results.NotFound();
+            try
+            {
+                challenge.Stop();
+                await repo.SaveChangesAsync(ct);
+                return Results.Ok(Project(challenge));
             }
             catch (DomainException ex)
             {
@@ -103,15 +175,24 @@ public static class PropFirmEndpoints
         Phase = c.Phase.ToString(),
         Status = c.Status.ToString(),
         Breach = c.Breach.ToString(),
+        Kind = c.Kind.ToString(),
         c.CurrentEquity,
+        c.CurrentBalance,
         c.PeakEquity,
         c.TradingDaysCount,
         c.ProfitTargetPercent,
         c.MaxDailyLossPercent,
         c.MaxTotalDrawdownPercent,
         DrawdownMode = c.DrawdownMode.ToString(),
+        DailyLossBasis = c.DailyLossBasis.ToString(),
+        c.ConsistencyMaxDayProfitSharePercent,
+        c.MaxCalendarDays,
+        c.MaxOpenPositions,
+        c.AllowWeekendHolding,
+        c.AllowNewsTrading,
         c.MinTradingDays,
         c.SingleStep,
+        c.AssignedNode,
         c.LastEquityAt
     };
 }

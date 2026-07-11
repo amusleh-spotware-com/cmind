@@ -38,6 +38,12 @@ public static class DependencyInjection
 
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<Core.Domain.IDomainEventDispatcher, DomainEventDispatcher>();
+        services.AddScoped<Core.Domain.IDomainEventHandler<Core.Domain.PropFirmChallengePassed>,
+            Infrastructure.PropFirm.PropFirmAlertNotifier>();
+        services.AddScoped<Core.Domain.IDomainEventHandler<Core.Domain.PropFirmChallengeBreached>,
+            Infrastructure.PropFirm.PropFirmAlertNotifier>();
+        services.AddScoped<Core.Domain.IDomainEventHandler<Core.Domain.PropFirmDrawdownWarning>,
+            Infrastructure.PropFirm.PropFirmAlertNotifier>();
         services.AddSingleton<Microsoft.EntityFrameworkCore.Diagnostics.ISaveChangesInterceptor,
             Infrastructure.Persistence.DomainEventDispatchInterceptor>();
         services.AddSingleton<Microsoft.EntityFrameworkCore.Diagnostics.ISaveChangesInterceptor,

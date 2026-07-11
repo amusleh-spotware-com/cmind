@@ -69,6 +69,9 @@ internal sealed class SyncTradingSession(FakeTradingSession inner) : IOpenApiTra
     public Task<double> LoadBalanceAsync(long ctid, CancellationToken ct)
     { lock (_gate) return inner.LoadBalanceAsync(ctid, ct); }
 
+    public Task<IReadOnlyList<PositionValuation>> LoadPositionValuationsAsync(long ctid, CancellationToken ct)
+    { lock (_gate) return inner.LoadPositionValuationsAsync(ctid, ct); }
+
     // Channel-backed and independently thread-safe; no gate, no awaits held.
     public IAsyncEnumerable<ExecutionEvent> SourceExecutionsAsync(long ctid, CancellationToken ct)
         => inner.SourceExecutionsAsync(ctid, ct);

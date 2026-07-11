@@ -17,9 +17,21 @@
                     <MudSelectItem T="Guid" Value="@a.Id">@a.Label</MudSelectItem>
                 }
             </MudSelect>
+            <MudSelect T="ChallengeKind" Value="_kind" ValueChanged="ApplyTemplate" Label="Template" Class="mb-2">
+                @foreach (var k in ChallengeTemplates.All)
+                {
+                    <MudSelectItem T="ChallengeKind" Value="@k">@k</MudSelectItem>
+                }
+            </MudSelect>
             <MudNumericField T="decimal" @bind-Value="_startingBalance" Label="Starting balance" Class="mb-2" />
             <MudNumericField T="double" @bind-Value="_profitTarget" Label="Profit target %" Class="mb-2" />
             <MudNumericField T="double" @bind-Value="_maxDailyLoss" Label="Max daily loss %" Class="mb-2" />
+            <MudSelect T="DailyLossBasis" @bind-Value="_dailyLossBasis" Label="Daily-loss basis" Class="mb-2">
+                @foreach (var b in Enum.GetValues<DailyLossBasis>())
+                {
+                    <MudSelectItem T="DailyLossBasis" Value="@b">@b</MudSelectItem>
+                }
+            </MudSelect>
             <MudNumericField T="double" @bind-Value="_maxDrawdown" Label="Max total drawdown %" Class="mb-2" />
             <MudSelect T="DrawdownMode" @bind-Value="_drawdownMode" Label="Drawdown mode" Class="mb-2">
                 @foreach (var m in Enum.GetValues<DrawdownMode>())
@@ -27,7 +39,17 @@
                     <MudSelectItem T="DrawdownMode" Value="@m">@m</MudSelectItem>
                 }
             </MudSelect>
+            @if (_drawdownMode == DrawdownMode.TrailingThreshold)
+            {
+                <MudNumericField T="decimal" @bind-Value="_trailingThresholdAmount" Label="Trailing threshold ($)" Class="mb-2" />
+                <MudNumericField T="decimal" @bind-Value="_trailingLockThreshold" Label="Trailing lock at equity ($)" Class="mb-2" />
+            }
             <MudNumericField T="int" @bind-Value="_minTradingDays" Label="Min trading days" Class="mb-2" />
+            <MudNumericField T="double?" @bind-Value="_consistency" Label="Consistency max day-profit share % (optional)" Class="mb-2" />
+            <MudNumericField T="int?" @bind-Value="_maxCalendarDays" Label="Max calendar days (optional)" Class="mb-2" />
+            <MudNumericField T="int?" @bind-Value="_maxOpenPositions" Label="Max open positions (optional)" Class="mb-2" />
+            <MudSwitch T="bool" @bind-Value="_allowWeekendHolding" Label="Allow weekend holding" Color="Color.Primary" />
+            <MudSwitch T="bool" @bind-Value="_allowNewsTrading" Label="Allow news trading" Color="Color.Primary" />
             <MudSwitch T="bool" @bind-Value="_singleStep" Label="Single-step (skip verification)" Color="Color.Primary" />
         </MudForm>
     </DialogContent>
@@ -45,21 +67,47 @@
     private MudForm? _form;
     private string _name = "";
     private Guid _account;
+    private ChallengeKind _kind = ChallengeKind.TwoPhase;
     private decimal _startingBalance = 100000;
     private double _profitTarget = 8;
     private double _maxDailyLoss = 5;
+    private DailyLossBasis _dailyLossBasis = DailyLossBasis.Equity;
     private double _maxDrawdown = 10;
     private DrawdownMode _drawdownMode = DrawdownMode.Static;
+    private decimal _trailingThresholdAmount;
+    private decimal _trailingLockThreshold;
     private int _minTradingDays;
+    private double? _consistency;
+    private int? _maxCalendarDays;
+    private int? _maxOpenPositions;
+    private bool _allowWeekendHolding = true;
+    private bool _allowNewsTrading = true;
     private bool _singleStep = true;
+
+    protected override void OnInitialized() => ApplyTemplate(_kind);
+
+    private void ApplyTemplate(ChallengeKind kind)
+    {
+        _kind = kind;
+        if (kind == ChallengeKind.Custom) return;
+        var rules = ChallengeTemplates.For(kind);
+        _profitTarget = rules.ProfitTarget.Value;
+        _maxDailyLoss = rules.MaxDailyLoss.Value;
+        _maxDrawdown = rules.MaxTotalDrawdown.Value;
+        _drawdownMode = rules.DrawdownMode;
+        _dailyLossBasis = rules.DailyLossBasis;
+        _minTradingDays = rules.MinTradingDays.Value;
+        _singleStep = rules.SingleStep;
+    }
 
     private async Task Submit()
     {
         if (_form is not null) await _form.Validate();
         if (string.IsNullOrWhiteSpace(_name) || _account == Guid.Empty) return;
         Dialog.Close(DialogResult.Ok(new NewPropFirmChallengeResult(
-            _name.Trim(), _account, _startingBalance, _profitTarget, _maxDailyLoss, _maxDrawdown,
-            _drawdownMode, _minTradingDays, _singleStep)));
+            _name.Trim(), _account, _kind, _startingBalance, _profitTarget, _maxDailyLoss, _dailyLossBasis,
+            _maxDrawdown, _drawdownMode, _trailingThresholdAmount, _trailingLockThreshold, _minTradingDays,
+            _consistency, _maxCalendarDays, _maxOpenPositions, _allowWeekendHolding, _allowNewsTrading, _singleStep)));
     }
 
     private void Cancel() => Dialog.Cancel();
@@ -67,7 +115,9 @@
     public sealed record PropFirmAccountOption(Guid Id, string Label);
 
     public sealed record NewPropFirmChallengeResult(
-        string Name, Guid TradingAccountId, decimal StartingBalance, double ProfitTargetPercent,
-        double MaxDailyLossPercent, double MaxTotalDrawdownPercent, DrawdownMode DrawdownMode,
-        int MinTradingDays, bool SingleStep);
+        string Name, Guid TradingAccountId, ChallengeKind Kind, decimal StartingBalance, double ProfitTargetPercent,
+        double MaxDailyLossPercent, DailyLossBasis DailyLossBasis, double MaxTotalDrawdownPercent,
+        DrawdownMode DrawdownMode, decimal TrailingThresholdAmount, decimal TrailingLockThreshold,
+        int MinTradingDays, double? ConsistencyMaxDayProfitSharePercent, int? MaxCalendarDays,
+        int? MaxOpenPositions, bool AllowWeekendHolding, bool AllowNewsTrading, bool SingleStep);
 }

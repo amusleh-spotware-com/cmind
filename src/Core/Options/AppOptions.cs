@@ -27,6 +27,7 @@ public sealed record AppOptions
     public PropGuardOptions PropGuard { get; init; } = new();
     public OpenApiOptions OpenApi { get; init; } = new();
     public CopyOptions Copy { get; init; } = new();
+    public PropFirmOptions PropFirm { get; init; } = new();
     public FeaturesOptions Features { get; init; } = new();
     public BrandingOptions Branding { get; init; } = new();
 }
@@ -49,6 +50,30 @@ public sealed record CopyOptions
     /// one node so co-located supervisors (Web local node + CopyAgent worker) never double-execute.
     /// Defaults to the machine name; set distinctly when two supervisors share a host.
     /// </summary>
+    public string NodeName { get; init; } = string.Empty;
+}
+
+public sealed record PropFirmOptions
+{
+    /// <summary>
+    /// When true, nodes host live prop-firm challenge trackers: each active challenge is claimed on a
+    /// self-healing lease and its account is tracked over the cTrader Open API. Off by default — tracking
+    /// requires a real authorised trading account. The domain and manual-equity path run without it.
+    /// </summary>
+    public bool Enabled { get; init; }
+
+    public TimeSpan ReconcileInterval { get; init; } = TimeSpan.FromSeconds(30);
+
+    /// <summary>How often a running tracker recomputes equity and feeds it to the challenge aggregate.</summary>
+    public TimeSpan EquityPollInterval { get; init; } = TimeSpan.FromSeconds(5);
+
+    /// <summary>How long a node's claim on an active challenge stays valid without renewal (self-heal on node death).</summary>
+    public TimeSpan LeaseTtl { get; init; } = TimeSpan.FromSeconds(120);
+
+    /// <summary>Equity-usage percentage at which a soft drawdown warning alert is raised (0 disables it).</summary>
+    public double DrawdownWarnThresholdPercent { get; init; } = 80;
+
+    /// <summary>Stable identity of the node hosting trackers; defaults to the machine name.</summary>
     public string NodeName { get; init; } = string.Empty;
 }
 

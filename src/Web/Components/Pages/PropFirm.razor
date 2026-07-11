@@ -24,10 +24,11 @@ else
 {
     <MudTable Items="_challenges" Dense="true">
         <HeaderContent>
-            <MudTh>Name</MudTh><MudTh>Phase</MudTh><MudTh>Status</MudTh><MudTh>Equity</MudTh>
+            <MudTh>Name</MudTh><MudTh>Kind</MudTh><MudTh>Phase</MudTh><MudTh>Status</MudTh><MudTh>Equity</MudTh>
             <MudTh>Peak</MudTh><MudTh>Days</MudTh><MudTh>Record equity</MudTh><MudTh /></HeaderContent>
         <RowTemplate>
             <MudTd>@context.name</MudTd>
+            <MudTd>@context.kind</MudTd>
             <MudTd>@context.phase</MudTd>
             <MudTd><MudChip T="string" Size="Size.Small" Color="StatusColor((string)context.status)">@context.status</MudChip></MudTd>
             <MudTd>@context.currentEquity</MudTd>
@@ -38,7 +39,18 @@ else
                 <MudButton Size="Size.Small" Color="Color.Primary" OnClick="@(() => RecordEquity((Guid)context.id))">Record</MudButton>
             </MudTd>
             <MudTd>
+                @if ((string)context.status == "Stopped")
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" Color="Color.Success"
+                                   OnClick="@(() => Start((Guid)context.id))" />
+                }
+                else if ((string)context.status == "Active")
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Small" Color="Color.Warning"
+                                   OnClick="@(() => Stop((Guid)context.id))" />
+                }
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                               Disabled="@((string)context.status == "Active")"
                                OnClick="@(() => Remove((Guid)context.id))" />
             </MudTd>
         </RowTemplate>
@@ -62,6 +74,8 @@ else
     {
         "Passed" => Color.Success,
         "Failed" => Color.Error,
+        "Active" => Color.Info,
+        "Stopped" => Color.Warning,
         _ => Color.Default
     };
 
@@ -90,7 +104,16 @@ else
             data.MaxTotalDrawdownPercent,
             data.DrawdownMode,
             data.MinTradingDays,
-            data.SingleStep
+            data.SingleStep,
+            data.Kind,
+            data.DailyLossBasis,
+            data.TrailingThresholdAmount,
+            data.TrailingLockThreshold,
+            data.ConsistencyMaxDayProfitSharePercent,
+            data.MaxCalendarDays,
+            data.MaxOpenPositions,
+            data.AllowWeekendHolding,
+            data.AllowNewsTrading
         });
         Snack.Add(r.IsSuccessStatusCode ? "Challenge created" : "Failed to create challenge",
             r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
@@ -101,6 +124,20 @@ else
     {
         var r = await Http.PostAsJsonAsync($"/api/prop-firm/challenges/{id}/equity", new { Equity = _equityInput });
         if (!r.IsSuccessStatusCode) Snack.Add("Could not record equity", Severity.Error);
+        await Load();
+    }
+
+    private async Task Start(Guid id)
+    {
+        var r = await Http.PostAsync($"/api/prop-firm/challenges/{id}/start", null);
+        if (!r.IsSuccessStatusCode) Snack.Add("Could not start challenge", Severity.Error);
+        await Load();
+    }
+
+    private async Task Stop(Guid id)
+    {
+        var r = await Http.PostAsync($"/api/prop-firm/challenges/{id}/stop", null);
+        if (!r.IsSuccessStatusCode) Snack.Add("Could not stop challenge", Severity.Error);
         await Load();
     }
 

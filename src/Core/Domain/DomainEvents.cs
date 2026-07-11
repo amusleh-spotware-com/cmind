@@ -63,3 +63,8 @@ public sealed record PropFirmChallengePassed(PropFirmChallengeId ChallengeId, Us
 
 public sealed record PropFirmChallengeBreached(PropFirmChallengeId ChallengeId, UserId UserId, BreachReason Reason)
     : DomainEventBase;
+
+public sealed record PropFirmChallengeStopped(PropFirmChallengeId ChallengeId, UserId UserId) : DomainEventBase;
+
+public sealed record PropFirmDrawdownWarning(PropFirmChallengeId ChallengeId, UserId UserId, double PercentUsed)
+    : DomainEventBase;

@@ -81,9 +81,14 @@ public sealed class CopyDecisionEngine(ICopySizingCalculator calculator)
             ? context.MasterSlippageInPoints
             : null;
 
-        return volume.Skipped
-            ? CopyAction.Skip("size_zero")
-            : new CopyAction(CopyActionKind.Open, volume.Lots, destination.Reverse, null, slippageInPoints);
+        if (volume.Skipped) return CopyAction.Skip("size_zero");
+
+        // C14 lot sanity ceiling: a computed copy that dwarfs the master's own size (or an absolute cap) is
+        // almost certainly a runaway multiplier/rounding bug — hard-block it rather than place a ruinous order.
+        if (destination.LotSanity.IsBreached(volume.Lots, context.Source.VolumeLots))
+            return CopyAction.Skip("lot_sanity");
+
+        return new CopyAction(CopyActionKind.Open, volume.Lots, destination.Reverse, null, slippageInPoints);
     }
 
     public static CopyOrderTypes ToOrderTypes(CopyOrderKind kind) => kind switch

@@ -79,6 +79,11 @@ Set in the New Profile dialog, on the Copy Trading page's per-destination panel,
   against the master event's real server timestamp (`ExecutionEvent.ServerTimestamp`) via the injected
   `TimeProvider`: a signal older than the configured max-lag is skipped, so a stale copy is never
   placed late (previously the delay was always zero and the guard was dead).
+- **Lot sanity ceiling** (C14) — an absolute maximum copy size and/or a multiple-of-master cap. A
+  computed copy that exceeds the absolute cap, or exceeds `N×` the master's own lot size, is
+  **hard-blocked** (surfaced as a `lot_sanity` skip, counted on `cmind.copy.skipped`) rather than
+  placed — defending against the catastrophic-oversize class (a 0.23-lot master turning into 3 lots on
+  each receiver through a runaway multiplier or rounding bug). Both dimensions default to `0` (off).
 
 ## Reliability & edge cases
 

@@ -60,6 +60,8 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public bool ForceMinLot { get; private set; }
     public double MaxDrawdownPercent { get; private set; }
     public double DailyLossLimit { get; private set; }
+    public double LotSanityAbsoluteMaxLots { get; private set; }
+    public double LotSanityMasterMultiple { get; private set; }
     public SymbolFilterMode SymbolFilterMode { get; private set; } = SymbolFilterMode.None;
     public IReadOnlyList<CopySymbolMapEntry> SymbolMaps => _symbolMaps;
     public IReadOnlyList<CopySymbolFilter> SymbolFilters => _symbolFilters;
@@ -80,6 +82,7 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
 
     public RiskSettings Risk => new(RiskMode, RiskParameter);
     public LotBounds Bounds => new(MinLot, MaxLot, ForceMinLot);
+    public LotSanityCeiling LotSanity => new(LotSanityAbsoluteMaxLots, LotSanityMasterMultiple);
 
     public void ConfigureRisk(RiskSettings risk)
     {
@@ -92,6 +95,12 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
         MinLot = bounds.MinLot;
         MaxLot = bounds.MaxLot;
         ForceMinLot = bounds.ForceMinLot;
+    }
+
+    public void ConfigureLotSanity(LotSanityCeiling ceiling)
+    {
+        LotSanityAbsoluteMaxLots = ceiling.AbsoluteMaxLots;
+        LotSanityMasterMultiple = ceiling.MasterMultiple;
     }
 
     public void ConfigureSlippage(SlippagePips slippage)

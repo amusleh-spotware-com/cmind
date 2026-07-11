@@ -50,6 +50,20 @@ public sealed class CopyRulesDomainTests
     }
 
     [Fact]
+    public void Lot_sanity_ceiling_rejects_a_negative_bound()
+    {
+        var act = () => new LotSanityCeiling(-1, 0);
+
+        act.Should().Throw<DomainException>().Which.Message.Should().Be(DomainErrors.CopyLotSanityInvalid);
+    }
+
+    [Fact]
+    public void Lot_sanity_disabled_never_breaches()
+    {
+        LotSanityCeiling.Disabled.IsBreached(1000, 1).Should().BeFalse("a disabled ceiling blocks nothing");
+    }
+
+    [Fact]
     public void Expiry_and_slippage_copying_can_be_disabled()
     {
         var destination = Destination();

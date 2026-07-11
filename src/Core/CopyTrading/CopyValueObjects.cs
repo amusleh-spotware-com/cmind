@@ -95,6 +95,32 @@ public readonly record struct LotBounds
     public static LotBounds Unbounded => new(0, 0, false);
 }
 
+// C14: an absolute sanity ceiling on a computed copy size, defending against the catastrophic-oversize
+// class (a master 0.23 lots turning into 3 lots on each receiver through a runaway multiplier / rounding
+// bug). A copy is blocked when it exceeds the absolute cap, or exceeds MasterMultiple× the master's own
+// size. 0 on either dimension disables that check; both 0 = disabled.
+public readonly record struct LotSanityCeiling
+{
+    public double AbsoluteMaxLots { get; }
+    public double MasterMultiple { get; }
+
+    public LotSanityCeiling(double absoluteMaxLots, double masterMultiple)
+    {
+        if (absoluteMaxLots < 0 || masterMultiple < 0
+            || double.IsNaN(absoluteMaxLots) || double.IsNaN(masterMultiple)
+            || double.IsInfinity(absoluteMaxLots) || double.IsInfinity(masterMultiple))
+            throw new DomainException(DomainErrors.CopyLotSanityInvalid);
+        AbsoluteMaxLots = absoluteMaxLots;
+        MasterMultiple = masterMultiple;
+    }
+
+    public static LotSanityCeiling Disabled => new(0, 0);
+
+    public bool IsBreached(double copyLots, double masterLots)
+        => (AbsoluteMaxLots > 0 && copyLots > AbsoluteMaxLots)
+           || (MasterMultiple > 0 && masterLots > 0 && copyLots > MasterMultiple * masterLots);
+}
+
 public readonly record struct SymbolMapEntry
 {
     public Symbol Source { get; }

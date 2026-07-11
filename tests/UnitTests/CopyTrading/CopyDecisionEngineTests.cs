@@ -126,6 +126,33 @@ public sealed class CopyDecisionEngineTests
     }
 
     [Fact]
+    public void Lot_sanity_absolute_cap_blocks_an_oversize_copy()
+    {
+        // Master 1 lot, 1x multiplier -> copy 1 lot, but the absolute ceiling is 0.5.
+        var destination = Destination(d => d.ConfigureLotSanity(new LotSanityCeiling(0.5, 0)));
+        _engine.DecideOpen(destination, Context()).SkipReason.Should().Be("lot_sanity");
+    }
+
+    [Fact]
+    public void Lot_sanity_master_multiple_blocks_a_runaway_multiplier()
+    {
+        // 5x multiplier on a 1-lot master -> copy 5 lots, which exceeds 3x the master's own size.
+        var destination = Destination(d =>
+        {
+            d.ConfigureRisk(new RiskSettings(MoneyManagementMode.LotMultiplier, 5));
+            d.ConfigureLotSanity(new LotSanityCeiling(0, 3));
+        });
+        _engine.DecideOpen(destination, Context()).SkipReason.Should().Be("lot_sanity");
+    }
+
+    [Fact]
+    public void Lot_sanity_within_the_ceiling_allows_the_copy()
+    {
+        var destination = Destination(d => d.ConfigureLotSanity(new LotSanityCeiling(2, 3)));
+        _engine.DecideOpen(destination, Context()).Kind.Should().Be(CopyActionKind.Open);
+    }
+
+    [Fact]
     public void PositionsToOpen_excludes_already_mapped_sources()
     {
         var map = new Dictionary<long, long> { [10] = 100 };

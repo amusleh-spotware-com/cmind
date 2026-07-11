@@ -1,0 +1,17 @@
+﻿@* Shared result panel for AI feature pages: a progress bar while loading and the text/JSON output. *@
+
+@if (Loading)
+{
+    <MudProgressLinear Indeterminate="true" Class="mt-3" />
+}
+@if (!string.IsNullOrEmpty(Output))
+{
+    <MudPaper Class="pa-4 mt-3" Elevation="1" data-testid="ai-output">
+        <pre style="white-space:pre-wrap; margin:0;">@Output</pre>
+    </MudPaper>
+}
+
+@code {
+    [Parameter] public bool Loading { get; set; }
+    [Parameter] public string Output { get; set; } = "";
+}

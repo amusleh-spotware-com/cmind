@@ -1,0 +1,116 @@
+﻿@page "/ai/build"
+@using System.Text.Json
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@inherits AiFeaturePageBase
+@inject NavigationManager Nav
+
+<PageTitle>AI · Build cBot</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Build cBot</MudText>
+    <HelpTip Text="Describe a strategy in plain English. The AI writes the cBot, builds it, fixes its own compile errors (up to 3 tries), and on success creates a runnable cBot." />
+</MudStack>
+
+<AiFeatureNotice EnabledChanged="OnAiStatus" />
+
+<MudPaper Class="pa-4" Elevation="1">
+    <MudText Typo="Typo.body2" Class="mb-2">
+        Describe a strategy in plain English. The AI writes the cBot, builds it, fixes its own compile
+        errors (up to 3 tries), and on success creates a runnable cBot.
+    </MudText>
+    <MudGrid>
+        <MudItem xs="12" sm="4">
+            <MudSelect T="string" @bind-Value="_language" Label="Language" Dense="true">
+                <MudSelectItem Value="@("CSharp")">C#</MudSelectItem>
+                <MudSelectItem Value="@("Python")">Python</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="8">
+            <MudTextField @bind-Value="_projectName" Label="Bot name" Placeholder="MyBot" />
+        </MudItem>
+    </MudGrid>
+    <MudTextField @bind-Value="_description" Label="Describe your strategy" Lines="5" Class="mt-3"
+                  Placeholder="e.g. RSI mean-reversion on EURUSD h1, 1.5% risk, ATR stop-loss" />
+    <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
+               StartIcon="@Icons.Material.Filled.Bolt" OnClick="BuildBot" Disabled="Busy">
+        Build my bot
+    </MudButton>
+
+    @if (Loading)
+    {
+        <MudProgressLinear Indeterminate="true" Class="mt-3" />
+    }
+
+    @if (_buildResult is not null)
+    {
+        <MudPaper Class="pa-3 mt-3" Elevation="0" Outlined="true" data-testid="ai-build-result">
+            @if (_buildResult.Success)
+            {
+                <MudAlert Severity="Severity.Success" Class="mb-2">
+                    Built in @_buildResult.Attempts attempt(s). Your runnable cBot is ready.
+                </MudAlert>
+                <MudStack Row="true" Spacing="2">
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.PlayArrow"
+                               OnClick="@(() => Nav.NavigateTo($"/run?cbot={_buildResult.CBotId}"))"
+                               Disabled="@(_buildResult.CBotId is null)">Run it</MudButton>
+                    <MudButton Color="Color.Secondary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit"
+                               OnClick="@(() => Nav.NavigateTo($"/builder/{_buildResult.ProjectId}"))"
+                               Disabled="@(_buildResult.ProjectId is null)">Open in editor</MudButton>
+                </MudStack>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Error" Class="mb-2">
+                    @(_buildResult.Error ?? $"Build failed after {_buildResult.Attempts} attempt(s).")
+                </MudAlert>
+            }
+            @if (!string.IsNullOrEmpty(_buildResult.Log))
+            {
+                <pre style="white-space:pre-wrap; margin:0; max-height:280px; overflow:auto;">@_buildResult.Log</pre>
+            }
+        </MudPaper>
+    }
+</MudPaper>
+
+@code {
+    private string _language = "CSharp";
+    private string _projectName = "MyBot";
+    private string _description = "";
+    private BuildResult? _buildResult;
+
+    private async Task BuildBot()
+    {
+        if (string.IsNullOrWhiteSpace(_description))
+        {
+            Snack.Add("Describe your strategy first", Severity.Warning);
+            return;
+        }
+        Loading = true;
+        _buildResult = null;
+        try
+        {
+            var response = await Http.PostAsJsonAsync("/api/ai/build-strategy",
+                new { Name = _projectName, Language = _language, Description = _description });
+            var text = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(text);
+            var root = doc.RootElement;
+            _buildResult = new BuildResult(
+                root.TryGetProperty("success", out var s) && s.ValueKind == JsonValueKind.True,
+                root.TryGetProperty("cbotId", out var c) && c.ValueKind == JsonValueKind.String ? c.GetGuid() : null,
+                root.TryGetProperty("projectId", out var p) && p.ValueKind == JsonValueKind.String ? p.GetGuid() : null,
+                root.TryGetProperty("attempts", out var a) && a.ValueKind == JsonValueKind.Number ? a.GetInt32() : 0,
+                root.TryGetProperty("log", out var l) ? l.GetString() : null,
+                root.TryGetProperty("error", out var e) ? e.GetString() : null);
+        }
+        catch
+        {
+            Snack.Add("Request failed", Severity.Error);
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+    private sealed record BuildResult(bool Success, Guid? CBotId, Guid? ProjectId, int Attempts, string? Log, string? Error);
+}

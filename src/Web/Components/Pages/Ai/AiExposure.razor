@@ -1,0 +1,28 @@
+﻿@page "/ai/exposure"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@inherits AiFeaturePageBase
+
+<PageTitle>AI · Exposure Check</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Exposure Check</MudText>
+    <HelpTip Text="Checks current news and sentiment for the symbols your live bots are trading and flags any that warrant de-risking." />
+</MudStack>
+
+<AiFeatureNotice EnabledChanged="OnAiStatus" />
+
+<MudPaper Class="pa-4" Elevation="1">
+    <MudText Typo="Typo.body2" Class="mb-3">
+        Reviews the symbols your running bots are trading against live conditions and flags positions to reconsider.
+    </MudText>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled"
+               StartIcon="@Icons.Material.Filled.Shield" OnClick="Run" Disabled="Busy">
+        Check live exposure
+    </MudButton>
+</MudPaper>
+
+<AiOutputPanel Loading="Loading" Output="Output" />
+
+@code {
+    private Task Run() => PostTextAsync("/api/ai/exposure-check", new { });
+}

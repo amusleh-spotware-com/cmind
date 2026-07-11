@@ -1,0 +1,20 @@
+﻿@* Themed "coming soon" placeholder for features that are on the roadmap. Matches the app's dark theme
+   and white-label tokens. *@
+
+<div class="app-coming-soon" data-testid="coming-soon">
+    <div class="app-coming-soon-card">
+        <div class="app-coming-soon-badge">Coming soon</div>
+        <MudIcon Icon="@Icon" Class="app-coming-soon-icon" />
+        <MudText Typo="Typo.h4" Class="app-coming-soon-title">@Title</MudText>
+        @if (!string.IsNullOrWhiteSpace(Description))
+        {
+            <MudText Typo="Typo.body1" Class="app-coming-soon-text">@Description</MudText>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter] public string Description { get; set; } = "";
+    [Parameter] public string Icon { get; set; } = Icons.Material.Filled.RocketLaunch;
+}

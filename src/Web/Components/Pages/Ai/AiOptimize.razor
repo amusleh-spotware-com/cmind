@@ -1,0 +1,65 @@
+﻿@page "/ai/optimize"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@inherits AiFeaturePageBase
+
+<PageTitle>AI · Optimize</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Optimize</MudText>
+    <HelpTip Text="The AI proposes parameter sets and backtests each across your nodes, then reports the best." />
+</MudStack>
+
+<AiFeatureNotice EnabledChanged="OnAiStatus" />
+
+<MudPaper Class="pa-4" Elevation="1">
+    <MudText Typo="Typo.body2" Class="mb-2">
+        AI proposes parameter sets and backtests each across your nodes.
+    </MudText>
+    <MudGrid>
+        <MudItem xs="12" sm="6">
+            <MudSelect T="Guid?" @bind-Value="_cbotId" Label="cBot" Dense="true">
+                @foreach (var c in _cbots) { <MudSelectItem T="Guid?" Value="@((Guid?)c.id)">@c.name</MudSelectItem> }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudSelect T="Guid?" @bind-Value="_acctId" Label="Trading account" Dense="true">
+                @foreach (var a in _accounts) { <MudSelectItem T="Guid?" Value="@((Guid?)a.id)">@a.accountNumber - @a.broker</MudSelectItem> }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="6" sm="6">
+            <MudTextField @bind-Value="_symbol" Label="Symbol" />
+        </MudItem>
+        <MudItem xs="6" sm="6">
+            <MudTextField @bind-Value="_timeframe" Label="Timeframe" />
+        </MudItem>
+    </MudGrid>
+    <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
+               StartIcon="@Icons.Material.Filled.Tune" OnClick="Run" Disabled="Busy">
+        Propose &amp; backtest
+    </MudButton>
+</MudPaper>
+
+<AiOutputPanel Loading="Loading" Output="Output" />
+
+@code {
+    private dynamic[] _cbots = [], _accounts = [];
+    private Guid? _cbotId, _acctId;
+    private string _symbol = "EURUSD", _timeframe = "h1";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _cbots = await LoadOrEmptyAsync("/api/cbots/");
+        _accounts = await LoadOrEmptyAsync("/api/accounts/");
+    }
+
+    private Task Run()
+    {
+        if (_cbotId is null || _acctId is null)
+        {
+            Snack.Add("Pick a cBot and trading account", Severity.Warning);
+            return Task.CompletedTask;
+        }
+        return PostJsonAsync($"/api/ai/optimize-run/{_cbotId}",
+            new { TradingAccountId = _acctId, Symbol = _symbol, Timeframe = _timeframe });
+    }
+}

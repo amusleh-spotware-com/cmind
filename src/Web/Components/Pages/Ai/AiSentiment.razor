@@ -1,0 +1,28 @@
+﻿@page "/ai/sentiment"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@inherits AiFeaturePageBase
+
+<PageTitle>AI · Market Sentiment</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Market Sentiment</MudText>
+    <HelpTip Text="The AI searches current news and price action for a symbol and summarises the prevailing market sentiment." />
+</MudStack>
+
+<AiFeatureNotice EnabledChanged="OnAiStatus" />
+
+<MudPaper Class="pa-4" Elevation="1">
+    <MudTextField @bind-Value="_symbol" Label="Symbol" Style="max-width:200px;" Placeholder="EURUSD" />
+    <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
+               StartIcon="@Icons.Material.Filled.Insights" OnClick="Run" Disabled="Busy">
+        Get sentiment
+    </MudButton>
+</MudPaper>
+
+<AiOutputPanel Loading="Loading" Output="Output" />
+
+@code {
+    private string _symbol = "EURUSD";
+
+    private Task Run() => PostTextAsync("/api/ai/sentiment", new { Symbol = _symbol });
+}

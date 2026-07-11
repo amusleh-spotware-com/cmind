@@ -22,6 +22,7 @@
                 @if (Gate.IsEnabled(FeatureFlag.Backtesting))
                 {
                     <MudNavLink Href="/backtest" Icon="@Icons.Material.Filled.History">Backtest</MudNavLink>
+                    <MudNavLink Href="/optimize" Icon="@Icons.Material.Filled.Tune">Optimize</MudNavLink>
                 }
             </MudNavGroup>
         }
@@ -29,7 +30,14 @@
         @if (Gate.IsEnabled(FeatureFlag.Ai))
         {
             <MudNavGroup Title="AI" Icon="@Icons.Material.Filled.AutoAwesome" Expanded="true">
-                <MudNavLink Href="/assistant" Icon="@Icons.Material.Filled.AutoAwesome">AI</MudNavLink>
+                <MudNavLink Href="/ai/build" Icon="@Icons.Material.Filled.Bolt">Build cBot</MudNavLink>
+                <MudNavLink Href="/ai/review" Icon="@Icons.Material.Filled.RateReview">Review</MudNavLink>
+                <MudNavLink Href="/ai/debate" Icon="@Icons.Material.Filled.Forum">Debate</MudNavLink>
+                <MudNavLink Href="/ai/sentiment" Icon="@Icons.Material.Filled.Insights">Market Sentiment</MudNavLink>
+                <MudNavLink Href="/ai/exposure" Icon="@Icons.Material.Filled.Shield">Exposure Check</MudNavLink>
+                <MudNavLink Href="/ai/digest" Icon="@Icons.Material.Filled.Summarize">Portfolio Digest</MudNavLink>
+                <MudNavLink Href="/ai/tune" Icon="@Icons.Material.Filled.TrendingDown">Tune Advisor</MudNavLink>
+                <MudNavLink Href="/ai/optimize" Icon="@Icons.Material.Filled.Tune">Optimize</MudNavLink>
                 @if (Gate.IsEnabled(FeatureFlag.PortfolioAgent))
                 {
                     <MudNavLink Href="/agent" Icon="@Icons.Material.Filled.SmartToy">Portfolio Agent</MudNavLink>

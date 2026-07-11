@@ -315,6 +315,118 @@ html, body {
     margin-top: -8px;
 }
 
+/* ---- Coming-soon placeholder ---------------------------------------------- */
+
+.app-coming-soon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    padding: 24px;
+}
+.app-coming-soon-card {
+    position: relative;
+    overflow: hidden;
+    max-width: 460px;
+    text-align: center;
+    background: var(--app-surface);
+    border: 1px solid var(--app-border);
+    border-radius: var(--app-radius);
+    padding: 48px 40px;
+}
+.app-coming-soon-card::before {
+    content: "";
+    position: absolute;
+    top: -80px;
+    right: -80px;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--app-primary) 22%, transparent), transparent 70%);
+    pointer-events: none;
+}
+.app-coming-soon-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--app-primary);
+    background: color-mix(in srgb, var(--app-primary) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--app-primary) 40%, transparent);
+    border-radius: 999px;
+    padding: 4px 12px;
+    margin-bottom: 20px;
+}
+.app-coming-soon-icon { font-size: 64px !important; color: var(--app-primary); margin-bottom: 16px; }
+.app-coming-soon-title { font-weight: 800 !important; letter-spacing: -0.5px; margin-bottom: 10px; }
+.app-coming-soon-text { color: var(--app-text-secondary); line-height: 1.6; }
+
+/* ---- Blazor reconnect modal (themed) -------------------------------------- */
+
+#components-reconnect-modal.app-reconnect {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+}
+#components-reconnect-modal.components-reconnect-show,
+#components-reconnect-modal.components-reconnect-failed,
+#components-reconnect-modal.components-reconnect-rejected { display: flex; }
+
+.app-reconnect-card {
+    background: var(--app-surface);
+    border: 1px solid var(--app-border);
+    border-radius: var(--app-radius);
+    padding: 28px 32px;
+    max-width: 360px;
+    width: calc(100% - 48px);
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.app-reconnect-spinner {
+    width: 36px;
+    height: 36px;
+    margin: 0 auto 16px;
+    border: 3px solid var(--app-border-strong);
+    border-top-color: var(--app-primary);
+    border-radius: 50%;
+    animation: app-spin 0.7s linear infinite;
+}
+.app-reconnect-title { font-size: 18px; font-weight: 700; color: var(--app-text); margin-bottom: 8px; }
+.app-reconnect-text { font-size: 13px; color: var(--app-text-secondary); line-height: 1.5; }
+.app-reconnect-actions { margin-top: 18px; display: flex; gap: 10px; justify-content: center; }
+.app-reconnect-btn {
+    min-height: var(--app-touch-target);
+    padding: 10px 22px;
+    background: var(--app-primary);
+    color: var(--app-primary-contrast);
+    border: none;
+    border-radius: var(--app-radius);
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+}
+.app-reconnect-btn:hover { background: var(--app-primary-hover); }
+
+/* Reveal only the copy/button for the active reconnect state. */
+.app-reconnect-when-show,
+.app-reconnect-when-failed,
+.app-reconnect-when-rejected { display: none; }
+#components-reconnect-modal.components-reconnect-show .app-reconnect-when-show,
+#components-reconnect-modal.components-reconnect-failed .app-reconnect-when-failed,
+#components-reconnect-modal.components-reconnect-rejected .app-reconnect-when-rejected { display: inline; }
+#components-reconnect-modal.components-reconnect-failed .app-reconnect-btn.app-reconnect-when-failed,
+#components-reconnect-modal.components-reconnect-rejected .app-reconnect-btn.app-reconnect-when-rejected {
+    display: inline-flex;
+    align-items: center;
+}
+#components-reconnect-modal.components-reconnect-rejected .app-reconnect-spinner { display: none; }
+
 /* ---- Inline help affordance ----------------------------------------------- */
 
 .app-help-tip {
@@ -445,7 +557,8 @@ html, body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .app-login-spinner { animation: none; }
+    .app-login-spinner,
+    .app-reconnect-spinner { animation: none; }
 }
 
 /* ---- Dialogs go near-full-screen on phones -------------------------------- */

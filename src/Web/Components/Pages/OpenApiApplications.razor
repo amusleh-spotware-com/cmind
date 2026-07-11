@@ -7,6 +7,7 @@
 @inject ISnackbar Snack
 @inject IDialogService Dialogs
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 <PageTitle>Open API</PageTitle>
 
@@ -55,17 +56,11 @@ else
         </MudCardContent>
         <MudCardActions>
             <MudButton Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Edit" OnClick="Configure">Edit</MudButton>
-            <MudButton Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Share" OnClick="Invite">Invite link</MudButton>
+            <MudButton Color="Color.Secondary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyInvite">Copy Invite Link</MudButton>
             <MudSpacer />
             <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="Delete">Delete</MudButton>
         </MudCardActions>
     </MudCard>
-}
-
-@if (!string.IsNullOrEmpty(_inviteUrl))
-{
-    <MudTextField T="string" Value="_inviteUrl" ReadOnly="true" Label="Investor invite link (share with copiers)"
-                  Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.ContentCopy" Class="mt-4" />
 }
 
 @code {
@@ -75,24 +70,30 @@ else
     private string _clientId = "";
     private string _callbackUrl = "";
     private int _authorizedAccountCount;
-    private string? _inviteUrl;
 
     protected override Task OnInitializedAsync() => Load();
 
     private async Task Load()
     {
         _loading = true;
-        var res = await Http.GetDynamicAsync("/api/openapi/application");
-        if (res is not null)
+        try
         {
-            _configured = (bool)res.configured;
-            _callbackUrl = (string)res.callbackUrl;
-            _authorizedAccountCount = (int)res.authorizedAccountCount;
-            if (_configured)
+            var res = await Http.GetDynamicAsync("/api/openapi/application");
+            if (res is not null)
             {
-                _name = (string)res.name;
-                _clientId = (string)res.clientId;
+                _configured = (bool)res.configured;
+                _callbackUrl = (string)res.callbackUrl;
+                _authorizedAccountCount = (int)res.authorizedAccountCount;
+                if (_configured)
+                {
+                    _name = (string)res.name;
+                    _clientId = (string)res.clientId;
+                }
             }
+        }
+        catch
+        {
+            // Open API feature gated off/unavailable — show the empty state instead of crashing.
         }
         _loading = false;
     }
@@ -121,18 +122,21 @@ else
 
     private void Authorize() => Nav.NavigateTo("/api/openapi/authorize", forceLoad: true);
 
-    private async Task Invite()
+    private async Task CopyInvite()
     {
         var r = await Http.PostAsync("/api/openapi/application/invite", null);
         if (!r.IsSuccessStatusCode) { Snack.Add("Failed to create invite", Severity.Error); return; }
         using var doc = JsonDocument.Parse(await r.Content.ReadAsStringAsync());
-        _inviteUrl = doc.RootElement.GetProperty("url").GetString();
+        var url = doc.RootElement.GetProperty("url").GetString();
+        if (string.IsNullOrEmpty(url)) { Snack.Add("Failed to create invite", Severity.Error); return; }
+        await JS.InvokeVoidAsync("copyToClipboard", url);
+        Snack.Add("Invite link copied to clipboard", Severity.Success);
     }
 
     private async Task Delete()
     {
         var r = await Http.DeleteAsync("/api/openapi/application");
-        if (r.IsSuccessStatusCode) { Snack.Add("Application deleted", Severity.Success); _inviteUrl = null; await Load(); }
+        if (r.IsSuccessStatusCode) { Snack.Add("Application deleted", Severity.Success); await Load(); }
         else Snack.Add("Failed to delete application", Severity.Error);
     }
 }

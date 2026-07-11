@@ -30,6 +30,28 @@
 </head>
 <body>
     <Routes @rendermode="@RenderMode.InteractiveServer" />
+
+    @* Custom Blazor reconnect UI — Blazor toggles the state classes; markup + styling are ours so it
+       matches the app's dark theme instead of the default white box. *@
+    <div id="components-reconnect-modal" class="app-reconnect">
+        <div class="app-reconnect-card">
+            <div class="app-reconnect-spinner" aria-hidden="true"></div>
+            <div class="app-reconnect-title">
+                <span class="app-reconnect-when-show">Reconnecting…</span>
+                <span class="app-reconnect-when-failed">Connection lost</span>
+                <span class="app-reconnect-when-rejected">Session expired</span>
+            </div>
+            <div class="app-reconnect-text">
+                <span class="app-reconnect-when-show">Restoring your live connection to the server.</span>
+                <span class="app-reconnect-when-failed">We couldn't reach the server. Retrying…</span>
+                <span class="app-reconnect-when-rejected">Your session could not be resumed. Please reload the page.</span>
+            </div>
+            <div class="app-reconnect-actions">
+                <button class="app-reconnect-btn app-reconnect-when-failed" onclick="window.Blazor.reconnect()">Retry now</button>
+                <button class="app-reconnect-btn app-reconnect-when-rejected" onclick="location.reload()">Reload</button>
+            </div>
+        </div>
+    </div>
     <script src="_content/BlazorMonaco/jsInterop.js"></script>
     <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
     <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>

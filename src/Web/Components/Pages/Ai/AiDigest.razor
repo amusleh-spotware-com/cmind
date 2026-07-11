@@ -1,0 +1,28 @@
+﻿@page "/ai/digest"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@inherits AiFeaturePageBase
+
+<PageTitle>AI · Portfolio Digest</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Portfolio Digest</MudText>
+    <HelpTip Text="Reviews your recent and running bots for what's working, concentration/correlation risk, and suggested next steps." />
+</MudStack>
+
+<AiFeatureNotice EnabledChanged="OnAiStatus" />
+
+<MudPaper Class="pa-4" Elevation="1">
+    <MudText Typo="Typo.body2" Class="mb-3">
+        Summarises your recent and running bots — performance, concentration/correlation risk, and next steps.
+    </MudText>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled"
+               StartIcon="@Icons.Material.Filled.Summarize" OnClick="Run" Disabled="Busy">
+        Generate digest
+    </MudButton>
+</MudPaper>
+
+<AiOutputPanel Loading="Loading" Output="Output" />
+
+@code {
+    private Task Run() => PostTextAsync("/api/ai/portfolio-digest", new { });
+}

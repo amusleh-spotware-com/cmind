@@ -19,6 +19,8 @@ public sealed class MobileDialogTests(AppFixture app)
 
         var dialog = page.Locator(".mud-dialog");
         await dialog.WaitForAsync(new() { State = WaitForSelectorState.Visible });
+        // MudBlazor scales the dialog in; wait for the entrance transform to settle before measuring width.
+        await page.WaitForTimeoutAsync(600);
 
         var box = await dialog.BoundingBoxAsync();
         var viewport = await page.EvaluateAsync<int>("() => window.innerWidth");

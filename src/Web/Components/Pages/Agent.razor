@@ -130,14 +130,29 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _cbots = await Http.GetDynamicArrayAsync("/api/cbots/");
-        _accounts = await Http.GetDynamicArrayAsync("/api/accounts/");
+        // Load each source independently and tolerate a disabled/unavailable feature (e.g. Authoring off
+        // makes /api/cbots return 404). A failed load leaves that list empty and the page usable rather
+        // than throwing into the ErrorBoundary.
+        _cbots = await LoadOrEmptyAsync("/api/cbots/");
+        _accounts = await LoadOrEmptyAsync("/api/accounts/");
         await LoadMandates();
         await LoadProposals();
     }
 
-    private async Task LoadMandates() => _mandates = await Http.GetDynamicArrayAsync("/api/agent/mandates");
-    private async Task LoadProposals() => _proposals = await Http.GetDynamicArrayAsync("/api/agent/proposals");
+    private async Task LoadMandates() => _mandates = await LoadOrEmptyAsync("/api/agent/mandates");
+    private async Task LoadProposals() => _proposals = await LoadOrEmptyAsync("/api/agent/proposals");
+
+    private async Task<dynamic[]> LoadOrEmptyAsync(string url)
+    {
+        try
+        {
+            return await Http.GetDynamicArrayAsync(url);
+        }
+        catch
+        {
+            return [];
+        }
+    }
 
     private async Task CreateMandate()
     {

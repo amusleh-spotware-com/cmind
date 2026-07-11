@@ -1,5 +1,7 @@
 @inherits LayoutComponentBase
+@implements IDisposable
 @inject Web.Branding.IBrandingThemeProvider Branding
+@inject NavigationManager Nav
 
 <MudThemeProvider Theme="@Branding.Theme" IsDarkMode="true" />
 <MudPopoverProvider />
@@ -46,5 +48,15 @@
     private bool _drawerOpen = true;
     private ErrorBoundary? _errorBoundary;
 
+    protected override void OnInitialized() => Nav.LocationChanged += OnLocationChanged;
+
+    // A Blazor ErrorBoundary latches on the first caught exception and keeps showing its error content on
+    // every later render — so one page throwing would leave every subsequently navigated page (and the
+    // dialogs on that circuit) stuck on the error UI. Recover on each navigation so an error never spreads
+    // past the page that caused it.
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e) => _errorBoundary?.Recover();
+
     private void RecoverError() => _errorBoundary?.Recover();
+
+    public void Dispose() => Nav.LocationChanged -= OnLocationChanged;
 }

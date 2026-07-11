@@ -47,8 +47,8 @@
         var now = TimeProvider.GetUtcNow().UtcDateTime;
         _from = now.AddMonths(-1);
         _to = now;
-        _cbots = await Http.GetDynamicArrayAsync("/api/cbots/");
-        _accts = await Http.GetDynamicArrayAsync("/api/accounts/");
+        _cbots = await LoadOrEmptyAsync("/api/cbots/");
+        _accts = await LoadOrEmptyAsync("/api/accounts/");
     }
 
     private async Task LoadParamSets()
@@ -56,7 +56,21 @@
         _psId = null;
         _paramsets = _cbotId is null
             ? []
-            : await Http.GetDynamicArrayAsync($"/api/paramsets?cbotId={_cbotId}");
+            : await LoadOrEmptyAsync($"/api/paramsets?cbotId={_cbotId}");
+    }
+
+    // Tolerate a gated-off/unavailable endpoint (e.g. Authoring disabled → /api/cbots 404) so opening the
+    // dialog never throws into the circuit; the affected selector is simply empty.
+    private async Task<dynamic[]> LoadOrEmptyAsync(string url)
+    {
+        try
+        {
+            return await Http.GetDynamicArrayAsync(url);
+        }
+        catch
+        {
+            return [];
+        }
     }
 
     private async Task Submit()

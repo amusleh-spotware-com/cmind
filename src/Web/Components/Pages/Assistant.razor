@@ -217,8 +217,23 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _cbots = await Http.GetDynamicArrayAsync("/api/cbots/");
-        _accounts = await Http.GetDynamicArrayAsync("/api/accounts/");
+        // Tolerate a disabled/unavailable feature (e.g. Authoring off makes /api/cbots return 404): a
+        // failed load leaves the selector empty and the page usable rather than throwing into the
+        // ErrorBoundary.
+        _cbots = await LoadOrEmptyAsync("/api/cbots/");
+        _accounts = await LoadOrEmptyAsync("/api/accounts/");
+    }
+
+    private async Task<dynamic[]> LoadOrEmptyAsync(string url)
+    {
+        try
+        {
+            return await Http.GetDynamicArrayAsync(url);
+        }
+        catch
+        {
+            return [];
+        }
     }
 
     private async Task BuildBot()

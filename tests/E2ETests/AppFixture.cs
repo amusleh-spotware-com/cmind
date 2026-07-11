@@ -23,6 +23,7 @@ public sealed class AppFixture : IAsyncLifetime
     private Process? _app;
     private IPlaywright? _playwright;
 
+    public string AppLog => _appLog.ToString();
     public string BaseUrl { get; private set; } = "";
     public IBrowser Browser { get; private set; } = default!;
     public string StorageState { get; private set; } = "";

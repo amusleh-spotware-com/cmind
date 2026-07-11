@@ -54,6 +54,9 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public CopyOrderTypes CopyOrderTypes { get; private set; } = CopyOrderTypes.All;
     public bool CopyPendingExpiry { get; private set; } = true;
     public bool CopyMasterSlippage { get; private set; } = true;
+    // Manage-only (Ignore-New-Trades / Duplikium "Close-Only"): mirror closes, partial closes and
+    // protection changes on positions already copied, but open no new positions or pendings.
+    public bool ManageOnly { get; private set; }
     public CopyDirectionFilter Direction { get; private set; } = CopyDirectionFilter.Both;
     public double MinLot { get; private set; }
     public double MaxLot { get; private set; }
@@ -160,6 +163,11 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public void SetSlippageCopying(bool copyMasterSlippage)
     {
         CopyMasterSlippage = copyMasterSlippage;
+    }
+
+    public void SetManageOnly(bool manageOnly)
+    {
+        ManageOnly = manageOnly;
     }
 
     public bool IsOrderTypeAllowed(CopyOrderTypes orderType)

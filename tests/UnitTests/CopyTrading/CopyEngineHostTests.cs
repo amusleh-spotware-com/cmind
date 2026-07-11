@@ -246,6 +246,35 @@ public sealed class CopyEngineHostTests
     }
 
     [Fact]
+    public async Task Manage_only_opens_nothing_but_still_closes_existing_copies()
+    {
+        var session = NewSession();
+        // Master holds 5001, already mirrored on the manage-only slave as 9001 — must stay managed.
+        session.SeedPosition(Source, positionId: 5001, SymbolId, isBuy: true, volume: 100, label: "5001");
+        session.SeedPosition(Slave, positionId: 9001, SymbolId, isBuy: true, volume: 100, label: "5001");
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
+            Destination(Slave, d => { d.SetManageOnly(true); d.SetPendingOrderCopying(true); })));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            // A fresh master open opens nothing on a manage-only destination.
+            session.PushOpen(Source, positionId: 6001, SymbolId, isBuy: true, volume: 100);
+            // A fresh master pending also places nothing.
+            session.PushPending(Source, orderId: 6500, SymbolId, isBuy: true, volume: 100, CopyOrderKind.Limit, 1.05);
+            await Task.Delay(150);
+            session.Orders.Should().BeEmpty("manage-only opens no new positions");
+            session.Pendings.Should().BeEmpty("manage-only places no new pendings");
+
+            // The master closing the already-copied position still closes the copy.
+            session.PushClose(Source, 5001, SymbolId, isBuy: true, volume: 100);
+            await WaitUntil(() => session.Closes.Any(c => c.PositionId == 9001));
+        });
+
+        session.Orders.Should().BeEmpty();
+        session.Closes.Should().Contain(c => c.PositionId == 9001, "existing copies are still managed and closed");
+    }
+
+    [Fact]
     public async Task Partial_close_is_ignored_when_mirroring_disabled()
     {
         var session = NewSession();

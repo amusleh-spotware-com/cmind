@@ -66,6 +66,9 @@ Set in the New Profile dialog, on the Copy Trading page's per-destination panel,
   proxy); the other modes read balance and skip the extra revaluation round-trip.
 - **Direction filter**: both / long-only / short-only. **Reverse**: flip the side (and swap
   SL↔TP) to run a contrarian copy.
+- **Manage-only** (Ignore-New-Trades / Close-Only): mirror closes, partial closes and protection
+  changes on positions already copied, but open **no** new positions or pending orders (skipped as
+  `manage_only`). Use to wind a destination down without cutting existing copies.
 - **Symbol map** and **symbol filter** (whitelist / blacklist).
 - **Order-type filter** — choose exactly which master order types to copy: market, market-range,
   limit, stop, stop-limit (`CopyOrderTypes` flags; default all). cMAM-style selectivity.

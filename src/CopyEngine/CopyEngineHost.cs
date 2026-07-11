@@ -330,7 +330,7 @@ public sealed class CopyEngineHost(
 
         foreach (var destination in plan.Destinations)
         {
-            if (!destination.Config.CopyPendingOrders) continue;
+            if (!destination.Config.CopyPendingOrders || destination.Config.ManageOnly) continue;
             if (!destination.Config.IsOrderTypeAllowed(CopyDecisionEngine.ToOrderTypes(execution.OrderKind)))
             {
                 logger.CopySkipped(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.OrderId, "order_type");
@@ -399,7 +399,7 @@ public sealed class CopyEngineHost(
 
         foreach (var destination in plan.Destinations)
         {
-            if (!destination.Config.CopyPendingOrders) continue;
+            if (!destination.Config.CopyPendingOrders || destination.Config.ManageOnly) continue;
             try
             {
                 var expiry = destination.Config.CopyPendingExpiry ? execution.ExpirationTimestamp : null;
@@ -456,6 +456,12 @@ public sealed class CopyEngineHost(
         ExecutionEvent execution, string sourceName, SymbolDetails sourceDetail, AccountSnapshot sourceSnapshot,
         bool applyProtection, bool isScaleIn, CancellationToken ct)
     {
+        if (destination.Config.ManageOnly)
+        {
+            CopyMetrics.Instance.CopySkipped("manage_only");
+            return;
+        }
+
         if (IsDestinationTripped(destination.CtidTraderAccountId))
         {
             CopyMetrics.Instance.CopySkipped("circuit_open");

@@ -147,6 +147,14 @@ public static class ObservabilityDefaults
     public const string CopyMeterName = "cMind.Copy";
 }
 
+public static class CopyDefaults
+{
+    // G8 rejection circuit breaker: after this many consecutive open failures a destination is "tripped"
+    // and receives no new opens until the cooldown elapses (existing positions are still managed/closed).
+    public const int RejectionBudget = 5;
+    public static readonly TimeSpan CircuitCooldown = TimeSpan.FromSeconds(60);
+}
+
 public static class AiConstants
 {
     public const string DefaultModel = "claude-opus-4-8";

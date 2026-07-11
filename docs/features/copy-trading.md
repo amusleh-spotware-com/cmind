@@ -79,6 +79,11 @@ Set in the New Profile dialog, on the Copy Trading page's per-destination panel,
   against the master event's real server timestamp (`ExecutionEvent.ServerTimestamp`) via the injected
   `TimeProvider`: a signal older than the configured max-lag is skipped, so a stale copy is never
   placed late (previously the delay was always zero and the guard was dead).
+- **Rejection circuit breaker / Follower Guard** (G8) — a destination that rejects
+  `CopyDefaults.RejectionBudget` opens in a row is **tripped**: it receives no new opens for a cooldown
+  window (a `CopyDestinationTripped` alert fires), stopping a rejection storm from hammering a
+  (prop-firm) account. Existing positions are still managed and closed while tripped; the breaker
+  auto-resets after the cooldown and a successful copy clears the counter.
 - **Lot sanity ceiling** (C14) — an absolute maximum copy size and/or a multiple-of-master cap. A
   computed copy that exceeds the absolute cap, or exceeds `N×` the master's own lot size, is
   **hard-blocked** (surfaced as a `lot_sanity` skip, counted on `cmind.copy.skipped`) rather than

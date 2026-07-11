@@ -1,5 +1,6 @@
 using System.Threading.Channels;
 using Core;
+using Core.Constants;
 using Core.Domain;
 using Core.Logging;
 using CTraderOpenApi;
@@ -46,6 +47,9 @@ public sealed class CopyEngineHost(
         Channel.CreateUnbounded<IReadOnlyList<(long Ctid, string Token)>>(new UnboundedChannelOptions { SingleReader = true });
     private readonly SemaphoreSlim _stateGate = new(1, 1);
     private readonly PropFirmEquityCalculator _equityCalculator = new();
+    // G8 rejection circuit breaker: per-destination consecutive open-failure count and, once tripped, the
+    // time until new opens resume. Mutated only under _stateGate (event handling is serialized).
+    private readonly Dictionary<long, (int ConsecutiveFailures, DateTimeOffset? TrippedUntil)> _destinationHealth = new();
 
     // Pushed by the supervisor when a cID's single valid access token rotates (refresh or re-auth after
     // the user links another account on the same cID, which invalidates the old token). The host
@@ -190,7 +194,10 @@ public sealed class CopyEngineHost(
             catch (Exception ex)
             {
                 CopyMetrics.Instance.CopyFailed(destination.CtidTraderAccountId);
-                NoteIfTokenInvalidated(ex, destination.CtidTraderAccountId);
+                // A token-invalid failure has its own M1 alert + auto-recovery path, so it must not also
+                // feed the rejection breaker (that would trip a destination for a transient auth issue).
+                if (!NoteIfTokenInvalidated(ex, destination.CtidTraderAccountId))
+                    RecordCopyFailure(destination.CtidTraderAccountId);
                 logger.CopyOpenFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, ex);
             }
         }
@@ -447,6 +454,12 @@ public sealed class CopyEngineHost(
         ExecutionEvent execution, string sourceName, SymbolDetails sourceDetail, AccountSnapshot sourceSnapshot,
         bool applyProtection, bool isScaleIn, CancellationToken ct)
     {
+        if (IsDestinationTripped(destination.CtidTraderAccountId))
+        {
+            CopyMetrics.Instance.CopySkipped("circuit_open");
+            return;
+        }
+
         var destinationName = destination.Config.ResolveDestinationSymbol(sourceName);
         if (!_destinationSymbolIds[destination.CtidTraderAccountId].TryGetValue(Normalize(destinationName), out var destinationSymbolId))
             return;
@@ -497,6 +510,7 @@ public sealed class CopyEngineHost(
             effectiveBuy, wireVolume, execution.PositionId.ToString(), ct, decision.SlippageInPoints, baseSlippagePrice);
         CopyMetrics.Instance.CopyPlaced(destination.CtidTraderAccountId);
         CopyMetrics.Instance.RecordLatency(EventAge(execution).TotalMilliseconds);
+        RecordCopySuccess(destination.CtidTraderAccountId);
         if (decision.SlippageInPoints is { } slippagePoints)
         {
             CopyMetrics.Instance.RecordSlippage(slippagePoints);
@@ -672,6 +686,35 @@ public sealed class CopyEngineHost(
         if (ex is not OpenApiException { Error.Kind: OpenApiErrorKind.TokenInvalid } tokenException) return false;
         logger.CopyTokenInvalidated(plan.ProfileId.Value, ctid, tokenException.Error.Code);
         return true;
+    }
+
+    // G8: a destination is tripped (its rejection budget exhausted) and still inside its cooldown, so new
+    // opens are paused. An elapsed cooldown auto-resets the breaker so copying resumes. Existing positions
+    // are never gated by this — a tripped destination is still managed and closed.
+    private bool IsDestinationTripped(long ctid)
+    {
+        if (!_destinationHealth.TryGetValue(ctid, out var health) || health.TrippedUntil is not { } trippedUntil)
+            return false;
+        if (timeProvider.GetUtcNow() < trippedUntil) return true;
+        _destinationHealth[ctid] = (0, null); // cooldown elapsed — resume
+        return false;
+    }
+
+    private void RecordCopySuccess(long ctid) => _destinationHealth[ctid] = (0, null);
+
+    // Counts a consecutive open failure; on breaching the rejection budget the destination trips for the
+    // cooldown window and raises the Follower-Guard alert so a rejection storm can't keep firing orders.
+    private void RecordCopyFailure(long ctid)
+    {
+        var failures = (_destinationHealth.TryGetValue(ctid, out var health) ? health.ConsecutiveFailures : 0) + 1;
+        if (failures < CopyDefaults.RejectionBudget)
+        {
+            _destinationHealth[ctid] = (failures, null);
+            return;
+        }
+
+        _destinationHealth[ctid] = (failures, timeProvider.GetUtcNow() + CopyDefaults.CircuitCooldown);
+        logger.CopyDestinationTripped(plan.ProfileId.Value, ctid, failures, CopyDefaults.CircuitCooldown.TotalSeconds);
     }
 
     // Real per-account sizing state (fixes G2). Balance is always read; equity is derived (the Open API

@@ -233,6 +233,10 @@ public static partial class LogMessages
         Message = "Copy host restarted by watchdog: profile {ProfileId} (previous host exited/faulted)")]
     public static partial void CopyHostRestarted(this ILogger logger, Guid profileId);
 
+    [LoggerMessage(EventId = 1080, Level = LogLevel.Warning,
+        Message = "Copy destination tripped: profile {ProfileId} dest {DestinationCtid} after {Failures} consecutive failures — new opens paused for {CooldownSeconds}s")]
+    public static partial void CopyDestinationTripped(this ILogger logger, Guid profileId, long destinationCtid, int failures, double cooldownSeconds);
+
     // ---- Prop-firm challenge tracking ----
 
     [LoggerMessage(EventId = 1067, Level = LogLevel.Error, Message = "Prop-firm tracking supervisor cycle failed")]

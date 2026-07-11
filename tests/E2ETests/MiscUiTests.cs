@@ -37,4 +37,29 @@ public sealed class MiscUiTests(AppFixture app)
         bg.Should().NotBeNullOrEmpty();
         bg.Should().NotBe("rgb(255, 255, 255)", "the reconnect card must not be the default white");
     }
+
+    [Fact]
+    public async Task Reconnect_modal_overlays_and_shows_only_active_state()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+
+        // Blazor toggles reconnect state by replacing the element's class list (dropping our own class),
+        // so the styling must key off the #id. Simulate the "failed" state exactly as Blazor does.
+        await page.EvaluateAsync(
+            "() => { document.getElementById('components-reconnect-modal').className = 'components-reconnect-failed'; }");
+
+        var modal = page.Locator("#components-reconnect-modal");
+        (await modal.IsVisibleAsync()).Should().BeTrue("the failed state must show the modal");
+
+        var position = await page.EvaluateAsync<string>(
+            "() => getComputedStyle(document.getElementById('components-reconnect-modal')).position");
+        position.Should().Be("fixed", "the modal must overlay the app, not render inline in the page flow");
+
+        // Only the failed copy is shown — not all three states jammed together.
+        (await page.Locator(".app-reconnect-when-failed").First.IsVisibleAsync()).Should().BeTrue();
+        (await page.Locator(".app-reconnect-when-show").First.IsVisibleAsync()).Should().BeFalse();
+        (await page.Locator(".app-reconnect-when-rejected").First.IsVisibleAsync()).Should().BeFalse();
+        (await page.GetByRole(AriaRole.Button, new() { Name = "Retry now" }).IsVisibleAsync()).Should().BeTrue();
+    }
 }

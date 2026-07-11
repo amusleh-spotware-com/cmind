@@ -17,6 +17,11 @@
     --app-primary-hover: #2ED690;
     --app-primary-contrast: #FFFFFF;
     --app-error: #E74C3C;
+    /* Semantic status roles — white-label branding overrides these at runtime (BrandingCss); these
+       stock defaults guarantee they always resolve so components/charts can rely on them. */
+    --app-success: #26C281;
+    --app-warning: #F39C12;
+    --app-info: #3498DB;
     --app-radius: 4px;
     --app-bottomnav-height: 56px;
     --app-touch-target: 44px;
@@ -626,3 +631,183 @@ html, body {
     .mobile-stack > * { display: block !important; width: 100% !important; margin-bottom: 8px; }
     .app-login-card { padding: 32px 24px; }
 }
+
+/* ---- Dashboard --------------------------------------------------------------
+   Mobile-first: every widget is a full-width stack item on a phone and only
+   graduates to a multi-column grid via MudBlazor breakpoints. Colour comes only
+   from role tokens (--app-success/-warning/-error/-info/-primary/-text*).
+   --------------------------------------------------------------------------- */
+
+/* Semantic role helpers — one source of truth for icon/value/spark colour. */
+.app-role-success { color: var(--app-success); }
+.app-role-warning { color: var(--app-warning); }
+.app-role-danger  { color: var(--app-error); }
+.app-role-info    { color: var(--app-info); }
+.app-role-neutral { color: var(--app-text); }
+
+.app-dash-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+.app-dash-updated { color: var(--app-text-secondary); font-size: 12px; }
+
+/* Live indicator — a real pulsing dot; stops for reduced-motion users. */
+.app-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    color: var(--app-success);
+}
+.app-live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--app-success);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--app-success) 60%, transparent);
+    animation: app-live-pulse 1.8s ease-in-out infinite;
+}
+@keyframes app-live-pulse {
+    0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--app-success) 55%, transparent); }
+    70%  { box-shadow: 0 0 0 7px color-mix(in srgb, var(--app-success) 0%, transparent); }
+    100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--app-success) 0%, transparent); }
+}
+
+/* Period toggle. */
+.app-period {
+    display: inline-flex;
+    border: 1px solid var(--app-border);
+    border-radius: var(--app-radius);
+    overflow: hidden;
+}
+.app-period button {
+    min-height: 34px;
+    padding: 4px 12px;
+    background: transparent;
+    border: none;
+    color: var(--app-text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+}
+.app-period button + button { border-left: 1px solid var(--app-border); }
+.app-period button:hover { color: var(--app-text); }
+.app-period-active { background: color-mix(in srgb, var(--app-primary) 16%, transparent) !important; color: var(--app-primary) !important; }
+
+.app-section-title {
+    color: var(--app-text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    margin: 4px 0 10px;
+}
+
+/* KPI card. */
+.app-kpi { display: flex; flex-direction: column; gap: 8px; min-height: 116px; }
+.app-kpi-head { display: flex; align-items: center; gap: 8px; }
+.app-kpi-icon { font-size: 20px !important; }
+.app-kpi-label { color: var(--app-text-secondary); font-size: 12px; font-weight: 600; }
+.app-kpi-value { font-size: 26px; font-weight: 800; line-height: 1.1; letter-spacing: -0.5px; }
+.app-kpi-value.app-flash { animation: app-flash 0.9s ease-out; }
+@keyframes app-flash {
+    0% { background: color-mix(in srgb, var(--app-primary) 22%, transparent); }
+    100% { background: transparent; }
+}
+.app-kpi-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-top: auto; }
+.app-kpi-delta { display: inline-flex; align-items: center; gap: 2px; font-size: 12px; font-weight: 700; }
+.app-kpi-delta-icon { font-size: 14px !important; }
+.app-delta-good { color: var(--app-success); }
+.app-delta-bad  { color: var(--app-error); }
+.app-delta-flat { color: var(--app-text-muted); }
+
+/* Inline SVG sparkline — stroke inherits the card's role colour. */
+.app-spark { width: 64px; height: 24px; overflow: visible; }
+.app-spark polyline { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.9; }
+
+/* Chart / section card. */
+.app-chart-card {
+    background: var(--app-surface);
+    border: 1px solid var(--app-border);
+    border-radius: var(--app-radius);
+    padding: 16px;
+    height: 100%;
+}
+.app-section-head { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-weight: 700; font-size: 14px; }
+
+/* Status ring (conic-gradient donut) + legend. */
+.app-ring-wrap { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.app-ring {
+    position: relative;
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.app-ring-hole {
+    position: absolute;
+    inset: 18px;
+    border-radius: 50%;
+    background: var(--app-surface);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.app-ring-total { font-size: 24px; font-weight: 800; line-height: 1; }
+.app-ring-total-label { font-size: 10px; color: var(--app-text-secondary); letter-spacing: 0.4px; text-transform: uppercase; }
+.app-legend { display: flex; flex-direction: column; gap: 8px; min-width: 140px; }
+.app-legend-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.app-legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.app-legend-count { margin-left: auto; font-weight: 700; }
+
+/* Live activity feed. */
+.app-feed { display: flex; flex-direction: column; }
+.app-feed-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--app-border);
+    min-height: var(--app-touch-target);
+}
+.app-feed-row:last-child { border-bottom: none; }
+.app-feed-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.app-feed-main { min-width: 0; flex: 1 1 auto; }
+.app-feed-title { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-feed-sub { font-size: 11px; color: var(--app-text-secondary); }
+.app-feed-time { font-size: 11px; color: var(--app-text-muted); white-space: nowrap; flex-shrink: 0; }
+.app-feed-empty, .app-dash-empty { color: var(--app-text-secondary); font-size: 13px; padding: 20px 4px; text-align: center; }
+.app-feed-new { animation: app-feed-in 0.5s ease-out; }
+@keyframes app-feed-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Node health / capacity gauge. */
+.app-gauge-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+.app-gauge {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--app-border);
+    overflow: hidden;
+}
+.app-gauge-fill { height: 100%; border-radius: 999px; background: var(--app-primary); transition: width 0.4s ease; }
+.app-gauge-fill.app-role-warning { background: var(--app-warning); }
+.app-gauge-fill.app-role-danger { background: var(--app-error); }
+
+@media (prefers-reduced-motion: reduce) {
+    .app-live-dot,
+    .app-kpi-value.app-flash,
+    .app-feed-new,
+    .app-gauge-fill { animation: none !important; transition: none !important; }
+}
+
+/* "Powered by cMind" dashboard credit (hidden when App:Branding:ShowSiteLink=false). */
+.app-powered-by { text-align: center; margin-top: 1.5rem; margin-bottom: 0.5rem; opacity: 0.75; }

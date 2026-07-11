@@ -5,7 +5,7 @@
         <div style="display:flex;align-items:center;gap:12px;">
             <MudIcon Icon="@Icon" Style="@($"color:{Color};font-size:32px;")" />
             <div style="display:flex;flex-direction:column;">
-                <span style="color:#A0A0A0;font-size:12px;">@Label</span>
+                <span style="color:var(--app-text-secondary);font-size:12px;">@Label</span>
                 <span style="color:@Color;font-size:24px;font-weight:600;line-height:1.2;">@Value</span>
             </div>
         </div>
@@ -15,7 +15,7 @@
 @code {
     [Parameter, EditorRequired] public string Label { get; set; } = "";
     [Parameter, EditorRequired] public long Value { get; set; }
-    [Parameter] public string Color { get; set; } = "#E6E6E6";
+    [Parameter] public string Color { get; set; } = "var(--app-text)";
     [Parameter] public string Icon { get; set; } = "";
     [Parameter] public string? Href { get; set; }
 

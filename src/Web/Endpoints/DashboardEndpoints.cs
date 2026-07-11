@@ -13,6 +13,14 @@ public static class DashboardEndpoints
     {
         var g = app.MapGroup("/api/dashboard").RequireAuthorization();
 
+        g.MapGet("/overview", async (string? period, DataContext db, ICurrentUser u, TimeProvider time) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var overview = await DashboardQuery.BuildAsync(
+                db, uid, u.IsAtLeast("Admin"), DashboardPeriods.Parse(period), time.GetUtcNow());
+            return Results.Ok(overview);
+        });
+
         g.MapGet("/stats", async (DataContext db, ICurrentUser u) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();

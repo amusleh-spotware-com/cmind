@@ -1,0 +1,80 @@
+﻿@using ApexCharts
+@using Web.Endpoints
+@inject IJSRuntime JS
+
+<div class="app-chart-card">
+    <div class="app-section-head">
+        <span>Activity over time</span>
+        <HelpTip Text="cBot runs and backtests started, completed and failed across the selected period." />
+    </div>
+    @if (_points.Count == 0)
+    {
+        <div class="app-dash-empty">No activity in this period yet.</div>
+    }
+    else
+    {
+        <ApexChart @ref="_chart" TItem="Point" Options="_options" Height="240">
+            <ApexPointSeries TItem="Point" Items="_points" Name="Started" SeriesType="SeriesType.Area"
+                             XValue="@(p => p.X)" YValue="@(p => p.Started)" />
+            <ApexPointSeries TItem="Point" Items="_points" Name="Completed" SeriesType="SeriesType.Area"
+                             XValue="@(p => p.X)" YValue="@(p => p.Completed)" />
+            <ApexPointSeries TItem="Point" Items="_points" Name="Failed" SeriesType="SeriesType.Area"
+                             XValue="@(p => p.X)" YValue="@(p => p.Failed)" />
+        </ApexChart>
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<DashboardBucket> Buckets { get; set; } = [];
+
+    private sealed record Point(DateTime X, decimal Started, decimal Completed, decimal Failed);
+
+    private List<Point> _points = [];
+    private ApexChart<Point>? _chart;
+    private readonly ApexChartOptions<Point> _options = new();
+    private bool _themed;
+
+    protected override void OnParametersSet() =>
+        _points = [.. Buckets.Select(b => new Point(b.Start.UtcDateTime, b.Started, b.Completed, b.Failed))];
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_themed || _points.Count == 0) return;
+        _themed = true;
+
+        string[] colors;
+        try
+        {
+            colors = await JS.InvokeAsync<string[]>(
+                "appReadTokens", new[] { "--app-info", "--app-success", "--app-error" });
+        }
+        catch
+        {
+            colors = [];
+        }
+
+        _options.Chart = new Chart
+        {
+            Toolbar = new Toolbar { Show = false },
+            Background = "transparent",
+            Animations = new Animations { Enabled = false },
+            FontFamily = "Inter, sans-serif"
+        };
+        _options.Theme = new ApexCharts.Theme { Mode = Mode.Dark };
+        _options.Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 };
+        _options.DataLabels = new DataLabels { Enabled = false };
+        _options.Legend = new Legend { Show = true, Position = LegendPosition.Top };
+        _options.Xaxis = new XAxis { Type = XAxisType.Datetime };
+        _options.Fill = new Fill
+        {
+            Type = FillType.Gradient,
+            Gradient = new FillGradient { OpacityFrom = 0.35, OpacityTo = 0.03 }
+        };
+        if (colors.Length == 3 && colors.All(c => !string.IsNullOrWhiteSpace(c)))
+        {
+            _options.Colors = [.. colors];
+        }
+
+        if (_chart is not null) await _chart.UpdateOptionsAsync(true, true, false);
+    }
+}

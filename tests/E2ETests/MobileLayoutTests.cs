@@ -20,7 +20,7 @@ public sealed class MobileLayoutTests(AppFixture app)
     // Shell-simple pages that must never scroll sideways on a phone right now. Grows every phase.
     public static IEnumerable<object[]> NoOverflowRoutes() => new[]
     {
-        "/account", "/settings/features", "/nodes", "/users", "/cbots", "/run", "/backtest",
+        "/", "/account", "/settings/features", "/nodes", "/users", "/cbots", "/run", "/backtest",
         "/mcp", "/prop-firm", "/settings/legal", "/copy-trading",
         "/agent", "/alerts", "/prop-guard", "/settings/ai", "/settings/openapi", "/accounts",
         "/ai/build", "/ai/review", "/ai/optimize", "/optimize",

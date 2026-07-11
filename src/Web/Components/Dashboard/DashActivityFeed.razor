@@ -1,0 +1,55 @@
+﻿@using Web.Endpoints
+@inject TimeProvider Time
+
+<div class="app-chart-card">
+    <div class="app-section-head">
+        <span>Live activity</span>
+        <HelpTip Text="Your most recent cBot and backtest events, newest first." />
+    </div>
+    @if (Items.Count == 0)
+    {
+        <div class="app-feed-empty">No activity yet — start a cBot or backtest to see it here.</div>
+    }
+    else
+    {
+        <div class="app-feed" data-testid="activity-feed">
+            @foreach (var item in Items)
+            {
+                <div class="app-feed-row">
+                    <span class="app-feed-dot" style="@($"background:{DotColor(item.Status)};")"></span>
+                    <div class="app-feed-main">
+                        <div class="app-feed-title">@Title(item)</div>
+                        <div class="app-feed-sub">@item.Kind · @item.Status</div>
+                    </div>
+                    <span class="app-feed-time">@Relative(item.At)</span>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<DashboardActivity> Items { get; set; } = [];
+
+    private static string Title(DashboardActivity item) =>
+        string.IsNullOrWhiteSpace(item.Symbol) ? item.CBot : $"{item.Symbol} · {item.CBot}";
+
+    private static string DotColor(string status) => status switch
+    {
+        "Running" => "var(--app-success)",
+        "Starting" or "Scheduled" => "var(--app-info)",
+        "Pending" or "Stopping" => "var(--app-warning)",
+        "Failed" => "var(--app-error)",
+        _ => "var(--app-text-muted)"
+    };
+
+    private string Relative(DateTimeOffset at)
+    {
+        var span = Time.GetUtcNow() - at;
+        if (span < TimeSpan.Zero) span = TimeSpan.Zero;
+        if (span.TotalSeconds < 60) return "just now";
+        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
+        if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
+        return $"{(int)span.TotalDays}d ago";
+    }
+}

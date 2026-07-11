@@ -1,0 +1,101 @@
+﻿@using System.Globalization
+@using System.Text
+@inject NavigationManager Nav
+
+<MudItem xs="6" md="3">
+    <MudPaper Class="pa-3 app-stat-card app-kpi" Elevation="0"
+              Style="@(Href is null ? "" : "cursor:pointer;")" @onclick="OnClick" data-testid="@TestId">
+        <div class="app-kpi-head">
+            <MudIcon Icon="@Icon" Class="@($"app-kpi-icon {RoleClass}")" />
+            <span class="app-kpi-label">@Label</span>
+            @if (Help is not null)
+            {
+                <HelpTip Text="@Help" />
+            }
+        </div>
+        <div class="@($"app-kpi-value {RoleClass}")">@Value</div>
+        <div class="app-kpi-foot">
+            @if (Delta is not null)
+            {
+                <span class="@($"app-kpi-delta {DeltaClass}")">
+                    <MudIcon Icon="@DeltaIcon" Class="app-kpi-delta-icon" />@DeltaText
+                </span>
+            }
+            else
+            {
+                <span></span>
+            }
+            @if (SparkPoints is not null)
+            {
+                <svg class="@($"app-spark {RoleClass}")" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true">
+                    <polyline points="@SparkPoints" />
+                </svg>
+            }
+        </div>
+    </MudPaper>
+</MudItem>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter, EditorRequired] public string Value { get; set; } = "";
+    [Parameter] public string Icon { get; set; } = "";
+    [Parameter] public string Role { get; set; } = "neutral";
+    [Parameter] public double? Delta { get; set; }
+    [Parameter] public string? DeltaSuffix { get; set; }
+    [Parameter] public bool HigherIsBetter { get; set; } = true;
+    [Parameter] public IReadOnlyList<double>? Spark { get; set; }
+    [Parameter] public string? Href { get; set; }
+    [Parameter] public string? Help { get; set; }
+    [Parameter] public string? TestId { get; set; }
+
+    private string RoleClass => $"app-role-{Role}";
+
+    private bool DeltaIsFlat => Delta is null or 0;
+    private bool DeltaIsGood => Delta is { } d && d != 0 && (d > 0) == HigherIsBetter;
+
+    private string DeltaClass => DeltaIsFlat ? "app-delta-flat" : DeltaIsGood ? "app-delta-good" : "app-delta-bad";
+
+    private string DeltaIcon => Delta switch
+    {
+        > 0 => Icons.Material.Filled.ArrowUpward,
+        < 0 => Icons.Material.Filled.ArrowDownward,
+        _ => Icons.Material.Filled.Remove
+    };
+
+    private string DeltaText
+    {
+        get
+        {
+            if (Delta is not { } d) return "";
+            var sign = d > 0 ? "+" : "";
+            return $"{sign}{d.ToString("0.#", CultureInfo.InvariantCulture)}{DeltaSuffix}";
+        }
+    }
+
+    private string? SparkPoints
+    {
+        get
+        {
+            if (Spark is not { Count: > 1 }) return null;
+            var max = Spark.Max();
+            var min = Spark.Min();
+            var range = max - min;
+            if (range <= 0) range = 1;
+
+            var builder = new StringBuilder();
+            for (var i = 0; i < Spark.Count; i++)
+            {
+                var x = (double)i / (Spark.Count - 1) * 100;
+                var y = 23 - (Spark[i] - min) / range * 22;
+                builder.Append(CultureInfo.InvariantCulture, $"{x:0.#},{y:0.#} ");
+            }
+
+            return builder.ToString().TrimEnd();
+        }
+    }
+
+    private void OnClick()
+    {
+        if (Href is not null) Nav.NavigateTo(Href);
+    }
+}

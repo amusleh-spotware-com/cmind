@@ -63,6 +63,15 @@
     <script>
         window.copyToClipboard = (text) => navigator.clipboard.writeText(text);
 
+        // Resolve design-token CSS custom properties to concrete colours so charts (which paint SVG,
+        // not CSS) stay white-label-driven instead of hard-coding hex. Returns [] on any failure.
+        window.appReadTokens = (names) => {
+            try {
+                const style = getComputedStyle(document.documentElement);
+                return names.map(n => style.getPropertyValue(n).trim());
+            } catch { return []; }
+        };
+
         // PWA: register the app-shell service worker and capture the install prompt.
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () =>

@@ -1,62 +1,138 @@
 @page "/"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using System.Globalization
+@using System.Net.Http.Json
+@using Web.Endpoints
+@using Web.Components.Dashboard
 @using Web.Json
 @implements IDisposable
 @inject HttpClient Http
 @inject TimeProvider Time
+@inject Web.Branding.IBrandingThemeProvider Branding
 
 <PageTitle>Dashboard</PageTitle>
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
+<div class="app-dash-head">
     <MudText Typo="Typo.h5">Dashboard</MudText>
-    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text"
-             Icon="@Icons.Material.Filled.FiberManualRecord" Class="live-pulse" data-testid="live-indicator">Live</MudChip>
+    <span class="app-live" data-testid="live-indicator">
+        <span class="app-live-dot"></span>Live
+    </span>
     <MudSpacer />
-    <MudText Typo="Typo.caption" Class="mud-text-secondary">Updated @_updatedAt.ToLocalTime().ToString("HH:mm:ss")</MudText>
-</MudStack>
+    <div class="app-period" role="group" aria-label="Time period" data-testid="period-toggle">
+        @foreach (var option in Periods)
+        {
+            <button type="button" class="@(option.Key == _period ? "app-period-active" : "")"
+                    data-testid="@($"period-{option.Key}")" @onclick="() => SetPeriodAsync(option.Key)">
+                @option.Label
+            </button>
+        }
+    </div>
+</div>
+<div class="app-dash-updated mb-4" data-testid="dash-updated">Updated @_updatedLocal</div>
 
-@if (_stats is null)
+@if (_error)
 {
-    <MudProgressCircular Indeterminate="true" />
+    <MudPaper Class="pa-6" Elevation="0" data-testid="dash-error">
+        <MudStack AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.CloudOff" Color="Color.Error" Size="Size.Large" />
+            <MudText>Couldn't load the dashboard.</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RetryAsync">Retry</MudButton>
+        </MudStack>
+    </MudPaper>
+}
+else if (_data is null)
+{
+    <MudGrid data-testid="dash-loading">
+        @for (var i = 0; i < 4; i++)
+        {
+            <MudItem xs="6" md="3">
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="116px" Animation="Animation.Wave" />
+            </MudItem>
+        }
+        <MudItem xs="12" md="8"><MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="280px" Animation="Animation.Wave" /></MudItem>
+        <MudItem xs="12" md="4"><MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="280px" Animation="Animation.Wave" /></MudItem>
+    </MudGrid>
 }
 else
 {
-    <MudText Typo="Typo.subtitle1" Class="mb-2" Style="color:#A0A0A0;">Activity</MudText>
-    <MudGrid Class="mb-4">
-        <DashStat Label="Running cBots" Value="@((long)_stats.runningInstances)" Color="#26C281" Icon="@Icons.Material.Filled.PlayCircle" />
-        <DashStat Label="Running backtests" Value="@((long)_stats.runningBacktests)" Color="#3498DB" Icon="@Icons.Material.Filled.Science" />
-        <DashStat Label="Pending" Value="@((long)_stats.pendingInstances)" Color="#F39C12" Icon="@Icons.Material.Filled.Schedule" />
-        <DashStat Label="Failed" Value="@((long)_stats.failedInstances)" Color="#E74C3C" Icon="@Icons.Material.Filled.ErrorOutline" />
-        <DashStat Label="Completed" Value="@((long)_stats.completedInstances)" Color="#A0A0A0" Icon="@Icons.Material.Filled.CheckCircle" />
-        <DashStat Label="Total instances" Value="@((long)_stats.totalInstances)" Color="#E6E6E6" Icon="@Icons.Material.Filled.ListAlt" />
+    <MudGrid Class="mb-2">
+        <DashKpiCard Label="Active now" Value="@_data.Kpis.ActiveNow.ToString()" Role="success"
+                     Icon="@Icons.Material.Filled.PlayCircle" Spark="_data.Kpis.ActiveSpark" Href="/run"
+                     Help="cBot runs and backtests currently starting or running." TestId="kpi-active" />
+        <DashKpiCard Label="Success rate" Value="@SuccessRateText" Role="success"
+                     Icon="@Icons.Material.Filled.CheckCircle" Delta="@SuccessRateDelta" DeltaSuffix="pp"
+                     Spark="_data.Kpis.SuccessSpark" Help="Completed vs failed over the selected period."
+                     TestId="kpi-success" />
+        <DashKpiCard Label="Completed" Value="@_data.Kpis.Completed.ToString()" Role="info"
+                     Icon="@Icons.Material.Filled.DoneAll" Delta="@_data.Kpis.CompletedDelta"
+                     Spark="_data.Kpis.CompletedSpark" Help="Finished cBot runs and backtests this period."
+                     TestId="kpi-completed" />
+        <DashKpiCard Label="Failed" Value="@_data.Kpis.Failed.ToString()" Role="danger"
+                     Icon="@Icons.Material.Filled.ErrorOutline" Delta="@_data.Kpis.FailedDelta"
+                     HigherIsBetter="false" Spark="_data.Kpis.FailedSpark" Href="/run"
+                     Help="Runs and backtests that failed this period." TestId="kpi-failed" />
     </MudGrid>
 
-    <MudText Typo="Typo.subtitle1" Class="mb-2" Style="color:#A0A0A0;">My resources</MudText>
-    <MudGrid Class="mb-4">
-        <DashStat Label="cBots" Value="@((long)_stats.cBots)" Color="#26C281" Icon="@Icons.Material.Filled.SmartToy" Href="/cbots" />
-        <DashStat Label="Parameter sets" Value="@((long)_stats.paramSets)" Color="#26C281" Icon="@Icons.Material.Filled.Tune" Href="/cbots" />
-        <DashStat Label="Trading accounts" Value="@((long)_stats.tradingAccounts)" Color="#26C281" Icon="@Icons.Material.Filled.AccountBalance" Href="/accounts" />
-        <DashStat Label="cTrader IDs" Value="@((long)_stats.ctids)" Color="#26C281" Icon="@Icons.Material.Filled.Person" Href="/accounts" />
-        <DashStat Label="MCP keys" Value="@((long)_stats.mcpKeys)" Color="#26C281" Icon="@Icons.Material.Filled.Key" Href="/mcp" />
+    <MudGrid Class="mb-2">
+        <MudItem xs="12" md="8"><DashActivityChart Buckets="_data.TimeSeries" /></MudItem>
+        <MudItem xs="12" md="4"><DashStatusRing Status="_data.Status" /></MudItem>
     </MudGrid>
 
-    @if ((bool)_stats.isAdmin)
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" md="@(_data.Nodes is null ? 12 : 8)"><DashActivityFeed Items="_data.Activity" /></MudItem>
+        @if (_data.Nodes is not null)
+        {
+            <MudItem xs="12" md="4"><DashNodeHealth Nodes="_data.Nodes" /></MudItem>
+        }
+    </MudGrid>
+
+    <div class="app-section-title">My resources</div>
+    <MudGrid Class="mb-4">
+        <DashStat Label="cBots" Value="@_data.Resources.CBots" Color="var(--app-primary)" Icon="@Icons.Material.Filled.SmartToy" Href="/cbots" />
+        <DashStat Label="Parameter sets" Value="@_data.Resources.ParamSets" Color="var(--app-primary)" Icon="@Icons.Material.Filled.Tune" Href="/cbots" />
+        <DashStat Label="Trading accounts" Value="@_data.Resources.TradingAccounts" Color="var(--app-primary)" Icon="@Icons.Material.Filled.AccountBalance" Href="/accounts" />
+        <DashStat Label="cTrader IDs" Value="@_data.Resources.Ctids" Color="var(--app-primary)" Icon="@Icons.Material.Filled.Person" Href="/accounts" />
+        <DashStat Label="MCP keys" Value="@_data.Resources.McpKeys" Color="var(--app-primary)" Icon="@Icons.Material.Filled.Key" Href="/mcp" />
+    </MudGrid>
+
+    @if (_data.Nodes is not null)
     {
-        <MudText Typo="Typo.subtitle1" Class="mb-2" Style="color:#A0A0A0;">Admin</MudText>
+        <div class="app-section-title">Admin</div>
         <MudGrid>
-            <DashStat Label="Users" Value="@((long)_stats.users)" Color="#3498DB" Icon="@Icons.Material.Filled.People" Href="/users" />
-            <DashStat Label="Nodes" Value="@((long)_stats.nodes)" Color="#3498DB" Icon="@Icons.Material.Filled.Dns" Href="/nodes" />
-            <DashStat Label="Active nodes" Value="@((long)_stats.activeNodes)" Color="#26C281" Icon="@Icons.Material.Filled.Cloud" Href="/nodes" />
+            <DashStat Label="Nodes" Value="@_data.Nodes.Total" Color="var(--app-info)" Icon="@Icons.Material.Filled.Dns" Href="/nodes" />
+            <DashStat Label="Active nodes" Value="@_data.Nodes.Active" Color="var(--app-success)" Icon="@Icons.Material.Filled.Cloud" Href="/nodes" />
         </MudGrid>
     }
+}
+
+@if (Branding.Branding.ShowSiteLink)
+{
+    <div class="app-powered-by" data-testid="powered-by">
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+            Powered by <MudLink Href="@Core.Constants.BrandingDefaults.SiteUrl" Target="_blank"
+                                Typo="Typo.caption" data-testid="powered-by-link">cMind</MudLink>
+        </MudText>
+    </div>
 }
 
 @code {
     private static readonly TimeSpan RefreshInterval = TimeSpan.FromSeconds(10);
 
-    private dynamic? _stats;
-    private DateTimeOffset _updatedAt;
+    private static readonly (string Key, string Label)[] Periods =
+    [
+        ("1h", "1H"), ("24h", "24H"), ("7d", "7D"), ("30d", "30D")
+    ];
+
+    private DashboardOverview? _data;
+    private bool _error;
+    private string _period = "24h";
+    private string _updatedLocal = "—";
     private readonly CancellationTokenSource _cts = new();
+
+    private string SuccessRateText =>
+        _data is null ? "—" : (_data.Kpis.SuccessRate * 100).ToString("0", CultureInfo.InvariantCulture) + "%";
+
+    private double SuccessRateDelta => _data is null ? 0 : Math.Round(_data.Kpis.SuccessRateDelta * 100, 1);
 
     protected override async Task OnInitializedAsync()
     {
@@ -64,25 +140,47 @@ else
         _ = PollAsync(_cts.Token);
     }
 
-    private async Task RefreshAsync()
+    private async Task SetPeriodAsync(string period)
     {
-        _stats = await Http.GetDynamicAsync("/api/dashboard/stats");
-        _updatedAt = Time.GetUtcNow();
+        if (_period == period) return;
+        _period = period;
+        _data = null;
+        await RefreshAsync();
     }
 
-    // Lightweight live refresh so the dashboard reflects running/pending/failed counts without a manual reload.
-    private async Task PollAsync(CancellationToken ct)
+    private Task RetryAsync() => RefreshAsync();
+
+    private async Task RefreshAsync()
+    {
+        try
+        {
+            _data = await Http.GetFromJsonAsync<DashboardOverview>(
+                $"/api/dashboard/overview?period={_period}", JsonDefaults.DynamicWeb, _cts.Token);
+            _updatedLocal = Time.GetUtcNow().ToLocalTime().ToString("HH:mm:ss", CultureInfo.InvariantCulture);
+            _error = false;
+        }
+        catch (Exception) when (!_cts.IsCancellationRequested)
+        {
+            if (_data is null) _error = true;
+        }
+    }
+
+    // Enhanced live refresh: re-pull the overview on a timer so KPIs, chart, status and feed stay
+    // current without a manual reload. A transient failure never kills the loop.
+    private async Task PollAsync(CancellationToken cancellationToken)
     {
         try
         {
             using var timer = new PeriodicTimer(RefreshInterval);
-            while (await timer.WaitForNextTickAsync(ct))
+            while (await timer.WaitForNextTickAsync(cancellationToken))
             {
-                // A transient stats-fetch failure must not kill the live loop, and StateHasChanged after
-                // disposal is harmless — swallow both so the dashboard keeps refreshing.
                 try
                 {
-                    await InvokeAsync(async () => { await RefreshAsync(); StateHasChanged(); });
+                    await InvokeAsync(async () =>
+                    {
+                        await RefreshAsync();
+                        StateHasChanged();
+                    });
                 }
                 catch (ObjectDisposedException) { return; }
                 catch (Exception) { /* transient refresh failure — retry next tick */ }
@@ -97,8 +195,3 @@ else
         _cts.Dispose();
     }
 }
-
-<style>
-    .live-pulse { animation: livepulse 1.6s ease-in-out infinite; }
-    @@keyframes livepulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-</style>

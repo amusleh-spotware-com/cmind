@@ -1,0 +1,71 @@
+﻿@using System.Globalization
+@using Web.Endpoints
+
+<div class="app-chart-card">
+    <div class="app-section-head">
+        <span>Instance status</span>
+        <HelpTip Text="How your cBot runs and backtests are currently distributed across states." />
+    </div>
+    <div class="app-ring-wrap">
+        <div class="app-ring" style="@RingStyle" data-testid="status-ring">
+            <div class="app-ring-hole">
+                <span class="app-ring-total">@_total</span>
+                <span class="app-ring-total-label">Total</span>
+            </div>
+        </div>
+        <div class="app-legend">
+            @foreach (var s in _segments)
+            {
+                <div class="app-legend-row">
+                    <span class="app-legend-dot" style="@($"background:{s.Color};")"></span>
+                    <span>@s.Label</span>
+                    <span class="app-legend-count">@s.Count</span>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public DashboardStatusBreakdown Status { get; set; } = default!;
+
+    private sealed record Segment(string Label, int Count, string Color);
+
+    private IReadOnlyList<Segment> _segments = [];
+    private int _total;
+
+    protected override void OnParametersSet()
+    {
+        _segments =
+        [
+            new("Running", Status.Running, "var(--app-success)"),
+            new("Backtests", Status.BacktestsRunning, "var(--app-info)"),
+            new("Pending", Status.Pending, "var(--app-warning)"),
+            new("Completed", Status.Completed, "var(--app-text-muted)"),
+            new("Failed", Status.Failed, "var(--app-error)")
+        ];
+        _total = _segments.Sum(s => s.Count);
+    }
+
+    private string RingStyle
+    {
+        get
+        {
+            if (_total == 0) return "background:var(--app-border);";
+
+            var stops = new List<string>();
+            var cursor = 0d;
+            foreach (var s in _segments)
+            {
+                if (s.Count == 0) continue;
+                var start = cursor / _total * 100;
+                cursor += s.Count;
+                var end = cursor / _total * 100;
+                stops.Add(string.Format(CultureInfo.InvariantCulture,
+                    "{0} {1:0.##}% {2:0.##}%", s.Color, start, end));
+            }
+
+            return $"background:conic-gradient({string.Join(",", stops)});";
+        }
+    }
+}

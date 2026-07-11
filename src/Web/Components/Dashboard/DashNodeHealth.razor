@@ -1,0 +1,35 @@
+﻿@using System.Globalization
+@using Web.Endpoints
+
+<div class="app-chart-card" data-testid="node-health">
+    <div class="app-section-head">
+        <span>Cluster health</span>
+        <HelpTip Text="Active execution nodes and how much of their combined instance capacity is in use." />
+    </div>
+    <div class="app-gauge-row">
+        <span>Active nodes</span>
+        <span><strong>@Nodes.Active</strong> / @Nodes.Total</span>
+    </div>
+    <div class="app-gauge-row">
+        <span>Capacity in use</span>
+        <span><strong>@Nodes.CapacityUsed</strong> / @Nodes.CapacityTotal slots</span>
+    </div>
+    <div class="app-gauge">
+        <div class="@($"app-gauge-fill {UtilizationRole}")" style="@($"width:{UtilizationPercent}%;")"></div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public DashboardNodes Nodes { get; set; } = default!;
+
+    private double Utilization => Nodes.CapacityTotal <= 0 ? 0 : (double)Nodes.CapacityUsed / Nodes.CapacityTotal;
+
+    private string UtilizationPercent => Math.Clamp(Utilization * 100, 0, 100).ToString("0.#", CultureInfo.InvariantCulture);
+
+    private string UtilizationRole => Utilization switch
+    {
+        >= 0.9 => "app-role-danger",
+        >= 0.7 => "app-role-warning",
+        _ => ""
+    };
+}

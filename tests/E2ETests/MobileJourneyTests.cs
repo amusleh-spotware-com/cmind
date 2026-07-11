@@ -38,6 +38,10 @@ public sealed class MobileJourneyTests(AppFixture app)
         var page = await app.NewAuthedMobilePageAsync();
         await page.GotoAsync("/mcp", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
 
+        // AI is unconfigured in E2E: /mcp uses AiFeatureNotice, which pops a one-time "AI not configured"
+        // message box on navigate. It's a centred modal that covers the New Key button, so dismiss it first.
+        await DismissAiDialogAsync(page);
+
         await page.GetByRole(AriaRole.Button, new() { Name = "New Key" }).ClickAsync();
 
         var dialog = page.Locator(".mud-dialog").First;
@@ -52,5 +56,14 @@ public sealed class MobileJourneyTests(AppFixture app)
         // The new key shows in the list as a labelled card.
         await page.GetByText(label).First.WaitForAsync(new() { Timeout = 8000 });
         (await page.GetByText(label).First.IsVisibleAsync()).Should().BeTrue();
+    }
+
+    // AI is unconfigured in E2E; AI-gated pages pop a one-time "AI not configured" dialog on navigate.
+    private static async Task DismissAiDialogAsync(IPage page)
+    {
+        var later = page.Locator("button:has-text('Later')");
+        try { await later.First.ClickAsync(new() { Timeout = 8000 }); }
+        catch (TimeoutException) { /* dialog not shown — fine */ }
+        catch (PlaywrightException) { /* ignore */ }
     }
 }

@@ -41,6 +41,12 @@ degree of parallelism. Each pod gets a stable `NodeName` (default: pod hostname)
 are attributed per pod. The database is the single source of truth — no sticky sessions,
 no per-pod state to migrate.
 
+**At scale (S7/S8):** each pod jitters its reconcile by up to 20% of `ReconcileInterval`
+(`CopyEngineSupervisor.JitteredInterval`) so N replicas don't fire the claim/renew `UPDATE`
+simultaneously (Postgres thundering-herd). When `copyAgent.replicas > 1` the chart also spreads
+replicas across nodes (`topologySpreadConstraints`) and adds a `PodDisruptionBudget` (`minAvailable: 1`)
+so a drain/upgrade never takes copy capacity to zero.
+
 ## Run/backtest execution
 
 `NodeScheduler` picks the least-loaded eligible node honouring `MaxInstances`; remote node

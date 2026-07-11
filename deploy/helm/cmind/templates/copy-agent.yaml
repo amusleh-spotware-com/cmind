@@ -23,6 +23,17 @@ spec:
       # S1 fast failover: give the supervisor time on SIGTERM to release its copy-profile leases
       # (CopyEngineSupervisor.StopAsync) so a survivor reclaims them immediately instead of after LeaseTtl.
       terminationGracePeriodSeconds: {{ .Values.copyAgent.terminationGracePeriodSeconds | default 30 }}
+      {{- if gt (int (.Values.copyAgent.replicas | default 1)) 1 }}
+      # S8: spread copy-agent replicas across nodes so a single node loss can't take all copy capacity.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/instance: {{ .Release.Name }}
+              app.kubernetes.io/component: copy-agent
+      {{- end }}
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -55,4 +66,22 @@ spec:
                   key: DATA_PROTECTION_CERT_PASSWORD
           resources:
             {{- toYaml .Values.copyAgent.resources | nindent 12 }}
+{{- if gt (int (.Values.copyAgent.replicas | default 1)) 1 }}
+---
+# S8: keep at least one copy-agent up during a voluntary disruption (node drain / upgrade) so copy
+# capacity is never taken to zero by cluster ops.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "cmind.fullname" . }}-copy-agent
+  labels:
+    {{- include "cmind.labels" . | nindent 4 }}
+    app.kubernetes.io/component: copy-agent
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: copy-agent
+{{- end }}
 {{- end }}

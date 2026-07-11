@@ -42,7 +42,7 @@ public sealed class CopyEngineSupervisor(
                 catch (Exception ex) { log.CopySupervisorFailed(ex); }
             }
 
-            await Task.Delay(options.CurrentValue.Copy.ReconcileInterval, stoppingToken);
+            await Task.Delay(JitteredInterval(options.CurrentValue.Copy.ReconcileInterval, Random.Shared), stoppingToken);
         }
 
         foreach (var handle in _running.Values) handle.Cts.Cancel();
@@ -72,6 +72,14 @@ public sealed class CopyEngineSupervisor(
 
     // Clears this node's assignment/lease on every profile it holds. Atomic ExecuteUpdate, so a survivor's
     // ClaimProfilesAsync (which grabs unassigned/lapsed profiles) picks them up on its next cycle.
+    // S7 anti-thundering-herd: spread each pod's reconcile by up to 20% of the interval so N replicas don't
+    // all fire the claim/renew UPDATE at the same instant (Postgres contention at scale).
+    internal static TimeSpan JitteredInterval(TimeSpan baseInterval, Random random)
+    {
+        var jitterCeilingMs = (int)Math.Max(1, baseInterval.TotalMilliseconds * 0.2);
+        return baseInterval + TimeSpan.FromMilliseconds(random.Next(jitterCeilingMs));
+    }
+
     internal static Task<int> ReleaseLeasesAsync(DataContext db, NodeIdentity node, CancellationToken ct)
         => db.CopyProfiles
             .Where(p => p.Status == CopyProfileStatus.Running && p.AssignedNode == node.Value)

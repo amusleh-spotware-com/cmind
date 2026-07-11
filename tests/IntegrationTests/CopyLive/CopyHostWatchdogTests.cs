@@ -47,4 +47,18 @@ public sealed class CopyHostWatchdogTests
 
         CopyEngineSupervisor.IsHostDead(Task.CompletedTask, id, mine).Should().BeFalse();
     }
+
+    [Fact]
+    public void Jittered_reconcile_interval_stays_within_base_plus_20_percent()
+    {
+        var baseInterval = TimeSpan.FromSeconds(10);
+        var random = new Random(42);
+
+        for (var i = 0; i < 200; i++)
+        {
+            var jittered = CopyEngineSupervisor.JitteredInterval(baseInterval, random);
+            jittered.Should().BeGreaterThanOrEqualTo(baseInterval, "jitter only adds delay, never subtracts");
+            jittered.Should().BeLessThan(baseInterval * 1.2, "jitter is capped at 20% of the interval");
+        }
+    }
 }

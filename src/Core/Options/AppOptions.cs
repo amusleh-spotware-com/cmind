@@ -51,6 +51,13 @@ public sealed record CopyOptions
     /// Defaults to the machine name; set distinctly when two supervisors share a host.
     /// </summary>
     public string NodeName { get; init; } = string.Empty;
+
+    /// <summary>
+    /// S4 bounded claim: the maximum number of running copy profiles a single node will host. When &gt; 0 a
+    /// node claims at most this many (atomic, skip-locked), so profiles spread across replicas instead of the
+    /// first supervisor grabbing them all. 0 = unbounded (a single node hosts everything — the default).
+    /// </summary>
+    public int MaxProfilesPerNode { get; init; }
 }
 
 public sealed record PropFirmOptions

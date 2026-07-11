@@ -96,7 +96,9 @@ public sealed class CopyEngineSupervisor(
         var node = ResolveNode();
         var now = timeProvider.GetUtcNow();
         var leaseTtl = options.CurrentValue.Copy.LeaseTtl;
-        await ClaimProfilesAsync(db, node, now, leaseTtl, stoppingToken);
+        var maxPerNode = options.CurrentValue.Copy.MaxProfilesPerNode;
+        int? claimCap = maxPerNode > 0 ? Math.Max(0, maxPerNode - _running.Count) : null;
+        await ClaimProfilesAsync(db, node, now, leaseTtl, stoppingToken, claimCap);
         await RenewLeasesAsync(db, node, now + leaseTtl, stoppingToken);
 
         var mine = await db.CopyProfiles.Include(p => p.Destinations)
@@ -168,13 +170,34 @@ public sealed class CopyEngineSupervisor(
     // ExecuteUpdate is atomic per row, so two supervisors racing never both claim the same profile
     // (no double-copy), and a crashed node's profiles are picked up once the lease expires (self-heal).
     internal static Task<int> ClaimProfilesAsync(
-        DataContext db, NodeIdentity node, DateTimeOffset now, TimeSpan leaseTtl, CancellationToken ct)
-        => db.CopyProfiles
-            .Where(p => p.Status == CopyProfileStatus.Running
-                && (p.AssignedNode == null || p.LeaseExpiresAt == null || p.LeaseExpiresAt <= now))
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(p => p.AssignedNode, node.Value)
-                .SetProperty(p => p.LeaseExpiresAt, now + leaseTtl), ct);
+        DataContext db, NodeIdentity node, DateTimeOffset now, TimeSpan leaseTtl, CancellationToken ct,
+        int? maxToClaim = null)
+    {
+        if (maxToClaim is not { } cap)
+            return db.CopyProfiles
+                .Where(p => p.Status == CopyProfileStatus.Running
+                    && (p.AssignedNode == null || p.LeaseExpiresAt == null || p.LeaseExpiresAt <= now))
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(p => p.AssignedNode, node.Value)
+                    .SetProperty(p => p.LeaseExpiresAt, now + leaseTtl), ct);
+
+        if (cap <= 0) return Task.FromResult(0);
+
+        // S4 bounded claim: take at most `cap` profiles so they spread across replicas. FOR UPDATE SKIP
+        // LOCKED makes it atomic across concurrent supervisors — two nodes never grab the same rows (no
+        // double-hosting). Raw SQL bypasses the soft-delete query filter, so IsDeleted is filtered here.
+        var until = now + leaseTtl;
+        return db.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+             UPDATE "CopyProfiles" SET "AssignedNode" = {node.Value}, "LeaseExpiresAt" = {until}
+             WHERE "Id" IN (
+                 SELECT "Id" FROM "CopyProfiles"
+                 WHERE "Status" = 'Running' AND "IsDeleted" = false
+                   AND ("AssignedNode" IS NULL OR "LeaseExpiresAt" IS NULL OR "LeaseExpiresAt" <= {now})
+                 ORDER BY "Id" LIMIT {cap} FOR UPDATE SKIP LOCKED
+             )
+             """, ct);
+    }
 
     // Renew the lease on the profiles this node hosts so a live node keeps its claim across cycles.
     internal static Task<int> RenewLeasesAsync(

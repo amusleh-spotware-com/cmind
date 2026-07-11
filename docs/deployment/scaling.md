@@ -41,6 +41,13 @@ degree of parallelism. Each pod gets a stable `NodeName` (default: pod hostname)
 are attributed per pod. The database is the single source of truth — no sticky sessions,
 no per-pod state to migrate.
 
+**Balanced distribution (S4):** set `App:Copy:MaxProfilesPerNode` > 0 to cap how many running profiles a
+node hosts. Each supervisor then claims **at most** its remaining headroom via an atomic
+`FOR UPDATE SKIP LOCKED` bounded claim, so profiles **spread** across replicas instead of the first
+supervisor grabbing them all — no single hot pod / SPOF. The skip-locked claim keeps the "exactly one node
+per profile" guarantee (no double-hosting) even under concurrent claims. `0` (default) = unbounded (one
+node hosts everything, unchanged).
+
 **At scale (S7/S8):** each pod jitters its reconcile by up to 20% of `ReconcileInterval`
 (`CopyEngineSupervisor.JitteredInterval`) so N replicas don't fire the claim/renew `UPDATE`
 simultaneously (Postgres thundering-herd). When `copyAgent.replicas > 1` the chart also spreads

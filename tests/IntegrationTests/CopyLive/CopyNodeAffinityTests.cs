@@ -108,6 +108,38 @@ public sealed class CopyNodeAffinityTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Bounded_claim_spreads_profiles_across_nodes()
+    {
+        await using var db = NewContext();
+        var userId = await SeedUserAsync(db);
+        var ids = new List<CopyProfileId>();
+        foreach (var i in Enumerable.Range(0, 3))
+        {
+            var profile = RunningProfile(userId, $"p{i}-{Guid.NewGuid():N}");
+            db.Add(profile);
+            ids.Add(profile.Id);
+        }
+        await db.SaveChangesAsync();
+
+        var nodeA = new NodeIdentity("node-a");
+        var nodeB = new NodeIdentity("node-b");
+        var now = TestClock.Now;
+        var ttl = TimeSpan.FromMinutes(2);
+
+        // Each node caps at 2 → node-a takes 2, node-b takes the remaining 1 (spread, not all-to-one).
+        var claimedByA = await CopyEngineSupervisor.ClaimProfilesAsync(db, nodeA, now, ttl, default, maxToClaim: 2);
+        var claimedByB = await CopyEngineSupervisor.ClaimProfilesAsync(db, nodeB, now, ttl, default, maxToClaim: 2);
+
+        claimedByA.Should().Be(2, "a bounded node claims at most its cap");
+        claimedByB.Should().Be(1, "the second node picks up the remaining profile — no single hot pod");
+
+        db.ChangeTracker.Clear();
+        var profiles = await db.CopyProfiles.Where(p => ids.Contains(p.Id)).ToListAsync();
+        profiles.Count(p => p.IsHostedBy(nodeA)).Should().Be(2);
+        profiles.Count(p => p.IsHostedBy(nodeB)).Should().Be(1);
+    }
+
+    [Fact]
     public async Task Releasing_leases_on_shutdown_lets_another_node_reclaim_immediately()
     {
         await using var db = NewContext();

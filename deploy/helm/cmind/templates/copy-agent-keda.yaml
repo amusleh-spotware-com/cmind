@@ -35,7 +35,7 @@ spec:
         # Scales replicas ~= ceil(runningProfiles / profilesPerPod): the query returns the running count,
         # and KEDA drives that toward targetQueryValue (= profiles a single pod should host).
         query: >-
-          SELECT count(*) FROM "CopyProfiles" WHERE "Status" = 1 AND "IsDeleted" = false
+          SELECT count(*) FROM "CopyProfiles" WHERE "Status" = 'Running' AND "IsDeleted" = false
         targetQueryValue: "{{ .Values.copyAgent.keda.profilesPerPod | default 25 }}"
       authenticationRef:
         name: {{ include "cmind.fullname" . }}-copy-agent-pg

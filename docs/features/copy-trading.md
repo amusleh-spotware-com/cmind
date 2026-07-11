@@ -69,6 +69,10 @@ Set in the New Profile dialog, on the Copy Trading page's per-destination panel,
 - **Manage-only** (Ignore-New-Trades / Close-Only): mirror closes, partial closes and protection
   changes on positions already copied, but open **no** new positions or pending orders (skipped as
   `manage_only`). Use to wind a destination down without cutting existing copies.
+- **Sync-Open-on-start** / **Sync-Closed-on-start** (default on): on the profile's **first** resync,
+  whether to open copies for the master's pre-existing positions, and whether to close copies the master
+  closed while the profile was stopped. Both apply only at start — a mid-run reconnect always reconciles
+  fully so a desync recovers regardless.
 - **Symbol map** and **symbol filter** (whitelist / blacklist).
 - **Order-type filter** — choose exactly which master order types to copy: market, market-range,
   limit, stop, stop-limit (`CopyOrderTypes` flags; default all). cMAM-style selectivity.

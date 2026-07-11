@@ -43,6 +43,9 @@ public sealed class CopyEngineHost(
     private readonly Dictionary<long, long> _sourceVolumes = new();
     private readonly Dictionary<long, double?> _sourceStops = new();
     private readonly HashSet<long> _mirroredPendingOrders = [];
+    // Distinguishes the profile's first resync (start) from a later reconnect resync, so the Sync-Open /
+    // Sync-Closed-on-start toggles apply only at start; a mid-run reconnect always reconciles fully.
+    private bool _hasResynced;
     private readonly Channel<IReadOnlyList<(long Ctid, string Token)>> _tokenUpdates =
         Channel.CreateUnbounded<IReadOnlyList<(long Ctid, string Token)>>(new UnboundedChannelOptions { SingleReader = true });
     private readonly SemaphoreSlim _stateGate = new(1, 1);
@@ -592,6 +595,7 @@ public sealed class CopyEngineHost(
 
     private async Task ResyncAsync(IOpenApiTradingSession session, CancellationToken ct)
     {
+        var isInitialResync = !_hasResynced;
         var sourcePositions = await session.ReconcileAsync(plan.SourceCtidTraderAccountId, ct);
         var sourceOpenIds = sourcePositions.Select(p => p.PositionId).ToHashSet();
         _openSourcePositions.Clear();
@@ -622,6 +626,9 @@ public sealed class CopyEngineHost(
             {
                 if (long.TryParse(position.Label, out var sourceId) && !sourceOpenIds.Contains(sourceId))
                 {
+                    // Sync-Closed-off: on the first resync, leave copies the master closed while the profile
+                    // was stopped. A mid-run reconnect always closes orphans so a desync converges.
+                    if (isInitialResync && !destination.Config.SyncClosedOnStart) continue;
                     await session.ClosePositionAsync(destination.CtidTraderAccountId, position.PositionId, position.Volume, ct);
                     orphansClosed++;
                 }
@@ -633,6 +640,10 @@ public sealed class CopyEngineHost(
             foreach (var source in sourcePositions)
             {
                 if (mirroredSourceIds.Contains(source.PositionId)) continue;
+                // Sync-Open-off: on the first resync, don't open copies for the master's pre-existing trades.
+                // A mid-run reconnect always opens missing copies so a desync (master traded while dropped)
+                // converges.
+                if (isInitialResync && !destination.Config.SyncOpenOnStart) continue;
                 if (!_sourceSymbolNames.TryGetValue(source.SymbolId, out var sourceName)) continue;
 
                 var sourceDetail = await SymbolDetailAsync(session, plan.SourceCtidTraderAccountId, source.SymbolId, ct);
@@ -656,6 +667,7 @@ public sealed class CopyEngineHost(
                     await session.CancelOrderAsync(destination.CtidTraderAccountId, pending.OrderId, ct);
         }
 
+        _hasResynced = true;
         logger.CopyResync(plan.ProfileId.Value, sourceOpenIds.Count, orphansClosed);
     }
 

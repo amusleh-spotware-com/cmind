@@ -57,6 +57,12 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     // Manage-only (Ignore-New-Trades / Duplikium "Close-Only"): mirror closes, partial closes and
     // protection changes on positions already copied, but open no new positions or pendings.
     public bool ManageOnly { get; private set; }
+    // Sync-on-start policy (cMAM). SyncOpenOnStart: on the profile's first resync, open copies for the
+    // master's pre-existing positions. SyncClosedOnStart: on first resync, close copies the master closed
+    // while the profile was stopped. Both apply only to the initial resync — a mid-run reconnect always
+    // reconciles fully so a desync recovers.
+    public bool SyncOpenOnStart { get; private set; } = true;
+    public bool SyncClosedOnStart { get; private set; } = true;
     public CopyDirectionFilter Direction { get; private set; } = CopyDirectionFilter.Both;
     public double MinLot { get; private set; }
     public double MaxLot { get; private set; }
@@ -168,6 +174,12 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public void SetManageOnly(bool manageOnly)
     {
         ManageOnly = manageOnly;
+    }
+
+    public void SetSyncPolicy(bool syncOpenOnStart, bool syncClosedOnStart)
+    {
+        SyncOpenOnStart = syncOpenOnStart;
+        SyncClosedOnStart = syncClosedOnStart;
     }
 
     public bool IsOrderTypeAllowed(CopyOrderTypes orderType)

@@ -215,6 +215,33 @@ public sealed class CopyEngineHostTests
     }
 
     [Fact]
+    public async Task Sync_open_off_does_not_open_pre_existing_master_positions_on_start()
+    {
+        var session = NewSession();
+        session.SeedPosition(Source, positionId: 8001, SymbolId, isBuy: true, volume: 100, label: string.Empty);
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
+            Destination(Slave, d => d.SetSyncPolicy(syncOpenOnStart: false, syncClosedOnStart: true))));
+
+        await DriveAsync(session, plan, () => Task.Delay(200));
+
+        session.Orders.Should().BeEmpty("sync-open-off leaves the master's pre-existing trades uncopied at start");
+    }
+
+    [Fact]
+    public async Task Sync_closed_off_leaves_orphaned_copies_untouched_on_start()
+    {
+        var session = NewSession();
+        // A copy whose source the master no longer holds (closed while the profile was stopped).
+        session.SeedPosition(Slave, positionId: 7777, SymbolId, isBuy: true, volume: 100, label: "9999");
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
+            Destination(Slave, d => d.SetSyncPolicy(syncOpenOnStart: true, syncClosedOnStart: false))));
+
+        await DriveAsync(session, plan, () => Task.Delay(200));
+
+        session.Closes.Should().BeEmpty("sync-closed-off leaves what the master closed while stopped");
+    }
+
+    [Fact]
     public async Task Reconnect_resync_closes_orphaned_destination_positions()
     {
         var session = NewSession();

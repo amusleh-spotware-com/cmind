@@ -40,7 +40,9 @@ public record AddCopyDestinationRequest(
     bool CopyMasterSlippage = true,
     double LotSanityAbsoluteMaxLots = 0,
     double LotSanityMasterMultiple = 0,
-    bool ManageOnly = false);
+    bool ManageOnly = false,
+    bool SyncOpenOnStart = true,
+    bool SyncClosedOnStart = true);
 
 public record SymbolMapPair(string Source, string Destination);
 
@@ -131,6 +133,8 @@ public static class CopyEndpoints
                     d.LotSanityAbsoluteMaxLots,
                     d.LotSanityMasterMultiple,
                     d.ManageOnly,
+                    d.SyncOpenOnStart,
+                    d.SyncClosedOnStart,
                     SymbolFilterMode = d.SymbolFilterMode.ToString(),
                     SymbolFilters = d.SymbolFilters.Select(f => f.Symbol),
                     SymbolMaps = d.SymbolMaps.Select(m => new { m.Source, m.Destination })
@@ -183,6 +187,7 @@ public static class CopyEndpoints
             destination.SetGuards(new DrawdownPercent(req.MaxDrawdownPercent), req.DailyLossLimit);
             destination.ConfigureLotSanity(new LotSanityCeiling(req.LotSanityAbsoluteMaxLots, req.LotSanityMasterMultiple));
             destination.SetManageOnly(req.ManageOnly);
+            destination.SetSyncPolicy(req.SyncOpenOnStart, req.SyncClosedOnStart);
             if (req.SymbolMap is { Count: > 0 })
                 destination.SetSymbolMap(req.SymbolMap.Select(m => new SymbolMapEntry(new Symbol(m.Source), new Symbol(m.Destination))));
             if (req.SymbolFilterMode != SymbolFilterMode.None && req.SymbolFilters is { Count: > 0 })

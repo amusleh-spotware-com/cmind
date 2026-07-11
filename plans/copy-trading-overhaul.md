@@ -258,6 +258,19 @@ New/changed domain concepts (Core, infra-free). All new entities/VOs full-DDD fr
 
 Each phase is independently shippable, ships all three test tiers + docs, and leaves the tree green.
 
+### Phase 0a — `FakeTradingSession` fidelity (foundational, see §7.6)
+Do this **first** — every later phase's unit coverage depends on a faithful simulator.
+1. Live characterization tests (`LiveApiCharacterization`) record the real Open API wire truth for F1–F13
+   (event sequences, scaling, reject codes) → golden fixtures.
+2. Rebuild `FakeTradingSession` to reproduce them: accept→fill lifecycle, partial fills, typed rejections
+   (F12), volume step/min/max (F2), invalid-SL/TP + per-symbol digits (F3/F4), market-range accept/reject
+   by spot (F5), pending trigger→fill dual event (F6), server-driven SL/TP-hit + stop-out closes (F7),
+   per-account symbol tables (F8), full account state (F9), timestamped events via `FakeTimeProvider`
+   (F10), trading-mode/schedule (F11), token invalidation (F13).
+3. **Conformance harness**: one scenario suite asserted identical against fake and (secrets-gated) live.
+4. Migrate existing `CopyEngineHost` unit tests onto the richer fake; add the newly-unlocked coverage.
+   Extend the fake, never weaken it (CLAUDE.md). `dotnet test` green.
+
 ### Phase 0 — Instrumentation & correctness fixes (no new features)
 1. Fix **G1** (real copy latency via `TimeProvider` + event timestamp) and **G2** (real
    `EquitySnapshot` from a live `AccountStateReader`). These are correctness bugs, not features.
@@ -437,6 +450,26 @@ faults that only manifest against the real socket:
 - **Wedged-host watchdog (M2)** — stall a host (inject a hang on an orphan) → assert the watchdog restarts
   it and **other** profiles keep running untouched.
 
+### 7.3b Cluster-scale chaos **live** layer (new `LiveCopyClusterChaos`, see §8)
+Runs in a **real multi-replica cluster** (kind in CI; optionally ephemeral AKS/EKS pre-release) with N
+copy-agent replicas + live demo accounts. Every scaling edge case is automated end to end — **no
+compromise on testability**:
+- **Rolling update, zero copy-gap** — open a live master position, `kubectl rollout restart` the
+  copy-agent Deployment → assert the copy stays mirrored throughout (failover < target, e.g. < 5 s) with
+  **no double-copy** during the pod overlap.
+- **Pod kill mid-copy** — `kubectl delete pod` the owner while a position is open → assert another replica
+  reclaims within the (shortened) lease and the copy survives; measure real failover time.
+- **Graceful scale-in lease release (S1)** — `kubectl scale` down → assert the terminating pod **releases
+  its leases on SIGTERM** so a survivor picks them up **immediately** (not after full `LeaseTtl`).
+- **Balanced partitioning (S4)** — start M profiles across N replicas → assert profiles are **spread**
+  (no single pod hosts all), and re-balance after a pod joins/leaves.
+- **HPA/KEDA scale-out (S2)** — push profile count past the per-pod target → assert a new replica is
+  scheduled and picks up unassigned profiles automatically.
+- **Web SignalR scale-out (S6)** — 2+ Web replicas behind the backplane → assert the copy-trading UI +
+  logs hub stay live across a circuit reconnect to a different replica.
+- **Cloud smoke (S5)** — the copy-agent live 1:1 copy runs green on **Azure Container Apps** and **AWS
+  Fargate** (copy-agent needs no privileged Docker), reading secrets from Key Vault / Secrets Manager.
+
 ### 7.4 Regression baselining & CI gating
 - **Latency/slippage budget assertions**: each live copy records master→slave latency and realized
   slippage; the harness asserts they stay within a configured budget (e.g. p95 latency < X ms, realized
@@ -455,9 +488,152 @@ option, every guard, plus socket flap / token rotation / node death / rejection 
 demo accounts, with no human, self-cleaning, and a pass/fail/perf verdict per option. Any change that
 breaks any option flips its row. That is the "rock solid, regression-proof" bar the request asks for.
 
+### 7.6 `FakeTradingSession` fidelity overhaul — a true cTrader Open API simulator
+
+`tests/UnitTests/CopyTrading/FakeTradingSession.cs` is the in-memory `IOpenApiTradingSession` that every
+unit test runs against. Today it is a **convenience stub**, not a faithful server: `SendMarketOrderAsync`
+**always fills instantly and fully**, prices are hardcoded `1.10`, there is **one shared symbol table for
+all accounts**, rejections are a blunt `InvalidOperationException`, `SymbolDetails` lacks
+max-volume/digits/trading-mode, events carry **no timestamps**, and account state is a single `Balance`.
+That gap is why real behaviors (partial fills, invalid-SL/TP, market-range rejection, digit mismatch,
+pending trigger→fill dual event) can only be caught in the live tier. **Goal: make the fake mimic the
+real cTrader Open API server closely enough that unit tests cover *everything*, and the live tier only
+*confirms*.** This is foundational — it lands in **Phase 0a**, before the features that depend on it.
+
+**Fidelity gaps (fake vs. real `OpenApiTradingSession` / `ProtoOA*`), each to be modeled:**
+
+| # | Real cTrader Open API behavior | Fake today | Fix in the simulator |
+|---|--------------------------------|-----------|----------------------|
+| F1 | Market order → `ORDER_ACCEPTED` then a **deal** → `ORDER_FILLED`; can **partial-fill** or **reject** (NOT_ENOUGH_MONEY, MARKET_CLOSED, TRADING_DISABLED, off-quotes) | always full-fills, no events back | model accept→fill, configurable partial fill %, typed rejection outcomes |
+| F2 | **Volume normalized** to `stepVolume`; below `minVolume` or above `maxVolume` → rejected/clamped | ignores step/min/max | enforce step rounding + min/max (add `maxVolume` to details) |
+| F3 | **Invalid SL/TP** rejected — buy SL must be below price, TP above (and vice-versa); wrong **digits/precision** → `INVALID_STOPLOSS_TAKEPROFIT` (the cMAM/M6 bug) | accepts anything | validate SL/TP vs side + symbol digits; reject when wrong |
+| F4 | Prices are **integer-scaled by digits** (`10^digits`, spot `/100000`); `pipPosition`; per-symbol `digits` | hardcoded `1.10`, no digits | model per-symbol digits + price scaling; SL/TP/slippage math against them |
+| F5 | **Market-range** order fills only if spot within `baseSlippagePrice ± slippageInPoints`, else **rejected** (no fill) | blunt `RejectMarketRangeForCtid` flag | reject/fill by comparing live spot to base ± slippage |
+| F6 | **Pending trigger → fill**: server emits `ORDER_FILLED` with **both** `Order` (carrying `positionId`) and an **OPEN Position** → the dual-event that causes the FX-Blue/cMAM double-copy bug | `PushOpen` has an orderId param but not the exact sequence | reproduce the exact trigger→fill event so the dedupe (C12/M5) is unit-tested |
+| F7 | **Server-driven closes**: SL/TP hit, **stop-out** (margin), or manual close → position `CLOSED` execution event | only test-pushed closes | model SL/TP-hit + stop-out closes emitted from the sim's own price moves |
+| F8 | **Per-account** symbol tables + details differ (cross-broker: different ids, digits, lotSize, suffix) | one shared table/details for all accounts | per-account symbol registry + details (enables cross-broker + digit-mismatch tests) |
+| F9 | **Account state**: balance, **equity, margin, freeMargin**, `moneyDigits`; equity moves with open-position P&L | single `Balance` | full account-state model driven by open positions × spot (feeds G2 sizing + prop-guard) |
+| F10 | **Execution/spot events carry server timestamps** (`executionTimestamp`) | no timestamps | stamp events from a `FakeTimeProvider` (feeds G1 latency + max-lag) |
+| F11 | **Trading mode / schedule**: symbol can be disabled / close-only / market-closed → orders rejected | not modeled | per-symbol trading-mode + schedule → reject accordingly |
+| F12 | **Typed error taxonomy** (`ProtoOAErrorRes` / order-error codes: POSITION_NOT_FOUND, ORDER_NOT_FOUND, …) | generic exception | a `CtraderReject(code)` result type so the host's graceful paths (e.g. cMAM "position ID not found") are unit-tested |
+| F13 | **Token invalidation**: authorizing a new token invalidates the old; a stale token → auth error | swap just records | model token validity → emit auth failure on stale use (feeds M1) |
+
+**Learn-from-live method (characterization-driven, not guesswork):** for each behavior above, write a
+**live characterization test** (`LiveApiCharacterization`, demo accounts, gated + `Inconclusive` on closed
+market) that drives the real Open API and **records the exact wire truth** — event type sequence, field
+values, scaling, and error codes (e.g. place a buy limit, let it trigger, capture that `ORDER_FILLED`
+carries `Order.PositionId` + an OPEN `Position`; submit an invalid SL and capture the exact reject code;
+send an oversize volume and capture the clamp/reject). The recorded facts become **golden fixtures**
+checked into the test project (no secrets, just observed shapes). The fake is then built to reproduce
+them.
+
+**Conformance harness (keeps fake ≡ real forever):** a shared `IOpenApiTradingSession` **conformance test
+suite** runs the *same* scenarios twice — once against `FakeTradingSession`, once against the live
+session (when secrets present) — and asserts identical observable outcomes (fill vs reject + reason,
+resulting reconcile state, event field values within scale tolerance). If the real server ever changes,
+the live leg fails and we update the fake. This is the mechanism that makes "unit tests cover everything"
+**trustworthy**: the fake is provably faithful, so a green unit run means the real thing behaves the same.
+`FakeTradingSession` extensions here obey the CLAUDE.md rule — **extend, never weaken** to pass a test.
+
+**Coverage this unlocks (all now unit-testable, no live needed):** partial fills, every rejection reason,
+invalid-SL/TP + digit mismatch, market-range accept/reject by spot, pending trigger→fill dedupe, SL/TP-hit
++ stop-out closes, cross-broker symbol/digit differences, equity-driven sizing + prop-guard, latency/max-
+lag, token invalidation. Each becomes a row in the deterministic suite **and** a matching live-matrix row
+(§7.2) so the two tiers stay in lockstep.
+
 ---
 
-## 8. Definition of done (per phase)
+## 8. Horizontal scalability, Kubernetes & cloud — gap analysis + plan
+
+The copy tier already has the right **foundation**: DB-as-coordinator, atomic `ExecuteUpdate` lease claim
+(no double-copy), self-heal on node death, in-place token rotation, stateless pods, `CopyAgent` worker,
+Helm chart, Azure bicep (Container Apps), AWS Terraform (ECS Fargate + RDS). See
+`docs/deployment/scaling.md`. But a **feature that costs users money on a hiccup** needs the failover and
+distribution gaps closed and **every one of them live-automated**. Concrete gaps:
+
+| # | Scalability / K8s / cloud gap | Evidence | Impact | Fix |
+|---|-------------------------------|----------|--------|------|
+| S1 | **No graceful lease release on shutdown** — `CopyEngineSupervisor.ExecuteAsync` just cancels hosts on stop; the profile's `AssignedNode`/lease stay set | `CopyEngineSupervisor.cs` 48 (`foreach handle Cts.Cancel()`), `CopyProfile.ReleaseAssignment` never called on drain | on rolling update / scale-in a profile is **un-hosted for up to `LeaseTtl` (120 s)** → master trades in that window are missed | `IHostApplicationLifetime` / `StopAsync` → **release this node's leases** (`AssignedNode=null`) so a survivor reclaims on its next cycle immediately; add a `preStop` hook + tuned `terminationGracePeriodSeconds` |
+| S2 | **No autoscaling for copy-agent** — fixed `replicas`, comment says "keep a single replica" | `deploy/helm/cmind/templates/copy-agent.yaml` 10-12 | can't grow with profile count; CPU-based HPA is wrong for long-lived sockets | **KEDA** scaler on a DB query (running-profile count ÷ per-pod target) → scale on *work*, not CPU; document per-pod capacity |
+| S3 | **Slow node-death detection** — reclaim only after `LeaseTtl` | scaling.md; `ClaimProfilesAsync` `LeaseExpiresAt <= now` | 120 s of a dead master's stream un-hosted | shorten lease + renew interval with jitter; add a **crash-fast path** (pod `preStop`/liveness → release) so only *hard* crashes wait the TTL |
+| S4 | **Imbalanced partitioning** — claim grabs **all** unassigned/lapsed profiles in one `UPDATE` → the first supervisor to run hosts **everything**, others idle | `ClaimProfilesAsync` (unbounded `WHERE`), and `CopyNodeAffinityTests` asserts "first node claims all 3, second claims 0" | no real horizontal load spread; one pod is a hot spot / SPOF | **bounded claim** (per-pod max-profiles cap) + **work-steal rebalance** (a lightly-loaded pod claims from an over-full one when free capacity exists); or partition by consistent hash of `ProfileId` over live pods |
+| S5 | **Cloud copy-agent not verified on Container Apps / Fargate**; secrets via base64 PFX env var | `deploy/azure/main.bicep`, `deploy/aws/main.tf`; DataProtection cert in env | copy-agent (no privileged Docker) *can* run there but isn't proven; env-secret doesn't rotate | verify **copy-agent on ACA + Fargate** (only DB + Open API egress needed); move secrets to **Key Vault / Secrets Manager**, DataProtection key ring to blob/Key Vault so **all replicas share one ring** and can decrypt tokens |
+| S6 | **Web scale-out vs Blazor Server stickiness** — SignalR circuits are per-replica; logs hub + live copy dashboard break on multi-replica without affinity/backplane | `Web` is Blazor Server SSR + SignalR (`Hubs/LogsHub`) | copy-trading UI/live logs don't survive multi-replica Web without help | add a **SignalR backplane (Redis)** or session affinity; document; cover with S6 live test |
+| S7 | **Postgres contention at scale** — every supervisor claims/renews every `ReconcileInterval`; connection-pool load from N Web/MCP/agent replicas | scaling.md checklist | thundering-herd `UPDATE` + pool exhaustion at high replica/profile counts | **jittered** reconcile, index the claim predicate, PgBouncer/pool sizing guidance, load-test to a target profile count |
+| S8 | **No PodDisruptionBudget / anti-affinity / probes on copy-agent** — worker has no HTTP health, so no readiness/liveness; a voluntary disruption can take all replicas | `copy-agent.yaml` (no probes/PDB/affinity) | cluster ops (drain/upgrade) can momentarily zero copy capacity | add a lightweight **health endpoint** (or file-based probe), **PDB** (`minAvailable`), **topologySpreadConstraints**/anti-affinity across nodes/AZs |
+
+### Phase 5 — Scale & resilience-at-scale (closes S1–S8)
+Full DDD (lease release + rebalance are `CopyProfile`/domain-service operations, not ad-hoc SQL in the
+worker). All eight land with the **cluster-chaos live tests** of §7.3b — nothing here is "done" until it
+is automated end-to-end in a real multi-replica cluster against demo accounts.
+1. **S1** graceful lease release on `StopAsync`/SIGTERM + `preStop` + grace period → **fast failover**.
+2. **S4** bounded claim + work-steal rebalance (domain method `CopyProfile.ReleaseForRebalance`, a
+   `ICopyLoadBalancer` domain service; supervisor orchestrates). Balanced distribution invariant + test.
+3. **S3** shorter lease + jittered renew + crash-fast release path.
+4. **S2** KEDA autoscaler on running-profile count; per-pod capacity documented + load-tested.
+5. **S5** verify copy-agent on **ACA + Fargate**; secrets → Key Vault / Secrets Manager; shared
+   DataProtection key ring (blob/Key Vault) so any replica decrypts tokens.
+6. **S6** SignalR backplane (Redis) / affinity for Web; live copy UI survives replica failover.
+7. **S7** claim-predicate index + jitter + pooling guidance; **scale load test** to a target profile count.
+8. **S8** copy-agent health probes + PDB + topology spread / anti-affinity.
+9. Tests: unit (rebalance math, lease-release transition, balanced-distribution invariant), integration
+   (real Postgres: N supervisors converge to a **balanced** claim, graceful release hands off in one
+   cycle, no double-claim under contention), **cluster-chaos live** (§7.3b: rolling update zero-gap, pod
+   kill, scale-in release, KEDA scale-out, ACA/Fargate smoke). Docs: rewrite `scaling.md` +
+   `kubernetes.md` + `cloud-*.md` for the new knobs, autoscaler, and per-pod capacity.
+
+### Testing infrastructure for scale (no compromise — everything live-automated)
+- Extend `scripts/k8s-e2e.sh` into a **cluster-chaos runner**: spin a kind cluster, deploy Web + Postgres
+  + **N copy-agent replicas**, run `LiveCopyClusterChaos` against demo accounts, drive `kubectl`
+  rollout/kill/scale from the test, assert continuity + balance + failover budgets, tear down. Exit 0 only
+  on `Passed!`.
+- A **pre-release cloud smoke**: `terraform apply` / `az deployment` an ephemeral ACA + Fargate copy-agent,
+  run the live 1:1 + failover smoke, destroy. Gated (needs cloud creds), scheduled — but **fully scripted,
+  zero manual steps**.
+- Scale/perf: a load generator seeds K synthetic running profiles (demo) and asserts claim/rebalance
+  stays within CPU/DB budgets at the target replica count — a **scaling regression** fails CI.
+
+---
+
+## 9. Documentation updates (after each phase ships — MANDATORY)
+
+Per CLAUDE.md, docs move in the **same commit** as the code. No phase is "done" until its docs match.
+Each phase updates the relevant subset below; a final pass reconciles the whole set.
+
+**Feature docs (`docs/features/`):**
+- `copy-trading.md` — the master doc. Update per phase: new options (account protection, prop-firm guard,
+  flatten-all, conditional close-all, sync toggles, per-symbol overrides, trading-hours/label filters),
+  new sizing modes (risk-from-SL, max-risk fallback), the on-stop policy, and the differentiator section
+  (stateless / no ghost trades / no lost mapping — C1/C17/M10).
+- New `docs/features/copy-account-protection.md` (Phase 2/2c) — equity/drawdown/trailing guard modes,
+  flatten-all, lockout, consistency tracking, with the honest no-guarantee caveat.
+- `token-lifecycle.md` — token-invalidation alert + auto-recover + atomic full-cID auth (M1).
+
+**Testing docs (`docs/testing/`):**
+- `live-copy-trading.md` — the new option-matrix + chaos tiers, latency/slippage budgets, golden verdicts.
+- `stress-testing.md` — any new DST scenarios (rejection storms, partial-fill drift, token invalidation).
+- New `docs/testing/fake-trading-session.md` (Phase 0a) — the simulator's fidelity contract (F1–F13),
+  the live-characterization/golden-fixture method, and the conformance harness (fake ≡ real).
+- `dev-credentials.md` — any new secret/knob the matrix/chaos/cloud-smoke tiers read.
+
+**Deployment/ops docs (`docs/deployment/`):**
+- `scaling.md` — rewrite for graceful lease release, bounded claim + rebalance, shortened lease/failover
+  budget, per-pod capacity (Phase 5, S1/S3/S4).
+- `kubernetes.md` — KEDA autoscaler, PDB, probes, topology spread, cluster-chaos test job (S2/S8, §7.3b).
+- `cloud-azure.md` / `cloud-aws.md` / `cloud.md` — copy-agent on ACA/Fargate, Key Vault / Secrets Manager
+  secrets, shared DataProtection key ring (S5); SignalR backplane for Web scale-out (S6).
+
+**Cross-cutting:**
+- `docs/features/README.md` index — link any new feature docs.
+- `CLAUDE.md` — if a new binding rule emerges (e.g. the fake-fidelity/conformance mandate), record it.
+- Update `plans/copy-trading-overhaul.md` status Proposed → per-phase Shipped as phases land; note
+  deviations. On completion, mark the plan done and (optionally) archive it under `plans/`.
+- Auto-memory: after each shipped phase, add/refresh a `project` memory entry (what shipped, commit,
+  known gaps) mirroring the existing copy-trading memories.
+
+---
+
+## 10. Definition of done (per phase)
 
 - [ ] DDD checklist holds (new logic on aggregates/VOs/domain services, no anemic surface, events for
       cross-aggregate reactions, Core stays infra-free).
@@ -467,10 +643,17 @@ breaks any option flips its row. That is the "rock solid, regression-proof" bar 
 - [ ] `docs/features/copy-trading.md` + `docs/testing/live-copy-trading.md` updated in the same commit.
 - [ ] OpenTelemetry metrics emitted for latency + slippage + fill-rate; `LogMessages` audit events added.
 - [ ] Rider `get_file_problems` clean on every touched `.cs`/`.razor`; `caveman:cavecrew-reviewer` pass.
+- [ ] **Fake fidelity (Phase 0a):** `FakeTradingSession` reproduces the characterized real behavior;
+      conformance harness green (fake ≡ live); every new behavior unit-tested on the fake **and** mirrored
+      by a live-matrix row.
+- [ ] **Docs (§9):** every touched feature/testing/deployment doc updated **in the same commit**.
+- [ ] **Scale (Phase 5):** cluster-chaos live tests green (rolling-update zero-gap, pod-kill failover,
+      scale-in lease release, balanced distribution, KEDA scale-out, ACA/Fargate smoke); `scaling.md` /
+      `kubernetes.md` / `cloud-*.md` updated; no new SPOF or local per-pod state.
 
 ---
 
-## 9. Sources
+## 11. Sources
 
 - Duplikium: [features](https://www.trade-copier.com/features) ·
   [prop-firm protection](https://www.trade-copier.com/features/propfirm-trade-copier) ·

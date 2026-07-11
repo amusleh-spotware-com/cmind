@@ -39,7 +39,8 @@ public sealed class CopyAdvancedScenariosTests
 
     private static CopyEngineHost Host(FakeTradingSession session, CopyProfilePlan plan, ILogger? logger = null)
         => new(plan, new FakeTradingSessionFactory(session),
-            new CopyDecisionEngine(new CopySizingCalculator()), logger ?? (ILogger)NullLogger.Instance);
+            new CopyDecisionEngine(new CopySizingCalculator()), TimeProvider.System,
+            logger ?? (ILogger)NullLogger.Instance);
 
     private static async Task DriveAsync(FakeTradingSession session, CopyProfilePlan plan,
         Func<Task> act, ILogger? logger = null)

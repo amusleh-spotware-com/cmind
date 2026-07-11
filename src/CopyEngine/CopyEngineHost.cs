@@ -31,6 +31,7 @@ public sealed class CopyEngineHost(
     CopyProfilePlan plan,
     IOpenApiTradingSessionFactory sessionFactory,
     CopyDecisionEngine decisions,
+    TimeProvider timeProvider,
     ILogger logger)
 {
     private readonly Dictionary<long, string> _sourceSymbolNames = new();
@@ -349,7 +350,7 @@ public sealed class CopyEngineHost(
                 execution.StopLoss, execution.TakeProfit),
             Snapshot(sourceBalance), Snapshot(destinationBalance),
             Spec(sourceDetail), Spec(destinationDetail), price, Math.Pow(10, -destinationDetail.PipPosition),
-            TimeSpan.Zero, CopyDecisionEngine.ToOrderTypes(execution.OrderKind), execution.SlippageInPoints));
+            EventAge(execution), CopyDecisionEngine.ToOrderTypes(execution.OrderKind), execution.SlippageInPoints));
         if (decision.Kind != CopyActionKind.Open) return false;
 
         var wireVolume = VolumeConversion.ProtocolFromLots(decision.Lots, destinationDetail.LotSize);
@@ -450,7 +451,7 @@ public sealed class CopyEngineHost(
             Spec(destinationDetail),
             execution.Price,
             Math.Pow(10, -destinationDetail.PipPosition),
-            TimeSpan.Zero,
+            EventAge(execution),
             CopyDecisionEngine.ToOrderTypes(execution.OrderKind),
             execution.SlippageInPoints));
 
@@ -628,6 +629,16 @@ public sealed class CopyEngineHost(
         var steps = (long)Math.Round(raw / step, MidpointRounding.AwayFromZero);
         var slice = Math.Min(steps * step, available);
         return slice < detail.MinVolume ? 0 : slice;
+    }
+
+    // Real copy latency (fixes G1): master event server timestamp -> now, via the injected clock. The
+    // decision engine skips a stale signal past the destination's max-lag. Synthetic resync opens carry no
+    // timestamp, so they age to zero and are never latency-skipped.
+    private TimeSpan EventAge(ExecutionEvent execution)
+    {
+        if (execution.ServerTimestamp is not { } serverTimestamp) return TimeSpan.Zero;
+        var age = timeProvider.GetUtcNow() - DateTimeOffset.FromUnixTimeMilliseconds(serverTimestamp);
+        return age > TimeSpan.Zero ? age : TimeSpan.Zero;
     }
 
     private static AccountSnapshot Snapshot(double balance) => new(balance, balance, balance);

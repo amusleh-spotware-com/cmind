@@ -32,7 +32,8 @@ public sealed record ExecutionEvent(
     bool TrailingStopLoss = false,
     long? ExpirationTimestamp = null,
     int? SlippageInPoints = null,
-    double? BaseSlippagePrice = null);
+    double? BaseSlippagePrice = null,
+    long? ServerTimestamp = null);
 
 public sealed record OpenPositionSnapshot(
     long PositionId, long SymbolId, bool IsBuy, long Volume, string Label,
@@ -148,7 +149,8 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
                     TrailingStopLoss: pendingOrder.TrailingStopLoss,
                     ExpirationTimestamp: pendingOrder.HasExpirationTimestamp ? pendingOrder.ExpirationTimestamp : null,
                     SlippageInPoints: pendingOrder.HasSlippageInPoints ? (int)pendingOrder.SlippageInPoints : null,
-                    BaseSlippagePrice: pendingOrder.HasBaseSlippagePrice ? pendingOrder.BaseSlippagePrice : null);
+                    BaseSlippagePrice: pendingOrder.HasBaseSlippagePrice ? pendingOrder.BaseSlippagePrice : null,
+                    ServerTimestamp: executionEvent.Deal is { HasExecutionTimestamp: true } pendingDeal ? pendingDeal.ExecutionTimestamp : null);
                 continue;
             }
 
@@ -170,7 +172,8 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
                     OrderKind: MarketKind(executionEvent.Order?.OrderType),
                     TrailingStopLoss: position.TrailingStopLoss,
                     SlippageInPoints: executionEvent.Order is { HasSlippageInPoints: true } slipOrder ? (int)slipOrder.SlippageInPoints : null,
-                    BaseSlippagePrice: executionEvent.Order is { HasBaseSlippagePrice: true } baseOrder ? baseOrder.BaseSlippagePrice : null);
+                    BaseSlippagePrice: executionEvent.Order is { HasBaseSlippagePrice: true } baseOrder ? baseOrder.BaseSlippagePrice : null,
+                    ServerTimestamp: executionEvent.Deal is { HasExecutionTimestamp: true } positionDeal ? positionDeal.ExecutionTimestamp : null);
                 continue;
             }
         }

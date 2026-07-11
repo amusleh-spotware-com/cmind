@@ -71,7 +71,10 @@ Set in the New Profile dialog, on the Copy Trading page's per-destination panel,
   slave order with the master's exact slippage-in-points (base price taken from the slave's
   live spot).
 - **Guards**: max drawdown %, daily loss cap, max copy delay, slippage filter (skip a copy if
-  the slave price has moved beyond N pips from the master entry).
+  the slave price has moved beyond N pips from the master entry). **Max copy delay** is measured
+  against the master event's real server timestamp (`ExecutionEvent.ServerTimestamp`) via the injected
+  `TimeProvider`: a signal older than the configured max-lag is skipped, so a stale copy is never
+  placed late (previously the delay was always zero and the guard was dead).
 
 ## Reliability & edge cases
 

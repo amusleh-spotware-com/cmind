@@ -96,7 +96,7 @@ public sealed class CopyEngineSupervisor(
 
             var cts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
             var host = new CopyEngineHost(plan, sessionFactory,
-                new CopyDecisionEngine(new CopySizingCalculator()), loggerFactory.CreateLogger<CopyEngineHost>());
+                new CopyDecisionEngine(new CopySizingCalculator()), timeProvider, loggerFactory.CreateLogger<CopyEngineHost>());
             var task = Task.Run(() => host.RunAsync(cts.Token), CancellationToken.None);
             _running[profile.Id] = new HostHandle(task, cts, host, signature);
             log.CopyProfileHosted(profile.Id.Value);

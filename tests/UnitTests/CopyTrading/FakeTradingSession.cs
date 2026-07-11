@@ -178,24 +178,28 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
 
     public void PushOpen(long ctid, long positionId, long symbolId, bool isBuy, long volume,
         double? stopLoss = null, double? takeProfit = null, long orderId = 0, bool trailing = false,
-        CopyOrderKind orderKind = CopyOrderKind.Market, int? slippageInPoints = null, double? baseSlippagePrice = null)
+        CopyOrderKind orderKind = CopyOrderKind.Market, int? slippageInPoints = null, double? baseSlippagePrice = null,
+        long? serverTimestamp = null)
         => _source.Writer.TryWrite(new ExecutionEvent(ctid, "ORDER_FILLED", positionId, symbolId,
             isBuy, volume, 1.10, stopLoss, takeProfit, IsOpen: true, OrderId: orderId, TrailingStopLoss: trailing,
-            OrderKind: orderKind, SlippageInPoints: slippageInPoints, BaseSlippagePrice: baseSlippagePrice));
+            OrderKind: orderKind, SlippageInPoints: slippageInPoints, BaseSlippagePrice: baseSlippagePrice,
+            ServerTimestamp: serverTimestamp));
 
     public void PushClose(long ctid, long positionId, long symbolId, bool isBuy, long volume)
         => _source.Writer.TryWrite(new ExecutionEvent(ctid, "ORDER_ACCEPTED", positionId, symbolId,
             isBuy, volume, 1.10, null, null, IsOpen: false));
 
     public void PushPending(long ctid, long orderId, long symbolId, bool isBuy, long volume,
-        CopyOrderKind kind, double price, long? expirationTimestamp = null, int? slippageInPoints = null)
+        CopyOrderKind kind, double price, long? expirationTimestamp = null, int? slippageInPoints = null,
+        long? serverTimestamp = null)
     {
         _sourceOrderExpiry[orderId] = expirationTimestamp;
         _source.Writer.TryWrite(new ExecutionEvent(ctid, "ORDER_ACCEPTED", 0, symbolId, isBuy, volume,
             price, null, null, IsOpen: false, OrderId: orderId, IsPendingOrder: true, OrderKind: kind,
             LimitPrice: kind is CopyOrderKind.Limit ? price : null,
             StopPrice: kind is CopyOrderKind.Stop or CopyOrderKind.StopLimit ? price : null,
-            ExpirationTimestamp: expirationTimestamp, SlippageInPoints: slippageInPoints));
+            ExpirationTimestamp: expirationTimestamp, SlippageInPoints: slippageInPoints,
+            ServerTimestamp: serverTimestamp));
     }
 
     public void PushPendingReplaced(long ctid, long orderId, long symbolId, bool isBuy, long volume,

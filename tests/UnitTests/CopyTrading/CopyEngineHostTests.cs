@@ -5,6 +5,7 @@ using CTraderOpenApi.Client;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Time.Testing;
 using Xunit;
 
 namespace UnitTests.CopyTrading;
@@ -35,10 +36,11 @@ public sealed class CopyEngineHostTests
         => new(CopyProfileId.New(), Live: false, "client", "secret", Source, "token", 1, destinations);
 
     private static async Task DriveAsync(FakeTradingSession session, CopyProfilePlan plan,
-        Func<Task> act, CapturingLogger? logger = null)
+        Func<Task> act, CapturingLogger? logger = null, TimeProvider? timeProvider = null)
     {
         var host = new CopyEngineHost(plan, new FakeTradingSessionFactory(session),
-            new CopyDecisionEngine(new CopySizingCalculator()), logger ?? (ILogger)NullLogger.Instance);
+            new CopyDecisionEngine(new CopySizingCalculator()), timeProvider ?? TimeProvider.System,
+            logger ?? (ILogger)NullLogger.Instance);
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         var run = Task.Run(() => host.RunAsync(cts.Token), CancellationToken.None);
         try { await act(); }
@@ -75,6 +77,44 @@ public sealed class CopyEngineHostTests
         order.IsBuy.Should().BeTrue();
         order.Volume.Should().Be(100);
         order.Label.Should().Be("1001");
+    }
+
+    [Fact]
+    public async Task Stale_source_open_past_max_delay_is_skipped()
+    {
+        var now = new DateTimeOffset(2026, 07, 11, 12, 00, 00, TimeSpan.Zero);
+        var clock = new FakeTimeProvider(now);
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
+            Destination(Slave, d => d.ConfigureMaxDelay(MaxCopyDelay.Seconds(30)))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            var staleTimestamp = now.AddSeconds(-60).ToUnixTimeMilliseconds();
+            session.PushOpen(Source, 6001, SymbolId, isBuy: true, volume: 100, serverTimestamp: staleTimestamp);
+            await Task.Delay(200);
+        }, timeProvider: clock);
+
+        session.Orders.Should().BeEmpty("a signal older than the 30s max-lag is dropped (real latency, fixes G1)");
+    }
+
+    [Fact]
+    public async Task Fresh_source_open_within_max_delay_is_copied()
+    {
+        var now = new DateTimeOffset(2026, 07, 11, 12, 00, 00, TimeSpan.Zero);
+        var clock = new FakeTimeProvider(now);
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
+            Destination(Slave, d => d.ConfigureMaxDelay(MaxCopyDelay.Seconds(30)))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            var freshTimestamp = now.AddSeconds(-2).ToUnixTimeMilliseconds();
+            session.PushOpen(Source, 6002, SymbolId, isBuy: true, volume: 100, serverTimestamp: freshTimestamp);
+            await WaitUntil(() => session.Orders.Count == 1);
+        }, timeProvider: clock);
+
+        session.Orders.Should().ContainSingle("a signal within the max-lag copies normally");
     }
 
     [Fact]

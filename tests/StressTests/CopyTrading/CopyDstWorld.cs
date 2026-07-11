@@ -55,7 +55,7 @@ internal sealed class CopyDstWorld : IAsyncDisposable
         var plan = new CopyProfilePlan(CopyProfileId.New(), Live: false, "client", "secret",
             SourceCtid, "token", 1, destinationPlans);
         _host = new CopyEngineHost(plan, new SyncTradingSessionFactory(_session),
-            new CopyDecisionEngine(new CopySizingCalculator()), NullLogger.Instance);
+            new CopyDecisionEngine(new CopySizingCalculator()), TimeProvider.System, NullLogger.Instance);
         _cts = new CancellationTokenSource(runBudget ?? TimeSpan.FromSeconds(60));
         _run = Task.Run(() => _host.RunAsync(_cts.Token), CancellationToken.None);
     }

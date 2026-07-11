@@ -34,7 +34,7 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
             slaves.Select(s => new CopyDestinationPlan(s.Account.Ctid, s.Account.AccessToken, 1, s.Config)).ToList());
 
         var host = new CopyEngineHost(plan, new OpenApiTradingSessionFactory(fixture.ConnectionFactory),
-            new CopyDecisionEngine(new CopySizingCalculator()), NullLogger.Instance);
+            new CopyDecisionEngine(new CopySizingCalculator()), TimeProvider.System, NullLogger.Instance);
 
         using var hostCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         var hostTask = Task.Run(() => host.RunAsync(hostCts.Token), CancellationToken.None);
@@ -91,7 +91,7 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
             [new CopyDestinationPlan(slave.Account.Ctid, slave.Account.AccessToken, 1, slave.Config)]);
 
         var host = new CopyEngineHost(plan, new OpenApiTradingSessionFactory(fixture.ConnectionFactory),
-            new CopyDecisionEngine(new CopySizingCalculator()), NullLogger.Instance);
+            new CopyDecisionEngine(new CopySizingCalculator()), TimeProvider.System, NullLogger.Instance);
         using var hostCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         var hostTask = Task.Run(() => host.RunAsync(hostCts.Token), CancellationToken.None);
 
@@ -151,7 +151,7 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
             masterCtid, master.AccessToken, 1,
             [new CopyDestinationPlan(slave.Account.Ctid, slave.Account.AccessToken, 1, slave.Config)]);
         var host = new CopyEngineHost(plan, new OpenApiTradingSessionFactory(fixture.ConnectionFactory),
-            new CopyDecisionEngine(new CopySizingCalculator()), NullLogger.Instance);
+            new CopyDecisionEngine(new CopySizingCalculator()), TimeProvider.System, NullLogger.Instance);
         using var hostCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         var hostTask = Task.Run(() => host.RunAsync(hostCts.Token), CancellationToken.None);
 
@@ -208,7 +208,7 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
             masterCtid, master.AccessToken, 1,
             [new CopyDestinationPlan(slave.Account.Ctid, slave.Account.AccessToken, 1, slave.Config)]);
         var host = new CopyEngineHost(plan, new OpenApiTradingSessionFactory(fixture.ConnectionFactory),
-            new CopyDecisionEngine(new CopySizingCalculator()), NullLogger.Instance);
+            new CopyDecisionEngine(new CopySizingCalculator()), TimeProvider.System, NullLogger.Instance);
         using var hostCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         var hostTask = Task.Run(() => host.RunAsync(hostCts.Token), CancellationToken.None);
 

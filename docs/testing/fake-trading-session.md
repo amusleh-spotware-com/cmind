@@ -24,7 +24,7 @@ extended) · ⬜ not yet modeled.
 | F7 | **Server-driven closes** (SL/TP hit, stop-out) | ⬜ | Today closes are test-pushed (`PushClose`); price-driven SL/TP-hit + stop-out closes planned. |
 | F8 | **Per-account** symbol tables / details | ◑ | Symbol names/ids are per-fake; per-account divergent tables (cross-broker) pending. |
 | F9 | Full **account state** (balance, equity, margin, freeMargin) | ◑ | `Balance` + `LoadPositionValuationsAsync` (entry/swap/commission via `SetPositionValuation`) feed equity; margin/freeMargin land with Phase 0 G2. |
-| F10 | Events carry **server timestamps** | ⬜ | `ExecutionEvent` has no timestamp field yet; added with Phase 0 G1 (latency) via a `FakeTimeProvider`. |
+| F10 | Events carry **server timestamps** | ✅ | `ExecutionEvent.ServerTimestamp` (unix ms) — real session reads it from the deal's `ExecutionTimestamp`; `PushOpen`/`PushPending` accept `serverTimestamp:` so a `FakeTimeProvider`-driven test drives real copy latency (G1). |
 | F11 | **Trading mode / schedule** (disabled / close-only / closed) | ⬜ | Planned Phase 2b. |
 | F12 | **Typed error taxonomy** (`ProtoOAErrorRes` codes) | ✅ | `RejectReasonForCtid[ctid] = CtraderRejectReason.X` throws one-shot `CtraderRejectException(reason)` (NotEnoughMoney, MarketClosed, PositionNotFound, …). |
 | F13 | **Token invalidation** — stale token → auth error | ✅ | `InvalidateToken(ctid)` marks the attached token stale; trading calls throw `CtraderTokenInvalidException` until `SwapAccessTokenAsync` installs a fresh token. |

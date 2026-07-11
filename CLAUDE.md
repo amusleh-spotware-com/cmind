@@ -233,6 +233,20 @@ bug can cost users money, and stale docs mislead the AI agents that build on thi
 3. **Docs stay in sync.** Each major feature has a doc under `docs/features/`. Any change to a
    feature updates its `docs/features/*.md` **in the same commit** (and `docs/` deployment/ops docs
    when behavior there changes). No feature is "done" until its doc matches the code.
+4. **Every change is covered at all three tiers or it does not merge.** This is a hard per-change
+   gate, stricter than "feature or fix": any new or changed feature, page, dialog, nav entry, action,
+   endpoint, config option/toggle, background service, or UI control MUST ship, in the same commit,
+   (a) **unit** tests for its domain invariants/transitions and any options binding; (b) an
+   **integration** test against real Postgres (Testcontainers) for its persistence/endpoint behavior
+   — or, for a pure infra/background component, a deterministic integration test that drives the real
+   component (stub the external edge, not the component under test); and (c) a **Playwright E2E** that
+   drives the real UI (create/edit/save round-trip + happy path + renders without the Blazor error
+   UI), or, for an API-only or background feature, an authenticated API-level / deterministic E2E of
+   the observable outcome. New routes are added to `PageSmokeTests`. Failure paths count: a feature
+   that can fail (network drop, timeout, rejection, node death, DB blip) tests the failure branch too,
+   not just the happy path. A change exercisable at a tier but lacking that tier's test is not "done".
+   No "small change", config-only, refactor-only, or UI-only exemptions — if a tier genuinely cannot
+   apply, say so explicitly in the summary with the reason.
 
 ## Time — MANDATORY (`TimeProvider`, never `DateTime.UtcNow`)
 

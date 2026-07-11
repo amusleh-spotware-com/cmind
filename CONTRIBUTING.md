@@ -134,12 +134,12 @@ key — you never need one to build, test, or run the app.
 1. **Branch** off `main` (`feat/…`, `fix/…`, `docs/…`, `test/…`, `refactor/…`).
 2. **Read the conventions.** [CLAUDE.md](CLAUDE.md) is the architecture + rules bible. The domain
    follows **strict Domain-Driven Design** — rich aggregates, value objects over primitives, no
-   domain logic in endpoints/services. See [DDD definition of done](CLAUDE.md#domain-driven-design--mandatory).
+   domain logic in endpoints/services. See [DDD definition of done](CLAUDE.md#hard-mandates).
 3. **Make one focused change.**
 4. **Build clean:** `dotnet build` must pass. `TreatWarningsAsErrors=true`, no `NoWarn` — fix real
    warnings, including analyzer/`.razor` inspection warnings.
 5. **Test every tier the change can reach:** unit **and** integration **and** E2E where applicable
-   (see [Testing rules in CLAUDE.md](CLAUDE.md#testing--docs--mandatory)). `dotnet test` green,
+   (see [Testing rules in CLAUDE.md](CLAUDE.md#hard-mandates)). `dotnet test` green,
    including pre-existing tests.
 6. **Never call `DateTime.UtcNow`/`Now`** in production code — inject `TimeProvider`. Tests hardcode
    timestamps or use `FakeTimeProvider`.
@@ -196,7 +196,7 @@ A PR is **ready to review** when every box below is true. This is the bar we hol
 - [ ] **DDD respected:** new domain logic lives on an aggregate / value object / domain service — not
       in an endpoint, MCP tool, Razor component, or hosted service. No new public setters on
       entities; no primitive-obsessed domain signatures. See the
-      [DDD checklist](CLAUDE.md#domain-driven-design--mandatory).
+      [DDD checklist](CLAUDE.md#hard-mandates).
 - [ ] **No secrets committed.**
 - [ ] **Docs updated** in the same PR (`docs/features/*.md`, `README.md`, `CLAUDE.md`) if behavior or
       setup changed.
@@ -228,7 +228,7 @@ checklist passes.
   token rotation, node death + lease reclaim).
 - Docs: clarity, accuracy, examples, deployment/ops guides.
 - Performance and safety improvements with before/after evidence.
-- Accessibility and UX polish that follows the [UI dialog convention](CLAUDE.md#ui-design-guide-mandatory-for-blazor-pages).
+- Accessibility and UX polish that follows the [UI dialog convention](docs/ui-guidelines.md).
 
 ### We will ask you to change, or decline ❌
 
@@ -257,7 +257,7 @@ If a PR is declined, we'll explain why and — where possible — how to reshape
 **Do:**
 
 - **Do** open an issue before a large feature — align on approach to avoid wasted work.
-- **Do** put new domain concepts in the right [bounded context / module](CLAUDE.md#bounded-contexts--modules)
+- **Do** put new domain concepts in the right [bounded context / module](src/Core/CLAUDE.md)
   (Access, Authoring, Execution, Portfolio, Alerts).
 - **Do** reference other aggregates by **strong ID**, not navigation property, in new code.
 - **Do** keep each `SaveChanges` to a **single aggregate**; use domain events for cross-aggregate flows.
@@ -284,13 +284,17 @@ If a PR is declined, we'll explain why and — where possible — how to reshape
   directly — use the source-generated `LogMessages`.
 - **Don't** force-push over a reviewer's in-progress review without a heads-up.
 
-Most of these are hard-won gotchas already documented in [CLAUDE.md](CLAUDE.md#notable-design-decisions)
+Most of these are hard-won gotchas already documented in [CLAUDE.md](CLAUDE.md#non-inferable-design-decisions)
 — skim it once and you'll dodge the traps that bite everyone.
 
 ## Coding conventions
 
 Enforced by `.editorconfig`, `Directory.Build.props`, and analyzers. Highlights:
 
+- **Modern C# 14 / .NET 10** (`LangVersion=latest`): collection expressions `[]` (not
+  `new List<T>()`/`Array.Empty`), primary constructors, `field` keyword, target-typed `new`,
+  `is null`/`is not null` (never `== null`), switch expressions/pattern matching, `required`/`init`
+  over setters, raw string literals for JSON/SQL. No legacy syntax an analyzer would flag.
 - File-scoped namespaces; `sealed` by default; `private readonly` injected fields; explicit access
   modifiers; primary constructors (service deps first, then factories).
 - Config via `IOptionsMonitor<AppOptions>` — no `cfg["Key"]` in business code.

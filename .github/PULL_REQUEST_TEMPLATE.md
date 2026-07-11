@@ -18,7 +18,7 @@ Closes #
 - [ ] `dotnet build` passes, no new warnings (`TreatWarningsAsErrors=true`, `.razor` inspections included)
 - [ ] `dotnet test` green (incl pre-existing)
 - [ ] Added/updated tests for new behavior (unit under `tests/UnitTests/`, plus integration/E2E where fits; regression test for bug fixes)
-- [ ] Domain logic on aggregate / value object / domain service, not endpoint/tool/component/hosted service ([DDD checklist](../blob/main/CLAUDE.md#domain-driven-design--mandatory))
+- [ ] Domain logic on aggregate / value object / domain service, not endpoint/tool/component/hosted service ([DDD checklist](../blob/main/CLAUDE.md#hard-mandates))
 - [ ] No `DateTime.UtcNow`/`Now` in production code (inject `TimeProvider`)
 - [ ] No secrets committed
 - [ ] Docs updated (`docs/features/*.md` / `README.md` / `CLAUDE.md`) if behavior or setup changed

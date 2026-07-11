@@ -6,9 +6,10 @@ cMind welcome AI-assisted contribution — repo built agent-friendly. Follow rul
 
 ## Read these before editing
 
-1. **[CLAUDE.md](CLAUDE.md)** — authoritative ruleset: architecture, strict DDD law, testing/time mandates, coding style, hard-won gotchas. Non-negotiable.
-2. **[CONTRIBUTING.md](CONTRIBUTING.md)** — PR/issue standards, accepted vs rejected, dos/don'ts.
-3. **Relevant `docs/features/*.md`** for area you touch.
+1. **[CLAUDE.md](CLAUDE.md)** — authoritative ruleset: architecture, strict DDD law, testing/time mandates, modern-C# + coding style, hard-won gotchas. Non-negotiable.
+2. **Nested `CLAUDE.md`** in the tree you edit — `src/Core`, `src/Infrastructure`, `src/Web`, `tests` carry layer-specific rules and gotchas. They auto-load in Claude Code; in other tools open the one for your area.
+3. **[CONTRIBUTING.md](CONTRIBUTING.md)** — PR/issue standards, accepted vs rejected, dos/don'ts.
+4. **Relevant `docs/features/*.md`** for the area you touch.
 
 ## What cMind is
 
@@ -32,11 +33,12 @@ docs/               — features/, deployment/, operations/, testing/.
 
 ## Hard rules (do not violate)
 
-- **Strict DDD.** New domain logic go on aggregate / value object / domain service — never in endpoint, MCP tool, Razor component, hosted service. No new public setters on domain entities; state change through intention-revealing methods that guard invariants. Reference other aggregates by **strong ID**, not navigation property. One `SaveChanges` mutate one aggregate. Wrap primitives crossing domain boundary in value object. `src/Core` must compile with **zero** infra deps. Full checklist: [CLAUDE.md → Domain-Driven Design](CLAUDE.md#domain-driven-design--mandatory).
+- **Strict DDD.** New domain logic go on aggregate / value object / domain service — never in endpoint, MCP tool, Razor component, hosted service. No new public setters on domain entities; state change through intention-revealing methods that guard invariants. Reference other aggregates by **strong ID**, not navigation property. One `SaveChanges` mutate one aggregate. Wrap primitives crossing domain boundary in value object. `src/Core` must compile with **zero** infra deps. Full checklist: [CLAUDE.md → Domain-Driven Design](CLAUDE.md#hard-mandates).
 - **Test every tier change can reach** — unit **and** integration **and** E2E, including failure paths (disconnect, order rejection, desync, token rotation, node death + lease reclaim). Bug fix ship regression test. `dotnet test` must be green.
 - **Never weaken test or `FakeTradingSession` to pass CI.** Simulator stay cTrader-faithful; extend it, don't dumb down. (`tests/UnitTests/CopyTrading/FakeTradingSession.cs`)
 - **Never `DateTime.UtcNow`/`DateTime.Now`** in production code — inject `TimeProvider` (`GetUtcNow()`). Tests hardcode timestamps or use `FakeTimeProvider`.
 - **Zero warnings.** `TreatWarningsAsErrors=true`, no `NoWarn`. Fix analyzer and `.razor` inspection findings too, not just build breaks.
+- **Modern C# 14 / .NET 10** (`LangVersion=latest`). Collection expressions `[]` (not `new List<T>()`/`Array.Empty`); primary constructors; `field` keyword; target-typed `new`; `is null`/`is not null` (never `== null`); switch expressions/pattern matching; file-scoped namespaces; `required`/`init` over setters; raw string literals for JSON/SQL. No legacy syntax an analyzer flags. Modernize the lines you touch.
 - **No secrets** in code, tests, fixtures, logs, prompts. Use `ISecretProtector`; strings live in `Core/Constants/`; log via source-generated `LogMessages`.
 - **UI:** every add/create/edit action use MudBlazor dialog, never inline page form.
 - **Docs in same PR.** Update `docs/features/*.md` when behavior changes.

@@ -7,6 +7,7 @@
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Good first issues](https://img.shields.io/badge/good%20first%20issues-open-7057ff.svg)](https://github.com/amusleh-spotware-com/cmind/labels/good%20first%20issue)
 [![AI-assisted PRs welcome](https://img.shields.io/badge/AI--assisted%20PRs-welcome-8A2BE2.svg)](AGENTS.md)
+[![PWA · mobile-first](https://img.shields.io/badge/PWA-mobile--first-26C281.svg)](docs/ui-guidelines.md)
 
 **cMind is a multi-tenant trading operations platform for cTrader.** Build, backtest, run,
 and copy trading strategies at scale — with AI assistance built in — from one hardened,
@@ -32,6 +33,9 @@ self-hostable app.
 - **Yours to run.** Self-host on Docker, Kubernetes, Azure, or AWS. Argon2id, encrypted key
   ring, per-node signed tokens, rate limiting, structured logs + OpenTelemetry.
   → [docs/deployment/](docs/deployment/)
+- **In your pocket.** A mobile-first, fully responsive UI you can **install as an app** on your
+  phone (PWA) — bottom-nav navigation, card layouts, offline shell. Every surface is
+  white-labelable, so resellers ship it as their own. → [docs/ui-guidelines.md](docs/ui-guidelines.md)
 
 ## What's inside
 
@@ -44,6 +48,7 @@ self-hostable app.
 | Node fleet & horizontal scaling | [operations/node-discovery.md](docs/operations/node-discovery.md) · [deployment/scaling.md](docs/deployment/scaling.md) |
 | MCP server (HTTP + SSE tools for AI clients) | [features/mcp.md](docs/features/mcp.md) |
 | Deployment (Compose, K8s/Helm, Azure, AWS) | [deployment/](docs/deployment/) |
+| Design system, mobile-first & PWA, white-label theming | [ui-guidelines.md](docs/ui-guidelines.md) |
 | Testing & dev credentials | [testing/](docs/testing/) · [testing/dev-credentials.md](docs/testing/dev-credentials.md) |
 
 ## Quick start
@@ -58,9 +63,11 @@ step-by-step setup, see **[docs/deployment/local.md](docs/deployment/local.md)**
 
 ## Tech
 
-.NET 10 · ASP.NET Core Minimal APIs · Blazor Server (SSR) + MudBlazor · EF Core 10 + PostgreSQL ·
-.NET Aspire · Docker · gRPC/Protobuf (cTrader Open API) · Serilog + OpenTelemetry · MCP.
-Architecture follows strict Domain-Driven Design — see [CLAUDE.md](CLAUDE.md).
+.NET 10 · ASP.NET Core Minimal APIs · Blazor Server (SSR) + MudBlazor · mobile-first responsive UI +
+installable PWA · white-label theming · EF Core 10 + PostgreSQL · .NET Aspire · Docker ·
+gRPC/Protobuf (cTrader Open API) · Serilog + OpenTelemetry · MCP · Playwright E2E (mobile + desktop).
+Architecture follows strict Domain-Driven Design — see [CLAUDE.md](CLAUDE.md) and
+[docs/ui-guidelines.md](docs/ui-guidelines.md).
 
 ## Contributing — we'd love your help 💛
 

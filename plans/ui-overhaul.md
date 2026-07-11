@@ -1,7 +1,19 @@
 # UI Overhaul — Mobile-First, Responsive, Installable, Fully E2E-Tested
 
-Status: **PLAN — not implemented.** No code in this doc is applied. This is the step-by-step
-blueprint for overhauling the whole app UI.
+Status: **IN PROGRESS.** Blueprint for overhauling the whole app UI.
+
+**Shipped so far (main):**
+- Phase 1a — mobile-first shell: white-label CSS design tokens (`BrandingCss`), mobile-first `site.css`,
+  bottom navigation, `AppFixture` mobile device emulation + `MobileLayoutTests`.
+- Phase 3 — installable PWA: branded manifest endpoint, icons (192/512/maskable/apple-touch), app-shell
+  service worker + offline page, iOS tags, `PwaTests`.
+- Phase 5 (login) — redesigned split-screen branded login (reveal, loading, responsive), `LoginTests`.
+- Phase 2 + 4 foundation — reusable `HelpTip`; responsive table→card pattern proven on Nodes; `HelpTipTests`.
+- Phase 7 — `docs/ui-guidelines.md` (mandatory), `CLAUDE.md` UI mandates, README mobile/PWA highlights.
+
+**Remaining:** roll the table→card + HelpTip + mobile-journey pattern across the rest of the pages
+(§6 list), full E2E device-matrix + visual-regression + a11y (§7.4), install-prompt UI, per-feature
+docs (`pwa.md`, theming). Each page ships with its mobile E2E per `docs/ui-guidelines.md`.
 
 ## 0. Goal & non-negotiables
 

@@ -136,6 +136,24 @@ tests/
 
 ## UI design guide (MANDATORY for Blazor pages)
 
+> **Full binding contract: [`docs/ui-guidelines.md`](docs/ui-guidelines.md).** Read it before writing or
+> changing ANY UI. Non-negotiables below; the doc has the rest + the UI definition-of-done.
+
+- **Mobile-first, always.** Author every page/dialog for a 360–430px phone first, enhance upward. **No
+  horizontal scroll at any width 320–1920px.** Touch targets ≥44px; inputs ≥16px. The mobile bottom nav
+  (`Components/Layout/BottomNav.razor`) is the primary phone nav.
+- **Design tokens only — no hard-coded colours/radii/brand strings.** Read MudBlazor theme + CSS tokens
+  (`var(--app-*)` from `Web/Branding/BrandingCss.cs`); they flow from white-label `BrandingOptions`.
+- **Tables collapse to cards on phones**: every `MudTable` sets `Breakpoint="Breakpoint.Sm"`, every `MudTd`
+  has a `DataLabel` (template: `Components/Pages/Nodes.razor`).
+- **Every control gets a `<HelpTip Text="…" />`** (`Components/HelpTip.razor`; hover desktop / tap mobile),
+  text sourced from `docs/` and updated in the same commit.
+- **White-label + PWA respected**: brand/logo/colours from `BrandingOptions`; keep the manifest endpoint
+  branded and the service worker app-shell-only. Blazor Server ⇒ installable, not full offline.
+- **E2E is blocking for UI.** Every user-facing change ships Playwright tests driven on **mobile device
+  emulation** (`AppFixture.NewAuthedMobilePageAsync`) + desktop: add new routes to `PageSmokeTests` **and**
+  `MobileLayoutTests` (renders, bottom nav, no error UI), converted pages to the no-overflow set, new flows
+  a realistic mobile journey + an unhappy path, new help tips a tap-opens assertion. `dotnet test` green.
 - **All "add/create/edit/new" actions use a MudBlazor dialog** (`IDialogService.ShowAsync<TDialog>`),
   never an inline form/card embedded in the page. A page-level toolbar button (`New X`, top-right via
   `MudSpacer`) opens the dialog; the dialog owns the form + validation and returns a small result record

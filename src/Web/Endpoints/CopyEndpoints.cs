@@ -225,6 +225,31 @@ public static class CopyEndpoints
             return Results.Ok(new { destination.Id });
         });
 
+        g.MapGet("/profiles/{id:guid}/destinations/{destinationId:guid}/symbol-map.csv", async (Guid id, Guid destinationId,
+            ICopyProfileRepository repo, ICurrentUser u, CancellationToken ct) =>
+        {
+            var profile = await repo.GetWithDestinationsAsync(CopyProfileId.From(id), ct);
+            if (profile is null || profile.UserId != u.UserId!.Value) return Results.NotFound();
+            var destination = profile.Destinations.FirstOrDefault(d => d.Id == CopyDestinationId.From(destinationId));
+            if (destination is null) return Results.NotFound();
+            var csv = CopySymbolMapCsv.Format(destination.SymbolMaps.Select(m => (m.Source, m.Destination, m.VolumeMultiplier)));
+            return Results.Text(csv, "text/csv");
+        });
+
+        g.MapPut("/profiles/{id:guid}/destinations/{destinationId:guid}/symbol-map/csv", async (Guid id, Guid destinationId,
+            HttpRequest request, ICopyProfileRepository repo, ICurrentUser u, CancellationToken ct) =>
+        {
+            var profile = await repo.GetWithDestinationsAsync(CopyProfileId.From(id), ct);
+            if (profile is null || profile.UserId != u.UserId!.Value) return Results.NotFound();
+            var destination = profile.Destinations.FirstOrDefault(d => d.Id == CopyDestinationId.From(destinationId));
+            if (destination is null) return Results.NotFound();
+            using var reader = new StreamReader(request.Body);
+            var csv = await reader.ReadToEndAsync(ct);
+            destination.SetSymbolMap(CopySymbolMapCsv.Parse(csv));
+            await repo.SaveChangesAsync(ct);
+            return Results.Ok(new { destination.SymbolMaps.Count });
+        });
+
         g.MapDelete("/profiles/{id:guid}/destinations/{destinationId:guid}", async (Guid id, Guid destinationId,
             ICopyProfileRepository repo, ICurrentUser u, TimeProvider time, CancellationToken ct) =>
         {

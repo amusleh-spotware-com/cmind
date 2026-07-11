@@ -75,7 +75,9 @@ Set in the New Profile dialog, on the Copy Trading page's per-destination panel,
   fully so a desync recovers regardless.
 - **Symbol map** and **symbol filter** (whitelist / blacklist). Each symbol-map entry carries an optional
   **per-symbol volume multiplier** (cMAM per-symbol override) that scales the copy size for that symbol on
-  top of the destination's sizing (1 = no change).
+  top of the destination's sizing (1 = no change). The whole map imports/exports as **CSV**
+  (`GET …/symbol-map.csv`, `PUT …/symbol-map/csv`; columns `Source,Destination,VolumeMultiplier`) — each
+  row validated through the domain value objects, so a malformed file can't produce an invalid map.
 - **Trading-hours window** (C18) — a per-destination daily UTC window (`start`/`end` minutes-of-day,
   end exclusive; `start == end` = all-day). New opens outside the window are skipped (`trading_hours`);
   a window with `start > end` wraps past midnight (e.g. 22:00–06:00). Existing positions stay managed.

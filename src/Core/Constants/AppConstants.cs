@@ -168,6 +168,8 @@ public static class CopyDefaults
     // drainer (consumer). Full = drop the oldest fact rather than block trading. Drainer flushes a batch on
     // this interval.
     public const int CopyExecutionChannelCapacity = 10_000;
+    // Operational notifications are low-volume (breach events only) but user-facing, so a smaller buffer.
+    public const int CopyNotificationChannelCapacity = 2_000;
     public const int CopyExecutionDrainBatchSize = 500;
     public static readonly TimeSpan CopyExecutionDrainInterval = TimeSpan.FromSeconds(5);
 }

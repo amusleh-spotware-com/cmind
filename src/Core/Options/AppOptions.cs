@@ -66,6 +66,14 @@ public sealed record CopyOptions
     /// trading hot path and every test are unaffected.
     /// </summary>
     public bool TransparencyEnabled { get; init; }
+
+    /// <summary>
+    /// Operational notifications (2b): when true the copy host emits a safety notification (destination
+    /// tripped, account-protection/prop-rule breach, flatten-all) that a background drainer persists to the
+    /// per-owner CopyNotification feed. On by default — these are user-facing safety alerts; set false to
+    /// silence the feed. When false the host emits to a no-op sink (unchanged engine).
+    /// </summary>
+    public bool NotificationsEnabled { get; init; } = true;
 }
 
 public sealed record PropFirmOptions

@@ -22,6 +22,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<Instance> Instances => Set<Instance>();
     public DbSet<InstanceLog> InstanceLogs => Set<InstanceLog>();
     public DbSet<CopyExecution> CopyExecutions => Set<CopyExecution>();
+    public DbSet<CopyNotification> CopyNotifications => Set<CopyNotification>();
     public DbSet<ViewerGrant> ViewerGrants => Set<ViewerGrant>();
     public DbSet<McpApiKey> McpApiKeys => Set<McpApiKey>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
@@ -299,6 +300,13 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         {
             e.HasIndex(x => new { x.ProfileId, x.OccurredAt });
             e.Property(x => x.Kind).HasConversion<string>().HasMaxLength(16);
+        });
+
+        modelBuilder.Entity<CopyNotification>(e =>
+        {
+            e.HasIndex(x => new { x.UserId, x.OccurredAt });
+            e.Property(x => x.Kind).HasConversion<string>().HasMaxLength(32);
+            e.Property(x => x.Severity).HasConversion<string>().HasMaxLength(16);
         });
 
         modelBuilder.Entity<CopyProfile>().Navigation(x => x.Destinations)

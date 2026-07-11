@@ -1016,6 +1016,38 @@ public class CopyExecution : ISoftDeletable
         };
 }
 
+// Append-only copy operational notification for the profile owner (destination tripped, account protection,
+// prop breach, flatten, token invalidated), written out-of-band by the copy notification sink. Not an
+// aggregate — a user-facing feed queried directly, acknowledgeable per row.
+public class CopyNotification : ISoftDeletable
+{
+    public long Id { get; private set; }
+    public Guid ProfileId { get; private set; }
+    public UserId UserId { get; private set; }
+    public long? DestinationCtidTraderAccountId { get; private set; }
+    public Core.CopyTrading.CopyNotificationKind Kind { get; private set; }
+    public Core.CopyTrading.CopyNotificationSeverity Severity { get; private set; }
+    [MaxLength(256)] public string Message { get; private set; } = default!;
+    public DateTimeOffset OccurredAt { get; private set; }
+    public bool Acknowledged { get; private set; }
+    public bool IsDeleted { get; set; }
+    public DateTimeOffset? DeletedAt { get; set; }
+
+    public static CopyNotification From(Core.CopyTrading.CopyNotificationRecord record, UserId userId)
+        => new()
+        {
+            ProfileId = record.ProfileId.Value,
+            UserId = userId,
+            DestinationCtidTraderAccountId = record.DestinationCtidTraderAccountId,
+            Kind = record.Kind,
+            Severity = record.Severity,
+            Message = record.Message,
+            OccurredAt = record.OccurredAt
+        };
+
+    public void Acknowledge() => Acknowledged = true;
+}
+
 public class ViewerGrant : ISoftDeletable
 {
     public UserId ViewerId { get; private set; }

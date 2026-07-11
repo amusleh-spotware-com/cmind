@@ -37,11 +37,14 @@ public sealed class CopyEngineHost(
     CopyDecisionEngine decisions,
     TimeProvider timeProvider,
     ILogger logger,
-    ICopyEventSink? sink = null)
+    ICopyEventSink? sink = null,
+    ICopyNotificationSink? notifications = null)
 {
     // Execution-transparency sink (Phase 3). Defaults to the no-op sink so the engine is unchanged when
     // transparency is off and in every test; the supervisor passes a channel-backed sink when enabled.
     private readonly ICopyEventSink _sink = sink ?? NullCopyEventSink.Instance;
+    // Operational-notification sink (2b): the profile owner's copy alert feed. No-op by default.
+    private readonly ICopyNotificationSink _notifications = notifications ?? NullCopyNotificationSink.Instance;
     private readonly Dictionary<long, string> _sourceSymbolNames = new();
     private readonly Dictionary<long, IReadOnlyDictionary<string, long>> _destinationSymbolIds = new();
     // Thread-safe: read+populated from the G4 bounded-parallel destination fan-out (distinct keys per
@@ -236,6 +239,10 @@ public sealed class CopyEngineHost(
             {
                 _protectedDestinations.Add(ctid);
                 logger.CopyAccountProtectionTriggered(plan.ProfileId.Value, ctid, policy.Mode.ToString(), equity, policy.StopEquity);
+                _notifications.Notify(new CopyNotificationRecord(plan.ProfileId, ctid,
+                    CopyNotificationKind.AccountProtectionTriggered, CopyNotificationSeverity.Critical,
+                    $"Account protection ({policy.Mode}) triggered on destination {ctid} at equity {equity:0.##}.",
+                    timeProvider.GetUtcNow()));
                 if (policy.Mode == AccountProtectionMode.SellOut)
                     await FlattenDestinationAsync(session, ctid, ct);
             }
@@ -276,6 +283,10 @@ public sealed class CopyEngineHost(
             {
                 _lockedOutDestinations.Add(ctid);
                 logger.CopyPropRuleBreached(plan.ProfileId.Value, ctid, rule, equity);
+                _notifications.Notify(new CopyNotificationRecord(plan.ProfileId, ctid,
+                    CopyNotificationKind.PropRuleBreached, CopyNotificationSeverity.Critical,
+                    $"Prop rule '{rule}' breached on destination {ctid} at equity {equity:0.##}; flattened and locked out for the day.",
+                    timeProvider.GetUtcNow()));
                 await FlattenDestinationAsync(session, ctid, ct);
             }
         }
@@ -324,6 +335,10 @@ public sealed class CopyEngineHost(
                     _protectedDestinations.Add(destination.CtidTraderAccountId); // block re-opens after the panic flatten
                 }
                 logger.CopyFlattenAll(plan.ProfileId.Value, plan.Destinations.Count);
+                _notifications.Notify(new CopyNotificationRecord(plan.ProfileId, null, CopyNotificationKind.FlattenAll,
+                    CopyNotificationSeverity.Critical,
+                    $"Flatten-all executed: closed and locked {plan.Destinations.Count} destination(s) on request.",
+                    timeProvider.GetUtcNow()));
             }
             catch (Exception ex)
             {
@@ -1153,6 +1168,10 @@ public sealed class CopyEngineHost(
 
         _destinationHealth[ctid] = (failures, timeProvider.GetUtcNow() + CopyDefaults.CircuitCooldown);
         logger.CopyDestinationTripped(plan.ProfileId.Value, ctid, failures, CopyDefaults.CircuitCooldown.TotalSeconds);
+        _notifications.Notify(new CopyNotificationRecord(plan.ProfileId, ctid, CopyNotificationKind.DestinationTripped,
+            CopyNotificationSeverity.Warning,
+            $"Destination {ctid} paused after {failures} consecutive rejections (cooldown {CopyDefaults.CircuitCooldown.TotalSeconds:0}s).",
+            timeProvider.GetUtcNow()));
     }
 
     // Real per-account sizing state (fixes G2). Balance is always read; equity is derived (the Open API

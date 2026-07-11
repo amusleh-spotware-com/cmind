@@ -29,7 +29,8 @@ public sealed class CopyEngineSupervisor(
     ILoggerFactory loggerFactory,
     ILogger<CopyEngineSupervisor> log,
     TimeProvider timeProvider,
-    Core.CopyTrading.ICopyEventSink copyEventSink) : BackgroundService
+    Core.CopyTrading.ICopyEventSink copyEventSink,
+    Core.CopyTrading.ICopyNotificationSink copyNotificationSink) : BackgroundService
 {
     private readonly ConcurrentDictionary<CopyProfileId, HostHandle> _running = new();
 
@@ -149,7 +150,7 @@ public sealed class CopyEngineSupervisor(
             var cts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
             var host = new CopyEngineHost(plan, sessionFactory,
                 new CopyDecisionEngine(new CopySizingCalculator()), timeProvider,
-                loggerFactory.CreateLogger<CopyEngineHost>(), copyEventSink);
+                loggerFactory.CreateLogger<CopyEngineHost>(), copyEventSink, copyNotificationSink);
             var task = Task.Run(() => host.RunAsync(cts.Token), CancellationToken.None);
             _running[profile.Id] = new HostHandle(task, cts, host, signature);
             log.CopyProfileHosted(profile.Id.Value);

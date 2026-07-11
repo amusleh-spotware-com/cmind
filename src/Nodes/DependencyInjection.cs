@@ -51,6 +51,20 @@ public static class DependencyInjection
                 services.AddSingleton<Core.CopyTrading.ICopyEventSink>(Core.CopyTrading.NullCopyEventSink.Instance);
             }
 
+            // 2b notification routing: on by default (safety alerts). Channel sink + drainer persist the
+            // host's operational notifications to the per-owner feed; else the host gets the no-op sink.
+            if (copy.NotificationsEnabled)
+            {
+                services.AddSingleton<Nodes.CopyTrading.ChannelCopyNotificationSink>();
+                services.AddSingleton<Core.CopyTrading.ICopyNotificationSink>(
+                    sp => sp.GetRequiredService<Nodes.CopyTrading.ChannelCopyNotificationSink>());
+                services.AddHostedService<Nodes.CopyTrading.CopyNotificationDrainer>();
+            }
+            else
+            {
+                services.AddSingleton<Core.CopyTrading.ICopyNotificationSink>(Core.CopyTrading.NullCopyNotificationSink.Instance);
+            }
+
             services.AddHostedService<Nodes.CopyTrading.CopyEngineSupervisor>();
         }
 

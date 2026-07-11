@@ -320,6 +320,41 @@ public static class CopyEndpoints
             });
         });
 
+        // 2b copy notification feed: the signed-in user's recent operational notifications across all their
+        // profiles (destination tripped, account-protection/prop breach, flatten), plus an unacknowledged count.
+        g.MapGet("/notifications", async (DataContext db, ICurrentUser u, CancellationToken ct) =>
+        {
+            var uid = u.UserId!.Value;
+            var rows = await db.CopyNotifications.Where(x => x.UserId == uid)
+                .OrderByDescending(x => x.OccurredAt).ThenByDescending(x => x.Id).Take(200).ToListAsync(ct);
+            return Results.Ok(new
+            {
+                Unacknowledged = rows.Count(x => !x.Acknowledged),
+                Items = rows.Select(x => new
+                {
+                    x.Id,
+                    x.ProfileId,
+                    x.DestinationCtidTraderAccountId,
+                    Kind = x.Kind.ToString(),
+                    Severity = x.Severity.ToString(),
+                    x.Message,
+                    x.OccurredAt,
+                    x.Acknowledged
+                })
+            });
+        });
+
+        g.MapPost("/notifications/{notificationId:long}/acknowledge",
+            async (long notificationId, DataContext db, ICurrentUser u, CancellationToken ct) =>
+        {
+            var uid = u.UserId!.Value;
+            var row = await db.CopyNotifications.FirstOrDefaultAsync(x => x.Id == notificationId && x.UserId == uid, ct);
+            if (row is null) return Results.NotFound();
+            row.Acknowledge();
+            await db.SaveChangesAsync(ct);
+            return Results.NoContent();
+        });
+
         g.MapPost("/profiles/{id:guid}/flatten", async (Guid id, ICopyProfileRepository repo, ICurrentUser u,
             TimeProvider time, CancellationToken ct) =>
         {

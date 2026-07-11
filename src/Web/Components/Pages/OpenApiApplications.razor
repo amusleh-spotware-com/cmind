@@ -129,8 +129,16 @@ else
         using var doc = JsonDocument.Parse(await r.Content.ReadAsStringAsync());
         var url = doc.RootElement.GetProperty("url").GetString();
         if (string.IsNullOrEmpty(url)) { Snack.Add("Failed to create invite", Severity.Error); return; }
-        await JS.InvokeVoidAsync("copyToClipboard", url);
-        Snack.Add("Invite link copied to clipboard", Severity.Success);
+        try
+        {
+            await JS.InvokeVoidAsync("copyToClipboard", url);
+            Snack.Add("Invite link copied to clipboard", Severity.Success);
+        }
+        catch
+        {
+            // Clipboard access can be denied (permissions / insecure context) — don't lose the link.
+            Snack.Add($"Couldn't access the clipboard. Invite link: {url}", Severity.Info);
+        }
     }
 
     private async Task Delete()

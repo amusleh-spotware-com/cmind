@@ -1,9 +1,9 @@
 # Copy execution transparency (Phase 3)
 
-Per-copy execution facts — latency, realized slippage, fill vs failure — captured for every copy attempt
-and surfaced as a per-profile transparency report. **Off by default**; enable with
-`App:Copy:TransparencyEnabled=true`. When off, the copy engine is byte-for-byte unchanged: the host emits
-to a no-op sink and nothing is written.
+Per-copy execution facts — latency, realized slippage, fill vs failure — captured every copy attempt,
+surfaced as per-profile transparency report. **Off by default**; enable with
+`App:Copy:TransparencyEnabled=true`. When off, copy engine byte-for-byte unchanged: host emits
+to no-op sink, nothing written.
 
 ## How it works
 
@@ -20,16 +20,16 @@ CopyEngineHost ──Record(fact)──▶ ICopyEventSink
                           CopyExecution append-only table  ◀── GET /api/copy/profiles/{id}/transparency
 ```
 
-- **Hot path stays free of I/O.** The host calls `ICopyEventSink.Record(...)` — a non-blocking,
-  never-throwing enqueue. It never awaits, never touches the DB, and never blocks order execution.
-- **Loss is preferred over back-pressure.** The channel is bounded (`CopyExecutionChannelCapacity`) with
-  `DropOldest`: if the DB drainer stalls, the *oldest* transparency rows are dropped rather than delaying a
-  copy. Transparency is best-effort telemetry, not a trading dependency.
-- **Out-of-band persistence.** `CopyExecutionDrainer` drains the channel in batches
-  (`CopyExecutionDrainBatchSize`) on `CopyExecutionDrainInterval`, writing `CopyExecution` rows through a
-  scoped `DataContext`. A final flush runs on shutdown.
-- **Facts, not commands.** `CopyExecution` is an append-only log (like `InstanceLog`/`AuditLog`), not an
-  aggregate. The read model queries it directly (CQRS-lite) and aggregates in memory.
+- **Hot path stays free of I/O.** Host calls `ICopyEventSink.Record(...)` — non-blocking,
+  never-throwing enqueue. Never awaits, never touches DB, never blocks order execution.
+- **Loss preferred over back-pressure.** Channel bounded (`CopyExecutionChannelCapacity`) with
+  `DropOldest`: if DB drainer stalls, *oldest* transparency rows dropped rather than delay a
+  copy. Transparency = best-effort telemetry, not trading dependency.
+- **Out-of-band persistence.** `CopyExecutionDrainer` drains channel in batches
+  (`CopyExecutionDrainBatchSize`) on `CopyExecutionDrainInterval`, writes `CopyExecution` rows through
+  scoped `DataContext`. Final flush on shutdown.
+- **Facts, not commands.** `CopyExecution` = append-only log (like `InstanceLog`/`AuditLog`), not
+  aggregate. Read model queries it directly (CQRS-lite), aggregates in memory.
 
 ## What is recorded
 
@@ -37,34 +37,34 @@ One `CopyExecutionRecord` per copy attempt on one destination:
 
 | Kind | When | Carries |
 |------|------|---------|
-| `Opened` | a copy order was placed | symbol, side, wire volume, master price, realized slippage (points), latency (ms) |
-| `Failed` | the copy open threw/rejected | symbol, side, master volume/price, latency, failure reason (exception type) |
+| `Opened` | copy order placed | symbol, side, wire volume, master price, realized slippage (points), latency (ms) |
+| `Failed` | copy open threw/rejected | symbol, side, master volume/price, latency, failure reason (exception type) |
 
-(`Closed`/`Skipped`/`Reconciled` exist in the enum for future expansion.)
+(`Closed`/`Skipped`/`Reconciled` exist in enum for future expansion.)
 
 ## The report
 
-`GET /api/copy/profiles/{id}/transparency` (owner-scoped) returns, over the most recent 500 facts:
+`GET /api/copy/profiles/{id}/transparency` (owner-scoped) returns, over most recent 500 facts:
 
 - **Summary** — total, opened, failed, **fill rate**, **average latency (ms)**, **average slippage (points)**.
-- **Recent** — the raw recent facts (destination, source position, symbol, side, volume, master price,
+- **Recent** — raw recent facts (destination, source position, symbol, side, volume, master price,
   slippage, latency, reason, timestamp).
 
 ## Configuration (`App:Copy`)
 
 | Setting | Default | Effect |
 |---------|---------|--------|
-| `TransparencyEnabled` | `false` | Turn per-copy fact capture + the drainer on for the node. |
+| `TransparencyEnabled` | `false` | Turn per-copy fact capture + drainer on for node. |
 
-Channel capacity, drain batch size, and drain interval are `CopyDefaults` constants
+Channel capacity, drain batch size, drain interval = `CopyDefaults` constants
 (`CopyExecutionChannelCapacity` / `CopyExecutionDrainBatchSize` / `CopyExecutionDrainInterval`).
 
 ## Tests
 
-- **Unit** (`CopyTransparencyTests`) — a successful open emits an `Opened` fact with the right
-  symbol/side/volume/latency; a rejected open emits a `Failed` fact with the reason. Driven through a
+- **Unit** (`CopyTransparencyTests`) — successful open emits `Opened` fact with right
+  symbol/side/volume/latency; rejected open emits `Failed` fact with reason. Driven through
   capturing sink.
-- **Integration** (`CopyExecutionDrainerTests`, real Postgres) — the drainer persists buffered facts to the
-  `CopyExecution` log; an empty sink writes nothing.
-- **DST** — the host change is fire-and-forget with a no-op default sink, so the deterministic copy stress
+- **Integration** (`CopyExecutionDrainerTests`, real Postgres) — drainer persists buffered facts to
+  `CopyExecution` log; empty sink writes nothing.
+- **DST** — host change fire-and-forget with no-op default sink, so deterministic copy stress
   suite stays green (23/23).

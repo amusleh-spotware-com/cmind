@@ -1,24 +1,18 @@
 # AGENTS.md
 
-Machine-readable guide for **AI coding agents** (Claude Code, Cursor, Copilot, Aider, Windsurf, and
-friends) contributing to cMind. Humans: see [CONTRIBUTING.md](CONTRIBUTING.md). Agents: read this
-first, then [CLAUDE.md](CLAUDE.md) for the full ruleset.
+Machine-readable guide for **AI coding agents** (Claude Code, Cursor, Copilot, Aider, Windsurf, friends) contributing to cMind. Humans: see [CONTRIBUTING.md](CONTRIBUTING.md). Agents: read this first, then [CLAUDE.md](CLAUDE.md) for full ruleset.
 
-cMind welcomes AI-assisted contributions — the repo is built to be agent-friendly. Follow the rules
-below and your PR will pass review on the first try.
+cMind welcome AI-assisted contribution — repo built agent-friendly. Follow rules below, PR pass review first try.
 
 ## Read these before editing
 
-1. **[CLAUDE.md](CLAUDE.md)** — the authoritative ruleset: architecture, strict DDD law, testing/time
-   mandates, coding style, and hard-won gotchas. Non-negotiable.
-2. **[CONTRIBUTING.md](CONTRIBUTING.md)** — PR/issue standards, what's accepted vs rejected, dos/don'ts.
-3. **The relevant `docs/features/*.md`** for the area you're touching.
+1. **[CLAUDE.md](CLAUDE.md)** — authoritative ruleset: architecture, strict DDD law, testing/time mandates, coding style, hard-won gotchas. Non-negotiable.
+2. **[CONTRIBUTING.md](CONTRIBUTING.md)** — PR/issue standards, accepted vs rejected, dos/don'ts.
+3. **Relevant `docs/features/*.md`** for area you touch.
 
 ## What cMind is
 
-Multi-tenant Blazor Server + Minimal API platform for cTrader: build/backtest/run cBots across a node
-fleet, and copy-trade across accounts over the cTrader Open API. .NET 10, EF Core + PostgreSQL, .NET
-Aspire, MCP server, AI features via the Anthropic API. Architecture: **strict Domain-Driven Design**.
+Multi-tenant Blazor Server + Minimal API platform for cTrader: build/backtest/run cBots across node fleet, copy-trade across accounts over cTrader Open API. .NET 10, EF Core + PostgreSQL, .NET Aspire, MCP server, AI features via Anthropic API. Architecture: **strict Domain-Driven Design**.
 
 ## Repository map
 
@@ -38,48 +32,34 @@ docs/               — features/, deployment/, operations/, testing/.
 
 ## Hard rules (do not violate)
 
-- **Strict DDD.** New domain logic goes on an aggregate / value object / domain service — never in an
-  endpoint, MCP tool, Razor component, or hosted service. No new public setters on domain entities;
-  state changes through intention-revealing methods that guard invariants. Reference other aggregates
-  by **strong ID**, not navigation property. One `SaveChanges` mutates one aggregate. Wrap primitives
-  crossing a domain boundary in a value object. `src/Core` must compile with **zero** infra
-  dependencies. Full checklist: [CLAUDE.md → Domain-Driven Design](CLAUDE.md#domain-driven-design--mandatory).
-- **Test every tier the change can reach** — unit **and** integration **and** E2E, including failure
-  paths (disconnect, order rejection, desync, token rotation, node death + lease reclaim). Bug fixes
-  ship a regression test. `dotnet test` must be green.
-- **Never weaken a test or `FakeTradingSession` to pass CI.** The simulator stays cTrader-faithful;
-  extend it, don't dumb it down. (`tests/UnitTests/CopyTrading/FakeTradingSession.cs`)
-- **Never `DateTime.UtcNow`/`DateTime.Now`** in production code — inject `TimeProvider`
-  (`GetUtcNow()`). Tests hardcode timestamps or use `FakeTimeProvider`.
-- **Zero warnings.** `TreatWarningsAsErrors=true`, no `NoWarn`. Fix analyzer and `.razor` inspection
-  findings too, not just build breaks.
-- **No secrets** in code, tests, fixtures, logs, or prompts. Use `ISecretProtector`; strings live in
-  `Core/Constants/`; log via source-generated `LogMessages`.
-- **UI:** every add/create/edit action uses a MudBlazor dialog, never an inline page form.
-- **Docs in the same PR.** Update `docs/features/*.md` when behavior changes.
+- **Strict DDD.** New domain logic go on aggregate / value object / domain service — never in endpoint, MCP tool, Razor component, hosted service. No new public setters on domain entities; state change through intention-revealing methods that guard invariants. Reference other aggregates by **strong ID**, not navigation property. One `SaveChanges` mutate one aggregate. Wrap primitives crossing domain boundary in value object. `src/Core` must compile with **zero** infra deps. Full checklist: [CLAUDE.md → Domain-Driven Design](CLAUDE.md#domain-driven-design--mandatory).
+- **Test every tier change can reach** — unit **and** integration **and** E2E, including failure paths (disconnect, order rejection, desync, token rotation, node death + lease reclaim). Bug fix ship regression test. `dotnet test` must be green.
+- **Never weaken test or `FakeTradingSession` to pass CI.** Simulator stay cTrader-faithful; extend it, don't dumb down. (`tests/UnitTests/CopyTrading/FakeTradingSession.cs`)
+- **Never `DateTime.UtcNow`/`DateTime.Now`** in production code — inject `TimeProvider` (`GetUtcNow()`). Tests hardcode timestamps or use `FakeTimeProvider`.
+- **Zero warnings.** `TreatWarningsAsErrors=true`, no `NoWarn`. Fix analyzer and `.razor` inspection findings too, not just build breaks.
+- **No secrets** in code, tests, fixtures, logs, prompts. Use `ISecretProtector`; strings live in `Core/Constants/`; log via source-generated `LogMessages`.
+- **UI:** every add/create/edit action use MudBlazor dialog, never inline page form.
+- **Docs in same PR.** Update `docs/features/*.md` when behavior changes.
 
 ## Definition of done (self-check before opening a PR)
 
 - [ ] `dotnet build` — clean, zero new warnings.
 - [ ] `dotnet test` — green, including pre-existing tests.
-- [ ] New behavior covered by unit + integration/E2E tests; bug fix has a regression test.
+- [ ] New behavior covered by unit + integration/E2E tests; bug fix has regression test.
 - [ ] DDD checklist passes; `src/Core` has no infra deps.
 - [ ] No `DateTime.UtcNow`/`Now`; no secrets; no magic strings; no direct `ILogger.Log*`.
 - [ ] Docs updated; EF migration added if schema changed.
-- [ ] Conventional Commit title; PR linked to an issue.
+- [ ] Conventional Commit title; PR linked to issue.
 
 ## Recommended agent workflow
 
-1. Read `AGENTS.md` + `CLAUDE.md` + the relevant `docs/features/*.md`.
-2. Take one scoped task tied to a single issue.
-3. **Plan by layer** (Core / Infrastructure / Nodes / Web / Mcp / tests) before editing; confirm it
-   fits the DDD checklist.
-4. Implement → `dotnet build` → `dotnet test` → fix every analyzer/`.razor` problem → repeat until
-   clean.
-5. Write the tests (unit + integration/E2E + failure paths; extend `FakeTradingSession` for new
-   cTrader behavior).
+1. Read `AGENTS.md` + `CLAUDE.md` + relevant `docs/features/*.md`.
+2. Take one scoped task tied to single issue.
+3. **Plan by layer** (Core / Infrastructure / Nodes / Web / Mcp / tests) before editing; confirm fit DDD checklist.
+4. Implement → `dotnet build` → `dotnet test` → fix every analyzer/`.razor` problem → repeat till clean.
+5. Write tests (unit + integration/E2E + failure paths; extend `FakeTradingSession` for new cTrader behavior).
 6. Update docs, add EF migration if needed.
-7. Open a focused PR; disclose AI assistance in the description.
+7. Open focused PR; disclose AI assistance in description.
 
 ## Common commands
 
@@ -93,7 +73,4 @@ dotnet ef migrations add <Name> -p src/Infrastructure -s src/Infrastructure -o P
 
 ## Accountability
 
-A human contributor owns every AI-assisted PR: review every line, understand it, and stand behind it.
-"The AI wrote it" is never an excuse for a bug, a leaked secret, a weakened test, or a DDD violation.
-Do **not** point autonomous agents at the issue tracker to mass-file low-quality issues/PRs — quality
-over volume; spam is closed.
+Human contributor own every AI-assisted PR: review every line, understand it, stand behind it. "AI wrote it" never excuse for bug, leaked secret, weakened test, DDD violation. Do **not** point autonomous agents at issue tracker to mass-file low-quality issues/PRs — quality over volume; spam closed.

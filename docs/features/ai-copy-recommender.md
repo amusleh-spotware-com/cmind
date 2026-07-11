@@ -1,18 +1,15 @@
 # AI copy-profile recommender
 
-An AI helper that recommends safe copy-trading destination settings from a follower's stated risk profile
-and a description of the source (master) account. Exposed over the REST API, an MCP tool, and the Copy
-Trading page. Advisory only — it never creates or mutates a profile; the human (or a follow-up MCP call)
-applies the settings.
+AI helper. Recommend safe copy-trading destination settings from follower risk profile + source (master) account description. Exposed over REST API, MCP tool, Copy Trading page. Advisory only — never create/mutate profile; human (or follow-up MCP call) apply settings.
 
 ## Model
 
-- `IAiFeatureService.RecommendCopyProfileAsync(riskProfile, sourceDescription, ct)` — builds the request from
-  the `AiPrompts.CopyProfileSystem` prompt and returns an `AiResult` whose text is a JSON object of suggested
+- `IAiFeatureService.RecommendCopyProfileAsync(riskProfile, sourceDescription, ct)` — build request from
+  `AiPrompts.CopyProfileSystem` prompt, return `AiResult` whose text = JSON object of suggested
   settings: `riskMode` (a `MoneyManagementMode` name), `riskParameter`, `maxDrawdownPercent`, `dailyLossLimit`,
-  `direction`, `copyStopLoss`, `copyTakeProfit`, `slippagePips`, and a short `rationale`.
-- Like every AI feature, it is gated on `App:Ai:ApiKey`: with no key the call returns
-  `AiResult.Fail(disabled)` and the app is unaffected.
+  `direction`, `copyStopLoss`, `copyTakeProfit`, `slippagePips`, short `rationale`.
+- Like every AI feature, gated on `App:Ai:ApiKey`: no key → call return
+  `AiResult.Fail(disabled)`, app unaffected.
 
 ## Surfaces
 
@@ -22,15 +19,15 @@ applies the settings.
 | MCP | `CopyTools.RecommendCopyProfile(riskProfile, sourceDescription)` (feature `CopyTrading`, delegates to the AI service) |
 | UI | Copy Trading page → **AI suggest** button; the recommendation renders in an inline alert |
 
-The recommendation is intentionally not auto-applied: a follower reviews it, then creates a profile /
-destination through the normal Copy Trading dialog (or an MCP client parses the JSON and calls the create
+Recommendation not auto-applied on purpose: follower reviews, then creates profile /
+destination through normal Copy Trading dialog (or MCP client parses JSON + calls create
 endpoints).
 
 ## Tests
 
-- **Unit** — `UnitTests/Ai/AiFeatureServiceRecommendTests.cs`: the risk profile and source description are
-  forwarded to the AI client under the copy-profile system prompt (NSubstitute).
-- **Integration** — `IntegrationTests/AiRecommendDisabledTests.cs`: with no API key the real
-  `AnthropicAiClient` + `AiFeatureService` degrade to a failure result (the app runs without a key).
-- **E2E** — `E2ETests/AiCopyRecommendTests.cs`: the **AI suggest** button calls the endpoint and renders the
-  result (the graceful "not configured" message in the test environment), proving the UI → endpoint → AI path.
+- **Unit** — `UnitTests/Ai/AiFeatureServiceRecommendTests.cs`: risk profile + source description
+  forwarded to AI client under copy-profile system prompt (NSubstitute).
+- **Integration** — `IntegrationTests/AiRecommendDisabledTests.cs`: no API key → real
+  `AnthropicAiClient` + `AiFeatureService` degrade to failure result (app runs without key).
+- **E2E** — `E2ETests/AiCopyRecommendTests.cs`: **AI suggest** button calls endpoint + renders
+  result (graceful "not configured" message in test env), proving UI → endpoint → AI path.

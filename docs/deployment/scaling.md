@@ -1,76 +1,74 @@
 # Horizontal scaling
 
-cMind scales out with minimal operator effort. The two stateful workloads — run/backtest
-execution and copy-trading — both use the database as the coordination point, so adding
-replicas needs no external coordinator (no ZooKeeper, no leader election service).
+cMind scales out with minimal operator effort. Two stateful workloads — run/backtest
+execution, copy-trading — both use database as coordination point, so adding replicas needs
+no external coordinator (no ZooKeeper, no leader election).
 
 ## Copy-trading (self-healing lease)
 
-Each node runs a `CopyEngineSupervisor` (gated on `App:Copy:Enabled`). Every reconcile
-cycle a supervisor:
+Each node runs `CopyEngineSupervisor` (gated on `App:Copy:Enabled`). Every reconcile cycle,
+supervisor:
 
-1. **Claims** every running profile that is unassigned *or* whose lease has lapsed, in one
-   atomic `UPDATE` — two supervisors racing can never both claim the same profile, so a
-   profile is copied by exactly one node (no double orders).
-2. **Renews** the lease on the profiles it already hosts.
-3. Hosts the profiles assigned to it, and pushes access-token rotations to the running host
-   in place (no event-stream drop).
+1. **Claims** every running profile unassigned *or* lease-lapsed, in one atomic `UPDATE` —
+   two racing supervisors never both claim same profile, so profile copied by exactly one
+   node (no double orders).
+2. **Renews** lease on profiles it hosts.
+3. Hosts assigned profiles, pushes access-token rotations to running host in place (no
+   event-stream drop).
 
-If a node crashes, it stops renewing; once `App:Copy:LeaseTtl` passes, any surviving node
-reclaims its profiles on the next cycle and rebuilds state from a reconcile without
-duplicating trades. **Scaling out** = add replicas; unassigned/free profiles are picked up
-automatically.
+Node crash → stops renewing; once `App:Copy:LeaseTtl` passes, any surviving node reclaims
+its profiles next cycle, rebuilds state from reconcile without duplicating trades. **Scaling
+out** = add replicas; unassigned/free profiles picked up automatically.
 
 **Graceful scale-in / rolling update (S1)** = on `SIGTERM`, `CopyEngineSupervisor.StopAsync`
-**releases this node's leases** (`AssignedNode`/`LeaseExpiresAt` → null) so a survivor reclaims them
-on its *very next* reconcile cycle — **not** after the full `LeaseTtl`. Only a hard crash waits the TTL.
-The copy-agent's `terminationGracePeriodSeconds` (default 30) gives the release time to complete before
-the pod is killed.
+**releases this node's leases** (`AssignedNode`/`LeaseExpiresAt` → null) so survivor reclaims them
+its *very next* reconcile cycle — **not** after full `LeaseTtl`. Only hard crash waits the TTL.
+Copy-agent's `terminationGracePeriodSeconds` (default 30) gives release time to finish before
+pod killed.
 
 ### Knobs (`App:Copy`)
 
 | Setting | Default | Notes |
 |---------|---------|-------|
 | `Enabled` | `false` | Turn copy hosting on for the node. |
-| `ReconcileInterval` | `30s` | How often a node claims/renews/reconciles. |
-| `LeaseTtl` | `120s` | Grace before a silent node's profiles are reclaimed. Keep it a few reconcile intervals so a slow cycle doesn't cause a spurious hand-off. |
+| `ReconcileInterval` | `30s` | How often node claims/renews/reconciles. |
+| `LeaseTtl` | `120s` | Grace before silent node's profiles reclaimed. Keep few reconcile intervals so slow cycle doesn't cause spurious hand-off. |
 | `NodeName` | machine name | Set distinctly when two supervisors share a host. |
 
-On Kubernetes the copy supervisors run as a Deployment; set `replicas` to the desired
-degree of parallelism. Each pod gets a stable `NodeName` (default: pod hostname), so leases
-are attributed per pod. The database is the single source of truth — no sticky sessions,
-no per-pod state to migrate.
+On Kubernetes copy supervisors run as Deployment; set `replicas` to desired parallelism. Each
+pod gets stable `NodeName` (default: pod hostname), so leases attributed per pod. Database is
+single source of truth — no sticky sessions, no per-pod state to migrate.
 
-**Balanced distribution (S4):** set `App:Copy:MaxProfilesPerNode` > 0 to cap how many running profiles a
-node hosts. Each supervisor then claims **at most** its remaining headroom via an atomic
-`FOR UPDATE SKIP LOCKED` bounded claim, so profiles **spread** across replicas instead of the first
-supervisor grabbing them all — no single hot pod / SPOF. The skip-locked claim keeps the "exactly one node
-per profile" guarantee (no double-hosting) even under concurrent claims. `0` (default) = unbounded (one
-node hosts everything, unchanged).
+**Balanced distribution (S4):** set `App:Copy:MaxProfilesPerNode` > 0 to cap how many running
+profiles a node hosts. Each supervisor then claims **at most** its remaining headroom via atomic
+`FOR UPDATE SKIP LOCKED` bounded claim, so profiles **spread** across replicas instead of first
+supervisor grabbing all — no single hot pod / SPOF. Skip-locked claim keeps "exactly one node
+per profile" guarantee (no double-hosting) even under concurrent claims. `0` (default) =
+unbounded (one node hosts everything, unchanged).
 
-**At scale (S7/S8):** each pod jitters its reconcile by up to 20% of `ReconcileInterval`
-(`CopyEngineSupervisor.JitteredInterval`) so N replicas don't fire the claim/renew `UPDATE`
-simultaneously (Postgres thundering-herd). When `copyAgent.replicas > 1` the chart also spreads
-replicas across nodes (`topologySpreadConstraints`) and adds a `PodDisruptionBudget` (`minAvailable: 1`)
-so a drain/upgrade never takes copy capacity to zero.
+**At scale (S7/S8):** each pod jitters reconcile by up to 20% of `ReconcileInterval`
+(`CopyEngineSupervisor.JitteredInterval`) so N replicas don't fire claim/renew `UPDATE`
+simultaneously (Postgres thundering-herd). When `copyAgent.replicas > 1` chart also spreads
+replicas across nodes (`topologySpreadConstraints`) and adds `PodDisruptionBudget` (`minAvailable: 1`)
+so drain/upgrade never takes copy capacity to zero.
 
 ## Run/backtest execution
 
-`NodeScheduler` picks the least-loaded eligible node honouring `MaxInstances`; remote node
-agents self-register and heartbeat (`App:Discovery`), and `NodeHeartbeatMonitor` marks a
-node unreachable when its heartbeat exceeds `Discovery:HeartbeatTtl`. Add node agents to add
-execution capacity; a dead agent is routed around automatically.
+`NodeScheduler` picks least-loaded eligible node honouring `MaxInstances`; remote node agents
+self-register and heartbeat (`App:Discovery`), `NodeHeartbeatMonitor` marks node unreachable
+when heartbeat exceeds `Discovery:HeartbeatTtl`. Add node agents to add execution capacity;
+dead agent routed around automatically.
 
 ## Stateless tiers
 
-Web (Blazor Server + API) and the MCP server are stateless behind the database and can be
-replicated freely. Auth is cookie-based; scale Web horizontally behind a load balancer.
-The MCP server is a separate process/Deployment so it scales independently of Web.
+Web (Blazor Server + API) and MCP server are stateless behind database, replicate freely.
+Auth is cookie-based; scale Web horizontally behind load balancer. MCP server is separate
+process/Deployment so it scales independently of Web.
 
 ## Checklist for scaling out
 
-- [ ] Postgres sized for the added connection load (each Web/MCP/node replica opens a pool).
+- [ ] Postgres sized for added connection load (each Web/MCP/node replica opens a pool).
 - [ ] `App:Copy:Enabled=true` on every node that should host copy profiles.
-- [ ] Distinct `App:Copy:NodeName` per co-located supervisor (K8s: default per-pod is fine).
+- [ ] Distinct `App:Copy:NodeName` per co-located supervisor (K8s: default per-pod fine).
 - [ ] `LeaseTtl` ≥ 3× `ReconcileInterval`.
-- [ ] Node agents deployed where privileged Docker is available (AKS/EKS/EC2/VM, not Fargate).
+- [ ] Node agents deployed where privileged Docker available (AKS/EKS/EC2/VM, not Fargate).

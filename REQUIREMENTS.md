@@ -2,50 +2,45 @@
 
 ## Original spec (verbatim from user)
 
-Create an ASP.NET Core web app with Blazor frontend that allows building, running, backtesting,
-and optimizing cTrader cBots via the cTrader Console Docker image, running across multiple
-nodes.
+Create ASP.NET Core web app, Blazor frontend. Build, run, backtest, optimize cTrader cBots via cTrader Console Docker image, across many nodes.
 
 ### Multi-User & roles
 
-- **Owner** — single account created during deployment. Does everything: add/remove users, add/remove nodes, update credentials.
-- **Admin** — created by Owner. Adds/removes users (non-Admin/Owner).
-- **User** — created by Owner/Admin. Uses the app; cannot create accounts or add nodes.
-- **Viewer** — lowest role. Views assigned (or all, if granted) cBot run/backtest/optimization instances. Cannot stop or remove.
+- **Owner** — single account made at deploy. Do all: add/remove users, add/remove nodes, update creds.
+- **Admin** — made by Owner. Add/remove users (non-Admin/Owner).
+- **User** — made by Owner/Admin. Use app; no account creation, no node add.
+- **Viewer** — lowest role. View assigned (or all, if granted) cBot run/backtest/optimization instances. No stop, no remove.
 
-Each user's data isolated. All users change their own passwords. Passwords hashed.
+Each user data isolated. All users change own password. Passwords hashed.
 
 ### cTrader Accounts page
 
 - Add cTrader cID accounts (username + password).
 - Add trading accounts under each cID (account number). One cID → many trading accounts.
-- Each user sees/manages only their own cID + trading accounts.
-- All cID + trading account credentials **encrypted at rest** (industry standard), decrypted only when needed.
+- Each user see/manage only own cID + trading accounts.
+- All cID + trading account creds **encrypted at rest** (industry standard), decrypt only when needed.
 
 ### cBots page
 
-- Upload `.algo` files. Each linked to a user, visible only to owner.
+- Upload `.algo` files. Each linked to user, visible only to owner.
 - Rename, add, list, remove. `.algo` encrypted at rest.
 
 ### cBot Parameter Set files
 
-- Per-cBot JSON parameter sets, persisted in DB. Rename, add, list, remove.
+- Per-cBot JSON parameter sets, persist in DB. Rename, add, list, remove.
 
 ### Run page
 
-Select: cBot, trading account, symbol, timeframe, parameter set. List running instances, live
-stats, stop, duplicate, remove.
+Select: cBot, trading account, symbol, timeframe, parameter set. List running instances, live stats, stop, duplicate, remove.
 
 ### Backtest page
 
-Same selectors as Run plus backtest settings (date range, etc.). Per-backtest stats; navigate
-to a completed backtest for stats + charts. Console container run with `--data-dir` mounted to a
-persistent location on the node.
+Same selectors as Run plus backtest settings (date range, etc.). Per-backtest stats; navigate to completed backtest for stats + charts. Console container run with `--data-dir` mounted to persistent location on node.
 
 ### Nodes
 
-- Only Owner/Admin add nodes; users cannot pick a node.
-- A node is a cloud server running the cTrader Console Docker image.
+- Only Owner/Admin add nodes; users cannot pick node.
+- Node = cloud server running cTrader Console Docker image.
 - Node mode: Run / Backtest / Mixed.
 - Scheduler picks node by current running-instance count.
 - On node removal, stop all its cBots/backtests first.
@@ -54,7 +49,7 @@ persistent location on the node.
 
 ### cTrader Console Docker image
 
-Users pick the image tag (default `latest`).
+Users pick image tag (default `latest`).
 
 ### Stack
 
@@ -74,16 +69,15 @@ Not in cTrader Console yet — keep design open.
 
 ### Building cBot (in-browser)
 
-- Create a cTrader cBot .NET project.
+- Create cTrader cBot .NET project.
 - Monaco editor for source. Edit project file. Language: C# or Python.
-- Build via `dotnet build`; save resulting `.algo` into user's cBots. Each build updates the linked cBot row + bumps version.
+- Build via `dotnet build`; save resulting `.algo` into user's cBots. Each build updates linked cBot row + bumps version.
 - Quick run.
 - Show code/build errors in editor + Build Output tab.
 
 ### MCP server
 
-Provide an MCP server URL so AI models access user cBots, run/backtest them, etc., auth via
-per-user credentials.
+Provide MCP server URL so AI models access user cBots, run/backtest them, etc., auth via per-user creds.
 
 ## Clarifications received during the session
 
@@ -91,13 +85,13 @@ per-user credentials.
 | --- | --- |
 | Blazor Server vs WASM | Blazor Server **with SSR** |
 | Cloud target | Cloud-agnostic (deployable to Azure, AWS, ...) |
-| Python cBot support | Yes — Python cBots are also .NET projects and build with `dotnet build` |
+| Python cBot support | Yes — Python cBots also .NET projects, build with `dotnet build` |
 | cTrader Console image | `ghcr.io/spotware/ctrader-console` (from GitHub) |
 | Email provider | None — owner/admin resets passwords manually; user forced to change on login |
 | Blazor component library | MudBlazor |
-| Background worker | In-process `BackgroundService`s on the web host |
+| Background worker | In-process `BackgroundService`s on web host |
 | Per-user quotas | Out of scope |
-| Builder location | Runs on the web app server, not on remote nodes |
+| Builder location | Runs on web app server, not remote nodes |
 
 ## Architecture changes requested mid-session
 
@@ -107,14 +101,14 @@ per-user credentials.
 4. Remove `App.` prefix from project/file names + namespaces.
 5. `LoggerMessage` source-generated logging delegates instead of inline templated logs.
 6. NuGet **Central Package Management** (`Directory.Packages.props`).
-7. `README.md` mentioning this is an experiment built entirely by Claude Code.
+7. `README.md` noting this = experiment built entirely by Claude Code.
 8. `CLAUDE.md` describing structure.
 9. Drop `NoWarn` from `Directory.Build.props`; fix underlying warnings.
 10. DDD — strong-typed IDs instead of primitives, value objects for emails, symbols, etc.
 11. Soft delete.
 12. No hard-coded strings; `const`s in dedicated classes.
 13. `REQUIREMENTS.md` describing spec + progress.
-14. Init Git repo, push to a private GitHub repo.
+14. Init Git repo, push to private GitHub repo.
 
 ## What has been built so far
 
@@ -154,16 +148,16 @@ per-user credentials.
 ### Nodes / orchestration
 
 - `INodeScheduler` picks least-loaded node honoring `NodeMode` + `MaxInstances`.
-- `HttpContainerDispatcher` calls the `ExternalNode` agent HTTP API (start/stop/status/report/logs/stats/clean) with a short-lived per-node HS256 JWT. `LocalContainerDispatcher` for the web host's own `LocalNode`.
-- `ExternalNode` agent pulls the image + runs the cBot container via docker CLI (`--ctid --pwd-file --account --symbol --period --data-dir --start --end --data-mode ...`), image-prefix guarded, stateless by `app.instance` label.
+- `HttpContainerDispatcher` calls `ExternalNode` agent HTTP API (start/stop/status/report/logs/stats/clean) with short-lived per-node HS256 JWT. `LocalContainerDispatcher` for web host's own `LocalNode`.
+- `ExternalNode` agent pulls image + runs cBot container via docker CLI (`--ctid --pwd-file --account --symbol --period --data-dir --start --end --data-mode ...`), image-prefix guarded, stateless by `app.instance` label.
 - `NodeStatsPoller` collects CPU/mem/disk/backtest-data stats.
 - `InstanceReconciler` marks stale Starting instances Failed; `RunCompletionPoller`/`BacktestCompletionPoller` reconcile exited containers.
 
 ### Builder (in-browser editor → `.algo`)
 
 - C# + Python cBot starter templates (both .NET projects).
-- `CBotBuilder` runs `dotnet build` in a throwaway container (SDK image, work dir bind-mounted at `/work`, shared `app-nuget-cache` volume) on the web host. Reads `out/*.algo`, encrypts, upserts the linked `CBot` row, bumps version.
-- Quick run dispatches the produced `.algo` to a `Run` node via the scheduler.
+- `CBotBuilder` runs `dotnet build` in throwaway container (SDK image, work dir bind-mounted at `/work`, shared `app-nuget-cache` volume) on web host. Reads `out/*.algo`, encrypts, upserts linked `CBot` row, bumps version.
+- Quick run dispatches produced `.algo` to `Run` node via scheduler.
 
 ### Web / API
 
@@ -186,9 +180,82 @@ per-user credentials.
 
 - `AppHost` wires Postgres (persistent volume + pgAdmin), Web, MCP, + parameter bindings for `OwnerEmail`, `OwnerPassword`, Data Protection cert (base64 + password), Postgres password.
 
+## Features added after the initial build
+
+Original spec above shipped. Since then app grew several major capabilities, each documented under `docs/features/`, covered by unit + integration + Playwright/API E2E tests.
+
+### Copy trading (cTrader Open API)
+
+- Mirror trades across accounts over cTrader Open API. cID OAuth onboarding (callback with
+  cookie-state), single Open API application record, dialog-driven copy-profile UI.
+- Faithful order mirroring: market/pending order types, expiry, market-range slippage, partial
+  close, SL/TP amend, trailing, position true-up on partial fills, pending-order mirroring.
+- Distributed execution: `CopyEngineHost` across nodes, node lease + affinity, self-healing lease
+  reclaim on node death, in-place Open API token rotation (single valid token per cID), resync
+  after disconnect/desync, circuit breaker (resync heals bypass breaker).
+- Provider marketplace + listings (`PerformanceFee` VO, plan status), performance-fee engine,
+  execution-transparency ledger, copy notifications (host → alert bridge). AI copy recommender
+  suggests providers. Docs: `copy-trading.md`, `copy-execution-transparency.md`,
+  `copy-performance-fees.md`, `copy-provider-marketplace.md`, `copy-notifications.md`,
+  `ai-copy-recommender.md`.
+- Fidelity guaranteed by cTrader-faithful `FakeTradingSession` simulator plus deterministic
+  copy-trading stress suite (`tests/StressTests`) and K8s live-E2E harness.
+
+### AI-first layer (Claude / Anthropic Messages API)
+
+- `Core.Ai.IAiClient` abstraction, raw-HTTP `AnthropicAiClient` (no SDK dep), `IAiFeatureService`
+  orchestrating ten features, gated on `App:Ai:ApiKey` (off → every feature returns disabled, app
+  runs unchanged). Runtime key encrypted at rest, editable on AI Settings page.
+- Features: NL cBot codegen, buildable-project generation with build/self-repair loop, cBot review,
+  backtest analysis, parameter optimization + closed optimize-run loop (propose → persist →
+  backtest across nodes), instance post-mortems, web-search-grounded market sentiment,
+  chart-vision strategy design, marketplace curation.
+- Surfaces: **AI Assistant** page, `/api/ai/*` endpoints, MCP `AiTools`, background
+  `AiRiskGuard` assessing running bots when `RiskGuardEnabled`. Agent mandates + proposals +
+  alert rules/events aggregates back agent/alerts features. Docs: `ai.md`.
+
+### Prop-firm challenge simulation
+
+- Live Open API equity tracking, node-leased evaluation, all challenge rule types (max drawdown,
+  daily loss, profit target, ...). Superseded earlier "no live equity feed" limitation for
+  prop-firm context. Docs: `prop-firm.md`.
+
+### White-label, feature toggles, compliance
+
+- White-label branding, per-deployment feature toggles, compliance/legal settings page.
+  Docs: `white-label.md`, `feature-toggles.md`, `compliance.md`.
+
+### Platform hardening
+
+- **Full DDD migration** — rich aggregates (no anemic entities/public setters), value objects over
+  primitives, one aggregate per transaction, cross-aggregate refs by strong ID, domain events;
+  strict DDD now enforced standard (see `CLAUDE.md`).
+- **`TimeProvider` everywhere** — no `DateTime.UtcNow`; injected clock for deterministic time tests.
+- **Node auto-discovery** — agents self-register + heartbeat to `POST /api/nodes/register`
+  (join-token, protocol-version gated); `NodeHeartbeatMonitor` reconciles staleness.
+- **Strict versioning** — one SemVer product version surfaced via `Core.VersionInfo` and `/version`
+  on Web/MCP/node agent; `NodeAgentProtocol` wire version guards main↔agent HTTP API
+  (`426 Upgrade Required` on mismatch).
+- **Cloud-native observability** — Serilog compact-JSON with `trace_id`/`span_id` correlation, OTel
+  metrics/traces, native Azure App Insights export, AWS X-Ray/CloudWatch via ADOT sidecar.
+- **Web security** — CSP + security-headers middleware, auth-endpoint rate limiting, time-based
+  auto-expiring login lockout, hardened auth cookie.
+- **Deploy artifacts** — `Dockerfile.{web,mcp,node-agent}`, docker-compose, Helm chart
+  (`deploy/helm/cmind`, node agents = privileged StatefulSet), Azure bicep (Container Apps),
+  AWS Terraform (ECS Fargate + RDS). See `docs/deployment/`.
+- **UI convention** — all add/create/edit actions use MudBlazor dialogs (no inline page forms);
+  grouped nav with Settings section; per-cBot Parameter Sets dialog.
+
 ## Open follow-ups
 
-- Plug in optimization once the upstream image supports it.
 - Add Azure Key Vault / AWS KMS adapters for Data Protection key encryption.
-- Add in-app notifications (instance crashed, backtest done).
 - Add per-cBot parameter form auto-generation from `.algo` metadata.
+- Live copy-trading order-execution E2E against real broker credentials + node cluster.
+- Cloud IaC item S5 (copy-overhaul Phase 5) still open.
+
+## Resolved follow-ups (were open in the initial build)
+
+- ~~Plug in optimization once upstream image supports it~~ → AI closed optimize-run loop
+  (propose → persist → backtest across nodes) fills this without upstream support.
+- ~~Add in-app notifications (instance crashed, backtest done)~~ → alert rules/events + copy
+  notifications shipped.

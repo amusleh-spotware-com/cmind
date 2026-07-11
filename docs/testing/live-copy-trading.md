@@ -1,17 +1,11 @@
 # Copy-trading test suite (deterministic + live)
 
-This is the full, reproducible test suite for copy trading. It has two layers:
+Full reproducible copy-trading test suite. Two layers:
 
-1. **Deterministic tests** (xUnit, no network) — the copy math and copy engine logic. Fast, run in CI,
-   no secrets. Cover every money-management mode, every filter/option, and the engine's resilience
-   behaviour.
-2. **Live E2E tests** (real cTrader demo accounts) — the production `CopyEngineHost` placing and
-   copying real orders between real accounts. Fully automated and rerunnable "like a unit test":
-   they read cached credentials from local gitignored files, refresh the access token themselves, and
-   skip cleanly when the secrets are absent (so CI stays green).
+1. **Deterministic tests** (xUnit, no network) — copy math + engine logic. Fast, CI, no secrets. Cover every money-management mode, every filter/option, engine resilience.
+2. **Live E2E tests** (real cTrader demo accounts) — production `CopyEngineHost` placing + copying real orders between real accounts. Fully automated, rerunnable like unit test: read cached creds from local gitignored files, self-refresh access token, skip clean when secrets absent (CI stays green).
 
-Nothing here ever runs against a live-funded account — every provided account is a **demo** account,
-and every live test closes the positions it opened.
+Never runs against live-funded account — every account **demo**, every live test closes positions it opened.
 
 ## Layout
 
@@ -33,16 +27,15 @@ tests/IntegrationTests/CopyLive/
 
 ## Secrets (local, gitignored — never committed)
 
-All credentials live under `<repo>/secrets/` (already in `.gitignore`). The **dev only writes the first
-two files**; the third (tokens) is produced automatically by the onboarding.
+All creds under `<repo>/secrets/` (already in `.gitignore`). Dev writes **first two files only**; third (tokens) auto-produced by onboarding.
 
-`secrets/openapi-test-app.local.json` — the Open API application:
+`secrets/openapi-test-app.local.json` — Open API app:
 
 ```json
 { "ClientId": "2175_…", "ClientSecret": "…" }
 ```
 
-`secrets/openapi-cids.local.json` — the cID login credentials to authorize (one or many):
+`secrets/openapi-cids.local.json` — cID login creds to authorize (one or many):
 
 ```json
 { "Cids": [
@@ -51,7 +44,7 @@ two files**; the third (tokens) is produced automatically by the onboarding.
 ] }
 ```
 
-`secrets/openapi-tokens.local.json` — **written by the onboarding**, multi-cID, refreshed on every run:
+`secrets/openapi-tokens.local.json` — **written by onboarding**, multi-cID, refreshed every run:
 
 ```json
 { "Cids": [
@@ -60,27 +53,19 @@ two files**; the third (tokens) is produced automatically by the onboarding.
 ] }
 ```
 
-The **refresh token does not expire**, so after the one-time onboarding the live tests keep working
-indefinitely: each run exchanges each cID's refresh token for a fresh access token (rotation) — no
-browser, no prompts.
+Refresh token **never expires**, so after one-time onboarding live tests work indefinitely: each run exchanges each cID's refresh token for fresh access token (rotation) — no browser, no prompts.
 
 ## One-time onboarding (fully automated — no dev interaction beyond saving creds)
 
-The onboarding drives the real cTrader ID login in a headless browser from the saved cID credentials,
-captures the OAuth callback on a local HTTPS listener at the app's registered redirect
-(`https://localhost:7080/openapi/callback`), exchanges the code for tokens, loads the account list, and
-writes the multi-cID token cache. Run it once per machine (or whenever you add a cID):
+Onboarding drives real cTrader ID login in headless browser from saved cID creds, captures OAuth callback on local HTTPS listener at app's registered redirect (`https://localhost:7080/openapi/callback`), exchanges code for tokens, loads account list, writes multi-cID token cache. Run once per machine (or when adding cID):
 
 ```bash
 CMIND_ONBOARD=1 dotnet test tests/E2ETests --filter FullyQualifiedName~OnboardingTests
 ```
 
-That authorizes every cID in `openapi-cids.local.json` and writes `openapi-tokens.local.json`. From then
-on the live copy tests need nothing else. (The cID's cTrader ID account must not have 2FA/captcha on
-login for the automation to complete.)
+Authorizes every cID in `openapi-cids.local.json`, writes `openapi-tokens.local.json`. After that live copy tests need nothing else. (cID's cTrader ID account must have no 2FA/captcha on login for automation to complete.)
 
-**Alternative bootstrap** (if the accounts are already authorized in a running app): decrypt the stored
-tokens straight out of the app's Postgres volume instead of re-authorizing:
+**Alternative bootstrap** (if accounts already authorized in running app): decrypt stored tokens straight out of app's Postgres volume instead of re-authorizing:
 
 ```bash
 docker run -d --name cmind-pg-extract -e POSTGRES_PASSWORD=appdev \
@@ -92,9 +77,7 @@ docker rm -f cmind-pg-extract
 
 ## Safety — demo only
 
-The live tests trade **only demo accounts**: the fixture filters the token cache to accounts with
-`IsLive == false` and connects to the demo gateway, so an order can never be placed on a live/funded
-account even if a live account is authorized. Every position a test opens is closed in cleanup.
+Live tests trade **only demo accounts**: fixture filters token cache to accounts with `IsLive == false` and connects to demo gateway, so order can never land on live/funded account even if live account authorized. Every position a test opens closed in cleanup.
 
 ## Running
 
@@ -109,8 +92,7 @@ dotnet test tests/IntegrationTests --filter FullyQualifiedName~CopyTradingLiveTe
 dotnet test
 ```
 
-Without the secrets files the live tests print a skip reason and pass as no-ops, so the suite is safe
-to run anywhere.
+Without secrets files live tests print skip reason + pass as no-ops, so suite safe to run anywhere.
 
 ## Coverage
 
@@ -137,15 +119,11 @@ exponential backoff.
 
 ### Live, real cTrader demo accounts (`CopyTradingLiveTests`)
 Token refresh + account listing · **1:1** copy executes · **1:many** copy mirrors to every slave ·
-**reverse** turns a master buy into a slave sell · **cross-cID** copy (master under one cID mirrors to a
-slave under another cID, each authenticating with its own token). Each opens a real min-lot position on
-the master, waits for the engine to mirror it (matched by the source-position-id label on the slave),
-asserts, and closes everything. A closed market is reported **Inconclusive** rather than failing.
+**reverse** turns master buy into slave sell · **cross-cID** copy (master under one cID mirrors to slave under another, each authenticating with own token). Each opens real min-lot position on master, waits for engine to mirror it (matched by source-position-id label on slave), asserts, closes everything. Closed market reported **Inconclusive**, not failing.
 
 ## Logging & auditability
 
-Every copy trading operation is logged through source-generated structured events
-(`Core/Logging/LogMessages.cs`, event IDs 1043–1055) so the full trail is auditable:
+Every copy trading operation logged via source-generated structured events (`Core/Logging/LogMessages.cs`, event IDs 1043–1055), full trail auditable:
 
 | Event | Id | Meaning |
 |-------|----|---------|
@@ -166,10 +144,7 @@ Every copy trading operation is logged through source-generated structured event
 | CopyStopLossAmended | 1061 | a source SL move re-amended the slave copy |
 | CopyHostTokenRotated | 1062 | supervisor restarted a running host after its access token rotated |
 
-Logs are emitted as Serilog compact JSON (structured properties: `ProfileId`, `DestinationCtid`,
-`SourcePositionId`, `Symbol`, `Side`, `Volume`, …) and shipped to OTLP when
-`OTEL_EXPORTER_OTLP_ENDPOINT` is set. **Fully configurable** per category via standard config — e.g. to
-raise or lower copy-engine verbosity without touching code:
+Logs emitted as Serilog compact JSON (structured props: `ProfileId`, `DestinationCtid`, `SourcePositionId`, `Symbol`, `Side`, `Volume`, …), shipped to OTLP when `OTEL_EXPORTER_OTLP_ENDPOINT` set. **Fully configurable** per category via standard config — e.g. raise/lower copy-engine verbosity without touching code:
 
 ```jsonc
 // appsettings.json — Serilog level overrides
@@ -179,14 +154,11 @@ raise or lower copy-engine verbosity without touching code:
 } } }
 ```
 
-The `Audit_log_records_every_trading_operation` host test asserts the trail fires for open, order,
-protection, and close.
+`Audit_log_records_every_trading_operation` host test asserts trail fires for open, order, protection, close.
 
 ## Edge cases (validated against how real copy/MAM platforms fail)
 
-Slippage & latency, symbol suffix/mismatch, duplicate trades on reconnect, leverage mismatch &
-margin-safe sizing, deposit-currency/contract-size differences, min/max lot & rounding, rejected orders,
-direction filters, and orphan cleanup after a disconnect are all covered above. Sources:
+Slippage & latency, symbol suffix/mismatch, duplicate trades on reconnect, leverage mismatch & margin-safe sizing, deposit-currency/contract-size differences, min/max lot & rounding, rejected orders, direction filters, orphan cleanup after disconnect — all covered above. Sources:
 [leverage mismatch](https://copygram.app/blog/education/the-truth-about-leverage-mismatches-copying-high-leverage-low-leverage-accounts) ·
 [cross-broker copying](https://www.mt4copier.com/cross-broker-trade-copying-efficient-forex-replication/) ·
 [copier pitfalls](https://www.mt4copier.com/copy-trading-pitfalls-every-account-manager-must-avoid/) ·
@@ -196,10 +168,7 @@ direction filters, and orphan cleanup after a disconnect are all covered above. 
 
 ## Advanced mirroring coverage (partial close · pending orders · SL-trailing)
 
-The host mirrors more than market open/close. Each behaviour is a per-destination opt-in flag on
-`CopyDestination` (`MirrorPartialClose` default on, `MirrorScaleIn`/`CopyPendingOrders`/`CopyTrailingStop`
-default off), guarded by intention methods and jsonb-persisted (migration
-`CopyAdvancedMirroringAndNodeAffinity`).
+Host mirrors more than market open/close. Each behaviour = per-destination opt-in flag on `CopyDestination` (`MirrorPartialClose` default on, `MirrorScaleIn`/`CopyPendingOrders`/`CopyTrailingStop` default off), guarded by intention methods, jsonb-persisted (migration `CopyAdvancedMirroringAndNodeAffinity`).
 
 | Behaviour | Deterministic test (`CopyEngineHostTests`) | Live test |
 |-----------|--------------------------------------------|-----------|
@@ -212,118 +181,65 @@ default off), guarded by intention methods and jsonb-persisted (migration
 | Source SL move re-amend | `Source_stop_loss_move_re_amends_the_copy` | — |
 | Audit events fire | `Advanced_mirroring_audit_events_fire` (1056/1058/1059) | — |
 
-All live tests above are **verified green against real cTrader demo accounts** (1:1, 1:many, reverse,
-cross-cID, partial close, pending+cancel, trailing).
+All live tests above **verified green against real cTrader demo accounts** (1:1, 1:many, reverse, cross-cID, partial close, pending+cancel, trailing).
 
-Wire additions in `OpenApiTradingSession`: `SendPendingOrderAsync`, `CancelOrderAsync`,
-`ReconcilePendingOrdersAsync`, trailing flag on `AmendPositionSltpAsync`, order/pending fields on
-`ExecutionEvent`, `LoadSpotPriceAsync` (spot subscribe → bid/ask, used by the live pending/trailing
-tests to place resting orders away from market), and `StopLoss`/`TrailingStopLoss` on
-`OpenPositionSnapshot` (so a copy's trailing state is observable via reconcile). Destination copies stay
-labelled by **source position id** (pending copies by source **order id**) so reconnect reconcile stays
-id-based and never duplicates a trade.
+Wire additions in `OpenApiTradingSession`: `SendPendingOrderAsync`, `CancelOrderAsync`, `ReconcilePendingOrdersAsync`, trailing flag on `AmendPositionSltpAsync`, order/pending fields on `ExecutionEvent`, `LoadSpotPriceAsync` (spot subscribe → bid/ask, used by live pending/trailing tests to place resting orders away from market), `StopLoss`/`TrailingStopLoss` on `OpenPositionSnapshot` (copy's trailing state observable via reconcile). Destination copies stay labelled by **source position id** (pending copies by source **order id**) so reconnect reconcile stays id-based, never duplicates trade.
 
-**cTrader event gotcha (verified live):** a resting pending order's `ORDER_ACCEPTED`/`ORDER_CANCELLED`
-execution event carries a **non-open `Position` placeholder** as well as the `Order`. The stream must
-therefore classify it as an *order* event **before** the position branch (gated on the position not
-being `OPEN`), else a pending placement is mis-read as a position close. `SourceExecutionsAsync` does
-this; missing it silently drops all pending mirroring.
+**cTrader event gotcha (verified live):** resting pending order's `ORDER_ACCEPTED`/`ORDER_CANCELLED` execution event carries **non-open `Position` placeholder** plus the `Order`. Stream must classify it as *order* event **before** position branch (gated on position not `OPEN`), else pending placement mis-read as position close. `SourceExecutionsAsync` does this; missing it silently drops all pending mirroring.
 
 ## Token rotation + node affinity
 
-- **Rotation into running hosts.** `CopyEngineSupervisor` records a token signature on each running host
-  and, every reconcile, rebuilds the plan from the DB (freshly rotated by `OpenApiTokenRefreshService`).
-  A changed signature restarts the host (`CopyHostTokenRotated`, 1062); the new host's `ResyncAsync`
-  rebuilds state without duplicating trades. Force a rotation mid-run via
-  `IOpenApiTokenClient.RefreshAsync` to verify the live host keeps copying.
-- **Node affinity (no double-copy).** Both the Web local node and the `CopyAgent` worker run a supervisor.
-  Each running profile is claimed by exactly one node (`CopyProfile.AssignedNode`, atomic
-  `ExecuteUpdate` claim keyed off `CopyOptions.NodeName`, default machine name). A supervisor hosts only
-  profiles it owns; stop/pause releases the claim. Coverage:
+- **Rotation into running hosts.** `CopyEngineSupervisor` records token signature on each running host and, every reconcile, rebuilds plan from DB (freshly rotated by `OpenApiTokenRefreshService`). Changed signature restarts host (`CopyHostTokenRotated`, 1062); new host's `ResyncAsync` rebuilds state without duplicating trades. Force rotation mid-run via `IOpenApiTokenClient.RefreshAsync` to verify live host keeps copying.
+- **Node affinity (no double-copy).** Both Web local node and `CopyAgent` worker run a supervisor. Each running profile claimed by exactly one node (`CopyProfile.AssignedNode`, atomic `ExecuteUpdate` claim keyed off `CopyOptions.NodeName`, default machine name). Supervisor hosts only profiles it owns; stop/pause releases claim. Coverage:
   - Domain (unit): `AssignToNode_makes_profile_hosted_by_only_that_node`,
     `Stopping_a_profile_releases_its_node_assignment`, `NodeIdentity_rejects_blank`.
-  - **Integration (real Postgres, Testcontainers)**: `CopyNodeAffinityTests` drives the supervisor's
-    real `ClaimUnassignedProfilesAsync` — asserts the first node claims all 3 running profiles and the
-    second claims **0** (no double-host), and that pause→restart frees the claim for another node.
-  - Rotation detection (`TokenRotationSignatureTests`): the supervisor's `TokenSignature` changes when
-    the source or a destination token rotates, and is stable otherwise (so a running host restarts only
-    on a real rotation).
+  - **Integration (real Postgres, Testcontainers)**: `CopyNodeAffinityTests` drives supervisor's real `ClaimUnassignedProfilesAsync` — asserts first node claims all 3 running profiles, second claims **0** (no double-host), pause→restart frees claim for another node.
+  - Rotation detection (`TokenRotationSignatureTests`): supervisor's `TokenSignature` changes when source or destination token rotates, stable otherwise (running host restarts only on real rotation).
 
 ### Single-use refresh tokens (important)
 
-cTrader **refresh tokens are single-use** — each refresh returns a *new* refresh token and invalidates
-the old one. The live fixture refreshes on start and persists the rotated token to
-`secrets/openapi-tokens.local.json`. Consequences:
-- If a run refreshes but **cannot persist** the new token (e.g. a read-only mount), the cached token is
-  dead and the next run fails `ACCESS_DENIED`. Regenerate with the headless onboarding:
+cTrader **refresh tokens are single-use** — each refresh returns *new* refresh token, invalidates old. Live fixture refreshes on start, persists rotated token to `secrets/openapi-tokens.local.json`. Consequences:
+- If run refreshes but **cannot persist** new token (e.g. read-only mount), cached token dead, next run fails `ACCESS_DENIED`. Regenerate with headless onboarding:
   `CMIND_ONBOARD=1 dotnet test tests/E2ETests --filter FullyQualifiedName~OnboardingTests`.
-- `LiveCopySecrets.SaveTokens` swallows write failures so a read-only cache doesn't crash a run, but the
-  **live** in-cluster suite still needs a **writable** cache (the K8s Job copies the Secret into an
-  emptyDir — see the deployment doc).
+- `LiveCopySecrets.SaveTokens` swallows write failures so read-only cache doesn't crash run, but **live** in-cluster suite still needs **writable** cache (K8s Job copies Secret into emptyDir — see deployment doc).
 
 ## Running the suite in a Kubernetes cluster
 
-The whole suite runs in-cluster against the Helm-deployed app, so a regression is caught in-cluster the
-same as locally. See [`docs/deployment/kubernetes.md`](../deployment/kubernetes.md#in-cluster-test-suite).
+Whole suite runs in-cluster against Helm-deployed app, so regression caught in-cluster same as locally. See [`docs/deployment/kubernetes.md`](../deployment/kubernetes.md#in-cluster-test-suite).
 
 ```bash
 scripts/k8s-e2e.sh                                   # kind cluster, deterministic suite (no secrets)
 TEST_FILTER='FullyQualifiedName~CopyTradingLiveTests' COPY_SECRET=cmind-copy-secrets scripts/k8s-e2e.sh  # live
 ```
 
-`Dockerfile.tests` builds the runner image; the Helm `tests-job.yaml` (gated `tests.enabled=false`) runs
-it against the in-cluster Postgres + Web. **Default = the deterministic copy suite** (no secrets, no
-rotating tokens). For the live suite, set `tests.copySecret` to a Secret holding the gitignored
-`openapi-*.local.json`; an init-container copies it into a **writable** emptyDir at `/app/secrets`
-(required — single-use refresh tokens must be persistable). The copy tests need only Web + Postgres +
-the token cache — no privileged node agents. The script asserts the Job exits 0 and its logs contain
-`Passed!`.
+`Dockerfile.tests` builds runner image; Helm `tests-job.yaml` (gated `tests.enabled=false`) runs it against in-cluster Postgres + Web. **Default = deterministic copy suite** (no secrets, no rotating tokens). For live suite, set `tests.copySecret` to Secret holding gitignored `openapi-*.local.json`; init-container copies it into **writable** emptyDir at `/app/secrets` (required — single-use refresh tokens must be persistable). Copy tests need only Web + Postgres + token cache — no privileged node agents. Script asserts Job exits 0 and logs contain `Passed!`.
 
-**Verified here (Docker, no cluster):** the test image runs the deterministic suite (`101 passed`) and,
-with a writable `secrets/` mount, the full **live** suite (`8 passed`) — i.e. the exact Job path minus
-Kubernetes. `kind`/`kubectl`/`helm` were not available in the authoring environment, so the full
-`k8s-e2e.sh` cluster run is the one step not executed here.
+**Verified here (Docker, no cluster):** test image runs deterministic suite (`101 passed`) and, with writable `secrets/` mount, full **live** suite (`8 passed`) — exact Job path minus Kubernetes. `kind`/`kubectl`/`helm` unavailable in authoring env, so full `k8s-e2e.sh` cluster run is the one step not executed here.
 
 ## Live option matrix + chaos (LiveCopyMatrix / LiveCopyChaos)
 
-Two data-driven live suites build on `LiveCopyScenario` / `LiveCopyFixture`, the live counterpart to the
-deterministic DST stress suite:
+Two data-driven live suites build on `LiveCopyScenario` / `LiveCopyFixture`, live counterpart to deterministic DST stress suite:
 
-- **`LiveCopyMatrix`** — a `[Theory]`/`[MemberData]` option matrix: one real master open per row against
-  demo accounts, each with a differently-configured destination, asserting the golden outcome. Rows:
-  `one_to_one`, `half_multiplier`, `reverse` (copies the opposite side), `manage_only` (opens nothing),
-  `trading_hours_closed` (window excludes now → no copy), `source_label_block` (label filter → no copy),
-  `lot_sanity_block` (ceiling → no copy).
-- **`LiveCopyChaos`** — the copy engine against a hostile start: the master already holds a position before
-  the host starts, so convergence can only come from the start-up resync (`Sync-Open-on-Start`), plus the
-  negative case with the toggle off. Deterministic socket-flap / token-rotation / rejection chaos is covered
-  exhaustively by the DST suite; this asserts the live resync path.
+- **`LiveCopyMatrix`** — `[Theory]`/`[MemberData]` option matrix: one real master open per row against demo accounts, each with differently-configured destination, asserting golden outcome. Rows: `one_to_one`, `half_multiplier`, `reverse` (opposite side), `manage_only` (opens nothing), `trading_hours_closed` (window excludes now → no copy), `source_label_block` (label filter → no copy), `lot_sanity_block` (ceiling → no copy).
+- **`LiveCopyChaos`** — copy engine against hostile start: master already holds position before host starts, so convergence can only come from start-up resync (`Sync-Open-on-Start`), plus negative case with toggle off. Deterministic socket-flap / token-rotation / rejection chaos covered exhaustively by DST suite; this asserts live resync path.
 
-Both **skip cleanly** without credentials and report **Inconclusive** on a closed market, and every row
-cleans up the positions it opened (demo accounts only).
+Both **skip cleanly** without creds, report **Inconclusive** on closed market, every row cleans up positions it opened (demo accounts only).
 
-**Fixture robustness:** `LiveCopyFixture` now degrades to a clean skip when the cached tokens can't be
-refreshed (cTrader refresh tokens are single-use — a stale cache or an offline run no longer faults the
-whole live collection; re-run the OAuth onboarding to refresh the cache).
+**Fixture robustness:** `LiveCopyFixture` now degrades to clean skip when cached tokens can't refresh (cTrader refresh tokens single-use — stale cache or offline run no longer faults whole live collection; re-run OAuth onboarding to refresh cache).
 
 ## Running the live + cluster suites yourself (NO excuses — everything is self-serviceable)
 
-Everything below is available in this environment. Do **not** claim "creds unavailable", "token stale", or
-"kind/helm not installed" — set them up and run them.
+Everything below available in this environment. Do **not** claim "creds unavailable", "token stale", or "kind/helm not installed" — set them up and run them.
 
 ### 1. Get a fresh Open API token (headless OAuth, no browser interaction)
 
-cTrader refresh tokens are single-use, so a cached token WILL go stale. Re-mint it yourself from the saved
-cID username/password (`secrets/openapi-cids.local.json` + `secrets/openapi-test-app.local.json`, or the
-unified `secrets/dev-credentials.local.json`). The onboarding test drives a **headless Edge** OAuth via
-Playwright and writes `secrets/openapi-tokens.local.json`:
+cTrader refresh tokens single-use, so cached token WILL go stale. Re-mint it yourself from saved cID username/password (`secrets/openapi-cids.local.json` + `secrets/openapi-test-app.local.json`, or unified `secrets/dev-credentials.local.json`). Onboarding test drives **headless Edge** OAuth via Playwright, writes `secrets/openapi-tokens.local.json`:
 
 ```bash
 CMIND_ONBOARD=1 dotnet test tests/E2ETests --filter FullyQualifiedName~OnboardingTests
 ```
 
-~13s; authorizes every cID and caches fresh tokens. Re-run whenever the live suite reports the fixture is
-unavailable due to a refresh failure.
+~13s; authorizes every cID, caches fresh tokens. Re-run whenever live suite reports fixture unavailable due to refresh failure.
 
 ### 2. Run the live copy suites (real cTrader demo accounts)
 
@@ -333,20 +249,15 @@ dotnet test tests/IntegrationTests --filter FullyQualifiedName~LiveCopyMatrix   
 dotnet test tests/IntegrationTests --filter FullyQualifiedName~LiveCopyChaos           # resync chaos (2)
 ```
 
-They place + clean up real DEMO orders (never live accounts), and report **Inconclusive** on a closed
-market. Verified green end to end.
+Place + clean up real DEMO orders (never live accounts), report **Inconclusive** on closed market. Verified green end to end.
 
 ### 3. Bootstrap tokens from a running app volume (alternative)
 
-If the app has been run and a cID linked in-app, extract the app's latest refresh token straight from the
-`app-pg-data` Postgres volume instead of re-authorizing — see `LiveTokenBootstrapTests` and set
-`CMIND_VOLUME_CONN`.
+If app run + cID linked in-app, extract app's latest refresh token straight from `app-pg-data` Postgres volume instead of re-authorizing — see `LiveTokenBootstrapTests`, set `CMIND_VOLUME_CONN`.
 
 ### 4. Kubernetes cluster E2E
 
-`kind`, `helm`, and Docker are available (install kind/helm via `go install`/release binaries or
-`choco install kind kubernetes-helm` if not already on PATH). The one-shot script builds+loads images,
-deploys the chart, runs the in-cluster test Job, and asserts exit 0:
+`kind`, `helm`, Docker available (install kind/helm via `go install`/release binaries or `choco install kind kubernetes-helm` if not on PATH). One-shot script builds+loads images, deploys chart, runs in-cluster test Job, asserts exit 0:
 
 ```bash
 scripts/k8s-e2e.sh                                 # deterministic copy suite (no secrets)

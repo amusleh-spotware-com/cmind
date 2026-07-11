@@ -1,12 +1,8 @@
 # Node auto-discovery
 
-External nodes join the cluster by **self-registration + heartbeat** — no manual entry required.
-This is the same pattern used by Consul/Nomad/kubeadm agents: an agent boots knowing where the
-main node is and a shared cluster secret, then continuously announces itself.
+External nodes join cluster by **self-registration + heartbeat** — no manual entry. Same pattern as Consul/Nomad/kubeadm agents: agent boots knowing main node location + shared cluster secret, then continuously announces itself.
 
-> Verified end-to-end on both Docker Compose and a `kind` Kubernetes cluster: agents self-register,
-> appear in the DB reachable, get auto-marked unreachable when heartbeats stop past the TTL, and
-> return online when they resume.
+> Verified end-to-end on Docker Compose and `kind` Kubernetes cluster: agents self-register, appear in DB reachable, auto-marked unreachable when heartbeats stop past TTL, return online when resume.
 
 ## How it works
 
@@ -23,18 +19,10 @@ POST /api/nodes/register  ── join token ──▶ verify token (constant-tim
                                                  → RemoteNode.MarkUnreachable() (NodeWentOffline)
 ```
 
-- **Registration == heartbeat.** The agent re-POSTs on `HeartbeatIntervalSeconds`. First call
-  creates the node (`NodeRegistered` event); later calls refresh liveness. A resumed heartbeat after
-  an outage flips the node back reachable (`NodeCameOnline`).
-- **Liveness reconciliation.** `NodeHeartbeatMonitor` marks nodes whose last heartbeat exceeds
-  `HeartbeatTtl` as unreachable. The scheduler (`IsActive`/`AcceptsRun`/`AcceptsBacktest` are gated
-  on reachability) stops placing work on them until they report again.
-- **Identity is the node name.** The main upserts by `NodeName`, so a pod whose IP/URL changes on
-  restart keeps its identity and re-registers its new `AdvertiseUrl`.
-- **Mode is fixed at first registration.** A node's mode (`Run`/`Backtest`/`Mixed`) is its persisted
-  type and cannot change on heartbeat; a re-registration with a different mode is honoured for
-  liveness but the mode change is ignored (logged as a warning). To change mode, delete the node and
-  let it re-register.
+- **Registration == heartbeat.** Agent re-POSTs on `HeartbeatIntervalSeconds`. First call creates node (`NodeRegistered` event); later calls refresh liveness. Resumed heartbeat after outage flips node back reachable (`NodeCameOnline`).
+- **Liveness reconciliation.** `NodeHeartbeatMonitor` marks nodes whose last heartbeat exceeds `HeartbeatTtl` unreachable. Scheduler (`IsActive`/`AcceptsRun`/`AcceptsBacktest` gated on reachability) stops placing work until they report again.
+- **Identity is node name.** Main upserts by `NodeName`, so pod whose IP/URL changes on restart keeps identity, re-registers new `AdvertiseUrl`.
+- **Mode fixed at first registration.** Node mode (`Run`/`Backtest`/`Mixed`) is persisted type, cannot change on heartbeat; re-registration with different mode honoured for liveness but mode change ignored (logged as warning). To change mode: delete node, let it re-register.
 
 ## Configuration
 
@@ -42,41 +30,34 @@ Main (Web) — `App:Discovery`:
 
 | Key | Default | Meaning |
 |-----|---------|---------|
-| `Enabled` | `false` | Master switch for the register endpoint + monitor. |
+| `Enabled` | `false` | Master switch for register endpoint + monitor. |
 | `JoinToken` | — | Shared cluster secret (≥ 32 chars) agents must present. |
-| `HeartbeatTtl` | `00:01:30` | Grace before a silent node is marked unreachable. |
-| `MonitorInterval` | `00:00:30` | How often the monitor sweeps. |
-| `HeartbeatInterval` | `00:00:30` | Value returned to agents as the suggested cadence. |
+| `HeartbeatTtl` | `00:01:30` | Grace before silent node marked unreachable. |
+| `MonitorInterval` | `00:00:30` | How often monitor sweeps. |
+| `HeartbeatInterval` | `00:00:30` | Value returned to agents as suggested cadence. |
 
 Agent (ExternalNode) — `NodeAgent`:
 
 | Key | Meaning |
 |-----|---------|
-| `MainUrl` | Base URL of the main node. Empty = manual registration mode (loop is a no-op). |
-| `AdvertiseUrl` | URL the main uses to reach **this** agent. |
-| `NodeName` | Unique name; defaults to the machine name if blank. |
+| `MainUrl` | Base URL of main node. Empty = manual registration mode (loop no-op). |
+| `AdvertiseUrl` | URL main uses to reach **this** agent. |
+| `NodeName` | Unique name; defaults to machine name if blank. |
 | `Mode` | `Run` / `Backtest` / `Mixed`. |
-| `MaxInstances` | Capacity hint honoured by the scheduler. |
+| `MaxInstances` | Capacity hint honoured by scheduler. |
 | `HeartbeatIntervalSeconds` | Re-register cadence. |
-| `JwtSecret` | Must equal the main's `JoinToken` — it is both the registration bearer and the dispatch JWT signing key. |
+| `JwtSecret` | Must equal main's `JoinToken` — both registration bearer and dispatch JWT signing key. |
 
 ## Security model (v1)
 
-Auto-registered nodes share **one cluster secret** (`JoinToken` == each agent's `JwtSecret`).
-The main signs each dispatch request as a 5-minute HS256 JWT with that secret; the agent validates.
-Requirements:
+Auto-registered nodes share **one cluster secret** (`JoinToken` == each agent's `JwtSecret`). Main signs each dispatch request as 5-minute HS256 JWT with that secret; agent validates. Requirements:
 
-- Keep `JoinToken` ≥ 32 chars and rotate it (update the main's `App:Discovery:JoinToken` and every
-  agent's `NodeAgent:JwtSecret` together).
-- Terminate TLS in front of the main and the agents in production (reverse proxy / ingress).
-- The agent still only runs images matching `AllowedImagePrefix`.
+- Keep `JoinToken` ≥ 32 chars and rotate it (update main's `App:Discovery:JoinToken` and every agent's `NodeAgent:JwtSecret` together).
+- Terminate TLS in front of main and agents in production (reverse proxy / ingress).
+- Agent still only runs images matching `AllowedImagePrefix`.
 
-**Hardening follow-up (not v1):** issue a unique per-node secret at registration (kubeadm-style
-bootstrap → per-node credential) so a single compromised agent cannot forge dispatch tokens for its
-peers. The registration flow already returns a response body, which is the natural place to hand
-back a minted per-node secret.
+**Hardening follow-up (not v1):** issue unique per-node secret at registration (kubeadm-style bootstrap → per-node credential) so single compromised agent cannot forge dispatch tokens for peers. Registration flow already returns response body — natural place to hand back minted per-node secret.
 
 ## Manual nodes still work
 
-`POST /api/nodes` (admin UI) continues to register pinned nodes with their own per-node secret.
-Discovery is additive.
+`POST /api/nodes` (admin UI) continues to register pinned nodes with own per-node secret. Discovery is additive.

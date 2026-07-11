@@ -1,13 +1,12 @@
 # AWS deployment — step by step
 
-`deploy/aws` is a Terraform module: **ECS Fargate** (Web + MCP) behind an **ALB**, **RDS Postgres**,
-and CloudWatch logs.
+`deploy/aws` = Terraform module: **ECS Fargate** (Web + MCP) behind **ALB**, **RDS Postgres**, CloudWatch logs.
 
 ## 1. Prerequisites
 
-- Terraform ≥ 1.5 and AWS credentials (`aws configure` / env vars) with rights to create VPC-scoped
+- Terraform ≥ 1.5 + AWS credentials (`aws configure` / env vars) with rights to make VPC-scoped
   resources, ECS, RDS, ALB, IAM.
-- The three images in a registry ECS can pull (ECR, or GHCR public).
+- Three images in registry ECS can pull (ECR, or GHCR public).
 
 ## 2. Initialize
 
@@ -28,15 +27,15 @@ terraform apply \
   -var discovery_join_token="$(openssl rand -hex 24)"
 ```
 
-Creates: RDS Postgres (`appdb`), ECS cluster, Fargate services for Web + MCP, an ALB (Web at `/`,
-MCP at `/mcp`), security groups, a CloudWatch log group, and an **ADOT (AWS Distro for
-OpenTelemetry) collector sidecar** in each task. The app exports OTLP to the sidecar, which ships
-traces to **X-Ray** and metrics to **CloudWatch** (EMF, namespace `cmind`); logs stay on the
-`awslogs` driver as compact JSON. Discovery is enabled on Web. A task role grants the sidecar
+Makes: RDS Postgres (`appdb`), ECS cluster, Fargate services for Web + MCP, ALB (Web at `/`,
+MCP at `/mcp`), security groups, CloudWatch log group, **ADOT (AWS Distro for
+OpenTelemetry) collector sidecar** in each task. App exports OTLP to sidecar, which ships
+traces to **X-Ray**, metrics to **CloudWatch** (EMF, namespace `cmind`); logs stay on
+`awslogs` driver as compact JSON. Discovery on for Web. Task role grants sidecar
 X-Ray + CloudWatch write access — no collector to run yourself.
 
-> Uses the account's **default VPC/subnets** for brevity. For production, wire your own VPC, private
-> subnets, and an HTTPS listener (ACM cert).
+> Uses account's **default VPC/subnets** for brevity. For production, wire own VPC, private
+> subnets, HTTPS listener (ACM cert).
 
 ## 4. Get the URLs
 
@@ -45,15 +44,15 @@ terraform output web_url   # ALB root
 terraform output mcp_url   # ALB /mcp
 ```
 
-Open `web_url`, sign in with the owner (forced password change on first login).
+Open `web_url`, sign in with owner (forced password change on first login).
 
 ## 5. Add node agents (separate)
 
 Fargate disallows privileged/DinD, so run agents elsewhere pointing at `web_url`:
 
-- **ECS on EC2** — a capacity provider with `privileged = true` task definitions running
+- **ECS on EC2** — capacity provider with `privileged = true` task definitions running
   `cmind-node-agent`.
-- **EKS** — the Helm chart ([kubernetes.md](kubernetes.md)) with `nodeAgent.privileged=true`.
+- **EKS** — Helm chart ([kubernetes.md](kubernetes.md)) with `nodeAgent.privileged=true`.
 
 Set `NodeAgent__MainUrl=<web_url>`, `NodeAgent__AdvertiseUrl=<agent reachable url>`,
 `NodeAgent__JwtSecret=<discovery_join_token>`. Agents self-register — see
@@ -68,23 +67,23 @@ curl -s "$(terraform output -raw web_url)/version"
 
 ## Production notes
 
-- Add an HTTPS listener + ACM certificate; restrict the ALB security group.
-- Store secrets in AWS Secrets Manager / SSM and inject via task-definition `secrets` instead of
+- Add HTTPS listener + ACM certificate; restrict ALB security group.
+- Store secrets in AWS Secrets Manager / SSM, inject via task-definition `secrets` instead of
   plaintext `environment`.
 - Enable RDS Multi-AZ + backups.
-- Traces (X-Ray), metrics (CloudWatch EMF), and logs (CloudWatch Logs) are wired automatically via
-  the ADOT sidecar; correlate on `trace_id`. See
+- Traces (X-Ray), metrics (CloudWatch EMF), logs (CloudWatch Logs) wired automatically via
+  ADOT sidecar; correlate on `trace_id`. See
   [../operations/logging.md](../operations/logging.md#aws--x-ray--cloudwatch-adot-sidecar).
-- The app already points `OTEL_EXPORTER_OTLP_ENDPOINT` at the in-task sidecar; repoint it to an
-  external collector if you prefer to centralize.
+- App already points `OTEL_EXPORTER_OTLP_ENDPOINT` at in-task sidecar; repoint to external
+  collector if you prefer to centralize.
 
 ## Copy-trading agent + Secrets Manager (S5)
 
-`deploy/aws/copy-agent.tf` adds a **copy-agent** ECS Fargate service that hosts the `CopyEngineSupervisor`
-(`App:Copy:Enabled=true`, `App:Features:CopyTrading=true`) with **no ALB** — a worker holding the long-lived
-cTrader sockets. The DB connection string is stored in **AWS Secrets Manager** and injected through the
-task's `secrets` block (the execution role is granted `secretsmanager:GetSecretValue` on just that secret),
-not as plaintext env. Each task's `NodeName` defaults to its container hostname (unique per Fargate task), so
-the DB lease attributes running profiles per task and two tasks never double-host one. Scale
-`copy_agent_count` to add copy capacity; the DataProtection key ring is shared through Postgres, so any task
-can decrypt the stored Open API tokens.
+`deploy/aws/copy-agent.tf` adds **copy-agent** ECS Fargate service hosting `CopyEngineSupervisor`
+(`App:Copy:Enabled=true`, `App:Features:CopyTrading=true`) with **no ALB** — worker holding long-lived
+cTrader sockets. DB connection string stored in **AWS Secrets Manager**, injected through
+task's `secrets` block (execution role granted `secretsmanager:GetSecretValue` on just that secret),
+not plaintext env. Each task's `NodeName` defaults to its container hostname (unique per Fargate task), so
+DB lease attributes running profiles per task — two tasks never double-host one. Scale
+`copy_agent_count` to add copy capacity; DataProtection key ring shared through Postgres, so any task
+can decrypt stored Open API tokens.

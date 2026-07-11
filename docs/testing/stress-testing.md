@@ -1,32 +1,21 @@
 # Stress testing
 
-A stress suite that hammers the parts of the app whose failure costs users money — above all
-**copy trading** — with hostile, randomized, fault-injected workloads and asserts the system stays
-correct. Lives in `tests/StressTests`, runs in the normal `dotnet test` green gate.
+Stress suite. Hammers app parts whose failure cost users money — chiefly **copy trading** — with hostile, randomized, fault-injected workloads. Asserts system stay correct. Lives in `tests/StressTests`, runs in normal `dotnet test` green gate.
 
 ## Approach — Deterministic Simulation Testing (DST)
 
-The industry-leading way to stress distributed financial systems is **deterministic simulation
-testing**, as used by TigerBeetle, FoundationDB, and Antithesis: run the real logic against a
-*simulated* world, drive it with a **seeded** random workload plus injected faults, and assert
-invariants at quiescence. Because everything is seeded and deterministic, any failure reproduces
-exactly from its seed. We combine this with:
+Best way stress distributed financial systems = **deterministic simulation testing**, per TigerBeetle, FoundationDB, Antithesis: run real logic against *simulated* world, drive with **seeded** random workload + injected faults, assert invariants at quiescence. All seeded + deterministic → any failure reproduces exact from seed. Combined with:
 
-- **Chaos-engineering fault injection** (Netflix Chaos Monkey style) — connection drops, order
-  rejections, token rotation, node death.
-- **Property-based invariants** — instead of asserting exact call sequences, assert properties that
-  must hold no matter how events interleave (convergence, no orphans, at-most-one lease holder).
+- **Chaos-engineering fault injection** (Netflix Chaos Monkey style) — connection drops, order rejections, token rotation, node death.
+- **Property-based invariants** — no assert exact call sequences; assert properties that must hold no matter how events interleave (convergence, no orphans, at-most-one lease holder).
 
-The app already ships the perfect DST world model: `FakeTradingSession`, a cTrader-faithful
-in-memory Open API session. The stress suite reuses it (linked, single source of truth) rather than
-mocking, so the simulated broker behaves like the real one.
+App already ships perfect DST world model: `FakeTradingSession`, cTrader-faithful in-memory Open API session. Stress suite reuses it (linked, single source of truth) not mock, so simulated broker behave like real one.
 
 ## What it covers
 
 ### Copy trading (primary focus)
 
-Driven through `CopyDstWorld` (`tests/StressTests/CopyTrading/`), which runs a live `CopyEngineHost`
-against the fake session and issues a membership-consistent source workload:
+Driven via `CopyDstWorld` (`tests/StressTests/CopyTrading/`), runs live `CopyEngineHost` against fake session, issues membership-consistent source workload:
 
 | Scenario | Stresses |
 |---|---|
@@ -39,31 +28,17 @@ against the fake session and issues a membership-consistent source workload:
 | `Randomized_chaos_workload…` (10 seeds) | **the DST core** — every event type + every fault interleaved unpredictably |
 | `CopyLeaseReclaimStressTests` | node death + lease reclaim across a scaled cluster (pure domain, `FakeTimeProvider`) |
 
-**Convergence invariant.** At rest, every healthy destination mirrors exactly the set of still-open
-source positions — no orphans, none missing. Asserted on the label *set* (a scale-in legitimately
-opens a second destination position under the same source label, so duplicate labels are expected).
-A destination currently rejecting orders is allowed to lag and is reconciled once healed.
+**Convergence invariant.** At rest, every healthy destination mirrors exactly set of still-open source positions — no orphans, none missing. Asserted on label *set* (scale-in legitimately opens second destination position under same source label, so duplicate labels expected). Destination currently rejecting orders allowed to lag, reconciled once healed.
 
-**Lease invariant.** In a cluster where nodes die and revive on a seeded schedule, at most one node
-ever holds a valid lease on a profile; a dead node's lease lapses exactly at expiry and is reclaimed;
-a healthy cluster settles with every profile held by exactly one node. Mirrors
-`CopyEngineSupervisor`'s claim predicate against the `CopyProfile` domain lease methods.
+**Lease invariant.** In cluster where nodes die + revive on seeded schedule, at most one node ever holds valid lease on a profile; dead node's lease lapses exact at expiry, gets reclaimed; healthy cluster settles with every profile held by exact one node. Mirrors `CopyEngineSupervisor`'s claim predicate against `CopyProfile` domain lease methods.
 
 ### Thread-safety of the harness
 
-`FakeTradingSession` is single-threaded; the stress workload mutates it from the test thread while
-the host reads/writes it from its loop. `SyncTradingSession` wraps it and makes every session
-operation atomic on one gate (without holding that gate across the reconnect callback, which would
-invert lock order against the host's `_stateGate` and deadlock). The simulator itself is left
-untouched.
+`FakeTradingSession` single-threaded; stress workload mutates it from test thread while host reads/writes from its loop. `SyncTradingSession` wraps it, makes every session operation atomic on one gate (without holding gate across reconnect callback — would invert lock order vs host's `_stateGate` and deadlock). Simulator itself left untouched.
 
 ## Bugs found
 
-- **Startup resync race in `CopyEngineHost`.** `OnReconnected` was wired before the initial
-  reference-load + first resync, which ran without `_stateGate`. A socket flap during startup ran a
-  second resync concurrently and corrupted the host's non-concurrent state dictionaries
-  (`_symbolDetails`, `_sourceVolumes`). Fixed by running the startup load + first resync under the
-  gate. This is a production race, not a test artifact — the DST chaos workload surfaced it.
+- **Startup resync race in `CopyEngineHost`.** `OnReconnected` wired before initial reference-load + first resync, which ran without `_stateGate`. Socket flap during startup ran second resync concurrent, corrupted host's non-concurrent state dicts (`_symbolDetails`, `_sourceVolumes`). Fixed: run startup load + first resync under gate. Production race, not test artifact — DST chaos workload surfaced it.
 
 ## Running
 
@@ -71,18 +46,10 @@ untouched.
 dotnet test tests/StressTests/StressTests.csproj
 ```
 
-The suite is **serialized** (`[assembly: CollectionBehavior(DisableTestParallelization = true)]`):
-each test spins a live host background loop and drives it to quiescence under a wall clock, so
-running them in parallel starves the host tasks and makes convergence timeouts flaky. Workloads are
-sized to finish in seconds so the suite stays in the default green gate. A failure prints its seed;
-re-run that seed to reproduce the exact interleaving.
+Suite **serialized** (`[assembly: CollectionBehavior(DisableTestParallelization = true)]`): each test spins live host background loop, drives to quiescence under wall clock, so parallel run starves host tasks and makes convergence timeouts flaky. Workloads sized to finish in seconds so suite stays in default green gate. Failure prints its seed; re-run that seed to reproduce exact interleaving.
 
 ## Extending
 
-- New copy behavior → add a source op to `CopyDstWorld` (keep the source book membership consistent
-  with the event stream) and a weighted case in `CopyChaosDstTests`. If it can create or retire a
-  destination position, make sure the convergence invariant still holds.
-- New fault → add an injector to `CopyDstWorld` (delegating to `FakeTradingSession`'s control
-  surface via `SyncTradingSession`) and exercise it in a named scenario plus the chaos mix.
-- Keep the simulator cTrader-faithful (see the root `CLAUDE.md` mandate); never weaken it to make a
-  stress test pass.
+- New copy behavior → add source op to `CopyDstWorld` (keep source book membership consistent with event stream) + weighted case in `CopyChaosDstTests`. If it can create or retire a destination position, make sure convergence invariant still holds.
+- New fault → add injector to `CopyDstWorld` (delegate to `FakeTradingSession`'s control surface via `SyncTradingSession`) + exercise in a named scenario plus chaos mix.
+- Keep simulator cTrader-faithful (see root `CLAUDE.md` mandate); never weaken it to make a stress test pass.

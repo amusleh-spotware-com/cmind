@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" width="1200" height="360" role="img" aria-label="cMind">
+  <defs>
+    <radialGradient id="glow" cx="30%" cy="42%" r="55%">
+      <stop offset="0%" stop-color="#26C281" stop-opacity="0.16"/>
+      <stop offset="60%" stop-color="#26C281" stop-opacity="0.03"/>
+      <stop offset="100%" stop-color="#26C281" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="curveFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#26C281" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#26C281" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="360" fill="#141414"/>
+  <rect width="1200" height="360" fill="url(#glow)"/>
+
+  <!-- faint node network drifting right -->
+  <g stroke="#26C281" stroke-opacity="0.10">
+    <line x1="760" y1="70" x2="860" y2="120"/>
+    <line x1="860" y1="120" x2="960" y2="90"/>
+    <line x1="960" y1="90" x2="1050" y2="150"/>
+    <line x1="820" y1="230" x2="900" y2="280"/>
+    <line x1="900" y1="280" x2="1010" y2="250"/>
+    <line x1="1050" y1="150" x2="1120" y2="210"/>
+  </g>
+  <g fill="#26C281">
+    <circle cx="760" cy="70" r="3" fill-opacity="0.30"/>
+    <circle cx="860" cy="120" r="4" fill-opacity="0.38"/>
+    <circle cx="960" cy="90" r="2.5" fill-opacity="0.28"/>
+    <circle cx="1050" cy="150" r="4.5" fill-opacity="0.42"/>
+    <circle cx="820" cy="230" r="3" fill-opacity="0.26"/>
+    <circle cx="900" cy="280" r="2.5" fill-opacity="0.22"/>
+    <circle cx="1010" cy="250" r="3.5" fill-opacity="0.34"/>
+    <circle cx="1120" cy="210" r="3" fill-opacity="0.28"/>
+  </g>
+
+  <!-- rising equity curve to a profit node -->
+  <polyline points="720,300 800,278 880,240 980,200 1080,150 1150,120"
+            fill="none" stroke="#26C281" stroke-width="3" stroke-opacity="0.75" stroke-linejoin="round"/>
+  <circle cx="1150" cy="120" r="6" fill="#26C281"/>
+
+  <!-- lock-up: symbol + wordmark + tagline -->
+  <g transform="translate(84 96) scale(2.7)" fill="#26C281">
+    <path d="M32 16 A15 15 0 1 0 32 48" fill="none" stroke="#26C281" stroke-width="6" stroke-linecap="butt"/>
+    <polyline points="40,31 51,17" fill="none" stroke="#26C281" stroke-width="1.8" stroke-opacity="0.6"/>
+    <line x1="40" y1="30" x2="40" y2="47" stroke="#26C281" stroke-width="2.2" stroke-linecap="butt"/>
+    <rect x="37" y="33" width="6" height="11" rx="0.8"/>
+    <line x1="51" y1="12" x2="51" y2="40" stroke="#26C281" stroke-width="2.2" stroke-linecap="butt"/>
+    <rect x="48" y="18" width="6" height="15" rx="0.8"/>
+    <circle cx="40" cy="31" r="2.4"/>
+    <circle cx="51" cy="17" r="3.4"/>
+  </g>
+  <text x="270" y="176" font-family="'Space Grotesk','Segoe UI',Arial,sans-serif" font-size="76" font-weight="600" letter-spacing="-2" fill="#F5F7F5">cMind</text>
+  <text x="272" y="222" font-family="'Space Grotesk','Segoe UI',Arial,sans-serif" font-size="22" font-weight="400" fill="#B7BDB7">Build, run &amp; backtest cTrader bots across a distributed fleet — with an AI core watching the risk.</text>
+</svg>

@@ -315,6 +315,12 @@ html, body {
     margin-top: -8px;
 }
 
+/* ---- Brand mark & wordmark ------------------------------------------------ */
+
+.app-brand-mark { color: var(--app-primary); vertical-align: middle; flex-shrink: 0; }
+.app-login-brand,
+.app-brand-word { font-family: 'Space Grotesk', Inter, 'Segoe UI', sans-serif; letter-spacing: -0.02em; }
+
 /* ---- Settings full-screen dialog ------------------------------------------ */
 
 .app-settings {
@@ -492,6 +498,7 @@ html, body {
     padding: 64px;
     border-right: 1px solid var(--app-border);
     background:
+        radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--app-primary) 10%, transparent) 1px, transparent 1.6px) 0 0 / 34px 34px,
         radial-gradient(1200px 600px at 20% 10%, color-mix(in srgb, var(--app-primary) 22%, transparent), transparent 60%),
         linear-gradient(160deg, var(--app-surface-2), var(--app-bg));
 }

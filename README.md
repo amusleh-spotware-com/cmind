@@ -1,4 +1,8 @@
-# cMind
+<p align="center">
+  <img src="docs/design/banner.svg" alt="cMind — build, run &amp; backtest cTrader bots across a distributed fleet, with an AI core watching the risk." width="100%" />
+</p>
+
+<h1 align="center">cMind</h1>
 
 [![CI](https://github.com/amusleh-spotware-com/cmind/actions/workflows/ci.yml/badge.svg)](https://github.com/amusleh-spotware-com/cmind/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/amusleh-spotware-com/cmind/actions/workflows/codeql.yml/badge.svg)](https://github.com/amusleh-spotware-com/cmind/actions/workflows/codeql.yml)

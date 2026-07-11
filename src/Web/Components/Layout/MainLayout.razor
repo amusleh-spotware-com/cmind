@@ -17,7 +17,11 @@
         {
             <MudImage Src="@Branding.Branding.LogoUrl" Alt="@Branding.Branding.ProductName" Height="28" Class="mr-2" />
         }
-        <MudText Typo="Typo.h6" data-testid="app-product-name">@Branding.Branding.ProductName</MudText>
+        else
+        {
+            <BrandMark Size="26" Class="mr-2" />
+        }
+        <MudText Typo="Typo.h6" data-testid="app-product-name" Class="app-brand-word">@Branding.Branding.ProductName</MudText>
         <MudText Typo="Typo.caption" Class="ml-2 mud-text-disabled" data-testid="app-version">v@(Core.VersionInfo.Product)</MudText>
         <MudSpacer />
         <MudIconButton Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" Href="/account" aria-label="Account" />

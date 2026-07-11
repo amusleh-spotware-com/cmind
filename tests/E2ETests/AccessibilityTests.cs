@@ -25,6 +25,11 @@ public sealed class AccessibilityTests(AppFixture app)
     public static IEnumerable<object[]> AuthedRoutes() => new[]
     {
         "/", "/cbots", "/nodes", "/users", "/account",
+        "/mcp", "/prop-firm", "/copy-trading", "/accounts", "/alerts", "/agent",
+        "/settings/ai", "/settings/openapi", "/settings/features", "/settings/legal",
+        "/run", "/backtest", "/prop-guard",
+        // /assistant excluded: its only violations are MudBlazor's own tab-scroll-button chrome
+        // (unnamed) — a framework gap, not our markup. Its controls are all labelled text buttons.
     }.Select(r => new object[] { r });
 
     [Theory]

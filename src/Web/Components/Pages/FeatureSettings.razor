@@ -22,6 +22,7 @@
         <MudTd DataLabel="Feature">@context.flag</MudTd>
         <MudTd DataLabel="Enabled">
             <MudSwitch T="bool" Value="@((bool)context.enabled)" Color="Color.Primary"
+                       aria-label="@($"Toggle {context.flag}")"
                        ValueChanged="@(v => Toggle((string)context.flag, v))" />
         </MudTd>
     </RowTemplate>

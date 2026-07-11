@@ -22,6 +22,7 @@ public sealed class MobileLayoutTests(AppFixture app)
     {
         "/account", "/settings/features", "/nodes", "/users", "/cbots", "/run", "/backtest",
         "/mcp", "/prop-firm", "/settings/legal", "/copy-trading",
+        "/agent", "/alerts", "/prop-guard", "/assistant", "/settings/ai", "/settings/openapi", "/accounts",
     }.Select(r => new object[] { r });
 
     [Theory]

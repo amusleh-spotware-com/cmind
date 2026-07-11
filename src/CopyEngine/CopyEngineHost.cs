@@ -1025,7 +1025,7 @@ public sealed class CopyEngineHost(
     // (a lifecycle event already removes it earlier), so a subsequent partial close / scale-in is never
     // undone. A source id no longer open is dropped; a missing copy is left for the open-missing pass.
     private async Task TrueUpPartialFillsAsync(
-        IOpenApiTradingSession session, long ctid, IReadOnlySet<long> sourceOpenIds, CancellationToken ct)
+        IOpenApiTradingSession session, long ctid, HashSet<long> sourceOpenIds, CancellationToken ct)
     {
         var keys = _pendingTrueUp.Keys.Where(k => k.Ctid == ctid).ToArray();
         if (keys.Length == 0) return;
@@ -1107,7 +1107,7 @@ public sealed class CopyEngineHost(
     {
         if (_symbolDetails.TryGetValue((ctid, symbolId), out var cached)) return cached;
         var details = await session.LoadSymbolDetailsAsync(ctid, [symbolId], ct);
-        var detail = details.FirstOrDefault() ?? new SymbolDetails(symbolId, 0, 0, 0, 0);
+        var detail = details.Count > 0 ? details[0] : new SymbolDetails(symbolId, 0, 0, 0, 0);
         _symbolDetails[(ctid, symbolId)] = detail;
         return detail;
     }

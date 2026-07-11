@@ -16,11 +16,11 @@
     features are hidden from navigation and their APIs and background workers stop responding.
 </MudText>
 
-<MudTable Items="_items" Dense="true" Hover="true">
+<MudTable Items="_items" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
     <HeaderContent><MudTh>Feature</MudTh><MudTh>Enabled</MudTh></HeaderContent>
     <RowTemplate>
-        <MudTd>@context.flag</MudTd>
-        <MudTd>
+        <MudTd DataLabel="Feature">@context.flag</MudTd>
+        <MudTd DataLabel="Enabled">
             <MudSwitch T="bool" Value="@((bool)context.enabled)" Color="Color.Primary"
                        ValueChanged="@(v => Toggle((string)context.flag, v))" />
         </MudTd>

@@ -10,8 +10,9 @@
 
 <PageTitle>Copy Trading</PageTitle>
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+<MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
     <MudText Typo="Typo.h5">Copy Trading</MudText>
+    <HelpTip Text="Mirror a source (master) account's trades onto one or more destination (slave) accounts. Each destination controls its own sizing, direction, symbols and order handling. Start a profile to begin copying." />
     <MudSpacer />
     <MudTextField @bind-Value="_riskProfile" Label="Risk profile" Margin="Margin.Dense"
                   Style="max-width:180px" data-testid="ai-risk-profile" />
@@ -28,15 +29,15 @@
     </MudAlert>
 }
 
-<MudTable Items="_profiles" Dense="true" OnRowClick="@((TableRowClickEventArgs<dynamic> e) => Select((Guid)e.Item!.id))">
+<MudTable Items="_profiles" Dense="true" Breakpoint="Breakpoint.Sm" OnRowClick="@((TableRowClickEventArgs<dynamic> e) => Select((Guid)e.Item!.id))">
     <HeaderContent>
         <MudTh>Name</MudTh><MudTh>Source</MudTh><MudTh>Status</MudTh><MudTh>Destinations</MudTh><MudTh /></HeaderContent>
     <RowTemplate>
-        <MudTd>@context.name</MudTd>
-        <MudTd>@context.sourceAccountId</MudTd>
-        <MudTd><MudChip T="string" Size="Size.Small" Color="StatusColor((string)context.status)">@context.status</MudChip></MudTd>
-        <MudTd>@context.destinationCount</MudTd>
-        <MudTd>
+        <MudTd DataLabel="Name">@context.name</MudTd>
+        <MudTd DataLabel="Source">@context.sourceAccountId</MudTd>
+        <MudTd DataLabel="Status"><MudChip T="string" Size="Size.Small" Color="StatusColor((string)context.status)">@context.status</MudChip></MudTd>
+        <MudTd DataLabel="Destinations">@context.destinationCount</MudTd>
+        <MudTd DataLabel="">
             <MudButton Size="Size.Small" Color="Color.Success" Disabled="@IsRunning((string)context.status)"
                        OnClick="@(() => Action((Guid)context.id, "start"))" data-testid="copy-start">Start</MudButton>
             <MudButton Size="Size.Small" Color="Color.Warning" Disabled="@(!IsRunning((string)context.status))"
@@ -57,19 +58,19 @@
     <MudCard Class="mt-4">
         <MudCardContent>
             <MudText Typo="Typo.h6">Destinations — @_detail.name</MudText>
-            <MudTable Items="@(((IEnumerable<dynamic>)_detail.destinations))" Dense="true" Class="mb-3">
+            <MudTable Items="@(((IEnumerable<dynamic>)_detail.destinations))" Dense="true" Class="mb-3" Breakpoint="Breakpoint.Sm">
                 <HeaderContent>
                     <MudTh>Account</MudTh><MudTh>Mode</MudTh><MudTh>Param</MudTh><MudTh>Reverse</MudTh><MudTh>Direction</MudTh><MudTh>Partial</MudTh><MudTh>Pending</MudTh><MudTh>Trailing</MudTh><MudTh /></HeaderContent>
                 <RowTemplate>
-                    <MudTd>@context.destinationAccountId</MudTd>
-                    <MudTd>@context.mode</MudTd>
-                    <MudTd>@context.riskParameter</MudTd>
-                    <MudTd>@context.reverse</MudTd>
-                    <MudTd>@context.direction</MudTd>
-                    <MudTd>@context.mirrorPartialClose</MudTd>
-                    <MudTd>@context.copyPendingOrders</MudTd>
-                    <MudTd>@context.copyTrailingStop</MudTd>
-                    <MudTd><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                    <MudTd DataLabel="Account">@context.destinationAccountId</MudTd>
+                    <MudTd DataLabel="Mode">@context.mode</MudTd>
+                    <MudTd DataLabel="Param">@context.riskParameter</MudTd>
+                    <MudTd DataLabel="Reverse">@context.reverse</MudTd>
+                    <MudTd DataLabel="Direction">@context.direction</MudTd>
+                    <MudTd DataLabel="Partial">@context.mirrorPartialClose</MudTd>
+                    <MudTd DataLabel="Pending">@context.copyPendingOrders</MudTd>
+                    <MudTd DataLabel="Trailing">@context.copyTrailingStop</MudTd>
+                    <MudTd DataLabel=""><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
                                           OnClick="@(() => RemoveDestination((Guid)context.id))" /></MudTd>
                 </RowTemplate>
             </MudTable>

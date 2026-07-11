@@ -11,6 +11,7 @@
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
     <MudText Typo="Typo.h5">Prop-Firm Challenges</MudText>
+    <HelpTip Text="Track a prop-firm evaluation against its rules (max drawdown, daily loss, profit target, min trading days). Record equity manually, or enable live tracking to pull it from the account over the Open API." />
     <MudSpacer />
     <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
                OnClick="OpenNew">New Challenge</MudButton>
@@ -22,23 +23,23 @@
 }
 else
 {
-    <MudTable Items="_challenges" Dense="true">
+    <MudTable Items="_challenges" Dense="true" Breakpoint="Breakpoint.Sm">
         <HeaderContent>
             <MudTh>Name</MudTh><MudTh>Kind</MudTh><MudTh>Phase</MudTh><MudTh>Status</MudTh><MudTh>Equity</MudTh>
             <MudTh>Peak</MudTh><MudTh>Days</MudTh><MudTh>Record equity</MudTh><MudTh /></HeaderContent>
         <RowTemplate>
-            <MudTd>@context.name</MudTd>
-            <MudTd>@context.kind</MudTd>
-            <MudTd>@context.phase</MudTd>
-            <MudTd><MudChip T="string" Size="Size.Small" Color="StatusColor((string)context.status)">@context.status</MudChip></MudTd>
-            <MudTd>@context.currentEquity</MudTd>
-            <MudTd>@context.peakEquity</MudTd>
-            <MudTd>@context.tradingDaysCount</MudTd>
-            <MudTd>
+            <MudTd DataLabel="Name">@context.name</MudTd>
+            <MudTd DataLabel="Kind">@context.kind</MudTd>
+            <MudTd DataLabel="Phase">@context.phase</MudTd>
+            <MudTd DataLabel="Status"><MudChip T="string" Size="Size.Small" Color="StatusColor((string)context.status)">@context.status</MudChip></MudTd>
+            <MudTd DataLabel="Equity">@context.currentEquity</MudTd>
+            <MudTd DataLabel="Peak">@context.peakEquity</MudTd>
+            <MudTd DataLabel="Days">@context.tradingDaysCount</MudTd>
+            <MudTd DataLabel="Record equity">
                 <MudNumericField T="decimal" @bind-Value="_equityInput" Label="Equity" Margin="Margin.Dense" Style="max-width:140px" />
                 <MudButton Size="Size.Small" Color="Color.Primary" OnClick="@(() => RecordEquity((Guid)context.id))">Record</MudButton>
             </MudTd>
-            <MudTd>
+            <MudTd DataLabel="">
                 @if ((string)context.status == "Stopped")
                 {
                     <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" Color="Color.Success"

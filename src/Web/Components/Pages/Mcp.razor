@@ -10,6 +10,7 @@
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
     <MudText Typo="Typo.h5">MCP API Keys</MudText>
+    <HelpTip Text="Bearer tokens (mcpk_…) that let AI clients call this app's MCP server tools on your behalf. The full key is shown once at creation — copy it then. Revoke anytime." />
     <MudSpacer />
     <MudButton Color="Color.Primary" Variant="Variant.Filled"
                StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew">
@@ -17,13 +18,13 @@
     </MudButton>
 </MudStack>
 
-<MudTable Items="_items" Class="mt-3" Dense="true">
+<MudTable Items="_items" Class="mt-3" Dense="true" Breakpoint="Breakpoint.Sm">
     <HeaderContent><MudTh>Label</MudTh><MudTh>Prefix</MudTh><MudTh>Last used</MudTh><MudTh /></HeaderContent>
     <RowTemplate>
-        <MudTd>@context.label</MudTd>
-        <MudTd>@context.keyPrefix</MudTd>
-        <MudTd>@((string?)(context.lastUsedAt?.ToString()) ?? "—")</MudTd>
-        <MudTd><MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => Revoke((Guid)context.id))" /></MudTd>
+        <MudTd DataLabel="Label">@context.label</MudTd>
+        <MudTd DataLabel="Prefix">@context.keyPrefix</MudTd>
+        <MudTd DataLabel="Last used">@((string?)(context.lastUsedAt?.ToString()) ?? "—")</MudTd>
+        <MudTd DataLabel=""><MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => Revoke((Guid)context.id))" /></MudTd>
     </RowTemplate>
 </MudTable>
 

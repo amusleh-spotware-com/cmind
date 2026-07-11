@@ -16,17 +16,17 @@
 }
 else
 {
-    <MudTable Items="_documents" Dense="true">
+    <MudTable Items="_documents" Dense="true" Breakpoint="Breakpoint.Sm">
         <HeaderContent><MudTh>Document</MudTh><MudTh>Version</MudTh><MudTh>Status</MudTh><MudTh /></HeaderContent>
         <RowTemplate>
-            <MudTd>@context.type</MudTd>
-            <MudTd>@context.version</MudTd>
-            <MudTd>
+            <MudTd DataLabel="Document">@context.type</MudTd>
+            <MudTd DataLabel="Version">@context.version</MudTd>
+            <MudTd DataLabel="Status">
                 <MudChip T="string" Size="Size.Small" Color="@((bool)context.consented ? Color.Success : Color.Warning)">
                     @((bool)context.consented ? "Accepted" : "Action required")
                 </MudChip>
             </MudTd>
-            <MudTd>
+            <MudTd DataLabel="">
                 @if (!(bool)context.consented)
                 {
                     <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled"

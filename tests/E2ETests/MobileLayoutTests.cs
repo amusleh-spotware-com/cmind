@@ -21,6 +21,7 @@ public sealed class MobileLayoutTests(AppFixture app)
     public static IEnumerable<object[]> NoOverflowRoutes() => new[]
     {
         "/account", "/settings/features", "/nodes", "/users", "/cbots", "/run", "/backtest",
+        "/mcp", "/prop-firm", "/settings/legal", "/copy-trading",
     }.Select(r => new object[] { r });
 
     [Theory]

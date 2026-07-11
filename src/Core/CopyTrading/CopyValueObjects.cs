@@ -23,6 +23,18 @@ public enum CopyDirectionFilter
     ShortOnly = 2
 }
 
+// Account-level protection modes (ZuluGuard / Duplikium Global Account Protection). On breach of the
+// equity threshold the destination is latched against new opens; CloseOnly and Frozen both stop opening
+// new copies (existing stay managed — a full freeze of existing management is a reserved refinement),
+// while SellOut additionally closes every copy immediately. Off = no guard.
+public enum AccountProtectionMode
+{
+    Off = 0,
+    CloseOnly = 1,
+    Frozen = 2,
+    SellOut = 3
+}
+
 public enum SymbolFilterMode
 {
     None = 0,
@@ -120,6 +132,35 @@ public readonly record struct LotSanityCeiling
     public bool IsBreached(double copyLots, double masterLots)
         => (AbsoluteMaxLots > 0 && copyLots > AbsoluteMaxLots)
            || (MasterMultiple > 0 && masterLots > 0 && copyLots > MasterMultiple * masterLots);
+}
+
+// Account-level protection policy: a destination's live equity is watched, and on breach the mode is
+// applied. StopEquity is the floor (equity falling to/below it triggers); TakeEquity (optional) is the
+// ceiling (equity rising to/above it triggers a take-profit protection). SellOut requires a StopEquity.
+public readonly record struct AccountProtectionPolicy
+{
+    public AccountProtectionMode Mode { get; }
+    public double StopEquity { get; }
+    public double? TakeEquity { get; }
+
+    public AccountProtectionPolicy(AccountProtectionMode mode, double stopEquity, double? takeEquity)
+    {
+        if (stopEquity < 0 || double.IsNaN(stopEquity))
+            throw new DomainException(DomainErrors.CopyAccountProtectionInvalid);
+        if (takeEquity is { } take && (take <= 0 || double.IsNaN(take) || take <= stopEquity))
+            throw new DomainException(DomainErrors.CopyAccountProtectionInvalid);
+        if (mode == AccountProtectionMode.SellOut && stopEquity <= 0)
+            throw new DomainException(DomainErrors.CopyAccountProtectionInvalid);
+        Mode = mode;
+        StopEquity = stopEquity;
+        TakeEquity = takeEquity;
+    }
+
+    public static AccountProtectionPolicy Off => new(AccountProtectionMode.Off, 0, null);
+
+    public bool IsTriggered(double equity)
+        => Mode != AccountProtectionMode.Off
+           && ((StopEquity > 0 && equity <= StopEquity) || (TakeEquity is { } take && equity >= take));
 }
 
 // C18: a per-destination daily trading-hours window (UTC minutes-of-day). New opens outside the window

@@ -53,6 +53,9 @@ public sealed class CopyEngineHost(
     // G8 rejection circuit breaker: per-destination consecutive open-failure count and, once tripped, the
     // time until new opens resume. Mutated only under _stateGate (event handling is serialized).
     private readonly Dictionary<long, (int ConsecutiveFailures, DateTimeOffset? TrippedUntil)> _destinationHealth = new();
+    // Account-protection latch: once a destination's equity guard fires, it stops receiving new opens until
+    // the host restarts (a deliberate, non-silent safety stop). Mutated only under _stateGate.
+    private readonly HashSet<long> _protectedDestinations = [];
 
     // Pushed by the supervisor when a cID's single valid access token rotates (refresh or re-auth after
     // the user links another account on the same cID, which invalidates the old token). The host
@@ -92,6 +95,7 @@ public sealed class CopyEngineHost(
 
         using var loopCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         var tokenSwapLoop = Task.Run(() => ConsumeTokenUpdatesAsync(session, loopCts.Token), CancellationToken.None);
+        var equityGuardLoop = Task.Run(() => EquityGuardLoopAsync(session, loopCts.Token), CancellationToken.None);
         try
         {
             await foreach (var execution in session.SourceExecutionsAsync(plan.SourceCtidTraderAccountId, ct))
@@ -122,6 +126,7 @@ public sealed class CopyEngineHost(
             _tokenUpdates.Writer.TryComplete();
             loopCts.Cancel();
             try { await tokenSwapLoop; } catch { /* swap loop cancellation is expected on shutdown */ }
+            try { await equityGuardLoop; } catch { /* equity guard cancellation is expected on shutdown */ }
         }
     }
 
@@ -148,6 +153,45 @@ public sealed class CopyEngineHost(
             {
                 _stateGate.Release();
             }
+        }
+    }
+
+    // Phase 2 account protection (ZuluGuard / Global Account Protection): periodically evaluates each
+    // destination's live equity against its protection policy and, on breach, applies the mode.
+    private async Task EquityGuardLoopAsync(IOpenApiTradingSession session, CancellationToken ct)
+    {
+        if (plan.Destinations.All(d => d.Config.AccountProtection.Mode == AccountProtectionMode.Off)) return;
+
+        using var timer = new PeriodicTimer(CopyDefaults.EquityGuardInterval, timeProvider);
+        while (await timer.WaitForNextTickAsync(ct))
+        {
+            await _stateGate.WaitAsync(ct);
+            try { await EvaluateAccountProtectionAsync(session, ct); }
+            catch (Exception ex) { logger.LogWarning(ex, "Copy equity guard failed for profile {ProfileId}", plan.ProfileId.Value); }
+            finally { _stateGate.Release(); }
+        }
+    }
+
+    private async Task EvaluateAccountProtectionAsync(IOpenApiTradingSession session, CancellationToken ct)
+    {
+        foreach (var destination in plan.Destinations)
+        {
+            var policy = destination.Config.AccountProtection;
+            if (policy.Mode == AccountProtectionMode.Off || _protectedDestinations.Contains(destination.CtidTraderAccountId))
+                continue;
+
+            var equity = (await AccountSnapshotAsync(session, destination.CtidTraderAccountId, needsEquity: true, ct)).Equity;
+            if (!policy.IsTriggered(equity)) continue;
+
+            _protectedDestinations.Add(destination.CtidTraderAccountId); // latch: no more new opens
+            logger.CopyAccountProtectionTriggered(plan.ProfileId.Value, destination.CtidTraderAccountId,
+                policy.Mode.ToString(), equity, policy.StopEquity);
+
+            // SellOut closes every copy on the destination immediately (best-effort, market execution —
+            // no slippage guarantee, as competitors' equivalents also caveat).
+            if (policy.Mode == AccountProtectionMode.SellOut)
+                foreach (var position in await session.ReconcileAsync(destination.CtidTraderAccountId, ct))
+                    await session.ClosePositionAsync(destination.CtidTraderAccountId, position.PositionId, position.Volume, ct);
         }
     }
 
@@ -469,6 +513,12 @@ public sealed class CopyEngineHost(
         ExecutionEvent execution, string sourceName, SymbolDetails sourceDetail, AccountSnapshot sourceSnapshot,
         bool applyProtection, bool isScaleIn, CancellationToken ct)
     {
+        if (_protectedDestinations.Contains(destination.CtidTraderAccountId))
+        {
+            CopyMetrics.Instance.CopySkipped("account_protection");
+            return;
+        }
+
         if (destination.Config.ManageOnly)
         {
             CopyMetrics.Instance.CopySkipped("manage_only");

@@ -1,4 +1,5 @@
 using Core;
+using Core.Constants;
 using Core.Domain;
 using CopyEngine;
 using CTraderOpenApi.Client;
@@ -221,6 +222,57 @@ public sealed class CopyEngineHostTests
 
         session.Orders.Should().ContainSingle(o => o.Ctid == Slave2, "a failing slave must not block the others");
         session.Orders.Should().NotContain(o => o.Ctid == Slave);
+    }
+
+    [Fact]
+    public async Task Account_protection_sell_out_closes_all_and_blocks_new_opens_on_equity_breach()
+    {
+        var clock = new FakeTimeProvider(new DateTimeOffset(2026, 07, 11, 12, 00, 00, TimeSpan.Zero));
+        var session = NewSession();
+        session.Balance = 3000; // equity below the 5000 stop
+        session.SeedPosition(Source, positionId: 5001, SymbolId, isBuy: true, volume: 100, label: "5001");
+        session.SeedPosition(Slave, positionId: 9001, SymbolId, isBuy: true, volume: 100, label: "5001");
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d =>
+            d.SetAccountProtection(new AccountProtectionPolicy(AccountProtectionMode.SellOut, 5000, null)))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            await Task.Delay(150); // let the host start its equity-guard timer before advancing the clock
+            clock.Advance(CopyDefaults.EquityGuardInterval + TimeSpan.FromSeconds(1)); // fire a guard tick
+            await WaitUntil(() => session.Closes.Any(c => c.PositionId == 9001));
+
+            // A protected destination opens nothing further.
+            session.PushOpen(Source, positionId: 6001, SymbolId, isBuy: true, volume: 100);
+            await Task.Delay(150);
+        }, timeProvider: clock);
+
+        session.Closes.Should().Contain(c => c.PositionId == 9001, "sell-out closes every copy on an equity breach");
+        session.Orders.Should().BeEmpty("a protected destination opens no new positions");
+    }
+
+    [Fact]
+    public async Task Account_protection_close_only_blocks_new_opens_without_closing_existing()
+    {
+        var clock = new FakeTimeProvider(new DateTimeOffset(2026, 07, 11, 12, 00, 00, TimeSpan.Zero));
+        var session = NewSession();
+        session.Balance = 3000; // equity below the 5000 stop
+        session.SeedPosition(Source, positionId: 5001, SymbolId, isBuy: true, volume: 100, label: "5001");
+        session.SeedPosition(Slave, positionId: 9001, SymbolId, isBuy: true, volume: 100, label: "5001");
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d =>
+            d.SetAccountProtection(new AccountProtectionPolicy(AccountProtectionMode.CloseOnly, 5000, null)))));
+
+        CapturingLogger log = new();
+        await DriveAsync(session, plan, async () =>
+        {
+            await Task.Delay(150);
+            clock.Advance(CopyDefaults.EquityGuardInterval + TimeSpan.FromSeconds(1));
+            await WaitUntil(() => log.Records.Any(r => r.EventId == 1081)); // protection triggered
+            session.PushOpen(Source, positionId: 6001, SymbolId, isBuy: true, volume: 100);
+            await Task.Delay(150);
+        }, log, clock);
+
+        session.Orders.Should().BeEmpty("close-only blocks new opens once triggered");
+        session.Closes.Should().BeEmpty("close-only does not liquidate existing copies (unlike sell-out)");
     }
 
     [Fact]

@@ -79,6 +79,28 @@ public sealed class CopyRulesDomainTests
         act.Should().Throw<DomainException>().Which.Message.Should().Be(DomainErrors.CopyTradingWindowInvalid);
     }
 
+    [Theory]
+    [InlineData(AccountProtectionMode.SellOut, 5000, null, 4000, true)]   // equity below stop -> triggered
+    [InlineData(AccountProtectionMode.SellOut, 5000, null, 6000, false)]  // above stop -> safe
+    [InlineData(AccountProtectionMode.CloseOnly, 5000, 12000.0, 12500, true)] // above take ceiling -> triggered
+    [InlineData(AccountProtectionMode.Off, 5000, null, 1000, false)]     // off never triggers
+    public void Account_protection_trigger_state(AccountProtectionMode mode, double stop, double? take, double equity, bool expected)
+        => new AccountProtectionPolicy(mode, stop, take).IsTriggered(equity).Should().Be(expected);
+
+    [Fact]
+    public void Account_protection_sell_out_requires_a_stop_equity()
+    {
+        var act = () => new AccountProtectionPolicy(AccountProtectionMode.SellOut, 0, null);
+        act.Should().Throw<DomainException>().Which.Message.Should().Be(DomainErrors.CopyAccountProtectionInvalid);
+    }
+
+    [Fact]
+    public void Account_protection_rejects_a_take_below_the_stop()
+    {
+        var act = () => new AccountProtectionPolicy(AccountProtectionMode.CloseOnly, 5000, 4000);
+        act.Should().Throw<DomainException>().Which.Message.Should().Be(DomainErrors.CopyAccountProtectionInvalid);
+    }
+
     [Fact]
     public void Source_label_filter_matches_exactly_and_allows_all_when_unset()
     {

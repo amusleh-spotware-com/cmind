@@ -81,6 +81,15 @@ Set in the New Profile dialog, on the Copy Trading page's per-destination panel,
   master trades whose label matches **exactly** (e.g. copy one bot's trades, or a manual-only label);
   everything else is skipped (`source_label`). Empty = copy all. Carried on `ExecutionEvent.SourceLabel`
   from the master position/order's `TradeData.Label`, and honored on resync too.
+- **Account protection** (ZuluGuard / Global Account Protection) — watch the destination's **live
+  equity** (`balance + Σ floating P&L`, polled every `CopyDefaults.EquityGuardInterval`) against a
+  `StopEquity` floor and/or optional `TakeEquity` ceiling. On breach, apply the mode: **CloseOnly**
+  (stop opening new copies, keep managing existing), **Frozen** (stop opening), **SellOut** (close
+  **every** copy on the destination immediately). Once fired the destination is latched — no new opens
+  until the host restarts — and a `CopyAccountProtectionTriggered` alert is raised. `SellOut` requires a
+  `StopEquity`; a `TakeEquity` must sit above the `StopEquity`. **No-guarantee caveat:** sell-out uses
+  market execution — like every competitor's equivalent it can't guarantee a fill price in a fast or
+  gapped market.
 - **Order-type filter** — choose exactly which master order types to copy: market, market-range,
   limit, stop, stop-limit (`CopyOrderTypes` flags; default all). cMAM-style selectivity.
 - **Copy SL / Copy TP** — mirror the master's stop-loss / take-profit, or manage protection

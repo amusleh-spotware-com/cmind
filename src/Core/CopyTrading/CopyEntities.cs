@@ -76,6 +76,9 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public double LotSanityMasterMultiple { get; private set; }
     public int TradingHoursStartMinuteUtc { get; private set; }
     public int TradingHoursEndMinuteUtc { get; private set; }
+    public AccountProtectionMode AccountProtectionMode { get; private set; } = AccountProtectionMode.Off;
+    public double AccountProtectionStopEquity { get; private set; }
+    public double? AccountProtectionTakeEquity { get; private set; }
     public SymbolFilterMode SymbolFilterMode { get; private set; } = SymbolFilterMode.None;
     public IReadOnlyList<CopySymbolMapEntry> SymbolMaps => _symbolMaps;
     public IReadOnlyList<CopySymbolFilter> SymbolFilters => _symbolFilters;
@@ -98,6 +101,8 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public LotBounds Bounds => new(MinLot, MaxLot, ForceMinLot);
     public LotSanityCeiling LotSanity => new(LotSanityAbsoluteMaxLots, LotSanityMasterMultiple);
     public TradingWindow TradingHours => new(TradingHoursStartMinuteUtc, TradingHoursEndMinuteUtc);
+    public AccountProtectionPolicy AccountProtection =>
+        new(AccountProtectionMode, AccountProtectionStopEquity, AccountProtectionTakeEquity);
 
     public void ConfigureRisk(RiskSettings risk)
     {
@@ -122,6 +127,13 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     {
         TradingHoursStartMinuteUtc = window.StartMinuteUtc;
         TradingHoursEndMinuteUtc = window.EndMinuteUtc;
+    }
+
+    public void SetAccountProtection(AccountProtectionPolicy policy)
+    {
+        AccountProtectionMode = policy.Mode;
+        AccountProtectionStopEquity = policy.StopEquity;
+        AccountProtectionTakeEquity = policy.TakeEquity;
     }
 
     public void ConfigureSlippage(SlippagePips slippage)

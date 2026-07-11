@@ -237,6 +237,10 @@ public static partial class LogMessages
         Message = "Copy destination tripped: profile {ProfileId} dest {DestinationCtid} after {Failures} consecutive failures — new opens paused for {CooldownSeconds}s")]
     public static partial void CopyDestinationTripped(this ILogger logger, Guid profileId, long destinationCtid, int failures, double cooldownSeconds);
 
+    [LoggerMessage(EventId = 1081, Level = LogLevel.Warning,
+        Message = "Copy account protection triggered: profile {ProfileId} dest {DestinationCtid} mode {Mode} at equity {Equity} (stop {StopEquity})")]
+    public static partial void CopyAccountProtectionTriggered(this ILogger logger, Guid profileId, long destinationCtid, string mode, double equity, double stopEquity);
+
     // ---- Prop-firm challenge tracking ----
 
     [LoggerMessage(EventId = 1067, Level = LogLevel.Error, Message = "Prop-firm tracking supervisor cycle failed")]

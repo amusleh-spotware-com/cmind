@@ -31,6 +31,7 @@ public static class DomainErrors
     public const string CopyLotBoundsInvalid = "domain.copy.lot_bounds_invalid";
     public const string CopyLotSanityInvalid = "domain.copy.lot_sanity_invalid";
     public const string CopyTradingWindowInvalid = "domain.copy.trading_window_invalid";
+    public const string CopyAccountProtectionInvalid = "domain.copy.account_protection_invalid";
     public const string CopyRiskParameterInvalid = "domain.copy.risk_parameter_invalid";
     public const string CopySourceEqualsDestination = "domain.copy.source_equals_destination";
     public const string CopyDestinationDuplicate = "domain.copy.destination_duplicate";

@@ -153,6 +153,9 @@ public static class CopyDefaults
     // and receives no new opens until the cooldown elapses (existing positions are still managed/closed).
     public const int RejectionBudget = 5;
     public static readonly TimeSpan CircuitCooldown = TimeSpan.FromSeconds(60);
+    // Account-protection equity-guard poll interval: how often each destination's live equity is checked
+    // against its protection policy.
+    public static readonly TimeSpan EquityGuardInterval = TimeSpan.FromSeconds(15);
 }
 
 public static class AiConstants

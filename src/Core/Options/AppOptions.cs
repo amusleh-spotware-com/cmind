@@ -19,6 +19,9 @@ public sealed record AppOptions
     public TimeSpan RunCompletionPollInterval { get; init; } = TimeSpan.FromSeconds(15);
     public TimeSpan InstanceReconcileInterval { get; init; } = TimeSpan.FromMinutes(1);
     public TimeSpan InstanceStartupTimeout { get; init; } = TimeSpan.FromMinutes(10);
+    // A backtest container that never exits (hung CLI) would otherwise be polled forever; force-stop
+    // and fail it once it has run longer than this.
+    public TimeSpan MaxBacktestDuration { get; init; } = TimeSpan.FromHours(6);
     public LocalNodeOptions LocalNode { get; init; } = new();
     public DiscoveryOptions Discovery { get; init; } = new();
     public AiOptions Ai { get; init; } = new();

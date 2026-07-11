@@ -17,6 +17,12 @@ public sealed class BacktestCompletionPoller(
     TimeProvider timeProvider) : BackgroundService
 {
     private const string ContainerExitedReason = "Container exited without producing a report";
+    private const string BacktestTimedOutReason = "Backtest exceeded maximum allowed duration";
+
+    // A running backtest is overdue once it has run longer than the configured maximum. Pure so the
+    // timeout boundary is unit-tested without a DB or container.
+    internal static bool IsOverdue(DateTimeOffset startedAt, DateTimeOffset now, TimeSpan maxDuration)
+        => now - startedAt > maxDuration;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -38,16 +44,32 @@ public sealed class BacktestCompletionPoller(
             .Include(i => i.Node)
             .ToListAsync(ct);
 
+        var maxDuration = options.CurrentValue.MaxBacktestDuration;
+        var now = timeProvider.GetUtcNow();
         foreach (var instance in running)
         {
             if (instance.Node is null) continue;
+
+            // A hung backtest container never flips to exited, so the status check below would skip it
+            // forever. Force-stop and fail it once it has outrun the max duration.
+            if (IsOverdue(instance.StartedAt, now, maxDuration))
+            {
+                try { await factory.For(instance).StopAsync(instance, ct); }
+                catch (Exception ex) { log.BacktestStatusCheckFailed(instance.Id.Value, ex); }
+                log.BacktestTimedOut(instance.Id.Value);
+                db.Instances.Remove(instance);
+                db.Instances.Add(instance.ToFailed(BacktestTimedOutReason, now));
+                try { await db.SaveChangesAsync(ct); }
+                catch (DbUpdateConcurrencyException) { db.ChangeTracker.Clear(); }
+                continue;
+            }
+
             bool? isRunning;
             try { isRunning = await factory.For(instance).IsRunningAsync(instance, ct); }
             catch (Exception ex) { log.BacktestStatusCheckFailed(instance.Id.Value, ex); continue; }
             if (isRunning != false) continue;
 
             var reportJson = await TryReadReportAsync(factory, instance, ct);
-            var now = timeProvider.GetUtcNow();
             Instance terminal = reportJson is not null
                 ? instance.ToCompleted(now, reportJson, instance.DataDirSubPath)
                 : instance.ToFailed(ContainerExitedReason, now);

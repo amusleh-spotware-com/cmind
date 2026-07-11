@@ -115,6 +115,9 @@ public static partial class LogMessages
     [LoggerMessage(EventId = 1093, Level = LogLevel.Critical, Message = "Open API token refresh CRITICAL for account {CtidTraderAccountId}: still failing with token expiring at {ExpiresAt:o} — re-authorization needed")]
     public static partial void OpenApiTokenRefreshCritical(this ILogger logger, long ctidTraderAccountId, DateTimeOffset expiresAt);
 
+    [LoggerMessage(EventId = 1094, Level = LogLevel.Warning, Message = "Backtest {InstanceId} exceeded max duration and was force-stopped")]
+    public static partial void BacktestTimedOut(this ILogger logger, Guid instanceId);
+
     [LoggerMessage(EventId = 1035, Level = LogLevel.Information, Message = "Agent registered with main at {MainUrl} as node {NodeId}")]
     public static partial void AgentRegistered(this ILogger logger, string mainUrl, Guid nodeId);
 

@@ -52,7 +52,8 @@ public record AddCopyDestinationRequest(
     double PropRuleDailyLossCap = 0,
     double PropRuleTrailingDrawdown = 0,
     double ConsistencyThresholdPercent = 0,
-    int ExecutionJitterMaxMs = 0);
+    int ExecutionJitterMaxMs = 0,
+    double RiskFallbackLots = 0);
 
 public record SymbolMapPair(string Source, string Destination, double VolumeMultiplier = 1);
 
@@ -157,6 +158,7 @@ public static class CopyEndpoints
                     d.PropRuleTrailingDrawdown,
                     d.ConsistencyThresholdPercent,
                     d.ExecutionJitterMaxMs,
+                    d.RiskFallbackLots,
                     SymbolFilterMode = d.SymbolFilterMode.ToString(),
                     SymbolFilters = d.SymbolFilters.Select(f => f.Symbol),
                     SymbolMaps = d.SymbolMaps.Select(m => new { m.Source, m.Destination, m.VolumeMultiplier })
@@ -217,6 +219,7 @@ public static class CopyEndpoints
             destination.SetPropRuleGuard(new PropRuleGuard(req.PropRuleDailyLossCap, req.PropRuleTrailingDrawdown));
             destination.SetConsistencyThreshold(req.ConsistencyThresholdPercent);
             destination.SetExecutionJitter(req.ExecutionJitterMaxMs);
+            destination.SetRiskFallbackLots(req.RiskFallbackLots);
             if (req.SymbolMap is { Count: > 0 })
                 destination.SetSymbolMap(req.SymbolMap.Select(m => new SymbolMapEntry(new Symbol(m.Source), new Symbol(m.Destination), m.VolumeMultiplier)));
             if (req.SymbolFilterMode != SymbolFilterMode.None && req.SymbolFilters is { Count: > 0 })

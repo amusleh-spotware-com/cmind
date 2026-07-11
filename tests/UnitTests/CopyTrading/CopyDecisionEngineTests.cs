@@ -170,6 +170,17 @@ public sealed class CopyDecisionEngineTests
     }
 
     [Fact]
+    public void Risk_from_stop_loss_without_a_stop_uses_the_max_risk_fallback_when_set()
+    {
+        var destination = Destination(d => d.ConfigureRisk(new RiskSettings(MoneyManagementMode.RiskFromStopLoss, 2)));
+        // Context()'s source has no stop-loss; with a fallback configured the copy sizes to it instead of skipping.
+        var action = _engine.DecideOpen(destination, Context() with { RiskFallbackLots = 0.5 });
+
+        action.Kind.Should().Be(CopyActionKind.Open);
+        action.Lots.Should().Be(0.5, "an unstopped master falls back to the configured max-risk lot");
+    }
+
+    [Fact]
     public void Risk_from_stop_loss_sizes_off_the_master_stop_distance()
     {
         var destination = Destination(d => d.ConfigureRisk(new RiskSettings(MoneyManagementMode.RiskFromStopLoss, 2)));

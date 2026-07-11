@@ -35,7 +35,8 @@ public sealed record OpenDecisionContext(
     TimeSpan EventAge,
     CopyOrderTypes OrderType = CopyOrderTypes.Market,
     int? MasterSlippageInPoints = null,
-    double VolumeMultiplier = 1);
+    double VolumeMultiplier = 1,
+    double RiskFallbackLots = 0);
 
 /// <summary>
 /// Pure copy-decision logic shared by every host. Applies direction, latency and slippage filters,
@@ -74,7 +75,8 @@ public sealed class CopyDecisionEngine(ICopySizingCalculator calculator)
         var masterStopDistance = context.Source.StopLoss is { } stopLoss
             ? Math.Abs(context.Source.OpenPrice - stopLoss)
             : 0;
-        if (destination.Risk.Mode == MoneyManagementMode.RiskFromStopLoss && masterStopDistance <= 0)
+        if (destination.Risk.Mode == MoneyManagementMode.RiskFromStopLoss && masterStopDistance <= 0
+            && context.RiskFallbackLots <= 0)
             return CopyAction.Skip("no_stop_loss");
 
         var volume = calculator.Calculate(new CopySizingInput(
@@ -86,7 +88,8 @@ public sealed class CopyDecisionEngine(ICopySizingCalculator calculator)
             destination.Risk,
             destination.Bounds,
             masterStopDistance,
-            context.VolumeMultiplier));
+            context.VolumeMultiplier,
+            context.RiskFallbackLots));
 
         var slippageInPoints = context.OrderType == CopyOrderTypes.MarketRange && destination.CopyMasterSlippage
             ? context.MasterSlippageInPoints

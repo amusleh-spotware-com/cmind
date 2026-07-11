@@ -74,6 +74,9 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public bool ForceMinLot { get; private set; }
     public double MaxDrawdownPercent { get; private set; }
     public double DailyLossLimit { get; private set; }
+    // M7 max-risk fallback: for RiskFromStopLoss sizing, the fixed lot to use when the master has no
+    // stop-loss (so there's no distance to derive risk from). 0 = skip unstopped masters (no_stop_loss).
+    public double RiskFallbackLots { get; private set; }
     public double LotSanityAbsoluteMaxLots { get; private set; }
     public double LotSanityMasterMultiple { get; private set; }
     public int TradingHoursStartMinuteUtc { get; private set; }
@@ -238,6 +241,12 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public void SetManageOnly(bool manageOnly)
     {
         ManageOnly = manageOnly;
+    }
+
+    public void SetRiskFallbackLots(double lots)
+    {
+        DomainGuard.AgainstNegative(lots, DomainErrors.CopyLotInvalid);
+        RiskFallbackLots = lots;
     }
 
     public void SetSyncPolicy(bool syncOpenOnStart, bool syncClosedOnStart)

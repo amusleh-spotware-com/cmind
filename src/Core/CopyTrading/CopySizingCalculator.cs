@@ -54,7 +54,8 @@ public sealed class CopySizingCalculator : ICopySizingCalculator
     // matching the equity calculator's documented simplification. No master SL -> 0 (the engine skips it).
     private static double RiskFromStop(CopySizingInput input)
     {
-        if (input.MasterStopDistance <= 0) return 0;
+        // No master stop-loss -> use the configured max-risk fallback lot (0 falls through to a skip).
+        if (input.MasterStopDistance <= 0) return input.RiskFallbackLots;
         var riskAmount = input.Destination.Balance * input.Risk.Parameter / 100.0;
         var lossPerLot = input.MasterStopDistance * input.DestinationSymbol.ContractSize;
         return lossPerLot <= 0 ? 0 : riskAmount / lossPerLot;

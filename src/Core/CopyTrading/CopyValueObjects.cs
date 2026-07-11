@@ -299,7 +299,8 @@ public readonly record struct CopySizingInput(
     RiskSettings Risk,
     LotBounds Bounds,
     double MasterStopDistance = 0,
-    double VolumeMultiplier = 1);
+    double VolumeMultiplier = 1,
+    double RiskFallbackLots = 0);
 
 public readonly record struct CopyVolume(double Lots, bool Skipped)
 {

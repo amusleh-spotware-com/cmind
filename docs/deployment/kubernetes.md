@@ -216,3 +216,24 @@ image locally against Docker before shipping.
 helm -n cmind uninstall cmind        # or: kubectl delete -f <rendered>.yaml
 kind delete cluster --name cmind     # local only
 ```
+
+## Running the in-cluster suite cross-platform (Linux / macOS / Windows / WSL)
+
+`scripts/k8s-e2e.sh` is OS-independent. It converts the repo path to a native form (`cygpath -m`) so Docker,
+helm and kubectl resolve it on **Windows/git-bash** as well as Linux/macOS — verified end to end on Windows
+(kind cluster up → images built+loaded → chart deployed → in-cluster test Job green → teardown).
+
+| Environment | Command |
+|-------------|---------|
+| Linux / macOS | `scripts/k8s-e2e.sh` |
+| Windows (git-bash) | `bash scripts/k8s-e2e.sh` **or** `pwsh scripts/k8s-e2e.ps1` |
+| Windows → **WSL (preferred)** | `pwsh scripts/k8s-e2e.ps1 -Wsl` |
+
+**Prefer WSL on Windows.** Running inside WSL uses native Linux paths and Docker Desktop's WSL integration,
+which avoids all path-translation edge cases — the most robust option. It needs `docker`, `kind`, `helm`,
+`kubectl` and the .NET SDK on the WSL PATH (Docker Desktop provides `docker`; install the rest in the distro,
+e.g. `go install sigs.k8s.io/kind@latest`, the helm/kubectl release binaries). The `scripts/k8s-e2e.ps1`
+wrapper picks WSL with `-Wsl` and falls back to git-bash otherwise.
+
+`kind` + `helm` are self-installable if not present (release binaries or `choco install kind kubernetes-helm`);
+do not treat them as unavailable. See also [../testing/live-copy-trading.md](../testing/live-copy-trading.md).

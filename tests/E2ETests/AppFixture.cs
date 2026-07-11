@@ -162,6 +162,18 @@ public sealed class AppFixture : IAsyncLifetime
         return await context.NewPageAsync();
     }
 
+    // Authenticated page emulating a real mobile device (viewport, touch, DPR, user-agent) from
+    // Playwright's device registry, e.g. "iPhone 13", "Pixel 5". Reuses the owner storage state.
+    public async Task<IPage> NewAuthedMobilePageAsync(string device = "iPhone 13")
+    {
+        var options = _playwright!.Devices[device];
+        options.BaseURL = BaseUrl;
+        options.StorageState = StorageState;
+        var context = await Browser.NewContextAsync(options);
+        _contexts.Add(context);
+        return await context.NewPageAsync();
+    }
+
     private static int GetFreePort()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);

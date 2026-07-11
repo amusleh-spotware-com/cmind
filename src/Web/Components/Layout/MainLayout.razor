@@ -22,7 +22,7 @@
     <MudDrawer @bind-Open="_drawerOpen" Variant="@DrawerVariant.Responsive" Breakpoint="Breakpoint.Md" Elevation="1">
         <NavMenu />
     </MudDrawer>
-    <MudMainContent>
+    <MudMainContent Class="app-main-content">
         <MudContainer MaxWidth="MaxWidth.False" Class="pa-2 pa-md-6">
             <ErrorBoundary @ref="_errorBoundary">
                 <ChildContent>
@@ -38,6 +38,7 @@
             </ErrorBoundary>
         </MudContainer>
     </MudMainContent>
+    <BottomNav />
 </MudLayout>
 
 @code {

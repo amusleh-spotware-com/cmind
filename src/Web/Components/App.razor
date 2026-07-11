@@ -13,6 +13,7 @@
     <base href="/" />
     <link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css" />
     <link rel="stylesheet" href="css/site.css" />
+    @((MarkupString)$"<style>{Web.Branding.BrandingCss.BuildRootVariables(branding)}</style>")
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="@branding.FaviconUrl" />
     <meta name="theme-color" content="@branding.BackgroundColor" />

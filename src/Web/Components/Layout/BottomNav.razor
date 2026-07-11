@@ -1,0 +1,41 @@
+﻿@using Core.Features
+@inject IFeatureGate Gate
+
+@* Mobile-only bottom navigation (hidden on tablet+ via CSS). Surfaces the highest-traffic
+   destinations for thumb reach; the full grouped menu stays behind the app-bar hamburger. *@
+
+<nav class="app-bottomnav" data-testid="bottom-nav">
+    <NavLink class="app-bottomnav-item" href="/" Match="NavLinkMatch.All" ActiveClass="app-bottomnav-active">
+        <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" />
+        <span>Home</span>
+    </NavLink>
+
+    @if (Gate.IsEnabled(FeatureFlag.Authoring))
+    {
+        <NavLink class="app-bottomnav-item" href="/cbots" ActiveClass="app-bottomnav-active">
+            <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" />
+            <span>cBots</span>
+        </NavLink>
+    }
+
+    @if (Gate.IsEnabled(FeatureFlag.Execution))
+    {
+        <NavLink class="app-bottomnav-item" href="/run" ActiveClass="app-bottomnav-active">
+            <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" />
+            <span>Run</span>
+        </NavLink>
+    }
+
+    @if (Gate.IsEnabled(FeatureFlag.Ai))
+    {
+        <NavLink class="app-bottomnav-item" href="/assistant" ActiveClass="app-bottomnav-active">
+            <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Size="Size.Small" />
+            <span>AI</span>
+        </NavLink>
+    }
+
+    <NavLink class="app-bottomnav-item" href="/account" ActiveClass="app-bottomnav-active">
+        <MudIcon Icon="@Icons.Material.Filled.AccountCircle" Size="Size.Small" />
+        <span>Account</span>
+    </NavLink>
+</nav>

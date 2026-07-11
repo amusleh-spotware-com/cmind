@@ -1,9 +1,150 @@
+/* ---------------------------------------------------------------------------
+   Design tokens — stock defaults. White-label branding overrides the branded
+   roles at runtime via BrandingCss (injected after this file in App.razor);
+   CustomCss (injected last) can override anything. Components must read these
+   tokens, never hard-code colours/radius. Authored mobile-first.
+   --------------------------------------------------------------------------- */
+:root {
+    --app-bg: #1A1A1A;
+    --app-surface: #262626;
+    --app-surface-2: #1F1F1F;
+    --app-border: #2E2E2E;
+    --app-border-strong: #3A3A3A;
+    --app-text: #E6E6E6;
+    --app-text-secondary: #A0A0A0;
+    --app-text-muted: #6B6B6B;
+    --app-primary: #26C281;
+    --app-primary-hover: #2ED690;
+    --app-primary-contrast: #FFFFFF;
+    --app-error: #E74C3C;
+    --app-radius: 4px;
+    --app-bottomnav-height: 56px;
+    --app-touch-target: 44px;
+}
+
 html, body {
-    background: #1A1A1A;
-    color: #E6E6E6;
+    background: var(--app-bg);
+    color: var(--app-text);
     font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 14px;
     font-weight: 500;
+    /* Prevent iOS text auto-inflation in landscape. */
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+}
+
+/* Never allow a page to scroll sideways on a phone. */
+html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+/* ---- Shared surfaces / tables --------------------------------------------- */
+
+.mud-table-toolbar { background: transparent !important; }
+
+.mud-appbar { border-bottom: 1px solid var(--app-border); }
+
+.mud-drawer { border-right: 1px solid var(--app-border); }
+
+.mud-paper { background-color: var(--app-surface); }
+
+.mud-button-filled-primary {
+    background-color: var(--app-primary) !important;
+    color: var(--app-primary-contrast) !important;
+}
+.mud-button-filled-primary:hover {
+    background-color: var(--app-primary-hover) !important;
+}
+
+.mud-button-filled-error {
+    background-color: var(--app-error) !important;
+    color: var(--app-primary-contrast) !important;
+}
+
+.mud-input-outlined .mud-input-outlined-border { border-color: var(--app-border-strong); }
+
+.mud-table {
+    background-color: var(--app-surface-2);
+    border: 1px solid var(--app-border);
+}
+.mud-table-row:hover { background-color: var(--app-border) !important; }
+.mud-table-cell { border-bottom: 1px solid var(--app-surface); }
+
+.mud-input-control input,
+.mud-input-control textarea { color: var(--app-text); }
+
+.mud-alert-filled-error { background-color: var(--app-error); }
+
+.app-sell { color: var(--app-error); }
+.app-buy { color: var(--app-primary); }
+
+.app-stat-card {
+    background: var(--app-surface) !important;
+    border: 1px solid var(--app-border);
+    transition: border-color 0.15s, transform 0.15s;
+}
+.app-stat-card:hover { border-color: var(--app-border-strong); }
+
+/* ---- Touch targets (mobile-first base) ------------------------------------ */
+
+/* Comfortable tap size on phones; buttons/icon-buttons never smaller than 44px. */
+.mud-button-root,
+.mud-icon-button { min-height: var(--app-touch-target); }
+
+/* Keep page content clear of the fixed mobile bottom navigation. */
+.app-main-content { padding-bottom: calc(var(--app-bottomnav-height) + env(safe-area-inset-bottom, 0px)); }
+
+/* ---- Mobile bottom navigation --------------------------------------------- */
+
+.app-bottomnav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1300;
+    height: calc(var(--app-bottomnav-height) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--app-surface-2);
+    border-top: 1px solid var(--app-border);
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+}
+.app-bottomnav-item {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-width: 0;
+    padding: 6px 2px;
+    color: var(--app-text-secondary);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+.app-bottomnav-item span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.app-bottomnav-item:active { background: var(--app-border); }
+.app-bottomnav-active {
+    color: var(--app-primary);
+    border-top: 2px solid var(--app-primary);
+    margin-top: -1px;
+}
+
+/* ---- Desktop enhancements (mobile-first: base = phone, enhance upward) ----- */
+
+@media (min-width: 960px) {
+    /* Bottom nav is mobile-only; the persistent drawer takes over on tablet+. */
+    .app-bottomnav { display: none !important; }
+    .app-main-content { padding-bottom: 0; }
 }
 
 @media (min-width: 1200px) {
@@ -12,7 +153,7 @@ html, body {
     .mud-table-cell { padding: 14px 18px !important; font-size: 14.5px; }
     .mud-table-head .mud-table-cell { font-size: 13px; font-weight: 700 !important; letter-spacing: 0.4px; text-transform: uppercase; }
     .mud-button-root { font-weight: 700 !important; letter-spacing: 0.4px; padding: 9px 20px; }
-    .mud-card, .mud-paper { border: 1px solid #2E2E2E; }
+    .mud-card, .mud-paper { border: 1px solid var(--app-border); }
     .app-stat-card .mud-typography-h4 { font-size: 2rem !important; font-weight: 800 !important; letter-spacing: -0.5px; }
 }
 
@@ -20,72 +161,12 @@ html, body {
     html, body { font-size: 16px; }
 }
 
-.mud-table-toolbar { background: transparent !important; }
-
-.mud-appbar {
-    border-bottom: 1px solid #2E2E2E;
-}
-
-.mud-drawer {
-    border-right: 1px solid #2E2E2E;
-}
-
-.mud-paper { background-color: #262626; }
-
-.mud-button-filled-primary {
-    background-color: #26C281 !important;
-    color: #FFFFFF !important;
-}
-.mud-button-filled-primary:hover {
-    background-color: #2ED690 !important;
-}
-
-.mud-button-filled-error {
-    background-color: #E74C3C !important;
-    color: #FFFFFF !important;
-}
-
-.mud-input-outlined .mud-input-outlined-border {
-    border-color: #3A3A3A;
-}
-
-.mud-table {
-    background-color: #1F1F1F;
-    border: 1px solid #2E2E2E;
-}
-
-.mud-table-row:hover {
-    background-color: #2E2E2E !important;
-}
-
-.mud-table-cell {
-    border-bottom: 1px solid #262626;
-}
-
-.mud-input-control input,
-.mud-input-control textarea {
-    color: #E6E6E6;
-}
-
-.mud-alert-filled-error {
-    background-color: #E74C3C;
-}
-
-.app-sell { color: #E74C3C; }
-.app-buy { color: #26C281; }
-
-.app-stat-card {
-    background: #262626 !important;
-    border: 1px solid #2E2E2E;
-    transition: border-color 0.15s, transform 0.15s;
-}
-.app-stat-card:hover {
-    border-color: #3A3A3A;
-}
+/* ---- Login ---------------------------------------------------------------- */
 
 .app-login-page {
     min-height: 100vh;
-    background: #1A1A1A;
+    min-height: 100dvh;
+    background: var(--app-bg);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -95,9 +176,9 @@ html, body {
 .app-login-card {
     width: 100%;
     max-width: 440px;
-    background: #1A1A1A;
+    background: var(--app-bg);
     padding: 40px 48px 48px;
-    border-radius: 4px;
+    border-radius: var(--app-radius);
 }
 
 .app-login-logo {
@@ -119,18 +200,18 @@ html, body {
     justify-content: center;
     gap: 48px;
     margin-bottom: 32px;
-    border-bottom: 1px solid #2E2E2E;
+    border-bottom: 1px solid var(--app-border);
 }
 .app-login-tab {
     padding: 12px 8px;
     font-size: 14px;
     font-weight: 600;
     letter-spacing: 1px;
-    color: #6B6B6B;
+    color: var(--app-text-muted);
 }
 .app-login-tab-active {
     color: #FFFFFF;
-    border-bottom: 2px solid #26C281;
+    border-bottom: 2px solid var(--app-primary);
     margin-bottom: -1px;
 }
 
@@ -143,11 +224,11 @@ html, body {
 .app-login-field {
     display: flex;
     align-items: center;
-    border-bottom: 1px solid #3A3A3A;
+    border-bottom: 1px solid var(--app-border-strong);
     padding: 8px 0;
 }
 .app-login-field:focus-within {
-    border-bottom-color: #26C281;
+    border-bottom-color: var(--app-primary);
 }
 .app-login-icon {
     margin-right: 12px;
@@ -158,19 +239,20 @@ html, body {
     background: transparent;
     border: none;
     outline: none;
-    color: #E6E6E6;
-    font-size: 15px;
+    color: var(--app-text);
+    font-size: 16px; /* >=16px stops iOS Safari from zooming on focus */
     padding: 8px 0;
 }
 .app-login-field input::placeholder {
-    color: #6B6B6B;
+    color: var(--app-text-muted);
     font-style: italic;
 }
 
 .app-login-button {
     margin-top: 12px;
-    background: #26C281;
-    color: #FFFFFF;
+    min-height: var(--app-touch-target);
+    background: var(--app-primary);
+    color: var(--app-primary-contrast);
     border: none;
     border-radius: 2px;
     padding: 16px;
@@ -181,14 +263,14 @@ html, body {
     transition: background 0.15s;
 }
 .app-login-button:hover {
-    background: #2ED690;
+    background: var(--app-primary-hover);
 }
 
 .app-login-remember {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #A0A0A0;
+    color: var(--app-text-secondary);
     font-size: 13px;
     user-select: none;
     cursor: pointer;
@@ -217,18 +299,18 @@ html, body {
     transition: transform 0.15s ease-in-out;
 }
 .app-login-remember input:checked {
-    background: #26C281;
+    background: var(--app-primary);
 }
 .app-login-remember input:checked::before {
     transform: translateX(16px);
 }
 .app-login-remember input:focus-visible {
-    outline: 2px solid #26C281;
+    outline: 2px solid var(--app-primary);
     outline-offset: 2px;
 }
 
 .app-login-error {
-    color: #E74C3C;
+    color: var(--app-error);
     font-size: 13px;
     margin-top: -8px;
 }

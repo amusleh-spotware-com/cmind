@@ -15,6 +15,8 @@ One document per major capability. Keep these in sync with the code — see the 
 | AI assistant / agent / risk guard / alerts | [ai.md](ai.md) |
 | Prop-firm challenge simulation | [prop-firm.md](prop-firm.md) |
 | White-label / branding | [white-label.md](white-label.md) |
+| Installable app (PWA) | [pwa.md](pwa.md) |
+| UI design system & mobile-first | [../ui-guidelines.md](../ui-guidelines.md) |
 | Feature toggles | [feature-toggles.md](feature-toggles.md) |
 | Compliance / legal | [compliance.md](compliance.md) |
 | Build & backtest cBots | [build-and-backtest.md](build-and-backtest.md) |

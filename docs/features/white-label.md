@@ -47,13 +47,21 @@ Environment-variable form: `App__Branding__ProductName=AcmeFX`, `App__Branding__
 | `FaviconUrl` | `<link rel="icon">` | `favicon.svg` |
 | `Description` | `<meta name="description">` | stock description |
 | `PrimaryColor` / `SecondaryColor` | accent, drawer icon, buttons | `#26C281` / `#1FB97A` |
-| `AppBarColor` / `BackgroundColor` / `SurfaceColor` | chrome + surfaces + `<meta theme-color>` | dark palette |
+| `AppBarColor` / `BackgroundColor` / `SurfaceColor` | chrome + surfaces; `AppBarColor` drives `<meta theme-color>` + PWA manifest `theme_color`, `BackgroundColor` the manifest `background_color` | dark palette |
 | `SuccessColor` / `ErrorColor` / `WarningColor` / `InfoColor` | status colours | stock |
 | `CustomCss` | injected `<style>` in `<head>` (deployment-trusted) | *(empty)* |
 
 Assets referenced by `LogoUrl`/`FaviconUrl` served from Web app `wwwroot` (e.g. mount `wwwroot/branding/` folder) or any absolute URL.
 
 `App:Branding` validated at startup (`BrandingOptionsValidator`, run via `ValidateOnStart`): every colour must be valid hex, `CustomCss` must not contain `<`/`>` (cannot break out of `<style>` tag). Misconfigured deployment fail to boot with clear message, not render broken page.
+
+## Design tokens (CSS variables)
+
+Branding also reaches the app's **own** stylesheet + custom components, not just MudBlazor. `Web.Branding.BrandingCss.BuildRootVariables(BrandingOptions)` emits the branded palette as CSS custom properties on `:root` (`--app-primary`, `--app-primary-hover`, `--app-surface`, `--app-appbar`, `--app-success`/`--app-error`/`--app-warning`/`--app-info`, …), injected in `App.razor` right after `site.css`. `site.css` and every component read `var(--app-*)` — **no hard-coded colours** — so a reseller's palette flows everywhere (login hero, bottom nav, help tips, offline page) for free. Neutral surface tones default in `site.css :root`; `CustomCss` (injected last) can override any token. See [ui-guidelines.md](../ui-guidelines.md) §2.
+
+## Branded PWA
+
+The installable app is branded too — the manifest endpoint (`/manifest.webmanifest`) is built from `BrandingOptions` (`ProductName` → `name`/`short_name`, `Description`, `AppBarColor`/`BackgroundColor` → theme/background). See [pwa.md](pwa.md).
 
 ## Tests
 

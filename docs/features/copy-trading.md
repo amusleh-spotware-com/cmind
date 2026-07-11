@@ -54,8 +54,12 @@ Set in the New Profile dialog, on the Copy Trading page's per-destination panel,
 `POST /api/copy/profiles/{id}/destinations`:
 
 - **Sizing** (`MoneyManagementMode` + parameter): fixed lot, lot/notional multiplier,
-  proportional balance/equity/free-margin, fixed risk %, fixed leverage, auto-proportional.
-  Plus min/max lot bounds and force-min-lot. Proportional-**equity**/**free-margin** size off real
+  proportional balance/equity/free-margin, fixed risk %, fixed leverage, auto-proportional,
+  **risk-%-from-stop** (M7). Plus min/max lot bounds and force-min-lot. **Risk-from-stop** sizes the
+  destination so it risks the configured percent of *its own* balance derived from the **master's
+  stop-loss distance** (`master risks 2% → slave auto-risks 2%`): `lots = balance×% ÷ (stopDistance ×
+  contractSize)`. A master open **without** a stop-loss has no distance to size against, so it is
+  skipped (`no_stop_loss`) rather than guessed — configure a different mode for unstopped masters. Proportional-**equity**/**free-margin** size off real
   account **equity** (`balance + Σ floating P&L`, derived per the cTrader Open API which doesn't deliver
   equity), not plain balance — so a master sitting on open profit/loss sizes copies correctly. Used
   margin isn't exposed by the reconcile API, so free-margin is treated as equity (an honest available-funds

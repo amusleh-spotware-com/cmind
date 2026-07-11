@@ -68,6 +68,14 @@ public sealed class CopyDecisionEngine(ICopySizingCalculator calculator)
             if (pips > destination.SlippagePips) return CopyAction.Skip("slippage");
         }
 
+        // M7 risk-from-stop needs the master's stop distance; without a master SL there's nothing to size
+        // the risk against, so skip rather than guess a size on an unstopped position.
+        var masterStopDistance = context.Source.StopLoss is { } stopLoss
+            ? Math.Abs(context.Source.OpenPrice - stopLoss)
+            : 0;
+        if (destination.Risk.Mode == MoneyManagementMode.RiskFromStopLoss && masterStopDistance <= 0)
+            return CopyAction.Skip("no_stop_loss");
+
         var volume = calculator.Calculate(new CopySizingInput(
             context.Source.VolumeLots,
             context.MasterAccount,
@@ -75,7 +83,8 @@ public sealed class CopyDecisionEngine(ICopySizingCalculator calculator)
             context.MasterSymbol,
             context.DestinationSymbol,
             destination.Risk,
-            destination.Bounds));
+            destination.Bounds,
+            masterStopDistance));
 
         var slippageInPoints = context.OrderType == CopyOrderTypes.MarketRange && destination.CopyMasterSlippage
             ? context.MasterSlippageInPoints

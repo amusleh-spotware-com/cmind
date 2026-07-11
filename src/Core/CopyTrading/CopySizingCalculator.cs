@@ -40,8 +40,21 @@ public sealed class CopySizingCalculator : ICopySizingCalculator
                 Notional(destination.Balance * risk.Parameter / 100.0, destinationSpec.ContractSize),
             MoneyManagementMode.FixedLeverage =>
                 Notional(destination.Balance * risk.Parameter, destinationSpec.ContractSize),
+            MoneyManagementMode.RiskFromStopLoss => RiskFromStop(input),
             _ => 0
         };
+    }
+
+    // M7: size the destination so it risks the same percent of ITS balance as configured, derived from the
+    // master's stop-loss distance — "master risks 2% -> slave auto-risks 2%". lots = riskAmount / lossPerLot
+    // where lossPerLot = stopDistance (price) x contract size. Quote==deposit assumed (no FX conversion feed),
+    // matching the equity calculator's documented simplification. No master SL -> 0 (the engine skips it).
+    private static double RiskFromStop(CopySizingInput input)
+    {
+        if (input.MasterStopDistance <= 0) return 0;
+        var riskAmount = input.Destination.Balance * input.Risk.Parameter / 100.0;
+        var lossPerLot = input.MasterStopDistance * input.DestinationSymbol.ContractSize;
+        return lossPerLot <= 0 ? 0 : riskAmount / lossPerLot;
     }
 
     private static double Ratio(double numerator, double denominator)

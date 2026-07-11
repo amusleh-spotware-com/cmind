@@ -11,7 +11,8 @@ public sealed class CopySizingCalculatorTests
     private readonly ICopySizingCalculator _calculator = new CopySizingCalculator();
 
     private CopyVolume Run(RiskSettings risk, double masterVolume = 1, AccountSnapshot? destination = null,
-        SymbolSpec? destinationSpec = null, LotBounds? bounds = null, AccountSnapshot? master = null)
+        SymbolSpec? destinationSpec = null, LotBounds? bounds = null, AccountSnapshot? master = null,
+        double masterStopDistance = 0)
         => _calculator.Calculate(new CopySizingInput(
             masterVolume,
             master ?? Ten,
@@ -19,7 +20,19 @@ public sealed class CopySizingCalculatorTests
             Standard,
             destinationSpec ?? Standard,
             risk,
-            bounds ?? LotBounds.Unbounded));
+            bounds ?? LotBounds.Unbounded,
+            masterStopDistance));
+
+    [Fact]
+    public void RiskFromStopLoss_sizes_so_the_destination_risks_the_configured_percent()
+        // 10000 balance x 2% = 200 risk; stop 0.0010 x 100000 contract = 100 loss/lot -> 2 lots
+        => Run(new RiskSettings(MoneyManagementMode.RiskFromStopLoss, 2), masterStopDistance: 0.0010)
+            .Lots.Should().Be(2);
+
+    [Fact]
+    public void RiskFromStopLoss_without_a_stop_distance_skips()
+        => Run(new RiskSettings(MoneyManagementMode.RiskFromStopLoss, 2), masterStopDistance: 0)
+            .Skipped.Should().BeTrue();
 
     [Fact]
     public void FixedLot_returns_configured_lots()

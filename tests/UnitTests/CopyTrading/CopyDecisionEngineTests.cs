@@ -153,6 +153,29 @@ public sealed class CopyDecisionEngineTests
     }
 
     [Fact]
+    public void Risk_from_stop_loss_without_a_master_stop_is_skipped()
+    {
+        // Context()'s source carries no stop-loss, so risk-from-stop has nothing to size against.
+        var destination = Destination(d => d.ConfigureRisk(new RiskSettings(MoneyManagementMode.RiskFromStopLoss, 2)));
+        _engine.DecideOpen(destination, Context()).SkipReason.Should().Be("no_stop_loss");
+    }
+
+    [Fact]
+    public void Risk_from_stop_loss_sizes_off_the_master_stop_distance()
+    {
+        var destination = Destination(d => d.ConfigureRisk(new RiskSettings(MoneyManagementMode.RiskFromStopLoss, 2)));
+        var context = new OpenDecisionContext(
+            new SourcePosition(1, "EURUSD", IsLong: true, VolumeLots: 1, OpenPrice: 1.1000, StopLoss: 1.0990, TakeProfit: null),
+            Account, Account, Spec, Spec, DestinationPrice: 1.1000, DestinationPipSize: 0.0001, EventAge: TimeSpan.Zero);
+
+        var action = _engine.DecideOpen(destination, context);
+
+        action.Kind.Should().Be(CopyActionKind.Open);
+        action.Lots.Should().BeApproximately(2, 0.02,
+            "10000 x 2% = 200 risk over a ~0.0010 stop x 100000 contract = ~100/lot -> ~2 lots (floored to lot step)");
+    }
+
+    [Fact]
     public void PositionsToOpen_excludes_already_mapped_sources()
     {
         var map = new Dictionary<long, long> { [10] = 100 };

@@ -12,7 +12,8 @@ public enum MoneyManagementMode
     ProportionalFreeMargin = 5,
     FixedRiskPercent = 6,
     FixedLeverage = 7,
-    AutoProportional = 8
+    AutoProportional = 8,
+    RiskFromStopLoss = 9
 }
 
 public enum CopyDirectionFilter
@@ -161,7 +162,8 @@ public readonly record struct RiskSettings
                 or MoneyManagementMode.ProportionalFreeMargin or MoneyManagementMode.AutoProportional
                 when parameter <= 0:
                 throw new DomainException(DomainErrors.CopyMultiplierInvalid);
-            case MoneyManagementMode.FixedRiskPercent when parameter is <= 0 or > 100:
+            case MoneyManagementMode.FixedRiskPercent or MoneyManagementMode.RiskFromStopLoss
+                when parameter is <= 0 or > 100:
                 throw new DomainException(DomainErrors.CopyRiskParameterInvalid);
             case MoneyManagementMode.FixedLeverage when parameter <= 0:
                 throw new DomainException(DomainErrors.CopyLeverageInvalid);
@@ -193,7 +195,8 @@ public readonly record struct CopySizingInput(
     SymbolSpec MasterSymbol,
     SymbolSpec DestinationSymbol,
     RiskSettings Risk,
-    LotBounds Bounds);
+    LotBounds Bounds,
+    double MasterStopDistance = 0);
 
 public readonly record struct CopyVolume(double Lots, bool Skipped)
 {

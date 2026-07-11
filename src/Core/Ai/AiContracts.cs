@@ -50,4 +50,5 @@ public interface IAiFeatureService
     Task<AiResult> PortfolioDigestAsync(IReadOnlyList<AiInstanceContext> portfolio, int maxTokens, CancellationToken ct);
     Task<AiResult> DebateStrategyAsync(string name, string language, string source, int maxTokens, CancellationToken ct);
     Task<AiResult> AssessLiveExposureAsync(IReadOnlyList<AiInstanceContext> live, int maxTokens, CancellationToken ct);
+    Task<AiResult> RecommendCopyProfileAsync(string riskProfile, string sourceDescription, CancellationToken ct);
 }

@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Security.Claims;
 using Core;
+using Core.Ai;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +10,7 @@ using ModelContextProtocol.Server;
 namespace Mcp.Tools;
 
 [McpServerToolType]
-public sealed class CopyTools(DataContext db, IHttpContextAccessor http)
+public sealed class CopyTools(DataContext db, IHttpContextAccessor http, IAiFeatureService ai)
 {
     private UserId? CurrentUserId => Guid.TryParse(
         http.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier), out var g) ? UserId.From(g) : null;
@@ -28,6 +29,17 @@ public sealed class CopyTools(DataContext db, IHttpContextAccessor http)
             SourceAccountId = p.SourceAccountId.Value,
             DestinationCount = p.Destinations.Count
         }).ToList();
+    }
+
+    [McpServerTool, Description(
+        "Recommend safe copy-trading destination settings (as JSON) for a follower's risk profile. " +
+        "Returns an AI suggestion; does not create anything.")]
+    public async Task<object> RecommendCopyProfile(
+        [Description("Follower risk profile, e.g. conservative / balanced / aggressive")] string riskProfile,
+        [Description("Description of the source (master) account or strategy being copied")] string sourceDescription)
+    {
+        var result = await ai.RecommendCopyProfileAsync(riskProfile, sourceDescription, CancellationToken.None);
+        return new { success = result.Success, recommendation = result.Text, error = result.Error };
     }
 
     [McpServerTool, Description("Start a copy-trading profile.")]

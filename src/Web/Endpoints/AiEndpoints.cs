@@ -38,6 +38,9 @@ public static class AiEndpoints
         g.MapPost("/curate", async (CurateRequest req, IAiFeatureService ai, CancellationToken ct) =>
             Results.Ok(await ai.CurateStrategyAsync(req.Name ?? "cBot", req.Language ?? "CSharp", req.Source ?? "", ct)));
 
+        g.MapPost("/recommend-copy-profile", async (RecommendCopyProfileRequest req, IAiFeatureService ai, CancellationToken ct) =>
+            Results.Ok(await ai.RecommendCopyProfileAsync(req.RiskProfile ?? "", req.SourceDescription ?? "", ct)));
+
         g.MapPost("/analyze-backtest/{id:guid}", async (
             Guid id, DataContext db, ICurrentUser u, IAiFeatureService ai, CancellationToken ct) =>
         {
@@ -418,6 +421,7 @@ public sealed record DebateRequest(string? Name, string? Language, string? Sourc
 public sealed record SentimentRequest(string? Symbol);
 public sealed record VisionRequest(string? MediaType, string? Base64, string? Note);
 public sealed record CurateRequest(string? Name, string? Language, string? Source);
+public sealed record RecommendCopyProfileRequest(string? RiskProfile, string? SourceDescription);
 public sealed record GenerateProjectRequest(string? Name, string? Language, string? Description);
 public sealed record BuildStrategyRequest(string? Name, string? Language, string? Description);
 public sealed record OptimizeRunRequest(

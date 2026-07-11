@@ -13,9 +13,20 @@
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
     <MudText Typo="Typo.h5">Copy Trading</MudText>
     <MudSpacer />
+    <MudTextField @bind-Value="_riskProfile" Label="Risk profile" Margin="Margin.Dense"
+                  Style="max-width:180px" data-testid="ai-risk-profile" />
+    <MudButton Color="Color.Secondary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.AutoAwesome"
+               OnClick="RecommendSettings" data-testid="ai-suggest">AI suggest</MudButton>
     <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
                OnClick="OpenNewProfile">New Profile</MudButton>
 </MudStack>
+
+@if (!string.IsNullOrWhiteSpace(_recommendation))
+{
+    <MudAlert Severity="Severity.Info" Class="mb-3" data-testid="ai-recommendation">
+        <pre style="white-space:pre-wrap;margin:0">@_recommendation</pre>
+    </MudAlert>
+}
 
 <MudTable Items="_profiles" Dense="true" OnRowClick="@((TableRowClickEventArgs<dynamic> e) => Select((Guid)e.Item!.id))">
     <HeaderContent>
@@ -168,6 +179,8 @@
     private string _filterText = "";
     private SymbolFilterMode _filterMode = SymbolFilterMode.None;
     private string[] _suggested = [];
+    private string _riskProfile = "balanced";
+    private string _recommendation = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -211,6 +224,17 @@
         if (r.IsSuccessStatusCode) { Snack.Add("Profile created", Severity.Success); await Load(); }
         else Snack.Add("Failed to create profile", Severity.Error);
     }
+
+    private async Task RecommendSettings()
+    {
+        var r = await Http.PostAsJsonAsync("/api/ai/recommend-copy-profile",
+            new { RiskProfile = _riskProfile, SourceDescription = "cTrader copy-trading master account" });
+        if (!r.IsSuccessStatusCode) { Snack.Add("AI request failed", Severity.Error); return; }
+        var result = await r.Content.ReadFromJsonAsync<AiResultDto>();
+        _recommendation = result is { success: true } ? result.text : result?.error ?? "AI unavailable";
+    }
+
+    private sealed record AiResultDto(bool success, string text, string? error);
 
     private async Task Action(Guid id, string action)
     {

@@ -146,6 +146,11 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
         return client.CompleteAsync(new AiTextRequest(AiPrompts.DigestSystem, user.ToString(), MaxTokens: maxTokens), ct);
     }
 
+    public Task<AiResult> RecommendCopyProfileAsync(string riskProfile, string sourceDescription, CancellationToken ct) =>
+        client.CompleteAsync(new AiTextRequest(
+            AiPrompts.CopyProfileSystem,
+            $"Follower risk profile: {Clip(riskProfile)}\n\nSource (master) account / strategy description:\n{Clip(sourceDescription)}"), ct);
+
     private static string Clip(string value) =>
         string.IsNullOrEmpty(value) || value.Length <= MaxInputChars ? value ?? string.Empty : value[..MaxInputChars];
 }
@@ -243,6 +248,17 @@ internal static class AiPrompts
         "reconcile. Output exactly these sections: '## Bull case' (why it should make money), '## Bear case' (why it " +
         "will lose), '## Risk officer' (blow-up risks, position sizing, stop-loss, correlation), and '## Verdict' " +
         "(deploy / iterate / reject, with one-line reasoning). Ground every point in the actual code. Be concise and specific.";
+
+    public const string CopyProfileSystem =
+        "You are a copy-trading risk configurator. Given the follower's stated risk profile and a description of the " +
+        "source (master) account/strategy, recommend safe copy-trading destination settings. Output ONLY a JSON object " +
+        "and nothing else (no prose, no code fences): {\"riskMode\": one of [\"FixedLot\",\"LotMultiplier\"," +
+        "\"NotionalMultiplier\",\"ProportionalBalance\",\"ProportionalEquity\",\"ProportionalFreeMargin\"," +
+        "\"FixedRiskPercent\",\"FixedLeverage\",\"AutoProportional\"], \"riskParameter\": number, " +
+        "\"maxDrawdownPercent\": number (0-100), \"dailyLossLimit\": number, \"direction\": one of [\"Both\"," +
+        "\"LongOnly\",\"ShortOnly\"], \"copyStopLoss\": boolean, \"copyTakeProfit\": boolean, \"slippagePips\": number, " +
+        "\"rationale\": string (<=2 sentences)}. Choose conservative values that match the stated risk tolerance; " +
+        "protective copying (copyStopLoss/copyTakeProfit) should default to true. Not financial advice.";
 
     public const string CurateSystem =
         "You are a strategy marketplace curator. From the cBot source, produce compact JSON with fields: title (one line), " +

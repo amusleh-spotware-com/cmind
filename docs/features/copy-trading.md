@@ -142,6 +142,10 @@ Set in the New Profile dialog, on the Copy Trading page's per-destination panel,
 
 The engine is built for the reality that anything can fail at any time:
 
+- **Robust close/flatten** (M8) — closing an orphan on resync, or flattening on a guard breach, tolerates
+  a position the broker already closed (`POSITION_NOT_FOUND`): each close runs independently, so one stale
+  id never aborts the resync or leaves the rest of the account un-flattened.
+
 - **Start with the master already in trades** — on start the host reconciles and opens copies
   for the master's existing positions.
 - **Connection drops / desync** — on reconnect the host reconciles: opens missing copies, closes

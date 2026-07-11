@@ -260,7 +260,16 @@ public sealed class CopyEngineHost(
     private async Task FlattenDestinationAsync(IOpenApiTradingSession session, long ctid, CancellationToken ct)
     {
         foreach (var position in await session.ReconcileAsync(ctid, ct))
-            await session.ClosePositionAsync(ctid, position.PositionId, position.Volume, ct);
+        {
+            // Tolerate a position the broker already closed (POSITION_NOT_FOUND) — close each independently
+            // so one stale id can't leave the rest of the account un-flattened.
+            try { await session.ClosePositionAsync(ctid, position.PositionId, position.Volume, ct); }
+            catch (Exception ex)
+            {
+                NoteIfTokenInvalidated(ex, ctid);
+                logger.CopyCloseFailed(plan.ProfileId.Value, ctid, position.PositionId, ex);
+            }
+        }
     }
 
     private async Task LoadReferenceDataAsync(IOpenApiTradingSession session, CancellationToken ct)
@@ -782,8 +791,18 @@ public sealed class CopyEngineHost(
                     // Sync-Closed-off: on the first resync, leave copies the master closed while the profile
                     // was stopped. A mid-run reconnect always closes orphans so a desync converges.
                     if (isInitialResync && !destination.Config.SyncClosedOnStart) continue;
-                    await session.ClosePositionAsync(destination.CtidTraderAccountId, position.PositionId, position.Volume, ct);
-                    orphansClosed++;
+                    // M8 robust sync-closed: a position the broker already closed (POSITION_NOT_FOUND) must
+                    // not abort the whole resync — close each orphan independently and move on.
+                    try
+                    {
+                        await session.ClosePositionAsync(destination.CtidTraderAccountId, position.PositionId, position.Volume, ct);
+                        orphansClosed++;
+                    }
+                    catch (Exception ex)
+                    {
+                        NoteIfTokenInvalidated(ex, destination.CtidTraderAccountId);
+                        logger.CopyCloseFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, sourceId, ex);
+                    }
                 }
             }
 

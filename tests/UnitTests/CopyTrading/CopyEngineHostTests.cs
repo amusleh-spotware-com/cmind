@@ -427,6 +427,23 @@ public sealed class CopyEngineHostTests
     }
 
     [Fact]
+    public async Task Resync_tolerates_a_position_not_found_and_still_closes_other_orphans()
+    {
+        var session = NewSession();
+        // Two orphaned copies the master no longer holds; the broker reports the first already closed.
+        session.SeedPosition(Slave, positionId: 7001, SymbolId, isBuy: true, volume: 100, label: "9001");
+        session.SeedPosition(Slave, positionId: 7002, SymbolId, isBuy: true, volume: 100, label: "9002");
+        session.RejectReasonForCtid[Slave] = CtraderRejectReason.PositionNotFound; // one-shot on the next close
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave)));
+
+        await DriveAsync(session, plan, () =>
+            WaitUntil(() => session.Closes.Any(c => c.Ctid == Slave)));
+
+        session.Closes.Should().ContainSingle(c => c.Ctid == Slave,
+            "a POSITION_NOT_FOUND on one orphan must not abort the resync — the other orphan still closes");
+    }
+
+    [Fact]
     public async Task Partial_close_mirrors_a_proportional_slice_on_the_slave()
     {
         var session = NewSession();

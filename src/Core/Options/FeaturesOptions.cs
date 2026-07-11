@@ -22,6 +22,7 @@ public sealed record FeaturesOptions
     public bool Accounts { get; init; } = true;
     public bool OpenApi { get; init; } = true;
     public bool Mcp { get; init; } = true;
+    public bool Compliance { get; init; } = true;
 
     public bool IsEnabled(FeatureFlag flag) => flag switch
     {
@@ -37,6 +38,7 @@ public sealed record FeaturesOptions
         FeatureFlag.Accounts => Accounts,
         FeatureFlag.OpenApi => OpenApi,
         FeatureFlag.Mcp => Mcp,
+        FeatureFlag.Compliance => Compliance,
         _ => throw new DomainException(DomainErrors.FeatureFlagUnknown)
     };
 }

@@ -42,6 +42,8 @@ public static class DependencyInjection
             Infrastructure.Persistence.DomainEventDispatchInterceptor>();
         services.AddSingleton<Microsoft.EntityFrameworkCore.Diagnostics.ISaveChangesInterceptor,
             Infrastructure.Persistence.AuditStampingInterceptor>();
+        services.AddSingleton<Microsoft.EntityFrameworkCore.Diagnostics.ISaveChangesInterceptor,
+            Infrastructure.Persistence.AuditChainInterceptor>();
         services.AddScoped<Core.Domain.IAppUserRepository, AppUserRepository>();
         services.AddScoped<Core.Domain.ICTraderIdAccountRepository, CTraderIdAccountRepository>();
         services.AddScoped<Core.Domain.IMcpApiKeyRepository, McpApiKeyRepository>();
@@ -50,6 +52,9 @@ public static class DependencyInjection
         services.AddScoped<Core.Domain.IAlertRuleRepository, AlertRuleRepository>();
         services.AddScoped<Core.Domain.IPropRuleRepository, PropRuleRepository>();
         services.AddScoped<Core.Domain.IPropFirmChallengeRepository, PropFirmChallengeRepository>();
+        services.AddScoped<Core.Domain.ILegalDocumentRepository, LegalDocumentRepository>();
+        services.AddScoped<Core.Domain.IConsentRepository, ConsentRepository>();
+        services.AddScoped<Core.Domain.IAuditTrailVerifier, Infrastructure.Persistence.AuditTrailVerifier>();
         services.AddScoped<Core.Domain.IOpenApiApplicationRepository, OpenApiApplicationRepository>();
         services.AddScoped<Core.Domain.IOpenApiAuthorizationRepository, OpenApiAuthorizationRepository>();
         services.AddSingleton<CTraderOpenApi.Transport.IOpenApiTransportFactory,

@@ -188,6 +188,20 @@ public readonly record struct PropFirmChallengeId(Guid Value) : IStronglyTypedId
     public override string ToString() => Value.ToString();
 }
 
+public readonly record struct LegalDocumentId(Guid Value) : IStronglyTypedId<LegalDocumentId>
+{
+    public static LegalDocumentId New() => new(Guid.NewGuid());
+    public static LegalDocumentId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
+public readonly record struct ConsentRecordId(Guid Value) : IStronglyTypedId<ConsentRecordId>
+{
+    public static ConsentRecordId New() => new(Guid.NewGuid());
+    public static ConsentRecordId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct Email
 {
     public string Value { get; }

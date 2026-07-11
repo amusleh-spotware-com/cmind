@@ -85,3 +85,20 @@ public interface IPropFirmChallengeRepository
     void Remove(PropFirmChallenge challenge);
     Task SaveChangesAsync(CancellationToken ct);
 }
+
+public interface ILegalDocumentRepository
+{
+    Task<LegalDocument?> GetActiveAsync(LegalDocumentType type, CancellationToken ct);
+    Task<IReadOnlyList<LegalDocument>> ListActiveAsync(CancellationToken ct);
+    Task<LegalDocument?> GetByIdAsync(LegalDocumentId id, CancellationToken ct);
+    Task AddAsync(LegalDocument document, CancellationToken ct);
+    Task SaveChangesAsync(CancellationToken ct);
+}
+
+public interface IConsentRepository
+{
+    Task<IReadOnlyList<ConsentRecord>> ListByUserAsync(UserId userId, CancellationToken ct);
+    Task<bool> HasConsentAsync(UserId userId, LegalDocumentType type, int version, CancellationToken ct);
+    Task AddAsync(ConsentRecord record, CancellationToken ct);
+    Task SaveChangesAsync(CancellationToken ct);
+}

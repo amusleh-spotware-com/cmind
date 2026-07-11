@@ -142,7 +142,7 @@ public static class CopyEndpoints
             await repo.AddAsync(profile, ct);
             await repo.SaveChangesAsync(ct);
             return Results.Ok(new { profile.Id });
-        });
+        }).RequireConsent(Core.LegalDocumentType.RiskDisclosure);
 
         g.MapDelete("/profiles/{id:guid}", async (Guid id, DataContext db, ICurrentUser u, CancellationToken ct) =>
         {

@@ -112,6 +112,16 @@ public abstract class AppUser : AuditedEntity<UserId>
         MfaSecret = null;
         MfaEnabled = false;
     }
+
+    // GDPR erasure: scrub personally identifying data while keeping the (soft-deleted) row so that
+    // referential history and audit records remain coherent.
+    public void Anonymize()
+    {
+        Email = $"erased-{Id.Value:N}@erased.invalid";
+        NormalizedEmail = Email.ToUpperInvariant();
+        MfaSecret = null;
+        MfaEnabled = false;
+    }
 }
 
 public sealed class OwnerUser : AppUser
@@ -1357,6 +1367,11 @@ public class AuditLog
     [MaxLength(45)] public string? Ip { get; private set; }
     public string? DetailsJson { get; private set; }
 
+    // Tamper-evidence: each entry chains to the previous entry's hash, so any edit or deletion of a past
+    // record is detectable by re-walking the chain (see IAuditTrailVerifier).
+    [MaxLength(64)] public string? PrevHash { get; private set; }
+    [MaxLength(64)] public string? Hash { get; private set; }
+
     public static AuditLog Record(string action, string entityType, DateTimeOffset now, UserId? userId = null,
         Guid? entityId = null, string? ip = null, string? detailsJson = null)
         => new()
@@ -1369,6 +1384,24 @@ public class AuditLog
             DetailsJson = detailsJson,
             Time = now
         };
+
+    public string ComputeHash(string? prevHash)
+    {
+        PrevHash = prevHash;
+        Hash = ComputeHashOf(prevHash, Time, Action, EntityType, UserId, EntityId, DetailsJson);
+        return Hash;
+    }
+
+    public string ExpectedHash(string? prevHash) =>
+        ComputeHashOf(prevHash, Time, Action, EntityType, UserId, EntityId, DetailsJson);
+
+    private static string ComputeHashOf(string? prevHash, DateTimeOffset time, string action, string entityType,
+        UserId? userId, Guid? entityId, string? detailsJson)
+    {
+        var canonical = $"{prevHash}|{time:O}|{action}|{entityType}|{userId?.Value}|{entityId}|{detailsJson}";
+        return Convert.ToHexString(
+            System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(canonical)));
+    }
 }
 
 public class AppSetting

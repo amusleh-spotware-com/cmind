@@ -31,6 +31,8 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<AlertEvent> AlertEvents => Set<AlertEvent>();
     public DbSet<PropRule> PropRules => Set<PropRule>();
     public DbSet<PropFirmChallenge> PropFirmChallenges => Set<PropFirmChallenge>();
+    public DbSet<LegalDocument> LegalDocuments => Set<LegalDocument>();
+    public DbSet<ConsentRecord> ConsentRecords => Set<ConsentRecord>();
     public DbSet<OpenApiApplication> OpenApiApplications => Set<OpenApiApplication>();
     public DbSet<OpenApiAuthorization> OpenApiAuthorizations => Set<OpenApiAuthorization>();
     public DbSet<CopyProfile> CopyProfiles => Set<CopyProfile>();
@@ -80,6 +82,8 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<CopyDestinationId>().HaveConversion<StrongIdConverter<CopyDestinationId>>();
         configurationBuilder.Properties<CopyRunId>().HaveConversion<StrongIdConverter<CopyRunId>>();
         configurationBuilder.Properties<PropFirmChallengeId>().HaveConversion<StrongIdConverter<PropFirmChallengeId>>();
+        configurationBuilder.Properties<LegalDocumentId>().HaveConversion<StrongIdConverter<LegalDocumentId>>();
+        configurationBuilder.Properties<ConsentRecordId>().HaveConversion<StrongIdConverter<ConsentRecordId>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -241,6 +245,19 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
             e.Property(x => x.DrawdownMode).HasConversion<string>().HasMaxLength(16);
             e.Property(x => x.Breach).HasConversion<string>().HasMaxLength(16);
+        });
+
+        modelBuilder.Entity<LegalDocument>(e =>
+        {
+            e.HasIndex(x => new { x.Type, x.Version }).IsUnique().HasFilter("\"IsDeleted\" = false");
+            e.Property(x => x.Type).HasConversion<string>().HasMaxLength(32);
+        });
+
+        modelBuilder.Entity<ConsentRecord>(e =>
+        {
+            e.HasIndex(x => new { x.UserId, x.DocumentType, x.Version });
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.DocumentType).HasConversion<string>().HasMaxLength(32);
         });
 
         modelBuilder.Entity<OpenApiApplication>(e =>

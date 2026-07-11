@@ -1,0 +1,82 @@
+﻿@page "/compliance"
+@using System.Net.Http.Json
+@using Web.Json
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@inject HttpClient Http
+@inject ISnackbar Snack
+
+<PageTitle>Legal &amp; Privacy</PageTitle>
+
+<MudText Typo="Typo.h5" Class="mb-3">Legal &amp; Privacy</MudText>
+
+<MudText Typo="Typo.h6" Class="mb-2">Agreements</MudText>
+@if (_documents.Length == 0)
+{
+    <MudText Class="mud-text-secondary" data-testid="no-docs">No legal documents published.</MudText>
+}
+else
+{
+    <MudTable Items="_documents" Dense="true">
+        <HeaderContent><MudTh>Document</MudTh><MudTh>Version</MudTh><MudTh>Status</MudTh><MudTh /></HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.type</MudTd>
+            <MudTd>@context.version</MudTd>
+            <MudTd>
+                <MudChip T="string" Size="Size.Small" Color="@((bool)context.consented ? Color.Success : Color.Warning)">
+                    @((bool)context.consented ? "Accepted" : "Action required")
+                </MudChip>
+            </MudTd>
+            <MudTd>
+                @if (!(bool)context.consented)
+                {
+                    <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled"
+                               OnClick="@(() => Accept((string)context.type))" data-testid="accept">Accept</MudButton>
+                }
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+<MudDivider Class="my-4" />
+
+<MudText Typo="Typo.h6" Class="mb-2">Your data (GDPR)</MudText>
+<MudStack Row="true">
+    <MudButton StartIcon="@Icons.Material.Filled.Download" OnClick="Export" data-testid="export-btn">Export my data</MudButton>
+    <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" OnClick="Erase">Erase my account</MudButton>
+</MudStack>
+
+@if (!string.IsNullOrEmpty(_export))
+{
+    <MudPaper Class="pa-3 mt-3" Outlined="true">
+        <pre style="white-space:pre-wrap;margin:0" data-testid="export">@_export</pre>
+    </MudPaper>
+}
+
+@code {
+    private dynamic[] _documents = [];
+    private string _export = "";
+
+    protected override Task OnInitializedAsync() => Load();
+
+    private async Task Load() => _documents = await Http.GetDynamicArrayAsync("/api/compliance/consent/status");
+
+    private async Task Accept(string type)
+    {
+        var r = await Http.PostAsJsonAsync("/api/compliance/consent", new { Type = type });
+        Snack.Add(r.IsSuccessStatusCode ? "Recorded" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        await Load();
+    }
+
+    private async Task Export()
+    {
+        var r = await Http.GetAsync("/api/compliance/export");
+        _export = r.IsSuccessStatusCode ? await r.Content.ReadAsStringAsync() : "Export failed";
+    }
+
+    private async Task Erase()
+    {
+        var r = await Http.PostAsync("/api/compliance/erase", null);
+        if (r.IsSuccessStatusCode) Snack.Add("Account erased — you will be signed out shortly.", Severity.Info);
+        else Snack.Add("Erase failed", Severity.Error);
+    }
+}

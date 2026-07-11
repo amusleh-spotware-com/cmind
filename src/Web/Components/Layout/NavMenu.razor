@@ -53,6 +53,10 @@
         <MudNavLink Href="/nodes" Icon="@Icons.Material.Filled.Hub">Nodes</MudNavLink>
         <MudNavLink Href="/users" Icon="@Icons.Material.Filled.Group">Users</MudNavLink>
     </AuthorizeView>
+    @if (Gate.IsEnabled(FeatureFlag.Compliance))
+    {
+        <MudNavLink Href="/compliance" Icon="@Icons.Material.Filled.Gavel">Legal &amp; Privacy</MudNavLink>
+    }
     <AuthorizeView Policy="Owner">
         <MudNavLink Href="/settings/features" Icon="@Icons.Material.Filled.ToggleOn">Features</MudNavLink>
     </AuthorizeView>

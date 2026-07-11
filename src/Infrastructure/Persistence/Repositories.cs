@@ -146,3 +146,40 @@ public sealed class PropFirmChallengeRepository(DataContext db) : IPropFirmChall
 
     public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
 }
+
+public sealed class LegalDocumentRepository(DataContext db) : ILegalDocumentRepository
+{
+    public Task<LegalDocument?> GetActiveAsync(LegalDocumentType type, CancellationToken ct) =>
+        db.LegalDocuments.Where(d => d.Type == type && d.Published)
+            .OrderByDescending(d => d.Version).FirstOrDefaultAsync(ct);
+
+    public async Task<IReadOnlyList<LegalDocument>> ListActiveAsync(CancellationToken ct)
+    {
+        var published = await db.LegalDocuments.Where(d => d.Published).ToListAsync(ct);
+        return published.GroupBy(d => d.Type)
+            .Select(g => g.OrderByDescending(d => d.Version).First())
+            .ToList();
+    }
+
+    public Task<LegalDocument?> GetByIdAsync(LegalDocumentId id, CancellationToken ct) =>
+        db.LegalDocuments.FirstOrDefaultAsync(d => d.Id == id, ct);
+
+    public async Task AddAsync(LegalDocument document, CancellationToken ct) =>
+        await db.LegalDocuments.AddAsync(document, ct);
+
+    public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
+}
+
+public sealed class ConsentRepository(DataContext db) : IConsentRepository
+{
+    public async Task<IReadOnlyList<ConsentRecord>> ListByUserAsync(UserId userId, CancellationToken ct) =>
+        await db.ConsentRecords.Where(c => c.UserId == userId).ToListAsync(ct);
+
+    public Task<bool> HasConsentAsync(UserId userId, LegalDocumentType type, int version, CancellationToken ct) =>
+        db.ConsentRecords.AnyAsync(c => c.UserId == userId && c.DocumentType == type && c.Version == version, ct);
+
+    public async Task AddAsync(ConsentRecord record, CancellationToken ct) =>
+        await db.ConsentRecords.AddAsync(record, ct);
+
+    public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
+}

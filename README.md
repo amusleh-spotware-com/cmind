@@ -10,6 +10,20 @@
 </p>
 
 <p align="center">
+  <a href="https://amusleh-spotware-com.github.io/cmind">
+    <img src="https://img.shields.io/badge/📖_Read_the_Docs-cMind_site-26C281?style=for-the-badge&labelColor=141414" alt="Read the docs" height="42"/>
+  </a>
+  &nbsp;
+  <a href="https://amusleh-spotware-com.github.io/cmind/docs/deployment/local">
+    <img src="https://img.shields.io/badge/🚀_Run_in_5_min-Quick_start-1FB97A?style=for-the-badge&labelColor=141414" alt="Quick start" height="42"/>
+  </a>
+</p>
+
+<p align="center">
+  <b>🌐 Docs, guides & the full feature tour live at <a href="https://amusleh-spotware-com.github.io/cmind">amusleh-spotware-com.github.io/cmind</a></b>
+</p>
+
+<p align="center">
   <a href="https://github.com/amusleh-spotware-com/cmind/actions/workflows/ci.yml"><img src="https://github.com/amusleh-spotware-com/cmind/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
   <a href="https://github.com/amusleh-spotware-com/cmind/actions/workflows/codeql.yml"><img src="https://github.com/amusleh-spotware-com/cmind/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT"/></a>
@@ -22,6 +36,7 @@
 </p>
 
 <p align="center">
+  <a href="https://amusleh-spotware-com.github.io/cmind"><b>📖 Documentation</b></a> ·
   <a href="#-features">Features</a> ·
   <a href="#-screenshots">Screenshots</a> ·
   <a href="#-who-its-for">Who it's for</a> ·
@@ -84,17 +99,19 @@
 
 ## 🗂️ What's inside
 
+> 📖 **Full docs live on the [cMind docs site](https://amusleh-spotware-com.github.io/cmind).** Quick links:
+
 | Capability | Docs |
 |------------|------|
-| Copy trading (mirroring, order types, SL/TP, slippage, sync/desync) | [features/copy-trading.md](docs/features/copy-trading.md) |
-| Open API token lifecycle (single valid token per cID, in-place rotation) | [features/token-lifecycle.md](docs/features/token-lifecycle.md) |
-| AI assistant, agent, risk guard, alerts, prop-guard | [features/ai.md](docs/features/ai.md) |
-| Build &amp; backtest cBots (in-browser Monaco IDE, C# + Python) | [features/build-and-backtest.md](docs/features/build-and-backtest.md) |
-| Node fleet &amp; horizontal scaling | [operations/node-discovery.md](docs/operations/node-discovery.md) · [deployment/scaling.md](docs/deployment/scaling.md) |
-| MCP server (HTTP + SSE tools for AI clients) | [features/mcp.md](docs/features/mcp.md) |
-| Installable app &amp; design system (mobile-first, PWA, white-label) | [features/pwa.md](docs/features/pwa.md) · [ui-guidelines.md](docs/ui-guidelines.md) |
-| Deployment (Compose, K8s/Helm, Azure, AWS) | [deployment/](docs/deployment/) |
-| Testing &amp; dev credentials | [testing/](docs/testing/) · [testing/dev-credentials.md](docs/testing/dev-credentials.md) |
+| Copy trading (mirroring, order types, SL/TP, slippage, sync/desync) | [Copy trading](https://amusleh-spotware-com.github.io/cmind/docs/features/copy-trading) |
+| Open API token lifecycle (single valid token per cID, in-place rotation) | [Token lifecycle](https://amusleh-spotware-com.github.io/cmind/docs/features/token-lifecycle) |
+| AI assistant, agent, risk guard, alerts, prop-guard | [AI core](https://amusleh-spotware-com.github.io/cmind/docs/features/ai) |
+| Build &amp; backtest cBots (in-browser Monaco IDE, C# + Python) | [Build &amp; backtest](https://amusleh-spotware-com.github.io/cmind/docs/features/build-and-backtest) |
+| Node fleet &amp; horizontal scaling | [Node discovery](https://amusleh-spotware-com.github.io/cmind/docs/operations/node-discovery) · [Scaling](https://amusleh-spotware-com.github.io/cmind/docs/deployment/scaling) |
+| MCP server (HTTP + SSE tools for AI clients) | [MCP](https://amusleh-spotware-com.github.io/cmind/docs/features/mcp) |
+| Installable app &amp; design system (mobile-first, PWA, white-label) | [PWA](https://amusleh-spotware-com.github.io/cmind/docs/features/pwa) · [UI guidelines](https://amusleh-spotware-com.github.io/cmind/docs/ui-guidelines) |
+| Deployment (Compose, K8s/Helm, Azure, AWS) | [Deployment](https://amusleh-spotware-com.github.io/cmind/docs/deployment/cloud) |
+| Testing &amp; dev credentials | [Testing](https://amusleh-spotware-com.github.io/cmind/docs/testing/dev-credentials) |
 
 ## 🚀 Quick start
 
@@ -104,7 +121,7 @@ dotnet run --project src/AppHost      # full stack via .NET Aspire (Postgres, We
 ```
 
 Open the Web URL from the Aspire dashboard. For a Web-only run, deployment, and step-by-step setup,
-see **[docs/deployment/local.md](docs/deployment/local.md)**.
+see **[the local deployment guide](https://amusleh-spotware-com.github.io/cmind/docs/deployment/local)**.
 
 > 💡 On a phone? Open the app in your browser and **Add to Home Screen** — it installs as a standalone app.
 
@@ -114,7 +131,7 @@ see **[docs/deployment/local.md](docs/deployment/local.md)**.
 installable PWA · white-label theming · EF Core 10 + PostgreSQL · .NET Aspire · Docker ·
 gRPC/Protobuf (cTrader Open API) · Serilog + OpenTelemetry · MCP · Playwright E2E (mobile + desktop).
 Architecture follows **strict Domain-Driven Design** — see [CLAUDE.md](CLAUDE.md) and
-[docs/ui-guidelines.md](docs/ui-guidelines.md).
+[the UI guidelines](https://amusleh-spotware-com.github.io/cmind/docs/ui-guidelines).
 
 ## Contributing — we'd love your help 💛
 
@@ -136,4 +153,4 @@ Every merged contributor is credited. Come build the platform you wish existed. 
 ## 🔐 Security · License
 
 - Report vulnerabilities per [SECURITY.md](SECURITY.md).
-- MIT licensed — see [LICENSE](LICENSE). Built with [Claude Code](https://claude.com/claude-code).
+- MIT licensed — see [LICENSE](LICENSE).

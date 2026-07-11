@@ -1,0 +1,181 @@
+import { themes as prismThemes } from 'prism-react-renderer';
+import type { Config } from '@docusaurus/types';
+import type * as Preset from '@docusaurus/preset-classic';
+
+// cMind documentation & marketing site.
+// Mint-on-near-black brand, mobile-first, fully SEO'd. Deploys to GitHub Pages.
+
+const organizationName = 'amusleh-spotware-com';
+const projectName = 'cmind';
+const repoUrl = `https://github.com/${organizationName}/${projectName}`;
+
+const config: Config = {
+  title: 'cMind',
+  tagline: 'Build, run & backtest cTrader bots across a distributed fleet — with an AI core watching the risk.',
+  favicon: 'img/favicon.svg',
+
+  future: {
+    v4: true,
+    faster: true,
+  },
+
+  url: `https://${organizationName}.github.io`,
+  baseUrl: `/${projectName}/`,
+  organizationName,
+  projectName,
+  trailingSlash: false,
+
+  onBrokenLinks: 'warn',
+  onBrokenMarkdownLinks: 'warn',
+
+  markdown: {
+    mermaid: true,
+    // Migrated .md docs contain C# generics like IOptionsMonitor<AppOptions> in prose;
+    // 'detect' parses .md as CommonMark (not MDX) so angle brackets never break the build.
+    format: 'detect',
+  },
+  themes: ['@docusaurus/theme-mermaid'],
+
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en'],
+  },
+
+  headTags: [
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'keywords',
+        content:
+          'cTrader, cBot, algorithmic trading, copy trading, backtesting, trading bots, prop firm, AI trading, self-hosted, white-label, Blazor, .NET, MCP',
+      },
+    },
+    {
+      tagName: 'meta',
+      attributes: { name: 'theme-color', content: '#26C281' },
+    },
+    {
+      tagName: 'link',
+      attributes: { rel: 'apple-touch-icon', href: 'img/brand/apple-touch-icon.png' },
+    },
+    {
+      tagName: 'script',
+      attributes: { type: 'application/ld+json' },
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'cMind',
+        applicationCategory: 'FinanceApplication',
+        operatingSystem: 'Docker, Kubernetes, Azure, AWS',
+        description:
+          'Multi-tenant trading operations platform for cTrader: build, backtest, run & copy trading strategies at scale with AI assistance. Self-hostable and white-labelable.',
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+        license: 'https://opensource.org/licenses/MIT',
+      }),
+    },
+  ],
+
+  presets: [
+    [
+      'classic',
+      {
+        docs: {
+          sidebarPath: './sidebars.ts',
+          editUrl: `${repoUrl}/tree/main/website/`,
+          showLastUpdateTime: true,
+        },
+        blog: false,
+        theme: {
+          customCss: './src/css/custom.css',
+        },
+        sitemap: {
+          changefreq: 'weekly',
+          priority: 0.5,
+        },
+      } satisfies Preset.Options,
+    ],
+  ],
+
+  themeConfig: {
+    image: 'img/brand/banner.svg',
+    metadata: [
+      {
+        name: 'description',
+        content:
+          'cMind — a self-hostable, white-label trading operations platform for cTrader. Build, backtest, run and copy trading strategies at scale, with AI built in.',
+      },
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'og:type', content: 'website' },
+    ],
+    colorMode: {
+      defaultMode: 'dark',
+      respectPrefersColorScheme: true,
+    },
+    navbar: {
+      title: 'cMind',
+      logo: {
+        alt: 'cMind logo',
+        src: 'img/favicon.svg',
+      },
+      items: [
+        { to: '/docs/intro', label: 'Docs', position: 'left' },
+        { to: '/docs/features/copy-trading', label: 'Features', position: 'left' },
+        { to: '/docs/deployment/local', label: 'Deploy', position: 'left' },
+        { to: '/docs/contributing', label: 'Contribute', position: 'left' },
+        { to: '/docs/white-label-for-business', label: 'For business', position: 'left' },
+        {
+          href: repoUrl,
+          label: 'GitHub',
+          position: 'right',
+        },
+      ],
+    },
+    footer: {
+      style: 'dark',
+      links: [
+        {
+          title: 'Get started',
+          items: [
+            { label: 'Introduction', to: '/docs/intro' },
+            { label: 'Quick start', to: '/docs/deployment/local' },
+            { label: 'Who it is for', to: '/docs/audience' },
+          ],
+        },
+        {
+          title: 'Product',
+          items: [
+            { label: 'Copy trading', to: '/docs/features/copy-trading' },
+            { label: 'AI', to: '/docs/features/ai' },
+            { label: 'Build & backtest', to: '/docs/features/build-and-backtest' },
+            { label: 'White-label', to: '/docs/features/white-label' },
+          ],
+        },
+        {
+          title: 'Deploy',
+          items: [
+            { label: 'Local (Docker)', to: '/docs/deployment/local' },
+            { label: 'Kubernetes', to: '/docs/deployment/kubernetes' },
+            { label: 'Azure', to: '/docs/deployment/cloud-azure' },
+            { label: 'AWS', to: '/docs/deployment/cloud-aws' },
+          ],
+        },
+        {
+          title: 'More',
+          items: [
+            { label: 'GitHub', href: repoUrl },
+            { label: 'Contributing', to: '/docs/contributing' },
+            { label: 'Security', href: `${repoUrl}/blob/main/SECURITY.md` },
+          ],
+        },
+      ],
+      copyright: `Built with care for traders who move real money. © ${new Date().getFullYear()} cMind · MIT licensed.`,
+    },
+    prism: {
+      theme: prismThemes.oneDark,
+      darkTheme: prismThemes.oneDark,
+      additionalLanguages: ['csharp', 'bash', 'json', 'yaml', 'docker', 'powershell'],
+    },
+  } satisfies Preset.ThemeConfig,
+};
+
+export default config;

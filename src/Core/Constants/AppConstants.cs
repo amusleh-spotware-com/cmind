@@ -135,6 +135,10 @@ public static class BrandingDefaults
     public const string ErrorColor = "#E74C3C";
     public const string WarningColor = "#F39C12";
     public const string InfoColor = "#3498DB";
+
+    // The project documentation site, surfaced as the dashboard "Powered by cMind" link.
+    public const string SiteUrl = "https://amusleh-spotware-com.github.io/cmind";
+    public const bool ShowSiteLink = true;
 }
 
 public static class FeatureSettings

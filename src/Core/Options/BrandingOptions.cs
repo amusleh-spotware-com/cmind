@@ -25,4 +25,10 @@ public sealed record BrandingOptions
     public string WarningColor { get; init; } = BrandingDefaults.WarningColor;
     public string InfoColor { get; init; } = BrandingDefaults.InfoColor;
     public string CustomCss { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Whether the dashboard shows the "Powered by cMind" link back to the project site. Defaults to
+    /// <c>true</c>; a white-label deployment sets it to <c>false</c> to hide the credit entirely.
+    /// </summary>
+    public bool ShowSiteLink { get; init; } = BrandingDefaults.ShowSiteLink;
 }

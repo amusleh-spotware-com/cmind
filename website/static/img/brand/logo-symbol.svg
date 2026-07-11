@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="currentColor">
+  <path d="M32 16 A15 15 0 1 0 32 48" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="butt"/>
+  <polyline points="40,31 51,17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-opacity="0.6"/>
+  <line x1="40" y1="30" x2="40" y2="47" stroke="currentColor" stroke-width="2.2" stroke-linecap="butt"/>
+  <rect x="37" y="33" width="6" height="11" rx="0.8"/>
+  <line x1="51" y1="12" x2="51" y2="40" stroke="currentColor" stroke-width="2.2" stroke-linecap="butt"/>
+  <rect x="48" y="18" width="6" height="15" rx="0.8"/>
+  <circle cx="40" cy="31" r="2.4"/>
+  <circle cx="51" cy="17" r="3.4"/>
+</svg>

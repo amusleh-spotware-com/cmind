@@ -1,0 +1,127 @@
+/**
+ * cMind brand theme — mint on near-black, mobile-first.
+ * Palette mirrors the app's BrandingDefaults so the site feels native to the product.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* Brand primary — mint green (#26C281) → deep mint (#1FB97A) */
+  --ifm-color-primary: #1FB97A;
+  --ifm-color-primary-dark: #1ca66d;
+  --ifm-color-primary-darker: #1a9d67;
+  --ifm-color-primary-darkest: #158154;
+  --ifm-color-primary-light: #26c281;
+  --ifm-color-primary-lighter: #3ac98d;
+  --ifm-color-primary-lightest: #63d4a4;
+
+  --cmind-mint: #26C281;
+  --cmind-deep-mint: #1FB97A;
+  --cmind-near-black: #141414;
+  --cmind-bg: #1A1A1A;
+  --cmind-surface: #262626;
+  --cmind-error: #E74C3C;
+  --cmind-warning: #F39C12;
+  --cmind-info: #3498DB;
+
+  --ifm-font-family-base: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --ifm-font-family-monospace: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  --ifm-code-font-size: 92%;
+  --ifm-heading-font-weight: 700;
+  --ifm-navbar-height: 4rem;
+  --docusaurus-highlighted-code-line-bg: rgba(38, 194, 129, 0.12);
+}
+
+/* Dark mode = the real cMind surface. This is the default. */
+[data-theme='dark'] {
+  --ifm-color-primary: #26C281;
+  --ifm-color-primary-dark: #1FB97A;
+  --ifm-color-primary-darker: #1ca66d;
+  --ifm-color-primary-darkest: #158154;
+  --ifm-color-primary-light: #3ac98d;
+  --ifm-color-primary-lighter: #63d4a4;
+  --ifm-color-primary-lightest: #8fe0bf;
+
+  --ifm-background-color: #1A1A1A;
+  --ifm-background-surface-color: #141414;
+  --ifm-navbar-background-color: rgba(20, 20, 20, 0.85);
+  --ifm-footer-background-color: #141414;
+  --ifm-card-background-color: #262626;
+  --ifm-toc-border-color: #2e2e2e;
+  --ifm-color-content: #d6d9de;
+  --ifm-color-content-secondary: #9aa0a8;
+  --docusaurus-highlighted-code-line-bg: rgba(38, 194, 129, 0.18);
+}
+
+/* Light mode still works (respects prefers-color-scheme) but the brand lives in the dark. */
+[data-theme='light'] {
+  --ifm-background-color: #ffffff;
+  --ifm-background-surface-color: #f6f8f7;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Frosted, floating navbar */
+.navbar {
+  backdrop-filter: saturate(150%) blur(12px);
+  border-bottom: 1px solid rgba(38, 194, 129, 0.12);
+}
+[data-theme='dark'] .navbar {
+  border-bottom: 1px solid rgba(38, 194, 129, 0.16);
+}
+.navbar__title {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* Links glow a touch on hover — that terminal-grade feel */
+.menu__link:hover,
+.navbar__link:hover {
+  color: var(--cmind-mint);
+}
+
+/* Buttons */
+.button--primary {
+  --ifm-button-background-color: var(--cmind-mint);
+  --ifm-button-border-color: var(--cmind-mint);
+  box-shadow: 0 6px 24px rgba(38, 194, 129, 0.28);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.button--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 32px rgba(38, 194, 129, 0.4);
+}
+
+/* Cards & admonitions get a subtle mint edge in the dark */
+[data-theme='dark'] .card {
+  border: 1px solid #2e2e2e;
+}
+
+/* Code blocks a hair darker than the surface, like the app's log panels */
+[data-theme='dark'] pre code {
+  background: #0E1218;
+}
+
+/* Nice, readable tables */
+table {
+  display: table;
+  width: 100%;
+}
+table thead tr {
+  background: rgba(38, 194, 129, 0.08);
+}
+
+/* Headings with the brand's tight, engineered tracking */
+h1, h2, h3 {
+  letter-spacing: -0.02em;
+}
+
+/* A reusable "gradient text" helper for hero words */
+.cmind-gradient-text {
+  background: linear-gradient(120deg, #26C281 0%, #63d4a4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

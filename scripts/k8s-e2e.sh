@@ -32,7 +32,10 @@ USE_EXISTING_CLUSTER="${USE_EXISTING_CLUSTER:-0}"
 KEEP_CLUSTER="${KEEP_CLUSTER:-0}"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CHART="$ROOT/deploy/helm/cmind"
+# On Windows/git-bash, ROOT is an MSYS path (/c/...) that Docker/helm/kubectl can't resolve; convert to a
+# mixed Windows path (C:/...) for the external tools. On Linux/macOS cygpath is absent and WROOT == ROOT.
+WROOT="$(cygpath -m "$ROOT" 2>/dev/null || printf '%s' "$ROOT")"
+CHART="$WROOT/deploy/helm/cmind"
 COPY_SECRET="cmind-copy-secrets"
 
 log() { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
@@ -51,8 +54,8 @@ if [[ "$USE_EXISTING_CLUSTER" != "1" ]]; then
 fi
 
 log "Building images (web, tests)"
-docker build -f "$ROOT/Dockerfile.web"   -t "${IMG}-web:${IMAGE_TAG}"   "$ROOT"
-docker build -f "$ROOT/Dockerfile.tests" -t "${IMG}-tests:${IMAGE_TAG}" "$ROOT"
+docker build -f "$WROOT/Dockerfile.web"   -t "${IMG}-web:${IMAGE_TAG}"   "$WROOT"
+docker build -f "$WROOT/Dockerfile.tests" -t "${IMG}-tests:${IMAGE_TAG}" "$WROOT"
 
 if [[ "$USE_EXISTING_CLUSTER" != "1" ]]; then
   log "Loading images into kind"
@@ -65,7 +68,7 @@ kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -
 if [[ -d "$ROOT/secrets" ]]; then
   log "Creating token-cache secret $COPY_SECRET from ./secrets"
   kubectl -n "$NAMESPACE" create secret generic "$COPY_SECRET" \
-    --from-file="$ROOT/secrets" --dry-run=client -o yaml | kubectl apply -f -
+    --from-file="$WROOT/secrets" --dry-run=client -o yaml | kubectl apply -f -
 else
   log "No ./secrets directory — the live suite will skip; deterministic suite still runs"
 fi

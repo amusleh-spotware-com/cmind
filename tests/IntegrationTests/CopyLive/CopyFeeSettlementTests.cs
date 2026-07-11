@@ -40,7 +40,7 @@ public sealed class CopyFeeSettlementTests : IAsyncLifetime
             => Task.FromResult<double?>(equity);
     }
 
-    private CopyFeeSettlementService Service(IServiceProvider provider, double equity)
+    private static CopyFeeSettlementService Service(IServiceProvider provider, double equity)
         => new(provider.GetRequiredService<IServiceScopeFactory>(), new FakeEquityReader(equity),
             provider.GetRequiredService<IOptionsMonitor<AppOptions>>(),
             NullLogger<CopyFeeSettlementService>.Instance, TimeProvider.System);

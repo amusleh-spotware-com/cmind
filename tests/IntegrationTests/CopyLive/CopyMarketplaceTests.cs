@@ -1,4 +1,5 @@
 ﻿using Core;
+using Core.CopyTrading;
 using Core.Domain;
 using FluentAssertions;
 using Infrastructure.Persistence;
@@ -70,6 +71,33 @@ public sealed class CopyMarketplaceTests : IAsyncLifetime
         db.Add(CopyProviderListing.Create(userId, profileId, "Beta", null, 0, false));
         var act = async () => await db.SaveChangesAsync();
         await act.Should().ThrowAsync<DbUpdateException>("the unique index forbids a second listing for the profile");
+    }
+
+    [Fact]
+    public async Task Marketplace_stats_are_aggregated_in_the_database()
+    {
+        var profileId = CopyProfileId.New();
+        await using (var seed = NewContext())
+        {
+            void Add(CopyExecutionKind kind, double latency, int? slippage) =>
+                seed.CopyExecutions.Add(CopyExecution.From(new CopyExecutionRecord(profileId, 200, 7000, "EURUSD",
+                    kind, IsBuy: true, Volume: 100, MasterPrice: 1.10, SlippagePoints: slippage,
+                    LatencyMilliseconds: latency, Reason: null, OccurredAt: TestClock.Now)));
+            Add(CopyExecutionKind.Opened, 100, 2);
+            Add(CopyExecutionKind.Opened, 200, null);
+            Add(CopyExecutionKind.Failed, 0, null);
+            await seed.SaveChangesAsync();
+        }
+
+        await using var db = NewContext();
+        // Runs the real GroupBy aggregation against Postgres — proves it translates (no full materialization).
+        var stats = (await CopyEndpoints.LoadMarketplaceStatsAsync(db, [profileId.Value], default)).Single();
+        stats.Total.Should().Be(3);
+        stats.Opened.Should().Be(2);
+        stats.Failed.Should().Be(1);
+        stats.LatencySum.Should().Be(300, "sum of the two opened copies' latency (100 + 200)");
+        stats.SlippageSum.Should().Be(2);
+        stats.SlippageCount.Should().Be(1, "only one execution carried a slippage value");
     }
 
     [Fact]

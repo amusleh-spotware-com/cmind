@@ -31,7 +31,7 @@ public sealed class CopyNodeAffinityTests : IAsyncLifetime
         => new(new DbContextOptionsBuilder<DataContext>().UseNpgsql(_connectionString)
             .AddInterceptors(new AuditStampingInterceptor(TimeProvider.System)).Options);
 
-    private async Task<UserId> SeedUserAsync(DataContext db)
+    private static async Task<UserId> SeedUserAsync(DataContext db)
     {
         var user = RegularUser.Create(new Email($"u{Guid.NewGuid():N}@example.com"), "hash", new byte[] { 1, 2, 3 });
         db.Add(user);

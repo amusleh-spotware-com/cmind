@@ -315,7 +315,7 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
                 catch (Exception ex) { output.WriteLine($"cleanup cancel failed for {ctid}/{pending.OrderId}: {ex.Message}"); }
     }
 
-    private async Task<long> ResolveSymbolAsync(OpenApiTradingSession probe, long masterCtid,
+    private static async Task<long> ResolveSymbolAsync(OpenApiTradingSession probe, long masterCtid,
         IReadOnlyList<long> slaveCtids, CancellationToken ct, IReadOnlyList<string>? preference = null)
     {
         var masterIds = await probe.LoadSymbolIdsAsync(masterCtid, ct);

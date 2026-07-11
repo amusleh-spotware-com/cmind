@@ -405,20 +405,19 @@ public static class CopyEndpoints
             if (listings.Count == 0) return Results.Ok(Array.Empty<object>());
 
             var profileIds = listings.Select(l => l.ProfileId.Value).ToList();
-            var executions = await db.CopyExecutions.Where(x => profileIds.Contains(x.ProfileId)).ToListAsync(ct);
-            var byProfile = executions.GroupBy(x => x.ProfileId).ToDictionary(grp => grp.Key, grp => grp.ToList());
+            // Aggregate in SQL (GroupBy + Count/Sum with CASE) so the full execution history is never
+            // materialized — a busy provider's transparency log could be millions of rows.
+            var stats = (await LoadMarketplaceStatsAsync(db, profileIds, ct)).ToDictionary(s => s.ProfileId);
 
             var result = listings.Select(l =>
             {
-                var rows = byProfile.GetValueOrDefault(l.ProfileId.Value) ?? [];
-                var opened = rows.Count(x => x.Kind == CopyExecutionKind.Opened);
-                var failed = rows.Count(x => x.Kind == CopyExecutionKind.Failed);
-                var attempts = opened + failed;
+                var s = stats.GetValueOrDefault(l.ProfileId.Value);
+                var opened = s?.Opened ?? 0;
+                var attempts = opened + (s?.Failed ?? 0);
                 var fillRate = attempts == 0 ? 0d : (double)opened / attempts;
-                var avgLatency = rows.Where(x => x.Kind == CopyExecutionKind.Opened)
-                    .Select(x => x.LatencyMilliseconds).DefaultIfEmpty(0d).Average();
-                var avgSlippage = rows.Where(x => x.SlippagePoints.HasValue)
-                    .Select(x => (double)x.SlippagePoints!.Value).DefaultIfEmpty(0d).Average();
+                var avgLatency = opened == 0 ? 0d : s!.LatencySum / opened;
+                var slippageCount = s?.SlippageCount ?? 0;
+                var avgSlippage = slippageCount == 0 ? 0d : s!.SlippageSum / slippageCount;
                 return new
                 {
                     l.Id,
@@ -428,7 +427,7 @@ public static class CopyEndpoints
                     l.PerformanceFeePercent,
                     l.VerifiedLive,
                     l.PublishedAt,
-                    Executions = rows.Count,
+                    Executions = s?.Total ?? 0,
                     FillRate = fillRate,
                     AvgLatencyMs = avgLatency,
                     AvgSlippagePoints = avgSlippage,
@@ -502,6 +501,25 @@ public static class CopyEndpoints
 
         return app;
     }
+
+    // Per-profile execution stats aggregated in the database (never materializes the execution history).
+    // Internal so the SQL translation + correctness is asserted directly against real Postgres.
+    internal sealed record MarketplaceProfileStats(
+        Guid ProfileId, int Total, int Opened, int Failed, double LatencySum, double SlippageSum, int SlippageCount);
+
+    internal static async Task<IReadOnlyList<MarketplaceProfileStats>> LoadMarketplaceStatsAsync(
+        DataContext db, IReadOnlyList<Guid> profileIds, CancellationToken ct)
+        => await db.CopyExecutions.Where(x => profileIds.Contains(x.ProfileId))
+            .GroupBy(x => x.ProfileId)
+            .Select(grp => new MarketplaceProfileStats(
+                grp.Key,
+                grp.Count(),
+                grp.Count(x => x.Kind == CopyExecutionKind.Opened),
+                grp.Count(x => x.Kind == CopyExecutionKind.Failed),
+                grp.Sum(x => x.Kind == CopyExecutionKind.Opened ? x.LatencyMilliseconds : 0d),
+                grp.Sum(x => x.SlippagePoints != null ? (double)x.SlippagePoints!.Value : 0d),
+                grp.Count(x => x.SlippagePoints != null)))
+            .ToListAsync(ct);
 
     // A 0-100 ranking score: fill rate dominates, low latency and low slippage add, a verified-live badge
     // gives a small trust bonus. Deterministic and monotonic so the marketplace ordering is stable.

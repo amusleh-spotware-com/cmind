@@ -19,7 +19,7 @@ public class FeatureGateTests(PostgresFixture fixture) : IClassFixture<PostgresF
             .AddInterceptors(new AuditStampingInterceptor(TimeProvider.System))
             .Options);
 
-    private FeatureGate CreateGate(DataContext db, AppOptions options) =>
+    private static FeatureGate CreateGate(DataContext db, AppOptions options) =>
         new(new StaticOptionsMonitor<AppOptions>(options), db, new MemoryCache(new MemoryCacheOptions()),
             TimeProvider.System);
 

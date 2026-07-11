@@ -2,18 +2,26 @@
 
 Status: **IN PROGRESS.** Blueprint for overhauling the whole app UI.
 
-**Shipped so far (main):**
+**Shipped (main):**
 - Phase 1a — mobile-first shell: white-label CSS design tokens (`BrandingCss`), mobile-first `site.css`,
   bottom navigation, `AppFixture` mobile device emulation + `MobileLayoutTests`.
+- Phase 2 — responsive table→card (`Breakpoint.Sm` + `DataLabel`) on **every** MudTable page (Nodes,
+  Users, InstanceTable, TradingAccountList, CBots, Mcp, PropFirm, Compliance, CopyTrading, FeatureSettings);
+  create/edit dialogs full-screen on phones (global CSS); `MobileDialogTests`.
 - Phase 3 — installable PWA: branded manifest endpoint, icons (192/512/maskable/apple-touch), app-shell
-  service worker + offline page, iOS tags, `PwaTests`.
+  service worker + offline page, iOS tags, install-app affordance (`InstallAppButton`), `PwaTests`.
+- Phase 4 — reusable `HelpTip` (hover/tap) across page headers; `HelpTipTests`.
 - Phase 5 (login) — redesigned split-screen branded login (reveal, loading, responsive), `LoginTests`.
-- Phase 2 + 4 foundation — reusable `HelpTip`; responsive table→card pattern proven on Nodes; `HelpTipTests`.
-- Phase 7 — `docs/ui-guidelines.md` (mandatory), `CLAUDE.md` UI mandates, README mobile/PWA highlights.
+- Phase 7 — `docs/ui-guidelines.md` (mandatory), `CLAUDE.md` UI mandates, README mobile/PWA highlights,
+  `docs/features/pwa.md`, white-label tokens/PWA doc sections.
+- E2E §7.4 — a11y gate (vendored axe-core, `AccessibilityTests`; fixed real button-name/link-name
+  violations); device matrix (iPhone 13 / Pixel 5 / iPhone SE / Galaxy S9+) + real mobile create
+  round-trip (`MobileJourneyTests`). ~50 UI E2E green.
 
-**Remaining:** roll the table→card + HelpTip + mobile-journey pattern across the rest of the pages
-(§6 list), full E2E device-matrix + visual-regression + a11y (§7.4), install-prompt UI, per-feature
-docs (`pwa.md`, theming). Each page ships with its mobile E2E per `docs/ui-guidelines.md`.
+**Remaining (lower-priority / infra):** visual-regression screenshot baselines (env-sensitive, flaky —
+deferred); deeper mobile journeys + overflow coverage for the non-table form pages
+(Agent/Alerts/PropGuard/Assistant/AiSettings/InstanceDetail chart) — they pass render-smoke + shell,
+convert per `docs/ui-guidelines.md` as touched.
 
 ## 0. Goal & non-negotiables
 

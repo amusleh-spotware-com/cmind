@@ -112,6 +112,9 @@ public static partial class LogMessages
     [LoggerMessage(EventId = 1092, Level = LogLevel.Error, Message = "Node instance-reclaim cycle failed")]
     public static partial void InstanceReclaimFailed(this ILogger logger, Exception ex);
 
+    [LoggerMessage(EventId = 1093, Level = LogLevel.Critical, Message = "Open API token refresh CRITICAL for account {CtidTraderAccountId}: still failing with token expiring at {ExpiresAt:o} — re-authorization needed")]
+    public static partial void OpenApiTokenRefreshCritical(this ILogger logger, long ctidTraderAccountId, DateTimeOffset expiresAt);
+
     [LoggerMessage(EventId = 1035, Level = LogLevel.Information, Message = "Agent registered with main at {MainUrl} as node {NodeId}")]
     public static partial void AgentRegistered(this ILogger logger, string mainUrl, Guid nodeId);
 

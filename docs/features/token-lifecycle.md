@@ -40,6 +40,17 @@ on every refresh, so the new refresh token is persisted immediately; a read-only
 persist would self-invalidate (relevant to the in-cluster test Job, which mounts a writable copy
 of the secret).
 
+### Failure escalation
+
+A failed refresh is not silent. `OpenApiAuthorization.MarkRefreshFailed(reason, now, criticalWindow)`
+records `RefreshFailedAt`, increments `ConsecutiveRefreshFailures`, and always raises
+`AccessTokenRefreshFailed` (warning). When the token is now within `App:OpenApi:TokenRefreshCriticalWindow`
+(default 6h) of expiry and refresh is still failing, it escalates **once** with an
+`AccessTokenRefreshCritical` domain event + `Critical` log so the owner can re-authorize before
+copy/prop-firm operations lose the token. The failure counter and escalation latch reset on the next
+successful `Refresh`. The service keeps retrying every `TokenRefreshInterval`, so a provider/maintenance
+outage self-heals when the refresh endpoint returns.
+
 ## Invalidation alert & auto-recovery (M1)
 
 A partial/again-authorization on a cID invalidates the token a running copy host still holds. When a

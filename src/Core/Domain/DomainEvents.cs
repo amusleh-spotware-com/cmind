@@ -40,6 +40,10 @@ public sealed record AccessTokenRefreshed(
 public sealed record AccessTokenRefreshFailed(
     OpenApiAuthorizationId AuthorizationId, UserId UserId, string Reason) : DomainEventBase;
 
+public sealed record AccessTokenRefreshCritical(
+    OpenApiAuthorizationId AuthorizationId, UserId UserId, long CtidUserId,
+    DateTimeOffset AccessTokenExpiresAt, int ConsecutiveFailures) : DomainEventBase;
+
 public sealed record CopyProfileStarted(CopyProfileId ProfileId, UserId UserId) : DomainEventBase;
 
 public sealed record CopyProfilePaused(CopyProfileId ProfileId, UserId UserId) : DomainEventBase;

@@ -119,6 +119,9 @@ public sealed record OpenApiOptions
     public int Port { get; init; } = Constants.OpenApiEndpoints.Port;
     public TimeSpan TokenRefreshThreshold { get; init; } = TimeSpan.FromDays(3);
     public TimeSpan TokenRefreshInterval { get; init; } = TimeSpan.FromHours(1);
+    // When a refresh keeps failing and the token is within this window of expiry, escalate once with a
+    // critical alert so the owner can re-authorize before copy/prop-firm operations lose their token.
+    public TimeSpan TokenRefreshCriticalWindow { get; init; } = TimeSpan.FromHours(6);
     public TimeSpan HeartbeatInterval { get; init; } = TimeSpan.FromSeconds(10);
     public TimeSpan RequestTimeout { get; init; } = TimeSpan.FromSeconds(30);
     public TimeSpan InboundWatchdogTimeout { get; init; } = TimeSpan.FromSeconds(30);

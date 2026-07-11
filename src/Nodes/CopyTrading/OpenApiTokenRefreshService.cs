@@ -87,8 +87,11 @@ public sealed class OpenApiTokenRefreshService(
             }
             catch (Exception ex)
             {
-                authorization.MarkRefreshFailed(ex.Message, timeProvider.GetUtcNow());
+                var escalated = authorization.MarkRefreshFailed(
+                    ex.Message, timeProvider.GetUtcNow(), settings.TokenRefreshCriticalWindow);
                 log.OpenApiTokenRefreshFailedFor(authorization.CtidUserId, ex.Message);
+                if (escalated)
+                    log.OpenApiTokenRefreshCritical(authorization.CtidUserId, authorization.AccessTokenExpiresAt);
             }
 
             await authorizations.SaveChangesAsync(ct);

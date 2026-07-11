@@ -67,7 +67,7 @@ public sealed class OpenApiAuthDomainTests
     public void Refresh_rotates_tokens_clears_failure_and_raises_event()
     {
         var authorization = CreateAuthorization(TestClock.Now.AddMinutes(1));
-        authorization.MarkRefreshFailed("boom", TestClock.Now);
+        authorization.MarkRefreshFailed("boom", TestClock.Now, TimeSpan.FromHours(6));
         authorization.RefreshFailedAt.Should().NotBeNull();
 
         var newExpiry = TestClock.Now.AddDays(30);
@@ -86,7 +86,7 @@ public sealed class OpenApiAuthDomainTests
     {
         var authorization = CreateAuthorization(TestClock.Now.AddMinutes(1));
 
-        authorization.MarkRefreshFailed("network down", TestClock.Now);
+        authorization.MarkRefreshFailed("network down", TestClock.Now, TimeSpan.FromHours(6));
 
         authorization.DomainEvents.OfType<AccessTokenRefreshFailed>().Should().ContainSingle()
             .Which.Reason.Should().Be("network down");

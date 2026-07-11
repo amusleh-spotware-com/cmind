@@ -60,6 +60,8 @@ public class OpenApiAuthorization : AuditedEntity<OpenApiAuthorizationId>
     public OpenApiScope Scope { get; private set; }
     public DateTimeOffset? LastRefreshedAt { get; private set; }
     public DateTimeOffset? RefreshFailedAt { get; private set; }
+    public int ConsecutiveRefreshFailures { get; private set; }
+    public bool RefreshCriticalAlerted { get; private set; }
     public long TokenVersion { get; private set; } = 1;
 
     public static OpenApiAuthorization Create(
@@ -96,14 +98,29 @@ public class OpenApiAuthorization : AuditedEntity<OpenApiAuthorizationId>
         AccessTokenExpiresAt = accessTokenExpiresAt;
         LastRefreshedAt = now;
         RefreshFailedAt = null;
+        ConsecutiveRefreshFailures = 0;
+        RefreshCriticalAlerted = false;
         TokenVersion++;
         RaiseDomainEvent(new AccessTokenRefreshed(Id, UserId, CtidUserId));
     }
 
-    public void MarkRefreshFailed(string reason, DateTimeOffset now)
+    // Records a failed refresh attempt. Always raises the per-failure warning event; additionally
+    // escalates once with a critical event when the token is now within <paramref name="criticalWindow"/>
+    // of expiry and still failing, so the owner is alerted before the token dies. Returns whether this
+    // call escalated. The escalation latch and failure counter reset on a successful <see cref="Refresh"/>.
+    public bool MarkRefreshFailed(string reason, DateTimeOffset now, TimeSpan criticalWindow)
     {
         RefreshFailedAt = now;
+        ConsecutiveRefreshFailures++;
         RaiseDomainEvent(new AccessTokenRefreshFailed(Id, UserId, reason ?? string.Empty));
+
+        if (RefreshCriticalAlerted || now < AccessTokenExpiresAt - criticalWindow)
+            return false;
+
+        RefreshCriticalAlerted = true;
+        RaiseDomainEvent(new AccessTokenRefreshCritical(
+            Id, UserId, CtidUserId, AccessTokenExpiresAt, ConsecutiveRefreshFailures));
+        return true;
     }
 
     public bool IsExpiring(TimeSpan threshold, DateTimeOffset now) => now >= AccessTokenExpiresAt - threshold;

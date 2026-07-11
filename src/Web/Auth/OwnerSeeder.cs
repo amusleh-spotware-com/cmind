@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using Core;
+using Core.Constants;
 using Core.Logging;
 using Core.Options;
 using Infrastructure.Persistence;
@@ -20,8 +21,21 @@ public sealed class OwnerSeeder(
     {
         using var scope = sf.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
-        await db.Database.MigrateAsync(ct);
+        var connectionString = db.Database.GetConnectionString()
+            ?? throw new InvalidOperationException("Missing database connection string.");
 
+        // Migrate + seed under one advisory lock so a rolling deploy / scale-out never runs migrations
+        // concurrently and never double-seeds the owner (the AnyAsync check is only safe single-writer).
+        await MigrationLock.RunExclusiveAsync(connectionString, DatabaseDefaults.MigrationAdvisoryLockKey,
+            async token =>
+            {
+                await db.Database.MigrateAsync(token);
+                await SeedOwnerAsync(scope, db, token);
+            }, ct);
+    }
+
+    private async Task SeedOwnerAsync(IServiceScope scope, DataContext db, CancellationToken ct)
+    {
         if (await db.Users.OfType<OwnerUser>().AnyAsync(ct)) return;
 
         var opts = options.CurrentValue;

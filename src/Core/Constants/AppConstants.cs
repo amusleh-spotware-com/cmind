@@ -25,6 +25,10 @@ public static class DatabaseDefaults
     public const int MaxRetryCount = 6;
     public const int MaxRetryDelaySeconds = 30;
     public const int CommandTimeoutSeconds = 30;
+
+    // Postgres advisory-lock key serializing schema migration + owner seeding across web/mcp replicas
+    // so a rolling deploy or scale-out never runs migrations concurrently. Stable, app-wide constant.
+    public const long MigrationAdvisoryLockKey = 902026_0711L;
 }
 
 public static class NodeAgentHttp

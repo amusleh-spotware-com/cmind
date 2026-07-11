@@ -59,6 +59,15 @@ self-register and heartbeat (`App:Discovery`), `NodeHeartbeatMonitor` marks node
 when heartbeat exceeds `Discovery:HeartbeatTtl`. Add node agents to add execution capacity;
 dead agent routed around automatically.
 
+## Migrations on scale-out / rolling deploy
+
+Every Web/MCP replica runs `OwnerSeeder` at startup, which applies EF migrations and seeds the owner.
+To make that safe when N replicas start at once, migrate + seed run inside a **Postgres session
+advisory lock** (`MigrationLock.RunExclusiveAsync`, key `DatabaseDefaults.MigrationAdvisoryLockKey`):
+the first replica to acquire it migrates and seeds; the rest block on the lock, then find migrations
+already applied (no-op) and the owner already present. No separate migration job or leader election is
+needed. If you add first-run seeding, put it **inside** the same guarded block so it is single-writer.
+
 ## Node-agent HTTP resilience
 
 The main node talks to each `ExternalNode` agent over HTTP through three purpose-split clients so a

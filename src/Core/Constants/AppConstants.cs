@@ -160,6 +160,10 @@ public static class CopyDefaults
     // pending may rest after the master's has vanished before the slave copy is cancelled.
     public static readonly TimeSpan PendingCheckInterval = TimeSpan.FromSeconds(20);
     public static readonly TimeSpan PendingCorrelationTimeout = TimeSpan.FromSeconds(120);
+    // G4 bounded-concurrency dispatch: how many destinations a single source event fans out to at once, so
+    // the Nth slave doesn't queue behind the first N-1. Per-destination host state is thread-safe
+    // (ConcurrentDictionary) and network I/O is isolated per destination, so this is a pure latency win.
+    public const int MaxDestinationConcurrency = 4;
 }
 
 public static class AiConstants

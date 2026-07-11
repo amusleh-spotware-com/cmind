@@ -261,6 +261,11 @@ public static partial class LogMessages
         Message = "Copy pending timed out: profile {ProfileId} source order {SourceOrderId} — master pending vanished, slave copy cancelled")]
     public static partial void CopyPendingTimedOut(this ILogger logger, Guid profileId, long sourceOrderId);
 
+    [LoggerMessage(EventId = 1087, Level = LogLevel.Information,
+        Message = "Copy slave volume reconciled: profile {ProfileId} destination {DestinationCtid} position {PositionId} topped up {TopUpVolume} (target {TargetVolume}, was {FilledVolume})")]
+    public static partial void CopySlaveVolumeReconciled(this ILogger logger, Guid profileId, long destinationCtid,
+        long positionId, long topUpVolume, long targetVolume, long filledVolume);
+
     // ---- Prop-firm challenge tracking ----
 
     [LoggerMessage(EventId = 1067, Level = LogLevel.Error, Message = "Prop-firm tracking supervisor cycle failed")]

@@ -77,6 +77,10 @@ Set in the New Profile dialog, on the Copy Trading page's per-destination panel,
 - **Trading-hours window** (C18) — a per-destination daily UTC window (`start`/`end` minutes-of-day,
   end exclusive; `start == end` = all-day). New opens outside the window are skipped (`trading_hours`);
   a window with `start > end` wraps past midnight (e.g. 22:00–06:00). Existing positions stay managed.
+- **Source-label filter** (C18, cTrader equivalent of an MT magic-number filter) — when set, copy only
+  master trades whose label matches **exactly** (e.g. copy one bot's trades, or a manual-only label);
+  everything else is skipped (`source_label`). Empty = copy all. Carried on `ExecutionEvent.SourceLabel`
+  from the master position/order's `TradeData.Label`, and honored on resync too.
 - **Order-type filter** — choose exactly which master order types to copy: market, market-range,
   limit, stop, stop-limit (`CopyOrderTypes` flags; default all). cMAM-style selectivity.
 - **Copy SL / Copy TP** — mirror the master's stop-loss / take-profit, or manage protection

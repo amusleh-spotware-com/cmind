@@ -174,11 +174,11 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
     public void PushOpen(long ctid, long positionId, long symbolId, bool isBuy, long volume,
         double? stopLoss = null, double? takeProfit = null, long orderId = 0, bool trailing = false,
         CopyOrderKind orderKind = CopyOrderKind.Market, int? slippageInPoints = null, double? baseSlippagePrice = null,
-        long? serverTimestamp = null)
+        long? serverTimestamp = null, string? sourceLabel = null)
         => _source.Writer.TryWrite(new ExecutionEvent(ctid, "ORDER_FILLED", positionId, symbolId,
             isBuy, volume, 1.10, stopLoss, takeProfit, IsOpen: true, OrderId: orderId, TrailingStopLoss: trailing,
             OrderKind: orderKind, SlippageInPoints: slippageInPoints, BaseSlippagePrice: baseSlippagePrice,
-            ServerTimestamp: serverTimestamp));
+            ServerTimestamp: serverTimestamp, SourceLabel: sourceLabel));
 
     public void PushClose(long ctid, long positionId, long symbolId, bool isBuy, long volume)
         => _source.Writer.TryWrite(new ExecutionEvent(ctid, "ORDER_ACCEPTED", positionId, symbolId,
@@ -186,7 +186,7 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
 
     public void PushPending(long ctid, long orderId, long symbolId, bool isBuy, long volume,
         CopyOrderKind kind, double price, long? expirationTimestamp = null, int? slippageInPoints = null,
-        long? serverTimestamp = null)
+        long? serverTimestamp = null, string? sourceLabel = null)
     {
         _sourceOrderExpiry[orderId] = expirationTimestamp;
         _source.Writer.TryWrite(new ExecutionEvent(ctid, "ORDER_ACCEPTED", 0, symbolId, isBuy, volume,
@@ -194,7 +194,7 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
             LimitPrice: kind is CopyOrderKind.Limit ? price : null,
             StopPrice: kind is CopyOrderKind.Stop or CopyOrderKind.StopLimit ? price : null,
             ExpirationTimestamp: expirationTimestamp, SlippageInPoints: slippageInPoints,
-            ServerTimestamp: serverTimestamp));
+            ServerTimestamp: serverTimestamp, SourceLabel: sourceLabel));
     }
 
     public void PushPendingReplaced(long ctid, long orderId, long symbolId, bool isBuy, long volume,

@@ -44,7 +44,8 @@ public record AddCopyDestinationRequest(
     bool SyncOpenOnStart = true,
     bool SyncClosedOnStart = true,
     int TradingHoursStartMinuteUtc = 0,
-    int TradingHoursEndMinuteUtc = 0);
+    int TradingHoursEndMinuteUtc = 0,
+    string? SourceLabelFilter = null);
 
 public record SymbolMapPair(string Source, string Destination);
 
@@ -139,6 +140,7 @@ public static class CopyEndpoints
                     d.SyncClosedOnStart,
                     d.TradingHoursStartMinuteUtc,
                     d.TradingHoursEndMinuteUtc,
+                    d.SourceLabelFilter,
                     SymbolFilterMode = d.SymbolFilterMode.ToString(),
                     SymbolFilters = d.SymbolFilters.Select(f => f.Symbol),
                     SymbolMaps = d.SymbolMaps.Select(m => new { m.Source, m.Destination })
@@ -193,6 +195,7 @@ public static class CopyEndpoints
             destination.SetManageOnly(req.ManageOnly);
             destination.SetSyncPolicy(req.SyncOpenOnStart, req.SyncClosedOnStart);
             destination.ConfigureTradingHours(new TradingWindow(req.TradingHoursStartMinuteUtc, req.TradingHoursEndMinuteUtc));
+            destination.SetSourceLabelFilter(req.SourceLabelFilter);
             if (req.SymbolMap is { Count: > 0 })
                 destination.SetSymbolMap(req.SymbolMap.Select(m => new SymbolMapEntry(new Symbol(m.Source), new Symbol(m.Destination))));
             if (req.SymbolFilterMode != SymbolFilterMode.None && req.SymbolFilters is { Count: > 0 })

@@ -33,7 +33,8 @@ public sealed record ExecutionEvent(
     long? ExpirationTimestamp = null,
     int? SlippageInPoints = null,
     double? BaseSlippagePrice = null,
-    long? ServerTimestamp = null);
+    long? ServerTimestamp = null,
+    string? SourceLabel = null);
 
 public sealed record OpenPositionSnapshot(
     long PositionId, long SymbolId, bool IsBuy, long Volume, string Label,
@@ -151,7 +152,8 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
                     ExpirationTimestamp: pendingOrder.HasExpirationTimestamp ? pendingOrder.ExpirationTimestamp : null,
                     SlippageInPoints: pendingOrder.HasSlippageInPoints ? (int)pendingOrder.SlippageInPoints : null,
                     BaseSlippagePrice: pendingOrder.HasBaseSlippagePrice ? pendingOrder.BaseSlippagePrice : null,
-                    ServerTimestamp: executionEvent.Deal is { HasExecutionTimestamp: true } pendingDeal ? pendingDeal.ExecutionTimestamp : null);
+                    ServerTimestamp: executionEvent.Deal is { HasExecutionTimestamp: true } pendingDeal ? pendingDeal.ExecutionTimestamp : null,
+                    SourceLabel: tradeData.Label);
                 continue;
             }
 
@@ -174,7 +176,8 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
                     TrailingStopLoss: position.TrailingStopLoss,
                     SlippageInPoints: executionEvent.Order is { HasSlippageInPoints: true } slipOrder ? (int)slipOrder.SlippageInPoints : null,
                     BaseSlippagePrice: executionEvent.Order is { HasBaseSlippagePrice: true } baseOrder ? baseOrder.BaseSlippagePrice : null,
-                    ServerTimestamp: executionEvent.Deal is { HasExecutionTimestamp: true } positionDeal ? positionDeal.ExecutionTimestamp : null);
+                    ServerTimestamp: executionEvent.Deal is { HasExecutionTimestamp: true } positionDeal ? positionDeal.ExecutionTimestamp : null,
+                    SourceLabel: tradeData.Label);
                 continue;
             }
         }

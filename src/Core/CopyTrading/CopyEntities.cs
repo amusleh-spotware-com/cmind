@@ -63,6 +63,9 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     // reconciles fully so a desync recovers.
     public bool SyncOpenOnStart { get; private set; } = true;
     public bool SyncClosedOnStart { get; private set; } = true;
+    // Source-label filter (cTrader equivalent of an MT magic-number filter): when set, copy only master
+    // trades whose label matches exactly — e.g. copy one bot's trades, or manual-only. Empty = copy all.
+    [MaxLength(128)] public string? SourceLabelFilter { get; private set; }
     public CopyDirectionFilter Direction { get; private set; } = CopyDirectionFilter.Both;
     public double MinLot { get; private set; }
     public double MaxLot { get; private set; }
@@ -190,6 +193,14 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
         SyncOpenOnStart = syncOpenOnStart;
         SyncClosedOnStart = syncClosedOnStart;
     }
+
+    public void SetSourceLabelFilter(string? sourceLabel)
+    {
+        SourceLabelFilter = string.IsNullOrWhiteSpace(sourceLabel) ? null : sourceLabel.Trim();
+    }
+
+    public bool IsSourceLabelAllowed(string? sourceLabel)
+        => SourceLabelFilter is null || string.Equals(SourceLabelFilter, sourceLabel, StringComparison.Ordinal);
 
     public bool IsOrderTypeAllowed(CopyOrderTypes orderType)
         => orderType != CopyOrderTypes.None && (CopyOrderTypes & orderType) == orderType;

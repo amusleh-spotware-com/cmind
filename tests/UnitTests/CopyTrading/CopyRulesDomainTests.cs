@@ -80,6 +80,21 @@ public sealed class CopyRulesDomainTests
     }
 
     [Fact]
+    public void Source_label_filter_matches_exactly_and_allows_all_when_unset()
+    {
+        var destination = Destination();
+        destination.IsSourceLabelAllowed("anything").Should().BeTrue("no filter copies every master trade");
+
+        destination.SetSourceLabelFilter("botA");
+        destination.IsSourceLabelAllowed("botA").Should().BeTrue();
+        destination.IsSourceLabelAllowed("botB").Should().BeFalse();
+        destination.IsSourceLabelAllowed(null).Should().BeFalse("an unlabelled master trade is filtered out");
+
+        destination.SetSourceLabelFilter("   ");
+        destination.IsSourceLabelAllowed("botB").Should().BeTrue("blank filter clears the restriction");
+    }
+
+    [Fact]
     public void Expiry_and_slippage_copying_can_be_disabled()
     {
         var destination = Destination();

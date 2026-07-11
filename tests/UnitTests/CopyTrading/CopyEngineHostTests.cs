@@ -187,6 +187,24 @@ public sealed class CopyEngineHostTests
     }
 
     [Fact]
+    public async Task Source_label_filter_copies_only_matching_master_trades()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d => d.SetSourceLabelFilter("botA"))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushOpen(Source, 1001, SymbolId, isBuy: true, volume: 100, sourceLabel: "botB"); // filtered out
+            session.PushOpen(Source, 1002, SymbolId, isBuy: true, volume: 100, sourceLabel: "botA"); // copied
+            await WaitUntil(() => session.Orders.Any(o => o.Label == "1002"));
+            await Task.Delay(100);
+        });
+
+        session.Orders.Should().ContainSingle(o => o.Label == "1002");
+        session.Orders.Should().NotContain(o => o.Label == "1001", "a master trade whose label doesn't match is not copied");
+    }
+
+    [Fact]
     public async Task Order_failure_on_one_slave_still_copies_to_others()
     {
         var session = NewSession();

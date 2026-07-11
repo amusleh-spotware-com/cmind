@@ -339,6 +339,11 @@ public sealed class CopyEngineHost(
                 logger.CopySkipped(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.OrderId, "trading_hours");
                 continue;
             }
+            if (!destination.Config.IsSourceLabelAllowed(execution.SourceLabel))
+            {
+                logger.CopySkipped(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.OrderId, "source_label");
+                continue;
+            }
             if (!destination.Config.IsOrderTypeAllowed(CopyDecisionEngine.ToOrderTypes(execution.OrderKind)))
             {
                 logger.CopySkipped(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.OrderId, "order_type");
@@ -474,6 +479,13 @@ public sealed class CopyEngineHost(
         if (!destination.Config.TradingHours.IsOpenAt((int)timeProvider.GetUtcNow().TimeOfDay.TotalMinutes))
         {
             CopyMetrics.Instance.CopySkipped("trading_hours");
+            return;
+        }
+
+        // C18 source-label filter (magic-number equivalent): copy only master trades whose label matches.
+        if (!destination.Config.IsSourceLabelAllowed(execution.SourceLabel))
+        {
+            CopyMetrics.Instance.CopySkipped("source_label");
             return;
         }
 
@@ -661,7 +673,8 @@ public sealed class CopyEngineHost(
                 var sourceDetail = await SymbolDetailAsync(session, plan.SourceCtidTraderAccountId, source.SymbolId, ct);
                 var syntheticOpen = new ExecutionEvent(plan.SourceCtidTraderAccountId, "RESYNC_OPEN",
                     source.PositionId, source.SymbolId, source.IsBuy, source.Volume, 0,
-                    source.StopLoss, null, IsOpen: true, TrailingStopLoss: source.TrailingStopLoss);
+                    source.StopLoss, null, IsOpen: true, TrailingStopLoss: source.TrailingStopLoss,
+                    SourceLabel: source.Label);
                 try
                 {
                     await CopyOpenToDestinationAsync(session, destination, syntheticOpen, sourceName,

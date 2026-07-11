@@ -45,15 +45,26 @@ public sealed class LiveCopyFixture : IAsyncLifetime
 
         var refreshedCids = new List<LiveCopySecrets.CidTokens>();
         var pool = new List<LiveAccount>();
-        foreach (var cid in tokens.Cids)
+        try
         {
-            var refreshed = await client.RefreshAsync(ClientId, ClientSecret, cid.RefreshToken, CancellationToken.None);
-            var access = refreshed.AccessToken;
-            var newRefresh = string.IsNullOrEmpty(refreshed.RefreshToken) ? cid.RefreshToken : refreshed.RefreshToken;
-            refreshedCids.Add(cid with { AccessToken = access, RefreshToken = newRefresh });
+            foreach (var cid in tokens.Cids)
+            {
+                var refreshed = await client.RefreshAsync(ClientId, ClientSecret, cid.RefreshToken, CancellationToken.None);
+                var access = refreshed.AccessToken;
+                var newRefresh = string.IsNullOrEmpty(refreshed.RefreshToken) ? cid.RefreshToken : refreshed.RefreshToken;
+                refreshedCids.Add(cid with { AccessToken = access, RefreshToken = newRefresh });
 
-            foreach (var account in cid.Accounts.Where(a => !a.IsLive)) // DEMO ONLY
-                pool.Add(new LiveAccount(cid.Cid, account.CtidTraderAccountId, account.TraderLogin, access));
+                foreach (var account in cid.Accounts.Where(a => !a.IsLive)) // DEMO ONLY
+                    pool.Add(new LiveAccount(cid.Cid, account.CtidTraderAccountId, account.TraderLogin, access));
+            }
+        }
+        catch (Exception ex)
+        {
+            // cTrader refresh tokens are single-use; a stale cache (or no network) can't be refreshed. Degrade
+            // to a clean skip like a missing cache, rather than faulting the whole live collection.
+            SkipReason = $"Live copy token refresh failed (stale single-use token or offline): {ex.Message}. " +
+                         "Re-run the OAuth onboarding to refresh the cache (see docs/testing/live-copy-trading.md).";
+            return;
         }
 
         LiveCopySecrets.SaveTokens(new LiveCopySecrets.TokenCache(refreshedCids));

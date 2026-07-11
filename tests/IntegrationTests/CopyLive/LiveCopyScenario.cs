@@ -256,6 +256,46 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
         return new TrailingResult(false, null, slaveTrailing);
     }
 
+    public sealed record StartWithOpenResult(bool Inconclusive, string? Reason, bool SlaveCopied);
+
+    // Chaos: the master already holds a position BEFORE the host starts, so the copy can only come from the
+    // start-up resync (SyncOpenOnStart). Opens the master, then starts the host, and reports whether the
+    // slave copy appeared. Demo only; cleans up everything it opened.
+    public async Task<StartWithOpenResult> RunStartWithOpenAsync(LiveCopyFixture.LiveAccount master,
+        SlaveSetup slave, CancellationToken ct)
+    {
+        var masterCtid = master.Ctid;
+        await using var probe = fixture.NewSession(new[] { master, slave.Account });
+        await probe.StartAsync(ct);
+
+        var symbolId = await ResolveSymbolAsync(probe, masterCtid, [slave.Account.Ctid], ct);
+        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct)).First();
+        var volume = details.MinVolume > 0 ? details.MinVolume : details.StepVolume;
+        var label = $"cmind-swo-{Guid.NewGuid():N}"[..24];
+
+        await probe.SendMarketOrderAsync(masterCtid, symbolId, isBuy: true, volume, label, ct);
+        var masterPosition = await PollAsync(() => FindByLabelAsync(probe, masterCtid, label, ct), TimeSpan.FromSeconds(12), ct);
+        if (masterPosition is null)
+            return new StartWithOpenResult(true, "Master order did not fill (market likely closed).", false);
+
+        var sourceId = masterPosition.PositionId.ToString();
+        var plan = new CopyProfilePlan(CopyProfileId.New(), Live: false, fixture.ClientId, fixture.ClientSecret,
+            masterCtid, master.AccessToken, 1,
+            [new CopyDestinationPlan(slave.Account.Ctid, slave.Account.AccessToken, 1, slave.Config)]);
+        var host = new CopyEngineHost(plan, new OpenApiTradingSessionFactory(fixture.ConnectionFactory),
+            new CopyDecisionEngine(new CopySizingCalculator()), TimeProvider.System, NullLogger.Instance);
+        using var hostCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var hostTask = Task.Run(() => host.RunAsync(hostCts.Token), CancellationToken.None);
+
+        var copy = await PollAsync(() => FindByLabelAsync(probe, slave.Account.Ctid, sourceId, ct), CopyTimeout, ct);
+        var copied = copy is not null;
+        output.WriteLine($"start-with-open: slave copied={copied}");
+
+        await CleanupAsync(probe, masterCtid, sourceId, [slave], ct);
+        await StopHostAsync(hostCts, hostTask);
+        return new StartWithOpenResult(false, null, copied);
+    }
+
     private static async Task<bool> PollUntilAsync(Func<Task<bool>> condition, TimeSpan timeout, CancellationToken ct)
     {
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();

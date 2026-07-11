@@ -283,3 +283,25 @@ the token cache — no privileged node agents. The script asserts the Job exits 
 with a writable `secrets/` mount, the full **live** suite (`8 passed`) — i.e. the exact Job path minus
 Kubernetes. `kind`/`kubectl`/`helm` were not available in the authoring environment, so the full
 `k8s-e2e.sh` cluster run is the one step not executed here.
+
+## Live option matrix + chaos (LiveCopyMatrix / LiveCopyChaos)
+
+Two data-driven live suites build on `LiveCopyScenario` / `LiveCopyFixture`, the live counterpart to the
+deterministic DST stress suite:
+
+- **`LiveCopyMatrix`** — a `[Theory]`/`[MemberData]` option matrix: one real master open per row against
+  demo accounts, each with a differently-configured destination, asserting the golden outcome. Rows:
+  `one_to_one`, `half_multiplier`, `reverse` (copies the opposite side), `manage_only` (opens nothing),
+  `trading_hours_closed` (window excludes now → no copy), `source_label_block` (label filter → no copy),
+  `lot_sanity_block` (ceiling → no copy).
+- **`LiveCopyChaos`** — the copy engine against a hostile start: the master already holds a position before
+  the host starts, so convergence can only come from the start-up resync (`Sync-Open-on-Start`), plus the
+  negative case with the toggle off. Deterministic socket-flap / token-rotation / rejection chaos is covered
+  exhaustively by the DST suite; this asserts the live resync path.
+
+Both **skip cleanly** without credentials and report **Inconclusive** on a closed market, and every row
+cleans up the positions it opened (demo accounts only).
+
+**Fixture robustness:** `LiveCopyFixture` now degrades to a clean skip when the cached tokens can't be
+refreshed (cTrader refresh tokens are single-use — a stale cache or an offline run no longer faults the
+whole live collection; re-run the OAuth onboarding to refresh the cache).

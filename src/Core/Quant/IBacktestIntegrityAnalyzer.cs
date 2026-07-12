@@ -17,4 +17,15 @@ public interface IBacktestIntegrityAnalyzer
         TrialCount trials,
         double benchmarkSharpe = 0.0,
         double periodsPerYear = 252.0);
+
+    /// <summary>
+    /// Analyzes a whole optimization surface: reports the best trial's statistics plus the Probability of
+    /// Backtest Overfitting (Combinatorially-Symmetric Cross-Validation) across all trials — judging the
+    /// selection process, not just the winner.
+    /// </summary>
+    BacktestIntegrityReport AnalyzeGrid(
+        TrialSurface surface,
+        int slices = 8,
+        double benchmarkSharpe = 0.0,
+        double periodsPerYear = 252.0);
 }

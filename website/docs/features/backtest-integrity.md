@@ -37,6 +37,26 @@ at it, the analyzer reports:
 
 Every result carries a plain-English rationale so the "why" is never hidden.
 
+## Probability of Backtest Overfitting (across trials)
+
+Feeding a trial *count* is good; feeding the **actual out-of-sample series of every configuration you
+tried** is better. Paste them into the optional **trial grid** (one series per line) and cMind runs
+**Combinatorially-Symmetric Cross-Validation** (Bailey, Borwein, López de Prado & Zhu, 2015): it splits
+the observations into groups, and for every way of choosing half as in-sample it picks the in-sample
+best configuration and checks whether that winner lands in the bottom half **out-of-sample**. The
+**Probability of Backtest Overfitting (PBO)** is the fraction of splits where the winner failed to
+generalize. A PBO near 0 means the best configuration is genuinely best; a PBO of 0.5 or more means your
+selection process is picking noise — the verdict becomes **Overfit** regardless of how good the winner
+looked.
+
+```http
+POST /api/quant/pbo
+{ "trials": [[...], [...], ...] }
+```
+
+When the native cTrader Console optimizer lands, cMind will feed its full trial surface here
+automatically.
+
 ## Trials — the number that matters
 
 `Trials` is **how many parameter sets you tested** before picking this one. Testing one strategy and

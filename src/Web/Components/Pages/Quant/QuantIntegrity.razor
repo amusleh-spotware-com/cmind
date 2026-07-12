@@ -31,6 +31,20 @@
                 Analyze
             </MudButton>
         </MudPaper>
+
+        <MudPaper Class="pa-4 mt-4" Elevation="1">
+            <MudStack Row="true" AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.subtitle1">Overfitting across trials (optional)</MudText>
+                <HelpTip Text="Paste the out-of-sample return series of every configuration you tried — one series per line. We run Combinatorially-Symmetric Cross-Validation to estimate the Probability of Backtest Overfitting: how often the in-sample winner fails out-of-sample." />
+            </MudStack>
+            <MudTextField @bind-Value="_grid" Label="Trial grid (one return series per line)"
+                          Lines="5" Variant="Variant.Outlined" Class="mt-2" />
+            <MudButton Class="mt-3" Color="Color.Secondary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.GridView" OnClick="AssessOverfitting"
+                       Disabled="_loading" data-testid="integrity-pbo">
+                Assess overfitting
+            </MudButton>
+        </MudPaper>
     </MudItem>
 
     <MudItem xs="12" md="7">
@@ -55,6 +69,10 @@
                         <tr><td>Kurtosis</td><td>@r.kurtosis.ToString("0.00")</td></tr>
                         <tr><td>Observations</td><td>@r.observations</td></tr>
                         <tr><td>Trials</td><td>@r.trials</td></tr>
+                        @if (r.probabilityOfBacktestOverfitting is { } pbo)
+                        {
+                            <tr><td>Probability of Backtest Overfitting</td><td>@((pbo * 100).ToString("0.0"))%</td></tr>
+                        }
                     </tbody>
                 </MudSimpleTable>
                 <MudText Typo="Typo.body2" Class="mt-3">@r.rationale</MudText>
@@ -73,6 +91,7 @@
     private string _series = "";
     private string _mode = "returns";
     private int _trials = 1;
+    private string _grid = "";
     private bool _loading;
     private IntegrityResult? _result;
 
@@ -105,6 +124,36 @@
         catch
         {
             Snack.Add("Could not analyze that series.", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task AssessOverfitting()
+    {
+        var grid = _grid.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries)
+            .Select(Parse).Where(r => r.Length >= 4).ToArray();
+        if (grid.Length < 2)
+        {
+            Snack.Add("Enter at least two trial series (one per line, ≥4 numbers each).", Severity.Warning);
+            return;
+        }
+
+        _loading = true;
+        _result = null;
+        try
+        {
+            var response = await Http.PostAsJsonAsync("/api/quant/pbo", new { Trials = grid });
+            if (response.IsSuccessStatusCode)
+                _result = await response.Content.ReadFromJsonAsync<IntegrityResult>();
+            else
+                Snack.Add("Could not assess that trial grid.", Severity.Error);
+        }
+        catch
+        {
+            Snack.Add("Could not assess that trial grid.", Severity.Error);
         }
         finally
         {

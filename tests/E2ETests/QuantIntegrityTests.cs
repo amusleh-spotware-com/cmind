@@ -27,4 +27,27 @@ public sealed class QuantIntegrityTests(AppFixture app)
         await Assertions.Expect(page.Locator("[data-testid=integrity-verdict]")).ToBeVisibleAsync(Slow);
         await Assertions.Expect(page.Locator("[data-testid=integrity-verdict]")).ToContainTextAsync("Robust");
     }
+
+    [Fact]
+    public async Task Assess_overfitting_flags_mirror_trials()
+    {
+        // Two mirror-image trials → high Probability of Backtest Overfitting → "Overfit".
+        string Row(bool inverted) => string.Join(", ", Enumerable.Range(0, 16).Select(i =>
+        {
+            var baseline = (i < 8) ^ inverted ? 0.01 : -0.01;
+            var jitter = i % 2 == 0 ? 0.002 : -0.002;
+            return (baseline + jitter).ToString("0.000", CultureInfo.InvariantCulture);
+        }));
+        var grid = $"{Row(false)}\n{Row(true)}";
+
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/quant/integrity");
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        await page.GetByLabel("Trial grid (one return series per line)").FillAsync(grid);
+        await page.ClickAsync("[data-testid=integrity-pbo]");
+
+        await Assertions.Expect(page.Locator("[data-testid=integrity-verdict]")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.Locator("[data-testid=integrity-verdict]")).ToContainTextAsync("Overfit");
+    }
 }

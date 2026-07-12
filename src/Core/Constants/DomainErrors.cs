@@ -77,6 +77,7 @@ public static class DomainErrors
     public const string ReturnSeriesNotFinite = "domain.quant.return_series_not_finite";
     public const string TrialCountInvalid = "domain.quant.trial_count_invalid";
     public const string ProbabilityOutOfRange = "domain.quant.probability_out_of_range";
+    public const string TrialSurfaceInvalid = "domain.quant.trial_surface_invalid";
 
     public const string VolatilityTargetInvalid = "domain.portfolio.vol_target_invalid";
     public const string KellyFractionInvalid = "domain.portfolio.kelly_fraction_invalid";

@@ -63,6 +63,37 @@ public sealed class BacktestIntegrityAnalyzer : IBacktestIntegrityAnalyzer
             BuildRationale(verdict, sr, psr, dsr, tStat, trials.Value, n));
     }
 
+    public BacktestIntegrityReport AnalyzeGrid(
+        TrialSurface surface,
+        int slices = 8,
+        double benchmarkSharpe = 0.0,
+        double periodsPerYear = 252.0)
+    {
+        ArgumentNullException.ThrowIfNull(surface);
+
+        var bestIndex = 0;
+        var bestSharpe = double.NegativeInfinity;
+        for (var j = 0; j < surface.Count; j++)
+        {
+            var s = surface.Trials[j].Sharpe;
+            if (s > bestSharpe) { bestSharpe = s; bestIndex = j; }
+        }
+
+        var pbo = CombinatorialCrossValidation.ProbabilityOfBacktestOverfitting(surface, slices);
+        var baseReport = Analyze(surface.Trials[bestIndex], new TrialCount(surface.Count), benchmarkSharpe, periodsPerYear);
+        var verdict = ClassifyWithPbo(baseReport.DeflatedSharpe.Value, baseReport.ProbabilisticSharpe.Value, baseReport.TStatistic, pbo);
+
+        return baseReport with
+        {
+            Verdict = verdict,
+            ProbabilityOfBacktestOverfitting = new Probability(pbo),
+            Rationale = string.Format(
+                CultureInfo.InvariantCulture,
+                "Best of {0} trials: Sharpe {1:0.000}, Deflated Sharpe {2:0.0}%. Probability of Backtest Overfitting {3:0.0}% (fraction of in-sample winners that fell into the bottom half out-of-sample). Verdict: {4}.",
+                surface.Count, baseReport.Sharpe, baseReport.DeflatedSharpe.Value * 100.0, pbo * 100.0, verdict),
+        };
+    }
+
     // Variance of the Sharpe-ratio estimator (Bailey & López de Prado 2012), accounting for skew/kurtosis.
     private static double SharpeEstimatorVariance(double sr, double skew, double kurt, int n)
     {
@@ -92,6 +123,14 @@ public sealed class BacktestIntegrityAnalyzer : IBacktestIntegrityAnalyzer
     {
         if (dsr < OverfitDeflated) return Verdict.Overfit;
         if (dsr >= RobustDeflated && psr >= RobustProbabilistic && Math.Abs(tStat) >= RobustTStat)
+            return Verdict.Robust;
+        return Verdict.Fragile;
+    }
+
+    private static Verdict ClassifyWithPbo(double dsr, double psr, double tStat, double pbo)
+    {
+        if (pbo >= 0.5 || dsr < OverfitDeflated) return Verdict.Overfit;
+        if (dsr >= RobustDeflated && psr >= RobustProbabilistic && Math.Abs(tStat) >= RobustTStat && pbo < 0.25)
             return Verdict.Robust;
         return Verdict.Fragile;
     }

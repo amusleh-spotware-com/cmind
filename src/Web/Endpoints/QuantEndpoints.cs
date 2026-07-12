@@ -67,6 +67,22 @@ public static class QuantEndpoints
             }
         });
 
+        g.MapPost("/pbo", (PboRequest req, IBacktestIntegrityAnalyzer analyzer) =>
+        {
+            if (req.Trials is not { Length: >= 2 })
+                return Results.BadRequest(new { error = DomainErrors.TrialSurfaceInvalid });
+            try
+            {
+                var surface = TrialSurface.From(req.Trials.Select(t => ReturnSeries.From(t)).ToList());
+                var slices = req.Slices is > 1 ? req.Slices.Value : 8;
+                return Results.Ok(IntegrityResponse.From(analyzer.AnalyzeGrid(surface, slices)));
+            }
+            catch (DomainException ex)
+            {
+                return Results.BadRequest(new { error = ex.Code });
+            }
+        });
+
         g.MapPost("/sizing", (SizingRequest req, IPositionSizer sizer) =>
         {
             try
@@ -121,6 +137,8 @@ public sealed record IntegrityRequest(
     double[]? Returns, double[]? Equity, int? Trials, double? BenchmarkSharpe, double? PeriodsPerYear);
 
 public sealed record IntegrityBacktestRequest(int? Trials);
+
+public sealed record PboRequest(double[][]? Trials, int? Slices);
 
 public sealed record SizingRequest(
     double[]? Returns, double[]? Equity, double? TargetVolatility, double? KellyFraction,

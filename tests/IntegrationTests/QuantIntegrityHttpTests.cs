@@ -77,6 +77,34 @@ public class QuantIntegrityHttpTests(PostgresFixture fixture) : IClassFixture<Po
     }
 
     [Fact]
+    public async Task Pbo_flags_mirror_strategies_as_overfit()
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+
+        double J(int i) => i % 2 == 0 ? 0.002 : -0.002;
+        var a = Enumerable.Range(0, 16).Select(i => (i < 8 ? 0.01 : -0.01) + J(i)).ToArray();
+        var b = Enumerable.Range(0, 16).Select(i => (i < 8 ? -0.01 : 0.01) + J(i)).ToArray();
+
+        var response = await client.PostAsJsonAsync("/api/quant/pbo", new { Trials = new[] { a, b } });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("verdict").GetString().Should().Be("Overfit");
+        body.GetProperty("probabilityOfBacktestOverfitting").GetDouble().Should().BeGreaterThan(0.4);
+    }
+
+    [Fact]
+    public async Task Pbo_rejects_a_single_trial()
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+        var response = await client.PostAsJsonAsync("/api/quant/pbo",
+            new { Trials = new[] { Enumerable.Range(0, 16).Select(i => 0.01).ToArray() } });
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task Equity_curve_is_accepted()
     {
         await using var app = CreateApp();

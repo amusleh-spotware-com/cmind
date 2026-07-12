@@ -1,0 +1,34 @@
+{
+  "title": {
+    "message": "cMind",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "شعار cMind",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.Docs": {
+    "message": "الوثائق",
+    "description": "Navbar item with label Docs"
+  },
+  "item.label.Features": {
+    "message": "الميزات",
+    "description": "Navbar item with label Features"
+  },
+  "item.label.Deploy": {
+    "message": "النشر",
+    "description": "Navbar item with label Deploy"
+  },
+  "item.label.Contribute": {
+    "message": "المساهمة",
+    "description": "Navbar item with label Contribute"
+  },
+  "item.label.For business": {
+    "message": "للأعمال",
+    "description": "Navbar item with label For business"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  }
+}

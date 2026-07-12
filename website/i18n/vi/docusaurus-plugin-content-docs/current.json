@@ -1,0 +1,42 @@
+{
+  "version.label": {
+    "message": "Tiếp theo",
+    "description": "The label for version current"
+  },
+  "sidebar.docs.category.Getting started": {
+    "message": "Bắt đầu",
+    "description": "The label for category 'Getting started' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Features": {
+    "message": "Tính năng",
+    "description": "The label for category 'Features' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Copy trading": {
+    "message": "Sao chép giao dịch",
+    "description": "The label for category 'Copy trading' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Architecture": {
+    "message": "Kiến trúc",
+    "description": "The label for category 'Architecture' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Decision records": {
+    "message": "Bản ghi quyết định",
+    "description": "The label for category 'Decision records' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Deployment": {
+    "message": "Deployment",
+    "description": "The label for category 'Deployment' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Operations": {
+    "message": "Vận hành",
+    "description": "The label for category 'Operations' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Testing": {
+    "message": "Kiểm thử",
+    "description": "The label for category 'Testing' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Design": {
+    "message": "Thiết kế",
+    "description": "The label for category 'Design' in sidebar 'docs'"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "version.label": {
+    "message": "Επόμενο",
+    "description": "The label for version current"
+  },
+  "sidebar.docs.category.Getting started": {
+    "message": "Ξεκινώντας",
+    "description": "The label for category 'Getting started' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Features": {
+    "message": "Δυνατότητες",
+    "description": "The label for category 'Features' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Copy trading": {
+    "message": "Αντιγραφή συναλλαγών",
+    "description": "The label for category 'Copy trading' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Architecture": {
+    "message": "Αρχιτεκτονική",
+    "description": "The label for category 'Architecture' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Decision records": {
+    "message": "Αρχεία αποφάσεων",
+    "description": "The label for category 'Decision records' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Deployment": {
+    "message": "Deployment",
+    "description": "The label for category 'Deployment' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Operations": {
+    "message": "Λειτουργίες",
+    "description": "The label for category 'Operations' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Testing": {
+    "message": "Δοκιμές",
+    "description": "The label for category 'Testing' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Design": {
+    "message": "Σχεδίαση",
+    "description": "The label for category 'Design' in sidebar 'docs'"
+  }
+}

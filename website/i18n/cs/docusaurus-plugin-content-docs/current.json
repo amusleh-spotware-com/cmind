@@ -1,0 +1,42 @@
+{
+  "version.label": {
+    "message": "Následující",
+    "description": "The label for version current"
+  },
+  "sidebar.docs.category.Getting started": {
+    "message": "Začínáme",
+    "description": "The label for category 'Getting started' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Features": {
+    "message": "Funkce",
+    "description": "The label for category 'Features' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Copy trading": {
+    "message": "Kopírování obchodů",
+    "description": "The label for category 'Copy trading' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Architecture": {
+    "message": "Architektura",
+    "description": "The label for category 'Architecture' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Decision records": {
+    "message": "Záznamy rozhodnutí",
+    "description": "The label for category 'Decision records' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Deployment": {
+    "message": "Deployment",
+    "description": "The label for category 'Deployment' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Operations": {
+    "message": "Provoz",
+    "description": "The label for category 'Operations' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Testing": {
+    "message": "Testování",
+    "description": "The label for category 'Testing' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Design": {
+    "message": "Návrh",
+    "description": "The label for category 'Design' in sidebar 'docs'"
+  }
+}

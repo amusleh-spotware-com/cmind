@@ -1,0 +1,42 @@
+{
+  "version.label": {
+    "message": "다음",
+    "description": "The label for version current"
+  },
+  "sidebar.docs.category.Getting started": {
+    "message": "시작하기",
+    "description": "The label for category 'Getting started' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Features": {
+    "message": "기능",
+    "description": "The label for category 'Features' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Copy trading": {
+    "message": "카피 트레이딩",
+    "description": "The label for category 'Copy trading' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Architecture": {
+    "message": "아키텍처",
+    "description": "The label for category 'Architecture' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Decision records": {
+    "message": "결정 기록",
+    "description": "The label for category 'Decision records' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Deployment": {
+    "message": "Deployment",
+    "description": "The label for category 'Deployment' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Operations": {
+    "message": "운영",
+    "description": "The label for category 'Operations' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Testing": {
+    "message": "테스트",
+    "description": "The label for category 'Testing' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Design": {
+    "message": "디자인",
+    "description": "The label for category 'Design' in sidebar 'docs'"
+  }
+}

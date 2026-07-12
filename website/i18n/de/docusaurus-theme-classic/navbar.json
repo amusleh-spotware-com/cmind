@@ -1,0 +1,34 @@
+{
+  "title": {
+    "message": "cMind",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "cMind-Logo",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.Docs": {
+    "message": "Doku",
+    "description": "Navbar item with label Docs"
+  },
+  "item.label.Features": {
+    "message": "Funktionen",
+    "description": "Navbar item with label Features"
+  },
+  "item.label.Deploy": {
+    "message": "Bereitstellung",
+    "description": "Navbar item with label Deploy"
+  },
+  "item.label.Contribute": {
+    "message": "Mitwirken",
+    "description": "Navbar item with label Contribute"
+  },
+  "item.label.For business": {
+    "message": "Für Unternehmen",
+    "description": "Navbar item with label For business"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  }
+}

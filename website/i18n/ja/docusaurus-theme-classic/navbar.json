@@ -1,0 +1,34 @@
+{
+  "title": {
+    "message": "cMind",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "cMind ロゴ",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.Docs": {
+    "message": "ドキュメント",
+    "description": "Navbar item with label Docs"
+  },
+  "item.label.Features": {
+    "message": "機能",
+    "description": "Navbar item with label Features"
+  },
+  "item.label.Deploy": {
+    "message": "デプロイ",
+    "description": "Navbar item with label Deploy"
+  },
+  "item.label.Contribute": {
+    "message": "貢献",
+    "description": "Navbar item with label Contribute"
+  },
+  "item.label.For business": {
+    "message": "ビジネス向け",
+    "description": "Navbar item with label For business"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  }
+}

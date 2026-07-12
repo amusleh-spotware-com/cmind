@@ -1,0 +1,34 @@
+{
+  "title": {
+    "message": "cMind",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "cMind 徽标",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.Docs": {
+    "message": "文档",
+    "description": "Navbar item with label Docs"
+  },
+  "item.label.Features": {
+    "message": "功能",
+    "description": "Navbar item with label Features"
+  },
+  "item.label.Deploy": {
+    "message": "部署",
+    "description": "Navbar item with label Deploy"
+  },
+  "item.label.Contribute": {
+    "message": "参与贡献",
+    "description": "Navbar item with label Contribute"
+  },
+  "item.label.For business": {
+    "message": "企业版",
+    "description": "Navbar item with label For business"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  }
+}

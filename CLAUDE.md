@@ -129,9 +129,13 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
 8. **Docs in the same commit.** Every feature has `website/website/docs/features/*.md` (canonical — the
    published Docusaurus site; the top-level `docs/` copies are redirect stubs); behavior change →
    update its doc (and `website/docs/deployment`/`operations` when relevant). Not "done" until the
-   doc matches the code. **Docs are localized too:** adding or changing any doc means updating every
-   locale under `website/i18n/` (all languages in `Core.Constants.SupportedCultures`) in the same
-   change — never leave a locale stale.
+   doc matches the code. **Docs are localized too (MANDATORY, enforced):** every doc under
+   `website/docs/**/*.{md,mdx}` MUST ship a translated counterpart in **every** non-default locale at
+   `website/i18n/<locale>/docusaurus-plugin-content-docs/current/<same-rel-path>` (all 22 languages in
+   `docusaurus.config.ts` i18n.locales / `Core.Constants.SupportedCultures`) in the **same commit** — a
+   new or changed doc is not "done" until it exists in all languages. The parity gate
+   `npm run i18n:check` (wired into `.github/workflows/docs.yml`) **fails the docs build** on any missing
+   translation. Never leave a locale stale; never merge an English-only doc.
 9. **Everything user-facing is localized (no exceptions, enforced).** No literal user-facing string in a
    `.razor`, endpoint, email, or notification — inject `IStringLocalizer<Ui>` and use `@L["key"]`; add
    the key to `tools/i18n/ui-translations.json` for **every** language in `Core.Constants.SupportedCultures`

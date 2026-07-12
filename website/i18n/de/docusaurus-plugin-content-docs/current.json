@@ -1,0 +1,42 @@
+{
+  "version.label": {
+    "message": "Nächste",
+    "description": "The label for version current"
+  },
+  "sidebar.docs.category.Getting started": {
+    "message": "Erste Schritte",
+    "description": "The label for category 'Getting started' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Features": {
+    "message": "Funktionen",
+    "description": "The label for category 'Features' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Copy trading": {
+    "message": "Copy-Trading",
+    "description": "The label for category 'Copy trading' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Architecture": {
+    "message": "Architektur",
+    "description": "The label for category 'Architecture' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Decision records": {
+    "message": "Entscheidungsprotokolle",
+    "description": "The label for category 'Decision records' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Deployment": {
+    "message": "Deployment",
+    "description": "The label for category 'Deployment' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Operations": {
+    "message": "Betrieb",
+    "description": "The label for category 'Operations' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Testing": {
+    "message": "Testen",
+    "description": "The label for category 'Testing' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Design": {
+    "message": "Design",
+    "description": "The label for category 'Design' in sidebar 'docs'"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "title": {
+    "message": "cMind",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "Λογότυπο cMind",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.Docs": {
+    "message": "Τεκμηρίωση",
+    "description": "Navbar item with label Docs"
+  },
+  "item.label.Features": {
+    "message": "Δυνατότητες",
+    "description": "Navbar item with label Features"
+  },
+  "item.label.Deploy": {
+    "message": "Ανάπτυξη",
+    "description": "Navbar item with label Deploy"
+  },
+  "item.label.Contribute": {
+    "message": "Συνεισφορά",
+    "description": "Navbar item with label Contribute"
+  },
+  "item.label.For business": {
+    "message": "Για επιχειρήσεις",
+    "description": "Navbar item with label For business"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  }
+}

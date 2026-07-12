@@ -1,0 +1,34 @@
+{
+  "title": {
+    "message": "cMind",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "cMind logosu",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.Docs": {
+    "message": "Belgeler",
+    "description": "Navbar item with label Docs"
+  },
+  "item.label.Features": {
+    "message": "Özellikler",
+    "description": "Navbar item with label Features"
+  },
+  "item.label.Deploy": {
+    "message": "Dağıtım",
+    "description": "Navbar item with label Deploy"
+  },
+  "item.label.Contribute": {
+    "message": "Katkıda bulun",
+    "description": "Navbar item with label Contribute"
+  },
+  "item.label.For business": {
+    "message": "İşletmeler için",
+    "description": "Navbar item with label For business"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  }
+}

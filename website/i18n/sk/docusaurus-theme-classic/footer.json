@@ -1,0 +1,78 @@
+{
+  "link.title.Get started": {
+    "message": "Začíname",
+    "description": "The title of the footer links column with title=Get started in the footer"
+  },
+  "link.title.Product": {
+    "message": "Produkt",
+    "description": "The title of the footer links column with title=Product in the footer"
+  },
+  "link.title.Deploy": {
+    "message": "Nasadenie",
+    "description": "The title of the footer links column with title=Deploy in the footer"
+  },
+  "link.title.More": {
+    "message": "Viac",
+    "description": "The title of the footer links column with title=More in the footer"
+  },
+  "link.item.label.Introduction": {
+    "message": "Úvod",
+    "description": "The label of footer link with label=Introduction linking to /docs/intro"
+  },
+  "link.item.label.Quick start": {
+    "message": "Rýchly štart",
+    "description": "The label of footer link with label=Quick start linking to /docs/deployment/local"
+  },
+  "link.item.label.Who it is for": {
+    "message": "Pre koho je určené",
+    "description": "The label of footer link with label=Who it is for linking to /docs/audience"
+  },
+  "link.item.label.Copy trading": {
+    "message": "Kopírovanie obchodov",
+    "description": "The label of footer link with label=Copy trading linking to /docs/features/copy-trading"
+  },
+  "link.item.label.AI": {
+    "message": "AI",
+    "description": "The label of footer link with label=AI linking to /docs/features/ai"
+  },
+  "link.item.label.Build & backtest": {
+    "message": "Zostavenie a backtest",
+    "description": "The label of footer link with label=Build & backtest linking to /docs/features/build-and-backtest"
+  },
+  "link.item.label.White-label": {
+    "message": "White-label",
+    "description": "The label of footer link with label=White-label linking to /docs/features/white-label"
+  },
+  "link.item.label.Local (Docker)": {
+    "message": "Lokálne (Docker)",
+    "description": "The label of footer link with label=Local (Docker) linking to /docs/deployment/local"
+  },
+  "link.item.label.Kubernetes": {
+    "message": "Kubernetes",
+    "description": "The label of footer link with label=Kubernetes linking to /docs/deployment/kubernetes"
+  },
+  "link.item.label.Azure": {
+    "message": "Azure",
+    "description": "The label of footer link with label=Azure linking to /docs/deployment/cloud-azure"
+  },
+  "link.item.label.AWS": {
+    "message": "AWS",
+    "description": "The label of footer link with label=AWS linking to /docs/deployment/cloud-aws"
+  },
+  "link.item.label.GitHub": {
+    "message": "GitHub",
+    "description": "The label of footer link with label=GitHub linking to https://github.com/amusleh-spotware-com/cmind"
+  },
+  "link.item.label.Contributing": {
+    "message": "Prispievanie",
+    "description": "The label of footer link with label=Contributing linking to /docs/contributing"
+  },
+  "link.item.label.Security": {
+    "message": "Zabezpečenie",
+    "description": "The label of footer link with label=Security linking to https://github.com/amusleh-spotware-com/cmind/blob/main/SECURITY.md"
+  },
+  "copyright": {
+    "message": "Vytvorené so starostlivosťou pre obchodníkov, ktorí hýbu skutočnými peniazmi. © 2026 cMind · licencia MIT.",
+    "description": "The footer copyright"
+  }
+}

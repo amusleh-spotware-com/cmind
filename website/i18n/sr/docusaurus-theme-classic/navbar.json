@@ -1,0 +1,34 @@
+{
+  "title": {
+    "message": "cMind",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "cMind логотип",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.Docs": {
+    "message": "Документација",
+    "description": "Navbar item with label Docs"
+  },
+  "item.label.Features": {
+    "message": "Функције",
+    "description": "Navbar item with label Features"
+  },
+  "item.label.Deploy": {
+    "message": "Постављање",
+    "description": "Navbar item with label Deploy"
+  },
+  "item.label.Contribute": {
+    "message": "Допринеси",
+    "description": "Navbar item with label Contribute"
+  },
+  "item.label.For business": {
+    "message": "За пословање",
+    "description": "Navbar item with label For business"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  }
+}

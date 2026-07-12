@@ -151,6 +151,26 @@ public sealed class EconomicCalendarReader(
         return null;
     }
 
+    public async Task<IReadOnlyList<CalendarEventView>> GetEventsForSymbolAsync(
+        Symbol symbol, DateTimeOffset from, DateTimeOffset to, DateTimeOffset? asOf, CancellationToken ct)
+    {
+        var events = await db.EconomicEvents.AsNoTracking()
+            .Where(x => x.EffectiveAt >= from && x.EffectiveAt <= to)
+            .OrderBy(x => x.EffectiveAt)
+            .Take(2000)
+            .ToListAsync(ct);
+
+        var views = new List<CalendarEventView>();
+        foreach (var economicEvent in events)
+        {
+            if (asOf is { } pit && !economicEvent.Revisions.Any(r => r.KnownAt <= pit)) continue;
+            if (!CurrencyExposure.Affects(economicEvent.Country, symbol)) continue;
+            views.Add(Project(economicEvent, asOf, null));
+        }
+
+        return views;
+    }
+
     public async Task<BlackoutResult> GetBlackoutAsync(
         Symbol symbol, DateTimeOffset at, NewsWindowRule rule, CancellationToken ct)
     {

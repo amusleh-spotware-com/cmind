@@ -92,6 +92,21 @@ public sealed class CalendarTools(IEconomicCalendar calendar, TimeProvider timeP
             new Symbol(symbol), Impact(minImpact) ?? ImpactLevel.Low, timeProvider.GetUtcNow(), CancellationToken.None);
 
     [McpServerTool, Description(
+        "Events affecting a symbol (country->currency->symbol) within a window, point-in-time via asOf — for " +
+        "overlaying event markers on a backtest report with no look-ahead.")]
+    public async Task<object> CalendarEventsForSymbol(
+        [Description("Symbol, e.g. EURUSD")] string symbol,
+        [Description("Window start, ISO-8601 (optional)")] string? from = null,
+        [Description("Window end, ISO-8601 (optional)")] string? to = null,
+        [Description("Point-in-time anchor, ISO-8601 (optional)")] string? asOf = null)
+    {
+        var now = timeProvider.GetUtcNow();
+        return await calendar.GetEventsForSymbolAsync(
+            new Symbol(symbol), Instant(from) ?? now.AddDays(-30), Instant(to) ?? now.AddDays(30),
+            Instant(asOf), CancellationToken.None);
+    }
+
+    [McpServerTool, Description(
         "Whether a symbol is inside a high-impact news window now or at an instant. Returns the blackout flag, " +
         "the triggering event and the window edges; defaults to the conservative answer on uncertainty.")]
     public async Task<object> CalendarBlackout(

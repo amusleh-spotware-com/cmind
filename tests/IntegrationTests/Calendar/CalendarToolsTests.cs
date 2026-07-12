@@ -69,6 +69,19 @@ public class CalendarToolsTests(PostgresFixture fixture) : IClassFixture<Postgre
     }
 
     [Fact]
+    public async Task CalendarEventsForSymbol_tool_returns_affecting_events()
+    {
+        await using var db = await FreshAsync();
+        await SeedAsync(db);
+        var tools = new CalendarTools(Reader(db), new FixedTimeProvider(Now));
+
+        var result = (IReadOnlyList<CalendarEventView>)await tools.CalendarEventsForSymbol(
+            "EURUSD", from: "2024-01-01", to: "2025-01-01");
+
+        result.Should().Contain(e => e.SeriesCode == "US.CPI.MOM");
+    }
+
+    [Fact]
     public async Task CalendarBlackout_tool_flags_window()
     {
         await using var db = await FreshAsync();

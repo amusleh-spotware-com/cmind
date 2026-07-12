@@ -210,6 +210,18 @@ public static class CalendarApiEndpoints
             return view is null ? Results.NoContent() : Results.Ok(view);
         }).RequireCalendarScope(CalendarScopes.Read);
 
+        v1.MapGet("/for-symbol", async (
+            HttpContext http, IEconomicCalendar calendar, TimeProvider timeProvider, CancellationToken ct) =>
+        {
+            var symbol = http.Request.Query["symbol"].ToString();
+            if (string.IsNullOrWhiteSpace(symbol)) return Results.BadRequest();
+            var now = timeProvider.GetUtcNow();
+            var from = ParseInstant(http.Request.Query["from"]) ?? now.AddDays(-30);
+            var to = ParseInstant(http.Request.Query["to"]) ?? now.AddDays(30);
+            var asOf = ParseInstant(http.Request.Query["asOf"]);
+            return Results.Ok(await calendar.GetEventsForSymbolAsync(new Symbol(symbol), from, to, asOf, ct));
+        }).RequireCalendarScope(CalendarScopes.Read);
+
         v1.MapGet("/blackout", async (
             HttpContext http, IEconomicCalendar calendar, TimeProvider timeProvider, CancellationToken ct) =>
         {

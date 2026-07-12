@@ -102,6 +102,14 @@ public interface IEconomicCalendar
     Task<CalendarEventView?> GetNextForSymbolAsync(
         Symbol symbol, ImpactLevel minImpact, DateTimeOffset now, CancellationToken ct);
 
+    /// <summary>
+    /// Events affecting a symbol (country→currency→symbol) within a window — for overlaying event markers on
+    /// a backtest report. Honours <paramref name="asOf"/> so the overlay is point-in-time correct (a strategy
+    /// author sees exactly the events that were known during the backtested period, no look-ahead).
+    /// </summary>
+    Task<IReadOnlyList<CalendarEventView>> GetEventsForSymbolAsync(
+        Symbol symbol, DateTimeOffset from, DateTimeOffset to, DateTimeOffset? asOf, CancellationToken ct);
+
     Task<BlackoutResult> GetBlackoutAsync(
         Symbol symbol, DateTimeOffset at, NewsWindowRule rule, CancellationToken ct);
 

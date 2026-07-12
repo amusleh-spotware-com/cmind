@@ -21,6 +21,7 @@ public sealed class NewsBlackoutRiskFilterTests
         public Task<IReadOnlyList<SurprisePoint>> GetSurprisesAsync(SeriesCode series, int count, DateTimeOffset? asOf, CancellationToken ct) => throw new NotSupportedException();
         public Task<IReadOnlyList<SeriesCatalogEntry>> GetSeriesAsync(CalendarQuery query, CancellationToken ct) => throw new NotSupportedException();
         public Task<CalendarEventView?> GetNextForSymbolAsync(Symbol symbol, ImpactLevel minImpact, DateTimeOffset now, CancellationToken ct) => throw new NotSupportedException();
+        public Task<IReadOnlyList<CalendarEventView>> GetEventsForSymbolAsync(Symbol symbol, DateTimeOffset from, DateTimeOffset to, DateTimeOffset? asOf, CancellationToken ct) => throw new NotSupportedException();
         public Task<IReadOnlyList<Symbol>> GetAffectedSymbolsAsync(CalendarEventId id, IReadOnlyList<string> watchlist, CancellationToken ct) => throw new NotSupportedException();
         public Task<IReadOnlyList<SourceHealth>> GetHealthAsync(CancellationToken ct) => throw new NotSupportedException();
     }

@@ -137,6 +137,34 @@ public class EconomicCalendarPersistenceTests(PostgresFixture fixture) : IClassF
     }
 
     [Fact]
+    public async Task For_symbol_returns_only_affecting_events_for_a_backtest_overlay()
+    {
+        await using var db = await FreshAsync();
+        var writer = Writer(db);
+        var us = await SeedCpiAsync(db);
+        var jp = await writer.UpsertSeriesAsync(
+            new SeriesCode("JP.GDP"), new CountryCode("JP"), "Japan GDP", MarketMovingCategory.Growth,
+            ReleaseCadence.Quarterly, 0.8, "FRED", "JPNRGDPEXP", CancellationToken.None);
+        await writer.IngestReleaseAsync(us, Release(3.1m, Effective.AddMinutes(1)), CancellationToken.None);
+        await writer.IngestReleaseAsync(jp,
+            new SourceReleaseItem("JPNRGDPEXP", Effective, Effective.AddMinutes(1), 1.0m, null, null, "src"),
+            CancellationToken.None);
+
+        var reader = Reader(db);
+        var window = (Effective.AddDays(-1), Effective.AddDays(1));
+
+        // EURUSD is exposed to USD (US) but not JPY (JP) → only the US event overlays.
+        var forEur = await reader.GetEventsForSymbolAsync(
+            new Symbol("EURUSD"), window.Item1, window.Item2, null, CancellationToken.None);
+        forEur.Select(e => e.SeriesCode).Should().BeEquivalentTo(["US.CPI.MOM"]);
+
+        // USDJPY is exposed to both.
+        var forJpy = await reader.GetEventsForSymbolAsync(
+            new Symbol("USDJPY"), window.Item1, window.Item2, null, CancellationToken.None);
+        forJpy.Select(e => e.SeriesCode).Should().BeEquivalentTo(["US.CPI.MOM", "JP.GDP"]);
+    }
+
+    [Fact]
     public async Task Blackout_reader_reports_symbol_in_window()
     {
         await using var db = await FreshAsync();

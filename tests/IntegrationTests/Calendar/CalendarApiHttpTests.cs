@@ -89,6 +89,23 @@ public class CalendarApiHttpTests(PostgresFixture fixture) : IClassFixture<Postg
     }
 
     [Fact]
+    public async Task For_symbol_returns_events_affecting_the_symbol()
+    {
+        await using var app = CreateApp();
+        var owner = await LoginAsync(app);
+        await SeedEventAsync(app);
+        var (clientId, secret) = await IssueClientAsync(owner, CalendarScopes.Read);
+
+        var anon = app.CreateClient();
+        var token = await TokenAsync(anon, clientId, secret);
+        anon.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var events = await anon.GetFromJsonAsync<JsonElement>(
+            "/api/calendar/v1/for-symbol?symbol=EURUSD&from=2024-01-01&to=2025-01-01");
+        events.EnumerateArray().Should().Contain(e => e.GetProperty("seriesCode").GetString() == "US.CPI.MOM");
+    }
+
+    [Fact]
     public async Task Missing_token_is_unauthorized()
     {
         await using var app = CreateApp();

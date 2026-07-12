@@ -17,9 +17,24 @@ Status: **IN EXECUTION** — Phase A started 2026-07-12. Author baseline: 2026-0
   now the mandated target and the enforced direction (census gates + never-regress rule). Reaching a
   literal 100% number on ~740 source files is a multi-week fill campaign tracked by WS-1; the gates make
   every *new* omission fail the build so coverage only climbs.
-- **Remaining Phase A (tracked, not yet filled):** live-copy full scenario matrix execution against real
-  cluster+creds (nightly), chaos/fault-injection suite, `/security-review` + `TenantIsolationTests`,
-  literal-100% backfill.
+- **More stale gaps corrected (already shipped, verified green this session):** WS-3 chaos/fault-injection
+  suite exists — `CopyChaosDstTests` (10 seeds × opens/partial-close/scale-in/close/socket-flap/token-
+  rotation/rejection → heal → reconcile → assert convergence + never-fault) + `CopyLeaseReclaimStressTests`
+  (node-death → lease reclaim); 17 tests green. So WS-3 (resilience/recovery) is effectively complete
+  bar full-jitter (also done).
+- **Landed + pushed this session:** WS-1 `RouteCoverageTests`; WS-12 CLAUDE.md mandates (root + tests);
+  CI coverage on all three tiers + nightly `k8s-e2e` (In-cluster Kind) job; K8s whole-app verified locally
+  on Kind (`scripts/k8s-e2e.sh`, exit 0, in-cluster tests green); WS-6 `.Cancel()`→`CancelAsync()` sweep
+  (4 files, 234 copy unit tests green); WS-4 `TenantIsolationTests` (cross-tenant AI-credential isolation
+  over real HTTP + Postgres, green).
+- **Genuinely remaining (multi-session, tracked):** live-copy full scenario matrix *executed* against real
+  cluster+creds (harness + nightly wiring exist; unsafe to run unattended here) · literal-100% coverage
+  backfill on existing lines (the gates now force every *new* line covered; old lines are a fill campaign)
+  · full `/security-review` sweep + API-route (endpoint) census gate · white-label industry matrix · perf
+  benchmarks.
+
+**Status by workstream:** WS-1 gated ✓ · WS-2 harness ✓/live-run pending · WS-3 ✓ · WS-4 started ✓
+(tenant-isolation; security-review pending) · WS-6 ✓ · WS-10 ✓ · WS-12 ✓ · WS-5/7/8/9/11 tracked.
 
 
 > Umbrella plan for going public. It does **not** re-plan features already covered by the 17 plans in

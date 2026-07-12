@@ -31,6 +31,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
     public DbSet<AgentMandate> AgentMandates => Set<AgentMandate>();
     public DbSet<AgentProposal> AgentProposals => Set<AgentProposal>();
+    public DbSet<Core.Agent.TradingAgent> TradingAgents => Set<Core.Agent.TradingAgent>();
     public DbSet<AlertRule> AlertRules => Set<AlertRule>();
     public DbSet<AlertEvent> AlertEvents => Set<AlertEvent>();
     public DbSet<PropRule> PropRules => Set<PropRule>();
@@ -77,6 +78,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<McpApiKeyId>().HaveConversion<StrongIdConverter<McpApiKeyId>>();
         configurationBuilder.Properties<AgentMandateId>().HaveConversion<StrongIdConverter<AgentMandateId>>();
         configurationBuilder.Properties<AgentProposalId>().HaveConversion<StrongIdConverter<AgentProposalId>>();
+        configurationBuilder.Properties<TradingAgentId>().HaveConversion<StrongIdConverter<TradingAgentId>>();
         configurationBuilder.Properties<AlertRuleId>().HaveConversion<StrongIdConverter<AlertRuleId>>();
         configurationBuilder.Properties<AlertEventId>().HaveConversion<StrongIdConverter<AlertEventId>>();
         configurationBuilder.Properties<PropRuleId>().HaveConversion<StrongIdConverter<PropRuleId>>();
@@ -261,6 +263,20 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.Property(x => x.Breach).HasConversion<string>().HasMaxLength(24);
             e.Property(x => x.Kind).HasConversion<string>().HasMaxLength(16);
             e.Property(x => x.DailyLossBasis).HasConversion<string>().HasMaxLength(16);
+        });
+
+        modelBuilder.Entity<Core.Agent.TradingAgent>(e =>
+        {
+            e.HasIndex(x => new { x.UserId, x.CreatedAt });
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.Archetype).HasConversion<string>().HasMaxLength(24);
+            e.Property(x => x.Autonomy).HasConversion<string>().HasMaxLength(16);
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
+            // Computed accessors derived from stored columns — not persisted.
+            e.Ignore(x => x.Goals);
+            e.Ignore(x => x.Envelope);
+            e.Ignore(x => x.Temperament);
+            e.Ignore(x => x.ManagedAccounts);
         });
 
         modelBuilder.Entity<LegalDocument>(e =>

@@ -1,0 +1,97 @@
+@page "/agent-studio"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@using System.Net.Http.Json
+@using Web.Components.Dialogs
+@inject HttpClient Http
+@inject IDialogService Dialogs
+@inject MudBlazor.ISnackbar Snack
+
+<PageTitle>AI · Agent Studio</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Agent Studio</MudText>
+    <HelpTip Text="Create persona-driven trading agents (no code). Each has a character and archetype, manages accounts toward your goals, and runs under the Autonomy & Safety Kernel — hard risk envelope, circuit breaker and kill switch." />
+    <MudSpacer />
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
+               OnClick="CreateAgent" data-testid="agent-new">New agent</MudButton>
+</MudStack>
+
+@if (_agents.Count == 0)
+{
+    <MudText Typo="Typo.body2" Class="mud-text-secondary" data-testid="agents-empty">
+        No agents yet. Create one to get started.
+    </MudText>
+}
+else
+{
+    <MudTable Items="_agents" Dense="true" Hover="true" data-testid="agents-table">
+        <HeaderContent>
+            <MudTh>Agent</MudTh><MudTh>Type</MudTh><MudTh>Autonomy</MudTh><MudTh>Accounts</MudTh>
+            <MudTh>Goals</MudTh><MudTh>Status</MudTh><MudTh>Last action</MudTh><MudTh>Controls</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.name</MudTd>
+            <MudTd>@context.archetype</MudTd>
+            <MudTd>@context.autonomy</MudTd>
+            <MudTd>@context.accountCount</MudTd>
+            <MudTd>@context.goalCount</MudTd>
+            <MudTd><MudChip T="string" Size="Size.Small" Color="@StatusColor(context.status)">@context.status</MudChip></MudTd>
+            <MudTd>@(context.lastAction ?? "—")</MudTd>
+            <MudTd>
+                <MudButton Size="Size.Small" OnClick="() => Start(context.id)" Disabled="@(context.status == "Running")">Start</MudButton>
+                <MudButton Size="Size.Small" OnClick="() => Stop(context.id)" Disabled="@(context.status is "Draft" or "Stopped")">Stop</MudButton>
+                <MudButton Size="Size.Small" Color="Color.Error" OnClick="() => Kill(context.id)"
+                           Disabled="@(context.status != "Running")" data-testid="agent-kill">Kill</MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private List<AgentRow> _agents = [];
+
+    protected override Task OnInitializedAsync() => Reload();
+
+    private async Task Reload()
+    {
+        try { _agents = await Http.GetFromJsonAsync<List<AgentRow>>("/api/agent-studio") ?? []; }
+        catch { _agents = []; }
+    }
+
+    private async Task CreateAgent()
+    {
+        var dialog = await Dialogs.ShowAsync<AgentCreateDialog>("New agent");
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: AgentCreateDialog.AgentCreateResult r })
+        {
+            var response = await Http.PostAsJsonAsync("/api/agent-studio", new
+            {
+                r.Name, r.Archetype, r.Autonomy, r.Aggressiveness, r.Patience, r.TrendBias
+            });
+            if (response.IsSuccessStatusCode) { await Reload(); StateHasChanged(); }
+            else Snack.Add("Could not create the agent.", Severity.Error);
+        }
+    }
+
+    private Task Start(Guid id) => Lifecycle(id, "start");
+    private Task Stop(Guid id) => Lifecycle(id, "stop");
+    private Task Kill(Guid id) => Lifecycle(id, "halt");
+
+    private async Task Lifecycle(Guid id, string verb)
+    {
+        var response = await Http.PostAsync($"/api/agent-studio/{id}/{verb}", null);
+        if (response.IsSuccessStatusCode) { await Reload(); StateHasChanged(); }
+        else Snack.Add($"Could not {verb} the agent (check it has managed accounts).", Severity.Warning);
+    }
+
+    private static Color StatusColor(string status) => status switch
+    {
+        "Running" => Color.Success,
+        "Halted" => Color.Error,
+        "Stopped" => Color.Default,
+        _ => Color.Info
+    };
+
+    private sealed record AgentRow(Guid id, string name, string archetype, string autonomy, string status,
+        int accountCount, string? lastAction, DateTimeOffset? lastActionAt, int goalCount);
+}

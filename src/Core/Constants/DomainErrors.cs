@@ -87,6 +87,13 @@ public static class DomainErrors
     public const string DisclaimerConsentInvalid = "domain.autonomy.disclaimer_consent_invalid";
     public const string PerformanceTargetInvalid = "domain.autonomy.performance_target_invalid";
 
+    public const string AgentNameRequired = "domain.agent.name_required";
+    public const string AgentTransitionInvalid = "domain.agent.transition_invalid";
+    public const string AgentEnvelopeRequired = "domain.agent.envelope_required";
+    public const string AgentConsentRequired = "domain.agent.consent_required";
+    public const string AgentNoManagedAccounts = "domain.agent.no_managed_accounts";
+    public const string AgentTemperamentInvalid = "domain.agent.temperament_invalid";
+
     public const string VolatilityTargetInvalid = "domain.portfolio.vol_target_invalid";
     public const string KellyFractionInvalid = "domain.portfolio.kelly_fraction_invalid";
     public const string LeverageCapInvalid = "domain.portfolio.leverage_cap_invalid";

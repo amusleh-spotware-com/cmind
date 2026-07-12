@@ -30,6 +30,7 @@ const sidebars: SidebarsConfig = {
           ],
         },
         'features/ai',
+        'features/agent-studio',
         'features/build-and-backtest',
         'features/backtest-integrity',
         'features/position-sizing',

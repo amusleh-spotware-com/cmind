@@ -1,0 +1,56 @@
+@* Create a persona-driven trading agent. Returns AgentCreateResult on confirm. *@
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">New trading agent</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="_name" Label="Agent name" Required="true" RequiredError="Name is required"
+                          Immediate="true" Class="mb-2" data-testid="agent-name" />
+            <MudSelect @bind-Value="_archetype" Label="Archetype" Class="mb-2">
+                @foreach (var a in Archetypes) { <MudSelectItem Value="@a">@a</MudSelectItem> }
+            </MudSelect>
+            <MudSelect @bind-Value="_autonomy" Label="Autonomy" Class="mb-2">
+                <MudSelectItem Value="@("Advisory")">Advisory (proposes only)</MudSelectItem>
+                <MudSelectItem Value="@("ApprovalGated")">Approval-gated</MudSelectItem>
+            </MudSelect>
+            <MudText Typo="Typo.body2" Class="mt-2">Aggressiveness</MudText>
+            <MudSlider @bind-Value="_aggr" Min="0" Max="1" Step="0.1" Color="Color.Primary" />
+            <MudText Typo="Typo.body2">Patience</MudText>
+            <MudSlider @bind-Value="_patience" Min="0" Max="1" Step="0.1" Color="Color.Primary" />
+            <MudText Typo="Typo.body2">Trend-following</MudText>
+            <MudSlider @bind-Value="_trend" Min="0" Max="1" Step="0.1" Color="Color.Primary" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" data-testid="agent-create-submit">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    private static readonly string[] Archetypes =
+        ["Scalper", "DayTrader", "SwingTrader", "PositionTrader", "NewsTrader", "Contrarian", "MeanReversion", "BreakoutMomentum"];
+
+    private MudForm? _form;
+    private string _name = "";
+    private string _archetype = "Scalper";
+    private string _autonomy = "Advisory";
+    private double _aggr = 0.5;
+    private double _patience = 0.5;
+    private double _trend = 0.5;
+
+    private async Task Submit()
+    {
+        if (_form is not null) await _form.Validate();
+        if (string.IsNullOrWhiteSpace(_name)) return;
+        Dialog.Close(DialogResult.Ok(new AgentCreateResult(_name.Trim(), _archetype, _autonomy, _aggr, _patience, _trend)));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    public sealed record AgentCreateResult(string Name, string Archetype, string Autonomy, double Aggressiveness, double Patience, double TrendBias);
+}

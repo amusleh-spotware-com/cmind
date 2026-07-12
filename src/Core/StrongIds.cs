@@ -125,6 +125,13 @@ public readonly record struct AgentProposalId(Guid Value) : IStronglyTypedId<Age
     public override string ToString() => Value.ToString();
 }
 
+public readonly record struct TradingAgentId(Guid Value) : IStronglyTypedId<TradingAgentId>
+{
+    public static TradingAgentId New() => new(Guid.NewGuid());
+    public static TradingAgentId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct AlertRuleId(Guid Value) : IStronglyTypedId<AlertRuleId>
 {
     public static AlertRuleId New() => new(Guid.NewGuid());

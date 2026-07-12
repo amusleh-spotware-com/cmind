@@ -152,8 +152,11 @@ so re-enabling is instant.
 - **P3 — more sources & warm-up** *(started)*: a **core-series catalog** (CPI, Core CPI, NFP,
   unemployment, GDP, PCE, Fed funds, retail sales → their FRED ids) is seeded on first enable, and a
   one-time, idempotent, year-chunked **proactive backfill** pulls their ≥10-year history so the common
-  case is warm without waiting for a user miss. Still to come: BLS/BEA/Census/ECB/Eurostat/OECD sources
-  + central-bank schedules, the reconciliation pass, and per-source freshness/observability.
+  case is warm without waiting for a user miss. **Per-source freshness** is now real too: the worker
+  records each source's last successful poll, consecutive-failure count and a tripped-circuit flag
+  (persisted in app settings, cross-process), and the `/health` endpoint + `calendar_health` MCP tool
+  report a truthful `stale` verdict per source. Still to come: BLS/BEA/Census/ECB/Eurostat/OECD sources
+  + central-bank schedules and the reconciliation pass.
 - **P4 — deep integration**: **MCP tools** *(implemented — full read-API parity: `calendar_events`,
   `calendar_event`, `calendar_history`, `calendar_series`, `calendar_surprises`, `calendar_next`,
   `calendar_blackout`, `calendar_affected_symbols`, `calendar_health`, gated on the feature)*; cBot

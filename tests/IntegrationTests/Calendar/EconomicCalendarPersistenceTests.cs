@@ -36,9 +36,12 @@ public class EconomicCalendarPersistenceTests(PostgresFixture fixture) : IClassF
 
     private static CalendarWriteService Writer(DataContext db) => new(db, new FixedTimeProvider(Now));
 
-    private static EconomicCalendarReader Reader(DataContext db) =>
-        new(db, new StaticOptionsMonitor<AppOptions>(new AppOptions()), [], new NewsWindowPolicy(),
-            new FixedTimeProvider(Now));
+    private static EconomicCalendarReader Reader(DataContext db)
+    {
+        var options = new StaticOptionsMonitor<AppOptions>(new AppOptions());
+        var health = new CalendarHealthStore(db, options, new FixedTimeProvider(Now));
+        return new EconomicCalendarReader(db, options, [], new NewsWindowPolicy(), health);
+    }
 
     private static async Task<EconomicSeries> SeedCpiAsync(DataContext db, double prior = 0.85)
     {

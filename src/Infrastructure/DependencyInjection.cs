@@ -137,6 +137,7 @@ public static class DependencyInjection
         services.TryAddSingleton<Infrastructure.Calendar.CalendarRateGate>();
         services.AddTransient<Infrastructure.Calendar.CalendarRateLimitHandler>();
         services.AddScoped<Infrastructure.Calendar.CalendarWriteService>();
+        services.AddScoped<Infrastructure.Calendar.CalendarHealthStore>();
         services.AddScoped<Infrastructure.Calendar.CalendarBackfiller>();
         services.AddScoped<Core.Calendar.IEconomicCalendar, Infrastructure.Calendar.EconomicCalendarReader>();
         services.AddHttpClient<Core.Calendar.ICalendarSource, Infrastructure.Calendar.FredSource>((sp, client) =>

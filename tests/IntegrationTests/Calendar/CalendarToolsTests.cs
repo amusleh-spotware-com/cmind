@@ -35,9 +35,12 @@ public class CalendarToolsTests(PostgresFixture fixture) : IClassFixture<Postgre
         return db;
     }
 
-    private static EconomicCalendarReader Reader(DataContext db) =>
-        new(db, new StaticOptionsMonitor<AppOptions>(new AppOptions()), [], new NewsWindowPolicy(),
-            new FixedTimeProvider(Now));
+    private static EconomicCalendarReader Reader(DataContext db)
+    {
+        var options = new StaticOptionsMonitor<AppOptions>(new AppOptions());
+        var health = new CalendarHealthStore(db, options, new FixedTimeProvider(Now));
+        return new EconomicCalendarReader(db, options, [], new NewsWindowPolicy(), health);
+    }
 
     private static async Task SeedAsync(DataContext db)
     {

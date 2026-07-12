@@ -18,7 +18,7 @@ public sealed class EconomicCalendarReader(
     IOptionsMonitor<AppOptions> options,
     IEnumerable<ICalendarSource> sources,
     INewsWindowPolicy newsWindowPolicy,
-    TimeProvider timeProvider)
+    CalendarHealthStore healthStore)
     : IEconomicCalendar
 {
     private static readonly DateTimeOffset FarFuture = DateTimeOffset.MaxValue;
@@ -172,13 +172,7 @@ public sealed class EconomicCalendarReader(
     }
 
     public Task<IReadOnlyList<SourceHealth>> GetHealthAsync(CancellationToken ct)
-    {
-        var now = timeProvider.GetUtcNow();
-        IReadOnlyList<SourceHealth> health = sources
-            .Select(s => new SourceHealth(s.Name, now, CircuitOpen: false, TrackedSeries: 0, Stale: false))
-            .ToList();
-        return Task.FromResult(health);
-    }
+        => healthStore.GetAllAsync(sources.Select(s => s.Name).ToList(), ct);
 
     private static EventRevision? Resolve(EconomicEvent economicEvent, DateTimeOffset? asOf) =>
         asOf is { } pit ? economicEvent.RevisionAsOf(pit) : economicEvent.LatestRevision;

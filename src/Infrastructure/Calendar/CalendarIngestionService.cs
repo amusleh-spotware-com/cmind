@@ -60,6 +60,7 @@ public sealed class CalendarIngestionService(
         await using var scope = scopeFactory.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
         var writer = scope.ServiceProvider.GetRequiredService<CalendarWriteService>();
+        var health = scope.ServiceProvider.GetRequiredService<CalendarHealthStore>();
 
         var now = timeProvider.GetUtcNow();
         var from = now - TimeSpan.FromDays(options.CurrentValue.Calendar.ReconcileLookbackDays);
@@ -74,10 +75,12 @@ public sealed class CalendarIngestionService(
                 var releases = await source.FetchReleasesAsync(s.SourceSeriesId, from, now, ct);
                 foreach (var release in releases)
                     await writer.IngestReleaseAsync(s, release, ct);
+                await health.RecordSuccessAsync(source.Name, ct);
             }
             catch (Exception)
             {
                 // One source down degrades only its coverage; keep syncing the rest.
+                await health.RecordFailureAsync(source.Name, ct);
             }
         }
     }

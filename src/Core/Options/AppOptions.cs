@@ -79,6 +79,12 @@ public sealed record CalendarOptions
     /// <summary>Years of history the one-time proactive backfill pulls for the core high-impact series.</summary>
     public int BackfillYears { get; init; } = 10;
 
+    /// <summary>A source with no successful poll within this window is reported as stale in the health view.</summary>
+    public TimeSpan SourceStaleAfter { get; init; } = TimeSpan.FromHours(2);
+
+    /// <summary>Consecutive source failures that trip the reported circuit-open flag for that source.</summary>
+    public int CircuitFailureThreshold { get; init; } = 5;
+
     /// <summary>
     /// When a blackout answer is uncertain (source/DB fault, data gap), the conservative default: <c>true</c>
     /// = fail-closed ("assume in-blackout") for risk-off bots, <c>false</c> = fail-open. Never silently

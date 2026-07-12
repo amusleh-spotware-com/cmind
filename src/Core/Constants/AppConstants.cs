@@ -12,6 +12,28 @@ public static class RateLimitPolicies
     public const string Auth = nameof(Auth);
     public const int AuthPermitPerWindow = 20;
     public const int AuthWindowSeconds = 60;
+
+    // Self-service registration is public and anonymous, so it is throttled harder than auth: a handful of
+    // sign-up / verify / resend attempts per IP per minute is plenty for a human and starves scripted abuse.
+    public const string Registration = nameof(Registration);
+    public const int RegistrationPermitPerWindow = 5;
+    public const int RegistrationWindowSeconds = 60;
+}
+
+public static class RegistrationConstants
+{
+    // Bytes of entropy in an email-verification token; the raw token is url-safe base64 of these bytes and
+    // only its SHA-256 hash is stored. 32 bytes = 256 bits.
+    public const int VerificationTokenBytes = 32;
+
+    // Header the provisioning caller presents its shared secret in.
+    public const string ProvisionSecretHeader = "X-Provision-Secret";
+
+    // Max length accepted for any free-text profile attribute (name, company, ...).
+    public const int MaxProfileTextLength = 128;
+
+    public const int RoleRankUser = 2;
+    public const int RoleRankViewer = 3;
 }
 
 public static class AuthLockout

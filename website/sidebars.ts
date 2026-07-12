@@ -42,6 +42,7 @@ const sidebars: SidebarsConfig = {
         'features/mcp',
         'features/prop-firm',
         'features/two-factor-auth',
+        'features/user-registration',
         'features/white-label',
         'features/feature-toggles',
         'features/compliance',

@@ -22,6 +22,29 @@ public static class UserEndpoints
                 .Select(u => new { u.Id, u.Email, Role = u.RoleName, u.IsLockedOut, u.CreatedAt })
                 .ToListAsync());
 
+        g.MapGet("/pending", async (DataContext db) =>
+            await db.Users
+                .Where(u => u.ActivationState == UserActivationState.PendingApproval)
+                .Select(u => new { u.Id, u.Email, Role = u.RoleName, u.CreatedAt })
+                .ToListAsync());
+
+        g.MapPost("/{id:guid}/approve", async (Guid id, DataContext db) =>
+        {
+            var uid = UserId.From(id);
+            var target = await db.Users.FirstOrDefaultAsync(u => u.Id == uid);
+            if (target is null) return Results.NotFound();
+            try
+            {
+                target.Approve();
+            }
+            catch (Core.Domain.DomainException ex)
+            {
+                return Results.BadRequest(new { error = ex.Code });
+            }
+            await db.SaveChangesAsync();
+            return Results.Ok(new { target.Id });
+        });
+
         g.MapPost("/", async (CreateUserRequest req, DataContext db, IPasswordHasher hasher, ICurrentUser current) =>
         {
             // Rank: 0=Owner,1=Admin,2=User,3=Viewer

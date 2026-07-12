@@ -85,6 +85,8 @@ public static class DependencyInjection
         services.AddSingleton<Core.Agent.IAccountStateStore, Infrastructure.Agent.OpenApiAccountStateStore>();
         services.AddSingleton<Core.Agent.IAgentOrderExecutor, Infrastructure.Agent.OpenApiAgentOrderExecutor>();
         services.AddScoped<Core.Agent.IAgentDecisionEngine, Infrastructure.Agent.AiAgentDecisionEngine>();
+        services.AddScoped<Core.Agent.IResearchDesk, Core.Agent.ResearchDesk>();
+        services.AddScoped<Core.Agent.IAgentMemory, Infrastructure.Agent.EfAgentMemory>();
         services.AddHostedService<Infrastructure.Agent.AgentRuntimeService>();
         services.AddHttpClient<CTraderOpenApi.Auth.IOpenApiTokenClient, CTraderOpenApi.Auth.OpenApiTokenClient>(
             (sp, client) =>

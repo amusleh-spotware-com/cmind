@@ -77,9 +77,12 @@ public class RegistrationFlowTests(PostgresFixture fixture) : IClassFixture<Post
             .StatusCode.Should().Be(HttpStatusCode.Unauthorized);
 
         // Owner approves.
+        // The fixture DB is shared across tests, so match our specific pending user by email.
         var owner = await OwnerClientAsync(app);
         var pending = await (await owner.GetAsync("/api/users/pending")).Content.ReadFromJsonAsync<JsonElement>();
-        var id = pending.EnumerateArray().First().GetProperty("id").GetString();
+        var id = pending.EnumerateArray()
+            .First(u => u.GetProperty("email").GetString() == "pending@reg.local")
+            .GetProperty("id").GetString();
         (await owner.PostAsJsonAsync($"/api/users/{id}/approve", new { })).EnsureSuccessStatusCode();
 
         // Now login works.

@@ -61,6 +61,31 @@ public static class AgentStudioEndpoints
             }));
         });
 
+        g.MapGet("/{id:guid}/memory", async (Guid id, DataContext db, ICurrentUser u, Core.Agent.IAgentMemory memory, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var aid = TradingAgentId.From(id);
+            if (!await db.TradingAgents.AnyAsync(a => a.Id == aid && a.UserId == uid, ct)) return Results.NotFound();
+            var records = await memory.RecallAsync(aid, 50, ct);
+            return Results.Ok(records.Select(m => new { tier = m.Tier.ToString(), content = m.Content, at = m.CreatedAt }));
+        });
+
+        g.MapPost("/{id:guid}/debate", async (Guid id, DataContext db, ICurrentUser u, Core.Agent.IResearchDesk desk, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var agent = await Find(db, id, uid, ct);
+            if (agent is null) return Results.NotFound();
+
+            var context = $"Agent '{agent.Name}' ({agent.Archetype}, {agent.Autonomy}) managing {agent.ManagedAccounts.Count} account(s).";
+            var result = await desk.DebateAsync(agent, context, ct);
+            return Results.Ok(new
+            {
+                opinions = result.Opinions.Select(o => new { role = o.Role.ToString(), opinion = o.Opinion }),
+                synthesis = result.Synthesis,
+                proposal = new { reasoning = result.Proposal.Reasoning, action = result.Proposal.Side, result.Proposal.Symbol, result.Proposal.SizeLots }
+            });
+        });
+
         g.MapPost("/{id:guid}/decisions/{seq:long}/approve", (Guid id, long seq, DataContext db, ICurrentUser u, CancellationToken ct) =>
             DecideApprovalAsync(db, u, id, seq, r => r.Approve(), ct));
 

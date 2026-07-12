@@ -21,5 +21,6 @@ public enum FeatureFlag
     Accounts,
     OpenApi,
     Mcp,
-    Compliance
+    Compliance,
+    Registration
 }

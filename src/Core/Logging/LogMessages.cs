@@ -1,3 +1,4 @@
+using Core;
 using Microsoft.Extensions.Logging;
 
 namespace Core.Logging;
@@ -333,4 +334,28 @@ public static partial class LogMessages
     [LoggerMessage(EventId = 1077, Level = LogLevel.Warning,
         Message = "Prop-firm alert: challenge {ChallengeId} drawdown at {PercentUsed}% for user {UserId}")]
     public static partial void PropFirmAlertDrawdownWarning(this ILogger logger, Guid challengeId, double percentUsed, Guid userId);
+
+    // ---- User registration ----
+
+    [LoggerMessage(EventId = 1100, Level = LogLevel.Information, Message = "User self-registered: {UserId} ({State})")]
+    public static partial void UserSelfRegistered(this ILogger logger, Guid userId, UserActivationState state);
+
+    [LoggerMessage(EventId = 1101, Level = LogLevel.Information, Message = "User provisioned via API: {UserId}")]
+    public static partial void UserProvisioned(this ILogger logger, Guid userId);
+
+    [LoggerMessage(EventId = 1102, Level = LogLevel.Information, Message = "User email verified: {UserId}")]
+    public static partial void UserEmailVerified(this ILogger logger, Guid userId);
+
+    [LoggerMessage(EventId = 1103, Level = LogLevel.Information, Message = "User approved: {UserId}")]
+    public static partial void UserApprovedLog(this ILogger logger, Guid userId);
+
+    [LoggerMessage(EventId = 1104, Level = LogLevel.Information, Message = "Email sent to {ToAddress}: {Subject}")]
+    public static partial void EmailSent(this ILogger logger, string toAddress, string subject);
+
+    [LoggerMessage(EventId = 1105, Level = LogLevel.Warning, Message = "Email send failed to {ToAddress}: {Subject}")]
+    public static partial void EmailSendFailed(this ILogger logger, string toAddress, string subject, Exception ex);
+
+    [LoggerMessage(EventId = 1106, Level = LogLevel.Information,
+        Message = "Email transport not configured; skipped sending to {ToAddress}: {Subject}")]
+    public static partial void EmailNotConfigured(this ILogger logger, string toAddress, string subject);
 }

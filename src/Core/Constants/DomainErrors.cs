@@ -12,6 +12,8 @@ public static class DomainErrors
     public const string IntervalOutOfRange = "domain.interval.out_of_range";
     public const string SeverityUnknown = "domain.severity.unknown";
 
+    public const string DashboardWidgetUnknown = "domain.dashboard.widget_unknown";
+
     public const string AlertRuleDisabled = "domain.alert.rule_disabled";
     public const string MaxConcurrentOutOfRange = "domain.prop.max_concurrent_out_of_range";
     public const string ProposalNotPending = "domain.agent.proposal_not_pending";
@@ -93,6 +95,7 @@ public static class DomainErrors
     public const string AgentConsentRequired = "domain.agent.consent_required";
     public const string AgentNoManagedAccounts = "domain.agent.no_managed_accounts";
     public const string AgentTemperamentInvalid = "domain.agent.temperament_invalid";
+    public const string AgentMemoryContentRequired = "domain.agent.memory_content_required";
 
     public const string VolatilityTargetInvalid = "domain.portfolio.vol_target_invalid";
     public const string KellyFractionInvalid = "domain.portfolio.kelly_fraction_invalid";
@@ -100,4 +103,12 @@ public static class DomainErrors
     public const string PortfolioSeriesMismatch = "domain.portfolio.series_length_mismatch";
     public const string PortfolioInsufficientStrategies = "domain.portfolio.insufficient_strategies";
     public const string PortfolioDegenerateStrategy = "domain.portfolio.degenerate_strategy";
+
+    public const string RegistrationRoleNotAllowed = "domain.registration.role_not_allowed";
+    public const string UserActivationTransitionInvalid = "domain.registration.activation_transition_invalid";
+    public const string EmailVerificationTokenRequired = "domain.registration.email_verification_token_required";
+    public const string ProfileCountryInvalid = "domain.profile.country_invalid";
+    public const string ProfilePhoneInvalid = "domain.profile.phone_invalid";
+    public const string ProfileLocaleInvalid = "domain.profile.locale_invalid";
+    public const string ProfileTextTooLong = "domain.profile.text_too_long";
 }

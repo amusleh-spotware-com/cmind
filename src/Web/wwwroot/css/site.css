@@ -320,17 +320,25 @@ html, body {
     margin-top: -8px;
 }
 
+.app-login-success {
+    color: var(--app-success);
+    font-size: 14px;
+    line-height: 1.5;
+    margin-top: 8px;
+}
+
 /* ---- Brand mark & wordmark ------------------------------------------------ */
 
 .app-brand-mark { color: var(--app-primary); vertical-align: middle; flex-shrink: 0; }
 .app-login-brand,
 .app-brand-word { font-family: 'Space Grotesk', Inter, 'Segoe UI', sans-serif; letter-spacing: -0.02em; }
 
-/* ---- Settings full-screen dialog ------------------------------------------ */
+/* ---- Settings windowed dialog (Claude-settings style: centered panel, dimmed backdrop) ---- */
 
 .app-settings {
     display: flex;
-    min-height: 70vh;
+    min-height: 68vh;
+    max-height: 78vh;
 }
 .app-settings-nav {
     flex: 0 0 220px;
@@ -802,6 +810,36 @@ html, body {
     from { opacity: 0; transform: translateY(-6px); }
     to   { opacity: 1; transform: translateY(0); }
 }
+.app-feed-row-click { cursor: pointer; }
+.app-feed-row-click:hover { background: var(--app-surface-2); }
+.app-chart-card-click { cursor: pointer; }
+
+/* Backtests widget — three state tiles. */
+.app-backtest-tiles { display: flex; gap: 8px; }
+.app-backtest-tile {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 12px 4px;
+    background: var(--app-surface-2);
+    border-radius: var(--app-radius);
+}
+.app-backtest-num { font-size: 26px; font-weight: 800; line-height: 1; }
+.app-backtest-label { font-size: 11px; color: var(--app-text-secondary); }
+
+/* Customize-dashboard dialog rows. */
+.app-customize-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 2px;
+    border-bottom: 1px solid var(--app-border);
+    min-height: var(--app-touch-target);
+}
+.app-customize-row:last-child { border-bottom: none; }
+.app-customize-label { font-size: 14px; font-weight: 600; }
 
 /* Node health / capacity gauge. */
 .app-gauge-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }

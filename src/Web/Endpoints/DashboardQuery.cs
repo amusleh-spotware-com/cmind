@@ -1,4 +1,6 @@
 ﻿using Core;
+using Core.Agent;
+using Core.Domain;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -72,6 +74,50 @@ public static class DashboardQuery
             McpKeys = await db.McpApiKeys.CountAsync(k => k.UserId == userId && k.RevokedAt == null, cancellationToken)
         };
 
+        var backtests = new DashboardBacktests
+        {
+            Running = backtestRunning,
+            Completed = await db.Instances.CountAsync(
+                i => i.UserId == userId && i is CompletedBacktestInstance, cancellationToken),
+            Failed = await db.Instances.CountAsync(
+                i => i.UserId == userId && i is FailedBacktestInstance, cancellationToken)
+        };
+
+        var copyRows = await db.CopyProfiles.AsNoTracking()
+            .Where(p => p.UserId == userId)
+            .Select(p => new { p.Name, p.Status, Destinations = p.Destinations.Count })
+            .ToListAsync(cancellationToken);
+        var copyProfiles = copyRows
+            .OrderByDescending(r => r.Status == CopyProfileStatus.Running)
+            .ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase)
+            .Take(12)
+            .Select(r => new DashboardCopyProfile
+            {
+                Name = r.Name,
+                Status = r.Status.ToString(),
+                Destinations = r.Destinations,
+                IsRunning = r.Status == CopyProfileStatus.Running
+            })
+            .ToList();
+
+        var agentRows = await db.TradingAgents.AsNoTracking()
+            .Where(a => a.UserId == userId)
+            .Select(a => new { a.Name, a.Archetype, a.Status, a.LastActionAt })
+            .ToListAsync(cancellationToken);
+        var agents = agentRows
+            .OrderByDescending(a => a.Status == AgentStatus.Running)
+            .ThenBy(a => a.Name, StringComparer.OrdinalIgnoreCase)
+            .Take(12)
+            .Select(a => new DashboardAgent
+            {
+                Name = a.Name,
+                Archetype = a.Archetype.ToString(),
+                Status = a.Status.ToString(),
+                IsRunning = a.Status == AgentStatus.Running,
+                LastActionAt = a.LastActionAt
+            })
+            .ToList();
+
         DashboardNodes? nodes = null;
         if (isAdmin)
         {
@@ -106,6 +152,9 @@ public static class DashboardQuery
             TimeSeries = timeSeries,
             Activity = activity,
             Resources = resources,
+            Backtests = backtests,
+            CopyProfiles = copyProfiles,
+            Agents = agents,
             Nodes = nodes
         };
     }

@@ -140,7 +140,7 @@ public static class RegistrationEndpoints
 
             db.Users.Add(user);
             await db.SaveChangesAsync(ct);
-            logger.UserSelfRegistered(user.Id.Value, initialState.ToString());
+            logger.UserSelfRegistered(user.Id.Value, initialState);
 
             if (reg.RequireTermsAcceptance)
                 await RecordConsentAsync(user.Id, docs, consents, ip, clock.GetUtcNow(), ct);

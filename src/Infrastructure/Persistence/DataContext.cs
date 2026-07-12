@@ -35,6 +35,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<AgentProposal> AgentProposals => Set<AgentProposal>();
     public DbSet<Core.Agent.TradingAgent> TradingAgents => Set<Core.Agent.TradingAgent>();
     public DbSet<Core.Agent.AgentDecisionRecord> AgentDecisionRecords => Set<Core.Agent.AgentDecisionRecord>();
+    public DbSet<Core.Agent.AgentMemoryRecord> AgentMemories => Set<Core.Agent.AgentMemoryRecord>();
     public DbSet<AlertRule> AlertRules => Set<AlertRule>();
     public DbSet<AlertEvent> AlertEvents => Set<AlertEvent>();
     public DbSet<PropRule> PropRules => Set<PropRule>();
@@ -83,6 +84,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<AgentProposalId>().HaveConversion<StrongIdConverter<AgentProposalId>>();
         configurationBuilder.Properties<TradingAgentId>().HaveConversion<StrongIdConverter<TradingAgentId>>();
         configurationBuilder.Properties<AgentDecisionRecordId>().HaveConversion<StrongIdConverter<AgentDecisionRecordId>>();
+        configurationBuilder.Properties<AgentMemoryRecordId>().HaveConversion<StrongIdConverter<AgentMemoryRecordId>>();
         configurationBuilder.Properties<AlertRuleId>().HaveConversion<StrongIdConverter<AlertRuleId>>();
         configurationBuilder.Properties<AlertEventId>().HaveConversion<StrongIdConverter<AlertEventId>>();
         configurationBuilder.Properties<PropRuleId>().HaveConversion<StrongIdConverter<PropRuleId>>();
@@ -320,6 +322,13 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.HasIndex(x => new { x.AgentId, x.Sequence });
             e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
             e.Property(x => x.Approval).HasConversion<string>().HasMaxLength(16);
+        });
+
+        modelBuilder.Entity<Core.Agent.AgentMemoryRecord>(e =>
+        {
+            e.HasIndex(x => new { x.AgentId, x.CreatedAt });
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.Tier).HasConversion<string>().HasMaxLength(24);
         });
 
         modelBuilder.Entity<LegalDocument>(e =>

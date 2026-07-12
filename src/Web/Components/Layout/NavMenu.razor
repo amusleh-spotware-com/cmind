@@ -116,6 +116,14 @@
         Gate.IsEnabled(FeatureFlag.PropGuard) || Gate.IsEnabled(FeatureFlag.PropFirm);
 
     private Task OpenSettings() =>
+        // Centered, windowed dialog (Claude-settings style): a fixed-size panel over a dimmed backdrop,
+        // not a full-screen takeover. The .app-settings CSS gives it its tall, roomy shape.
         Dialogs.ShowAsync<SettingsDialog>(string.Empty,
-            new DialogOptions { FullScreen = true, CloseOnEscapeKey = true });
+            new DialogOptions
+            {
+                MaxWidth = MaxWidth.Large,
+                FullWidth = true,
+                CloseOnEscapeKey = true,
+                BackdropClick = true
+            });
 }

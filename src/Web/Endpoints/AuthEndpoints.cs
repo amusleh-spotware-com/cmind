@@ -53,6 +53,10 @@ public static class AuthEndpoints
                 return isForm ? Results.Redirect("/login?error=1") : Results.Unauthorized();
             }
 
+            // A self-registered account that has not yet verified its email / been approved cannot sign in.
+            if (!user.IsActive)
+                return isForm ? Results.Redirect("/login?pending=1") : Results.Unauthorized();
+
             user.RecordSuccessfulLogin();
             await db.SaveChangesAsync();
 

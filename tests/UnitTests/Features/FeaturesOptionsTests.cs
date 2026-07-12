@@ -8,13 +8,21 @@ namespace UnitTests.Features;
 public class FeaturesOptionsTests
 {
     [Fact]
-    public void All_features_default_to_enabled()
+    public void Product_features_default_to_enabled_except_registration()
     {
         var options = new FeaturesOptions();
 
         foreach (var flag in Enum.GetValues<FeatureFlag>())
-            options.IsEnabled(flag).Should().BeTrue($"{flag} must default to enabled");
+        {
+            // Self-service registration is the one feature that ships OFF — a deployment opts in explicitly.
+            var expected = flag != FeatureFlag.Registration;
+            options.IsEnabled(flag).Should().Be(expected, $"{flag} default");
+        }
     }
+
+    [Fact]
+    public void Registration_defaults_to_disabled()
+        => new FeaturesOptions().IsEnabled(FeatureFlag.Registration).Should().BeFalse();
 
     [Fact]
     public void IsEnabled_reflects_each_disabled_flag_independently()

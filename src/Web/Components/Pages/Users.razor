@@ -31,11 +31,46 @@
     </RowTemplate>
 </MudTable>
 
+@if (_pending.Length > 0)
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-6 mb-3">
+        <MudText Typo="Typo.h6">Pending approval</MudText>
+        <HelpTip Text="Self-registered accounts awaiting your approval before they can sign in." />
+    </MudStack>
+    <MudTable Items="_pending" Dense="true" Breakpoint="Breakpoint.Sm" data-testid="users-pending">
+        <HeaderContent><MudTh>Email</MudTh><MudTh>Role</MudTh><MudTh /></HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Email">@context.email</MudTd>
+            <MudTd DataLabel="Role">@context.role</MudTd>
+            <MudTd DataLabel="">
+                <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled"
+                           OnClick="@(() => Approve((Guid)context.id))">Approve</MudButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                               aria-label="Reject user" OnClick="@(() => Remove((Guid)context.id))" />
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
 @code {
     private dynamic[] _items = [];
+    private dynamic[] _pending = [];
 
     protected override Task OnInitializedAsync() => Load();
-    private async Task Load() => _items = await Http.GetDynamicArrayAsync("/api/users/");
+
+    private async Task Load()
+    {
+        _items = await Http.GetDynamicArrayAsync("/api/users/");
+        _pending = await Http.GetDynamicArrayAsync("/api/users/pending");
+    }
+
+    private async Task Approve(Guid id)
+    {
+        var r = await Http.PostAsJsonAsync($"/api/users/{id}/approve", new { });
+        Snack.Add(r.IsSuccessStatusCode ? "Approved" : "Failed",
+            r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        await Load();
+    }
 
     private async Task OpenNew()
     {

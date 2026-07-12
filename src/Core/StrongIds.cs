@@ -146,6 +146,13 @@ public readonly record struct AgentDecisionRecordId(Guid Value) : IStronglyTyped
     public override string ToString() => Value.ToString();
 }
 
+public readonly record struct AgentMemoryRecordId(Guid Value) : IStronglyTypedId<AgentMemoryRecordId>
+{
+    public static AgentMemoryRecordId New() => new(Guid.NewGuid());
+    public static AgentMemoryRecordId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct AlertRuleId(Guid Value) : IStronglyTypedId<AlertRuleId>
 {
     public static AlertRuleId New() => new(Guid.NewGuid());

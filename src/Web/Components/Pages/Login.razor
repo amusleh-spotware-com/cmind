@@ -1,6 +1,8 @@
 @page "/login"
 @layout EmptyLayout
+@using Core.Options
 @inject Web.Branding.IBrandingThemeProvider Branding
+@inject Microsoft.Extensions.Options.IOptionsMonitor<AppOptions> Options
 
 <PageTitle>Log in — @Branding.Branding.ProductName</PageTitle>
 
@@ -81,6 +83,10 @@
                 </button>
             </form>
 
+            @if (RegistrationEnabled)
+            {
+                <a class="app-login-support" href="/register" data-testid="login-register-link">Create an account</a>
+            }
             @if (!string.IsNullOrWhiteSpace(Branding.Branding.SupportUrl))
             {
                 <a class="app-login-support" href="@Branding.Branding.SupportUrl" target="_blank" rel="noopener">Need help signing in?</a>
@@ -119,4 +125,7 @@
     [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
     [SupplyParameterFromQuery(Name = "error")] public string? Error { get; set; }
     private bool HasError => !string.IsNullOrEmpty(Error);
+
+    private bool RegistrationEnabled =>
+        Options.CurrentValue.Features.Registration && Options.CurrentValue.Registration.Enabled;
 }

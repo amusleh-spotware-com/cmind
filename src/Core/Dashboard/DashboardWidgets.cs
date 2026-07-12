@@ -24,7 +24,7 @@ public static class DashboardWidgets
     /// <summary>Widgets only meaningful to an administrator (cluster-wide node capacity). Hidden for others.</summary>
     public static readonly IReadOnlySet<string> AdminOnly = new HashSet<string>(StringComparer.Ordinal) { NodeHealth };
 
-    private static readonly IReadOnlySet<string> Known = new HashSet<string>(DefaultOrder, StringComparer.Ordinal);
+    private static readonly HashSet<string> Known = new(DefaultOrder, StringComparer.Ordinal);
 
     public static bool IsKnown(string key) => Known.Contains(key);
 

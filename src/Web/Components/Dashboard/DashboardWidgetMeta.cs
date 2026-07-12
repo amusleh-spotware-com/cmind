@@ -11,7 +11,7 @@ public static class DashboardWidgetMeta
 {
     public sealed record Meta(string Key, string Label, string Icon);
 
-    private static readonly IReadOnlyDictionary<string, Meta> ByKey = new Dictionary<string, Meta>(StringComparer.Ordinal)
+    private static readonly Dictionary<string, Meta> ByKey = new(StringComparer.Ordinal)
     {
         [DashboardWidgets.Kpis] = new(DashboardWidgets.Kpis, "Key metrics", Icons.Material.Filled.Speed),
         [DashboardWidgets.ActivityChart] = new(DashboardWidgets.ActivityChart, "Activity chart", Icons.Material.Filled.ShowChart),

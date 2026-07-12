@@ -25,6 +25,12 @@ public sealed record FeaturesOptions
     public bool Mcp { get; init; } = true;
     public bool Compliance { get; init; } = true;
 
+    /// <summary>
+    /// Self-service registration. Unlike the other features this defaults to <c>false</c> — a deployment
+    /// opts in explicitly (and configures <c>App:Registration</c>) before the page/API become reachable.
+    /// </summary>
+    public bool Registration { get; init; }
+
     public bool IsEnabled(FeatureFlag flag) => flag switch
     {
         FeatureFlag.Authoring => Authoring,
@@ -41,6 +47,7 @@ public sealed record FeaturesOptions
         FeatureFlag.OpenApi => OpenApi,
         FeatureFlag.Mcp => Mcp,
         FeatureFlag.Compliance => Compliance,
+        FeatureFlag.Registration => Registration,
         _ => throw new DomainException(DomainErrors.FeatureFlagUnknown)
     };
 }

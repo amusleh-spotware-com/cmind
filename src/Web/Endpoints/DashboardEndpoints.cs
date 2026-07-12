@@ -1,4 +1,5 @@
 using Core;
+using Core.Dashboard;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -19,6 +20,41 @@ public static class DashboardEndpoints
             var overview = await DashboardQuery.BuildAsync(
                 db, uid, u.IsAtLeast("Admin"), DashboardPeriods.Parse(period), time.GetUtcNow());
             return Results.Ok(overview);
+        });
+
+        g.MapGet("/layout", async (DataContext db, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var board = await db.UserDashboards.AsNoTracking()
+                            .FirstOrDefaultAsync(d => d.UserId == uid, ct)
+                        ?? UserDashboard.CreateDefault(uid);
+            return Results.Ok(ToView(board));
+        });
+
+        g.MapPut("/layout", async (DashboardLayoutUpdate body, DataContext db, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+
+            var board = await db.UserDashboards.FirstOrDefaultAsync(d => d.UserId == uid, ct);
+            var isNew = board is null;
+            board ??= UserDashboard.CreateDefault(uid);
+
+            var preferences = (body.Widgets ?? [])
+                .Select(w => new DashboardWidgetPreference(w.Key, w.Visible))
+                .ToList();
+            try
+            {
+                board.Apply(preferences);
+            }
+            catch (Core.Domain.DomainException ex)
+            {
+                return Results.BadRequest(new { error = ex.Code });
+            }
+
+            if (isNew) db.UserDashboards.Add(board);
+            await db.SaveChangesAsync(ct);
+
+            return Results.Ok(ToView(board));
         });
 
         g.MapGet("/stats", async (DataContext db, ICurrentUser u) =>
@@ -86,4 +122,12 @@ public static class DashboardEndpoints
 
         return app;
     }
+
+    private static DashboardLayoutView ToView(UserDashboard board) => new()
+    {
+        Widgets = board.Widgets
+            .OrderBy(w => w.Order)
+            .Select(w => new DashboardWidgetView { Key = w.Key, Visible = w.Visible })
+            .ToList()
+    };
 }

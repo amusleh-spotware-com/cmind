@@ -32,9 +32,10 @@ public sealed class NullAgentOrderExecutor : IAgentOrderExecutor
 /// so the agent never acts blind. Automatic order extraction from the model is intentionally deferred
 /// until the API key is provided — the safety gate and execution wiring are exercised deterministically.
 /// </summary>
-public sealed class AiAgentDecisionEngine(IAiFeatureService ai) : IAgentDecisionEngine
+public sealed class AiAgentDecisionEngine(IAiFeatureService ai, IAgentMemory memory) : IAgentDecisionEngine
 {
     private const int MaxTokens = 1024;
+    private const int RecallCount = 3;
 
     public async Task<AgentDecision> DecideAsync(TradingAgent agent, AccountState state, CancellationToken ct)
     {
@@ -42,7 +43,11 @@ public sealed class AiAgentDecisionEngine(IAiFeatureService ai) : IAgentDecision
         if (!ai.Enabled)
             return new AgentDecision("AI is not configured — holding.", Order: null, Evidence: []);
 
-        var objective = agent.CompileSystemPrompt();
+        // Recall recent memory so the model reasons with continuity (layered memory / reflection).
+        var recent = await memory.RecallAsync(agent.Id, RecallCount, ct);
+        var objective = recent.Count == 0
+            ? agent.CompileSystemPrompt()
+            : agent.CompileSystemPrompt() + "\nRecent memory:\n" + string.Join("\n", recent.Select(m => $"- {m.Content}"));
         var result = await ai.ProposeAgentActionAsync(agent.Name, objective, "{}", null, MaxTokens, ct);
         if (result is not { Success: true })
             return new AgentDecision(result.Error ?? "AI returned no decision.", Order: null, Evidence: []);

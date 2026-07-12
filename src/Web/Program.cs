@@ -63,6 +63,14 @@ builder.Services.AddRateLimiter(o =>
                 PermitLimit = RateLimitPolicies.AuthPermitPerWindow,
                 Window = TimeSpan.FromSeconds(RateLimitPolicies.AuthWindowSeconds)
             }));
+    o.AddPolicy(RateLimitPolicies.Registration, context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = RateLimitPolicies.RegistrationPermitPerWindow,
+                Window = TimeSpan.FromSeconds(RateLimitPolicies.RegistrationWindowSeconds)
+            }));
 });
 builder.Services.ConfigureHttpJsonOptions(o =>
     o.SerializerOptions.Converters.Add(new StrongIdJsonConverterFactory()));
@@ -105,6 +113,7 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy(AuthPolicies.UserOrAbove, p => p.RequireRole("Owner", "Admin", "User"));
 
 builder.Services.AddSingleton<Microsoft.Extensions.Options.IValidateOptions<AppOptions>, Web.Branding.BrandingOptionsValidator>();
+builder.Services.AddSingleton<Microsoft.Extensions.Options.IValidateOptions<AppOptions>, Web.Registration.RegistrationOptionsValidator>();
 builder.Services.AddSingleton<Web.Branding.IBrandingThemeProvider, Web.Branding.BrandingThemeProvider>();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddHttpContextAccessor();
@@ -149,6 +158,7 @@ app.UseMiddleware<Web.Security.MfaEnforcementMiddleware>();
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 app.MapAuthEndpoints();
+app.MapRegistrationEndpoints();
 app.MapCBotEndpoints();
 app.MapNodeEndpoints();
 app.MapInstanceEndpoints();

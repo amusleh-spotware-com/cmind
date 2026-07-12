@@ -15,6 +15,12 @@ public abstract record DomainEventBase : IDomainEvent
 
 public sealed record AlertRaised(AlertRuleId RuleId, UserId UserId, string Severity) : DomainEventBase;
 
+public sealed record UserRegistered(UserId UserId, string NormalizedEmail) : DomainEventBase;
+
+public sealed record UserEmailConfirmed(UserId UserId) : DomainEventBase;
+
+public sealed record UserApproved(UserId UserId) : DomainEventBase;
+
 public sealed record AgentProposalCreated(AgentProposalId ProposalId, AgentMandateId MandateId, UserId UserId)
     : DomainEventBase;
 

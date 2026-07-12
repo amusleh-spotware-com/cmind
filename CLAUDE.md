@@ -189,5 +189,6 @@ Architecture facts you can't read off the code — the rest lives in nested `CLA
 
 ## Deliberately not done
 
-No optimization (unsupported by cTrader Console) · no email/SMTP (manual reset via
-`MustChangePassword`) · no strong-typed EF ID converters yet · no per-user quotas.
+No optimization (unsupported by cTrader Console) · email/SMTP is **opt-in only** (`App:Email`) for
+registration email-verification — unset ⇒ no-op sender and password reset stays manual via
+`MustChangePassword` · no strong-typed EF ID converters yet · no per-user quotas.

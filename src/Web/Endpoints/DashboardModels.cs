@@ -96,6 +96,50 @@ public sealed record DashboardNodes
     public required int CapacityTotal { get; init; }
 }
 
+/// <summary>One live copy-trading profile reduced to the dashboard's status widget.</summary>
+public sealed record DashboardCopyProfile
+{
+    public required string Name { get; init; }
+    public required string Status { get; init; }
+    public required int Destinations { get; init; }
+    public required bool IsRunning { get; init; }
+}
+
+/// <summary>One trading agent reduced to the dashboard's running-agents widget.</summary>
+public sealed record DashboardAgent
+{
+    public required string Name { get; init; }
+    public required string Archetype { get; init; }
+    public required string Status { get; init; }
+    public required bool IsRunning { get; init; }
+    public DateTimeOffset? LastActionAt { get; init; }
+}
+
+public sealed record DashboardBacktests
+{
+    public required int Running { get; init; }
+    public required int Completed { get; init; }
+    public required int Failed { get; init; }
+}
+
+/// <summary>One widget's placement in the user's layout (wire shape for GET/PUT /api/dashboard/layout).</summary>
+public sealed record DashboardWidgetView
+{
+    public required string Key { get; init; }
+    public required bool Visible { get; init; }
+}
+
+public sealed record DashboardLayoutView
+{
+    public required IReadOnlyList<DashboardWidgetView> Widgets { get; init; }
+}
+
+/// <summary>PUT body: the user's chosen ordered widget visibility. An empty/null list resets to defaults.</summary>
+public sealed record DashboardLayoutUpdate
+{
+    public IReadOnlyList<DashboardWidgetView>? Widgets { get; init; }
+}
+
 public sealed record DashboardOverview
 {
     public required DateTimeOffset UpdatedAt { get; init; }
@@ -105,6 +149,9 @@ public sealed record DashboardOverview
     public required IReadOnlyList<DashboardBucket> TimeSeries { get; init; }
     public required IReadOnlyList<DashboardActivity> Activity { get; init; }
     public required DashboardResources Resources { get; init; }
+    public required DashboardBacktests Backtests { get; init; }
+    public required IReadOnlyList<DashboardCopyProfile> CopyProfiles { get; init; }
+    public required IReadOnlyList<DashboardAgent> Agents { get; init; }
     public DashboardNodes? Nodes { get; init; }
 }
 

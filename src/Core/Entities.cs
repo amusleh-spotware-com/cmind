@@ -32,9 +32,22 @@ public abstract class AuditedEntity<TId> : ISoftDeletable, IHasDomainEvents, IAg
 
 // ---------------- Access: AppUser hierarchy by role ----------------
 
+/// <summary>
+/// Lifecycle gate a self-registered account passes through before it can sign in. Owner/admin-created
+/// accounts are <see cref="Active"/> from the start; a self-registered one starts pending until it either
+/// verifies its email or is approved by an owner/admin.
+/// </summary>
+public enum UserActivationState
+{
+    Active,
+    PendingEmailVerification,
+    PendingApproval
+}
+
 public abstract class AppUser : AuditedEntity<UserId>
 {
     private readonly List<MfaBackupCode> _backupCodes = [];
+    private readonly List<EmailVerificationToken> _emailVerificationTokens = [];
 
     [MaxLength(256)] public string Email { get; internal set; } = default!;
     [MaxLength(256)] public string NormalizedEmail { get; internal set; } = default!;
@@ -48,6 +61,20 @@ public abstract class AppUser : AuditedEntity<UserId>
     public bool MfaEnabled { get; private set; }
     public byte[] SecurityStamp { get; private set; } = default!;
     public IReadOnlyList<MfaBackupCode> BackupCodes => _backupCodes;
+
+    public UserActivationState ActivationState { get; private set; } = UserActivationState.Active;
+
+    // Optional white-label attributes. Coalesced so a null materialization (all columns null) still reads
+    // as the empty profile rather than a null reference.
+    public UserProfile Profile
+    {
+        get => field ?? UserProfile.Empty;
+        private set;
+    } = UserProfile.Empty;
+
+    public IReadOnlyList<EmailVerificationToken> EmailVerificationTokens => _emailVerificationTokens;
+
+    public bool IsActive => ActivationState == UserActivationState.Active;
 
     // A secret is stored but not yet confirmed by a first valid code — enrollment is mid-flight.
     public bool MfaEnrollmentPending => EncryptedMfaSecret is not null && !MfaEnabled;
@@ -162,6 +189,67 @@ public abstract class AppUser : AuditedEntity<UserId>
         foreach (var hash in hashes) _backupCodes.Add(MfaBackupCode.Create(Id, hash));
     }
 
+    // ---- Self-service registration ----
+
+    /// <summary>
+    /// Creates a self-registered user with a caller-chosen password. The role is restricted to User or
+    /// Viewer — an anonymous or integrating caller can never mint an Owner/Admin. The account starts in
+    /// <paramref name="initialState"/>: pending until it verifies its email or an owner/admin approves it
+    /// (or <see cref="UserActivationState.Active"/> for a trusted/provisioned account).
+    /// </summary>
+    public static AppUser SelfRegister(int roleRank, Email email, string passwordHash, byte[] securityStamp,
+        UserProfile profile, UserActivationState initialState, bool mustChangePassword = false)
+    {
+        AppUser user = roleRank switch
+        {
+            RoleRankUserValue => RegularUser.Create(email, passwordHash, securityStamp, mustChangePassword),
+            RoleRankViewerValue => ViewerUser.Create(email, passwordHash, securityStamp,
+                seeAllInstances: false, mustChangePassword),
+            _ => throw new DomainException(DomainErrors.RegistrationRoleNotAllowed)
+        };
+        user.Profile = profile;
+        user.ActivationState = initialState;
+        user.RaiseDomainEvent(new UserRegistered(user.Id, user.NormalizedEmail));
+        return user;
+    }
+
+    private const int RoleRankUserValue = 2;
+    private const int RoleRankViewerValue = 3;
+
+    public void UpdateProfile(UserProfile profile) => Profile = profile ?? UserProfile.Empty;
+
+    // Issues a fresh email-verification token (stored as a hash), invalidating any earlier ones so only the
+    // most recently sent link is redeemable.
+    public void IssueEmailVerificationToken(string tokenHash, DateTimeOffset expiresAt)
+    {
+        if (string.IsNullOrWhiteSpace(tokenHash))
+            throw new DomainException(DomainErrors.EmailVerificationTokenRequired);
+        _emailVerificationTokens.Clear();
+        _emailVerificationTokens.Add(EmailVerificationToken.Create(Id, tokenHash, expiresAt));
+    }
+
+    // Redeems a verification token: on a match against an unused, unexpired token the account becomes Active.
+    // Returns false when no redeemable token matches (bad/expired/already-used).
+    public bool RedeemEmailVerificationToken(string tokenHash, DateTimeOffset now)
+    {
+        if (ActivationState != UserActivationState.PendingEmailVerification) return false;
+        var match = _emailVerificationTokens.FirstOrDefault(t => t.TokenHash == tokenHash && t.IsRedeemable(now));
+        if (match is null) return false;
+        match.MarkUsed(now);
+        ActivationState = UserActivationState.Active;
+        RaiseDomainEvent(new UserEmailConfirmed(Id));
+        return true;
+    }
+
+    // Owner/admin approval of a queued registration.
+    public void Approve()
+    {
+        if (ActivationState != UserActivationState.PendingApproval)
+            throw new DomainException(DomainErrors.UserActivationTransitionInvalid);
+        ActivationState = UserActivationState.Active;
+        RaiseDomainEvent(new UserApproved(Id));
+    }
+
     // GDPR erasure: scrub personally identifying data while keeping the (soft-deleted) row so that
     // referential history and audit records remain coherent.
     public void Anonymize()
@@ -171,7 +259,33 @@ public abstract class AppUser : AuditedEntity<UserId>
         EncryptedMfaSecret = null;
         MfaEnabled = false;
         _backupCodes.Clear();
+        _emailVerificationTokens.Clear();
+        Profile = UserProfile.Empty;
     }
+}
+
+// Single-use, expiring email-verification token owned by the AppUser aggregate. Stored as a hash only; the
+// plaintext travels solely in the emailed verification link.
+public sealed class EmailVerificationToken
+{
+    public long Id { get; private set; }
+    public UserId UserId { get; private set; }
+    [MaxLength(128)] public string TokenHash { get; private set; } = default!;
+    public DateTimeOffset ExpiresAt { get; private set; }
+    public DateTimeOffset? UsedAt { get; private set; }
+
+    private EmailVerificationToken() { }
+
+    public static EmailVerificationToken Create(UserId userId, string tokenHash, DateTimeOffset expiresAt)
+        => new()
+        {
+            UserId = userId,
+            TokenHash = DomainGuard.AgainstNullOrWhiteSpace(tokenHash, DomainErrors.EmailVerificationTokenRequired),
+            ExpiresAt = expiresAt
+        };
+
+    public bool IsRedeemable(DateTimeOffset now) => UsedAt is null && ExpiresAt > now;
+    public void MarkUsed(DateTimeOffset now) => UsedAt = now;
 }
 
 // Single-use two-factor recovery code, owned by the AppUser aggregate. Stored as a hash only; the

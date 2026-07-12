@@ -53,18 +53,19 @@ public sealed class AgentRuntimeService(
         var store = sp.GetRequiredService<IAccountStateStore>();
         var executor = sp.GetRequiredService<IAgentOrderExecutor>();
         var processor = sp.GetRequiredService<IAgentDecisionProcessor>();
+        var memory = sp.GetRequiredService<IAgentMemory>();
 
         var running = await db.TradingAgents.Where(a => a.Status == AgentStatus.Running).ToListAsync(ct);
         foreach (var agent in running)
         {
-            try { await StepAgentAsync(agent, db, engine, store, executor, processor, ai.Enabled, ct); }
+            try { await StepAgentAsync(agent, db, engine, store, executor, processor, memory, ai.Enabled, ct); }
             catch { /* isolate: one agent's failure never affects another */ }
         }
     }
 
     private async Task StepAgentAsync(
         TradingAgent agent, DataContext db, IAgentDecisionEngine engine, IAccountStateStore store,
-        IAgentOrderExecutor executor, IAgentDecisionProcessor processor, bool aiAvailable, CancellationToken ct)
+        IAgentOrderExecutor executor, IAgentDecisionProcessor processor, IAgentMemory memory, bool aiAvailable, CancellationToken ct)
     {
         var now = time.GetUtcNow();
         foreach (var accountId in agent.ManagedAccounts)
@@ -87,6 +88,9 @@ public sealed class AgentRuntimeService(
 
             agent.RecordAction($"{processed.Outcome}: {processed.Reason}", now);
             await db.SaveChangesAsync(ct);
+
+            await memory.RememberAsync(agent.Id, agent.UserId, MemoryTier.LowLevelReflection,
+                $"{processed.Outcome}: {decision.Reasoning}", ct);
 
             if (agent.Status != AgentStatus.Running) break; // halted → stop touching this agent
         }

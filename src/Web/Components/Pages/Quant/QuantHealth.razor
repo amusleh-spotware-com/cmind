@@ -1,0 +1,124 @@
+@page "/quant/health"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject MudBlazor.ISnackbar Snack
+
+<PageTitle>Quant · Strategy Health</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Strategy Health &amp; Alpha Decay</MudText>
+    <HelpTip Text="Edges decay. We compare a strategy's recent Sharpe to its earlier record and locate the biggest mean-shift (CUSUM change-point) to tell you whether the edge is Healthy, Degrading, or Decayed." />
+</MudStack>
+
+<MudGrid>
+    <MudItem xs="12" md="5">
+        <MudPaper Class="pa-4" Elevation="1">
+            <MudTextField @bind-Value="_series" Label="Returns or equity curve"
+                          Lines="6" Variant="Variant.Outlined"
+                          HelperText="Comma/space/newline separated numbers, oldest first." />
+            <MudRadioGroup @bind-Value="_mode" Class="mt-2">
+                <MudRadio Value="@("returns")" Color="Color.Primary">Periodic returns</MudRadio>
+                <MudRadio Value="@("equity")" Color="Color.Primary">Equity / balance curve</MudRadio>
+            </MudRadioGroup>
+            <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.MonitorHeart" OnClick="Assess"
+                       Disabled="_loading" data-testid="health-assess">
+                Assess health
+            </MudButton>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="7">
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+        }
+        else if (_result is { } r)
+        {
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudAlert Severity="@HealthSeverity(r.health)" Class="mb-3" data-testid="health-verdict">
+                    <b>@r.health</b>
+                </MudAlert>
+                <MudSimpleTable Dense="true" Hover="true">
+                    <tbody>
+                        <tr><td>Earlier Sharpe</td><td>@r.earlierSharpe.ToString("0.000")</td></tr>
+                        <tr><td>Recent Sharpe</td><td>@r.recentSharpe.ToString("0.000")</td></tr>
+                        @if (r.changePointIndex is { } cp)
+                        {
+                            <tr><td>Change-point at observation</td><td>@cp</td></tr>
+                        }
+                        <tr><td>Observations</td><td>@r.observations</td></tr>
+                    </tbody>
+                </MudSimpleTable>
+                <MudText Typo="Typo.body2" Class="mt-3">@r.rationale</MudText>
+            </MudPaper>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                Paste a return series (oldest first) and press Assess health.
+            </MudText>
+        }
+    </MudItem>
+</MudGrid>
+
+@code {
+    private string _series = "";
+    private string _mode = "returns";
+    private bool _loading;
+    private HealthResult? _result;
+
+    private async Task Assess()
+    {
+        var numbers = Parse(_series);
+        if (numbers.Length < 2)
+        {
+            Snack.Add("Enter at least two numbers.", Severity.Warning);
+            return;
+        }
+
+        _loading = true;
+        _result = null;
+        try
+        {
+            var body = _mode == "equity" ? (object)new { Equity = numbers } : new { Returns = numbers };
+            var response = await Http.PostAsJsonAsync("/api/quant/health", body);
+            if (response.IsSuccessStatusCode)
+                _result = await response.Content.ReadFromJsonAsync<HealthResult>();
+            else
+                Snack.Add("Could not assess that series.", Severity.Error);
+        }
+        catch
+        {
+            Snack.Add("Could not assess that series.", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static double[] Parse(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return [];
+        var tokens = text.Split([',', ' ', '\n', '\r', '\t', ';'], StringSplitOptions.RemoveEmptyEntries);
+        var values = new List<double>(tokens.Length);
+        foreach (var token in tokens)
+            if (double.TryParse(token, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var v))
+                values.Add(v);
+        return values.ToArray();
+    }
+
+    private static Severity HealthSeverity(string health) => health switch
+    {
+        "Healthy" => Severity.Success,
+        "Decayed" => Severity.Error,
+        "Degrading" => Severity.Warning,
+        _ => Severity.Info
+    };
+
+    private sealed record HealthResult(
+        string health, double earlierSharpe, double recentSharpe, int? changePointIndex,
+        int observations, string rationale);
+}

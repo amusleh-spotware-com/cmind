@@ -13,7 +13,7 @@ public sealed class PageSmokeTests(AppFixture app)
     public static IEnumerable<object[]> Routes() => new[]
     {
         "/", "/accounts", "/cbots", "/run", "/backtest", "/nodes", "/copy-trading", "/agent", "/alerts",
-        "/prop-firm", "/prop-guard", "/mcp", "/users", "/account", "/optimize", "/quant/integrity", "/quant/sizing",
+        "/prop-firm", "/prop-guard", "/mcp", "/users", "/account", "/optimize", "/quant/integrity", "/quant/sizing", "/quant/health",
         "/ai/build", "/ai/review", "/ai/debate", "/ai/sentiment", "/ai/exposure", "/ai/digest",
         "/ai/tune", "/ai/optimize",
         "/settings/ai", "/settings/openapi", "/settings/features", "/settings/legal",

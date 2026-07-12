@@ -67,6 +67,28 @@ public static class QuantEndpoints
             }
         });
 
+        g.MapPost("/health", (IntegrityRequest req, Core.Health.IStrategyHealthMonitor monitor) =>
+        {
+            try
+            {
+                var series = BuildSeries(req.Returns, req.Equity);
+                var report = monitor.Assess(series);
+                return Results.Ok(new
+                {
+                    health = report.Health.ToString(),
+                    earlierSharpe = report.EarlierSharpe,
+                    recentSharpe = report.RecentSharpe,
+                    changePointIndex = report.ChangePointIndex,
+                    observations = report.Observations,
+                    rationale = report.Rationale
+                });
+            }
+            catch (DomainException ex)
+            {
+                return Results.BadRequest(new { error = ex.Code });
+            }
+        });
+
         g.MapPost("/pbo", (PboRequest req, IBacktestIntegrityAnalyzer analyzer) =>
         {
             if (req.Trials is not { Length: >= 2 })

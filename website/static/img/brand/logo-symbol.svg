@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="currentColor">
-  <path d="M32 16 A15 15 0 1 0 32 48" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="butt"/>
-  <polyline points="40,31 51,17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-opacity="0.6"/>
-  <line x1="40" y1="30" x2="40" y2="47" stroke="currentColor" stroke-width="2.2" stroke-linecap="butt"/>
-  <rect x="37" y="33" width="6" height="11" rx="0.8"/>
-  <line x1="51" y1="12" x2="51" y2="40" stroke="currentColor" stroke-width="2.2" stroke-linecap="butt"/>
-  <rect x="48" y="18" width="6" height="15" rx="0.8"/>
-  <circle cx="40" cy="31" r="2.4"/>
-  <circle cx="51" cy="17" r="3.4"/>
+  <path d="M39.5 22.4 A15 15 0 1 0 39.5 41.6" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="butt"/>
+  <circle cx="28" cy="32" r="6" fill="none" stroke="currentColor" stroke-width="2.4"/>
+  <circle cx="28" cy="32" r="2.4"/>
+  <line x1="35.2" y1="32" x2="42" y2="32" stroke="currentColor" stroke-width="2.4"/>
+  <line x1="42" y1="32" x2="49.5" y2="25.5" stroke="currentColor" stroke-width="2.4"/>
+  <line x1="42" y1="32" x2="49.5" y2="38.5" stroke="currentColor" stroke-width="2.4" stroke-opacity="0.55"/>
+  <circle cx="49.5" cy="25.5" r="2.9"/>
+  <circle cx="49.5" cy="38.5" r="2.1" fill-opacity="0.55"/>
 </svg>

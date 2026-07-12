@@ -40,15 +40,15 @@
   <circle cx="1150" cy="120" r="6" fill="#26C281"/>
 
   <!-- lock-up: symbol + wordmark + tagline -->
-  <g transform="translate(84 96) scale(2.7)" fill="#26C281">
-    <path d="M32 16 A15 15 0 1 0 32 48" fill="none" stroke="#26C281" stroke-width="6" stroke-linecap="butt"/>
-    <polyline points="40,31 51,17" fill="none" stroke="#26C281" stroke-width="1.8" stroke-opacity="0.6"/>
-    <line x1="40" y1="30" x2="40" y2="47" stroke="#26C281" stroke-width="2.2" stroke-linecap="butt"/>
-    <rect x="37" y="33" width="6" height="11" rx="0.8"/>
-    <line x1="51" y1="12" x2="51" y2="40" stroke="#26C281" stroke-width="2.2" stroke-linecap="butt"/>
-    <rect x="48" y="18" width="6" height="15" rx="0.8"/>
-    <circle cx="40" cy="31" r="2.4"/>
-    <circle cx="51" cy="17" r="3.4"/>
+  <g transform="translate(70 92) scale(2.7)" fill="#26C281">
+    <path d="M39.5 22.4 A15 15 0 1 0 39.5 41.6" fill="none" stroke="#26C281" stroke-width="6" stroke-linecap="butt"/>
+    <circle cx="28" cy="32" r="6" fill="none" stroke="#26C281" stroke-width="2.4"/>
+    <circle cx="28" cy="32" r="2.4"/>
+    <line x1="35.2" y1="32" x2="42" y2="32" stroke="#26C281" stroke-width="2.4"/>
+    <line x1="42" y1="32" x2="49.5" y2="25.5" stroke="#26C281" stroke-width="2.4"/>
+    <line x1="42" y1="32" x2="49.5" y2="38.5" stroke="#26C281" stroke-width="2.4" stroke-opacity="0.55"/>
+    <circle cx="49.5" cy="25.5" r="2.9"/>
+    <circle cx="49.5" cy="38.5" r="2.1" fill-opacity="0.55"/>
   </g>
   <text x="270" y="176" font-family="'Space Grotesk','Segoe UI',Arial,sans-serif" font-size="76" font-weight="600" letter-spacing="-2" fill="#F5F7F5">cMind</text>
   <text x="272" y="222" font-family="'Space Grotesk','Segoe UI',Arial,sans-serif" font-size="22" font-weight="400" fill="#B7BDB7">Build, run &amp; backtest cTrader bots across a distributed fleet — with an AI core watching the risk.</text>

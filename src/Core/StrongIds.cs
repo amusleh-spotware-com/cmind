@@ -55,6 +55,13 @@ public readonly record struct UserId(Guid Value) : IStronglyTypedId<UserId>
     public override string ToString() => Value.ToString();
 }
 
+public readonly record struct UserDashboardId(Guid Value) : IStronglyTypedId<UserDashboardId>
+{
+    public static UserDashboardId New() => new(Guid.NewGuid());
+    public static UserDashboardId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct CtidId(Guid Value) : IStronglyTypedId<CtidId>
 {
     public static CtidId New() => new(Guid.NewGuid());
@@ -129,6 +136,13 @@ public readonly record struct TradingAgentId(Guid Value) : IStronglyTypedId<Trad
 {
     public static TradingAgentId New() => new(Guid.NewGuid());
     public static TradingAgentId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
+public readonly record struct AgentDecisionRecordId(Guid Value) : IStronglyTypedId<AgentDecisionRecordId>
+{
+    public static AgentDecisionRecordId New() => new(Guid.NewGuid());
+    public static AgentDecisionRecordId From(Guid value) => new(value);
     public override string ToString() => Value.ToString();
 }
 

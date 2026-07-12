@@ -37,6 +37,29 @@ public static class AgentStudioEndpoints
             return agent is null ? Results.NotFound() : Results.Ok(Detail(agent));
         });
 
+        g.MapGet("/{id:guid}/decisions", async (Guid id, DataContext db, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var aid = TradingAgentId.From(id);
+            if (!await db.TradingAgents.AnyAsync(a => a.Id == aid && a.UserId == uid, ct)) return Results.NotFound();
+            var records = await db.AgentDecisionRecords
+                .Where(r => r.AgentId == aid && r.UserId == uid)
+                .OrderByDescending(r => r.Sequence)
+                .Take(200)
+                .ToListAsync(ct);
+            return Results.Ok(records.Select(r => new
+            {
+                sequence = r.Sequence,
+                outcome = r.Outcome,
+                reasoning = r.Reasoning,
+                reason = r.Reason,
+                order = r.OrderJson,
+                evidence = r.EvidenceCsv,
+                executed = r.Executed,
+                at = r.CreatedAt
+            }));
+        });
+
         g.MapPost("/", async (CreateAgentRequest req, DataContext db, ICurrentUser u, TimeProvider time, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();

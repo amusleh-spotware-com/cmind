@@ -92,6 +92,19 @@ public class AgentStudioHttpTests(PostgresFixture fixture) : IClassFixture<Postg
     }
 
     [Fact]
+    public async Task Decisions_ledger_starts_empty_and_is_user_scoped()
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+        var id = await CreateAsync(client, new { Name = "Ledger", Archetype = "Scalper" });
+
+        var decisions = await client.GetFromJsonAsync<JsonElement>($"/api/agent-studio/{id}/decisions");
+        decisions.EnumerateArray().Should().BeEmpty();
+
+        (await client.GetAsync($"/api/agent-studio/{Guid.NewGuid()}/decisions")).StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
     public async Task White_label_can_disable_agent_studio()
     {
         await using var app = new WebApplicationFactory<Program>().WithWebHostBuilder(b =>

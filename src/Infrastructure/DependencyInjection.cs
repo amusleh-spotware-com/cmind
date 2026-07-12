@@ -81,6 +81,11 @@ public static class DependencyInjection
         services.AddSingleton<Core.Execution.ITransactionCostAnalyzer, Core.Execution.TransactionCostAnalyzer>();
         services.AddSingleton<Core.Execution.IExecutionScheduler, Core.Execution.AlmgrenChrissScheduler>();
         services.AddSingleton<Core.Journal.IJournalAnalyzer, Core.Journal.JournalAnalyzer>();
+        services.AddSingleton<Core.Agent.IAgentDecisionProcessor, Core.Agent.AgentDecisionProcessor>();
+        services.AddSingleton<Core.Agent.IAccountStateStore, Infrastructure.Agent.NullAccountStateStore>();
+        services.AddSingleton<Core.Agent.IAgentOrderExecutor, Infrastructure.Agent.NullAgentOrderExecutor>();
+        services.AddScoped<Core.Agent.IAgentDecisionEngine, Infrastructure.Agent.AiAgentDecisionEngine>();
+        services.AddHostedService<Infrastructure.Agent.AgentRuntimeService>();
         services.AddHttpClient<CTraderOpenApi.Auth.IOpenApiTokenClient, CTraderOpenApi.Auth.OpenApiTokenClient>(
             (sp, client) =>
             {

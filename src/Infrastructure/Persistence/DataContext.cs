@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Core;
+using Core.Dashboard;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -29,9 +30,11 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<McpApiKey> McpApiKeys => Set<McpApiKey>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
+    public DbSet<UserDashboard> UserDashboards => Set<UserDashboard>();
     public DbSet<AgentMandate> AgentMandates => Set<AgentMandate>();
     public DbSet<AgentProposal> AgentProposals => Set<AgentProposal>();
     public DbSet<Core.Agent.TradingAgent> TradingAgents => Set<Core.Agent.TradingAgent>();
+    public DbSet<Core.Agent.AgentDecisionRecord> AgentDecisionRecords => Set<Core.Agent.AgentDecisionRecord>();
     public DbSet<AlertRule> AlertRules => Set<AlertRule>();
     public DbSet<AlertEvent> AlertEvents => Set<AlertEvent>();
     public DbSet<PropRule> PropRules => Set<PropRule>();
@@ -79,6 +82,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<AgentMandateId>().HaveConversion<StrongIdConverter<AgentMandateId>>();
         configurationBuilder.Properties<AgentProposalId>().HaveConversion<StrongIdConverter<AgentProposalId>>();
         configurationBuilder.Properties<TradingAgentId>().HaveConversion<StrongIdConverter<TradingAgentId>>();
+        configurationBuilder.Properties<AgentDecisionRecordId>().HaveConversion<StrongIdConverter<AgentDecisionRecordId>>();
         configurationBuilder.Properties<AlertRuleId>().HaveConversion<StrongIdConverter<AlertRuleId>>();
         configurationBuilder.Properties<AlertEventId>().HaveConversion<StrongIdConverter<AlertEventId>>();
         configurationBuilder.Properties<PropRuleId>().HaveConversion<StrongIdConverter<PropRuleId>>();
@@ -91,6 +95,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<PropFirmChallengeId>().HaveConversion<StrongIdConverter<PropFirmChallengeId>>();
         configurationBuilder.Properties<LegalDocumentId>().HaveConversion<StrongIdConverter<LegalDocumentId>>();
         configurationBuilder.Properties<ConsentRecordId>().HaveConversion<StrongIdConverter<ConsentRecordId>>();
+        configurationBuilder.Properties<UserDashboardId>().HaveConversion<StrongIdConverter<UserDashboardId>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -218,6 +223,15 @@ public class DataContext : DbContext, IDataProtectionKeyContext
 
         modelBuilder.Entity<AppSetting>(e => e.HasKey(x => x.Key));
 
+        modelBuilder.Entity<UserDashboard>(e =>
+        {
+            e.HasIndex(x => x.UserId).IsUnique().HasFilter("\"IsDeleted\" = false");
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.OwnsMany(x => x.Widgets, b => b.ToJson());
+        });
+        modelBuilder.Entity<UserDashboard>().Navigation(x => x.Widgets)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
         modelBuilder.Entity<AgentMandate>(e =>
         {
             e.HasIndex(x => new { x.UserId, x.Name }).IsUnique().HasFilter("\"IsDeleted\" = false");
@@ -277,6 +291,12 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.Ignore(x => x.Envelope);
             e.Ignore(x => x.Temperament);
             e.Ignore(x => x.ManagedAccounts);
+        });
+
+        modelBuilder.Entity<Core.Agent.AgentDecisionRecord>(e =>
+        {
+            e.HasIndex(x => new { x.AgentId, x.Sequence });
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<LegalDocument>(e =>

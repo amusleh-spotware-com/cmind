@@ -265,6 +265,13 @@ public readonly record struct CalendarApiClientId(Guid Value) : IStronglyTypedId
     public override string ToString() => Value.ToString();
 }
 
+public readonly record struct CalendarWebhookId(Guid Value) : IStronglyTypedId<CalendarWebhookId>
+{
+    public static CalendarWebhookId New() => new(Guid.NewGuid());
+    public static CalendarWebhookId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct Email
 {
     public string Value { get; }

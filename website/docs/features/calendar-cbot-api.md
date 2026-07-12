@@ -12,7 +12,9 @@ math that other calendar APIs do not expose.
 > feature/white-label 404), plus **`events/batch`** (bounded multiplex) and a discoverable
 > **`/openapi.json`** document, **`ETag`/`If-None-Match` 304** on the event/history reads, and
 > **keyset cursor pagination** (`Link: rel="next"`), the **SSE `stream`** (live `event: release` push,
-> poll-backed), and the shipped **typed client** (`CmindCalendarClient`). Still to come: signed `webhooks`.
+> poll-backed), **HMAC-signed webhooks** (`X-CMind-Signature: sha256=…`, owner-registered, delivered by a
+> config-gated worker off a persisted watermark), and the shipped **typed client** (`CmindCalendarClient`).
+> The full public API surface is implemented.
 
 ## Security — JWT
 

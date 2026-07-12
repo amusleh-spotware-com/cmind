@@ -20,6 +20,8 @@ public sealed record CalendarTokenRequest(string ClientId, string ClientSecret);
 
 public sealed record CreateCalendarClientRequest(string Name, string[] Scopes, int? ExpiresInDays);
 
+public sealed record CreateCalendarWebhookRequest(string? Url, string? Secret, string? MinImpact, string? Currencies);
+
 public sealed record CalendarBatchItem(
     DateTimeOffset? From, DateTimeOffset? To, string[]? Countries, string[]? Currencies,
     string[]? Series, string? MinImpact, string? Q, DateTimeOffset? AsOf, int? Limit)
@@ -94,6 +96,50 @@ public static class CalendarApiEndpoints
             var client = await db.CalendarApiClients.FirstOrDefaultAsync(c => c.Id == clientId && c.OwnerId == ownerId);
             if (client is null) return Results.NotFound();
             client.Disable(timeProvider.GetUtcNow());
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        });
+
+        var webhooks = app.MapGroup("/api/calendar/webhooks")
+            .RequireAuthorization()
+            .RequireCalendarEnabled();
+
+        webhooks.MapGet("/", async (DataContext db, ICurrentUser user) =>
+        {
+            var ownerId = user.UserId!.Value;
+            var list = await db.CalendarWebhooks
+                .Where(w => w.OwnerId == ownerId)
+                .Select(w => new { w.Id, w.Url, w.MinImpactLevel, w.Currencies, w.DisabledAt, w.CreatedAt })
+                .ToListAsync();
+            return Results.Ok(list);
+        });
+
+        webhooks.MapPost("/", async (
+            CreateCalendarWebhookRequest request, DataContext db, ICurrentUser user, ISecretProtector protector) =>
+        {
+            if (user.UserId is not { } ownerId) return Results.Unauthorized();
+            if (string.IsNullOrWhiteSpace(request.Secret)) return Results.BadRequest(new { error = "secret_required" });
+
+            var impact = ParseImpact(request.MinImpact) ?? ImpactLevel.Low;
+            try
+            {
+                var encrypted = protector.Protect(
+                    Encoding.UTF8.GetBytes(request.Secret), Core.Constants.EncryptionPurposes.CalendarWebhookSecret);
+                var webhook = CalendarWebhook.Create(ownerId, request.Url ?? "", encrypted, impact, request.Currencies);
+                db.CalendarWebhooks.Add(webhook);
+                await db.SaveChangesAsync();
+                return Results.Ok(new { id = webhook.Id });
+            }
+            catch (Core.Domain.DomainException ex) { return Results.BadRequest(new { error = ex.Code }); }
+        });
+
+        webhooks.MapDelete("/{id:guid}", async (Guid id, DataContext db, ICurrentUser user, TimeProvider timeProvider) =>
+        {
+            var ownerId = user.UserId!.Value;
+            var webhookId = CalendarWebhookId.From(id);
+            var webhook = await db.CalendarWebhooks.FirstOrDefaultAsync(w => w.Id == webhookId && w.OwnerId == ownerId);
+            if (webhook is null) return Results.NotFound();
+            webhook.Disable(timeProvider.GetUtcNow());
             await db.SaveChangesAsync();
             return Results.NoContent();
         });

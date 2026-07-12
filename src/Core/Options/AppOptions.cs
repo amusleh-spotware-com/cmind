@@ -103,6 +103,15 @@ public sealed record CalendarOptions
 
     /// <summary>Short JWT lifetime for issued Calendar API client tokens.</summary>
     public TimeSpan ApiTokenLifetime { get; init; } = TimeSpan.FromMinutes(15);
+
+    /// <summary>
+    /// Whether the outbound webhook delivery worker runs (POSTs matching released events to registered
+    /// webhooks). Off by default — it makes external calls; a deployment opts in.
+    /// </summary>
+    public bool WebhooksEnabled { get; init; }
+
+    /// <summary>How often the webhook worker polls for newly-released events to deliver.</summary>
+    public TimeSpan WebhookPollInterval { get; init; } = TimeSpan.FromSeconds(30);
 }
 
 public sealed record CopyOptions

@@ -169,6 +169,8 @@ public static class DependencyInjection
             client.BaseAddress = new Uri(calendar.BlsBaseUrl);
         }).AddHttpMessageHandler<Infrastructure.Calendar.CalendarRateLimitHandler>();
         services.AddSingleton<Core.Calendar.ICalendarSource, Infrastructure.Calendar.CentralBankScheduleSource>();
+        services.AddHttpClient<Infrastructure.Calendar.WebhookDelivery>();
+        services.AddHostedService<Infrastructure.Calendar.WebhookDeliveryService>();
         services.AddHostedService<Infrastructure.Calendar.CalendarBackfillService>();
         services.AddHostedService<Infrastructure.Calendar.CalendarIngestionService>();
         return services;

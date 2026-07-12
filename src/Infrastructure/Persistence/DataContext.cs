@@ -51,6 +51,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<EconomicSeries> CalendarSeries => Set<EconomicSeries>();
     public DbSet<EconomicEvent> EconomicEvents => Set<EconomicEvent>();
     public DbSet<CalendarApiClient> CalendarApiClients => Set<CalendarApiClient>();
+    public DbSet<CalendarWebhook> CalendarWebhooks => Set<CalendarWebhook>();
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     // The calendar module lives in its own Postgres schema so its append-only churn stays logically
@@ -107,6 +108,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<EconomicSeriesId>().HaveConversion<StrongIdConverter<EconomicSeriesId>>();
         configurationBuilder.Properties<CalendarEventId>().HaveConversion<StrongIdConverter<CalendarEventId>>();
         configurationBuilder.Properties<CalendarApiClientId>().HaveConversion<StrongIdConverter<CalendarApiClientId>>();
+        configurationBuilder.Properties<CalendarWebhookId>().HaveConversion<StrongIdConverter<CalendarWebhookId>>();
         configurationBuilder.Properties<LegalDocumentId>().HaveConversion<StrongIdConverter<LegalDocumentId>>();
         configurationBuilder.Properties<ConsentRecordId>().HaveConversion<StrongIdConverter<ConsentRecordId>>();
         configurationBuilder.Properties<UserDashboardId>().HaveConversion<StrongIdConverter<UserDashboardId>>();
@@ -486,6 +488,14 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         {
             e.ToTable("api_client", CalendarSchema);
             e.HasIndex(x => x.KeyPrefix).IsUnique().HasFilter("\"IsDeleted\" = false");
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.OwnerId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CalendarWebhook>(e =>
+        {
+            e.ToTable("webhook", CalendarSchema);
+            e.HasIndex(x => x.OwnerId);
+            e.Ignore(x => x.MinImpact);
             e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.OwnerId).OnDelete(DeleteBehavior.Cascade);
         });
 

@@ -140,4 +140,5 @@ public static class DomainErrors
     public const string CalendarNewsWindowInvalid = "domain.calendar.news_window_invalid";
     public const string CalendarApiClientNameRequired = "domain.calendar.api_client_name_required";
     public const string CalendarApiScopeInvalid = "domain.calendar.api_scope_invalid";
+    public const string CalendarWebhookUrlInvalid = "domain.calendar.webhook_url_invalid";
 }

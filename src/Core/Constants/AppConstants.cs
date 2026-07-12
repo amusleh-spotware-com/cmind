@@ -86,6 +86,7 @@ public static class AuthSchemes
 public static class EncryptionPurposes
 {
     public const string CtidPassword = "ctid.password";
+    public const string CalendarWebhookSecret = "calendar.webhook_secret";
     public const string CbotAlgo = "cbot.algo";
     public const string CbotSource = "cbot.source";
     public const string NodeApiSecret = "node.api.secret";

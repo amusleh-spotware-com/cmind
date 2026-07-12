@@ -11,8 +11,8 @@ math that other calendar APIs do not expose.
 > `affected-symbols`, `health` — are **implemented and integration-tested** (auth, scope enforcement,
 > feature/white-label 404), plus **`events/batch`** (bounded multiplex) and a discoverable
 > **`/openapi.json`** document, **`ETag`/`If-None-Match` 304** on the event/history reads, and
-> **keyset cursor pagination** (`Link: rel="next"`). Still to come: the SSE `stream`, signed `webhooks`,
-> and the shipped typed client snippet.
+> **keyset cursor pagination** (`Link: rel="next"`), the **SSE `stream`** (live `event: release` push,
+> poll-backed), and the shipped **typed client** (`CmindCalendarClient`). Still to come: signed `webhooks`.
 
 ## Security — JWT
 

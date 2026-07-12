@@ -157,6 +157,54 @@ public class CalendarApiHttpTests(PostgresFixture fixture) : IClassFixture<Postg
         second.StatusCode.Should().Be(HttpStatusCode.NotModified);
     }
 
+    private static async Task SeedRecentEventAsync(WebApplicationFactory<Program> app)
+    {
+        using var scope = app.Services.CreateScope();
+        var writer = scope.ServiceProvider.GetRequiredService<CalendarWriteService>();
+        var series = await writer.UpsertSeriesAsync(
+            new SeriesCode("US.CPI.MoM"), new CountryCode("US"), "US CPI (MoM)",
+            MarketMovingCategory.Inflation, ReleaseCadence.Monthly, 0.85, "FRED", "CPIAUCSL", CancellationToken.None);
+        var at = DateTimeOffset.UtcNow.AddMinutes(-5);
+        await writer.IngestReleaseAsync(series,
+            new SourceReleaseItem("CPIAUCSL", at, at, 3.1m, 2.9m, "%", "fred"), CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Stream_pushes_released_events_as_server_sent_events()
+    {
+        await using var app = CreateApp();
+        var owner = await LoginAsync(app);
+        await SeedRecentEventAsync(app);
+        var (clientId, secret) = await IssueClientAsync(owner, CalendarScopes.Stream);
+
+        var anon = app.CreateClient();
+        var token = await TokenAsync(anon, clientId, secret);
+        anon.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+        var response = await anon.GetAsync(
+            "/api/calendar/v1/stream", HttpCompletionOption.ResponseHeadersRead, cts.Token);
+        response.Content.Headers.ContentType!.MediaType.Should().Be("text/event-stream");
+
+        await using var body = await response.Content.ReadAsStreamAsync(cts.Token);
+        using var reader = new StreamReader(body);
+        var buffer = new char[2048];
+        var received = new System.Text.StringBuilder();
+        try
+        {
+            while (!cts.IsCancellationRequested)
+            {
+                var read = await reader.ReadAsync(buffer, cts.Token);
+                if (read == 0) break;
+                received.Append(buffer, 0, read);
+                if (received.ToString().Contains("US.CPI", StringComparison.Ordinal)) break;
+            }
+        }
+        catch (OperationCanceledException) { }
+
+        received.ToString().Should().Contain("US.CPI");
+    }
+
     [Fact]
     public async Task Full_page_emits_a_next_cursor_link_header()
     {

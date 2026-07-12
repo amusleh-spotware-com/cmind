@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Core;
 using Core.Calendar;
 using Core.Features;
@@ -189,6 +190,44 @@ public static class CalendarApiEndpoints
         v1.MapGet("/health", async (IEconomicCalendar calendar, CancellationToken ct) =>
             Results.Ok(await calendar.GetHealthAsync(ct)))
             .RequireCalendarScope(CalendarScopes.Read);
+
+        // Live push (Server-Sent Events): emits released events matching the filter as they appear, plus a
+        // heartbeat. Poll-backed (no cross-process bus); bounded lifetime; ends on client disconnect.
+        v1.MapGet("/stream", async (HttpContext http, IEconomicCalendar calendar, TimeProvider time, CancellationToken ct) =>
+        {
+            http.Response.Headers.ContentType = "text/event-stream";
+            http.Response.Headers.CacheControl = "no-cache";
+
+            var currencies = SplitCsv(http.Request.Query["currencies"]);
+            var minImpact = ParseImpact(http.Request.Query["minImpact"]) ?? ImpactLevel.Low;
+            var seen = new HashSet<Guid>();
+            var deadline = time.GetUtcNow().AddMinutes(30);
+
+            while (!ct.IsCancellationRequested && time.GetUtcNow() < deadline)
+            {
+                var now = time.GetUtcNow();
+                var recent = await calendar.GetEventsAsync(new CalendarQuery
+                {
+                    From = now.AddDays(-1), To = now, Currencies = currencies, MinImpact = minImpact, Limit = 50
+                }, ct);
+
+                foreach (var e in recent.Where(e => e.Released && seen.Add(e.Id.Value)))
+                {
+                    var payload = JsonSerializer.Serialize(new
+                    {
+                        id = e.Id.Value, seriesCode = e.SeriesCode, country = e.Country,
+                        effectiveAt = e.EffectiveAt, actual = e.Actual, impact = e.Impact.ToString()
+                    });
+                    await http.Response.WriteAsync($"event: release\ndata: {payload}\n\n", ct);
+                }
+
+                await http.Response.WriteAsync(": heartbeat\n\n", ct);
+                await http.Response.Body.FlushAsync(ct);
+
+                try { await Task.Delay(TimeSpan.FromSeconds(2), time, ct); }
+                catch (OperationCanceledException) { break; }
+            }
+        }).RequireCalendarScope(CalendarScopes.Stream);
 
         // Discoverable, versioned contract — no scope required (it is just the schema).
         v1.MapGet("/openapi.json", () => Results.Json(CalendarOpenApi.Document));

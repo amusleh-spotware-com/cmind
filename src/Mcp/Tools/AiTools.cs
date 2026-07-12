@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using Core;
 using Core.Ai;
+using Core.Ai.CurrencyStrength;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,7 @@ using ModelContextProtocol.Server;
 namespace Mcp.Tools;
 
 [McpServerToolType]
-public sealed class AiTools(DataContext db, IHttpContextAccessor http, IAiFeatureService ai)
+public sealed class AiTools(DataContext db, IHttpContextAccessor http, IAiFeatureService ai, ICurrencyStrengthQuery currencyStrength)
 {
     private UserId? CurrentUserId => Guid.TryParse(
         http.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier), out var g) ? UserId.From(g) : null;
@@ -53,5 +54,20 @@ public sealed class AiTools(DataContext db, IHttpContextAccessor http, IAiFeatur
             return new { Success = false, Error = "no completed backtest report for that instance" };
         var r = await ai.AnalyzeBacktestAsync(bt.Name, bt.ReportJson!, default);
         return new { r.Success, r.Text, r.Error };
+    }
+
+    [McpServerTool, Description("Get the latest AI macro currency-strength ranking + forward pair-outlook matrix + narrative for a horizon.")]
+    public async Task<object> CurrencyStrength(
+        [Description("Horizon: 1M, 3M, 6M or 12M (default 3M)")] string? horizon = null,
+        [Description("Tier filter: All, Majors, EM or Exotics (default All)")] string? tier = null)
+    {
+        Horizon parsed;
+        try { parsed = HorizonExtensions.Parse(horizon); }
+        catch (Core.Domain.DomainException) { parsed = Horizon.ThreeMonths; }
+
+        var view = await currencyStrength.LatestAsync(parsed, tier, default);
+        return view is null
+            ? new { Success = false, Error = "no currency-strength snapshot available (AI or calendar not configured, or not yet refreshed)" }
+            : new { Success = true, view.AsOf, view.Horizon, view.Source, view.Narrative, view.Ranking, view.Forecasts, view.Pairs };
     }
 }

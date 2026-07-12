@@ -329,6 +329,13 @@ public static class AiConstants
     // Vision requested against a provider that cannot accept images (e.g. a text-only local model).
     public const string VisionUnsupportedMessage =
         "The active AI provider does not support image input. Switch to a vision-capable provider in Settings → AI.";
+
+    // Currency-strength: base token budget for the AI forward/geopolitics gather (scales with universe size,
+    // capped) and for the narrative explanation.
+    public const int CurrencyStrengthGatherBaseTokens = 2500;
+    public const int CurrencyStrengthGatherTokensPerCurrency = 120;
+    public const int CurrencyStrengthGatherMaxTokens = 8000;
+    public const int CurrencyStrengthExplainMaxTokens = 2000;
 }
 
 // Wire constants for the OpenAI Chat Completions family — the dominant format also spoken by Azure

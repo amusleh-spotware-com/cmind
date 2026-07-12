@@ -1,7 +1,10 @@
 ﻿using System.Text.Json;
 using Core.Ai;
 using Core.Ai.CurrencyStrength;
+using Core.Calendar;
 using Core.Constants;
+using Core.Features;
+using Core.Logging;
 using Core.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -18,9 +21,9 @@ namespace Infrastructure.Ai.CurrencyStrength;
 /// </summary>
 public sealed class CurrencyStrengthRefresher(
     CurrencyMacroAssembler assembler,
-    CurrencyMacroParser parser,
     IAiFeatureService ai,
     ICurrencyStrengthSnapshots snapshots,
+    IFeatureGate featureGate,
     IOptionsMonitor<AppOptions> options,
     TimeProvider timeProvider,
     ILogger<CurrencyStrengthRefresher> logger)
@@ -51,18 +54,14 @@ public sealed class CurrencyStrengthRefresher(
                 gather.GapFill.GetValueOrDefault(c.Code)))
             .ToList();
 
-        var strengthCalculator = new CurrencyStrengthCalculator();
-        var forwardCalculator = new ForwardOutlookCalculator();
-        var ranking = strengthCalculator.Compute(panel, StrengthWeights.Default(), asOf);
+        var ranking = CurrencyStrengthCalculator.Compute(panel, StrengthWeights.Default(), asOf);
         var forwardWeights = ForwardWeights.Default();
 
         var horizonLayers = new Dictionary<string, HorizonLayer>(StringComparer.Ordinal);
-        PairOutlookMatrix? defaultMatrix = null;
         foreach (var horizon in Horizons)
         {
-            var (forecasts, matrix) = forwardCalculator.Project(ranking, gather.Trajectories, forwardWeights, horizon, asOf);
+            var (forecasts, matrix) = ForwardOutlookCalculator.Project(ranking, gather.Trajectories, forwardWeights, horizon, asOf);
             horizonLayers[horizon.Label()] = CurrencyStrengthMapper.ToLayer(forecasts, matrix);
-            if (horizon == Horizon.ThreeMonths) defaultMatrix = matrix;
         }
 
         var rankRows = CurrencyStrengthMapper.ToRankRows(ranking);
@@ -84,14 +83,18 @@ public sealed class CurrencyStrengthRefresher(
             hasCalendar ? asOf : null);
 
         await snapshots.AddAsync(snapshot, ct);
-        LogMessages.CurrencyStrengthRefreshed(logger, source.ToString(), universe.Currencies.Count);
-        _ = defaultMatrix;
+        LogMessages.CurrencyStrengthRefreshed(logger, source, universe.Currencies.Count);
         return snapshot;
     }
 
     private async Task<IReadOnlyDictionary<string, CurrencyMacroInputs>> AssembleCalendarAsync(
         CurrencyUniverse universe, DateTimeOffset asOf, CancellationToken ct)
     {
+        // Respect the calendar's white-label hard gate + runtime toggle — a calendar-off deployment falls
+        // back to AI-only figures rather than reading the calendar read model.
+        if (!CalendarEnablement.IsEnabled(options.CurrentValue.Branding, featureGate))
+            return new Dictionary<string, CurrencyMacroInputs>(StringComparer.Ordinal);
+
         try
         {
             return await assembler.AssembleAsync(universe, asOf, ct);
@@ -120,7 +123,7 @@ public sealed class CurrencyStrengthRefresher(
             return CurrencyForwardGather.Empty;
         }
 
-        return parser.Parse(result.Text, universe);
+        return CurrencyMacroParser.Parse(result.Text, universe);
     }
 
     private async Task<string> ExplainAsync(

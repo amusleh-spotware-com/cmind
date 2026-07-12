@@ -143,6 +143,12 @@ else
         var available = _layout
             .Where(w => DashboardWidgetMeta.IsAvailable(w.Key, Gate, _data?.IsAdmin ?? false))
             .ToList();
+        // Surface opt-in widgets (e.g. currency-strength) the board doesn't yet carry, so a user can enable
+        // them here — they are valid keys but never seeded visible by default.
+        var present = available.Select(w => w.Key).ToHashSet(StringComparer.Ordinal);
+        foreach (var key in DashboardWidgets.OptIn)
+            if (!present.Contains(key) && DashboardWidgetMeta.IsAvailable(key, Gate, _data?.IsAdmin ?? false))
+                available.Add(new DashboardWidgetView { Key = key, Visible = false });
         var parameters = new DialogParameters<DashboardCustomizeDialog>
         {
             { x => x.Widgets, available }
@@ -183,6 +189,7 @@ else
         DashboardWidgets.CopyProfiles => @<DashCopyProfiles Items="_data!.CopyProfiles" />,
         DashboardWidgets.Agents => @<DashAgents Items="_data!.Agents" />,
         DashboardWidgets.NodeHealth => @<text>@if (_data!.Nodes is not null) { <DashNodeHealth Nodes="_data.Nodes" /> }</text>,
+        DashboardWidgets.CurrencyStrength => @<DashCurrencyStrength />,
         DashboardWidgets.Resources => @<MudGrid>
             <DashStat Label="cBots" Value="@_data!.Resources.CBots" Color="var(--app-primary)" Icon="@Icons.Material.Filled.SmartToy" Href="/cbots" />
             <DashStat Label="Trading accounts" Value="@_data.Resources.TradingAccounts" Color="var(--app-primary)" Icon="@Icons.Material.Filled.AccountBalance" Href="/accounts" />

@@ -127,8 +127,8 @@ else
 
     protected override async Task OnInitializedAsync() => await Load();
 
-    private async Task OnHorizonChanged(string value) { _horizon = value ?? "3M"; await Load(); }
-    private async Task OnTierChanged(string value) { _tier = value ?? "All"; await Load(); }
+    private async Task OnHorizonChanged(string? value) { _horizon = value ?? "3M"; await Load(); }
+    private async Task OnTierChanged(string? value) { _tier = value ?? "All"; await Load(); }
 
     private async Task Refresh()
     {

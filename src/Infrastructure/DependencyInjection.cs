@@ -139,6 +139,21 @@ public static class DependencyInjection
         services.AddScoped<IAiClient, RoutingAiClient>();
         services.AddScoped<IAiFeatureService, AiFeatureService>();
         services.AddCalendarInfrastructure();
+        services.AddCurrencyStrengthInfrastructure();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers the AI macro currency-strength module: the calendar assembler, the AI parser, the snapshot
+    /// repository, the shared read model (<see cref="Core.Ai.CurrencyStrength.ICurrencyStrengthQuery"/>), and
+    /// the refresh orchestrator. The scheduled worker lives in <c>src/Nodes</c> and is config-gated.
+    /// </summary>
+    public static IServiceCollection AddCurrencyStrengthInfrastructure(this IServiceCollection services)
+    {
+        services.AddScoped<Infrastructure.Ai.CurrencyStrength.CurrencyMacroAssembler>();
+        services.AddScoped<Core.Ai.CurrencyStrength.ICurrencyStrengthSnapshots, Infrastructure.Ai.CurrencyStrength.CurrencyStrengthSnapshots>();
+        services.AddScoped<Core.Ai.CurrencyStrength.ICurrencyStrengthQuery, Infrastructure.Ai.CurrencyStrength.CurrencyStrengthQuery>();
+        services.AddScoped<Infrastructure.Ai.CurrencyStrength.CurrencyStrengthRefresher>();
         return services;
     }
 

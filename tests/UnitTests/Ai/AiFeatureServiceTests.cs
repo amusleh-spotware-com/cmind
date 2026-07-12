@@ -149,6 +149,28 @@ public sealed class AiFeatureServiceTests
     }
 
     [Fact]
+    public async Task GatherCurrencyForward_enables_web_search_and_forwards_budget()
+    {
+        var client = Client(AiResult.Ok("{\"currencies\":[]}"));
+        var service = new AiFeatureService(client);
+        await service.GatherCurrencyForwardAsync("{\"currencies\":[]}", 4200, default);
+        await client.Received().CompleteAsync(
+            Arg.Is<AiTextRequest>(r => r.EnableWebSearch && r.MaxTokens == 4200), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExplainCurrencyOutlook_sends_ranking_and_matrix_without_web_search()
+    {
+        var client = Client(AiResult.Ok("because ECB on hold"));
+        var service = new AiFeatureService(client);
+        await service.ExplainCurrencyOutlookAsync("RANKINGJSON", "MATRIXJSON", 2000, default);
+        await client.Received().CompleteAsync(
+            Arg.Is<AiTextRequest>(r => !r.EnableWebSearch && r.MaxTokens == 2000
+                && r.User.Contains("RANKINGJSON") && r.User.Contains("MATRIXJSON")),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public void Enabled_reflects_underlying_client()
     {
         new AiFeatureService(Client(AiResult.Ok(""), enabled: false)).Enabled.Should().BeFalse();

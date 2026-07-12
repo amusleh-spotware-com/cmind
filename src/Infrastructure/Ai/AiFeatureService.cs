@@ -151,6 +151,19 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
             AiPrompts.CopyProfileSystem,
             $"Follower risk profile: {Clip(riskProfile)}\n\nSource (master) account / strategy description:\n{Clip(sourceDescription)}"), ct);
 
+    public Task<AiResult> GatherCurrencyForwardAsync(string calendarContextJson, int maxTokens, CancellationToken ct) =>
+        client.CompleteAsync(new AiTextRequest(
+            AiPrompts.CurrencyForwardSystem,
+            $"Point-in-time calendar actuals + surprises per currency (JSON):\n{Clip(calendarContextJson)}",
+            MaxTokens: maxTokens, EnableWebSearch: true), ct);
+
+    public Task<AiResult> ExplainCurrencyOutlookAsync(string rankingJson, string pairOutlookJson, int maxTokens, CancellationToken ct) =>
+        client.CompleteAsync(new AiTextRequest(
+            AiPrompts.CurrencyExplainSystem,
+            $"Deterministic current ranking (JSON):\n{Clip(rankingJson)}\n\n" +
+            $"Deterministic forward pair-outlook matrix (JSON):\n{Clip(pairOutlookJson)}",
+            MaxTokens: maxTokens), ct);
+
     private static string Clip(string value) =>
         string.IsNullOrEmpty(value) || value.Length <= MaxInputChars ? value ?? string.Empty : value[..MaxInputChars];
 }
@@ -263,4 +276,25 @@ internal static class AiPrompts
     public const string CurateSystem =
         "You are a strategy marketplace curator. From the cBot source, produce compact JSON with fields: title (one line), " +
         "description (two sentences), tags (3-6), category, riskRating (low|medium|high), riskJustification.";
+
+    public const string CurrencyForwardSystem =
+        "You are a macro FX strategist gathering FORWARD-looking inputs for a deterministic currency-strength model. " +
+        "You are given point-in-time CURRENT actuals + surprises per currency from an economic calendar — DO NOT re-guess " +
+        "or override those; anchor on them. Using current web information, output ONLY a JSON object and nothing else " +
+        "(no prose, no code fences): {\"currencies\": [{\"code\": string (ISO-4217), \"trajectory\": {\"ratePathBp\": number " +
+        "(expected policy-rate change over the horizon, bp; hiking +, cutting -), \"inflationTrend\": number (negative = " +
+        "moving toward target, positive = away), \"growthMomentum\": number (positive = accelerating), \"geopoliticalDelta\": " +
+        "number in [-3,3] (positive = tailwind / safe-haven bid, negative = headwind: tariffs, fiscal/debt, elections)}, " +
+        "\"currentGapFill\": {\"policyRate\": number?, \"cpi\": number?, \"gdpGrowth\": number?, \"unemployment\": number?, " +
+        "\"realYield\": number?, \"externalVulnerability\": number?, \"politicalRisk\": number?, \"termsOfTrade\": number?} " +
+        "(ONLY for figures the calendar did not provide; omit otherwise), \"dataConfidence\": \"High\"|\"Medium\"|\"Low\"}]}. " +
+        "Provide an entry for EVERY currency in the calendar context. Be conservative for opaque EM/exotic data (Low confidence). " +
+        "Not financial advice.";
+
+    public const string CurrencyExplainSystem =
+        "You are an FX desk strategist. You are given a DETERMINISTIC current strength ranking and a forward pair-outlook " +
+        "matrix that were already computed by a model — treat every rank, bias and number as fixed ground truth; NEVER change " +
+        "one. Explain in plain English why the top and bottom currencies rank where they do, and narrate 3-5 of the highest- " +
+        "conviction pair calls (e.g. 'EUR/USD bullish 3M because ...') citing the drivers behind each. Note the honest caveat " +
+        "that fundamentals are a medium/long-term positioning filter, not a short-term timing signal. Be concise. Not financial advice.";
 }

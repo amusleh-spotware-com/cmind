@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Core;
+using Core.Ai.CurrencyStrength;
 using Core.Calendar;
 using Core.Dashboard;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
@@ -52,6 +53,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<EconomicEvent> EconomicEvents => Set<EconomicEvent>();
     public DbSet<CalendarApiClient> CalendarApiClients => Set<CalendarApiClient>();
     public DbSet<CalendarWebhook> CalendarWebhooks => Set<CalendarWebhook>();
+    public DbSet<CurrencyStrengthSnapshot> CurrencyStrengthSnapshots => Set<CurrencyStrengthSnapshot>();
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     // The calendar module lives in its own Postgres schema so its append-only churn stays logically
@@ -113,6 +115,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<ConsentRecordId>().HaveConversion<StrongIdConverter<ConsentRecordId>>();
         configurationBuilder.Properties<UserDashboardId>().HaveConversion<StrongIdConverter<UserDashboardId>>();
         configurationBuilder.Properties<AiProviderCredentialId>().HaveConversion<StrongIdConverter<AiProviderCredentialId>>();
+        configurationBuilder.Properties<CurrencyStrengthSnapshotId>().HaveConversion<StrongIdConverter<CurrencyStrengthSnapshotId>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -497,6 +500,16 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.HasIndex(x => x.OwnerId);
             e.Ignore(x => x.MinImpact);
             e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.OwnerId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CurrencyStrengthSnapshot>(e =>
+        {
+            e.ToTable("currency_strength_snapshot");
+            e.HasIndex(x => x.AsOf);
+            e.Property(x => x.Source).HasConversion<string>().HasMaxLength(24);
+            e.Property(x => x.RankingJson).HasColumnType("jsonb");
+            e.Property(x => x.HorizonsJson).HasColumnType("jsonb");
+            e.Property(x => x.IndicatorsJson).HasColumnType("jsonb");
         });
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())

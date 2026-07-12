@@ -21,7 +21,8 @@ public static class DashboardWidgetMeta
         [DashboardWidgets.CopyProfiles] = new(DashboardWidgets.CopyProfiles, "Copy trading", Icons.Material.Filled.Repeat),
         [DashboardWidgets.Agents] = new(DashboardWidgets.Agents, "AI agents", Icons.Material.Filled.SmartToy),
         [DashboardWidgets.Resources] = new(DashboardWidgets.Resources, "My resources", Icons.Material.Filled.Inventory2),
-        [DashboardWidgets.NodeHealth] = new(DashboardWidgets.NodeHealth, "Node health", Icons.Material.Filled.Dns)
+        [DashboardWidgets.NodeHealth] = new(DashboardWidgets.NodeHealth, "Node health", Icons.Material.Filled.Dns),
+        [DashboardWidgets.CurrencyStrength] = new(DashboardWidgets.CurrencyStrength, "Currency strength", Icons.Material.Filled.Public)
     };
 
     public static Meta For(string key) =>
@@ -35,6 +36,7 @@ public static class DashboardWidgetMeta
         DashboardWidgets.CopyProfiles => gate.IsEnabled(FeatureFlag.CopyTrading),
         DashboardWidgets.Agents => gate.IsEnabled(FeatureFlag.AgentStudio),
         DashboardWidgets.Backtests => gate.IsEnabled(FeatureFlag.Backtesting),
+        DashboardWidgets.CurrencyStrength => gate.IsEnabled(FeatureFlag.Ai),
         _ => true
     };
 }

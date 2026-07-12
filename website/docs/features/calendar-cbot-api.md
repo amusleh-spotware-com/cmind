@@ -102,3 +102,28 @@ the standard HTTP resilience handler on each source client, a domain circuit bre
 lease-guarded singleton ingestion worker with startup reconciliation, and health checks wired into
 `/health`. The shipped typed client snippet comes with retry + timeout + circuit-breaker preconfigured
 so bot authors inherit resilience.
+
+## Sibling: AI currency-strength (`market:read`)
+
+The [AI macro currency-strength](./currency-strength.md) read model rides the **same** JWT machinery —
+one scheme, one signing secret, one rate-limiter — adding only a `market:read` scope. Register an API
+client with that scope, exchange it for a token exactly as above, and call:
+
+```
+GET /api/market/v1/currency-strength/latest?horizon=3M&tier=Majors
+GET /api/market/v1/currency-strength/history?days=30
+GET /api/market/v1/currency-strength/pair/EUR/USD?horizon=3M
+```
+
+```csharp
+// obtain a token via POST /api/calendar/v1/token as above, then:
+http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+var view = await http.GetFromJsonAsync<JsonElement>(
+    baseUrl + "/api/market/v1/currency-strength/latest?horizon=3M");
+// view.ranking[], view.forecasts[], view.pairs[] (bias/conviction), view.narrative
+```
+
+A token missing `market:read` gets `403`; an expired/tampered token gets `401`. The endpoints are gated
+on the AI feature flag and served under `/api/market/v1` so they stay independent of the calendar
+feature gate. At run/backtest dispatch a deployment may inject `CMIND_API_BASEURL` + a short-lived
+`market:read` token so a cBot calls back with zero client registration.

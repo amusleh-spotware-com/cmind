@@ -12,8 +12,12 @@ public static class CalendarScopes
     public const string Surprises = "calendar:surprises";
     public const string Stream = "calendar:stream";
 
+    /// <summary>Reads the AI macro currency-strength read model (ranking + forward pair-outlook matrix).
+    /// Rides the same JWT/rate-limit machinery as the calendar; gated additionally on <c>FeatureFlag.Ai</c>.</summary>
+    public const string MarketRead = "market:read";
+
     public static readonly IReadOnlySet<string> All =
-        new HashSet<string>(StringComparer.Ordinal) { Read, Blackout, Surprises, Stream };
+        new HashSet<string>(StringComparer.Ordinal) { Read, Blackout, Surprises, Stream, MarketRead };
 }
 
 /// <summary>

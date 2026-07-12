@@ -75,6 +75,27 @@ public sealed class UserDashboardTests
     }
 
     [Fact]
+    public void CurrencyStrength_is_a_known_opt_in_widget_hidden_by_default()
+    {
+        DashboardWidgets.IsKnown(DashboardWidgets.CurrencyStrength).Should().BeTrue("it must be toggleable");
+        DashboardWidgets.IsOptIn(DashboardWidgets.CurrencyStrength).Should().BeTrue();
+        DashboardWidgets.DefaultOrder.Should().NotContain(DashboardWidgets.CurrencyStrength, "it is hidden by default");
+
+        var board = UserDashboard.CreateDefault(UserId.New());
+        board.Widgets.Select(w => w.Key).Should().NotContain(DashboardWidgets.CurrencyStrength);
+    }
+
+    [Fact]
+    public void Apply_lets_a_user_enable_the_opt_in_currency_strength_widget()
+    {
+        var board = UserDashboard.CreateDefault(UserId.New());
+
+        board.Apply([new DashboardWidgetPreference(DashboardWidgets.CurrencyStrength, true)]);
+
+        board.Widgets.Should().ContainSingle(w => w.Key == DashboardWidgets.CurrencyStrength && w.Visible);
+    }
+
+    [Fact]
     public void Reset_restores_the_default_layout()
     {
         var board = UserDashboard.CreateDefault(UserId.New());

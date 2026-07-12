@@ -51,4 +51,14 @@ public interface IAiFeatureService
     Task<AiResult> DebateStrategyAsync(string name, string language, string source, int maxTokens, CancellationToken ct);
     Task<AiResult> AssessLiveExposureAsync(IReadOnlyList<AiInstanceContext> live, int maxTokens, CancellationToken ct);
     Task<AiResult> RecommendCopyProfileAsync(string riskProfile, string sourceDescription, CancellationToken ct);
+
+    /// <summary>Gathers ONLY what the calendar can't publish: each currency's forward trajectory (expected
+    /// rate path, inflation trend, growth momentum, geopolitical delta) plus any EM/exotic current figures the
+    /// calendar lacks. <paramref name="calendarContextJson"/> anchors the model on real point-in-time actuals.
+    /// Strict JSON-only output; web search on.</summary>
+    Task<AiResult> GatherCurrencyForwardAsync(string calendarContextJson, int maxTokens, CancellationToken ct);
+
+    /// <summary>Narrates the already-computed ranking + pair-outlook matrix in plain English ("why #1 / why
+    /// EUR/USD bullish 3M"). The AI never invents a rank or number — the math is deterministic in Core.</summary>
+    Task<AiResult> ExplainCurrencyOutlookAsync(string rankingJson, string pairOutlookJson, int maxTokens, CancellationToken ct);
 }

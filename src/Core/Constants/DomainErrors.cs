@@ -141,4 +141,13 @@ public static class DomainErrors
     public const string CalendarApiClientNameRequired = "domain.calendar.api_client_name_required";
     public const string CalendarApiScopeInvalid = "domain.calendar.api_scope_invalid";
     public const string CalendarWebhookUrlInvalid = "domain.calendar.webhook_url_invalid";
+
+    public const string CurrencyNotInUniverse = "domain.currency.not_in_universe";
+    public const string CurrencyUniverseEmpty = "domain.currency.universe_empty";
+    public const string CurrencyUniverseDuplicate = "domain.currency.universe_duplicate";
+    public const string CurrencyIndicatorOutOfRange = "domain.currency.indicator_out_of_range";
+    public const string CurrencyTrajectoryOutOfRange = "domain.currency.trajectory_out_of_range";
+    public const string CurrencyWeightsNotNormalized = "domain.currency.weights_not_normalized";
+    public const string CurrencyPanelEmpty = "domain.currency.panel_empty";
+    public const string CurrencyHorizonUnknown = "domain.currency.horizon_unknown";
 }

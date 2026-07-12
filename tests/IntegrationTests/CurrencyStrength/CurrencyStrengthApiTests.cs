@@ -9,6 +9,7 @@ using Infrastructure.Calendar;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Xunit;
@@ -136,7 +137,8 @@ public class CurrencyStrengthApiTests(PostgresFixture fixture) : IClassFixture<P
     [Fact]
     public async Task Both_off_produces_no_snapshot()
     {
-        await using var app = CreateApp(aiEnabled: false);
+        // AI off + calendar gated off ⇒ neither source contributes ⇒ no snapshot.
+        await using var app = CreateApp(aiEnabled: false, ("App:Branding:EnableEconomicCalendar", "false"));
         var owner = await LoginAsync(app);
         (await owner.PostAsync("/api/ai/currency-strength/refresh", null)).StatusCode.Should().Be(HttpStatusCode.NoContent);
     }

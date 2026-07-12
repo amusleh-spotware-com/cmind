@@ -31,6 +31,7 @@ public static class DependencyInjection
 
         services.AddScoped<NewsBlackoutRiskFilter>();
         if (features.Ai) services.AddHostedService<AiRiskGuard>();
+        if (features.Ai) services.AddHostedService<Nodes.CurrencyStrength.CurrencyStrengthRefreshService>();
         if (features.PortfolioAgent) services.AddHostedService<PortfolioAgentService>();
         services.AddScoped<Nodes.Alerts.EconomicAlertEvaluator>();
         if (features.Alerts) services.AddHostedService<AlertEvaluator>();

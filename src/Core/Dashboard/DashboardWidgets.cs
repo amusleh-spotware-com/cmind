@@ -15,18 +15,29 @@ public static class DashboardWidgets
     public const string Resources = "resources";
     public const string NodeHealth = "node-health";
 
+    /// <summary>The AI macro currency-strength widget — opt-in (default hidden). Requires the AI feature +
+    /// key; a user turns it on from their own dashboard settings, so it is not in the default layout.</summary>
+    public const string CurrencyStrength = "currency-strength";
+
     /// <summary>Default widget order, all visible, applied to a user who has never customized their board.</summary>
     public static readonly IReadOnlyList<string> DefaultOrder =
     [
         Kpis, ActivityChart, StatusRing, ActivityFeed, Backtests, CopyProfiles, Agents, Resources, NodeHealth
     ];
 
+    /// <summary>Opt-in widgets: valid keys a user may enable, but never seeded visible by default (they gate on
+    /// a feature/key and must be turned on explicitly).</summary>
+    public static readonly IReadOnlySet<string> OptIn = new HashSet<string>(StringComparer.Ordinal) { CurrencyStrength };
+
     /// <summary>Widgets only meaningful to an administrator (cluster-wide node capacity). Hidden for others.</summary>
     public static readonly IReadOnlySet<string> AdminOnly = new HashSet<string>(StringComparer.Ordinal) { NodeHealth };
 
-    private static readonly HashSet<string> Known = new(DefaultOrder, StringComparer.Ordinal);
+    private static readonly HashSet<string> Known =
+        new(DefaultOrder.Concat(OptIn), StringComparer.Ordinal);
 
     public static bool IsKnown(string key) => Known.Contains(key);
 
     public static bool IsAdminOnly(string key) => AdminOnly.Contains(key);
+
+    public static bool IsOptIn(string key) => OptIn.Contains(key);
 }

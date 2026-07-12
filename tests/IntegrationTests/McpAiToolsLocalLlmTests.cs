@@ -45,7 +45,22 @@ public sealed class McpAiToolsLocalLlmTests
         var feature = new AiFeatureService(client);
         // Text tools never touch the DB/http; an unopened context is enough to satisfy the ctor.
         var db = new DataContext(new DbContextOptionsBuilder<DataContext>().UseNpgsql("Host=unused").Options);
-        return new AiTools(db, new HttpContextAccessor(), feature);
+        return new AiTools(db, new HttpContextAccessor(), feature, new NullCurrencyStrengthQuery());
+    }
+
+    private sealed class NullCurrencyStrengthQuery : Core.Ai.CurrencyStrength.ICurrencyStrengthQuery
+    {
+        public Task<Core.Ai.CurrencyStrength.CurrencyStrengthView?> LatestAsync(
+            Core.Ai.CurrencyStrength.Horizon horizon, string? tierFilter, CancellationToken ct) =>
+            Task.FromResult<Core.Ai.CurrencyStrength.CurrencyStrengthView?>(null);
+
+        public Task<Core.Ai.CurrencyStrength.PairRow?> PairAsync(
+            string @base, string quote, Core.Ai.CurrencyStrength.Horizon horizon, CancellationToken ct) =>
+            Task.FromResult<Core.Ai.CurrencyStrength.PairRow?>(null);
+
+        public Task<IReadOnlyList<Core.Ai.CurrencyStrength.StrengthHistoryPoint>> HistoryAsync(
+            int days, DateTimeOffset now, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<Core.Ai.CurrencyStrength.StrengthHistoryPoint>>([]);
     }
 
     [Fact]

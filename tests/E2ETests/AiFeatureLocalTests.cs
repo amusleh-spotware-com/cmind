@@ -80,6 +80,23 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
     }
 
     [Fact]
+    public async Task Currency_strength_page_is_ai_enabled_and_refresh_runs()
+    {
+        var page = await OpenAsync("/ai/currency-strength");
+
+        // AI is configured (fake local LLM) ⇒ no keyless gate, refresh is enabled.
+        (await page.Locator("[data-testid=ai-not-configured]").IsVisibleAsync()).Should().BeFalse();
+        var refresh = page.Locator("[data-testid=cs-refresh]");
+        await Assertions.Expect(refresh).ToBeEnabledAsync(new() { Timeout = 20000 });
+
+        // Trigger a refresh (exercises the AI gather + explain through the fake LLM); the page must not crash.
+        await refresh.ClickAsync();
+        await page.WaitForTimeoutAsync(1500);
+        (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
+        (await page.Locator("[data-testid=page-error]").IsVisibleAsync()).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Settings_lists_the_active_provider()
     {
         var page = await OpenAsync("/settings/ai");

@@ -59,6 +59,21 @@ public static partial class LogMessages
     [LoggerMessage(EventId = 1120, Level = LogLevel.Warning, Message = "News blackout: {Count} running bot symbol(s) inside a high-impact window: {Symbols}")]
     public static partial void RiskGuardNewsBlackout(this ILogger logger, int count, IReadOnlyList<string> symbols);
 
+    [LoggerMessage(EventId = 1130, Level = LogLevel.Information, Message = "Currency-strength snapshot refreshed ({Source}) over {Count} currencies")]
+    public static partial void CurrencyStrengthRefreshed(this ILogger logger, Ai.CurrencyStrength.SnapshotSource source, int count);
+
+    [LoggerMessage(EventId = 1131, Level = LogLevel.Warning, Message = "Currency-strength refresh produced no data (calendar and AI both absent)")]
+    public static partial void CurrencyStrengthNoData(this ILogger logger);
+
+    [LoggerMessage(EventId = 1132, Level = LogLevel.Warning, Message = "Currency-strength calendar assembly unavailable; falling back to AI-only figures")]
+    public static partial void CurrencyStrengthCalendarUnavailable(this ILogger logger, Exception ex);
+
+    [LoggerMessage(EventId = 1133, Level = LogLevel.Warning, Message = "Currency-strength AI forward gather failed: {Error}")]
+    public static partial void CurrencyStrengthGatherFailed(this ILogger logger, string error);
+
+    [LoggerMessage(EventId = 1134, Level = LogLevel.Error, Message = "Currency-strength refresh cycle failed")]
+    public static partial void CurrencyStrengthRefreshCycleFailed(this ILogger logger, Exception ex);
+
     [LoggerMessage(EventId = 1017, Level = LogLevel.Error, Message = "Portfolio agent cycle failed")]
     public static partial void AgentCycleFailed(this ILogger logger, Exception ex);
 

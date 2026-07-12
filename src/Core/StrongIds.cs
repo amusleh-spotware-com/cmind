@@ -272,6 +272,13 @@ public readonly record struct CalendarWebhookId(Guid Value) : IStronglyTypedId<C
     public override string ToString() => Value.ToString();
 }
 
+public readonly record struct CurrencyStrengthSnapshotId(Guid Value) : IStronglyTypedId<CurrencyStrengthSnapshotId>
+{
+    public static CurrencyStrengthSnapshotId New() => new(Guid.NewGuid());
+    public static CurrencyStrengthSnapshotId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct Email
 {
     public string Value { get; }

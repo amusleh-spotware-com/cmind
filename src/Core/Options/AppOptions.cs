@@ -37,6 +37,40 @@ public sealed record AppOptions
     public RegistrationOptions Registration { get; init; } = new();
     public EmailOptions Email { get; init; } = new();
     public CalendarOptions Calendar { get; init; } = new();
+    public CurrencyStrengthOptions CurrencyStrength { get; init; } = new();
+}
+
+/// <summary>
+/// The AI macro currency-strength module. The universe is deployment-configurable (tiered — majors + curated
+/// EM/exotics by default); adding a currency is config, not code. Operational knobs (refresh worker cadence,
+/// node lease) mirror the calendar module. Feature visibility is gated by <c>FeatureFlag.Ai</c>; the per-user
+/// dashboard widget is opt-in. All figures degrade gracefully when the calendar and/or AI are absent.
+/// </summary>
+public sealed record CurrencyStrengthOptions
+{
+    /// <summary>Whether the scheduled refresh worker runs (assemble → gather → compute → project → persist).
+    /// Off by default — the read side, explicit owner refresh and degradation paths work without it.</summary>
+    public bool RefreshEnabled { get; init; }
+
+    public TimeSpan RefreshInterval { get; init; } = TimeSpan.FromHours(6);
+
+    /// <summary>How long a node's claim on the singleton refresh worker stays valid without renewal.</summary>
+    public TimeSpan LeaseTtl { get; init; } = TimeSpan.FromSeconds(120);
+
+    /// <summary>Stable identity of the node hosting the refresh worker; defaults to the machine name.</summary>
+    public string NodeName { get; init; } = string.Empty;
+
+    /// <summary>The tiered currency universe. Empty ⇒ the built-in default (majors + curated EM/exotics).</summary>
+    public IReadOnlyList<CurrencyConfig> Universe { get; init; } = [];
+}
+
+/// <summary>One configured currency: ISO-4217 code, its tier, and optional peg metadata.</summary>
+public sealed record CurrencyConfig
+{
+    public string Code { get; init; } = string.Empty;
+    public Ai.CurrencyStrength.CurrencyTier Tier { get; init; } = Ai.CurrencyStrength.CurrencyTier.Major;
+    public bool IsPegged { get; init; }
+    public string? PegAnchor { get; init; }
 }
 
 public sealed record CalendarOptions

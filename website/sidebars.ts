@@ -51,6 +51,7 @@ const sidebars: SidebarsConfig = {
         'features/mcp',
         'features/economic-calendar',
         'features/calendar-cbot-api',
+        'features/currency-strength',
         'features/prop-firm',
         'features/two-factor-auth',
         'features/user-registration',

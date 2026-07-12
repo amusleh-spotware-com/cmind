@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text;
 using Core;
+using Core.Calendar;
 using Core.Constants;
 using Core.Domain;
 using Core.Logging;
@@ -150,7 +151,8 @@ public sealed class CopyEngineSupervisor(
             var cts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
             var host = new CopyEngineHost(plan, sessionFactory,
                 new CopyDecisionEngine(new CopySizingCalculator()), timeProvider,
-                loggerFactory.CreateLogger<CopyEngineHost>(), copyEventSink, copyNotificationSink);
+                loggerFactory.CreateLogger<CopyEngineHost>(), copyEventSink, copyNotificationSink,
+                NewsBlackoutHook());
             var task = Task.Run(() => host.RunAsync(cts.Token), CancellationToken.None);
             _running[profile.Id] = new HostHandle(task, cts, host, signature);
             log.CopyProfileHosted(profile.Id.Value);
@@ -167,6 +169,30 @@ public sealed class CopyEngineSupervisor(
             flattenedAny = true;
         }
         if (flattenedAny) await db.SaveChangesAsync(stoppingToken);
+    }
+
+    // Opt-in news-window pause: a per-open blackout check resolved through a fresh scope (the host is
+    // long-lived, the calendar reader is scoped). Null when disabled — the copy hot path is unchanged.
+    private Func<string, CancellationToken, ValueTask<bool>>? NewsBlackoutHook()
+    {
+        if (!options.CurrentValue.Copy.NewsPauseEnabled) return null;
+
+        var rule = new NewsWindowRule(ImpactLevel.Critical, beforeMinutes: 30, afterMinutes: 30);
+        return async (symbol, token) =>
+        {
+            try
+            {
+                await using var scope = scopeFactory.CreateAsyncScope();
+                var calendar = scope.ServiceProvider.GetRequiredService<IEconomicCalendar>();
+                var result = await calendar.GetBlackoutAsync(
+                    new Symbol(symbol), timeProvider.GetUtcNow(), rule, token);
+                return result.InBlackout;
+            }
+            catch (Exception)
+            {
+                return false; // a calendar-side failure must never block a live copy
+            }
+        };
     }
 
     // Claim every running profile that is unassigned OR whose lease has lapsed (its node died).

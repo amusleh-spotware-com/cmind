@@ -167,8 +167,10 @@ so re-enabling is instant.
   **alerts `EconomicEvent` trigger** *(implemented — an `AlertRule` that fires N minutes ahead of an
   upcoming release at/above a chosen impact, optionally narrowed to currencies; evaluated by the
   existing alert worker with no AI, de-duplicated per release; created via
-  `POST /api/alerts/rules/economic-event`)*. The prop-guard news-blackout gate is in (§5.1); the
-  copy-trade blackout pause and the backtest overlay are still to come.
+  `POST /api/alerts/rules/economic-event`)*. The prop-guard news-blackout gate **and the
+  copy-trade blackout pause** are in (§5.1 — an opt-in `App:Copy:NewsPauseEnabled`, default off: a source
+  open whose symbol sits in a Critical-impact blackout is skipped, byte-identical hot path when off). The
+  backtest event overlay is the one remaining integration.
 - **P5 — extras**: surprise analytics, iCal/CSV export, keyword search, pluggable consensus.
 
 See the [cBot & REST API reference](calendar-cbot-api.md) for the integration surface.

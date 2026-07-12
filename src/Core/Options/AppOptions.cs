@@ -166,6 +166,13 @@ public sealed record CopyOptions
 
     /// <summary>How often the fee settlement service polls equity and settles high-water-mark fees.</summary>
     public TimeSpan FeeSettlementInterval { get; init; } = TimeSpan.FromHours(1);
+
+    /// <summary>
+    /// News-window pause: when true, a source position open whose symbol is inside a Critical-impact
+    /// economic-calendar blackout is not mirrored (skipped). Off by default — the copy hot path is unchanged
+    /// unless a deployment opts in.
+    /// </summary>
+    public bool NewsPauseEnabled { get; init; }
 }
 
 public sealed record PropFirmOptions

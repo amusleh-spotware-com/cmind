@@ -61,6 +61,27 @@ public sealed class CopyEngineHostTests
     }
 
     [Fact]
+    public async Task Open_is_skipped_when_the_symbol_is_in_a_news_blackout()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave)));
+
+        var host = new CopyEngineHost(plan, new FakeTradingSessionFactory(session),
+            new CopyDecisionEngine(new CopySizingCalculator()), TimeProvider.System, NullLogger.Instance,
+            newsBlackout: (symbol, _) => ValueTask.FromResult(symbol == "EURUSD"));
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        var run = Task.Run(() => host.RunAsync(cts.Token), CancellationToken.None);
+        try
+        {
+            session.PushOpen(Source, positionId: 1001, SymbolId, isBuy: true, volume: 100);
+            await Task.Delay(500);
+            session.Orders.Should().BeEmpty("the source symbol is inside a news blackout");
+        }
+        finally { cts.Cancel(); try { await run; } catch { /* cancellation */ } }
+    }
+
+    [Fact]
     public async Task Open_mirrors_market_order_with_same_side_and_volume()
     {
         var session = NewSession();

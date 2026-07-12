@@ -38,8 +38,13 @@ public sealed class CopyEngineHost(
     TimeProvider timeProvider,
     ILogger logger,
     ICopyEventSink? sink = null,
-    ICopyNotificationSink? notifications = null)
+    ICopyNotificationSink? notifications = null,
+    Func<string, CancellationToken, ValueTask<bool>>? newsBlackout = null)
 {
+    // Optional, opt-in news-window pause: when supplied, a source open whose symbol is inside a high-impact
+    // economic-calendar blackout is skipped (not mirrored). Null (the default) leaves the engine unchanged.
+    private readonly Func<string, CancellationToken, ValueTask<bool>>? _newsBlackout = newsBlackout;
+
     // Execution-transparency sink (Phase 3). Defaults to the no-op sink so the engine is unchanged when
     // transparency is off and in every test; the supervisor passes a channel-backed sink when enabled.
     private readonly ICopyEventSink _sink = sink ?? NullCopyEventSink.Instance;
@@ -416,6 +421,14 @@ public sealed class CopyEngineHost(
         }
 
         if (!_sourceSymbolNames.TryGetValue(execution.SymbolId, out var sourceName)) return;
+
+        // News-window pause (opt-in): skip mirroring a fresh open while the symbol is in a high-impact blackout.
+        if (_newsBlackout is not null && await _newsBlackout(sourceName, ct))
+        {
+            CopyMetrics.Instance.CopySkipped("news_blackout");
+            logger.CopySkipped(plan.ProfileId.Value, plan.SourceCtidTraderAccountId, execution.PositionId, "news_blackout");
+            return;
+        }
 
         // A mirrored pending order just filled into this position: retire the resting destination
         // pending(s) so the copy re-opens as a labelled market position (uniform id-based reconcile).

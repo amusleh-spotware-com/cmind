@@ -69,7 +69,11 @@ to the **configured conservative answer** (fail-closed by default: "assume in-bl
 bots), plus a `stale` flag — a data gap never green-lights trading through NFP. The endpoint is a pure
 DB/cache read with a hard server timeout; there is no synchronous origin fetch on the hot path.
 
-A cBot pauses around news like this:
+A shipped typed client (`Infrastructure.Calendar.CmindCalendarClient`) wraps this: point its `HttpClient`
+at the API root, call `GetTokenAsync(clientId, clientSecret)` once, then `GetBlackoutAsync(token, symbol)`
+before each order — it is **fail-safe by construction** (any non-success or parse error returns
+`InBlackout = true, Stale = true`, so a data gap never green-lights trading). A cBot pauses around news
+like this:
 
 ```csharp
 // Pseudocode for a cTrader cBot using WebRequest + a Calendar API client token.

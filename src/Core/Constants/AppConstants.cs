@@ -216,6 +216,22 @@ public static class OpenApiEndpoints
     public const int SuccessRedirectDelaySeconds = 5;
 }
 
+public static class OpenApiSettings
+{
+    // AppSetting key namespace for owner-set runtime per-message-type rate-limit overrides. A key of the
+    // form "openapi.ratelimit.<Category>" stores an int msgs/sec; absence means "use the config/default".
+    public const string RateLimitKeyPrefix = "openapi.ratelimit.";
+    public const string RateLimitCacheKey = "openapi.ratelimit.overrides";
+    public static readonly TimeSpan CacheTtl = TimeSpan.FromSeconds(30);
+
+    // The message-type categories a white-label operator / owner can tune (must match OpenApiRateCategory).
+    public const string CategoryGeneral = "General";
+    public const string CategoryHistoricalData = "HistoricalData";
+    public static readonly IReadOnlyList<string> TunableCategories = [CategoryGeneral, CategoryHistoricalData];
+
+    public static string RateLimitKey(string category) => RateLimitKeyPrefix + category;
+}
+
 public static class ObservabilityDefaults
 {
     public const string WebServiceName = "cmind-web";

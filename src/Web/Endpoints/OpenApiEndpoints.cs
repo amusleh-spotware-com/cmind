@@ -6,6 +6,7 @@ using Core.Logging;
 using Core.Options;
 using CTraderOpenApi.Auth;
 using CTraderOpenApi.Client;
+using Infrastructure.OpenApi;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -14,6 +15,8 @@ using Web.OpenApi;
 namespace Web.Endpoints;
 
 public record SaveOpenApiAppRequest(string Name, string ClientId, string? ClientSecret);
+
+public record SetOpenApiRateLimitRequest(string Category, int Value);
 
 public static class OpenApiEndpoints
 {
@@ -26,26 +29,31 @@ public static class OpenApiEndpoints
         var g = app.MapGroup("/api/openapi").RequireAuthorization(AuthPolicies.UserOrAbove)
             .RequireFeature(Core.Features.FeatureFlag.OpenApi);
 
-        g.MapGet("/application", async (IOpenApiApplicationRepository apps, ICurrentUser u, DataContext db,
-            HttpContext ctx, CancellationToken ct) =>
+        g.MapGet("/application", async (IOpenApiAppResolver resolver, ICurrentUser u, DataContext db,
+            IOptionsMonitor<AppOptions> options, HttpContext ctx, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
-            var application = await apps.GetByUserAsync(uid, ct);
-            if (application is null)
-                return Results.Ok(new { configured = false, callbackUrl = CallbackUrl(ctx), authorizedAccountCount = 0 });
+            var sharedMode = await resolver.IsSharedModeAsync(ct);
+            var application = await resolver.ResolveForUserAsync(uid, ct);
+            var callbackUrl = RedirectUrl(options.CurrentValue.OpenApi, ctx);
             var authorizedAccountCount = await db.OpenApiAuthorizations.CountAsync(a => a.UserId == uid, ct);
+            if (application is null)
+                return Results.Ok(new { configured = false, sharedMode, callbackUrl, authorizedAccountCount });
             return Results.Ok(new
             {
-                configured = true, application.Name, application.ClientId,
-                callbackUrl = CallbackUrl(ctx), authorizedAccountCount
+                configured = true, sharedMode, application.Name, application.ClientId,
+                callbackUrl, authorizedAccountCount
             });
         });
 
         g.MapPut("/application", async (SaveOpenApiAppRequest req, IOpenApiApplicationRepository apps,
-            ICurrentUser u, ISecretProtector p, HttpContext ctx, CancellationToken ct) =>
+            IOpenApiAppResolver resolver, ICurrentUser u, ISecretProtector p, IOptionsMonitor<AppOptions> options,
+            HttpContext ctx, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
-            var redirectUri = new OpenApiRedirectUri(CallbackUrl(ctx));
+            if (await resolver.IsSharedModeAsync(ct))
+                return Results.Conflict(new { error = DomainErrors.OpenApiManagedByProvider });
+            var redirectUri = new OpenApiRedirectUri(RedirectUrl(options.CurrentValue.OpenApi, ctx));
             var existing = await apps.GetByUserAsync(uid, ct);
             if (existing is null)
             {
@@ -65,9 +73,12 @@ public static class OpenApiEndpoints
             return Results.Ok();
         });
 
-        g.MapDelete("/application", async (IOpenApiApplicationRepository apps, ICurrentUser u, CancellationToken ct) =>
+        g.MapDelete("/application", async (IOpenApiApplicationRepository apps, IOpenApiAppResolver resolver,
+            ICurrentUser u, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
+            if (await resolver.IsSharedModeAsync(ct))
+                return Results.Conflict(new { error = DomainErrors.OpenApiManagedByProvider });
             var application = await apps.GetByUserAsync(uid, ct);
             if (application is null) return Results.NotFound();
             await apps.RemoveAsync(application, ct);
@@ -75,22 +86,22 @@ public static class OpenApiEndpoints
             return Results.NoContent();
         });
 
-        g.MapGet("/authorize", async (IOpenApiApplicationRepository apps, ICurrentUser u,
+        g.MapGet("/authorize", async (IOpenApiAppResolver resolver, ICurrentUser u,
             IOAuthStateService states, IOptionsMonitor<AppOptions> options, HttpContext ctx, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
-            var application = await apps.GetByUserAsync(uid, ct);
+            var application = await resolver.ResolveForUserAsync(uid, ct);
             if (application is null) return Results.Redirect("/settings/openapi");
             var state = states.CreateState(uid, application.Id, AuthorizeStateTtl, isInvite: false);
             SetStateCookie(ctx, state);
             return Results.Redirect(BuildAuthorizeUrl(options.CurrentValue.OpenApi, application, state));
         });
 
-        g.MapPost("/application/invite", async (IOpenApiApplicationRepository apps, ICurrentUser u,
+        g.MapPost("/application/invite", async (IOpenApiAppResolver resolver, ICurrentUser u,
             IOAuthStateService states, HttpContext ctx, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
-            var application = await apps.GetByUserAsync(uid, ct);
+            var application = await resolver.ResolveForUserAsync(uid, ct);
             if (application is null) return Results.NotFound();
             var state = states.CreateState(uid, application.Id, InviteTtl, isInvite: true);
             var baseUrl = $"{ctx.Request.Scheme}://{ctx.Request.Host}";
@@ -103,7 +114,7 @@ public static class OpenApiEndpoints
             var result = states.Validate(state);
             if (result is null || !result.IsInvite) return Html(ErrorPage("This invite link is invalid or expired."));
             var application = await db.OpenApiApplications
-                .FirstOrDefaultAsync(a => a.Id == result.ApplicationId && a.UserId == result.UserId);
+                .FirstOrDefaultAsync(a => a.Id == result.ApplicationId && (a.IsShared || a.UserId == result.UserId));
             if (application is null) return Html(ErrorPage("The linked application no longer exists."));
             var authState = states.CreateState(result.UserId, result.ApplicationId, AuthorizeStateTtl, isInvite: true);
             SetStateCookie(ctx, authState);
@@ -127,7 +138,7 @@ public static class OpenApiEndpoints
             if (result is null) return Html(ErrorPage("This authorization link is invalid or expired."));
 
             var application = await db.OpenApiApplications
-                .FirstOrDefaultAsync(a => a.Id == result.ApplicationId && a.UserId == result.UserId, ct);
+                .FirstOrDefaultAsync(a => a.Id == result.ApplicationId && (a.IsShared || a.UserId == result.UserId), ct);
             if (application is null) return Html(ErrorPage("The linked application no longer exists."));
 
             try
@@ -150,6 +161,51 @@ public static class OpenApiEndpoints
             }
         }).AllowAnonymous().RequireRateLimiting(RateLimitPolicies.Auth);
 
+        var owner = app.MapGroup("/api/openapi/shared").RequireAuthorization(AuthPolicies.Owner)
+            .RequireFeature(Core.Features.FeatureFlag.OpenApi);
+
+        owner.MapGet("", async (SharedOpenApiAppService svc, DataContext db,
+            IOptionsMonitor<AppOptions> options, HttpContext ctx, CancellationToken ct) =>
+        {
+            var shared = await svc.GetSharedAsync(ct);
+            var redirectUrl = RedirectUrl(options.CurrentValue.OpenApi, ctx);
+            if (shared is null)
+                return Results.Ok(new { configured = false, redirectUrl, authorizedAccountCount = 0 });
+            var authorizedAccountCount = await db.OpenApiAuthorizations.CountAsync(ct);
+            return Results.Ok(new { configured = true, shared.Name, shared.ClientId, redirectUrl, authorizedAccountCount });
+        });
+
+        owner.MapPut("", async (SaveOpenApiAppRequest req, SharedOpenApiAppService svc,
+            IOptionsMonitor<AppOptions> options, HttpContext ctx, CancellationToken ct) =>
+        {
+            var redirectUri = new OpenApiRedirectUri(RedirectUrl(options.CurrentValue.OpenApi, ctx));
+            try
+            {
+                await svc.SaveOwnerSharedAsync(req.Name, new OpenApiClientId(req.ClientId), req.ClientSecret, redirectUri, ct);
+            }
+            catch (DomainException ex)
+            {
+                return Results.BadRequest(new { error = ex.Code });
+            }
+            return Results.Ok();
+        });
+
+        owner.MapDelete("", async (SharedOpenApiAppService svc, CancellationToken ct) =>
+            await svc.RemoveSharedAsync(ct) ? Results.NoContent() : Results.NotFound());
+
+        owner.MapGet("/rate-limits", async (IOpenApiRateLimitProvider rates, CancellationToken ct) =>
+            Results.Ok(await rates.GetEffectiveByNameAsync(ct)));
+
+        owner.MapPut("/rate-limits", async (SetOpenApiRateLimitRequest req, IOpenApiRateLimitProvider rates,
+            CancellationToken ct) =>
+        {
+            if (!Core.Constants.OpenApiSettings.TunableCategories.Contains(req.Category))
+                return Results.BadRequest(new { error = "unknown_category" });
+            if (req.Value < 0) return Results.BadRequest(new { error = "invalid_value" });
+            await rates.SetOwnerOverrideAsync(req.Category, req.Value, ct);
+            return Results.Ok();
+        });
+
         return app;
     }
 
@@ -158,6 +214,13 @@ public static class OpenApiEndpoints
 
     private static string CallbackUrl(HttpContext ctx) =>
         $"{ctx.Request.Scheme}://{ctx.Request.Host}{Core.Constants.OpenApiEndpoints.CallbackPath}";
+
+    // The single canonical redirect URL every cTrader Open API app registers: composed from the configured
+    // public base URL so it stays stable behind a proxy/CDN, falling back to the request host when unset.
+    private static string RedirectUrl(Core.Options.OpenApiOptions options, HttpContext ctx) =>
+        string.IsNullOrWhiteSpace(options.PublicBaseUrl)
+            ? CallbackUrl(ctx)
+            : options.PublicBaseUrl.TrimEnd('/') + Core.Constants.OpenApiEndpoints.CallbackPath;
 
     private static void SetStateCookie(HttpContext ctx, string state) =>
         ctx.Response.Cookies.Append(StateCookieName, state, new CookieOptions

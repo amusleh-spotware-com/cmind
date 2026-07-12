@@ -18,7 +18,15 @@ public interface ICTraderIdAccountRepository
 public interface IOpenApiApplicationRepository
 {
     Task<OpenApiApplication?> GetByIdAsync(OpenApiApplicationId id, UserId owner, CancellationToken ct);
+
+    // Owner-agnostic lookup for trusted server-side resolution (token refresh, callback): the caller has
+    // already scoped ownership via the authorization, and a shared app is owned by the operator, not the
+    // authorizing user.
+    Task<OpenApiApplication?> GetByIdAsync(OpenApiApplicationId id, CancellationToken ct);
     Task<OpenApiApplication?> GetByUserAsync(UserId owner, CancellationToken ct);
+
+    // The single deployment-wide shared application, if configured (drives shared-mode).
+    Task<OpenApiApplication?> GetSharedAsync(CancellationToken ct);
     Task AddAsync(OpenApiApplication application, CancellationToken ct);
     Task RemoveAsync(OpenApiApplication application, CancellationToken ct);
     Task SaveChangesAsync(CancellationToken ct);

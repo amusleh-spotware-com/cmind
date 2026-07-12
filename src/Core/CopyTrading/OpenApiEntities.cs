@@ -14,6 +14,11 @@ public class OpenApiApplication : AuditedEntity<OpenApiApplicationId>
     public byte[] EncryptedClientSecret { get; private set; } = default!;
     [MaxLength(512)] public string RedirectUri { get; private set; } = default!;
 
+    // The deployment-wide shared application a white-label operator ships so all users authorize their
+    // accounts through one Open API app. Owned by the owner account; at most one may exist (filtered
+    // unique index). When present the app runs in shared-mode: users cannot register their own app.
+    public bool IsShared { get; private set; }
+
     public static OpenApiApplication Create(
         UserId userId,
         string name,
@@ -27,6 +32,22 @@ public class OpenApiApplication : AuditedEntity<OpenApiApplicationId>
             ClientId = clientId.Value,
             EncryptedClientSecret = GuardSecret(encryptedClientSecret),
             RedirectUri = redirectUri.Value
+        };
+
+    public static OpenApiApplication CreateShared(
+        UserId ownerId,
+        string name,
+        OpenApiClientId clientId,
+        byte[] encryptedClientSecret,
+        OpenApiRedirectUri redirectUri)
+        => new()
+        {
+            UserId = ownerId,
+            Name = DomainGuard.AgainstNullOrWhiteSpace(name, DomainErrors.NameRequired),
+            ClientId = clientId.Value,
+            EncryptedClientSecret = GuardSecret(encryptedClientSecret),
+            RedirectUri = redirectUri.Value,
+            IsShared = true
         };
 
     public void UpdateCredentials(
@@ -124,6 +145,11 @@ public class OpenApiAuthorization : AuditedEntity<OpenApiAuthorizationId>
     }
 
     public bool IsExpiring(TimeSpan threshold, DateTimeOffset now) => now >= AccessTokenExpiresAt - threshold;
+
+    // Re-point this authorization at the deployment shared application when a white-label operator switches
+    // to shared-mode. The stored tokens were issued under the old app's client id, so a re-authorization is
+    // required to obtain valid tokens for the shared app — the next refresh fails and escalates until then.
+    public void ReassignToApplication(OpenApiApplicationId applicationId) => ApplicationId = applicationId;
 
     private static byte[] GuardToken(byte[] token)
     {

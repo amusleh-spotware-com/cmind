@@ -374,6 +374,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<OpenApiApplication>(e =>
         {
             e.HasIndex(x => x.UserId).IsUnique().HasFilter("\"IsDeleted\" = false");
+            e.HasIndex(x => x.IsShared).IsUnique().HasFilter("\"IsShared\" = true AND \"IsDeleted\" = false");
             e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 

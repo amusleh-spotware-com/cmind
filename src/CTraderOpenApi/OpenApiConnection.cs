@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Threading.Channels;
 using CTraderOpenApi.Logging;
 using CTraderOpenApi.Messages;
+using CTraderOpenApi.RateLimiting;
 using CTraderOpenApi.Transport;
 using Google.Protobuf;
 using Microsoft.Extensions.Logging;
@@ -19,6 +20,8 @@ public sealed class OpenApiConnection : IAsyncDisposable
     private readonly ILogger _logger;
     private readonly TimeProvider _timeProvider;
     private readonly BackoffPolicy _backoff;
+    private readonly TokenBucket _generalBucket;
+    private readonly TokenBucket _historicalBucket;
 
     private readonly Channel<ProtoMessage> _outbound =
         Channel.CreateUnbounded<ProtoMessage>(new UnboundedChannelOptions { SingleReader = true });
@@ -53,7 +56,12 @@ public sealed class OpenApiConnection : IAsyncDisposable
         _logger = logger;
         _timeProvider = timeProvider;
         _backoff = new BackoffPolicy(options.BackoffInitial, options.BackoffMax, options.BackoffFactor);
+        _generalBucket = new TokenBucket(RateFor(options, OpenApiRateCategory.General), timeProvider);
+        _historicalBucket = new TokenBucket(RateFor(options, OpenApiRateCategory.HistoricalData), timeProvider);
     }
+
+    private static int RateFor(OpenApiConnectionOptions options, OpenApiRateCategory category)
+        => options.RateLimits.TryGetValue(category, out var rate) ? rate : 0;
 
     public ConnectionState State => _state;
 
@@ -152,6 +160,8 @@ public sealed class OpenApiConnection : IAsyncDisposable
         var ct = attemptCts.Token;
         _state = ConnectionState.Connecting;
         DrainOutbound();
+        _generalBucket.Reset();
+        _historicalBucket.Reset();
 
         var transport = _transportFactory.Create(_host, _port);
         _transport = transport;
@@ -229,7 +239,29 @@ public sealed class OpenApiConnection : IAsyncDisposable
     private async Task SendPumpAsync(IOpenApiTransport transport, CancellationToken ct)
     {
         await foreach (var msg in _outbound.Reader.ReadAllAsync(ct))
+        {
+            await AcquireRateTokensAsync(msg.PayloadType, ct);
             await transport.SendAsync(msg.ToByteArray(), ct);
+        }
+    }
+
+    // Per-message-type pacing (cTrader docs): historical-data requests count against both their own,
+    // stricter bucket and the general connection bucket; keep-alive/handshake are exempt so they are never
+    // delayed behind a trading backlog. Single-reader drain preserves FIFO order under pacing.
+    private async ValueTask AcquireRateTokensAsync(uint payloadType, CancellationToken ct)
+    {
+        switch (OpenApiRateLimits.Classify(payloadType))
+        {
+            case OpenApiRateCategory.Exempt:
+                return;
+            case OpenApiRateCategory.HistoricalData:
+                await _generalBucket.WaitAsync(ct);
+                await _historicalBucket.WaitAsync(ct);
+                return;
+            default:
+                await _generalBucket.WaitAsync(ct);
+                return;
+        }
     }
 
     private async Task ReceivePumpAsync(IOpenApiTransport transport, CancellationToken ct)

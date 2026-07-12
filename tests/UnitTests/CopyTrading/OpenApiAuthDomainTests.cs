@@ -45,6 +45,29 @@ public sealed class OpenApiAuthDomainTests
     }
 
     [Fact]
+    public void Application_CreateShared_marks_shared_and_enforces_invariants()
+    {
+        var shared = OpenApiApplication.CreateShared(UserId.New(), "shared",
+            new OpenApiClientId("cid"), [1], new OpenApiRedirectUri("https://app.test/cb"));
+        shared.IsShared.Should().BeTrue();
+
+        var act = () => OpenApiApplication.CreateShared(UserId.New(), "shared",
+            new OpenApiClientId("cid"), [], new OpenApiRedirectUri("https://app.test/cb"));
+        act.Should().Throw<DomainException>().Which.Code.Should().Be(DomainErrors.OpenApiSecretRequired);
+    }
+
+    [Fact]
+    public void ReassignToApplication_repoints_to_shared_app()
+    {
+        var authorization = CreateAuthorization(TestClock.Now.AddDays(1));
+        var target = OpenApiApplicationId.New();
+
+        authorization.ReassignToApplication(target);
+
+        authorization.ApplicationId.Should().Be(target);
+    }
+
+    [Fact]
     public void Authorization_Create_raises_authorized_event()
     {
         var authorization = CreateAuthorization(TestClock.Now.AddDays(30));

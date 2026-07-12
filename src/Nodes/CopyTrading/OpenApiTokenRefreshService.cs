@@ -58,7 +58,7 @@ public sealed class OpenApiTokenRefreshService(
 
         foreach (var authorization in expiring)
         {
-            var application = await applications.GetByIdAsync(authorization.ApplicationId, authorization.UserId, ct);
+            var application = await applications.GetByIdAsync(authorization.ApplicationId, ct);
             if (application is null)
             {
                 log.OpenApiTokenRefreshApplicationMissing(

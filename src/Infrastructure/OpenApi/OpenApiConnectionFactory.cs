@@ -10,6 +10,7 @@ namespace Infrastructure.OpenApi;
 public sealed class OpenApiConnectionFactory(
     IOptionsMonitor<AppOptions> options,
     IOpenApiTransportFactory transportFactory,
+    IOpenApiRateLimitProvider rateLimits,
     ILoggerFactory loggerFactory,
     TimeProvider timeProvider) : IOpenApiConnectionFactory
 {
@@ -23,7 +24,8 @@ public sealed class OpenApiConnectionFactory(
             RequestTimeout = settings.RequestTimeout,
             InboundWatchdogTimeout = settings.InboundWatchdogTimeout,
             BackoffInitial = settings.BackoffInitial,
-            BackoffMax = settings.BackoffMax
+            BackoffMax = settings.BackoffMax,
+            RateLimits = rateLimits.GetEffectiveLimits()
         };
 
         return new OpenApiConnection(

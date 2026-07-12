@@ -370,4 +370,16 @@ public static partial class LogMessages
     [LoggerMessage(EventId = 1109, Level = LogLevel.Information,
         Message = "Broker verified for account {AccountNumber}: {Broker}")]
     public static partial void BrokerProbeVerified(this ILogger logger, long accountNumber, string broker);
+
+    [LoggerMessage(EventId = 1110, Level = LogLevel.Information,
+        Message = "Shared Open API application configured (client id {ClientId}); deployment is in shared-mode")]
+    public static partial void SharedOpenApiAppConfigured(this ILogger logger, string clientId);
+
+    [LoggerMessage(EventId = 1111, Level = LogLevel.Warning,
+        Message = "Shared-mode: removed {Count} personal Open API application(s); their accounts require re-authorization under the shared app")]
+    public static partial void SharedOpenApiAppRemovedPersonal(this ILogger logger, int count);
+
+    [LoggerMessage(EventId = 1112, Level = LogLevel.Warning,
+        Message = "Shared Open API application seed skipped: {Reason}")]
+    public static partial void SharedOpenApiAppSeedSkipped(this ILogger logger, string reason);
 }

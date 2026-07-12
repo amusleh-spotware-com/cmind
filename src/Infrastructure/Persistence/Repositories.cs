@@ -32,8 +32,14 @@ public sealed class OpenApiApplicationRepository(DataContext db) : IOpenApiAppli
     public Task<OpenApiApplication?> GetByIdAsync(OpenApiApplicationId id, UserId owner, CancellationToken ct) =>
         db.OpenApiApplications.FirstOrDefaultAsync(a => a.Id == id && a.UserId == owner, ct);
 
+    public Task<OpenApiApplication?> GetByIdAsync(OpenApiApplicationId id, CancellationToken ct) =>
+        db.OpenApiApplications.FirstOrDefaultAsync(a => a.Id == id, ct);
+
     public Task<OpenApiApplication?> GetByUserAsync(UserId owner, CancellationToken ct) =>
-        db.OpenApiApplications.FirstOrDefaultAsync(a => a.UserId == owner, ct);
+        db.OpenApiApplications.FirstOrDefaultAsync(a => a.UserId == owner && !a.IsShared, ct);
+
+    public Task<OpenApiApplication?> GetSharedAsync(CancellationToken ct) =>
+        db.OpenApiApplications.FirstOrDefaultAsync(a => a.IsShared, ct);
 
     public async Task AddAsync(OpenApiApplication application, CancellationToken ct) =>
         await db.OpenApiApplications.AddAsync(application, ct);

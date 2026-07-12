@@ -35,6 +35,7 @@ const sidebars: SidebarsConfig = {
             'features/copy-notifications',
             'features/ai-copy-recommender',
             'features/token-lifecycle',
+        'features/open-api-shared-app',
           ],
         },
         'features/ai',

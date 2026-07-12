@@ -2,6 +2,7 @@
 @using System.Text.Json
 @using Web.Json
 @using Web.Components.Dialogs
+@using Microsoft.AspNetCore.Components.Authorization
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
@@ -21,57 +22,156 @@
     }
 </MudStack>
 
-<MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
-    Configure a single cTrader Open API application, then authorize your cIDs to add their trading accounts.
-    One application is used for all accounts to keep copy trading consistent.
-</MudText>
-
 @if (_loading)
 {
     <MudProgressCircular Indeterminate="true" />
 }
-else if (!_configured)
-{
-    <MudPaper Class="pa-6" Elevation="0" Outlined="true">
-        <MudStack AlignItems="AlignItems.Center" Spacing="3">
-            <MudIcon Icon="@Icons.Material.Filled.Api" Size="Size.Large" Color="Color.Secondary" />
-            <MudText Typo="Typo.subtitle1">No Open API application configured</MudText>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
-                       OnClick="Configure">Add Application</MudButton>
-        </MudStack>
-    </MudPaper>
-}
 else
 {
-    <MudCard>
-        <MudCardContent>
-            <MudStack Spacing="2">
-                <MudStack Row="true" AlignItems="AlignItems.Center">
-                    <MudText Typo="Typo.subtitle1">@_name</MudText>
-                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Icon="@Icons.Material.Filled.CheckCircle">Configured</MudChip>
+    @if (_isOwner)
+    {
+        @* Deployment shared application: one Open API app all users authorize through (white-label). *@
+        <MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
+            Configure a single deployment-wide cTrader Open API application. When set, every user authorizes
+            their accounts through it and the per-user application option is removed for them.
+        </MudText>
+        <MudCard Class="mb-4">
+            <MudCardContent>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+                    <MudText Typo="Typo.subtitle1">Deployment shared application</MudText>
+                    @if (_sharedConfigured)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Success" Icon="@Icons.Material.Filled.CheckCircle">Configured</MudChip>
+                    }
                 </MudStack>
-                <MudText Typo="Typo.body2"><b>Client ID:</b> @_clientId</MudText>
-                <MudText Typo="Typo.body2"><b>Redirect URI:</b> <code>@_callbackUrl</code></MudText>
+                @if (_sharedConfigured)
+                {
+                    <MudText Typo="Typo.body2"><b>Name:</b> @_sharedName</MudText>
+                    <MudText Typo="Typo.body2"><b>Client ID:</b> @_sharedClientId</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                        No shared application configured. Users manage their own Open API application until you add one.
+                    </MudText>
+                }
+                <MudTextField T="string" Value="@_redirectUrl" ReadOnly="true"
+                              Label="Redirect URI (register this in cTrader)"
+                              Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.ContentCopy"
+                              OnAdornmentClick="CopyRedirect" Class="mt-2" />
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit"
+                           OnClick="ConfigureShared">@(_sharedConfigured ? "Edit" : "Add Shared Application")</MudButton>
+                @if (_sharedConfigured)
+                {
+                    <MudSpacer />
+                    <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="DeleteShared">Delete</MudButton>
+                }
+            </MudCardActions>
+        </MudCard>
+
+        @* Per-message-type client rate limits (matches the cTrader Open API docs). 0 = unlimited. *@
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.subtitle1" Class="mb-1">Client rate limits (per message type)</MudText>
+                <MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
+                    Outbound messages per second, per connection. Raise these if your broker negotiated higher
+                    cTrader limits, or set 0 to disable pacing (unlimited).
+                </MudText>
+                <MudNumericField @bind-Value="_rateGeneral" Label="General (msgs/sec, 0 = unlimited)"
+                                 Min="0" Class="mb-2" />
+                <MudNumericField @bind-Value="_rateHistorical" Label="Historical data (msgs/sec, 0 = unlimited)"
+                                 Min="0" Class="mb-2" />
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save"
+                           OnClick="SaveRateLimits">Save rate limits</MudButton>
+            </MudCardActions>
+        </MudCard>
+    }
+    else if (_sharedMode)
+    {
+        @* Normal user under shared-mode: no per-user app, just authorize through the provider's shared app. *@
+        <MudPaper Class="pa-6" Elevation="0" Outlined="true">
+            <MudStack AlignItems="AlignItems.Center" Spacing="3">
+                <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Size="Size.Large" Color="Color.Success" />
+                <MudText Typo="Typo.subtitle1">Open API is managed by your provider</MudText>
+                <MudText Typo="Typo.body2" Align="Align.Center" Class="mud-text-secondary">
+                    You don't need to register your own Open API application. Authorize your cTrader accounts
+                    through the provider's shared application.
+                </MudText>
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Link"
+                           OnClick="Authorize">Authorize accounts</MudButton>
+                <MudButton Color="Color.Secondary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyInvite">Copy Invite Link</MudButton>
             </MudStack>
-        </MudCardContent>
-        <MudCardActions>
-            <MudButton Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Edit" OnClick="Configure">Edit</MudButton>
-            <MudButton Color="Color.Secondary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyInvite">Copy Invite Link</MudButton>
-            <MudSpacer />
-            <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="Delete">Delete</MudButton>
-        </MudCardActions>
-    </MudCard>
+        </MudPaper>
+    }
+    else if (!_configured)
+    {
+        <MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
+            Configure a single cTrader Open API application, then authorize your cIDs to add their trading accounts.
+        </MudText>
+        <MudPaper Class="pa-6" Elevation="0" Outlined="true">
+            <MudStack AlignItems="AlignItems.Center" Spacing="3">
+                <MudIcon Icon="@Icons.Material.Filled.Api" Size="Size.Large" Color="Color.Secondary" />
+                <MudText Typo="Typo.subtitle1">No Open API application configured</MudText>
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="Configure">Add Application</MudButton>
+            </MudStack>
+        </MudPaper>
+    }
+    else
+    {
+        <MudCard>
+            <MudCardContent>
+                <MudStack Spacing="2">
+                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.subtitle1">@_name</MudText>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Success" Icon="@Icons.Material.Filled.CheckCircle">Configured</MudChip>
+                    </MudStack>
+                    <MudText Typo="Typo.body2"><b>Client ID:</b> @_clientId</MudText>
+                    <MudText Typo="Typo.body2"><b>Redirect URI:</b> <code>@_callbackUrl</code></MudText>
+                </MudStack>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Edit" OnClick="Configure">Edit</MudButton>
+                <MudButton Color="Color.Secondary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyInvite">Copy Invite Link</MudButton>
+                <MudSpacer />
+                <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="Delete">Delete</MudButton>
+            </MudCardActions>
+        </MudCard>
+    }
 }
 
 @code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
     private bool _loading = true;
+    private bool _isOwner;
+    private bool _sharedMode;
     private bool _configured;
     private string _name = "";
     private string _clientId = "";
     private string _callbackUrl = "";
     private int _authorizedAccountCount;
 
-    protected override Task OnInitializedAsync() => Load();
+    private bool _sharedConfigured;
+    private string _sharedName = "";
+    private string _sharedClientId = "";
+    private string _redirectUrl = "";
+    private int _rateGeneral;
+    private int _rateHistorical;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState is not null)
+        {
+            var state = await AuthState;
+            _isOwner = state.User.IsInRole("Owner");
+        }
+        await Load();
+    }
 
     private async Task Load()
     {
@@ -82,6 +182,7 @@ else
             if (res is not null)
             {
                 _configured = (bool)res.configured;
+                _sharedMode = (bool)res.sharedMode;
                 _callbackUrl = (string)res.callbackUrl;
                 _authorizedAccountCount = (int)res.authorizedAccountCount;
                 if (_configured)
@@ -90,12 +191,34 @@ else
                     _clientId = (string)res.clientId;
                 }
             }
+            if (_isOwner) await LoadOwner();
         }
         catch
         {
             // Open API feature gated off/unavailable — show the empty state instead of crashing.
         }
         _loading = false;
+    }
+
+    private async Task LoadOwner()
+    {
+        var shared = await Http.GetDynamicAsync("/api/openapi/shared");
+        if (shared is not null)
+        {
+            _sharedConfigured = (bool)shared.configured;
+            _redirectUrl = (string)shared.redirectUrl;
+            if (_sharedConfigured)
+            {
+                _sharedName = (string)shared.name;
+                _sharedClientId = (string)shared.clientId;
+            }
+        }
+        var rates = await Http.GetFromJsonAsync<Dictionary<string, int>>("/api/openapi/shared/rate-limits");
+        if (rates is not null)
+        {
+            _rateGeneral = rates.GetValueOrDefault("General");
+            _rateHistorical = rates.GetValueOrDefault("HistoricalData");
+        }
     }
 
     private async Task Configure()
@@ -118,6 +241,52 @@ else
         Snack.Add(r.IsSuccessStatusCode ? "Application saved" : "Failed to save application",
             r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
         if (r.IsSuccessStatusCode) await Load();
+    }
+
+    private async Task ConfigureShared()
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(OpenApiAppDialog.IsEdit), _sharedConfigured },
+            { nameof(OpenApiAppDialog.CallbackUrl), _redirectUrl },
+            { nameof(OpenApiAppDialog.Name), _sharedConfigured ? _sharedName : "Shared Open API Application" },
+            { nameof(OpenApiAppDialog.ClientId), _sharedConfigured ? _sharedClientId : null },
+            { nameof(OpenApiAppDialog.AuthorizedAccountCount), _authorizedAccountCount },
+        };
+        var dlg = await Dialogs.ShowAsync<OpenApiAppDialog>(null,
+            parameters, new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
+        var res = await dlg.Result;
+        if (res is null || res.Canceled) return;
+        var data = (OpenApiAppDialog.OpenApiAppDialogResult)res.Data!;
+        var r = await Http.PutAsJsonAsync("/api/openapi/shared",
+            new { data.Name, data.ClientId, data.ClientSecret });
+        Snack.Add(r.IsSuccessStatusCode ? "Shared application saved" : "Failed to save shared application",
+            r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        if (r.IsSuccessStatusCode) await Load();
+    }
+
+    private async Task DeleteShared()
+    {
+        var r = await Http.DeleteAsync("/api/openapi/shared");
+        if (r.IsSuccessStatusCode) { Snack.Add("Shared application deleted", Severity.Success); await Load(); }
+        else Snack.Add("Failed to delete shared application", Severity.Error);
+    }
+
+    private async Task SaveRateLimits()
+    {
+        var ok = true;
+        ok &= (await Http.PutAsJsonAsync("/api/openapi/shared/rate-limits",
+            new { Category = "General", Value = _rateGeneral })).IsSuccessStatusCode;
+        ok &= (await Http.PutAsJsonAsync("/api/openapi/shared/rate-limits",
+            new { Category = "HistoricalData", Value = _rateHistorical })).IsSuccessStatusCode;
+        Snack.Add(ok ? "Rate limits saved" : "Failed to save rate limits", ok ? Severity.Success : Severity.Error);
+    }
+
+    private async Task CopyRedirect()
+    {
+        if (string.IsNullOrEmpty(_redirectUrl)) return;
+        try { await JS.InvokeVoidAsync("copyToClipboard", _redirectUrl); Snack.Add("Redirect URI copied", Severity.Success); }
+        catch { Snack.Add($"Redirect URI: {_redirectUrl}", Severity.Info); }
     }
 
     private void Authorize() => Nav.NavigateTo("/api/openapi/authorize", forceLoad: true);

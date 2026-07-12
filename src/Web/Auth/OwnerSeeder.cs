@@ -33,6 +33,8 @@ public sealed class OwnerSeeder(
                 await SeedOwnerAsync(scope, db, token);
                 await scope.ServiceProvider.GetRequiredService<Core.Ai.IAiProviderStore>()
                     .SeedFromConfigAsync(token);
+                await scope.ServiceProvider.GetRequiredService<Infrastructure.OpenApi.SharedOpenApiAppService>()
+                    .SeedFromConfigAsync(token);
             }, ct);
     }
 

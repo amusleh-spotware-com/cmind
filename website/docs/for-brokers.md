@@ -55,6 +55,14 @@ API and via manual cID login (verified by reading the account's real broker name
 account that isn't on your list. Leave it empty and every broker is allowed (the default). See the
 [White-label feature doc](./features/white-label.md#broker-allowlist) for the full mechanics.
 
+## Ship one Open API app for all your users
+
+Skip the per-user hassle: provide **one cTrader Open API application** and every client authorizes
+their accounts through it — no client ever registers their own. Register a single redirect URL, drop
+the credentials in config or the owner settings, and shared-mode turns on for everyone. Negotiated a
+higher cTrader message limit? Tune the **per-message-type client rate limits** (or disable pacing).
+→ [Shared Open API application & rate limits](./features/open-api-shared-app.md)
+
 ## New ways to monetize
 
 - **AI, with zero friction for clients.** Provide a default AI provider key at the deployment level and

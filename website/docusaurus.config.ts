@@ -135,7 +135,7 @@ const config: Config = {
       title: 'cMind',
       logo: {
         alt: 'cMind logo',
-        src: 'img/favicon.svg',
+        src: 'img/logo.svg',
       },
       items: [
         { to: '/docs/intro', label: 'Docs', position: 'left' },

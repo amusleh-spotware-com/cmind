@@ -1,105 +1,200 @@
-﻿@page "/settings/ai"
+@page "/settings/ai"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "Owner")]
-@using Web.Json
+@using System.Net.Http.Json
+@using Web.Components.Dialogs
 @inject HttpClient Http
 @inject ISnackbar Snack
+@inject IDialogService Dialogs
 
-<PageTitle>AI</PageTitle>
+<PageTitle>AI Providers</PageTitle>
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
-    <MudText Typo="Typo.h5">AI</MudText>
+    <MudText Typo="Typo.h5">AI Providers</MudText>
     <MudSpacer />
-    @if (_enabled)
-    {
-        <MudChip T="string" Size="Size.Small" Color="Color.Success" Icon="@Icons.Material.Filled.CheckCircle"
-                 data-testid="ai-enabled-chip">Enabled</MudChip>
-    }
-    else
-    {
-        <MudChip T="string" Size="Size.Small" Color="Color.Default" Icon="@Icons.Material.Filled.Cancel"
-                 data-testid="ai-disabled-chip">Not configured</MudChip>
-    }
+    <MudButton Color="Color.Secondary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Science"
+               OnClick="UseDemo" data-testid="ai-use-demo">Try demo AI</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
+               OnClick="@(() => OpenDialog(null))" data-testid="ai-add-provider">Add provider</MudButton>
 </MudStack>
 
 <MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">
-    Add your Anthropic API key to enable AI features (code generation, review, market sentiment,
-    the portfolio agent, alerts and more). The key is stored encrypted and never shown again.
-    It overrides any key set through configuration.
+    Connect any AI provider — Anthropic, OpenAI, Azure OpenAI, Google Gemini, or any OpenAI-compatible
+    endpoint including local models (Ollama, LM Studio, vLLM, llama.cpp, LocalAI) and OpenAI-compatible
+    clouds (OpenRouter, Groq, Together, Mistral, DeepSeek). Exactly one provider is active at a time.
+    Keys are stored encrypted and never shown again.
 </MudText>
 
-<MudPaper Class="pa-4" MaxWidth="640px" Elevation="1">
-    @if (_hasConfigKey && !_hasStoredKey)
-    {
-        <MudAlert Severity="Severity.Info" Class="mb-3" Dense="true">
-            An API key is currently provided by configuration. Saving a key here overrides it.
-        </MudAlert>
-    }
-    <MudTextField @bind-Value="_apiKey" Label="Anthropic API key" Placeholder="sk-ant-..."
-                  InputType="InputType.Password" Immediate="true" data-testid="ai-key-input"
-                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Key" />
-    <MudStack Row="true" Spacing="2" Class="mt-3">
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save"
-                   OnClick="Save" Disabled="_busy || string.IsNullOrWhiteSpace(_apiKey)" data-testid="ai-key-save">
-            Save key
-        </MudButton>
-        @if (_hasStoredKey)
+@if (_providers.Count == 0)
+{
+    <MudAlert Severity="Severity.Info" Dense="true" data-testid="ai-no-providers">
+        No AI provider configured yet — AI features are disabled. Add one to enable them.
+    </MudAlert>
+}
+else
+{
+    <MudStack Spacing="2">
+        @foreach (var p in _providers)
         {
-            <MudButton Color="Color.Error" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Delete"
-                       OnClick="Clear" Disabled="_busy" data-testid="ai-key-clear">
-                Remove stored key
-            </MudButton>
+            <MudPaper Class="pa-3" Elevation="1" data-testid="ai-provider-card">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+                    <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" />
+                    <MudStack Spacing="0">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudText Typo="Typo.subtitle1">@KindName(p.Kind)</MudText>
+                            @if (p.IsActive)
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Success"
+                                         Icon="@Icons.Material.Filled.CheckCircle" data-testid="ai-active-chip">Active</MudChip>
+                            }
+                        </MudStack>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">@p.Model · @p.BaseUrl</MudText>
+                    </MudStack>
+                    <MudSpacer />
+                    @if (!p.HasKey)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Default"
+                                 Icon="@Icons.Material.Filled.NoEncryption">No key (local)</MudChip>
+                    }
+                    @if (!p.IsActive)
+                    {
+                        <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Text"
+                                   OnClick="@(() => Activate(p.Id))" data-testid="ai-set-active">Set active</MudButton>
+                    }
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit"
+                                   OnClick="@(() => OpenDialog(p))" data-testid="ai-edit-provider" />
+                    <MudIconButton Size="Size.Small" Color="Color.Error" Icon="@Icons.Material.Filled.Delete"
+                                   OnClick="@(() => Delete(p.Id))" data-testid="ai-delete-provider" />
+                </MudStack>
+            </MudPaper>
         }
     </MudStack>
-</MudPaper>
+
+    <MudStack Row="true" Class="mt-3">
+        <MudButton Color="Color.Secondary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.NetworkCheck"
+                   OnClick="TestConnection" Disabled="_testing" data-testid="ai-test-connection">Test connection</MudButton>
+    </MudStack>
+}
 
 @code {
-    private string _apiKey = "";
-    private bool _enabled;
-    private bool _hasStoredKey;
-    private bool _hasConfigKey;
-    private bool _busy;
+    private List<ProviderView> _providers = [];
+    private bool _testing;
 
     protected override Task OnInitializedAsync() => Load();
 
     private async Task Load()
     {
-        var res = await Http.GetDynamicAsync("/api/ai/key");
-        if (res is null) return;
-        _enabled = (bool)res.enabled;
-        _hasStoredKey = (bool)res.hasStoredKey;
-        _hasConfigKey = (bool)res.hasConfigKey;
-    }
-
-    private async Task Save()
-    {
-        _busy = true;
         try
         {
-            var r = await Http.PutAsJsonAsync("/api/ai/key", new { ApiKey = _apiKey });
-            if (r.IsSuccessStatusCode)
-            {
-                Snack.Add("API key saved", Severity.Success);
-                _apiKey = "";
-                await Load();
-            }
-            else
-            {
-                Snack.Add("Failed to save API key", Severity.Error);
-            }
+            _providers = await Http.GetFromJsonAsync<List<ProviderView>>("/api/ai/providers") ?? [];
         }
-        finally { _busy = false; }
+        catch
+        {
+            _providers = [];
+        }
     }
 
-    private async Task Clear()
+    private async Task OpenDialog(ProviderView? existing)
     {
-        _busy = true;
-        try
+        var parameters = new DialogParameters<AiProviderDialog> { { x => x.Existing, existing } };
+        var dialog = await Dialogs.ShowAsync<AiProviderDialog>(
+            existing is null ? "Add provider" : "Edit provider", parameters);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled || result.Data is not AiProviderDialog.Result r) return;
+
+        var payload = new
         {
-            var r = await Http.DeleteAsync("/api/ai/key");
-            Snack.Add(r.IsSuccessStatusCode ? "Stored key removed" : "Failed to remove key",
-                r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+            id = existing?.Id,
+            kind = r.Kind,
+            baseUrl = r.BaseUrl,
+            model = r.Model,
+            apiKey = string.IsNullOrWhiteSpace(r.ApiKey) ? null : r.ApiKey,
+            maxTokens = r.MaxTokens,
+            capabilities = new { r.SupportsWebSearch, r.SupportsVision, r.SupportsSystemRole, r.SupportsTools },
+            activate = r.Activate
+        };
+        var resp = await Http.PutAsJsonAsync("/api/ai/providers", payload);
+        if (resp.IsSuccessStatusCode)
+        {
+            Snack.Add("Provider saved", Severity.Success);
             await Load();
         }
-        finally { _busy = false; }
+        else
+        {
+            var err = await resp.Content.ReadAsStringAsync();
+            Snack.Add($"Failed to save provider: {err}", Severity.Error);
+        }
     }
+
+    private async Task Activate(Guid id)
+    {
+        var resp = await Http.PostAsync($"/api/ai/providers/{id}/activate", null);
+        Snack.Add(resp.IsSuccessStatusCode ? "Provider activated" : "Failed to activate",
+            resp.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        await Load();
+    }
+
+    private async Task Delete(Guid id)
+    {
+        var resp = await Http.DeleteAsync($"/api/ai/providers/{id}");
+        Snack.Add(resp.IsSuccessStatusCode ? "Provider removed" : "Failed to remove",
+            resp.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        await Load();
+    }
+
+    private async Task TestConnection()
+    {
+        _testing = true;
+        try
+        {
+            var res = await Http.PostAsync("/api/ai/providers/test", null);
+            var body = await res.Content.ReadFromJsonAsync<TestResult>();
+            if (body is { Success: true })
+                Snack.Add($"Connection OK ({body.LatencyMs} ms)", Severity.Success);
+            else
+                Snack.Add($"Connection failed: {body?.Error}", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snack.Add($"Connection failed: {ex.Message}", Severity.Error);
+        }
+        finally { _testing = false; }
+    }
+
+    private async Task UseDemo()
+    {
+        // One click: create + activate the built-in demo provider so AI features work live with no key.
+        var payload = new
+        {
+            id = (Guid?)null,
+            kind = 4, // AiProviderKind.Demo
+            baseUrl = "https://demo.local/",
+            model = "cmind-demo",
+            apiKey = (string?)null,
+            maxTokens = 4000,
+            capabilities = new { SupportsWebSearch = true, SupportsVision = true, SupportsSystemRole = true, SupportsTools = true },
+            activate = true
+        };
+        var resp = await Http.PutAsJsonAsync("/api/ai/providers", payload);
+        Snack.Add(resp.IsSuccessStatusCode ? "Demo AI activated — try any AI feature" : "Failed to enable demo AI",
+            resp.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        await Load();
+    }
+
+    private static string KindName(int kind) => kind switch
+    {
+        0 => "Anthropic",
+        1 => "OpenAI-compatible",
+        2 => "Azure OpenAI",
+        3 => "Google Gemini",
+        4 => "Demo AI (built-in)",
+        5 => "Built-in local AI (ONNX)",
+        _ => "Unknown"
+    };
+
+    private sealed record ProviderView(
+        Guid Id, int Kind, string BaseUrl, string Model, bool HasKey, bool IsActive, int MaxTokens,
+        CapabilitiesView Capabilities);
+    private sealed record CapabilitiesView(
+        bool SupportsWebSearch, bool SupportsVision, bool SupportsSystemRole, bool SupportsTools);
+    private sealed record TestResult(bool Success, long LatencyMs, string? Error);
 }

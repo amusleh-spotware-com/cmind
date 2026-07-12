@@ -30,6 +30,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<McpApiKey> McpApiKeys => Set<McpApiKey>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
+    public DbSet<AiProviderCredential> AiProviderCredentials => Set<AiProviderCredential>();
     public DbSet<UserDashboard> UserDashboards => Set<UserDashboard>();
     public DbSet<AgentMandate> AgentMandates => Set<AgentMandate>();
     public DbSet<AgentProposal> AgentProposals => Set<AgentProposal>();
@@ -98,6 +99,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<LegalDocumentId>().HaveConversion<StrongIdConverter<LegalDocumentId>>();
         configurationBuilder.Properties<ConsentRecordId>().HaveConversion<StrongIdConverter<ConsentRecordId>>();
         configurationBuilder.Properties<UserDashboardId>().HaveConversion<StrongIdConverter<UserDashboardId>>();
+        configurationBuilder.Properties<AiProviderCredentialId>().HaveConversion<StrongIdConverter<AiProviderCredentialId>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -246,6 +248,16 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         });
 
         modelBuilder.Entity<AppSetting>(e => e.HasKey(x => x.Key));
+
+        modelBuilder.Entity<AiProviderCredential>(e =>
+        {
+            // At most one active credential — a partial unique index enforces it at the DB, backing the
+            // store's activate-exclusivity (defence in depth against a concurrent activate racing).
+            e.HasIndex(x => x.IsActive).IsUnique().HasFilter("\"IsActive\" = true AND \"IsDeleted\" = false");
+            e.Property(x => x.Kind).HasConversion<string>().HasMaxLength(24);
+            e.Property(x => x.BaseUrl).HasMaxLength(512);
+            e.Property(x => x.Model).HasMaxLength(256);
+        });
 
         modelBuilder.Entity<UserDashboard>(e =>
         {

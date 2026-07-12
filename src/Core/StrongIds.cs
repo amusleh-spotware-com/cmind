@@ -237,6 +237,13 @@ public readonly record struct ConsentRecordId(Guid Value) : IStronglyTypedId<Con
     public override string ToString() => Value.ToString();
 }
 
+public readonly record struct AiProviderCredentialId(Guid Value) : IStronglyTypedId<AiProviderCredentialId>
+{
+    public static AiProviderCredentialId New() => new(Guid.NewGuid());
+    public static AiProviderCredentialId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct Email
 {
     public string Value { get; }

@@ -101,6 +101,16 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
    `FakeTradingSession`/seeded state); for the part that genuinely needs the secret, add a live test
    that **skips cleanly when the secret is absent** (see the `CopyLive`/onboarding pattern) — do not
    defer it, do not leave a tier unwritten, do not ask the user whether to add it. Just add it.
+   **AI features are E2E-tested through the fake local LLM — MANDATORY, no exception.** Every AI
+   feature (existing or new) is driven end-to-end through the **real UI** (and MCP surface) against a
+   configured provider: by default the in-process **`FakeLocalLlmServer`** (an OpenAI-compatible
+   endpoint returning a deterministic canned reply — zero external deps, wire-identical to Ollama/LM
+   Studio/vLLM), or a **real provider when `AI_E2E_BASEURL` (+ optional `AI_E2E_API_KEY`/`AI_E2E_KIND`/
+   `AI_E2E_MODEL`) is set** — real creds win, otherwise the fake. Adding or changing ANY AI feature
+   (endpoint, page, MCP tool) REQUIRES a Playwright E2E test that boots the AI-configured fixture
+   (`AiLocalFixture`, collection `ai-local`), exercises the feature through the UI, and asserts the AI
+   output renders (the canned reply when on the fake). MCP AI tools get the same via the fake LLM
+   (`McpAiToolsLocalLlmTests`). The keyless "not configured" gate E2E stays too. → `tests/CLAUDE.md`.
 3. **`FakeTradingSession` stays cTrader-faithful.** Extend it for new cTrader behavior; never weaken
    the simulator or a test to make CI pass. Fix the code. (`tests/UnitTests/CopyTrading/`)
 4. **Never `DateTime.UtcNow`/`.Now`/`DateTimeOffset.UtcNow`.** Inject `TimeProvider`, read

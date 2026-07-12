@@ -1,15 +1,15 @@
-﻿using System.Net;
+using System.Net;
 using Core.Ai;
 using Core.Constants;
-using Core.Options;
 using FluentAssertions;
 using Infrastructure.Ai;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace IntegrationTests;
 
+// Proves the identical retry/timeout/typed-fail resilience guarantee holds for EVERY adapter — cloud and
+// local (OpenAI-compatible) alike — since they all share the one AiHttp pipeline. 503 x2 then 200.
 public sealed class AiHttpResilienceTests
 {
     private sealed class SequenceHandler(int failTimes, string successBody) : HttpMessageHandler
@@ -26,38 +26,30 @@ public sealed class AiHttpResilienceTests
         }
     }
 
-    private sealed class StaticMonitor(AppOptions value) : IOptionsMonitor<AppOptions>
+    public static IEnumerable<object[]> Adapters() => new[]
     {
-        public AppOptions CurrentValue => value;
-        public AppOptions Get(string? name) => value;
-        public IDisposable? OnChange(Action<AppOptions, string?> listener) => null;
-    }
+        new object[] { AiProviderKind.Anthropic, "https://api.anthropic.com/", """{"content":[{"type":"text","text":"ok"}]}""" },
+        new object[] { AiProviderKind.OpenAiCompatible, "http://localhost:11434/v1/", """{"choices":[{"message":{"content":"ok"}}]}""" },
+        new object[] { AiProviderKind.AzureOpenAi, "https://res.openai.azure.com/", """{"choices":[{"message":{"content":"ok"}}]}""" },
+        new object[] { AiProviderKind.Gemini, "https://generativelanguage.googleapis.com/", """{"candidates":[{"content":{"parts":[{"text":"ok"}]}}]}""" }
+    };
 
-    private sealed class FakeKeyStore : IAiKeyStore
+    [Theory]
+    [MemberData(nameof(Adapters))]
+    public async Task Every_adapter_retries_transient_failures_then_succeeds(AiProviderKind kind, string baseUrl, string body)
     {
-        public bool HasKey => true;
-        public bool HasStoredKey => true;
-        public string? CurrentKey => "sk-test";
-        public Task SetKeyAsync(string apiKey, CancellationToken ct) => Task.CompletedTask;
-        public Task ClearKeyAsync(CancellationToken ct) => Task.CompletedTask;
-    }
-
-    [Fact]
-    public async Task Ai_client_retries_transient_failures_then_succeeds()
-    {
-        var handler = new SequenceHandler(failTimes: 2, successBody: """{"content":[{"type":"text","text":"ok"}]}""");
+        var handler = new SequenceHandler(failTimes: 2, successBody: body);
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddSingleton<IOptionsMonitor<AppOptions>>(
-            new StaticMonitor(new AppOptions { Ai = new AiOptions { BaseUrl = AiConstants.DefaultBaseUrl } }));
-        services.AddSingleton<IAiKeyStore>(new FakeKeyStore());
         services.AddAiHttpClient();
-        services.AddHttpClient<IAiClient, AnthropicAiClient>().ConfigurePrimaryHttpMessageHandler(() => handler);
+        services.AddHttpClient(AiConstants.HttpClientName).ConfigurePrimaryHttpMessageHandler(() => handler);
 
         await using var provider = services.BuildServiceProvider();
-        var client = provider.GetRequiredService<IAiClient>();
+        var adapter = provider.GetServices<IAiProvider>().Single(p => p.Kind == kind);
 
-        var result = await client.CompleteAsync(new AiTextRequest("system", "user"), CancellationToken.None);
+        var request = new AiProviderRequest(kind, baseUrl, "the-model", "sk-test", 256,
+            AiProviderCapabilities.DefaultFor(kind), "sys", "user", EnableWebSearch: false, Image: null);
+        var result = await adapter.CompleteAsync(request, CancellationToken.None);
 
         result.Success.Should().BeTrue();
         result.Text.Should().Be("ok");

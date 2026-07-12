@@ -39,4 +39,25 @@ public sealed record BrandingOptions
     /// <c>true</c> to make an authenticator app mandatory for all accounts.
     /// </summary>
     public bool RequireMfa { get; init; }
+
+    /// <summary>
+    /// Whether the shipped built-in local LLM (Microsoft.ML.OnnxRuntimeGenAI) is offered. Defaults to
+    /// <c>true</c> — every user gets working AI with no key. A white-label deployment sets it <c>false</c>
+    /// to remove the built-in model entirely (e.g. to force its own provider).
+    /// </summary>
+    public bool AllowBuiltInAi { get; init; } = true;
+
+    /// <summary>
+    /// Whether local / self-hosted providers (loopback or private-network OpenAI-compatible endpoints,
+    /// e.g. Ollama/LM Studio/vLLM) may be configured. Defaults to <c>true</c>. A white-label deployment
+    /// that must keep AI on approved clouds sets it <c>false</c>.
+    /// </summary>
+    public bool AllowLocalProviders { get; init; } = true;
+
+    /// <summary>
+    /// The exact set of provider kinds a deployment permits (names of <c>AiProviderKind</c>). Empty = all
+    /// kinds allowed. A white-label deployment lists only the kinds it sanctions (e.g. just
+    /// <c>Anthropic</c>, <c>OpenAiCompatible</c>) to lock down which AI providers users may add.
+    /// </summary>
+    public IReadOnlyList<string> AllowedAiProviderKinds { get; init; } = [];
 }

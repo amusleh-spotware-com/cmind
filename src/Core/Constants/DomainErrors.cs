@@ -113,4 +113,12 @@ public static class DomainErrors
     public const string ProfileTextTooLong = "domain.profile.text_too_long";
 
     public const string CultureNotSupported = "domain.localization.culture_not_supported";
+
+    public const string AiModelRequired = "domain.ai.model_required";
+    public const string AiEndpointInvalid = "domain.ai.endpoint_invalid";
+    public const string AiEndpointInsecure = "domain.ai.endpoint_insecure";
+    public const string AiMaxTokensOutOfRange = "domain.ai.max_tokens_out_of_range";
+    public const string AiProviderKindNotAllowed = "domain.ai.provider_kind_not_allowed";
+    public const string AiLocalProviderNotAllowed = "domain.ai.local_provider_not_allowed";
+    public const string AiBuiltInNotAllowed = "domain.ai.built_in_not_allowed";
 }

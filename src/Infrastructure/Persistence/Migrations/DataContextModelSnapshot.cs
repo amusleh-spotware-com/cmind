@@ -402,6 +402,68 @@ namespace Infrastructure.Persistence.Migrations
                     b.ToTable("AgentProposals");
                 });
 
+            modelBuilder.Entity("Core.AiProviderCredential", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BaseUrl")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<byte[]>("EncryptedApiKey")
+                        .HasColumnType("bytea");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<int>("MaxTokens")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<bool>("SupportsSystemRole")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SupportsTools")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SupportsVision")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SupportsWebSearch")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive")
+                        .IsUnique()
+                        .HasFilter("\"IsActive\" = true AND \"IsDeleted\" = false");
+
+                    b.ToTable("AiProviderCredentials");
+                });
+
             modelBuilder.Entity("Core.AlertEvent", b =>
                 {
                     b.Property<Guid>("Id")

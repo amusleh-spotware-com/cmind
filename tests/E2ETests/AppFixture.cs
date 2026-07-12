@@ -9,7 +9,7 @@ using Xunit;
 
 namespace E2ETests;
 
-public sealed class AppFixture : IAsyncLifetime
+public class AppFixture : IAsyncLifetime
 {
     public const string OwnerEmail = "owner@e2e.local";
     public const string OwnerPassword = "Owner_Pass_123!";
@@ -28,11 +28,17 @@ public sealed class AppFixture : IAsyncLifetime
     public IBrowser Browser { get; private set; } = default!;
     public string StorageState { get; private set; } = "";
 
+    // A specialized fixture can decline to boot (e.g. an opt-in lane whose prerequisite env is absent),
+    // so the collection's tests skip cheaply without paying the app/Postgres startup cost.
+    protected virtual bool ShouldStart => true;
+
     public async Task InitializeAsync()
     {
+        if (!ShouldStart) return;
         try
         {
             await _postgres.StartAsync();
+            await OnBeforeStartAsync();
 
             var port = GetFreePort();
             BaseUrl = $"http://127.0.0.1:{port}";
@@ -52,6 +58,9 @@ public sealed class AppFixture : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
+        try { await OnDisposeAsync(); }
+        catch { /* best effort */ }
+
         foreach (var context in _contexts)
         {
             try { await context.DisposeAsync(); }
@@ -73,6 +82,12 @@ public sealed class AppFixture : IAsyncLifetime
         await _postgres.DisposeAsync();
     }
 
+    // Extension hooks for a specialized fixture (e.g. one that boots a fake local-LLM endpoint and
+    // configures the app to use it). Base behaviour is a no-op, so the default fixture is unchanged.
+    protected virtual Task OnBeforeStartAsync() => Task.CompletedTask;
+    protected virtual void ConfigureApp(ProcessStartInfo psi) { }
+    protected virtual Task OnDisposeAsync() => Task.CompletedTask;
+
     private void StartApp(int port)
     {
         var webDll = typeof(Program).Assembly.Location;
@@ -90,6 +105,10 @@ public sealed class AppFixture : IAsyncLifetime
         psi.Environment["ConnectionStrings__appdb"] = _postgres.GetConnectionString();
         psi.Environment["App__OwnerEmail"] = OwnerEmail;
         psi.Environment["App__OwnerPassword"] = OwnerPassword;
+        // The shipped built-in AI is on by default; the base fixture keeps it OFF so the keyless
+        // "not configured" gate tests stay valid. Specialized fixtures opt back in as needed.
+        psi.Environment["App__Ai__BuiltIn__Enabled"] = "false";
+        ConfigureApp(psi);
 
         _app = new Process { StartInfo = psi };
         _app.OutputDataReceived += (_, e) => { if (e.Data is not null) _appLog.AppendLine(e.Data); };

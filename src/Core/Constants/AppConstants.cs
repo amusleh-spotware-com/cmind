@@ -285,6 +285,63 @@ public static class AiConstants
     public const int DebateMaxTokens = 2000;
     public const int ExposureMaxTokens = 2000;
     public const int ExposureMaxInstances = 40;
+
+    // Named HttpClient shared by every provider adapter — one resilience pipeline (timeouts + retry)
+    // covers cloud and local endpoints identically. Base URL/headers are set per request.
+    public const string HttpClientName = "ai";
+
+    // Cache of the resolved active provider (or null = "no active provider"), refreshed on any store
+    // mutation. Mirrors the old key cache TTL so gating stays cheap on the request path.
+    public const string ActiveProviderCacheKey = "ai.active_provider";
+    public static readonly TimeSpan ActiveProviderCacheTtl = TimeSpan.FromSeconds(30);
+
+    // Built-in demo provider placeholders — the endpoint/model are unused (the demo runs in-process) but
+    // the credential still stores a valid base URL + model.
+    public const string DemoBaseUrl = "https://demo.local/";
+    public const string DemoModel = "cmind-demo";
+
+    // Built-in ONNX local LLM placeholders (endpoint unused — it runs in-process) + default model dir.
+    public const string BuiltInBaseUrl = "https://builtin.local/";
+    public const string BuiltInModel = "built-in-onnx";
+    public const string BuiltInModelDefaultPath = "models/onnx";
+    public const string BuiltInUnavailableMessage =
+        "The built-in local AI model is not installed. Add an ONNX GenAI model under the configured path " +
+        "(App:Ai:BuiltIn:ModelPath) or configure another provider in Settings → AI.";
+
+    // Vision requested against a provider that cannot accept images (e.g. a text-only local model).
+    public const string VisionUnsupportedMessage =
+        "The active AI provider does not support image input. Switch to a vision-capable provider in Settings → AI.";
+}
+
+// Wire constants for the OpenAI Chat Completions family — the dominant format also spoken by Azure
+// OpenAI, Mistral, Groq, Together, OpenRouter, DeepSeek and every local runtime (Ollama, LM Studio,
+// vLLM, llama.cpp, LocalAI). One adapter covers them all; only the base URL + model + key differ.
+public static class OpenAiConstants
+{
+    public const string ChatCompletionsPath = "chat/completions";
+    public const string AuthorizationHeader = "Authorization";
+    public const string BearerPrefix = "Bearer ";
+    public const string DefaultBaseUrl = "https://api.openai.com/v1/";
+    public const string OllamaHintBaseUrl = "http://localhost:11434/v1/";
+    public const string WebSearchToolType = "web_search_preview";
+}
+
+public static class AzureOpenAiConstants
+{
+    public const string ApiKeyHeader = "api-key";
+    public const string ApiVersion = "2024-10-21";
+    public const string ApiVersionQuery = "api-version";
+    // Deployment path: openai/deployments/{model}/chat/completions?api-version=...
+    public static string ChatCompletionsPath(string deployment) => $"openai/deployments/{deployment}/chat/completions";
+}
+
+public static class GeminiConstants
+{
+    public const string DefaultBaseUrl = "https://generativelanguage.googleapis.com/";
+    public const string KeyQuery = "key";
+    public const string GoogleSearchTool = "google_search";
+    // generateContent path: v1beta/models/{model}:generateContent
+    public static string GenerateContentPath(string model) => $"v1beta/models/{model}:generateContent";
 }
 
 public static class RiskGuardConstants

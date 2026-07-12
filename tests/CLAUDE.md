@@ -18,6 +18,18 @@ exemption. If a tier genuinely can't apply, say so explicitly in the summary wit
   `PageSmokeTests`.
 - **StressTests** — deterministic-simulation (DST) copy-trading stress suite; keep it green.
 
+## AI features → E2E through the fake local LLM (MANDATORY)
+
+Every AI feature is proven end-to-end through the real UI (and MCP) against a configured provider — no
+"needs an API key" excuse. Use `AiLocalFixture` (collection `ai-local`): it boots the app with one
+active provider — the in-process **`FakeLocalLlmServer`** (OpenAI-compatible, deterministic canned
+reply, wire-identical to Ollama/LM Studio/vLLM) by default, or a **real provider** when the dev sets
+`AI_E2E_BASEURL` (+ optional `AI_E2E_API_KEY` / `AI_E2E_KIND` / `AI_E2E_MODEL`) — real creds win.
+Add/modify an AI endpoint, page, or MCP tool ⇒ add a Playwright test that drives it through the UI and
+asserts the AI output renders (`fixture.UsingFakeLlm` ⇒ assert it contains `AiLocalFixture.CannedReply`;
+real provider ⇒ assert non-empty). Patterns: `AiFeatureLocalTests` (UI), `McpAiToolsLocalLlmTests`
+(MCP), `LocalLlmProviderTests` (adapter). Keep the keyless "not configured" gate E2E (`AiPagesTests`).
+
 ## Failure paths are not optional
 
 A feature that can fail tests its failure branch too: connection drop, order-placement failure,

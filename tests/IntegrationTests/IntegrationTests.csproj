@@ -8,6 +8,12 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Web\Web.csproj" />
+    <!-- Aliased so Mcp's top-level Program type does not clash with Web's (both are the global `Program`
+         used by WebApplicationFactory<Program> across the HTTP tests). MCP tests reference it via
+         `extern alias mcp`. -->
+    <ProjectReference Include="..\..\src\Mcp\Mcp.csproj">
+      <Aliases>mcp</Aliases>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />

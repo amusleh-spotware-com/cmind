@@ -156,6 +156,8 @@ public sealed record AgentOptions
 
 public sealed record AiOptions
 {
+    // Legacy single-key config (Anthropic). Still honoured: when no provider credential rows exist it is
+    // imported as the default active Anthropic provider, so existing deployments keep working untouched.
     public string? ApiKey { get; init; }
     public string Model { get; init; } = Constants.AiConstants.DefaultModel;
     public string BaseUrl { get; init; } = Constants.AiConstants.DefaultBaseUrl;
@@ -164,6 +166,47 @@ public sealed record AiOptions
     public bool RiskGuardAutoStop { get; init; }
     public TimeSpan RiskGuardInterval { get; init; } = TimeSpan.FromMinutes(5);
     public bool Enabled => !string.IsNullOrWhiteSpace(ApiKey);
+
+    // Deployment-seeded providers imported into the store on startup if absent (idempotent), so an ops
+    // team can ship a local-LLM or cloud deployment purely via appsettings/env, no UI needed.
+    public Ai.AiProviderKind? ActiveProvider { get; init; }
+    public IReadOnlyList<AiProviderOptions> Providers { get; init; } = [];
+
+    // Built-in real local LLM (Microsoft.ML.OnnxRuntimeGenAI), shipped and enabled by default so every
+    // deployment has working AI with no key. Seeded + activated on first startup when allowed and no
+    // provider exists yet.
+    public AiBuiltInOptions BuiltIn { get; init; } = new();
+}
+
+public sealed record AiBuiltInOptions
+{
+    /// <summary>Whether the built-in ONNX local LLM is offered/seeded. Combined with the white-label
+    /// <c>App:Branding:AllowBuiltInAi</c> gate.</summary>
+    public bool Enabled { get; init; } = true;
+
+    /// <summary>Directory of the ONNX GenAI model (config + weights). Relative paths resolve under the app
+    /// base directory. When absent, the provider degrades to a typed failure with an install hint.</summary>
+    public string ModelPath { get; init; } = Constants.AiConstants.BuiltInModelDefaultPath;
+
+    public int MaxTokens { get; init; } = 1024;
+}
+
+public sealed record AiProviderOptions
+{
+    public Ai.AiProviderKind Kind { get; init; }
+    public string? BaseUrl { get; init; }
+    public string? Model { get; init; }
+    public string? ApiKey { get; init; }
+    public int? MaxTokens { get; init; }
+    public AiCapabilityOptions? Capabilities { get; init; }
+}
+
+public sealed record AiCapabilityOptions
+{
+    public bool? SupportsWebSearch { get; init; }
+    public bool? SupportsVision { get; init; }
+    public bool? SupportsSystemRole { get; init; }
+    public bool? SupportsTools { get; init; }
 }
 
 public sealed record DiscoveryOptions

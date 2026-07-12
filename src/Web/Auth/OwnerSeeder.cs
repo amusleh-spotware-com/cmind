@@ -31,6 +31,8 @@ public sealed class OwnerSeeder(
             {
                 await db.Database.MigrateAsync(token);
                 await SeedOwnerAsync(scope, db, token);
+                await scope.ServiceProvider.GetRequiredService<Core.Ai.IAiProviderStore>()
+                    .SeedFromConfigAsync(token);
             }, ct);
     }
 

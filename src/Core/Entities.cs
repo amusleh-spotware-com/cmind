@@ -28,6 +28,7 @@ public abstract class AuditedEntity<TId> : ISoftDeletable, IHasDomainEvents, IAg
     protected internal void RaiseDomainEvent(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
     public void ClearDomainEvents() => _domainEvents.Clear();
     protected internal void PreserveCreatedAt(DateTimeOffset createdAt) => CreatedAt = createdAt;
+    protected internal void PreserveUpdatedAt(DateTimeOffset updatedAt) => UpdatedAt = updatedAt;
 }
 
 // ---------------- Access: AppUser hierarchy by role ----------------

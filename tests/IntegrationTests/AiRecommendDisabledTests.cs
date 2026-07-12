@@ -1,8 +1,6 @@
-﻿using Core.Ai;
-using Core.Options;
+using Core.Ai;
 using FluentAssertions;
 using Infrastructure.Ai;
-using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace IntegrationTests;
@@ -10,11 +8,9 @@ namespace IntegrationTests;
 public class AiRecommendDisabledTests
 {
     [Fact]
-    public async Task Recommend_returns_failure_when_ai_not_configured()
+    public async Task Recommend_returns_failure_when_no_provider_configured()
     {
-        using var http = new HttpClient();
-        var client = new AnthropicAiClient(http,
-            new StaticOptionsMonitor<AppOptions>(new AppOptions()), new NoKeyStore(), NullLogger<AnthropicAiClient>.Instance);
+        var client = new RoutingAiClient(new NoActiveStore(), []);
         var service = new AiFeatureService(client);
 
         service.Enabled.Should().BeFalse();
@@ -25,12 +21,15 @@ public class AiRecommendDisabledTests
         result.Error.Should().NotBeNullOrEmpty();
     }
 
-    private sealed class NoKeyStore : IAiKeyStore
+    private sealed class NoActiveStore : IAiProviderStore
     {
-        public bool HasKey => false;
-        public bool HasStoredKey => false;
-        public string? CurrentKey => null;
-        public Task SetKeyAsync(string apiKey, CancellationToken ct) => Task.CompletedTask;
-        public Task ClearKeyAsync(CancellationToken ct) => Task.CompletedTask;
+        public bool HasActive => false;
+        public ActiveAiProvider? Active => null;
+        public Task<IReadOnlyList<AiProviderView>> ListAsync(CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<AiProviderView>>([]);
+        public Task<Guid> UpsertAsync(UpsertAiProviderCommand command, CancellationToken ct) => Task.FromResult(Guid.NewGuid());
+        public Task ActivateAsync(Guid id, CancellationToken ct) => Task.CompletedTask;
+        public Task RemoveAsync(Guid id, CancellationToken ct) => Task.CompletedTask;
+        public Task SeedFromConfigAsync(CancellationToken ct) => Task.CompletedTask;
     }
 }

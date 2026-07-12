@@ -19,28 +19,63 @@ public static class AiEndpoints
         var g = app.MapGroup("/api/ai").RequireAuthorization("UserOrAbove")
             .RequireFeature(Core.Features.FeatureFlag.Ai);
 
-        g.MapGet("/status", (IAiKeyStore keys) => Results.Ok(new { enabled = keys.HasKey }));
-
-        g.MapGet("/key", (
-            IAiKeyStore keys, Microsoft.Extensions.Options.IOptionsMonitor<Core.Options.AppOptions> opt) =>
-            Results.Ok(new
-            {
-                enabled = keys.HasKey,
-                hasStoredKey = keys.HasStoredKey,
-                hasConfigKey = !string.IsNullOrWhiteSpace(opt.CurrentValue.Ai.ApiKey)
-            })).RequireAuthorization(AuthPolicies.Owner);
-
-        g.MapPut("/key", async (SetAiKeyRequest req, IAiKeyStore keys, CancellationToken ct) =>
+        // Status keeps its { enabled } shape (the gate JS/E2E depend on it) and adds the active
+        // provider kind + model for display when configured.
+        g.MapGet("/status", (IAiProviderStore store) =>
         {
-            if (string.IsNullOrWhiteSpace(req.ApiKey)) return Results.BadRequest("API key is required");
-            await keys.SetKeyAsync(req.ApiKey, ct);
-            return Results.Ok(new { enabled = keys.HasKey });
+            var active = store.Active;
+            return Results.Ok(new
+            {
+                enabled = active is not null,
+                kind = active?.Kind.ToString(),
+                model = active?.Model
+            });
+        });
+
+        g.MapGet("/providers", async (IAiProviderStore store, CancellationToken ct) =>
+            Results.Ok(await store.ListAsync(ct))).RequireAuthorization(AuthPolicies.Owner);
+
+        g.MapPut("/providers", async (UpsertProviderRequest req, IAiProviderStore store, CancellationToken ct) =>
+        {
+            if (string.IsNullOrWhiteSpace(req.BaseUrl)) return Results.BadRequest("Base URL is required");
+            if (string.IsNullOrWhiteSpace(req.Model)) return Results.BadRequest("Model is required");
+            try
+            {
+                var caps = req.Capabilities is { } c
+                    ? new Core.Ai.AiProviderCapabilities(c.SupportsWebSearch, c.SupportsVision, c.SupportsSystemRole, c.SupportsTools)
+                    : (Core.Ai.AiProviderCapabilities?)null;
+                var id = await store.UpsertAsync(new Core.Ai.UpsertAiProviderCommand(
+                    req.Id, req.Kind, req.BaseUrl!, req.Model!, req.ApiKey, req.MaxTokens, caps, req.Activate), ct);
+                return Results.Ok(new { id });
+            }
+            catch (Core.Domain.DomainException ex)
+            {
+                return Results.BadRequest(ex.Code);
+            }
         }).RequireAuthorization(AuthPolicies.Owner);
 
-        g.MapDelete("/key", async (IAiKeyStore keys, CancellationToken ct) =>
+        g.MapPost("/providers/{id:guid}/activate", async (Guid id, IAiProviderStore store, CancellationToken ct) =>
         {
-            await keys.ClearKeyAsync(ct);
-            return Results.Ok(new { enabled = keys.HasKey });
+            await store.ActivateAsync(id, ct);
+            return Results.Ok(new { enabled = store.HasActive });
+        }).RequireAuthorization(AuthPolicies.Owner);
+
+        g.MapDelete("/providers/{id:guid}", async (Guid id, IAiProviderStore store, CancellationToken ct) =>
+        {
+            await store.RemoveAsync(id, ct);
+            return Results.Ok(new { enabled = store.HasActive });
+        }).RequireAuthorization(AuthPolicies.Owner);
+
+        // Ping the active provider with a tiny completion and report success + latency — handy for
+        // verifying a local endpoint after adding it.
+        g.MapPost("/providers/test", async (IAiClient client, CancellationToken ct) =>
+        {
+            if (!client.Enabled) return Results.Ok(new { success = false, latencyMs = 0L, error = AiConstants.DisabledMessage });
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            var result = await client.CompleteAsync(
+                new AiTextRequest("You are a connectivity probe. Reply with the single word: ok.", "ping", MaxTokens: 16), ct);
+            sw.Stop();
+            return Results.Ok(new { success = result.Success, latencyMs = sw.ElapsedMilliseconds, error = result.Error });
         }).RequireAuthorization(AuthPolicies.Owner);
 
         g.MapPost("/generate", async (GenerateCBotRequest req, IAiFeatureService ai, CancellationToken ct) =>
@@ -439,7 +474,11 @@ public static class AiEndpoints
     };
 }
 
-public sealed record SetAiKeyRequest(string? ApiKey);
+public sealed record UpsertProviderRequest(
+    Guid? Id, Core.Ai.AiProviderKind Kind, string? BaseUrl, string? Model, string? ApiKey,
+    int? MaxTokens, CapabilitiesRequest? Capabilities, bool Activate);
+public sealed record CapabilitiesRequest(
+    bool SupportsWebSearch, bool SupportsVision, bool SupportsSystemRole, bool SupportsTools);
 public sealed record GenerateCBotRequest(string? Language, string? Description);
 public sealed record ReviewCBotRequest(string? Language, string? Source);
 public sealed record DebateRequest(string? Name, string? Language, string? Source);

@@ -48,7 +48,7 @@ public sealed class CopyEngineSupervisor(
             await Task.Delay(JitteredInterval(options.CurrentValue.Copy.ReconcileInterval, Random.Shared), stoppingToken);
         }
 
-        foreach (var handle in _running.Values) await handle.Cts.CancelAsync();
+        await Task.WhenAll(_running.Values.Select(h => h.Cts.CancelAsync()));
     }
 
     // S1 graceful lease release: on shutdown (SIGTERM / rolling update) release this node's copy-profile
@@ -57,7 +57,7 @@ public sealed class CopyEngineSupervisor(
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
         await base.StopAsync(cancellationToken);
-        foreach (var handle in _running.Values) await handle.Cts.CancelAsync();
+        await Task.WhenAll(_running.Values.Select(h => h.Cts.CancelAsync()));
 
         try
         {

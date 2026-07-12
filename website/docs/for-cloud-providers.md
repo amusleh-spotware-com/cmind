@@ -87,6 +87,24 @@ Real, copy-paste deployment guides make this concrete: [cloud overview](./deploy
 - **Shared control plane (advanced).** Drive many instances from your own provisioning layer, seeding
   branding and features per tenant programmatically.
 
+## Metering usage for billing
+
+An owner/admin-only **`GET /api/usage`** endpoint returns a read-only summary a provider can poll and
+bill on — without any new domain or persistence, it projects existing state:
+
+```json
+{
+  "users": { "total": 42 },
+  "nodes": { "total": 6, "online": 5 },
+  "instances": { "total": 1280, "backtestsRunning": 3, "runsRunning": 11 },
+  "cbots": { "total": 210 },
+  "tradingAccounts": { "total": 88 }
+}
+```
+
+Poll it per tenant deployment to drive seat-based, fleet-based, or workload-based pricing. Pair with
+[logging & observability](./operations/logging.md) for finer compute metering.
+
 ## Keeping margins predictable
 
 Scale nodes to demand, share Postgres tiers, and autoscale the stateless tier. The operational

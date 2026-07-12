@@ -194,6 +194,7 @@ app.MapParamSetEndpoints();
 app.MapMcpKeyEndpoints();
 app.MapBuilderEndpoints();
 app.MapDashboardEndpoints();
+app.MapUsageEndpoints();
 app.MapFeatureEndpoints();
 app.MapAiEndpoints();
 app.MapQuantEndpoints();

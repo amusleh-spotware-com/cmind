@@ -32,28 +32,36 @@ public sealed class NullAgentOrderExecutor : IAgentOrderExecutor
 /// so the agent never acts blind. Automatic order extraction from the model is intentionally deferred
 /// until the API key is provided — the safety gate and execution wiring are exercised deterministically.
 /// </summary>
-public sealed class AiAgentDecisionEngine(IAiFeatureService ai, IAgentMemory memory) : IAgentDecisionEngine
+public sealed class AiAgentDecisionEngine(IAiClient ai, IAgentMemory memory) : IAgentDecisionEngine
 {
     private const int MaxTokens = 1024;
     private const int RecallCount = 3;
 
+    private const string JsonInstruction =
+        "\nDecide the next action for the account below and output ONLY a JSON object: " +
+        "{ \"reasoning\": \"...\", \"action\": \"buy|sell|hold\", \"symbol\": \"...\", \"sizeLots\": 0.0, \"evidence\": [\"...\"] }. " +
+        "Every order is validated against the risk envelope before it can act; prefer \"hold\" when unsure.";
+
     public async Task<AgentDecision> DecideAsync(TradingAgent agent, AccountState state, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(agent);
+        ArgumentNullException.ThrowIfNull(state);
         if (!ai.Enabled)
             return new AgentDecision("AI is not configured — holding.", Order: null, Evidence: []);
 
         // Recall recent memory so the model reasons with continuity (layered memory / reflection).
         var recent = await memory.RecallAsync(agent.Id, RecallCount, ct);
-        var objective = recent.Count == 0
-            ? agent.CompileSystemPrompt()
-            : agent.CompileSystemPrompt() + "\nRecent memory:\n" + string.Join("\n", recent.Select(m => $"- {m.Content}"));
-        var result = await ai.ProposeAgentActionAsync(agent.Name, objective, "{}", null, MaxTokens, ct);
+        var system = agent.CompileSystemPrompt()
+            + (recent.Count == 0 ? string.Empty : "\nRecent memory:\n" + string.Join("\n", recent.Select(m => $"- {m.Content}")))
+            + JsonInstruction;
+        var user = string.Create(System.Globalization.CultureInfo.InvariantCulture,
+            $"Account balance {state.Balance}, equity {state.Equity}, open exposure {state.OpenExposureLots:0.##} lots.");
+
+        var result = await ai.CompleteAsync(new AiTextRequest(system, user, MaxTokens), ct);
         if (result is not { Success: true })
             return new AgentDecision(result.Error ?? "AI returned no decision.", Order: null, Evidence: []);
 
         // Deterministically parse the model reply into an order for this account; anything malformed holds.
-        var parsed = AgentDecisionParser.Parse(result.Text);
-        return AgentDecisionParser.ToDecision(parsed, state.Account);
+        return AgentDecisionParser.ToDecision(AgentDecisionParser.Parse(result.Text), state.Account);
     }
 }

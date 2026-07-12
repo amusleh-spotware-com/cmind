@@ -68,6 +68,15 @@ public sealed record CalendarOptions
     public string? FredApiKey { get; init; }
 
     /// <summary>
+    /// Client-side request budget for the FRED source, kept under the provider's published limit (~120/min)
+    /// so ingestion never trips a 429. Requests are spaced by <c>60s / this</c> through a shared gate.
+    /// </summary>
+    public int FredRequestsPerMinute { get; init; } = 100;
+
+    /// <summary>Fallback cooldown applied to a source after a 429 that carries no usable <c>Retry-After</c>.</summary>
+    public TimeSpan RateLimitBackoff { get; init; } = TimeSpan.FromSeconds(60);
+
+    /// <summary>
     /// When a blackout answer is uncertain (source/DB fault, data gap), the conservative default: <c>true</c>
     /// = fail-closed ("assume in-blackout") for risk-off bots, <c>false</c> = fail-open. Never silently
     /// green-lights trading through a data gap.
@@ -159,6 +168,26 @@ public sealed record PropFirmOptions
 public sealed record OpenApiOptions
 {
     public bool Enabled { get; init; }
+
+    /// <summary>
+    /// Canonical public URL of this deployment (e.g. <c>https://cmind.mybroker.com</c>), used to compose the
+    /// single Open API redirect URL <c>{PublicBaseUrl}{CallbackPath}</c> deterministically behind a
+    /// proxy/CDN. When absent the redirect URL falls back to the inbound request host.
+    /// </summary>
+    public string? PublicBaseUrl { get; init; }
+
+    /// <summary>
+    /// White-label shared Open API application. When enabled with credentials, one app is seeded and every
+    /// user authorizes accounts through it — the per-user app option disappears.
+    /// </summary>
+    public SharedOpenApiAppOptions SharedApp { get; init; } = new();
+
+    /// <summary>
+    /// Per-message-type outbound rate caps (messages/sec) keyed by <c>OpenApiRateCategory</c> name
+    /// (<c>General</c>, <c>HistoricalData</c>). Empty ⇒ safe built-in defaults. A category set to <c>0</c>
+    /// is unlimited. An owner may override these at runtime from settings.
+    /// </summary>
+    public IReadOnlyDictionary<string, int> RateLimits { get; init; } = new Dictionary<string, int>();
     public string AuthBaseUrl { get; init; } = Constants.OpenApiEndpoints.AuthBaseUrl;
     public string LiveHost { get; init; } = Constants.OpenApiEndpoints.LiveHost;
     public string DemoHost { get; init; } = Constants.OpenApiEndpoints.DemoHost;
@@ -173,6 +202,14 @@ public sealed record OpenApiOptions
     public TimeSpan InboundWatchdogTimeout { get; init; } = TimeSpan.FromSeconds(30);
     public TimeSpan BackoffInitial { get; init; } = TimeSpan.FromSeconds(1);
     public TimeSpan BackoffMax { get; init; } = TimeSpan.FromSeconds(60);
+}
+
+public sealed record SharedOpenApiAppOptions
+{
+    public bool Enabled { get; init; }
+    public string Name { get; init; } = "Shared Open API Application";
+    public string ClientId { get; init; } = string.Empty;
+    public string ClientSecret { get; init; } = string.Empty;
 }
 
 public sealed record PropGuardOptions

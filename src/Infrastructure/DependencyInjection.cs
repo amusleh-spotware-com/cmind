@@ -63,6 +63,10 @@ public static class DependencyInjection
         services.AddScoped<Core.Domain.IAuditTrailVerifier, Infrastructure.Persistence.AuditTrailVerifier>();
         services.AddScoped<Core.Domain.IOpenApiApplicationRepository, OpenApiApplicationRepository>();
         services.AddScoped<Core.Domain.IOpenApiAuthorizationRepository, OpenApiAuthorizationRepository>();
+        services.AddScoped<Core.Domain.IOpenApiAppResolver, Infrastructure.OpenApi.OpenApiAppResolver>();
+        services.AddScoped<Infrastructure.OpenApi.SharedOpenApiAppService>();
+        services.AddSingleton<Infrastructure.OpenApi.IOpenApiRateLimitProvider,
+            Infrastructure.OpenApi.OpenApiRateLimitProvider>();
         services.AddSingleton<CTraderOpenApi.Transport.IOpenApiTransportFactory,
             CTraderOpenApi.Transport.TcpSslOpenApiTransportFactory>();
         services.AddSingleton<CTraderOpenApi.Client.IOpenApiConnectionFactory,
@@ -130,6 +134,8 @@ public static class DependencyInjection
     {
         services.TryAddSingleton<Core.Calendar.INewsWindowPolicy, Core.Calendar.NewsWindowPolicy>();
         services.TryAddSingleton<Core.Calendar.IForecastProvider, Infrastructure.Calendar.NullForecastProvider>();
+        services.TryAddSingleton<Infrastructure.Calendar.CalendarRateGate>();
+        services.AddTransient<Infrastructure.Calendar.CalendarRateLimitHandler>();
         services.AddScoped<Infrastructure.Calendar.CalendarWriteService>();
         services.AddScoped<Core.Calendar.IEconomicCalendar, Infrastructure.Calendar.EconomicCalendarReader>();
         services.AddHttpClient<Core.Calendar.ICalendarSource, Infrastructure.Calendar.FredSource>((sp, client) =>
@@ -137,7 +143,7 @@ public static class DependencyInjection
             var calendar = sp.GetRequiredService<IOptionsMonitor<AppOptions>>().CurrentValue.Calendar;
             var baseUrl = calendar.FredBaseUrl.EndsWith('/') ? calendar.FredBaseUrl : calendar.FredBaseUrl + "/";
             client.BaseAddress = new Uri(baseUrl);
-        });
+        }).AddHttpMessageHandler<Infrastructure.Calendar.CalendarRateLimitHandler>();
         services.AddHostedService<Infrastructure.Calendar.CalendarIngestionService>();
         return services;
     }

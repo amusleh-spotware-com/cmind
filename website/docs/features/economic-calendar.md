@@ -96,6 +96,30 @@ Two decoupled layers, all primary — never an aggregator:
 A dead source degrades coverage for **that source only**; the calendar keeps serving everything else
 and surfaces the gap as a freshness metric.
 
+## Rate limiting & the backup plan
+
+External providers publish rate limits (FRED allows ~120 requests/minute). The calendar is built so it
+**never trips a provider's limit**, and so that being throttled or cut off never degrades reads:
+
+- **Proactive throttling.** Every source's HTTP client goes through a shared, thread-safe rate gate
+  that spaces outbound requests to a configured budget (`App:Calendar:FredRequestsPerMinute`, default
+  100 — deliberately under the provider ceiling). Requests are queued and paced, never bursted.
+- **Honour `429 Retry-After`.** If a provider ever returns `429 Too Many Requests`, the gate backs the
+  whole source off by the server-requested cooldown (or `App:Calendar:RateLimitBackoff`, default 60s)
+  before the next call — no tight retry loop.
+- **Standard resilience.** Each source client also inherits the app-wide resilience handler (retry with
+  backoff + jitter, circuit breaker, timeouts), so transient blips are absorbed and a persistently
+  failing source is parked (its coverage goes stale) without affecting the others.
+- **The backup plan — the durable read-through cache.** Reads are **never** served by calling a
+  provider. Once a range is fetched it is persisted append-only to Postgres and served from there
+  forever after (see §"On-demand load"). So even when a source is rate-limited or down, the calendar
+  keeps answering from cached, point-in-time-correct data; the missing span simply stays uncovered and
+  is retried on the next ingestion cycle. Blackout answers additionally fail to the conservative
+  default under uncertainty, so a data gap never green-lights trading through a release.
+- **Cheap polling.** Conditional fetch (ETag / If-Modified-Since / source vintage cursors) and the
+  "fetch a span once, never again" cache keep the actual request volume far below any limit in normal
+  operation — the rate gate is a safety net, not the common path.
+
 ## Enable / disable
 
 Two independent tiers, exactly like other cMind features:

@@ -147,6 +147,40 @@ public class AgentStudioHttpTests(PostgresFixture fixture) : IClassFixture<Postg
     }
 
     [Fact]
+    public async Task Debate_returns_a_disabled_result_without_ai()
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+        var id = await CreateAsync(client, new { Name = "Desk", Archetype = "SwingTrader" });
+
+        var response = await client.PostAsync($"/api/agent-studio/{id}/debate", null);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("synthesis").GetString().Should().Contain("not configured");
+        body.GetProperty("opinions").EnumerateArray().Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Memory_persists_and_recalls()
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+        var id = await CreateAsync(client, new { Name = "Mem", Archetype = "Scalper" });
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var memory = scope.ServiceProvider.GetRequiredService<Core.Agent.IAgentMemory>();
+            var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+            var agent = await db.TradingAgents.FirstAsync(a => a.Id == TradingAgentId.From(id));
+            await memory.RememberAsync(agent.Id, agent.UserId, Core.Agent.MemoryTier.LowLevelReflection, "held: no signal", default);
+        }
+
+        var recalled = await client.GetFromJsonAsync<JsonElement>($"/api/agent-studio/{id}/memory");
+        recalled.EnumerateArray().Should().ContainSingle();
+        recalled.EnumerateArray().First().GetProperty("content").GetString().Should().Be("held: no signal");
+    }
+
+    [Fact]
     public async Task White_label_can_disable_agent_studio()
     {
         await using var app = new WebApplicationFactory<Program>().WithWebHostBuilder(b =>

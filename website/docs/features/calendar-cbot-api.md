@@ -9,8 +9,9 @@ math that other calendar APIs do not expose.
 > **Status.** The JWT security (client issuance + token exchange), the gating, and the core read
 > endpoints — `token`, `events`, `events/{id}`, `history`, `series`, `surprises`, `next`, `blackout`,
 > `affected-symbols`, `health` — are **implemented and integration-tested** (auth, scope enforcement,
-> feature/white-label 404). Still to come: cursor pagination, `ETag`/304, the SSE `stream`, signed
-> `webhooks`, `events:batch`, the OpenAPI document and the shipped typed client snippet.
+> feature/white-label 404), plus **`events/batch`** (bounded multiplex) and a discoverable
+> **`/openapi.json`** document. Still to come: cursor pagination, `ETag`/304, the SSE `stream`, signed
+> `webhooks`, and the shipped typed client snippet.
 
 ## Security — JWT
 

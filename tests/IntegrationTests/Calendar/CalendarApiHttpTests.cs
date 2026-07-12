@@ -136,6 +136,43 @@ public class CalendarApiHttpTests(PostgresFixture fixture) : IClassFixture<Postg
     }
 
     [Fact]
+    public async Task Openapi_document_is_served_and_lists_the_events_path()
+    {
+        await using var app = CreateApp();
+        var response = await app.CreateClient().GetAsync("/api/calendar/v1/openapi.json");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var doc = await response.Content.ReadFromJsonAsync<JsonElement>();
+        doc.GetProperty("paths").TryGetProperty("/events", out _).Should().BeTrue();
+        doc.GetProperty("openapi").GetString().Should().StartWith("3.");
+    }
+
+    [Fact]
+    public async Task Batch_multiplexes_several_event_queries()
+    {
+        await using var app = CreateApp();
+        var owner = await LoginAsync(app);
+        await SeedEventAsync(app);
+        var (clientId, secret) = await IssueClientAsync(owner, CalendarScopes.Read);
+
+        var anon = app.CreateClient();
+        var token = await TokenAsync(anon, clientId, secret);
+        anon.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var body = new[]
+        {
+            new { from = "2024-01-01", to = "2025-01-01" },
+            new { from = "2024-01-01", to = "2025-01-01" }
+        };
+        var response = await anon.PostAsJsonAsync("/api/calendar/v1/events/batch", body);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
+        var results = await response.Content.ReadFromJsonAsync<JsonElement>();
+        results.GetArrayLength().Should().Be(2);
+        results[0].GetProperty("events").GetArrayLength().Should().BeGreaterThan(0);
+    }
+
+    [Fact]
     public async Task White_label_hard_gate_off_404s_the_whole_tree()
     {
         await using var app = CreateApp(("App:Branding:EnableEconomicCalendar", "false"));

@@ -19,6 +19,24 @@ public sealed record CalendarTokenRequest(string ClientId, string ClientSecret);
 
 public sealed record CreateCalendarClientRequest(string Name, string[] Scopes, int? ExpiresInDays);
 
+public sealed record CalendarBatchItem(
+    DateTimeOffset? From, DateTimeOffset? To, string[]? Countries, string[]? Currencies,
+    string[]? Series, string? MinImpact, string? Q, DateTimeOffset? AsOf, int? Limit)
+{
+    public CalendarQuery ToQuery() => new()
+    {
+        From = From?.ToUniversalTime(),
+        To = To?.ToUniversalTime(),
+        Countries = Countries,
+        Currencies = Currencies,
+        Series = Series,
+        MinImpact = Enum.TryParse<ImpactLevel>(MinImpact, ignoreCase: true, out var impact) ? impact : null,
+        Keyword = string.IsNullOrWhiteSpace(Q) ? null : Q,
+        AsOf = AsOf?.ToUniversalTime(),
+        Limit = Limit is { } limit ? Math.Clamp(limit, 1, 1000) : 200
+    };
+}
+
 /// <summary>
 /// The public, versioned, JWT-secured Calendar REST API (<c>/api/calendar/v1</c>) plus the owner-only admin
 /// surface to issue and revoke API clients. The whole tree 404s when the calendar is disabled (either the
@@ -163,6 +181,20 @@ public static class CalendarApiEndpoints
         v1.MapGet("/health", async (IEconomicCalendar calendar, CancellationToken ct) =>
             Results.Ok(await calendar.GetHealthAsync(ct)))
             .RequireCalendarScope(CalendarScopes.Read);
+
+        // Discoverable, versioned contract — no scope required (it is just the schema).
+        v1.MapGet("/openapi.json", () => Results.Json(CalendarOpenApi.Document));
+
+        // Multiplex several event queries in one round-trip (cBot efficiency); bounded fan-out.
+        v1.MapPost("/events/batch", async (
+            CalendarBatchItem[] queries, IEconomicCalendar calendar, CancellationToken ct) =>
+        {
+            if (queries.Length is 0 or > 20) return Results.BadRequest(new { error = "batch_size" });
+            var results = new List<object>(queries.Length);
+            foreach (var query in queries)
+                results.Add(new { events = await calendar.GetEventsAsync(query.ToQuery(), ct) });
+            return Results.Ok(results);
+        }).RequireCalendarScope(CalendarScopes.Read);
     }
 
     private static CalendarQuery ParseQuery(HttpRequest request)

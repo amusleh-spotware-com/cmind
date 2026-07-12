@@ -1,5 +1,7 @@
 using Core;
+using Core.Constants;
 using Core.Domain;
+using Core.Portfolio;
 using Core.Quant;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
@@ -24,7 +26,7 @@ public static class QuantEndpoints
         {
             try
             {
-                var series = BuildSeries(req);
+                var series = BuildSeries(req.Returns, req.Equity);
                 var trials = new TrialCount(req.Trials is > 0 ? req.Trials.Value : 1);
                 var report = analyzer.Analyze(
                     series, trials,
@@ -65,14 +67,53 @@ public static class QuantEndpoints
             }
         });
 
+        g.MapPost("/sizing", (SizingRequest req, IPositionSizer sizer) =>
+        {
+            try
+            {
+                var series = BuildSeries(req.Returns, req.Equity);
+                var result = sizer.Size(
+                    series,
+                    new VolatilityTarget(req.TargetVolatility ?? 0.10),
+                    new KellyFraction(req.KellyFraction ?? 0.5),
+                    new LeverageCap(req.LeverageCap ?? 3.0),
+                    req.PeriodsPerYear is > 0 ? req.PeriodsPerYear.Value : 252.0);
+                return Results.Ok(result);
+            }
+            catch (DomainException ex)
+            {
+                return Results.BadRequest(new { error = ex.Code });
+            }
+        });
+
+        g.MapPost("/portfolio", (PortfolioRequest req, IPortfolioAllocator allocator) =>
+        {
+            if (req.Strategies is not { Length: >= 2 })
+                return Results.BadRequest(new { error = DomainErrors.PortfolioInsufficientStrategies });
+            try
+            {
+                var series = req.Strategies.Select(s => ReturnSeries.From(s)).ToList();
+                var result = allocator.Allocate(
+                    series,
+                    new VolatilityTarget(req.TargetVolatility ?? 0.10),
+                    new LeverageCap(req.LeverageCap ?? 3.0),
+                    req.PeriodsPerYear is > 0 ? req.PeriodsPerYear.Value : 252.0);
+                return Results.Ok(result);
+            }
+            catch (DomainException ex)
+            {
+                return Results.BadRequest(new { error = ex.Code });
+            }
+        });
+
         return app;
     }
 
-    private static ReturnSeries BuildSeries(IntegrityRequest req)
+    private static ReturnSeries BuildSeries(double[]? returns, double[]? equity)
     {
-        if (req.Returns is { Length: >= 2 }) return ReturnSeries.From(req.Returns);
-        if (req.Equity is { Length: >= 2 }) return ReturnSeries.FromEquityCurve(req.Equity);
-        throw new DomainException(Core.Constants.DomainErrors.ReturnSeriesTooShort);
+        if (returns is { Length: >= 2 }) return ReturnSeries.From(returns);
+        if (equity is { Length: >= 2 }) return ReturnSeries.FromEquityCurve(equity);
+        throw new DomainException(DomainErrors.ReturnSeriesTooShort);
     }
 }
 
@@ -80,6 +121,13 @@ public sealed record IntegrityRequest(
     double[]? Returns, double[]? Equity, int? Trials, double? BenchmarkSharpe, double? PeriodsPerYear);
 
 public sealed record IntegrityBacktestRequest(int? Trials);
+
+public sealed record SizingRequest(
+    double[]? Returns, double[]? Equity, double? TargetVolatility, double? KellyFraction,
+    double? LeverageCap, double? PeriodsPerYear);
+
+public sealed record PortfolioRequest(
+    double[][]? Strategies, double? TargetVolatility, double? LeverageCap, double? PeriodsPerYear);
 
 public sealed record IntegrityResponse(
     string verdict,

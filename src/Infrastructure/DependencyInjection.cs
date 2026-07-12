@@ -74,6 +74,8 @@ public static class DependencyInjection
         services.AddScoped<Core.Domain.ICopyProfileRepository, CopyProfileRepository>();
         services.AddSingleton<Core.Domain.ICopySizingCalculator, Core.Domain.CopySizingCalculator>();
         services.AddSingleton<Core.Quant.IBacktestIntegrityAnalyzer, Core.Quant.BacktestIntegrityAnalyzer>();
+        services.AddSingleton<Core.Portfolio.IPositionSizer, Core.Portfolio.PositionSizer>();
+        services.AddSingleton<Core.Portfolio.IPortfolioAllocator, Core.Portfolio.PortfolioAllocator>();
         services.AddHttpClient<CTraderOpenApi.Auth.IOpenApiTokenClient, CTraderOpenApi.Auth.OpenApiTokenClient>(
             (sp, client) =>
             {

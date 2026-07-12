@@ -1,0 +1,130 @@
+@page "/quant/sizing"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject MudBlazor.ISnackbar Snack
+
+<PageTitle>Quant · Position Sizing</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Position Sizing</MudText>
+    <HelpTip Text="From a strategy's return series we recommend an exposure using volatility targeting and fractional-Kelly sizing — the institutional way to size a position — and take the safer of the two, capped at your leverage limit." />
+</MudStack>
+
+<MudGrid>
+    <MudItem xs="12" md="5">
+        <MudPaper Class="pa-4" Elevation="1">
+            <MudTextField @bind-Value="_series" Label="Returns or equity curve"
+                          Lines="6" Variant="Variant.Outlined"
+                          HelperText="Comma/space/newline separated numbers." />
+            <MudRadioGroup @bind-Value="_mode" Class="mt-2">
+                <MudRadio Value="@("returns")" Color="Color.Primary">Periodic returns</MudRadio>
+                <MudRadio Value="@("equity")" Color="Color.Primary">Equity / balance curve</MudRadio>
+            </MudRadioGroup>
+            <MudNumericField @bind-Value="_targetVolPct" Label="Target volatility (% per year)" Min="0.1" Max="500"
+                             Variant="Variant.Outlined" Class="mt-2" />
+            <MudNumericField @bind-Value="_kelly" Label="Kelly fraction" Min="0.01" Max="1"
+                             Variant="Variant.Outlined" Class="mt-2"
+                             HelperText="Fraction of full Kelly (0.5 = half-Kelly, the common safe choice)." />
+            <MudNumericField @bind-Value="_leverageCap" Label="Leverage cap (×)" Min="0.1" Max="100"
+                             Variant="Variant.Outlined" Class="mt-2" />
+            <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Balance" OnClick="Calculate"
+                       Disabled="_loading" data-testid="sizing-calculate">
+                Recommend size
+            </MudButton>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="7">
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+        }
+        else if (_result is { } r)
+        {
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.h6" Class="mb-2" data-testid="sizing-recommendation">
+                    Recommended exposure: <b>@r.recommendedFraction.ToString("0.00")×</b>
+                </MudText>
+                <MudSimpleTable Dense="true" Hover="true">
+                    <tbody>
+                        <tr><td>Realized annual volatility</td><td>@((r.realizedAnnualVolatility * 100).ToString("0.0"))%</td></tr>
+                        <tr><td>Volatility-target sizing</td><td>@r.volatilityTargetFraction.ToString("0.00")×</td></tr>
+                        <tr><td>Full Kelly</td><td>@r.fullKellyFraction.ToString("0.00")×</td></tr>
+                        <tr><td>Fractional Kelly</td><td>@r.fractionalKellyFraction.ToString("0.00")×</td></tr>
+                    </tbody>
+                </MudSimpleTable>
+                <MudText Typo="Typo.body2" Class="mt-3">@r.rationale</MudText>
+            </MudPaper>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                Paste a return series and press Recommend size.
+            </MudText>
+        }
+    </MudItem>
+</MudGrid>
+
+@code {
+    private string _series = "";
+    private string _mode = "returns";
+    private double _targetVolPct = 10;
+    private double _kelly = 0.5;
+    private double _leverageCap = 3;
+    private bool _loading;
+    private SizingResult? _result;
+
+    private async Task Calculate()
+    {
+        var numbers = Parse(_series);
+        if (numbers.Length < 2)
+        {
+            Snack.Add("Enter at least two numbers.", Severity.Warning);
+            return;
+        }
+
+        _loading = true;
+        _result = null;
+        try
+        {
+            var body = new
+            {
+                Returns = _mode == "returns" ? numbers : null,
+                Equity = _mode == "equity" ? numbers : null,
+                TargetVolatility = _targetVolPct / 100.0,
+                KellyFraction = _kelly,
+                LeverageCap = _leverageCap
+            };
+            var response = await Http.PostAsJsonAsync("/api/quant/sizing", body);
+            if (response.IsSuccessStatusCode)
+                _result = await response.Content.ReadFromJsonAsync<SizingResult>();
+            else
+                Snack.Add("Could not size that series.", Severity.Error);
+        }
+        catch
+        {
+            Snack.Add("Could not size that series.", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static double[] Parse(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return [];
+        var tokens = text.Split([',', ' ', '\n', '\r', '\t', ';'], StringSplitOptions.RemoveEmptyEntries);
+        var values = new List<double>(tokens.Length);
+        foreach (var token in tokens)
+            if (double.TryParse(token, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var v))
+                values.Add(v);
+        return values.ToArray();
+    }
+
+    private sealed record SizingResult(
+        double realizedAnnualVolatility, double volatilityTargetFraction, double fullKellyFraction,
+        double fractionalKellyFraction, double recommendedFraction, string rationale);
+}

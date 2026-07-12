@@ -61,4 +61,57 @@ public sealed class OpenApiRateLimitTests
         afterReset.IsCompleted.Should().BeTrue();       // a token is available again, no wall-clock advance
         await afterReset;
     }
+
+    private static OpenApiRateGate Gate(FakeTimeProvider time, int general, int historical) =>
+        new(new Dictionary<OpenApiRateCategory, int>
+        {
+            [OpenApiRateCategory.General] = general,
+            [OpenApiRateCategory.HistoricalData] = historical
+        }, time);
+
+    [Fact]
+    public async Task Gate_never_paces_exempt_messages()
+    {
+        var time = new FakeTimeProvider();
+        var gate = Gate(time, general: 1, historical: 1);
+
+        await gate.AcquireAsync((uint)ProtoOAPayloadType.ProtoOaNewOrderReq, CancellationToken.None); // drain general
+
+        var heartbeat = gate.AcquireAsync((uint)ProtoPayloadType.HeartbeatEvent, CancellationToken.None);
+        heartbeat.IsCompleted.Should().BeTrue(); // exempt: sent despite the empty general bucket
+        await heartbeat;
+    }
+
+    [Fact]
+    public async Task Gate_historical_request_also_consumes_the_general_bucket()
+    {
+        var time = new FakeTimeProvider();
+        var gate = Gate(time, general: 1, historical: 1);
+
+        // One historical request draws a token from BOTH the historical and the general bucket.
+        await gate.AcquireAsync((uint)ProtoOAPayloadType.ProtoOaGetTrendbarsReq, CancellationToken.None);
+
+        // The general bucket is now empty, so a plain trading message must wait.
+        var general = gate.AcquireAsync((uint)ProtoOAPayloadType.ProtoOaNewOrderReq, CancellationToken.None).AsTask();
+        general.IsCompleted.Should().BeFalse();
+
+        time.Advance(TimeSpan.FromSeconds(1));
+        await general.WaitAsync(TimeSpan.FromSeconds(5));
+        general.IsCompleted.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Gate_general_traffic_is_not_slowed_by_the_historical_bucket()
+    {
+        var time = new FakeTimeProvider();
+        var gate = Gate(time, general: 5, historical: 1);
+
+        // Deplete the historical bucket (also spends one general token, leaving 4).
+        await gate.AcquireAsync((uint)ProtoOAPayloadType.ProtoOaGetTrendbarsReq, CancellationToken.None);
+
+        // General traffic still flows immediately — it is not gated by the drained historical bucket.
+        var general = gate.AcquireAsync((uint)ProtoOAPayloadType.ProtoOaNewOrderReq, CancellationToken.None);
+        general.IsCompleted.Should().BeTrue();
+        await general;
+    }
 }

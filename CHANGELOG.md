@@ -50,6 +50,12 @@ All notable changes documented here. Format based on
   `426 Upgrade Required`.
 - MIT `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CHANGELOG.md`.
 - GitHub issue/PR templates, CI (build + test), CodeQL analysis, Dependabot config.
+- Launch-readiness test gates: `RouteCoverageTests` (every Blazor page is smoke-tested),
+  `TenantIsolationTests` (cross-tenant read/edit/delete denial over real HTTP, AI credentials +
+  alert rules), and `EndpointAuthCoverageTests` (every `/api/*` route must declare auth intent —
+  fails the build on an accidentally-public endpoint). Coverage now collected on all three test
+  tiers; nightly in-cluster **Kind** E2E job verifies the whole app on Kubernetes. Plan:
+  `plans/public-launch-readiness.md`.
 - `.dockerignore`.
 - Security headers middleware (`Content-Security-Policy`, `X-Content-Type-Options`,
   `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`) on Web app.

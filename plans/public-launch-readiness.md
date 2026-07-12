@@ -33,8 +33,16 @@ Status: **IN EXECUTION** — Phase A started 2026-07-12. Author baseline: 2026-0
   · full `/security-review` sweep + API-route (endpoint) census gate · white-label industry matrix · perf
   benchmarks.
 
-**Status by workstream:** WS-1 gated ✓ · WS-2 harness ✓/live-run pending · WS-3 ✓ · WS-4 started ✓
-(tenant-isolation; security-review pending) · WS-6 ✓ · WS-10 ✓ · WS-12 ✓ · WS-5/7/8/9/11 tracked.
+- **WS-4 security — expanded this session:** `TenantIsolationTests` now covers **two** aggregates over
+  real HTTP + Postgres (AI credentials + alert rules; cross-tenant read hidden, cross-tenant edit/delete
+  → 404). `EndpointAuthCoverageTests` enumerates every mapped `/api/*` route from the live host and fails
+  the build if any declares no auth intent (neither `IAuthorizeData` nor `IAllowAnonymous`), with two
+  reviewed allow-lists: pre-auth entry points and JWT-endpoint-filter-secured versioned APIs
+  (`calendar/v1`, `market/v1`). A new accidentally-public endpoint now fails CI.
+
+**Status by workstream:** WS-1 gated ✓ · WS-2 harness ✓/live-run pending · WS-3 ✓ · WS-4 ✓✓
+(tenant-isolation ×2 + endpoint-auth gate; full `/security-review` sweep still pending) · WS-6 ✓ ·
+WS-10 ✓ · WS-12 ✓ · WS-5/7/8/9/11 tracked.
 
 
 > Umbrella plan for going public. It does **not** re-plan features already covered by the 17 plans in

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace ExternalNode;
+namespace CtraderCliNode;
 
 /// <summary>
 /// Self-registers this agent with the main node and heartbeats on an interval. When MainUrl or

@@ -1,5 +1,5 @@
 ﻿using Core.NodeAgent;
-using ExternalNode;
+using CtraderCliNode;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;

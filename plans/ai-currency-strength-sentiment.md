@@ -312,10 +312,49 @@ a section in `Account.razor`; a MudBlazor **dialog** per the UI mandate if it's 
 widget needs AI configured (link to `/settings/ai`).
 
 ### 3.7 MCP (`src/Mcp/Tools/AiTools.cs`)
-- Add `currency_strength` tool → params `{ horizon }` → returns latest ranking + **pair-outlook
+- Add `currency_strength` tool → params `{ horizon, tier? }` → returns latest ranking + **pair-outlook
   matrix for the horizon** + narrative JSON for AI clients/agents. Gated identically (flag + key).
+  Auth via the existing **MCP key** scheme (`McpKeyAuthHandler`, `mcpk_` bearer) — no new auth.
 
-### 3.8 Constants / options / logging (no magic strings, no raw logs)
+### 3.8 Programmatic access — one query service, three consumers (MCP · in-app AI · cBot REST/JWT)
+
+The currency snapshot is a **read model** every consumer shares. Define it once, expose three ways:
+
+- **`ICurrencyStrengthQuery` (Core interface, Infra impl)** — `LatestAsync(Horizon, tier filter, ct)`,
+  `HistoryAsync(days, ct)`, `PairAsync(base, quote, Horizon, ct)`. Returns Core VOs
+  (`CurrencyStrengthRanking` / `PairOutlookMatrix` / `PairOutlook`). The single source the MCP tool,
+  the in-app AI features, **and** the cBot REST endpoints all call — no duplicated read logic.
+
+**(a) In-app AI features** — `AiRiskGuard`, `TradingAgent`, `AlertService`, `AiFeatureService`
+consumers inject `ICurrencyStrengthQuery` directly (in-process, no HTTP/JWT) to fold the macro
+outlook into their prompts/decisions. Pure DI, gated on `FeatureFlag.Ai`.
+
+**(b) MCP** — §3.7, MCP-key auth. For external AI clients/agents.
+
+**(c) cBot REST API, secured by JWT** — cBots run in **sandboxed containers** with no cookie/session,
+so they authenticate with a **short-lived HS256 JWT**, mirroring the proven
+main→CtraderCliNode scheme (`HttpContainerDispatcher.CreateToken` + `AddJwtBearer` validation):
+- **New JWT scheme in `src/Web`** — `AddJwtBearer(AuthSchemes.CBotJwt)` with `TokenValidationParameters`:
+  `ValidIssuer = "app-main"`, **`ValidAudience = "app-cbot"`** (new `CBotTokenAuth` constants),
+  `ValidateLifetime`/`ValidateIssuerSigningKey` true, `IssuerSigningKey` = `SymmetricSecurityKey` from
+  a deployment **cBot-signing secret** (encrypted at rest via `ISecretProtector` /
+  `EncryptionPurposes.CBotTokenSecret`, config-seeded — never plaintext/logged). Web's default scheme
+  stays cookie; this scheme is additive.
+- **Token issuance** — `ICBotAccessTokenIssuer` (Core interface, Infra impl): mints a JWT scoped to
+  `{ userId, instanceId, scope=market:read }`, TTL bounded (short, refreshable), `TimeProvider`-clock.
+  **Injected into the run/backtest container env at dispatch** (`src/Nodes` Local/Http dispatchers,
+  alongside the existing container env) plus the Web base URL, so the cBot reads
+  `CMIND_API_TOKEN` + `CMIND_API_BASEURL` from env and calls back. Token lifetime tracks the instance;
+  a finished/terminated instance ⇒ token invalid (short TTL + `instanceId` claim checked live).
+- **cBot endpoints** — new group `/api/market/currency-strength` (public-facing, machine):
+  `GET /latest?horizon=&tier=`, `GET /history?days=`, `GET /pair/{base}/{quote}?horizon=`. Under a
+  policy `CBotMarketRead` accepting **`AuthSchemes.CBotJwt`** (and optionally cookie/MCP so the same
+  data is reachable from UI/agents), `.RequireFeature(FeatureFlag.Ai)`, **rate-limited**, read-only.
+  `scope=market:read` claim required; user-scoped where relevant. Returns the shared query DTOs.
+- **`AuthPolicies`/`AuthSchemes`** — add `CBotJwt`, `CBotMarketRead`; `CBotTokenAuth.Issuer/Audience/
+  TokenLifetime`; `EncryptionPurposes.CBotTokenSecret`. Constants only, no magic strings.
+
+### 3.9 Constants / options / logging (no magic strings, no raw logs)
 - `AppOptions`: **currency universe config** — the tiered list `{ code, tier, isPegged, pegAnchor }`
   with a sensible default (majors + curated EM/exotics), so a deployment adds/removes currencies
   without code. Per-tier default weights + dead-band live here too (overridable).
@@ -331,6 +370,9 @@ widget needs AI configured (link to `/settings/ai`).
 ### 4.1 Unit (`tests/UnitTests/Ai/CurrencyStrength/`) — the deterministic core, exhaustive
 - `Currency` / `CurrencyUniverse` VO: any configured currency (major/EM/exotic) accepts; code outside
   the universe / bad ISO ⇒ `DomainException`; tier + peg metadata resolved correctly.
+- **`ICBotAccessTokenIssuer`** (Infra unit): minted JWT has correct `iss=app-main`/`aud=app-cbot`/
+  `instanceId`/`scope` claims, HS256, bounded lifetime (`FakeTimeProvider`); round-trips through the
+  same `TokenValidationParameters` the Web scheme uses; expired/wrong-secret ⇒ validation fails.
 - `CurrencyIndicators`: tier-aware range guards; out-of-range ⇒ `DomainException`; exotic edge cases
   (hyperinflation, low reserves) accepted-but-flagged, not rejected.
 - **Tier/peg behaviour:** EM/exotic weighting lifts carry + risk + external-vulnerability vs majors;
@@ -365,6 +407,13 @@ widget needs AI configured (link to `/settings/ai`).
   → computes ranking **+ projects all-horizon matrix** + persists; `GET /latest?horizon=` returns the
   right matrix per horizon; `/history` shape; `/api/preferences/dashboard` GET/PUT.
 - **Feature-gate off** (`FeatureFlag.Ai=false`) ⇒ endpoints `404`/blocked (matches `RequireFeature`).
+- **`ICurrencyStrengthQuery`** shared read model: latest/history/pair shapes; tier filter; empty state.
+- **cBot JWT security (`/api/market/currency-strength`):** `ICBotAccessTokenIssuer` mints a valid
+  token → endpoint returns data; **expired** token ⇒ `401`; **wrong audience** (node/other) ⇒ `401`;
+  **tampered/invalid signature** ⇒ `401`; missing `scope=market:read` ⇒ `403`; token for a
+  finished/terminated `instanceId` ⇒ `401`; feature-gated off ⇒ blocked; rate-limit trips on abuse.
+- **In-app consumption:** an AI feature (e.g. `AiRiskGuard`/`TradingAgent`) reads the snapshot via
+  `ICurrencyStrengthQuery` in-process (no HTTP).
 - **Failure paths:** malformed AI JSON ⇒ refresh fails cleanly, **prior snapshot preserved**; AI
   key absent ⇒ `/latest` degrades, refresh returns `Fail`; empty history handled.
 
@@ -376,6 +425,9 @@ widget needs AI configured (link to `/settings/ai`).
 - Universe with EM+exotic currencies renders on 360px without horizontal scroll (matrix
   virtualized/scoped).
 - Add both routes (`/ai/currency-strength`, `/settings/dashboard`) to **`PageSmokeTests`** (mandate).
+- **Authenticated-API E2E (cBot path):** call `GET /api/market/currency-strength` with a real minted
+  cBot JWT → 200 + expected shape; with an expired/wrong-audience token → 401 (the mandate's
+  "authenticated API call" E2E form for a machine surface). MCP tool call returns the same data.
 - No horizontal scroll 320–1920px; screenshot captured for docs (`CAPTURE_SCREENSHOTS=1`).
 
 ---
@@ -388,6 +440,10 @@ widget needs AI configured (link to `/settings/ai`).
   **honest limitation** (medium/long-term positioning filter, not a short-term signal).
 - Add id to `website/sidebars.ts`. Screenshot into `website/static/img/screenshots/`.
 - `website/docs/operations` note: refresh cadence / background worker + snapshot table.
+- **`website/docs/features/currency-strength.md` + a cBot/API section:** MCP tool usage, and the
+  **JWT-secured cBot REST API** — how the token is injected (`CMIND_API_TOKEN`/`CMIND_API_BASEURL`),
+  a copy-paste cBot sample hitting `/api/market/currency-strength`, and the endpoint reference.
+- `website/docs/deployment`: the cBot-token signing secret config + rotation.
 
 ---
 
@@ -406,7 +462,12 @@ widget needs AI configured (link to `/settings/ai`).
 5. **Web API + full page UI** — endpoints, `AiCurrencyStrength.razor` charts; E2E page render.
 6. **Dashboard widget + settings toggle** — `DashCurrencyStrength.razor`, settings switch, conditional
    render on `Index.razor`; E2E enable-flow; `PageSmokeTests` routes.
-7. **MCP tool + docs + screenshots** — `currency_strength` tool, feature doc, sidebar, screenshot.
+7. **Programmatic access** — `ICurrencyStrengthQuery` shared read model; in-app AI consumers wired;
+   MCP `currency_strength` tool; **cBot JWT** (`AddJwtBearer` scheme + `CBotMarketRead` policy +
+   `ICBotAccessTokenIssuer` + dispatch env injection) and `/api/market/currency-strength` endpoints;
+   full security test set (unit + integration + authenticated-API E2E).
+8. **Docs + screenshots** — feature doc, sidebar, screenshot; deployment doc for the cBot-signing
+   secret + `CMIND_API_BASEURL`/`CMIND_API_TOKEN` env; a minimal cBot code sample calling the REST API.
 
 ---
 
@@ -427,6 +488,11 @@ widget needs AI configured (link to `/settings/ai`).
   open-ended news scraping, to stay testable.
 - **DDD hazard** — snapshot is deployment-scoped, preferences are user-scoped: two aggregates, two
   `SaveChanges`, referenced by strong ID; no cross-aggregate nav.
+- **cBot token security** — a leaked JWT is read-only, market-scoped, short-lived, and dies with the
+  instance (`instanceId` claim + TTL), limiting blast radius; signed with an encrypted deployment
+  secret (rotatable); endpoints rate-limited. Never log the token. If cBots can't reach the Web host
+  (network policy), the REST path degrades and the cBot proceeds without the macro read — never blocks
+  the trade. Reuses the audited main→node JWT pattern rather than inventing new crypto.
 
 ---
 
@@ -436,7 +502,11 @@ widget needs AI configured (link to `/settings/ai`).
 - [ ] Unit + integration + E2E green, **failure paths covered**; new routes in `PageSmokeTests`.
 - [ ] `src/Core` stays infra-free; ranking **and forward-projection** math is 100% deterministic &
       unit-proven across majors + EM + exotics + pegs + mixed universe.
-- [ ] No `DateTime.UtcNow`; no secrets/magic strings; source-gen logging; modern C# 14.
+- [ ] Data reachable 3 ways off one `ICurrencyStrengthQuery`: in-app AI (DI), MCP (`mcpk_` key),
+      **cBot REST secured by HS256 JWT** (`aud=app-cbot`, scoped, short-lived, rate-limited); 401/403
+      failure paths proven.
+- [ ] No `DateTime.UtcNow`; no secrets/magic strings (cBot-signing secret encrypted via
+      `ISecretProtector`); source-gen logging; modern C# 14.
 - [ ] Forward pair-outlook matrix (all horizons) + tiered universe (majors/EM/exotics) shipped;
       pegs/low-confidence flagged; N×N view legible on 360px.
 - [ ] Widget hidden until (feature flag ✔ + AI key ✔ + per-user toggle ✔); AI-off path verified.

@@ -128,7 +128,7 @@ External access: set `web.ingress.enabled=true`, `web.ingress.host`, and TLS.
 Main node dispatches work to **specific** agent by URL, so each agent needs stable,
 individually-addressable DNS name. Chart uses StatefulSet + headless Service; each pod
 advertises `http://<pod>.<svc>.<ns>.svc.cluster.local:8080` and self-registers under pod name.
-Same discovery mechanism bare external nodes use —
+Same discovery mechanism bare cTrader CLI nodes use —
 see [../operations/node-discovery.md](../operations/node-discovery.md).
 
 ## Web scale-out (SignalR backplane, S6)

@@ -14,7 +14,7 @@ result.
 |---|---|
 | [0001](./0001-strict-ddd-pure-core.md) | Strict DDD with a pure `Core` |
 | [0002](./0002-tph-instance-replaces-entity.md) | Instance state is TPH; a transition replaces the entity |
-| [0003](./0003-external-nodes-http-jwt.md) | External nodes are HTTP + JWT, no SSH/shell |
+| [0003](./0003-external-nodes-http-jwt.md) | cTrader CLI nodes are HTTP + JWT, no SSH/shell |
 | [0004](./0004-cbotbuilder-on-web-host.md) | `CBotBuilder` runs on the web host in a sandbox container |
 | [0005](./0005-anthropic-raw-http.md) | The AI client uses raw HTTP, not the Anthropic SDK |
 | [0006](./0006-copy-profile-db-lease.md) | Copy hosting is coordinated by an atomic DB lease |

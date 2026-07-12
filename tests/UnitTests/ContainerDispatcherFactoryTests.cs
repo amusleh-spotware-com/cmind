@@ -28,7 +28,7 @@ public class ContainerDispatcherFactoryTests
     }
 
     [Fact]
-    public void For_RemoteNode_returns_http_dispatcher()
+    public void For_CtraderCliNode_returns_http_dispatcher()
     {
         var http = CreateHttp();
         var opts = new TestMonitor(new AppOptions());

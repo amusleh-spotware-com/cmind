@@ -35,7 +35,7 @@ public static class NodeEndpoints
                 {
                     n.Id,
                     n.Name,
-                    Host = n is RemoteNode ? ((RemoteNode)n).BaseUrl : "local",
+                    Host = n is CtraderCliNode ? ((CtraderCliNode)n).BaseUrl : "local",
                     Mode = n.ModeName,
                     Status = n.StatusName,
                     n.MaxInstances,
@@ -64,7 +64,7 @@ public static class NodeEndpoints
             if (req.ApiSecret.Length < NodeAgentAuth.MinSecretLength)
                 return Results.BadRequest($"api secret must be at least {NodeAgentAuth.MinSecretLength} characters");
 
-            var node = RemoteNode.Create(NodeMode.FromName(req.Mode), req.Name, req.BaseUrl,
+            var node = CtraderCliNode.Create(NodeMode.FromName(req.Mode), req.Name, req.BaseUrl,
                 p.Protect(Encoding.UTF8.GetBytes(req.ApiSecret), EncryptionPurposes.NodeApiSecret),
                 req.DataDirPath, req.MaxInstances);
             db.Nodes.Add(node);
@@ -171,7 +171,7 @@ public static class NodeEndpoints
         var log = loggerFactory.CreateLogger(nameof(NodeEndpoints));
 
         var existingNode = await db.Nodes.FirstOrDefaultAsync(n => n.Name == req.Name);
-        if (existingNode is RemoteNode existing)
+        if (existingNode is CtraderCliNode existing)
         {
             if (!string.Equals(existing.ModeName, mode.Name, StringComparison.Ordinal))
                 log.NodeModeChangeIgnored(existing.Name, mode.Name, existing.ModeName);
@@ -183,7 +183,7 @@ public static class NodeEndpoints
             return Results.Conflict("node name already in use by a non-remote node");
 
         var secret = protector.Protect(Encoding.UTF8.GetBytes(discovery.JoinToken), EncryptionPurposes.NodeApiSecret);
-        var node = RemoteNode.SelfRegister(mode, req.Name, endpoint, secret, dataDir, maxInstances,
+        var node = CtraderCliNode.SelfRegister(mode, req.Name, endpoint, secret, dataDir, maxInstances,
             timeProvider.GetUtcNow());
         db.Nodes.Add(node);
         await db.SaveChangesAsync();

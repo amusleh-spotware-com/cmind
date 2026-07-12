@@ -29,7 +29,7 @@ public class NodeInstanceReclaimerTests(PostgresFixture fixture) : IClassFixture
 
         var user = RegularUser.Create(new Email($"reclaim-{Guid.NewGuid():N}@test.invalid"), "hash", [1], false);
         var cbot = CBot.Create(user.Id, "bot", [1, 2, 3]);
-        var node = RemoteNode.SelfRegister(NodeMode.Mixed, $"node-{Guid.NewGuid():N}",
+        var node = CtraderCliNode.SelfRegister(NodeMode.Mixed, $"node-{Guid.NewGuid():N}",
             new NodeEndpointUrl("http://node-1:8080"), [1, 2, 3], DataDir, 5, Now);
         node.MarkUnreachable();
 
@@ -77,7 +77,7 @@ public class NodeInstanceReclaimerTests(PostgresFixture fixture) : IClassFixture
 
         var user = RegularUser.Create(new Email($"reclaim-{Guid.NewGuid():N}@test.invalid"), "hash", [1], false);
         var cbot = CBot.Create(user.Id, "bot", [1, 2, 3]);
-        var node = RemoteNode.SelfRegister(NodeMode.Mixed, $"node-{Guid.NewGuid():N}",
+        var node = CtraderCliNode.SelfRegister(NodeMode.Mixed, $"node-{Guid.NewGuid():N}",
             new NodeEndpointUrl("http://node-2:8080"), [1, 2, 3], DataDir, 5, Now);
 
         var instance = new RunningRunInstance

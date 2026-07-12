@@ -13,7 +13,7 @@ using Xunit;
 
 namespace UnitTests;
 
-public class ExternalNodeAgentTests(AgentFactory factory) : IClassFixture<AgentFactory>
+public class CtraderCliNodeAgentTests(AgentFactory factory) : IClassFixture<AgentFactory>
 {
     [Fact]
     public async Task Health_is_anonymous()

@@ -1,10 +1,10 @@
 ---
-description: "All three services (Web, MCP, ExternalNode) log via Serilog as compact JSON on stdout — container runtimes and log collectors (Loki, ELK, CloudWatch…"
+description: "All three services (Web, MCP, CtraderCliNode) log via Serilog as compact JSON on stdout — container runtimes and log collectors (Loki, ELK, CloudWatch…"
 ---
 
 # Logging & observability
 
-All three services (Web, MCP, ExternalNode) log via **Serilog** as **compact JSON on stdout** —
+All three services (Web, MCP, CtraderCliNode) log via **Serilog** as **compact JSON on stdout** —
 container runtimes and log collectors (Loki, ELK, CloudWatch, Azure Log Analytics, Datadog) ingest
 structured events directly, no free-text parsing.
 

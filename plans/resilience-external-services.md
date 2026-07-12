@@ -225,7 +225,7 @@ Extend the cTrader stand-in (keep it faithful, never weaken to pass a test — p
 - Persistent vs transient rejection distinction so breaker/dead-letter paths differ (W2.2).
 All driven by a `FakeTimeProvider` virtual clock — zero real waits, fully deterministic.
 
-Node-side fake: a stub `ExternalNode` agent (in-memory HTTP) that can return 5xx/timeout/partial and
+Node-side fake: a stub `CtraderCliNode` agent (in-memory HTTP) that can return 5xx/timeout/partial and
 simulate crash (stop responding) — for WS-3 integration tests.
 
 AI fake: a stub `IAiClient` returning timeout/429/5xx/malformed/empty — for WS-5.

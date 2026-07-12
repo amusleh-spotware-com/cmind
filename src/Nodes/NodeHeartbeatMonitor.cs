@@ -41,7 +41,7 @@ public sealed class NodeHeartbeatMonitor(
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
         var now = timeProvider.GetUtcNow();
 
-        // OfType<RemoteNode>() over the soft-delete-filtered TPH set does not translate on Npgsql;
+        // OfType<CtraderCliNode>() over the soft-delete-filtered TPH set does not translate on Npgsql;
         // enumerate the concrete remote subtypes, then filter reachability in memory.
         var candidates = await db.Nodes
             .Where(n => n is ActiveRunNode || n is ActiveBacktestNode || n is ActiveMixedNode
@@ -49,7 +49,7 @@ public sealed class NodeHeartbeatMonitor(
             .ToListAsync(ct);
 
         var changed = false;
-        foreach (var node in candidates.Cast<RemoteNode>())
+        foreach (var node in candidates.Cast<CtraderCliNode>())
         {
             if (!node.IsReachable || node.LastHeartbeatAt is null) continue;
             if (!node.IsHeartbeatStale(ttl, now)) continue;

@@ -43,7 +43,7 @@ public sealed class NodeDiscoveryTests
     [Fact]
     public void SelfRegister_marks_reachable_and_raises_registered_event()
     {
-        var node = RemoteNode.SelfRegister(NodeMode.Mixed, "node-1",
+        var node = Core.CtraderCliNode.SelfRegister(NodeMode.Mixed, "node-1",
             new NodeEndpointUrl("http://node-1:8080"), [1, 2, 3], DataDir, 5, TestClock.Now);
 
         node.Should().BeOfType<ActiveMixedNode>();
@@ -127,7 +127,7 @@ public sealed class NodeDiscoveryTests
         node.DomainEvents.OfType<NodeWentOffline>().Should().BeEmpty();
     }
 
-    private static RemoteNode NewNode()
-        => RemoteNode.SelfRegister(NodeMode.Mixed, "node-1",
+    private static Core.CtraderCliNode NewNode()
+        => Core.CtraderCliNode.SelfRegister(NodeMode.Mixed, "node-1",
             new NodeEndpointUrl("http://node-1:8080"), [1, 2, 3], DataDir, 5, TestClock.Now);
 }

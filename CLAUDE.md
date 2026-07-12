@@ -52,7 +52,7 @@ npm run serve               # preview the production build → http://localhost:
 
 Multi-tenant Blazor Server + Minimal API platform for cTrader. Builds/runs/backtests cBots (C# +
 Python, `dotnet build` in a sandboxed container) via `ghcr.io/spotware/ctrader-console`, scheduled
-across remote nodes (`ExternalNode` HTTP agents) and/or the local web host. Also mirrors trades
+across remote nodes (`CtraderCliNode` HTTP agents) and/or the local web host. Also mirrors trades
 across accounts (copy trading) over the cTrader Open API. Stack: **.NET 10 / C# 14**, EF Core +
 PostgreSQL, .NET Aspire, MCP server, AI via the Anthropic API. Architecture: **strict DDD**.
 
@@ -63,7 +63,8 @@ src/Core            — pure domain: entities, aggregates, value objects, strong
                       Core-side interfaces. ZERO infra deps (no EF/HttpClient/Docker/ASP.NET).
 src/Infrastructure  — EF Core, DataProtection, encryption, GHCR, Anthropic client, observability.
 src/Nodes           — cross-node orchestration: scheduling, dispatch, pollers, background services.
-src/ExternalNode    — standalone HTTP node agent (deployed on remote hosts; JWT-auth, docker CLI).
+src/CtraderCliNode  — standalone HTTP node agent (remote hosts; JWT-auth). Runs/backtests cBots via the
+                      cTrader CLI in a docker container (optimize too, once the cTrader CLI supports it).
 src/Web             — Blazor Server SSR + Minimal API + SignalR + MudBlazor UI.
 src/Mcp             — MCP HTTP+SSE server (tools for AI clients).
 src/AppHost         — .NET Aspire orchestrator.
@@ -170,11 +171,11 @@ Architecture facts you can't read off the code — the rest lives in nested `CLA
   (bind-mount `/work`, shared `app-nuget-cache` volume) so untrusted MSBuild can't reach host FS/net.
   Run/backtest containers run on nodes picked by `NodeScheduler`, dispatched via
   `ContainerDispatcherFactory` → `Http` (remote agent) or `Local` (web host's own node).
-- **External nodes get no SSH/shell.** Main→agent over HTTP; each request carries a short-lived HS256
+- **cTrader CLI nodes get no SSH/shell.** Main→agent over HTTP; each request carries a short-lived HS256
   JWT (5-min, `iss=app-main`/`aud=app-node`) signed with the node's secret. Agent only runs images
   matching `AllowedImagePrefix`, execs docker via `ArgumentList` (no shell), stateless (finds
   containers by `app.instance` label). Auto-discovery: agents self-register + heartbeat to
-  `POST /api/nodes/register`; upsert `RemoteNode` **by name** (stable across IP changes).
+  `POST /api/nodes/register`; upsert `CtraderCliNode` **by name** (stable across IP changes).
 - **Instance state = TPH; a transition replaces the entity** (discriminator can't change) → instance
   **id changes** starting→running→terminal. Container id is stable and carried over; the HTTP agent is
   keyed by container id for status/report/stop/logs.

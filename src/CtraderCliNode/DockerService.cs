@@ -6,7 +6,7 @@ using Core.Constants;
 using Core.NodeAgent;
 using Microsoft.Extensions.Options;
 
-namespace ExternalNode;
+namespace CtraderCliNode;
 
 public sealed class DockerService(IOptionsMonitor<NodeAgentOptions> options, ILogger<DockerService> log)
 {

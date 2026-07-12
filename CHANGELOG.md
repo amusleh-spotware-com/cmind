@@ -45,7 +45,7 @@ All notable changes documented here. Format based on
   (`VersionPrefix` in `Directory.Build.props`) shipped in lockstep by every assembly,
   surfaced at runtime via `Core.VersionInfo` (Web app bar + `/version` on Web, MCP,
   node agent). Dedicated wire-contract version (`NodeAgentProtocol`) guards main
-  node ↔ external node agent HTTP API: main node stamps every request with
+  node ↔ cTrader CLI node agent HTTP API: main node stamps every request with
   `X-Node-Protocol-Version` header, agent rejects incompatible callers with
   `426 Upgrade Required`.
 - MIT `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CHANGELOG.md`.
@@ -62,7 +62,7 @@ All notable changes documented here. Format based on
 
 - Hardened auth cookie (`HttpOnly`, `SameSite=Lax`, `SecurePolicy=SameAsRequest`).
 - OpenAPI document now exposed only in Development environment.
-- External node `StartAsync` now idempotent (short-circuits if container already
+- cTrader CLI node `StartAsync` now idempotent (short-circuits if container already
   exists) so retried request can't wipe running container's work dir.
 - Dashboard instance counters collapsed from six sequential `COUNT` queries into single
   grouped aggregate query.

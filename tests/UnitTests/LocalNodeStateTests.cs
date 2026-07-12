@@ -29,7 +29,7 @@ public class LocalNodeStateTests
     }
 
     [Fact]
-    public void RemoteNode_IsLocal_false()
+    public void CtraderCliNode_IsLocal_false()
     {
         new ActiveMixedNode().IsLocal.Should().BeFalse();
         new ActiveRunNode().IsLocal.Should().BeFalse();

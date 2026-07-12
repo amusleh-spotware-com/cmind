@@ -6,7 +6,7 @@ Closes #
 
 ## Changes
 
-<!-- Key changes, grouped by layer (Core / Infrastructure / Nodes / Web / Mcp / ExternalNode). -->
+<!-- Key changes, grouped by layer (Core / Infrastructure / Nodes / Web / Mcp / CtraderCliNode). -->
 
 -
 

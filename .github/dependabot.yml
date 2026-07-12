@@ -20,6 +20,6 @@ updates:
       interval: weekly
 
   - package-ecosystem: docker
-    directory: "/src/ExternalNode"
+    directory: "/src/CtraderCliNode"
     schedule:
       interval: weekly

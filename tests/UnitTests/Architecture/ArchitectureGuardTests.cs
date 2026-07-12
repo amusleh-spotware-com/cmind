@@ -15,7 +15,7 @@ public sealed class ArchitectureGuardTests
     private static readonly string SrcRoot = Path.Combine(RepoRoot, "src");
 
     // Standalone agent processes that ship without the Core source-generated LogMessages catalog.
-    private static readonly string[] DirectLoggingExemptProjects = ["ExternalNode", "CopyEngine", "CopyAgent"];
+    private static readonly string[] DirectLoggingExemptProjects = ["CtraderCliNode", "CopyEngine", "CopyAgent"];
 
     // Mandate #1: src/Core is pure domain — zero infrastructure dependencies.
     [Fact]

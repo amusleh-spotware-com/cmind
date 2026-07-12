@@ -160,7 +160,7 @@ Include **all** of:
 1. **What happened** — expected vs actual, one clear sentence each.
 2. **Steps to reproduce** — numbered, from a clean state. "It's broken" is not a repro.
 3. **Environment** — .NET SDK version, OS, Docker version, and which component
-   (Web / MCP / ExternalNode / AppHost).
+   (Web / MCP / CtraderCliNode / AppHost).
 4. **Logs / stack trace** — the relevant slice, in a code block. Redact secrets.
 5. **Scope** — does it happen on a fresh `main`? Which commit if you can bisect.
 
@@ -207,7 +207,7 @@ A PR is **ready to review** when every box below is true. This is the bar we hol
 ### Makes review faster
 
 - A clear **Summary** answering *what* and *why*.
-- Changes **grouped by layer** (Core / Infrastructure / Nodes / Web / Mcp / ExternalNode).
+- Changes **grouped by layer** (Core / Infrastructure / Nodes / Web / Mcp / CtraderCliNode).
 - Screenshots / GIFs for UI changes.
 - A **Notes for reviewers** section for anything non-obvious, trade-offs, or follow-ups.
 - Keep the diff reviewable — under ~400 lines where you can. Split big work into a stack of PRs.

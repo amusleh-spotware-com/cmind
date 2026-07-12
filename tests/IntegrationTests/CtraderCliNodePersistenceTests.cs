@@ -6,7 +6,7 @@ using Xunit;
 
 namespace IntegrationTests;
 
-public class RemoteNodePersistenceTests(PostgresFixture fixture) : IClassFixture<PostgresFixture>
+public class CtraderCliNodePersistenceTests(PostgresFixture fixture) : IClassFixture<PostgresFixture>
 {
     private DataContext CreateContext() =>
         new(new DbContextOptionsBuilder<DataContext>()
@@ -15,7 +15,7 @@ public class RemoteNodePersistenceTests(PostgresFixture fixture) : IClassFixture
             .Options);
 
     [Fact]
-    public async Task RemoteNode_BaseUrl_and_ApiSecret_survive_a_round_trip()
+    public async Task CtraderCliNode_BaseUrl_and_ApiSecret_survive_a_round_trip()
     {
         await using var setup = CreateContext();
         await setup.Database.MigrateAsync();

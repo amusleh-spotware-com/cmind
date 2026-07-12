@@ -11,9 +11,9 @@ public sealed class NodeInstanceReclaimerTests
     private const string DataDir = "/var/app/data";
     private static readonly TimeSpan Threshold = TimeSpan.FromSeconds(150);
 
-    private static RemoteNode UnreachableNode(DateTimeOffset lastHeartbeat)
+    private static Core.CtraderCliNode UnreachableNode(DateTimeOffset lastHeartbeat)
     {
-        var node = RemoteNode.SelfRegister(NodeMode.Mixed, "node-1",
+        var node = Core.CtraderCliNode.SelfRegister(NodeMode.Mixed, "node-1",
             new NodeEndpointUrl("http://node-1:8080"), [1, 2, 3], DataDir, 5, lastHeartbeat);
         node.MarkUnreachable();
         return node;
@@ -58,7 +58,7 @@ public sealed class NodeInstanceReclaimerTests
     [Fact]
     public void ShouldNotReclaim_when_node_reachable()
     {
-        var node = RemoteNode.SelfRegister(NodeMode.Mixed, "node-1",
+        var node = Core.CtraderCliNode.SelfRegister(NodeMode.Mixed, "node-1",
             new NodeEndpointUrl("http://node-1:8080"), [1, 2, 3], DataDir, 5, TestClock.Now);
         var instance = RunningOn(node);
         var now = TestClock.Now + Threshold + TimeSpan.FromSeconds(1);

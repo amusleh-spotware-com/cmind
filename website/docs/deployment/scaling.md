@@ -74,7 +74,7 @@ needed. If you add first-run seeding, put it **inside** the same guarded block s
 
 ## Node-agent HTTP resilience
 
-The main node talks to each `ExternalNode` agent over HTTP through three purpose-split clients so a
+The main node talks to each `CtraderCliNode` agent over HTTP through three purpose-split clients so a
 flaky node or network never corrupts state:
 
 - **read** (`status` / `report` / `stats`) — idempotent GETs, retried on transient failures

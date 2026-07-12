@@ -3,7 +3,7 @@ using Core.Constants;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace ExternalNode;
+namespace CtraderCliNode;
 
 /// <summary>
 /// Stamps every log event with the current W3C trace/span id from <see cref="Activity.Current"/>.

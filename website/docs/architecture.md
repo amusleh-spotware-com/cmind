@@ -21,7 +21,7 @@ This page is the map. For the *why* behind specific choices, see the
 | `src/Core` | Pure domain — entities, aggregates, value objects, strong IDs, domain events, Core-side interfaces. **Zero** infra dependencies (no EF/HttpClient/Docker/ASP.NET). |
 | `src/Infrastructure` | EF Core + PostgreSQL, DataProtection encryption, GHCR client, Anthropic AI client, observability. |
 | `src/Nodes` | Cross-node orchestration — scheduling, dispatch, pollers, background services. |
-| `src/ExternalNode` | Standalone HTTP node agent deployed on remote hosts (JWT-auth, docker CLI, no shell). |
+| `src/CtraderCliNode` | Standalone HTTP node agent on remote hosts (JWT-auth, no shell). Runs and backtests cBots by driving the **cTrader CLI** inside a docker container — and will optimize too, once the cTrader CLI adds it. |
 | `src/CopyEngine` | The copy-trading host: mirrors trades from a source account onto destinations. |
 | `src/CTraderOpenApi` | cTrader Open API client (protobuf over TCP/SSL) — auth, trading session, equity. |
 | `src/Web` | Blazor Server SSR + Minimal API + SignalR + MudBlazor UI. |
@@ -49,7 +49,7 @@ flowchart TB
     Db[("PostgreSQL (EF Core)")]
 
     subgraph Fleet["Node fleet"]
-        ExtNode["ExternalNode agent (HTTP + JWT)"]
+        ExtNode["CtraderCliNode agent (HTTP + JWT)"]
         Docker["ctrader-console containers"]
     end
 
@@ -76,7 +76,7 @@ flowchart TB
    socket) inside a throwaway SDK container with a bind-mounted `/work` and a shared
    `app-nuget-cache` volume, so untrusted MSBuild can't reach the host filesystem or network.
 2. Run/backtest containers execute on a node chosen by `NodeScheduler`, dispatched through
-   `ContainerDispatcherFactory` → either `Http` (a remote `ExternalNode` agent) or `Local` (the web
+   `ContainerDispatcherFactory` → either `Http` (a remote `CtraderCliNode` agent) or `Local` (the web
    host's own node).
 3. Containers run `ghcr.io/spotware/ctrader-console` with `--exit-on-stop`. Pollers
    (`RunCompletionPoller`, `BacktestCompletionPoller`) reconcile self-exited containers: exit 0/null
@@ -86,14 +86,14 @@ Instance state is **TPH, and a transition replaces the entity** (the discriminat
 an instance **id changes** starting → running → terminal. The **container id is stable** and carried
 over; the HTTP agent is keyed by container id for status/report/stop/logs.
 
-### External nodes
+### cTrader CLI nodes
 
-External nodes get **no SSH or shell**. The main app talks to each agent over HTTP; every request
+cTrader CLI nodes get **no SSH or shell**. The main app talks to each agent over HTTP; every request
 carries a short-lived HS256 **JWT** (5-minute, `iss=app-main` / `aud=app-node`) signed with that
 node's secret. The agent only runs images matching `AllowedImagePrefix`, execs docker via
 `ArgumentList` (never a shell), and is stateless (it finds containers by the `app.instance` label).
 Agents self-register and heartbeat to `POST /api/nodes/register`; the main app upserts the
-`RemoteNode` **by name** so it survives IP changes.
+`CtraderCliNode` **by name** so it survives IP changes.
 
 ### Copy trading
 

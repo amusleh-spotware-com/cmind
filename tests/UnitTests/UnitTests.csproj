@@ -6,7 +6,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Core\Core.csproj" />
     <ProjectReference Include="..\..\src\CopyEngine\CopyEngine.csproj" />
-    <ProjectReference Include="..\..\src\ExternalNode\ExternalNode.csproj" />
+    <ProjectReference Include="..\..\src\CtraderCliNode\CtraderCliNode.csproj" />
     <ProjectReference Include="..\..\src\Infrastructure\Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Nodes\Nodes.csproj" />
   </ItemGroup>

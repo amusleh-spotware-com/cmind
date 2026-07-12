@@ -34,7 +34,7 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: .NET SDK version, OS, Docker version, and which component (Web / MCP / ExternalNode / AppHost).
+      description: .NET SDK version, OS, Docker version, and which component (Web / MCP / CtraderCliNode / AppHost).
       placeholder: |
         - .NET SDK: 10.0.100
         - OS: Windows 11 / Ubuntu 24.04

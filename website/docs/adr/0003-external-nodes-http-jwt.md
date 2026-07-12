@@ -1,9 +1,9 @@
 ---
-title: 0003 — External nodes are HTTP + JWT, no SSH/shell
+title: 0003 — cTrader CLI nodes are HTTP + JWT, no SSH/shell
 description: Why remote node agents expose only an HTTP API with short-lived JWTs and never a shell.
 ---
 
-# 0003 — External nodes are HTTP + JWT, no SSH/shell
+# 0003 — cTrader CLI nodes are HTTP + JWT, no SSH/shell
 
 ## Context
 
@@ -13,7 +13,7 @@ large blast radius for a system that runs untrusted user cBots.
 
 ## Decision
 
-Each remote host runs a standalone `ExternalNode` **HTTP agent** with **no SSH and no shell**. The
+Each remote host runs a standalone `CtraderCliNode` **HTTP agent** with **no SSH and no shell**. The
 main app calls the agent over HTTP; every request carries a short-lived **HS256 JWT** (5-minute,
 `iss=app-main` / `aud=app-node`) signed with that node's secret. The agent:
 
@@ -21,7 +21,7 @@ main app calls the agent over HTTP; every request carries a short-lived **HS256 
   match `ghcr.io/spotware-evil/...`);
 - execs docker via `ArgumentList` — never a shell string;
 - is **stateless**, finding containers by the `app.instance` label;
-- self-registers and heartbeats to `POST /api/nodes/register`; the main app upserts the `RemoteNode`
+- self-registers and heartbeats to `POST /api/nodes/register`; the main app upserts the `CtraderCliNode`
   **by name**, so a node survives IP changes.
 
 ## Consequences

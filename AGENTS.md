@@ -22,7 +22,7 @@ Multi-tenant Blazor Server + Minimal API platform for cTrader: build/backtest/ru
 src/Core            — pure domain (entities, aggregates, value objects, strong IDs). ZERO infra deps.
 src/Infrastructure  — EF Core, encryption, GHCR, Anthropic client, observability.
 src/Nodes           — cross-node orchestration, scheduling, dispatch, background services.
-src/ExternalNode    — standalone HTTP node agent (runs on remote hosts).
+src/CtraderCliNode  — standalone HTTP node agent (remote hosts); runs/backtests cBots via the cTrader CLI.
 src/Web             — Blazor Server SSR + Minimal API + SignalR.
 src/Mcp             — MCP HTTP+SSE server (tools for AI clients).
 src/AppHost         — .NET Aspire orchestrator.

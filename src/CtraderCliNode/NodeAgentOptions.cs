@@ -1,4 +1,4 @@
-﻿namespace ExternalNode;
+﻿namespace CtraderCliNode;
 
 public sealed class NodeAgentOptions
 {

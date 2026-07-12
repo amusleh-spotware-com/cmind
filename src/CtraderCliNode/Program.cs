@@ -2,7 +2,7 @@
 using Core;
 using Core.Constants;
 using Core.NodeAgent;
-using ExternalNode;
+using CtraderCliNode;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;

@@ -133,7 +133,7 @@ public static class NodeAgentAuth
 
 public static class NodeAgentProtocol
 {
-    // Wire-contract version for the main node <-> ExternalNode agent HTTP API. Independent of
+    // Wire-contract version for the main node <-> CtraderCliNode agent HTTP API. Independent of
     // the product SemVer: bump ONLY on a breaking change to the agent contract (routes, request/
     // response shapes, semantics). The main node stamps every request with HeaderName; the agent
     // rejects mismatched versions with 426 Upgrade Required.

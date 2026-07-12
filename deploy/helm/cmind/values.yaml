@@ -82,7 +82,7 @@ nodeAgent:
   maxInstances: 10
   heartbeatIntervalSeconds: 30
   allowedImagePrefix: "ghcr.io/spotware/"
-  # Privileged so the agent can start its own in-pod dockerd (see ExternalNode Dockerfile).
+  # Privileged so the agent can start its own in-pod dockerd (see CtraderCliNode Dockerfile).
   privileged: true
   resources:
     requests: { cpu: 250m, memory: 512Mi }

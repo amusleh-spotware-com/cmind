@@ -61,7 +61,7 @@ public sealed class HttpContainerDispatcher(
 
     public async Task StopAsync(Instance instance, CancellationToken ct)
     {
-        if (instance.Node is not RemoteNode node) return;
+        if (instance.Node is not CtraderCliNode node) return;
         if (ContainerCommandHelpers.GetContainerId(instance) is not { } containerId) return;
         using var client = CreateClient(node, WriteClientName);
         using var response = await client.PostAsync(NodeAgentRoutes.Stop(containerId), null, ct);
@@ -69,7 +69,7 @@ public sealed class HttpContainerDispatcher(
 
     public async Task<bool?> IsRunningAsync(Instance instance, CancellationToken ct)
     {
-        if (instance.Node is not RemoteNode node) return null;
+        if (instance.Node is not CtraderCliNode node) return null;
         if (ContainerCommandHelpers.GetContainerId(instance) is not { } containerId) return null;
         var status = await GetStatusAsync(node, containerId, ct);
         if (status is null || !status.Exists) return null;
@@ -78,7 +78,7 @@ public sealed class HttpContainerDispatcher(
 
     public async Task<int?> GetExitCodeAsync(Instance instance, CancellationToken ct)
     {
-        if (instance.Node is not RemoteNode node) return null;
+        if (instance.Node is not CtraderCliNode node) return null;
         if (ContainerCommandHelpers.GetContainerId(instance) is not { } containerId) return null;
         var status = await GetStatusAsync(node, containerId, ct);
         return status?.ExitCode;
@@ -86,7 +86,7 @@ public sealed class HttpContainerDispatcher(
 
     public async Task<string?> ReadReportAsync(Instance instance, CancellationToken ct)
     {
-        if (instance.Node is not RemoteNode node) return null;
+        if (instance.Node is not CtraderCliNode node) return null;
         if (ContainerCommandHelpers.GetContainerId(instance) is not { } containerId) return null;
         using var client = CreateClient(node, ReadClientName);
         using var response = await client.GetAsync(NodeAgentRoutes.Report(containerId), ct);
@@ -97,7 +97,7 @@ public sealed class HttpContainerDispatcher(
 
     public async IAsyncEnumerable<string> TailLogsAsync(Instance instance, [EnumeratorCancellation] CancellationToken ct)
     {
-        if (instance.Node is not RemoteNode node) yield break;
+        if (instance.Node is not CtraderCliNode node) yield break;
         if (ContainerCommandHelpers.GetContainerId(instance) is not { } containerId) yield break;
         using var client = CreateClient(node, StreamClientName);
         using var stream = await client.GetStreamAsync(NodeAgentRoutes.Logs(containerId), ct);
@@ -112,7 +112,7 @@ public sealed class HttpContainerDispatcher(
 
     public async Task<NodeStats> CollectStatsAsync(Node node, CancellationToken ct)
     {
-        var remote = node as RemoteNode ?? throw new InvalidOperationException("Not a remote node.");
+        var remote = node as CtraderCliNode ?? throw new InvalidOperationException("Not a remote node.");
         using var client = CreateClient(remote, ReadClientName);
         var stats = await client.GetFromJsonAsync<NodeStatsResponse>(NodeAgentRoutes.NodeStats, ct)
                     ?? throw new InvalidOperationException("Agent returned empty stats.");
@@ -122,7 +122,7 @@ public sealed class HttpContainerDispatcher(
 
     public async Task<long> GetBacktestDataSizeAsync(Node node, CancellationToken ct)
     {
-        if (node is not RemoteNode remote) return 0;
+        if (node is not CtraderCliNode remote) return 0;
         using var client = CreateClient(remote, ReadClientName);
         var stats = await client.GetFromJsonAsync<NodeStatsResponse>(NodeAgentRoutes.NodeStats, ct);
         return stats?.BacktestDataUsedBytes ?? 0;
@@ -130,22 +130,22 @@ public sealed class HttpContainerDispatcher(
 
     public async Task CleanBacktestDataAsync(Node node, UserId? userId, CancellationToken ct)
     {
-        if (node is not RemoteNode remote) return;
+        if (node is not CtraderCliNode remote) return;
         using var client = CreateClient(remote, WriteClientName);
         var url = userId is { } uid ? $"{NodeAgentRoutes.NodeClean}?userId={uid.Value}" : NodeAgentRoutes.NodeClean;
         using var response = await client.PostAsync(url, null, ct);
     }
 
-    private async Task<ContainerStatusResponse?> GetStatusAsync(RemoteNode node, string containerId, CancellationToken ct)
+    private async Task<ContainerStatusResponse?> GetStatusAsync(CtraderCliNode node, string containerId, CancellationToken ct)
     {
         using var client = CreateClient(node, ReadClientName);
         return await client.GetFromJsonAsync<ContainerStatusResponse>(NodeAgentRoutes.Status(containerId), ct);
     }
 
-    private static RemoteNode RequireRemote(Instance instance) =>
-        instance.Node as RemoteNode ?? throw new InvalidOperationException("Instance has no remote node.");
+    private static CtraderCliNode RequireRemote(Instance instance) =>
+        instance.Node as CtraderCliNode ?? throw new InvalidOperationException("Instance has no remote node.");
 
-    private HttpClient CreateClient(RemoteNode node, string clientName)
+    private HttpClient CreateClient(CtraderCliNode node, string clientName)
     {
         var client = httpClientFactory.CreateClient(clientName);
         client.BaseAddress = new Uri(node.BaseUrl);

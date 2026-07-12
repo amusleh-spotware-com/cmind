@@ -26,14 +26,14 @@ Only latest `main` supported.
 - **Secrets at rest** encrypted via ASP.NET Core Data Protection (`ISecretProtector`,
   X.509-protected key ring). Never log or store secrets plaintext.
 - **Passwords** hashed with Argon2id (Konscious). Login has failed-attempt lockout.
-- **External nodes** authenticate main node with short-lived per-node HS256 JWT
+- **cTrader CLI nodes** authenticate main node with short-lived per-node HS256 JWT
   (5-min expiry) signed with per-node shared secret (≥ 32 chars). Agent only runs
   images matching `AllowedImagePrefix`, execs docker via `ArgumentList` (no shell).
 - **MCP keys** are `mcpk_<hex>`, SHA-256 hashed at rest, shown once.
 
 ### Production checklist
 
-- Terminate **TLS** in front of both Web app and each `ExternalNode` agent; keep
+- Terminate **TLS** in front of both Web app and each `CtraderCliNode` agent; keep
   agents on private network.
 - Keep every node shared secret ≥ 32 chars; rotate by updating both node's stored
   secret and agent's `NodeAgent:JwtSecret`.

@@ -623,7 +623,7 @@ public abstract class Node : AuditedEntity<NodeId>
     }
 }
 
-public abstract class RemoteNode : Node
+public abstract class CtraderCliNode : Node
 {
     [MaxLength(512)] public string BaseUrl { get; internal set; } = default!;
     public byte[] EncryptedApiSecret { get; internal set; } = default!;
@@ -632,10 +632,10 @@ public abstract class RemoteNode : Node
 
     public override bool IsLocal => false;
 
-    public static RemoteNode Create(NodeMode mode, string name, string baseUrl, byte[] encryptedApiSecret,
+    public static CtraderCliNode Create(NodeMode mode, string name, string baseUrl, byte[] encryptedApiSecret,
         string dataDirPath, int maxInstances)
     {
-        RemoteNode node = mode.Name switch
+        CtraderCliNode node = mode.Name switch
         {
             nameof(NodeMode.Run) => new ActiveRunNode(),
             nameof(NodeMode.Backtest) => new ActiveBacktestNode(),
@@ -648,7 +648,7 @@ public abstract class RemoteNode : Node
         return node;
     }
 
-    public static RemoteNode SelfRegister(NodeMode mode, string name, NodeEndpointUrl endpoint,
+    public static CtraderCliNode SelfRegister(NodeMode mode, string name, NodeEndpointUrl endpoint,
         byte[] encryptedApiSecret, string dataDirPath, int maxInstances, DateTimeOffset now)
     {
         var node = Create(mode, name, endpoint.Value, encryptedApiSecret, dataDirPath, maxInstances);
@@ -682,7 +682,7 @@ public abstract class RemoteNode : Node
     }
 }
 
-public sealed class ActiveRunNode : RemoteNode
+public sealed class ActiveRunNode : CtraderCliNode
 {
     public override string ModeName => "Run";
     public override string StatusName => IsReachable ? "Active" : "Unreachable";
@@ -691,7 +691,7 @@ public sealed class ActiveRunNode : RemoteNode
     public override bool AcceptsBacktest => false;
 }
 
-public sealed class ActiveBacktestNode : RemoteNode
+public sealed class ActiveBacktestNode : CtraderCliNode
 {
     public override string ModeName => "Backtest";
     public override string StatusName => IsReachable ? "Active" : "Unreachable";
@@ -700,7 +700,7 @@ public sealed class ActiveBacktestNode : RemoteNode
     public override bool AcceptsBacktest => IsReachable;
 }
 
-public sealed class ActiveMixedNode : RemoteNode
+public sealed class ActiveMixedNode : CtraderCliNode
 {
     public override string ModeName => "Mixed";
     public override string StatusName => IsReachable ? "Active" : "Unreachable";
@@ -709,7 +709,7 @@ public sealed class ActiveMixedNode : RemoteNode
     public override bool AcceptsBacktest => IsReachable;
 }
 
-public sealed class DecommissioningNode : RemoteNode
+public sealed class DecommissioningNode : CtraderCliNode
 {
     public override string ModeName => "Decommissioning";
     public override string StatusName => "Decommissioning";
@@ -718,7 +718,7 @@ public sealed class DecommissioningNode : RemoteNode
     public override bool AcceptsBacktest => false;
 }
 
-public sealed class OfflineNode : RemoteNode
+public sealed class OfflineNode : CtraderCliNode
 {
     public override string ModeName => "Offline";
     public override string StatusName => "Offline";

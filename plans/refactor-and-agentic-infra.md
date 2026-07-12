@@ -186,7 +186,7 @@ feedback is fast; cache NuGet; `--no-restore/--no-build` reuse. Optionally graph
 
 ### 3.1 Architecture overview + diagram (missing)
 **Why:** module map lives only in CLAUDE.md prose. New agents/humans lack a single
-"how a build/backtest/copy request flows across Web → Nodes → ExternalNode" picture.
+"how a build/backtest/copy request flows across Web → Nodes → CtraderCliNode" picture.
 **Add:** `website/docs/architecture.md` (canonical) with a Mermaid diagram: aggregates, dispatch
 (`ContainerDispatcherFactory` → Http/Local), copy engine host, node HTTP+JWT, MCP, AI gating. Link
 from `intro.md` + sidebar.

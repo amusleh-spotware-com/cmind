@@ -107,7 +107,7 @@ articles (country→symbol mapping, PIT/look-ahead pitfalls).
 
 ## 3. Architecture
 
-Mirror the existing **decoupled-but-integrated** patterns (`ExternalNode`, `Nodes`, AI gating).
+Mirror the existing **decoupled-but-integrated** patterns (`CtraderCliNode`, `Nodes`, AI gating).
 
 ```
 src/Core (calendar subdomain)
@@ -229,15 +229,32 @@ copy-trade pause, and AI risk guard **with one shared, tested implementation** �
 - **Instance/backtest annotation:** backtest reports overlay event markers (PIT-correct) so a strategy
   author sees which trades landed on NFP. Uses the same PIT query — no look-ahead.
 
-### 5.2 MCP (`CalendarTools`)
+### 5.2 MCP (`CalendarTools`) — full API parity in MCP form
 
-Tools for AI clients (all read-only, gated by the same branding flag + MCP API key):
-- `calendar_upcoming(currencies?, minImpact?, within?)` → next events, per-user TZ.
-- `calendar_event(eventId)` → full revision chain + affected symbols + surprise.
-- `calendar_surprise_history(seriesCode, count)` → last N actual/forecast/surprise for backtesting.
-- `calendar_blackout(symbol, at?)` → is/when a symbol is in a high-impact window.
+The MCP server exposes **the entire Calendar API as MCP tools** — one tool per REST capability (§5.6)
+— so every AI client and every in-app AI feature (agent, alerts, risk guard, research desk) gets the
+same power a cBot has, in MCP-native shape. Not a reduced subset; parity is the requirement.
+
+Tools (read-only, gated by `IsCalendarEnabled` + `McpApiKey`; share the same `IEconomicCalendar`
+domain read side as the REST API — one implementation, two protocols):
+- `calendar_events(from?, to?, countries?, currencies?, series?, minImpact?, category?, q?, asOf?)` →
+  events window (upcoming or historical), PIT via `asOf`.
+- `calendar_event(eventId, watchlist?, asOf?)` → full **revision chain** + surprise + impact rationale
+  + affected symbols.
+- `calendar_history(series, from, to, asOf?)` → deep ≥10y series history.
+- `calendar_series(countries?, currencies?, q?)` → indicator catalog + cadence.
+- `calendar_surprises(series, count?)` → actual/forecast/**surprise z-score** for reasoning/backtest.
+- `calendar_next(symbol, minImpact?)` → next relevant release for a symbol (country-mapped).
+- `calendar_blackout(symbol, at?, minImpact?, before?, after?)` → in-window? + fail-safe flag.
 - `calendar_affected_symbols(eventId, watchlist)` → country→symbol resolution.
-Feeds the existing `AiFeatureService` so agent/alerts can reason over "what's on the calendar."
+- `calendar_health()` → per-source freshness/coverage so an agent can judge data trust.
+Streaming/webhook + token-issue are REST-only (MCP is request/response); everything else is 1:1.
+
+Wired into `AiFeatureService` (the single AI orchestrator) so the **in-app AI features consume the
+calendar directly**: the agent reasons over "what's on the calendar this week," alerts explain a
+move by the release that caused it, the AI risk guard checks `calendar_blackout` before proposing an
+entry, the research desk pulls `calendar_surprises` for context. MCP responses carry the same
+freshness/`stale` signal as the API so AI never treats degraded data as certain.
 
 ### 5.3 Public Calendar REST API — JWT-secured, the headline integration
 
@@ -323,7 +340,7 @@ Reuse the repo's existing token machinery, don't invent a new scheme.
      an `ApiClient` aggregate (mirrors `McpApiKey`). The client authenticates once
      (`POST /api/calendar/v1/token` with a client id + secret) and receives a **short-lived HS256
      JWT** (`iss=cmind-calendar`, `aud=calendar-api`, `exp` 15 min, `scope` claim). Same HS256 pattern
-     the ExternalNode agents already use (5-min main→node JWT) — proven in-repo.
+     the CtraderCliNode agents already use (5-min main→node JWT) — proven in-repo.
   2. **Refresh / long-lived client secret** stays server-side; only the short JWT rides on requests
      (`Authorization: Bearer <jwt>`). Secret stored encrypted via `ISecretProtector`
      (`EncryptionPurposes`), never plaintext, never logged.
@@ -391,16 +408,36 @@ Reuse the repo's existing token machinery, don't invent a new scheme.
   SSE stream receives a fixture release; webhook delivery with valid HMAC + retry on 5xx.
 - Unit: JWT claim building/validation, scope mapping, rate-limiter token-bucket math.
 
-## 6. White-label toggle
+## 6. Enable / disable — two-tier gating
 
-Add `bool EnableEconomicCalendar { get; init; } = true;` to `BrandingOptions` (`App:Branding`,
-defaults **true**). When false:
-- Nav entry, `/economic-calendar` route, and REST/MCP endpoints return 404/gated (reuse the
-  feature-gate pattern; guard page load + recover `ErrorBoundary` on nav — see the known gotcha).
-- Ingestion worker not registered → no external calls, no DB growth.
-- cBot/MCP tools report feature-disabled cleanly (not a 500).
-Single source of truth: one `IsCalendarEnabled` check surfaced from options; endpoints, nav, worker,
-and MCP all read it. Integration test asserts full gating (route 404, worker not scheduled).
+Calendar is **on by default** and toggleable **two ways**, exactly like other app features:
+
+**Tier 1 — Runtime feature toggle (admin, like every other feature).** A `FeatureToggle`/`AppSetting`
+entry `Feature.EconomicCalendar` flipped from the app's **Settings/Features admin UI** (same surface
+used by the existing feature toggles from the prop-firm/white-label epic) — no redeploy, takes effect
+live. This is the day-to-day switch an operator uses. Persisted (append-only `AppSetting`), audited,
+observed via `IOptionsMonitor`/settings so all consumers react without restart.
+
+**Tier 2 — White-label hard gate (deployment).** `bool EnableEconomicCalendar { get; init; } = true;`
+on `BrandingOptions` (`App:Branding`). A reseller sets it `false` to **remove the feature entirely**
+from that white-label build — it never appears, can't be re-enabled by an operator.
+
+**Precedence:** `effectiveEnabled = Branding.EnableEconomicCalendar && FeatureToggle.EconomicCalendar`.
+White-label off ⇒ feature invisible and the runtime toggle isn't even shown. White-label on ⇒ operator
+may enable/disable at will.
+
+**When disabled (either tier):**
+- Nav/bottom-nav entry hidden; `/economic-calendar` + `/api/calendar/**` (incl. JWT token issue) +
+  MCP calendar tools return 404 / feature-disabled cleanly (reuse the feature-gate pattern; guard page
+  load + recover `ErrorBoundary` on nav — see the known gotcha). Never a 500.
+- Ingestion worker + lazy-load fetch not registered → no external calls, no DB growth.
+- Existing persisted history is **retained** (not dropped) on a runtime toggle-off so re-enabling is
+  instant; white-label-off may drop the schema (deployment choice).
+
+**Single source of truth:** one `IsCalendarEnabled` service composing both tiers; nav, endpoints, API
+auth, worker registration, and MCP all read it. Runtime toggle flip re-registers/parks the worker
+without restart. Integration + E2E assert both gates independently: white-label-off ⇒ hard 404 + no
+toggle UI; runtime-off ⇒ 404 + worker parked + history preserved + instant re-enable.
 
 ---
 
@@ -426,6 +463,47 @@ and MCP all read it. Integration test asserts full gating (route 404, worker not
   circuit state → existing cloud observability (X-Ray/CloudWatch/App Insights, trace/span correlation).
 - **Degradation contract.** Reads never fail because ingestion failed; queries return best-known PIT
   data + a freshness stamp so consumers (and cBots) can decide.
+
+### 7.1 Resilience parity with copy-trading (reuse the same infra)
+
+The Calendar API sits in an **algo-trading hot path** — a cBot may block an order on
+`GET /v1/blackout`. It must never crash the bot, never hang it, never lie. Reuse copy-trading's exact
+resilience primitives, not new ones:
+
+- **Standard HTTP resilience handler** — every `ICalendarSource` `HttpClient` opts into
+  `AddStandardResilienceHandler` (the same `ConfigureHttpClientDefaults` pipeline in
+  `HostDefaults.cs`: retry w/ backoff+jitter, **circuit breaker**, attempt + total-request timeouts).
+  Source flakiness is absorbed exactly like node/Open-API HTTP is today.
+- **Domain circuit breaker** — reuse `Core/Autonomy/CircuitBreaker.Evaluate(...)` pattern for the
+  ingestion/source layer (consecutive-fail + error-rate trip → source parked, auto half-open probe),
+  same shape as `CopyCircuitBreaker`. A tripped source degrades *its* coverage only.
+- **Lease-guarded singleton worker** — the ingestion/lazy-fetch worker claims a **lease**
+  (`LeaseExpiresAt` / `RenewLease` / `IsLeaseHeldBy` / `ReleaseLeasesAsync`, `LeaseTtl` from
+  `AppOptions`) exactly like `CopyEngineSupervisor`: one owner at a time, renews while alive, releases
+  on graceful stop, **reclaimed after TTL on crash**. No double-fetch, no orphaned worker.
+- **Startup resync / reconciliation** — on (re)claim the worker runs a reconciliation pass (§7) before
+  serving fresh writes, mirroring `CopyEngineHost`'s startup-resync (the race the DST suite caught).
+  Single-flight per `(series, span)` so a crash mid-fetch re-runs idempotently (append-only ⇒ safe).
+- **Health checks** — calendar readiness (DB reachable, worker lease held, no all-sources-down) wired
+  into `/health`; liveness stays process-only on `/alive`. K8s/container probes see calendar state.
+
+### 7.2 API hardening for algo callers (edge cases)
+
+- **Never throw into a live bot.** Every API path returns a well-formed `problem+json` or a typed
+  degraded body; a source/DB fault ⇒ `200` best-known + `X-Calendar-Freshness`/`stale=true` header (or
+  `503 Retry-After` only if truly nothing known) — the cBot decides, deterministically.
+- **Fail-safe blackout semantics.** `GET /v1/blackout` on uncertainty **defaults to the conservative
+  answer** (config: fail-closed = "assume in-blackout" for risk-off bots, or fail-open) + a
+  `confidence`/`stale` flag — a data gap never silently green-lights trading through NFP.
+- **Bounded latency.** Hot endpoints (`blackout`, `next`) are pure DB/cache reads with a hard server
+  timeout; no synchronous origin fetch on the hot path (lazy fetch is background/async — §9.2).
+- **Idempotency & retries.** GETs idempotent; `POST /v1/token` and webhook registration take an
+  `Idempotency-Key`; the client snippet ships with retry+timeout+circuit-breaker preconfigured
+  (Polly) so bot authors inherit resilience.
+- **Backpressure.** Per-client token-bucket rate limit + global bulkhead; 429 `Retry-After`; SSE/
+  webhook fan-out capped and dropped-slow-consumer-safe.
+- **PIT determinism under load** — `asOf` reads are pure and cacheable; a backtest hammering history
+  gets identical bytes every time (ETag), no contention with live ingestion.
 
 ---
 
@@ -461,6 +539,16 @@ and MCP all read it. Integration test asserts full gating (route 404, worker not
 - **Failure-path E2E:** ingest a fixture High event into a blackout window → copy-trade mirror for
   that symbol is suppressed, then resumes after the window (drives the real host).
 - Screenshot capture wired into the existing `CAPTURE_SCREENSHOTS` E2E for docs.
+
+**Stress (DST — deterministic simulation, `tests/StressTests`, parity with copy-trading):**
+- Deterministic-sim the ingestion worker + API under adversarial conditions on `FakeTimeProvider`:
+  source flapping (trip/half-open/recover), worker crash + lease reclaim mid-fetch, concurrent
+  lazy-load single-flight (no double-write), reconciliation races (mirror the CopyEngineHost
+  startup-resync race the DST suite already catches), clock skew / DST-boundary release instants.
+- Property: **append-only invariant + PIT determinism hold under any interleaving** — no lost/dup
+  revision, blackout answer never flips non-monotonically, `asOf` reproducible after chaos.
+- Fail-safe blackout under total source outage returns the configured conservative answer, never a
+  false "clear."
 
 Seed a deterministic **10-year fixture dataset** (generated, checked into test assets) so integration
 + E2E exercise history/PIT without live calls. `FakeTimeProvider` throughout — never the real clock.

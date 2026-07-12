@@ -114,7 +114,7 @@ Provide MCP server URL so AI models access user cBots, run/backtest them, etc., 
 
 ### Solution skeleton
 
-- `AppHost`, `Core`, `Infrastructure`, `Nodes`, `ExternalNode`, `Web`, `Mcp` + `UnitTests`, `IntegrationTests`.
+- `AppHost`, `Core`, `Infrastructure`, `Nodes`, `CtraderCliNode`, `Web`, `Mcp` + `UnitTests`, `IntegrationTests`.
 - Central Package Management via `Directory.Packages.props`.
 - `Directory.Build.props` strict (`TreatWarningsAsErrors=true`, no `NoWarn`).
 - `.editorconfig`, `.gitignore`, `global.json` pinning .NET 10.
@@ -148,8 +148,8 @@ Provide MCP server URL so AI models access user cBots, run/backtest them, etc., 
 ### Nodes / orchestration
 
 - `INodeScheduler` picks least-loaded node honoring `NodeMode` + `MaxInstances`.
-- `HttpContainerDispatcher` calls `ExternalNode` agent HTTP API (start/stop/status/report/logs/stats/clean) with short-lived per-node HS256 JWT. `LocalContainerDispatcher` for web host's own `LocalNode`.
-- `ExternalNode` agent pulls image + runs cBot container via docker CLI (`--ctid --pwd-file --account --symbol --period --data-dir --start --end --data-mode ...`), image-prefix guarded, stateless by `app.instance` label.
+- `HttpContainerDispatcher` calls `CtraderCliNode` agent HTTP API (start/stop/status/report/logs/stats/clean) with short-lived per-node HS256 JWT. `LocalContainerDispatcher` for web host's own `LocalNode`.
+- `CtraderCliNode` agent pulls image + runs cBot container via docker CLI (`--ctid --pwd-file --account --symbol --period --data-dir --start --end --data-mode ...`), image-prefix guarded, stateless by `app.instance` label.
 - `NodeStatsPoller` collects CPU/mem/disk/backtest-data stats.
 - `InstanceReconciler` marks stale Starting instances Failed; `RunCompletionPoller`/`BacktestCompletionPoller` reconcile exited containers.
 

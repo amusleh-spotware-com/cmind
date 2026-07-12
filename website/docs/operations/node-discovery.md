@@ -1,26 +1,26 @@
 ---
-description: "External nodes join cluster by self-registration + heartbeat — no manual entry. Same pattern as Consul/Nomad/kubeadm agents: agent boots knowing main node…"
+description: "cTrader CLI nodes join cluster by self-registration + heartbeat — no manual entry. Same pattern as Consul/Nomad/kubeadm agents: agent boots knowing main node…"
 ---
 
 # Node auto-discovery
 
-External nodes join cluster by **self-registration + heartbeat** — no manual entry. Same pattern as Consul/Nomad/kubeadm agents: agent boots knowing main node location + shared cluster secret, then continuously announces itself.
+cTrader CLI nodes join cluster by **self-registration + heartbeat** — no manual entry. Same pattern as Consul/Nomad/kubeadm agents: agent boots knowing main node location + shared cluster secret, then continuously announces itself.
 
 > Verified end-to-end on Docker Compose and `kind` Kubernetes cluster: agents self-register, appear in DB reachable, auto-marked unreachable when heartbeats stop past TTL, return online when resume.
 
 ## How it works
 
 ```
-ExternalNode agent                         Main (Web)
+CtraderCliNode agent                         Main (Web)
 ------------------                         ----------
 POST /api/nodes/register  ── join token ──▶ verify token (constant-time)
   { name, baseUrl, mode,                    verify protocol version
-    maxInstances, dataDir,                   upsert RemoteNode by name
+    maxInstances, dataDir,                   upsert CtraderCliNode by name
     protocolVersion }                        stamp LastHeartbeatAt, IsReachable=true
-        ▲                                     └─ RemoteNode.SelfRegister / RecordHeartbeat
+        ▲                                     └─ CtraderCliNode.SelfRegister / RecordHeartbeat
         │  every HeartbeatInterval            NodeHeartbeatMonitor (background):
         └──────────────────────────────────── if now - LastHeartbeatAt > HeartbeatTtl
-                                                 → RemoteNode.MarkUnreachable() (NodeWentOffline)
+                                                 → CtraderCliNode.MarkUnreachable() (NodeWentOffline)
 ```
 
 - **Registration == heartbeat.** Agent re-POSTs on `HeartbeatIntervalSeconds`. First call creates node (`NodeRegistered` event); later calls refresh liveness. Resumed heartbeat after outage flips node back reachable (`NodeCameOnline`).
@@ -42,7 +42,7 @@ Main (Web) — `App:Discovery`:
 | `MonitorInterval` | `00:00:30` | How often the monitor and instance-reclaimer sweep. |
 | `HeartbeatInterval` | `00:00:30` | Value returned to agents as suggested cadence. |
 
-Agent (ExternalNode) — `NodeAgent`:
+Agent (CtraderCliNode) — `NodeAgent`:
 
 | Key | Meaning |
 |-----|---------|

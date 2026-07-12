@@ -12,7 +12,7 @@ shapes leak into Core. The domain does not know EF exists.
   from a **base** type's `EntityTypeBuilder` for a property on a **derived** TPH type — it silently
   produces a property EF never persists. TPH makes subclass-only props column-nullable automatically.
 - **TPH `OfType<Intermediate>()` over the soft-delete filter does not translate on Npgsql** — throws
-  at runtime (500). Query without narrowing (by unique key, then `is RemoteNode`) or enumerate concrete
+  at runtime (500). Query without narrowing (by unique key, then `is CtraderCliNode`) or enumerate concrete
   leaf subtypes + `ToListAsync()` + `.Cast<>()`. (see `NodeEndpoints.RegisterNodeAsync`)
 - **Nested `(i as T) != null ? (i as T)!.Prop : …` in an `IQueryable.Select()` don't translate** —
   silent wrong/null vs real Postgres. Materialize with `ToListAsync()` first, switch in C#.

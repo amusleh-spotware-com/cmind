@@ -51,7 +51,7 @@ public sealed class NodeInstanceReclaimer(
     // has been heartbeat-stale beyond the threshold. Pure so the decision is unit-tested without a DB.
     internal static bool ShouldReclaim(Instance instance, TimeSpan staleThreshold, DateTimeOffset now)
         => !instance.IsTerminal
-           && instance.Node is RemoteNode { IsReachable: false } node
+           && instance.Node is CtraderCliNode { IsReachable: false } node
            && node.IsHeartbeatStale(staleThreshold, now);
 
     // Transitions every reclaimable instance to Failed. One SaveChanges for the batch; a concurrent
@@ -71,7 +71,7 @@ public sealed class NodeInstanceReclaimer(
         {
             if (!ShouldReclaim(instance, staleThreshold, now)) continue;
 
-            var nodeName = (instance.Node as RemoteNode)?.Name ?? string.Empty;
+            var nodeName = (instance.Node as CtraderCliNode)?.Name ?? string.Empty;
             Instance failed = instance switch
             {
                 RunInstance run => run.ToFailed(NodeUnreachableReason, now),

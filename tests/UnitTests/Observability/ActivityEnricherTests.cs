@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using Core.Constants;
-using ExternalNode;
+using CtraderCliNode;
 using FluentAssertions;
 using Infrastructure.Observability;
 using Serilog.Core;

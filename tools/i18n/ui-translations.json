@@ -108,7 +108,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "Indicator history"
     },
     "ar": {
       "common.retry": "إعادة المحاولة",
@@ -217,7 +218,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "سجل المؤشر"
     },
     "cs": {
       "common.retry": "Zkusit znovu",
@@ -326,7 +328,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "Historie ukazatele"
     },
     "de": {
       "common.retry": "Wiederholen",
@@ -435,7 +438,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "Indikatorverlauf"
     },
     "el": {
       "common.retry": "Επανάληψη",
@@ -544,7 +548,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "Ιστορικό δείκτη"
     },
     "es": {
       "common.retry": "Reintentar",
@@ -653,7 +658,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "Historial del indicador"
     },
     "fr": {
       "common.retry": "Réessayer",
@@ -762,7 +768,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "Historique de l'indicateur"
     },
     "hu": {
       "common.retry": "Újra",
@@ -871,7 +878,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "Mutató előzményei"
     },
     "id": {
       "common.retry": "Coba lagi",
@@ -980,7 +988,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "Riwayat indikator"
     },
     "it": {
       "common.retry": "Riprova",
@@ -1089,7 +1098,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "Storico indicatore"
     },
     "ja": {
       "common.retry": "再試行",
@@ -1198,7 +1208,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "指標の履歴"
     },
     "ko": {
       "common.retry": "다시 시도",
@@ -1307,7 +1318,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "지표 기록"
     },
     "ms": {
       "common.retry": "Cuba semula",
@@ -1416,7 +1428,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "Sejarah penunjuk"
     },
     "pl": {
       "common.retry": "Ponów",
@@ -1525,7 +1538,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "Historia wskaźnika"
     },
     "pt-BR": {
       "common.retry": "Tentar novamente",
@@ -1634,7 +1648,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "Histórico do indicador"
     },
     "ru": {
       "common.retry": "Повторить",
@@ -1743,7 +1758,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "История показателя"
     },
     "sk": {
       "common.retry": "Skúsiť znova",
@@ -1852,7 +1868,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "História ukazovateľa"
     },
     "sl": {
       "common.retry": "Poskusi znova",
@@ -1961,7 +1978,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "Zgodovina kazalnika"
     },
     "sr": {
       "common.retry": "Покушај поново",
@@ -2070,7 +2088,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "Istorija indikatora"
     },
     "th": {
       "common.retry": "ลองอีกครั้ง",
@@ -2179,7 +2198,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "ประวัติตัวชี้วัด"
     },
     "tr": {
       "common.retry": "Yeniden dene",
@@ -2288,7 +2308,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "Gösterge geçmişi"
     },
     "vi": {
       "common.retry": "Thử lại",
@@ -2397,7 +2418,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "Lịch sử chỉ số"
     },
     "zh-Hans": {
       "common.retry": "重试",
@@ -2506,7 +2528,8 @@
       "whitelabel.cat.email": "Email",
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
-      "whitelabel.cat.propFirm": "Prop firm"
+      "whitelabel.cat.propFirm": "Prop firm",
+      "calendar.series.title": "指标历史"
     }
   }
 }

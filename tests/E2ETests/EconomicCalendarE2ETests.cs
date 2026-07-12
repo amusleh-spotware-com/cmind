@@ -24,6 +24,18 @@ public sealed class EconomicCalendarE2ETests(AppFixture app)
     }
 
     [Fact]
+    public async Task Series_history_page_renders()
+    {
+        var page = await app.NewAuthedMobilePageAsync();
+        await page.GotoAsync("/economic-calendar/series/US.CPI",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+
+        (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
+        (await page.Locator("[data-testid=page-error]").IsVisibleAsync()).Should().BeFalse();
+        (await page.GetByText("US.CPI").First.IsVisibleAsync()).Should().BeTrue();
+    }
+
+    [Fact]
     public async Task Filter_action_opens_a_dialog()
     {
         var page = await app.NewAuthedMobilePageAsync();

@@ -1,28 +1,23 @@
-﻿@page "/economic-calendar"
+﻿@page "/economic-calendar/series/{Code}"
 @using Core.Calendar
 @using Core.Features
 @using Core.Options
 @using Microsoft.Extensions.Options
-@using Web.Components.Dialogs
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject IStringLocalizer<Ui> L
 @inject IEconomicCalendar Calendar
-@inject IDialogService DialogService
 @inject IFeatureGate Gate
 @inject IOptionsMonitor<AppOptions> Options
 @inject TimeProvider Time
 
-<PageTitle>@L["calendar.title"]</PageTitle>
+<PageTitle>@Code</PageTitle>
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
-    <MudText Typo="Typo.h5">@L["calendar.title"]</MudText>
-    <MudSpacer />
-    @if (_enabled)
-    {
-        <MudButton StartIcon="@Icons.Material.Filled.FilterList" Variant="Variant.Outlined"
-                   OnClick="OpenFilterAsync">@L["calendar.filter.title"]</MudButton>
-    }
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-1">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Href="/economic-calendar"
+                   aria-label="@L["common.close"]" />
+    <MudText Typo="Typo.h5">@Code</MudText>
 </MudStack>
+<MudText Typo="Typo.subtitle2" Class="mb-3 mud-text-secondary">@L["calendar.series.title"]</MudText>
 
 @if (!_enabled)
 {
@@ -38,7 +33,6 @@ else if (_events.Count == 0)
 }
 else
 {
-    <MudText Typo="Typo.subtitle2" Class="mb-2 mud-text-secondary">@L["calendar.upcoming"]</MudText>
     <MudStack Spacing="2">
         @foreach (var e in _events)
         {
@@ -46,7 +40,6 @@ else
                 <MudCardContent>
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                         <MudText Typo="Typo.body2">@e.EffectiveAt.ToLocalTime().DateTime.ToString("g")</MudText>
-                        <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@e.Country</MudChip>
                         <MudChip T="string" Size="Size.Small" Color="@ImpactColor(e.Impact)">@ImpactLabel(e.Impact)</MudChip>
                         <MudSpacer />
                         @if (e.Released)
@@ -54,7 +47,6 @@ else
                             <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@L["calendar.released"]</MudChip>
                         }
                     </MudStack>
-                    <MudLink Href="@($"/economic-calendar/series/{e.SeriesCode}")" Typo="Typo.subtitle2" Class="mt-1">@e.SeriesCode</MudLink>
                     <MudStack Row="true" Spacing="4" Class="mt-1">
                         <div>
                             <MudText Typo="Typo.caption" Class="mud-text-secondary">@L["calendar.actual"]</MudText>
@@ -76,14 +68,13 @@ else
 }
 
 @code {
+    [Parameter] public string Code { get; set; } = string.Empty;
+
     private IReadOnlyList<CalendarEventView> _events = [];
-    private ImpactLevel _minImpact = ImpactLevel.Low;
-    private string? _currencies;
-    private DateTime? _fromDate;
     private bool _enabled;
     private bool _loading = true;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         _enabled = CalendarEnablement.IsEnabled(Options.CurrentValue.Branding, Gate);
         if (!_enabled)
@@ -92,47 +83,16 @@ else
             return;
         }
 
-        await LoadAsync();
-    }
-
-    private async Task LoadAsync()
-    {
         _loading = true;
         var now = Time.GetUtcNow();
-        // History browsing: when a start date is picked, jump to that instant across the full history;
-        // otherwise default to the upcoming window. No cap — any past date is reachable.
-        var from = _fromDate is { } date ? new DateTimeOffset(date, TimeSpan.Zero) : now.AddDays(-1);
-        var query = new CalendarQuery
+        _events = await Calendar.GetEventsAsync(new CalendarQuery
         {
-            From = from,
-            To = from.AddDays(30),
-            MinImpact = _minImpact == ImpactLevel.Low ? null : _minImpact,
-            Currencies = string.IsNullOrWhiteSpace(_currencies)
-                ? null
-                : _currencies.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
-            Limit = 100
-        };
-        _events = await Calendar.GetEventsAsync(query, CancellationToken.None);
+            Series = [Code],
+            From = now.AddYears(-10),
+            To = now.AddDays(30),
+            Limit = 200
+        }, CancellationToken.None);
         _loading = false;
-    }
-
-    private async Task OpenFilterAsync()
-    {
-        var parameters = new DialogParameters<CalendarFilterDialog>
-        {
-            { x => x.MinImpact, _minImpact },
-            { x => x.Currencies, _currencies },
-            { x => x.FromDate, _fromDate }
-        };
-        var dialog = await DialogService.ShowAsync<CalendarFilterDialog>(L["calendar.filter.title"], parameters);
-        var result = await dialog.Result;
-        if (result is { Canceled: false, Data: CalendarFilterDialog.CalendarFilter filter })
-        {
-            _minImpact = filter.MinImpact;
-            _currencies = filter.Currencies;
-            _fromDate = filter.FromDate;
-            await LoadAsync();
-        }
     }
 
     private static string Format(decimal? value) => value?.ToString("0.##") ?? "—";

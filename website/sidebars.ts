@@ -31,6 +31,7 @@ const sidebars: SidebarsConfig = {
         },
         'features/ai',
         'features/build-and-backtest',
+        'features/backtest-integrity',
         'features/mcp',
         'features/prop-firm',
         'features/two-factor-auth',

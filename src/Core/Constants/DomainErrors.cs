@@ -72,4 +72,9 @@ public static class DomainErrors
     public const string LegalDocumentAlreadyPublished = "domain.legal.already_published";
     public const string LegalDocumentNotPublished = "domain.legal.not_published";
     public const string ConsentVersionMismatch = "domain.legal.consent_version_mismatch";
+
+    public const string ReturnSeriesTooShort = "domain.quant.return_series_too_short";
+    public const string ReturnSeriesNotFinite = "domain.quant.return_series_not_finite";
+    public const string TrialCountInvalid = "domain.quant.trial_count_invalid";
+    public const string ProbabilityOutOfRange = "domain.quant.probability_out_of_range";
 }

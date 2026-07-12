@@ -1,0 +1,137 @@
+@page "/quant/integrity"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject MudBlazor.ISnackbar Snack
+
+<PageTitle>Quant · Backtest Integrity</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Backtest Integrity Lab</MudText>
+    <HelpTip Text="Is this backtest a real edge or an overfit fluke? We compute the Probabilistic and Deflated Sharpe Ratio (Bailey & López de Prado) and correct for how many configurations you tried, then give a Robust / Fragile / Overfit verdict." />
+</MudStack>
+
+<MudGrid>
+    <MudItem xs="12" md="5">
+        <MudPaper Class="pa-4" Elevation="1">
+            <MudTextField @bind-Value="_series" Label="Returns or equity curve"
+                          Lines="6" Variant="Variant.Outlined"
+                          HelperText="Comma/space/newline separated numbers."
+                          data-testid="integrity-series" />
+            <MudRadioGroup @bind-Value="_mode" Class="mt-2">
+                <MudRadio Value="@("returns")" Color="Color.Primary">Periodic returns (e.g. 0.01 = +1%)</MudRadio>
+                <MudRadio Value="@("equity")" Color="Color.Primary">Equity / balance curve</MudRadio>
+            </MudRadioGroup>
+            <MudNumericField @bind-Value="_trials" Label="Configurations tried (trials)" Min="1"
+                             Variant="Variant.Outlined" Class="mt-2"
+                             HelperText="How many parameter sets you tested to pick this one. More trials → stronger overfitting penalty." />
+            <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.VerifiedUser" OnClick="Analyze"
+                       Disabled="_loading" data-testid="integrity-analyze">
+                Analyze
+            </MudButton>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="7">
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+        }
+        else if (_result is { } r)
+        {
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudAlert Severity="@VerdictSeverity(r.verdict)" Class="mb-3" data-testid="integrity-verdict">
+                    <b>@r.verdict</b>
+                </MudAlert>
+                <MudSimpleTable Dense="true" Hover="true">
+                    <tbody>
+                        <tr><td>Sharpe (per period)</td><td>@r.sharpe.ToString("0.000")</td></tr>
+                        <tr><td>Annualized Sharpe</td><td>@r.annualizedSharpe.ToString("0.00")</td></tr>
+                        <tr><td>Probabilistic Sharpe</td><td>@((r.probabilisticSharpe * 100).ToString("0.0"))%</td></tr>
+                        <tr><td>Deflated Sharpe</td><td>@((r.deflatedSharpe * 100).ToString("0.0"))%</td></tr>
+                        <tr><td>t-statistic</td><td>@r.tStatistic.ToString("0.00")</td></tr>
+                        <tr><td>Skewness</td><td>@r.skewness.ToString("0.00")</td></tr>
+                        <tr><td>Kurtosis</td><td>@r.kurtosis.ToString("0.00")</td></tr>
+                        <tr><td>Observations</td><td>@r.observations</td></tr>
+                        <tr><td>Trials</td><td>@r.trials</td></tr>
+                    </tbody>
+                </MudSimpleTable>
+                <MudText Typo="Typo.body2" Class="mt-3">@r.rationale</MudText>
+            </MudPaper>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                Paste a return series or equity curve and press Analyze.
+            </MudText>
+        }
+    </MudItem>
+</MudGrid>
+
+@code {
+    private string _series = "";
+    private string _mode = "returns";
+    private int _trials = 1;
+    private bool _loading;
+    private IntegrityResult? _result;
+
+    private async Task Analyze()
+    {
+        var numbers = Parse(_series);
+        if (numbers.Length < 2)
+        {
+            Snack.Add("Enter at least two numbers.", Severity.Warning);
+            return;
+        }
+
+        _loading = true;
+        _result = null;
+        try
+        {
+            var body = _mode == "equity"
+                ? (object)new { Equity = numbers, Trials = _trials }
+                : new { Returns = numbers, Trials = _trials };
+            var response = await Http.PostAsJsonAsync("/api/quant/integrity", body);
+            if (response.IsSuccessStatusCode)
+            {
+                _result = await response.Content.ReadFromJsonAsync<IntegrityResult>();
+            }
+            else
+            {
+                Snack.Add("Could not analyze that series.", Severity.Error);
+            }
+        }
+        catch
+        {
+            Snack.Add("Could not analyze that series.", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static double[] Parse(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return [];
+        var tokens = text.Split([',', ' ', '\n', '\r', '\t', ';'], StringSplitOptions.RemoveEmptyEntries);
+        var values = new List<double>(tokens.Length);
+        foreach (var token in tokens)
+            if (double.TryParse(token, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var v))
+                values.Add(v);
+        return values.ToArray();
+    }
+
+    private static Severity VerdictSeverity(string verdict) => verdict switch
+    {
+        "Robust" => Severity.Success,
+        "Overfit" => Severity.Error,
+        _ => Severity.Warning
+    };
+
+    private sealed record IntegrityResult(
+        string verdict, double sharpe, double annualizedSharpe, double probabilisticSharpe,
+        double deflatedSharpe, double tStatistic, double skewness, double kurtosis,
+        int observations, int trials, double? probabilityOfBacktestOverfitting, string rationale);
+}

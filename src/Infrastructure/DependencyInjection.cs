@@ -73,6 +73,7 @@ public static class DependencyInjection
         services.AddSingleton<Core.Domain.IOAuthStateService, Infrastructure.OpenApi.OAuthStateService>();
         services.AddScoped<Core.Domain.ICopyProfileRepository, CopyProfileRepository>();
         services.AddSingleton<Core.Domain.ICopySizingCalculator, Core.Domain.CopySizingCalculator>();
+        services.AddSingleton<Core.Quant.IBacktestIntegrityAnalyzer, Core.Quant.BacktestIntegrityAnalyzer>();
         services.AddHttpClient<CTraderOpenApi.Auth.IOpenApiTokenClient, CTraderOpenApi.Auth.OpenApiTokenClient>(
             (sp, client) =>
             {

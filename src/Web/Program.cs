@@ -162,6 +162,7 @@ app.MapBuilderEndpoints();
 app.MapDashboardEndpoints();
 app.MapFeatureEndpoints();
 app.MapAiEndpoints();
+app.MapQuantEndpoints();
 app.MapAgentEndpoints();
 app.MapAlertEndpoints();
 app.MapPropGuardEndpoints();

@@ -202,6 +202,15 @@ match surrounding code, don't fight the whole codebase.
 - [ ] No hard-coded user-facing text — every string via `@L["key"]`, present in all locales (hardcoded +
       parity gates green); new RTL renders correctly.
 - [ ] Docs updated in the same commit (and every `website/i18n/` locale); EF migration added if schema changed.
+- [ ] **Full coverage, no regression.** New behavior is covered at **all three tiers** — unit **and**
+      integration **and** E2E-with-UI. The target is **100%** line/branch and coverage **never drops**:
+      a change that lowers a project's measured coverage does not merge. Every new Blazor page is in
+      `PageSmokeTests.Routes()` (enforced by `RouteCoverageTests`); every new interactive UI control is
+      driven by an E2E; every new minimal-API route has an integration/E2E test. Failure paths count.
+- [ ] **Runs on Kubernetes.** Any change touching deployment, config surface, a new service/agent, or a
+      new user-facing feature keeps the app green under the in-cluster suite — verified locally on Kind
+      via `scripts/k8s-e2e.sh` and covered by an in-cluster test in `deploy/helm/cmind` `tests-job`.
+      "Works on my machine" is not done; "works on the cluster" is.
 
 ## Non-inferable design decisions
 

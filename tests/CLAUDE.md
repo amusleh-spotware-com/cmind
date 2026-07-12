@@ -42,6 +42,43 @@ path.
 partial close, SL/TP amend, trailing, disconnect/reconnect desync, token swap, rejections). Add a
 behavior → extend the simulator. **Never weaken it or a test to make CI pass** — fix the code.
 
+## Coverage — target 100%, never regress
+
+Coverage is **100% line/branch** across unit + integration + E2E, and it **only ratchets up**. A change
+that drops a project's measured coverage does not merge. Every branch — including the failure branch —
+is exercised. "Hard to test" means the design is wrong: extract the seam, inject the edge
+(`TimeProvider`, `IAiClient`, `FakeTradingSession`), and cover it. Genuinely unreachable defensive code
+is the only exception and must carry an inline justification.
+
+Census gates make omissions fail the build, not depend on a reviewer:
+- **Every Blazor page** is in `PageSmokeTests.Routes()` — `RouteCoverageTests` fails the build on a page
+  with no smoke coverage (add the route, or exclude it with a reason in `RouteCoverageTests`).
+- **Every interactive UI control** (button, dialog, toggle, form) is driven by an E2E that asserts the
+  observable outcome — not just that the page rendered.
+- **Every minimal-API route** has an integration or E2E test hitting it authenticated.
+- **Mandate guards** (`ArchitectureGuardTests`, `NoHardcodedUiTextTests`, `ResourceParityTests`,
+  `WhiteLabelCatalogParityTests`) stay green — they are the machine-enforced CLAUDE.md.
+
+## Kubernetes — the app must work in-cluster
+
+The app is deployed to K8s (`deploy/helm/cmind`); "works locally" is not "works". Every feature is
+proven **in-cluster** by the `tests-job` and verified locally on **Kind** with
+`scripts/k8s-e2e.sh` (kind create → build/load images → `helm install` → run the test Job → assert
+exit 0). Default filter is the deterministic copy suite (no secrets); the live copy suite runs when
+`./secrets` is present (see below). Touch deployment, config surface, a new service/agent, or a
+user-facing feature → run `scripts/k8s-e2e.sh` and keep it green.
+
+## Live copy trading — real broker, every operation
+
+Copy trading moves real money, so it is proven against a **real cTrader Open API** account, not only the
+fake. `tests/E2ETests/CopyLive` reads credentials from `secrets/dev-credentials.local.json` (or the
+legacy split files / env) and **skips cleanly when absent** — never delete or stub the live tier to make
+CI pass. Every trading operation (market/pending/expiry, partial close, SL/TP amend, trailing,
+partial-fill true-up, multi-follower fan-out) **and** its adverse path (reject, socket drop mid-order,
+token invalidation, node death + lease reclaim, desync/resync) has a live scenario asserting the
+invariant: **follower re-converges to broker truth — zero lost intent, zero duplicated side effect.**
+The nightly live-copy Job is required-green before a release tag.
+
 ## Time
 
 Tests **never** read the real clock — hardcode timestamps

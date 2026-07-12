@@ -77,6 +77,6 @@ public sealed partial class RouteCoverageTests
             ?? throw new InvalidOperationException("Could not locate repo root (cmind.slnx) from test output.");
     }
 
-    [GeneratedRegex("""^\s*@page\s+"(?<route>[^"]+)"""")]
+    [GeneratedRegex("^\\s*@page\\s+\"(?<route>[^\"]+)\"")]
     private static partial Regex PageDirective();
 }

@@ -80,6 +80,7 @@ public static class DependencyInjection
         services.AddSingleton<Core.Regimes.IRegimeAnalyzer, Core.Regimes.RegimeAnalyzer>();
         services.AddSingleton<Core.Execution.ITransactionCostAnalyzer, Core.Execution.TransactionCostAnalyzer>();
         services.AddSingleton<Core.Execution.IExecutionScheduler, Core.Execution.AlmgrenChrissScheduler>();
+        services.AddSingleton<Core.Journal.IJournalAnalyzer, Core.Journal.JournalAnalyzer>();
         services.AddHttpClient<CTraderOpenApi.Auth.IOpenApiTokenClient, CTraderOpenApi.Auth.OpenApiTokenClient>(
             (sp, client) =>
             {

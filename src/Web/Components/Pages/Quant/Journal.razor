@@ -1,0 +1,63 @@
+@page "/journal"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@using System.Net.Http.Json
+@inject HttpClient Http
+
+<PageTitle>AI · Trading Journal</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Trading Journal &amp; Coach</MudText>
+    <HelpTip Text="Analyse your own runs and backtests for behavioural leaks — over-concentration, repeated failures, a losing bias — so you can improve the strategy you already have." />
+</MudStack>
+
+@if (_data is null)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (_data.summary.total == 0)
+{
+    <MudText Typo="Typo.body2" Class="mud-text-secondary" data-testid="journal-empty">
+        No runs or backtests yet. Once you have some, this page will coach you on your trading.
+    </MudText>
+}
+else
+{
+    <MudGrid data-testid="journal-summary">
+        <MudItem xs="12" md="5">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudSimpleTable Dense="true">
+                    <tbody>
+                        <tr><td>Total instances</td><td>@_data.summary.total</td></tr>
+                        <tr><td>Winning backtests</td><td>@_data.summary.wins</td></tr>
+                        <tr><td>Losing backtests</td><td>@_data.summary.losses</td></tr>
+                        <tr><td>Failures</td><td>@_data.summary.failures</td></tr>
+                        <tr><td>Win rate</td><td>@((_data.summary.winRate * 100).ToString("0.0"))%</td></tr>
+                    </tbody>
+                </MudSimpleTable>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="7">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.subtitle1" Class="mb-2">Insights</MudText>
+                @foreach (var insight in _data.summary.insights)
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">@insight</MudAlert>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    private JournalData? _data;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _data = await Http.GetFromJsonAsync<JournalData>("/api/journal"); }
+        catch { _data = new JournalData(new JournalSummaryDto(0, 0, 0, 0, 0, []), []); }
+    }
+
+    private sealed record JournalData(JournalSummaryDto summary, List<JournalEntryDto> entries);
+    private sealed record JournalSummaryDto(int total, int wins, int losses, int failures, double winRate, List<string> insights);
+    private sealed record JournalEntryDto(string cbot, string? symbol, string kind, string status);
+}

@@ -164,6 +164,7 @@ app.MapFeatureEndpoints();
 app.MapAiEndpoints();
 app.MapQuantEndpoints();
 app.MapAgentStudioEndpoints();
+app.MapJournalEndpoints();
 app.MapAgentEndpoints();
 app.MapAlertEndpoints();
 app.MapPropGuardEndpoints();

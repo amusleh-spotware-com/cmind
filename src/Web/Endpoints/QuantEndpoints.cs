@@ -67,6 +67,34 @@ public static class QuantEndpoints
             }
         });
 
+        g.MapPost("/tca", (TcaRequest req, Core.Execution.ITransactionCostAnalyzer analyzer) =>
+        {
+            if (req.ArrivalPrice is not { } arrival || req.Fills is not { Length: > 0 })
+                return Results.BadRequest(new { error = Core.Constants.DomainErrors.ExecutionInputInvalid });
+            var side = string.Equals(req.Side, "Sell", StringComparison.OrdinalIgnoreCase)
+                ? Core.Execution.OrderSide.Sell
+                : Core.Execution.OrderSide.Buy;
+            try
+            {
+                var fills = req.Fills.Select(f => new Core.Execution.Fill(f.Price, f.Quantity)).ToList();
+                var r = analyzer.Analyze(arrival, side, fills);
+                return Results.Ok(new
+                {
+                    arrivalPrice = r.ArrivalPrice,
+                    averageFillPrice = r.AverageFillPrice,
+                    filledQuantity = r.FilledQuantity,
+                    side = r.Side.ToString(),
+                    slippageBps = r.SlippageBps,
+                    implementationShortfall = r.ImplementationShortfall,
+                    rationale = r.Rationale
+                });
+            }
+            catch (DomainException ex)
+            {
+                return Results.BadRequest(new { error = ex.Code });
+            }
+        });
+
         g.MapPost("/regimes", (RegimeRequest req, Core.Regimes.IRegimeAnalyzer analyzer) =>
         {
             try
@@ -190,6 +218,9 @@ public sealed record IntegrityBacktestRequest(int? Trials);
 public sealed record PboRequest(double[][]? Trials, int? Slices);
 
 public sealed record RegimeRequest(double[]? Returns, double[]? Equity, int? Window);
+
+public sealed record TcaFill(double Price, double Quantity);
+public sealed record TcaRequest(double? ArrivalPrice, string? Side, TcaFill[]? Fills);
 
 public sealed record SizingRequest(
     double[]? Returns, double[]? Equity, double? TargetVolatility, double? KellyFraction,

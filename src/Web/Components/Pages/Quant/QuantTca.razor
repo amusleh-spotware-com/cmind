@@ -1,0 +1,119 @@
+@page "/quant/tca"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject MudBlazor.ISnackbar Snack
+
+<PageTitle>Quant · Execution Cost (TCA)</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Transaction Cost Analysis</MudText>
+    <HelpTip Text="Execution alpha is small per trade but compounds. TCA measures how far your achieved (VWAP) price drifted from the decision price — slippage in basis points and implementation shortfall — the number banks obsess over." />
+</MudStack>
+
+<MudGrid>
+    <MudItem xs="12" md="5">
+        <MudPaper Class="pa-4" Elevation="1">
+            <MudNumericField @bind-Value="_arrival" Label="Arrival (decision) price" Min="0"
+                             Variant="Variant.Outlined" />
+            <MudSelect @bind-Value="_side" Label="Side" Variant="Variant.Outlined" Class="mt-2">
+                <MudSelectItem Value="@("Buy")">Buy</MudSelectItem>
+                <MudSelectItem Value="@("Sell")">Sell</MudSelectItem>
+            </MudSelect>
+            <MudTextField @bind-Value="_fills" Label="Fills (price, quantity per line)"
+                          Lines="5" Variant="Variant.Outlined" Class="mt-2"
+                          HelperText="One fill per line: price then quantity, e.g. '1.1005, 100'." />
+            <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Receipt" OnClick="Analyze"
+                       Disabled="_loading" data-testid="tca-analyze">
+                Analyze cost
+            </MudButton>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="7">
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+        }
+        else if (_result is { } r)
+        {
+            <MudPaper Class="pa-4" Elevation="1" data-testid="tca-result">
+                <MudText Typo="Typo.h6" Class="mb-2">Slippage: <b>@r.slippageBps.ToString("0.0") bps</b></MudText>
+                <MudSimpleTable Dense="true" Hover="true">
+                    <tbody>
+                        <tr><td>Arrival price</td><td>@r.arrivalPrice.ToString("0.#####")</td></tr>
+                        <tr><td>Average fill (VWAP)</td><td>@r.averageFillPrice.ToString("0.#####")</td></tr>
+                        <tr><td>Filled quantity</td><td>@r.filledQuantity.ToString("0.####")</td></tr>
+                        <tr><td>Implementation shortfall</td><td>@r.implementationShortfall.ToString("0.#####")</td></tr>
+                    </tbody>
+                </MudSimpleTable>
+                <MudText Typo="Typo.body2" Class="mt-3">@r.rationale</MudText>
+            </MudPaper>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                Enter the arrival price and your fills, then press Analyze cost.
+            </MudText>
+        }
+    </MudItem>
+</MudGrid>
+
+@code {
+    private double _arrival = 1.1000;
+    private string _side = "Buy";
+    private string _fills = "";
+    private bool _loading;
+    private TcaResult? _result;
+
+    private async Task Analyze()
+    {
+        var fills = ParseFills(_fills);
+        if (fills.Count == 0)
+        {
+            Snack.Add("Enter at least one fill (price, quantity).", Severity.Warning);
+            return;
+        }
+
+        _loading = true;
+        _result = null;
+        try
+        {
+            var response = await Http.PostAsJsonAsync("/api/quant/tca",
+                new { ArrivalPrice = _arrival, Side = _side, Fills = fills });
+            if (response.IsSuccessStatusCode)
+                _result = await response.Content.ReadFromJsonAsync<TcaResult>();
+            else
+                Snack.Add("Could not analyze those fills.", Severity.Error);
+        }
+        catch
+        {
+            Snack.Add("Could not analyze those fills.", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static List<TcaFill> ParseFills(string text)
+    {
+        var result = new List<TcaFill>();
+        if (string.IsNullOrWhiteSpace(text)) return result;
+        foreach (var line in text.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries))
+        {
+            var parts = line.Split([',', ' ', '\t', ';'], StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2) continue;
+            if (double.TryParse(parts[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var price)
+                && double.TryParse(parts[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var qty))
+                result.Add(new TcaFill(price, qty));
+        }
+        return result;
+    }
+
+    private sealed record TcaFill(double Price, double Quantity);
+    private sealed record TcaResult(
+        double arrivalPrice, double averageFillPrice, double filledQuantity, string side,
+        double slippageBps, double implementationShortfall, string rationale);
+}

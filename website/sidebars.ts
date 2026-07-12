@@ -35,6 +35,7 @@ const sidebars: SidebarsConfig = {
         'features/position-sizing',
         'features/strategy-health',
         'features/regime-lab',
+        'features/execution-tca',
         'features/mcp',
         'features/prop-firm',
         'features/two-factor-auth',

@@ -78,6 +78,7 @@ public static class DependencyInjection
         services.AddSingleton<Core.Portfolio.IPortfolioAllocator, Core.Portfolio.PortfolioAllocator>();
         services.AddSingleton<Core.Health.IStrategyHealthMonitor, Core.Health.StrategyHealthMonitor>();
         services.AddSingleton<Core.Regimes.IRegimeAnalyzer, Core.Regimes.RegimeAnalyzer>();
+        services.AddSingleton<Core.Execution.ITransactionCostAnalyzer, Core.Execution.TransactionCostAnalyzer>();
         services.AddHttpClient<CTraderOpenApi.Auth.IOpenApiTokenClient, CTraderOpenApi.Auth.OpenApiTokenClient>(
             (sp, client) =>
             {

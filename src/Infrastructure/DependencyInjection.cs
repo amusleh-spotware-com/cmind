@@ -81,6 +81,7 @@ public static class DependencyInjection
             });
         services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
         services.AddSingleton<IPasswordHasher, Argon2PasswordHasher>();
+        services.AddSingleton<ITotpAuthenticator, OtpNetTotpAuthenticator>();
         services.AddMemoryCache();
         services.AddScoped<Core.Features.IFeatureGate, Infrastructure.Features.FeatureGate>();
         services.AddHttpClient<IGithubContainerRegistryTagProvider, GithubContainerRegistryTagProvider>();

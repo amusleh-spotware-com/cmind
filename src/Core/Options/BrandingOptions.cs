@@ -31,4 +31,12 @@ public sealed record BrandingOptions
     /// <c>true</c>; a white-label deployment sets it to <c>false</c> to hide the credit entirely.
     /// </summary>
     public bool ShowSiteLink { get; init; } = BrandingDefaults.ShowSiteLink;
+
+    /// <summary>
+    /// When <c>true</c>, every user must set up two-factor authentication before they can use the app:
+    /// after the password step a user without MFA is forced through enrollment on first login. Defaults to
+    /// <c>false</c> — 2FA stays opt-in from the profile page. A regulated white-label deployment sets it to
+    /// <c>true</c> to make an authenticator app mandatory for all accounts.
+    /// </summary>
+    public bool RequireMfa { get; init; }
 }

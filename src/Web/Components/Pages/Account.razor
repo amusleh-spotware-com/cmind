@@ -1,8 +1,11 @@
 @page "/account"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using System.Net.Http.Json
+@using Web.Components.Dialogs
 @inject HttpClient Http
 @inject ISnackbar Snack
 @inject NavigationManager Nav
+@inject IDialogService Dialogs
 
 <PageTitle>Account</PageTitle>
 <MudText Typo="Typo.h5" Class="mb-3">Change Password</MudText>
@@ -14,6 +17,32 @@
 
 <MudDivider Class="my-6" />
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+    <MudText Typo="Typo.subtitle1">Two-factor authentication</MudText>
+    <HelpTip Text="Protect your account with a time-based code from an authenticator app in addition to your password." />
+</MudStack>
+<div data-testid="mfa-section">
+    @if (_mfaEnabled)
+    {
+        <MudAlert Severity="Severity.Success" Dense="true" Class="mb-2" data-testid="mfa-status-on">
+            Two-factor authentication is <b>on</b>. @_backupCodesLeft backup code(s) remaining.
+        </MudAlert>
+        <MudButton OnClick="RegenerateBackupCodes" Variant="Variant.Outlined" Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.Restore" data-testid="mfa-regen-open">Regenerate backup codes</MudButton>
+        <MudButton OnClick="DisableMfa" Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                   Class="ml-2" StartIcon="@Icons.Material.Filled.LockOpen" data-testid="mfa-disable-open">Turn off</MudButton>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-2" data-testid="mfa-status-off">
+            Two-factor authentication is <b>off</b>. Add an authenticator app for stronger account security.
+        </MudAlert>
+        <MudButton OnClick="EnableMfa" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.Security" data-testid="mfa-enable-open">Enable two-factor</MudButton>
+    }
+</div>
+
+<MudDivider Class="my-6" />
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
     <MudText Typo="Typo.subtitle1">Install app</MudText>
     <HelpTip Text="Install this app on your device for a full-screen, home-screen experience. On iPhone/iPad use Safari's Share → Add to Home Screen." />
 </MudStack>
@@ -21,14 +50,52 @@
 
 @code {
     private string _cur = "", _new = "";
+    private bool _mfaEnabled;
+    private int _backupCodesLeft;
+
+    protected override Task OnInitializedAsync() => LoadMfaStatus();
+
+    private async Task LoadMfaStatus()
+    {
+        var status = await Http.GetFromJsonAsync<MfaStatus>("/api/auth/mfa/status");
+        _mfaEnabled = status?.MfaEnabled ?? false;
+        _backupCodesLeft = status?.UnusedBackupCodeCount ?? 0;
+    }
+
     private async Task Submit()
     {
         var r = await Http.PostAsJsonAsync("/api/auth/change-password", new { CurrentPassword = _cur, NewPassword = _new });
         Snack.Add(r.IsSuccessStatusCode ? "Updated" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
     }
+
+    private async Task EnableMfa()
+    {
+        var result = await Dialogs.ShowAsync<EnableTwoFactorDialog>("Enable two-factor authentication");
+        if (!(await result.Result)!.Canceled)
+        {
+            await LoadMfaStatus();
+            // A mandatory-enrollment redirect loop clears once MFA is on; land the user back on the app.
+            Nav.NavigateTo(Nav.Uri, forceLoad: true);
+        }
+    }
+
+    private async Task DisableMfa()
+    {
+        var result = await Dialogs.ShowAsync<DisableTwoFactorDialog>("Turn off two-factor authentication");
+        if (!(await result.Result)!.Canceled) await LoadMfaStatus();
+    }
+
+    private async Task RegenerateBackupCodes()
+    {
+        var result = await Dialogs.ShowAsync<RegenerateBackupCodesDialog>("Regenerate backup codes");
+        if (!(await result.Result)!.Canceled) await LoadMfaStatus();
+    }
+
     private async Task Logout()
     {
         await Http.PostAsync("/api/auth/logout", null);
         Nav.NavigateTo("/login", true);
     }
+
+    private sealed record MfaStatus(bool MfaEnabled, bool MfaEnrollmentPending, int UnusedBackupCodeCount);
 }

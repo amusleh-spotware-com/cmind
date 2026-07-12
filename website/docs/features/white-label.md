@@ -55,6 +55,7 @@ Environment-variable form: `App__Branding__ProductName=AcmeFX`, `App__Branding__
 | `SuccessColor` / `ErrorColor` / `WarningColor` / `InfoColor` | status colours | stock |
 | `CustomCss` | injected `<style>` in `<head>` (deployment-trusted) | *(empty)* |
 | `ShowSiteLink` | show the "Powered by cMind" credit link on the dashboard | `true` |
+| `RequireMfa` | require every user to set up two-factor authentication before using the app | `false` |
 
 Assets referenced by `LogoUrl`/`FaviconUrl` served from Web app `wwwroot` (e.g. mount `wwwroot/branding/` folder) or any absolute URL.
 

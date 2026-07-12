@@ -144,6 +144,7 @@ app.UseAntiforgery();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<Web.Security.MfaEnforcementMiddleware>();
 
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();

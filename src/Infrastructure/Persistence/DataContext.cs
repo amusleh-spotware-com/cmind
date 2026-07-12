@@ -103,6 +103,15 @@ public class DataContext : DbContext, IDataProtectionKeyContext
                 .HasValue<AdminUser>("Admin")
                 .HasValue<RegularUser>("User")
                 .HasValue<ViewerUser>("Viewer");
+            e.HasMany(x => x.BackupCodes).WithOne().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AppUser>().Navigation(x => x.BackupCodes)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        modelBuilder.Entity<MfaBackupCode>(e =>
+        {
+            e.HasIndex(x => new { x.UserId, x.CodeHash });
         });
 
         modelBuilder.Entity<CTraderIdAccount>(e =>

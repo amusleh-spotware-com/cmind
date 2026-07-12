@@ -14,6 +14,24 @@ public interface IPasswordHasher
     bool Verify(string password, string hash);
 }
 
+/// <summary>
+/// RFC 6238 time-based one-time password (TOTP) authenticator: generates enrollment secrets, builds the
+/// <c>otpauth://</c> provisioning URI scanned by an authenticator app, and verifies a submitted code against
+/// a secret at a given instant (with a small clock-skew window). Implemented in Infrastructure; the domain
+/// stays free of the crypto/library dependency.
+/// </summary>
+public interface ITotpAuthenticator
+{
+    /// <summary>Generates a fresh cryptographically-random Base32 secret for a new enrollment.</summary>
+    string GenerateSecret();
+
+    /// <summary>Builds the <c>otpauth://totp/...</c> provisioning URI encoded into the enrollment QR code.</summary>
+    string BuildOtpAuthUri(string issuer, string accountName, string secret);
+
+    /// <summary>Verifies a user-entered code against the Base32 secret at <paramref name="now"/>.</summary>
+    bool VerifyCode(string secret, string code, DateTimeOffset now);
+}
+
 public interface INodeScheduler
 {
     Task<Node?> PickNodeAsync(string kind, CancellationToken ct);

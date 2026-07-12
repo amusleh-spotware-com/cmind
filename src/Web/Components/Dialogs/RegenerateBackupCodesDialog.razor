@@ -1,0 +1,91 @@
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject ISnackbar Snack
+@inject IJSRuntime JS
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center" style="width:100%;">
+            <MudIcon Icon="@Icons.Material.Filled.Restore" Class="mr-2" />
+            <MudText Typo="Typo.h6">Regenerate backup codes</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div data-testid="mfa-regen-dialog" style="max-width:380px;">
+            @if (_codes.Length == 0)
+            {
+                <MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
+                    This invalidates your existing backup codes and issues a fresh set. Confirm your password.
+                </MudText>
+                <MudTextField @bind-Value="_password" Label="Password" InputType="InputType.Password"
+                              Variant="Variant.Outlined" Margin="Margin.Dense" data-testid="mfa-regen-password"
+                              Immediate="true" />
+                @if (!string.IsNullOrEmpty(_error))
+                {
+                    <MudText Color="Color.Error" Typo="Typo.caption">@_error</MudText>
+                }
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Class="mb-2">Your new codes — each works once:</MudText>
+                <div class="mud-paper mud-elevation-0 pa-3 mb-3" style="border:1px solid var(--mud-palette-lines-default);border-radius:8px;font-family:monospace;"
+                     data-testid="mfa-regen-codes">
+                    @foreach (var c in _codes)
+                    {
+                        <div>@c</div>
+                    }
+                </div>
+                <MudButton StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="Copy"
+                           Variant="Variant.Text" Size="Size.Small">Copy codes</MudButton>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        @if (_codes.Length == 0)
+        {
+            <MudButton OnClick="@(() => Dialog.Cancel())">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit"
+                       Disabled="_busy || string.IsNullOrWhiteSpace(_password)" data-testid="mfa-regen-submit">
+                Regenerate
+            </MudButton>
+        }
+        else
+        {
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(() => Dialog.Close(DialogResult.Ok(true)))">
+                Done
+            </MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    private string _password = "";
+    private string _error = "";
+    private bool _busy;
+    private string[] _codes = [];
+
+    private async Task Submit()
+    {
+        _error = "";
+        _busy = true;
+        var resp = await Http.PostAsJsonAsync("/api/auth/mfa/backup-codes/regenerate", new { Password = _password });
+        _busy = false;
+        if (!resp.IsSuccessStatusCode)
+        {
+            _error = "Incorrect password.";
+            return;
+        }
+        var body = await resp.Content.ReadFromJsonAsync<RegenResponse>();
+        _codes = body?.BackupCodes ?? [];
+    }
+
+    private async Task Copy()
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", string.Join('\n', _codes));
+        Snack.Add("Copied to clipboard", Severity.Success);
+    }
+
+    private sealed record RegenResponse(string[] BackupCodes);
+}

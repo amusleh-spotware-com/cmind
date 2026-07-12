@@ -1,0 +1,56 @@
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject ISnackbar Snack
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center" style="width:100%;">
+            <MudIcon Icon="@Icons.Material.Filled.LockOpen" Class="mr-2" Color="Color.Warning" />
+            <MudText Typo="Typo.h6">Turn off two-factor authentication</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div data-testid="mfa-disable-dialog" style="max-width:380px;">
+            <MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
+                This removes your authenticator and invalidates all backup codes. Confirm your password to continue.
+            </MudText>
+            <MudTextField @bind-Value="_password" Label="Password" InputType="InputType.Password"
+                          Variant="Variant.Outlined" Margin="Margin.Dense" data-testid="mfa-disable-password"
+                          Immediate="true" />
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <MudText Color="Color.Error" Typo="Typo.caption" data-testid="mfa-disable-error">@_error</MudText>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => Dialog.Cancel())">Cancel</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Submit"
+                   Disabled="_busy || string.IsNullOrWhiteSpace(_password)" data-testid="mfa-disable-submit">
+            Turn off
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    private string _password = "";
+    private string _error = "";
+    private bool _busy;
+
+    private async Task Submit()
+    {
+        _error = "";
+        _busy = true;
+        var resp = await Http.PostAsJsonAsync("/api/auth/mfa/disable", new { Password = _password });
+        _busy = false;
+        if (!resp.IsSuccessStatusCode)
+        {
+            _error = "Incorrect password.";
+            return;
+        }
+        Snack.Add("Two-factor authentication turned off", Severity.Success);
+        Dialog.Close(DialogResult.Ok(true));
+    }
+}

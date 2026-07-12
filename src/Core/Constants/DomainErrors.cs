@@ -51,6 +51,12 @@ public static class DomainErrors
 
     public const string BrandingColorInvalid = "domain.branding.color_invalid";
 
+    public const string MfaSecretRequired = "domain.mfa.secret_required";
+    public const string MfaEnrollmentNotPending = "domain.mfa.enrollment_not_pending";
+    public const string MfaAlreadyEnabled = "domain.mfa.already_enabled";
+    public const string MfaNotEnabled = "domain.mfa.not_enabled";
+    public const string MfaBackupCodesRequired = "domain.mfa.backup_codes_required";
+
     public const string PropFirmMoneyNegative = "domain.propfirm.money_negative";
     public const string PropFirmPercentOutOfRange = "domain.propfirm.percent_out_of_range";
     public const string PropFirmTradingDaysOutOfRange = "domain.propfirm.trading_days_out_of_range";

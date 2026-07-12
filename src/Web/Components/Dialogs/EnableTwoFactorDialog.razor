@@ -1,0 +1,143 @@
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject ISnackbar Snack
+@inject IJSRuntime JS
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center" style="width:100%;">
+            <MudIcon Icon="@Icons.Material.Filled.Security" Class="mr-2" />
+            <MudText Typo="Typo.h6">Set up two-factor authentication</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div data-testid="mfa-enable-dialog" style="max-width:420px;">
+            @if (_loading)
+            {
+                <div class="d-flex justify-center my-6"><MudProgressCircular Indeterminate="true" /></div>
+            }
+            else if (_step == Step.Scan)
+            {
+                <MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
+                    Scan this QR code with an authenticator app (Google Authenticator, Microsoft Authenticator,
+                    Authy…), then enter the 6-digit code it shows.
+                </MudText>
+                <div class="d-flex justify-center mb-3" style="background:#fff;padding:12px;border-radius:8px;"
+                     data-testid="mfa-qr">
+                    @((MarkupString)_qrSvg)
+                </div>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Can't scan? Enter this key manually:</MudText>
+                <MudTextField Value="_secret" ReadOnly="true" Variant="Variant.Outlined" Margin="Margin.Dense"
+                              Class="mb-3" T="string" data-testid="mfa-secret" Adornment="Adornment.End"
+                              AdornmentIcon="@Icons.Material.Filled.ContentCopy" OnAdornmentClick="CopySecret" />
+                <MudTextField @bind-Value="_code" Label="6-digit code" Variant="Variant.Outlined"
+                              Margin="Margin.Dense" MaxLength="8" data-testid="mfa-confirm-code"
+                              Immediate="true" OnKeyUp="OnCodeKeyUp" />
+                @if (!string.IsNullOrEmpty(_error))
+                {
+                    <MudText Color="Color.Error" Typo="Typo.caption" data-testid="mfa-confirm-error">@_error</MudText>
+                }
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Success" Class="mb-3" Dense="true" data-testid="mfa-enabled-alert">
+                    Two-factor authentication is on.
+                </MudAlert>
+                <MudText Typo="Typo.body2" Class="mb-2">
+                    Save these backup codes somewhere safe. Each one works <b>once</b> if you lose your device.
+                </MudText>
+                <div class="mud-paper mud-elevation-0 pa-3 mb-3" style="border:1px solid var(--mud-palette-lines-default);border-radius:8px;font-family:monospace;"
+                     data-testid="mfa-backup-codes">
+                    @foreach (var c in _backupCodes)
+                    {
+                        <div>@c</div>
+                    }
+                </div>
+                <MudButton StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyBackupCodes"
+                           Variant="Variant.Text" Size="Size.Small">Copy codes</MudButton>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        @if (_step == Step.Scan)
+        {
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Confirm"
+                       Disabled="_loading || string.IsNullOrWhiteSpace(_code)" data-testid="mfa-confirm-submit">
+                Verify &amp; enable
+            </MudButton>
+        }
+        else
+        {
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Done" data-testid="mfa-done">
+                Done
+            </MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    private enum Step { Scan, BackupCodes }
+
+    private Step _step = Step.Scan;
+    private bool _loading = true;
+    private string _secret = "";
+    private string _qrSvg = "";
+    private string _code = "";
+    private string _error = "";
+    private string[] _backupCodes = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resp = await Http.PostAsync("/api/auth/mfa/setup", null);
+        if (!resp.IsSuccessStatusCode)
+        {
+            Snack.Add("Could not start 2FA setup.", Severity.Error);
+            Dialog.Cancel();
+            return;
+        }
+        var body = await resp.Content.ReadFromJsonAsync<SetupResponse>();
+        _secret = body?.Secret ?? "";
+        _qrSvg = body?.QrSvg ?? "";
+        _loading = false;
+    }
+
+    private async Task OnCodeKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(_code)) await Confirm();
+    }
+
+    private async Task Confirm()
+    {
+        _error = "";
+        _loading = true;
+        var resp = await Http.PostAsJsonAsync("/api/auth/mfa/confirm", new { Code = _code });
+        _loading = false;
+        if (!resp.IsSuccessStatusCode)
+        {
+            _error = "That code didn't match. Check your app's clock and try again.";
+            return;
+        }
+        var body = await resp.Content.ReadFromJsonAsync<ConfirmResponse>();
+        _backupCodes = body?.BackupCodes ?? [];
+        _step = Step.BackupCodes;
+    }
+
+    private async Task CopySecret() => await CopyAsync(_secret);
+
+    private async Task CopyBackupCodes() => await CopyAsync(string.Join('\n', _backupCodes));
+
+    private async Task CopyAsync(string text)
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        Snack.Add("Copied to clipboard", Severity.Success);
+    }
+
+    private void Cancel() => Dialog.Cancel();
+    private void Done() => Dialog.Close(DialogResult.Ok(true));
+
+    private sealed record SetupResponse(string Secret, string OtpAuthUri, string QrSvg);
+    private sealed record ConfirmResponse(string[] BackupCodes);
+}

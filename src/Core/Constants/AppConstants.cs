@@ -72,6 +72,33 @@ public static class EncryptionPurposes
     public const string OpenApiRefreshToken = "openapi.refresh_token";
     public const string OpenApiOAuthState = "openapi.oauth_state";
     public const string AiApiKey = "ai.api_key";
+    public const string MfaSecret = "mfa.secret";
+    public const string MfaPendingCookie = "mfa.pending_cookie";
+}
+
+public static class MfaConstants
+{
+    // RFC 6238 authenticator defaults (Google/Microsoft/Authy compatible): 6 digits, 30s step, SHA1.
+    public const int Digits = 6;
+    public const int PeriodSeconds = 30;
+    // Accepted drift on verification: +/- this many 30s windows to tolerate clock skew.
+    public const int VerificationWindowSteps = 1;
+    public const int SecretSizeBytes = 20;
+
+    // Single-use recovery codes issued at enrollment.
+    public const int BackupCodeCount = 10;
+    // Characters per code (Crockford-ish base32, unambiguous). Shown grouped as XXXXX-XXXXX.
+    public const int BackupCodeLength = 10;
+
+    // Name of the short-lived cookie holding the half-authenticated state between the password step
+    // and the TOTP challenge. Never an auth cookie; deleted the moment the challenge succeeds/fails.
+    public const string PendingCookieName = "app_mfa_pending";
+    public const int PendingChallengeLifetimeMinutes = 5;
+
+    // Claim stamped on a fully-authenticated principal that still owes mandatory enrollment
+    // (white-label App:Branding:RequireMfa). The enforcement guard redirects until MFA is enabled.
+    public const string SetupRequiredClaimType = "app:mfa_setup_required";
+    public const string SetupRequiredClaimValue = "true";
 }
 
 public static class NodeAgentAuth

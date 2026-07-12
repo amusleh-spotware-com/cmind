@@ -34,6 +34,8 @@ public abstract class AuditedEntity<TId> : ISoftDeletable, IHasDomainEvents, IAg
 
 public abstract class AppUser : AuditedEntity<UserId>
 {
+    private readonly List<MfaBackupCode> _backupCodes = [];
+
     [MaxLength(256)] public string Email { get; internal set; } = default!;
     [MaxLength(256)] public string NormalizedEmail { get; internal set; } = default!;
     [MaxLength(512)] public string PasswordHash { get; private set; } = default!;
@@ -42,9 +44,14 @@ public abstract class AppUser : AuditedEntity<UserId>
     public bool IsLockedOut { get; private set; }
     public int AccessFailedCount { get; private set; }
     public DateTimeOffset? LockoutEnd { get; private set; }
-    [MaxLength(64)] public string? MfaSecret { get; private set; }
+    public byte[]? EncryptedMfaSecret { get; private set; }
     public bool MfaEnabled { get; private set; }
     public byte[] SecurityStamp { get; private set; } = default!;
+    public IReadOnlyList<MfaBackupCode> BackupCodes => _backupCodes;
+
+    // A secret is stored but not yet confirmed by a first valid code — enrollment is mid-flight.
+    public bool MfaEnrollmentPending => EncryptedMfaSecret is not null && !MfaEnabled;
+    public int UnusedBackupCodeCount => _backupCodes.Count(c => c.UsedAt is null);
 
     public abstract string RoleName { get; }
     public abstract int RoleRank { get; }
@@ -101,16 +108,58 @@ public abstract class AppUser : AuditedEntity<UserId>
         LockoutEnd = null;
     }
 
-    public void EnableMfa(string secret)
+    // Step 1 of enrollment: stash the (already-encrypted) authenticator secret without turning MFA on.
+    // The secret only becomes active once a first valid code confirms the user scanned it correctly.
+    public void BeginMfaEnrollment(byte[] encryptedSecret)
     {
-        MfaSecret = DomainGuard.AgainstNullOrWhiteSpace(secret, DomainErrors.NameRequired);
+        if (encryptedSecret is null || encryptedSecret.Length == 0)
+            throw new DomainException(DomainErrors.MfaSecretRequired);
+        if (MfaEnabled) throw new DomainException(DomainErrors.MfaAlreadyEnabled);
+        EncryptedMfaSecret = encryptedSecret;
+        _backupCodes.Clear();
+    }
+
+    // Step 2: the caller has verified a live code against the pending secret; activate MFA and issue
+    // the single-use recovery codes (stored hashed).
+    public void ConfirmMfaEnrollment(IReadOnlyCollection<string> backupCodeHashes)
+    {
+        if (!MfaEnrollmentPending) throw new DomainException(DomainErrors.MfaEnrollmentNotPending);
+        if (backupCodeHashes is null || backupCodeHashes.Count == 0)
+            throw new DomainException(DomainErrors.MfaBackupCodesRequired);
         MfaEnabled = true;
+        ReplaceBackupCodes(backupCodeHashes);
+    }
+
+    public void RegenerateBackupCodes(IReadOnlyCollection<string> backupCodeHashes)
+    {
+        if (!MfaEnabled) throw new DomainException(DomainErrors.MfaNotEnabled);
+        if (backupCodeHashes is null || backupCodeHashes.Count == 0)
+            throw new DomainException(DomainErrors.MfaBackupCodesRequired);
+        ReplaceBackupCodes(backupCodeHashes);
+    }
+
+    // Redeems a recovery code at the 2FA challenge. Single-use: a matching unused code is burned and
+    // never accepted again. Returns false when no unused code matches.
+    public bool ConsumeBackupCode(string codeHash, DateTimeOffset now)
+    {
+        if (!MfaEnabled) throw new DomainException(DomainErrors.MfaNotEnabled);
+        var match = _backupCodes.FirstOrDefault(c => c.UsedAt is null && c.CodeHash == codeHash);
+        if (match is null) return false;
+        match.MarkUsed(now);
+        return true;
     }
 
     public void DisableMfa()
     {
-        MfaSecret = null;
+        EncryptedMfaSecret = null;
         MfaEnabled = false;
+        _backupCodes.Clear();
+    }
+
+    private void ReplaceBackupCodes(IReadOnlyCollection<string> hashes)
+    {
+        _backupCodes.Clear();
+        foreach (var hash in hashes) _backupCodes.Add(MfaBackupCode.Create(Id, hash));
     }
 
     // GDPR erasure: scrub personally identifying data while keeping the (soft-deleted) row so that
@@ -119,9 +168,31 @@ public abstract class AppUser : AuditedEntity<UserId>
     {
         Email = $"erased-{Id.Value:N}@erased.invalid";
         NormalizedEmail = Email.ToUpperInvariant();
-        MfaSecret = null;
+        EncryptedMfaSecret = null;
         MfaEnabled = false;
+        _backupCodes.Clear();
     }
+}
+
+// Single-use two-factor recovery code, owned by the AppUser aggregate. Stored as a hash only; the
+// plaintext is shown to the user exactly once at enrollment.
+public sealed class MfaBackupCode
+{
+    public long Id { get; private set; }
+    public UserId UserId { get; private set; }
+    [MaxLength(128)] public string CodeHash { get; private set; } = default!;
+    public DateTimeOffset? UsedAt { get; private set; }
+
+    private MfaBackupCode() { }
+
+    public static MfaBackupCode Create(UserId userId, string codeHash)
+        => new()
+        {
+            UserId = userId,
+            CodeHash = DomainGuard.AgainstNullOrWhiteSpace(codeHash, DomainErrors.MfaBackupCodesRequired)
+        };
+
+    public void MarkUsed(DateTimeOffset now) => UsedAt = now;
 }
 
 public sealed class OwnerUser : AppUser

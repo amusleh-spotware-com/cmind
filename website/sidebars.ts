@@ -33,6 +33,7 @@ const sidebars: SidebarsConfig = {
         'features/build-and-backtest',
         'features/mcp',
         'features/prop-firm',
+        'features/two-factor-auth',
         'features/white-label',
         'features/feature-toggles',
         'features/compliance',

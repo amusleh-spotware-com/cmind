@@ -29,6 +29,7 @@ public class TenantIsolationTests(PostgresFixture fixture) : IClassFixture<Postg
             b.UseSetting("App:OwnerEmail", Owner);
             b.UseSetting("App:OwnerPassword", OwnerPassword);
             b.UseSetting("App:Features:Ai", "true");
+            b.UseSetting("App:Features:Alerts", "true");
             b.UseSetting("App:Features:Registration", "true");
             b.UseSetting("App:Registration:Enabled", "true");
             b.UseSetting("App:Registration:Api:Enabled", "true");
@@ -87,5 +88,32 @@ public class TenantIsolationTests(PostgresFixture fixture) : IClassFixture<Postg
         // Alice's credential survives Bob's attempt.
         var aliceList = await (await alice.GetAsync("/api/ai/my-providers")).Content.ReadFromJsonAsync<JsonElement>();
         Ids(aliceList).Should().Contain(aliceId, "a user's own credential must not be deletable by another user");
+    }
+
+    [Fact]
+    public async Task A_users_alert_rule_cannot_be_read_edited_or_deleted_by_another_user()
+    {
+        await using var app = CreateApp();
+        var alice = await ProvisionAndLoginAsync(app, $"alice-{Guid.NewGuid():N}@tenant.local");
+        var bob = await ProvisionAndLoginAsync(app, $"bob-{Guid.NewGuid():N}@tenant.local");
+
+        var created = await alice.PostAsJsonAsync("/api/alerts/rules",
+            new { Name = $"Alice-{Guid.NewGuid():N}", Symbol = "EURUSD", IntervalMinutes = 15, Enabled = true });
+        created.StatusCode.Should().Be(HttpStatusCode.OK);
+        var aliceRuleId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+
+        // Bob cannot see Alice's rule.
+        var bobRules = await (await bob.GetAsync("/api/alerts/rules")).Content.ReadFromJsonAsync<JsonElement>();
+        Ids(bobRules).Should().NotContain(aliceRuleId, "another user's alert rule must not be listed");
+
+        // Bob cannot edit or delete it — the owner filter makes it a 404, not a cross-tenant mutation.
+        (await bob.PutAsJsonAsync($"/api/alerts/rules/{aliceRuleId}", new { Name = "hijacked" }))
+            .StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await bob.DeleteAsync($"/api/alerts/rules/{aliceRuleId}"))
+            .StatusCode.Should().Be(HttpStatusCode.NotFound);
+
+        // Alice's rule is untouched.
+        var aliceRules = await (await alice.GetAsync("/api/alerts/rules")).Content.ReadFromJsonAsync<JsonElement>();
+        Ids(aliceRules).Should().Contain(aliceRuleId, "a user's own alert rule survives another user's attempts");
     }
 }

@@ -35,3 +35,26 @@ jobs:
         with:
           name: test-results-stress
           path: TestResults
+
+  k8s-e2e:
+    name: In-cluster E2E (Kind)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Install kind
+        run: |
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.25.0/kind-linux-amd64
+          chmod +x ./kind && sudo mv ./kind /usr/local/bin/kind
+      - uses: azure/setup-helm@v4
+      - name: Verify whole app in-cluster (deterministic copy suite; no secrets)
+        run: bash scripts/k8s-e2e.sh
+        env:
+          TEST_FILTER: FullyQualifiedName~CopyTrading
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: k8s-e2e-log
+          path: /tmp/cmind-tests.log

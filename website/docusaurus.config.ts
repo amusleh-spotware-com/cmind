@@ -25,14 +25,16 @@ const config: Config = {
   projectName,
   trailingSlash: false,
 
-  onBrokenLinks: 'warn',
-  onBrokenMarkdownLinks: 'warn',
+  onBrokenLinks: 'throw',
 
   markdown: {
     mermaid: true,
     // Migrated .md docs contain C# generics like IOptionsMonitor<AppOptions> in prose;
     // 'detect' parses .md as CommonMark (not MDX) so angle brackets never break the build.
     format: 'detect',
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
   },
   themes: ['@docusaurus/theme-mermaid'],
 

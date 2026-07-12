@@ -1,6 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <UserSecretsId>app-web-7d23f00b</UserSecretsId>
+    <!-- Localization needs ICU: the app renders in 23 cultures (see Core.Constants.SupportedCultures),
+         so the Web host opts out of the repo-wide InvariantGlobalization. Wire/parse code stays on
+         CultureInfo.InvariantCulture regardless, so this only enables per-culture UI formatting. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="IntegrationTests" />

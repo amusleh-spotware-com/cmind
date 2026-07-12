@@ -24,6 +24,24 @@ here. Full UI contract: [website/docs/ui-guidelines.md](website/docs/ui-guidelin
 - **Guard the load / recover the boundary:** a gated API returns 404; guard page loads and reset the
   `ErrorBoundary` on nav or a sticky error crashes the page (see feature-gate/ErrorBoundary gotcha).
 
+## Localization — MANDATORY (blocking, build-enforced)
+
+- **No literal user-facing text.** Inject `@inject IStringLocalizer<Ui> L` and write `@L["key"]` for
+  every visible string — element text, `Label`/`Text`/`Title`/`Placeholder`/`HelperText`/`aria-label`/
+  `alt`, snackbar messages, page titles. A hard-coded string fails the build (`NoHardcodedUiTextTests`).
+- **Add the key everywhere at once.** New/changed key → edit `tools/i18n/ui-translations.json` for
+  **all** languages in `Core.Constants.SupportedCultures`, then `pwsh tools/i18n/gen-resx.ps1`.
+  `ResourceParityTests` fails on a missing or blank translation.
+- **Formatting:** UI display uses `CurrentCulture`; wire/parse/CSV/cbotset stays `CultureInfo.InvariantCulture`.
+- **RTL:** never assume LTR — the shell already flips via `<html dir>` + `MudRTLProvider`; use logical CSS
+  (`margin-inline-start`, not `margin-left`) for anything direction-sensitive.
+- **Culture switch** goes through the `GET /set-culture` endpoint (full reload); a Blazor circuit can't
+  change culture live. Signed-in choice persists to `UserProfile.Locale` and rides the login cookie.
+- **Careful: MudBlazor param typos don't fail `get_file_problems`** (unknown component parameters throw
+  only at render). Verify a new Mud parameter exists (e.g. RTL is `MudRTLProvider.RightToLeft`, **not**
+  `MudThemeProvider`), and cover the page with an E2E render test.
+- Full guide: `website/docs/features/localization.md`.
+
 ## `.razor` correctness
 
 - Fix **every** Rider `get_file_problems` finding in `.razor` too, not just `.cs` — nullable derefs in

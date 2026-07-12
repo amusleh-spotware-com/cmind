@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="common.retry" xml:space="preserve"><value>إعادة المحاولة</value></data>
+  <data name="common.close" xml:space="preserve"><value>إغلاق</value></data>
+  <data name="common.cancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="common.save" xml:space="preserve"><value>حفظ</value></data>
+  <data name="app.reconnect.reconnecting" xml:space="preserve"><value>جارٍ إعادة الاتصال…</value></data>
+  <data name="app.reconnect.connectionLost" xml:space="preserve"><value>انقطع الاتصال</value></data>
+  <data name="app.reconnect.sessionExpired" xml:space="preserve"><value>انتهت الجلسة</value></data>
+  <data name="app.reconnect.restoring" xml:space="preserve"><value>جارٍ استعادة اتصالك المباشر بالخادم.</value></data>
+  <data name="app.reconnect.retrying" xml:space="preserve"><value>تعذّر الوصول إلى الخادم. تُعاد المحاولة…</value></data>
+  <data name="app.reconnect.resume" xml:space="preserve"><value>تعذّر استئناف جلستك. يرجى إعادة تحميل الصفحة.</value></data>
+  <data name="app.reconnect.retryNow" xml:space="preserve"><value>إعادة المحاولة الآن</value></data>
+  <data name="app.reconnect.reload" xml:space="preserve"><value>إعادة التحميل</value></data>
+  <data name="layout.toggleNav" xml:space="preserve"><value>تبديل قائمة التنقّل</value></data>
+  <data name="layout.account" xml:space="preserve"><value>الحساب</value></data>
+  <data name="layout.pageError" xml:space="preserve"><value>حدث خطأ في هذه الصفحة.</value></data>
+  <data name="nav.dashboard" xml:space="preserve"><value>لوحة التحكم</value></data>
+  <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.run" xml:space="preserve"><value>تشغيل</value></data>
+  <data name="nav.backtest" xml:space="preserve"><value>اختبار رجعي</value></data>
+  <data name="nav.optimize" xml:space="preserve"><value>تحسين</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>السلامة</value></data>
+  <data name="nav.positionSizing" xml:space="preserve"><value>تحديد حجم المركز</value></data>
+  <data name="nav.strategyHealth" xml:space="preserve"><value>صحة الاستراتيجية</value></data>
+  <data name="nav.regimeLab" xml:space="preserve"><value>مختبر الأنظمة</value></data>
+  <data name="nav.executionCost" xml:space="preserve"><value>تكلفة التنفيذ</value></data>
+  <data name="nav.contrarianPositioning" xml:space="preserve"><value>التموضع المعاكس</value></data>
+  <data name="nav.executionSchedule" xml:space="preserve"><value>جدول التنفيذ</value></data>
+  <data name="nav.group.ai" xml:space="preserve"><value>الذكاء الاصطناعي</value></data>
+  <data name="nav.ai.build" xml:space="preserve"><value>إنشاء cBot</value></data>
+  <data name="nav.ai.review" xml:space="preserve"><value>مراجعة</value></data>
+  <data name="nav.ai.debate" xml:space="preserve"><value>مناظرة</value></data>
+  <data name="nav.ai.sentiment" xml:space="preserve"><value>معنويات السوق</value></data>
+  <data name="nav.ai.exposure" xml:space="preserve"><value>فحص التعرّض</value></data>
+  <data name="nav.ai.digest" xml:space="preserve"><value>ملخّص المحفظة</value></data>
+  <data name="nav.ai.tune" xml:space="preserve"><value>مستشار الضبط</value></data>
+  <data name="nav.ai.optimize" xml:space="preserve"><value>تحسين</value></data>
+  <data name="nav.agentStudio" xml:space="preserve"><value>استوديو الوكيل</value></data>
+  <data name="nav.journal" xml:space="preserve"><value>يومية التداول</value></data>
+  <data name="nav.portfolioAgent" xml:space="preserve"><value>وكيل المحفظة</value></data>
+  <data name="nav.alerts" xml:space="preserve"><value>التنبيهات</value></data>
+  <data name="nav.mcpKeys" xml:space="preserve"><value>مفاتيح MCP</value></data>
+  <data name="nav.group.prop" xml:space="preserve"><value>التمويل</value></data>
+  <data name="nav.propGuard" xml:space="preserve"><value>حارس التمويل</value></data>
+  <data name="nav.challenges" xml:space="preserve"><value>التحدّيات</value></data>
+  <data name="nav.tradingAccounts" xml:space="preserve"><value>حسابات التداول</value></data>
+  <data name="nav.copyTrading" xml:space="preserve"><value>نسخ التداول</value></data>
+  <data name="nav.nodes" xml:space="preserve"><value>العُقد</value></data>
+  <data name="nav.users" xml:space="preserve"><value>المستخدمون</value></data>
+  <data name="nav.settings" xml:space="preserve"><value>الإعدادات</value></data>
+  <data name="nav.bottom.home" xml:space="preserve"><value>الرئيسية</value></data>
+  <data name="nav.bottom.account" xml:space="preserve"><value>الحساب</value></data>
+  <data name="settings.title" xml:space="preserve"><value>الإعدادات</value></data>
+  <data name="settings.close" xml:space="preserve"><value>إغلاق الإعدادات</value></data>
+  <data name="settings.section.openApi" xml:space="preserve"><value>Open API</value></data>
+  <data name="settings.section.ai" xml:space="preserve"><value>الذكاء الاصطناعي</value></data>
+  <data name="settings.section.features" xml:space="preserve"><value>الميزات</value></data>
+  <data name="settings.section.legal" xml:space="preserve"><value>الشؤون القانونية والخصوصية</value></data>
+  <data name="settings.section.language" xml:space="preserve"><value>اللغة</value></data>
+  <data name="language.title" xml:space="preserve"><value>اللغة</value></data>
+  <data name="language.description" xml:space="preserve"><value>اختر لغة الواجهة. يُحفَظ اختيارك في ملفك الشخصي ويُطبَّق في كامل التطبيق.</value></data>
+  <data name="language.current" xml:space="preserve"><value>اللغة الحالية</value></data>
+</root>

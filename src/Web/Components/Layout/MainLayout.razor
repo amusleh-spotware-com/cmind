@@ -1,9 +1,13 @@
 @inherits LayoutComponentBase
 @implements IDisposable
+@using System.Globalization
+@using Core.Constants
 @inject Web.Branding.IBrandingThemeProvider Branding
 @inject NavigationManager Nav
+@inject IStringLocalizer<Ui> L
 
 <MudThemeProvider Theme="@Branding.Theme" IsDarkMode="true" />
+<MudRTLProvider RightToLeft="@_rightToLeft">
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -11,7 +15,7 @@
 <MudLayout>
     <MudAppBar Elevation="1" Dense="true">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
-                       aria-label="Toggle navigation menu"
+                       aria-label="@L["layout.toggleNav"]"
                        OnClick="@(() => _drawerOpen = !_drawerOpen)" />
         @if (!string.IsNullOrWhiteSpace(Branding.Branding.LogoUrl))
         {
@@ -24,7 +28,8 @@
         <MudText Typo="Typo.h6" data-testid="app-product-name" Class="app-brand-word">@Branding.Branding.ProductName</MudText>
         <MudText Typo="Typo.caption" Class="ml-2 mud-text-disabled" data-testid="app-version">v@(Core.VersionInfo.Product)</MudText>
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" Href="/account" aria-label="Account" />
+        <LanguageSwitcher />
+        <MudIconButton Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" Href="/account" aria-label="@L["layout.account"]" />
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Variant="@DrawerVariant.Responsive" Breakpoint="Breakpoint.Md" Elevation="1">
         <NavMenu />
@@ -37,9 +42,9 @@
                 </ChildContent>
                 <ErrorContent>
                     <MudAlert Severity="Severity.Error" Class="my-4" data-testid="page-error">
-                        Something went wrong on this page.
+                        @L["layout.pageError"]
                         <MudButton Class="ml-2" Variant="Variant.Text" Color="Color.Inherit"
-                                   OnClick="RecoverError">Retry</MudButton>
+                                   OnClick="RecoverError">@L["common.retry"]</MudButton>
                     </MudAlert>
                 </ErrorContent>
             </ErrorBoundary>
@@ -47,12 +52,18 @@
     </MudMainContent>
     <BottomNav />
 </MudLayout>
+</MudRTLProvider>
 
 @code {
     private bool _drawerOpen = true;
     private ErrorBoundary? _errorBoundary;
+    private bool _rightToLeft;
 
-    protected override void OnInitialized() => Nav.LocationChanged += OnLocationChanged;
+    protected override void OnInitialized()
+    {
+        _rightToLeft = SupportedCultures.IsRightToLeft(CultureInfo.CurrentUICulture.Name);
+        Nav.LocationChanged += OnLocationChanged;
+    }
 
     // A Blazor ErrorBoundary latches on the first caught exception and keeps showing its error content on
     // every later render — so one page throwing would leave every subsequently navigated page (and the

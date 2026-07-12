@@ -218,6 +218,11 @@ public abstract class AppUser : AuditedEntity<UserId>
 
     public void UpdateProfile(UserProfile profile) => Profile = profile ?? UserProfile.Empty;
 
+    // Records the user's chosen UI language. Only a supported culture reaches here (the CultureName value
+    // object already rejected anything else), so this simply overlays it onto the owned profile.
+    public void SetLocale(Core.Localization.CultureName culture) =>
+        Profile = Profile with { Locale = culture.Value };
+
     // Issues a fresh email-verification token (stored as a hash), invalidating any earlier ones so only the
     // most recently sent link is redeemable.
     public void IssueEmailVerificationToken(string tokenHash, DateTimeOffset expiresAt)

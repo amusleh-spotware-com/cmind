@@ -119,7 +119,17 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
 8. **Docs in the same commit.** Every feature has `website/website/docs/features/*.md` (canonical — the
    published Docusaurus site; the top-level `docs/` copies are redirect stubs); behavior change →
    update its doc (and `website/docs/deployment`/`operations` when relevant). Not "done" until the
-   doc matches the code.
+   doc matches the code. **Docs are localized too:** adding or changing any doc means updating every
+   locale under `website/i18n/` (all languages in `Core.Constants.SupportedCultures`) in the same
+   change — never leave a locale stale.
+9. **Everything user-facing is localized (no exceptions, enforced).** No literal user-facing string in a
+   `.razor`, endpoint, email, or notification — inject `IStringLocalizer<Ui>` and use `@L["key"]`; add
+   the key to `tools/i18n/ui-translations.json` for **every** language in `Core.Constants.SupportedCultures`
+   and regenerate (`pwsh tools/i18n/gen-resx.ps1`). Domain stays key-based (`DomainErrors`). Display
+   formatting uses `CurrentCulture`; wire/parse stays `CultureInfo.InvariantCulture`. RTL must render
+   (`<html dir>` + MudBlazor `MudRTLProvider`). The build **fails** on a hard-coded string
+   (`NoHardcodedUiTextTests`) or a missing/blank translation (`ResourceParityTests`) — a new feature is
+   born fully localized or it does not merge. → `src/Web/CLAUDE.md` + `website/docs/features/localization.md`.
 
 ## Modern C# — MANDATORY (target C# 14 / .NET 10, `LangVersion=latest`)
 
@@ -168,7 +178,9 @@ match surrounding code, don't fight the whole codebase.
       paths included; bug fix has a regression test; new route added to `PageSmokeTests`.
 - [ ] DDD checklist passes; `src/Core` has no infra deps; touched anemic code left more encapsulated.
 - [ ] No `DateTime.UtcNow`/`.Now`; no secrets; no magic strings; no direct `ILogger.Log*`; modern C#.
-- [ ] Docs updated in the same commit; EF migration added if schema changed.
+- [ ] No hard-coded user-facing text — every string via `@L["key"]`, present in all locales (hardcoded +
+      parity gates green); new RTL renders correctly.
+- [ ] Docs updated in the same commit (and every `website/i18n/` locale); EF migration added if schema changed.
 
 ## Non-inferable design decisions
 

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="common.retry" xml:space="preserve"><value>Réessayer</value></data>
+  <data name="common.close" xml:space="preserve"><value>Fermer</value></data>
+  <data name="common.cancel" xml:space="preserve"><value>Annuler</value></data>
+  <data name="common.save" xml:space="preserve"><value>Enregistrer</value></data>
+  <data name="app.reconnect.reconnecting" xml:space="preserve"><value>Reconnexion…</value></data>
+  <data name="app.reconnect.connectionLost" xml:space="preserve"><value>Connexion perdue</value></data>
+  <data name="app.reconnect.sessionExpired" xml:space="preserve"><value>Session expirée</value></data>
+  <data name="app.reconnect.restoring" xml:space="preserve"><value>Restauration de votre connexion en direct au serveur.</value></data>
+  <data name="app.reconnect.retrying" xml:space="preserve"><value>Serveur injoignable. Nouvelle tentative…</value></data>
+  <data name="app.reconnect.resume" xml:space="preserve"><value>Votre session n'a pas pu être reprise. Veuillez recharger la page.</value></data>
+  <data name="app.reconnect.retryNow" xml:space="preserve"><value>Réessayer maintenant</value></data>
+  <data name="app.reconnect.reload" xml:space="preserve"><value>Recharger</value></data>
+  <data name="layout.toggleNav" xml:space="preserve"><value>Afficher/masquer le menu de navigation</value></data>
+  <data name="layout.account" xml:space="preserve"><value>Compte</value></data>
+  <data name="layout.pageError" xml:space="preserve"><value>Une erreur s'est produite sur cette page.</value></data>
+  <data name="nav.dashboard" xml:space="preserve"><value>Tableau de bord</value></data>
+  <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.run" xml:space="preserve"><value>Exécuter</value></data>
+  <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>
+  <data name="nav.optimize" xml:space="preserve"><value>Optimiser</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Intégrité</value></data>
+  <data name="nav.positionSizing" xml:space="preserve"><value>Taille de position</value></data>
+  <data name="nav.strategyHealth" xml:space="preserve"><value>Santé de la stratégie</value></data>
+  <data name="nav.regimeLab" xml:space="preserve"><value>Labo de régimes</value></data>
+  <data name="nav.executionCost" xml:space="preserve"><value>Coût d'exécution</value></data>
+  <data name="nav.contrarianPositioning" xml:space="preserve"><value>Positionnement à contre-courant</value></data>
+  <data name="nav.executionSchedule" xml:space="preserve"><value>Planning d'exécution</value></data>
+  <data name="nav.group.ai" xml:space="preserve"><value>IA</value></data>
+  <data name="nav.ai.build" xml:space="preserve"><value>Créer un cBot</value></data>
+  <data name="nav.ai.review" xml:space="preserve"><value>Analyse</value></data>
+  <data name="nav.ai.debate" xml:space="preserve"><value>Débat</value></data>
+  <data name="nav.ai.sentiment" xml:space="preserve"><value>Sentiment du marché</value></data>
+  <data name="nav.ai.exposure" xml:space="preserve"><value>Contrôle d'exposition</value></data>
+  <data name="nav.ai.digest" xml:space="preserve"><value>Synthèse du portefeuille</value></data>
+  <data name="nav.ai.tune" xml:space="preserve"><value>Conseiller d'optimisation</value></data>
+  <data name="nav.ai.optimize" xml:space="preserve"><value>Optimiser</value></data>
+  <data name="nav.agentStudio" xml:space="preserve"><value>Agent Studio</value></data>
+  <data name="nav.journal" xml:space="preserve"><value>Journal de trading</value></data>
+  <data name="nav.portfolioAgent" xml:space="preserve"><value>Agent de portefeuille</value></data>
+  <data name="nav.alerts" xml:space="preserve"><value>Alertes</value></data>
+  <data name="nav.mcpKeys" xml:space="preserve"><value>Clés MCP</value></data>
+  <data name="nav.group.prop" xml:space="preserve"><value>Prop</value></data>
+  <data name="nav.propGuard" xml:space="preserve"><value>Prop Guard</value></data>
+  <data name="nav.challenges" xml:space="preserve"><value>Défis</value></data>
+  <data name="nav.tradingAccounts" xml:space="preserve"><value>Comptes de trading</value></data>
+  <data name="nav.copyTrading" xml:space="preserve"><value>Copy Trading</value></data>
+  <data name="nav.nodes" xml:space="preserve"><value>Nœuds</value></data>
+  <data name="nav.users" xml:space="preserve"><value>Utilisateurs</value></data>
+  <data name="nav.settings" xml:space="preserve"><value>Paramètres</value></data>
+  <data name="nav.bottom.home" xml:space="preserve"><value>Accueil</value></data>
+  <data name="nav.bottom.account" xml:space="preserve"><value>Compte</value></data>
+  <data name="settings.title" xml:space="preserve"><value>Paramètres</value></data>
+  <data name="settings.close" xml:space="preserve"><value>Fermer les paramètres</value></data>
+  <data name="settings.section.openApi" xml:space="preserve"><value>Open API</value></data>
+  <data name="settings.section.ai" xml:space="preserve"><value>IA</value></data>
+  <data name="settings.section.features" xml:space="preserve"><value>Fonctionnalités</value></data>
+  <data name="settings.section.legal" xml:space="preserve"><value>Mentions légales et confidentialité</value></data>
+  <data name="settings.section.language" xml:space="preserve"><value>Langue</value></data>
+  <data name="language.title" xml:space="preserve"><value>Langue</value></data>
+  <data name="language.description" xml:space="preserve"><value>Choisissez la langue de l'interface. Votre choix est enregistré dans votre profil et appliqué à toute l'application.</value></data>
+  <data name="language.current" xml:space="preserve"><value>Langue actuelle</value></data>
+</root>

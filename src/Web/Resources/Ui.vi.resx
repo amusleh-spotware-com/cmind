@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="common.retry" xml:space="preserve"><value>Thử lại</value></data>
+  <data name="common.close" xml:space="preserve"><value>Đóng</value></data>
+  <data name="common.cancel" xml:space="preserve"><value>Hủy</value></data>
+  <data name="common.save" xml:space="preserve"><value>Lưu</value></data>
+  <data name="app.reconnect.reconnecting" xml:space="preserve"><value>Đang kết nối lại…</value></data>
+  <data name="app.reconnect.connectionLost" xml:space="preserve"><value>Mất kết nối</value></data>
+  <data name="app.reconnect.sessionExpired" xml:space="preserve"><value>Phiên đã hết hạn</value></data>
+  <data name="app.reconnect.restoring" xml:space="preserve"><value>Đang khôi phục kết nối trực tiếp tới máy chủ.</value></data>
+  <data name="app.reconnect.retrying" xml:space="preserve"><value>Không thể kết nối máy chủ. Đang thử lại…</value></data>
+  <data name="app.reconnect.resume" xml:space="preserve"><value>Không thể tiếp tục phiên của bạn. Vui lòng tải lại trang.</value></data>
+  <data name="app.reconnect.retryNow" xml:space="preserve"><value>Thử lại ngay</value></data>
+  <data name="app.reconnect.reload" xml:space="preserve"><value>Tải lại</value></data>
+  <data name="layout.toggleNav" xml:space="preserve"><value>Bật/tắt menu điều hướng</value></data>
+  <data name="layout.account" xml:space="preserve"><value>Tài khoản</value></data>
+  <data name="layout.pageError" xml:space="preserve"><value>Đã xảy ra lỗi trên trang này.</value></data>
+  <data name="nav.dashboard" xml:space="preserve"><value>Bảng điều khiển</value></data>
+  <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.run" xml:space="preserve"><value>Chạy</value></data>
+  <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>
+  <data name="nav.optimize" xml:space="preserve"><value>Tối ưu hóa</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Tính toàn vẹn</value></data>
+  <data name="nav.positionSizing" xml:space="preserve"><value>Kích thước vị thế</value></data>
+  <data name="nav.strategyHealth" xml:space="preserve"><value>Sức khỏe chiến lược</value></data>
+  <data name="nav.regimeLab" xml:space="preserve"><value>Phòng thí nghiệm chế độ</value></data>
+  <data name="nav.executionCost" xml:space="preserve"><value>Chi phí thực thi</value></data>
+  <data name="nav.contrarianPositioning" xml:space="preserve"><value>Định vị ngược xu hướng</value></data>
+  <data name="nav.executionSchedule" xml:space="preserve"><value>Lịch thực thi</value></data>
+  <data name="nav.group.ai" xml:space="preserve"><value>AI</value></data>
+  <data name="nav.ai.build" xml:space="preserve"><value>Tạo cBot</value></data>
+  <data name="nav.ai.review" xml:space="preserve"><value>Đánh giá</value></data>
+  <data name="nav.ai.debate" xml:space="preserve"><value>Tranh luận</value></data>
+  <data name="nav.ai.sentiment" xml:space="preserve"><value>Tâm lý thị trường</value></data>
+  <data name="nav.ai.exposure" xml:space="preserve"><value>Kiểm tra mức rủi ro</value></data>
+  <data name="nav.ai.digest" xml:space="preserve"><value>Tóm tắt danh mục</value></data>
+  <data name="nav.ai.tune" xml:space="preserve"><value>Cố vấn tinh chỉnh</value></data>
+  <data name="nav.ai.optimize" xml:space="preserve"><value>Tối ưu hóa</value></data>
+  <data name="nav.agentStudio" xml:space="preserve"><value>Agent Studio</value></data>
+  <data name="nav.journal" xml:space="preserve"><value>Nhật ký giao dịch</value></data>
+  <data name="nav.portfolioAgent" xml:space="preserve"><value>Tác nhân danh mục</value></data>
+  <data name="nav.alerts" xml:space="preserve"><value>Cảnh báo</value></data>
+  <data name="nav.mcpKeys" xml:space="preserve"><value>Khóa MCP</value></data>
+  <data name="nav.group.prop" xml:space="preserve"><value>Prop</value></data>
+  <data name="nav.propGuard" xml:space="preserve"><value>Prop Guard</value></data>
+  <data name="nav.challenges" xml:space="preserve"><value>Thử thách</value></data>
+  <data name="nav.tradingAccounts" xml:space="preserve"><value>Tài khoản giao dịch</value></data>
+  <data name="nav.copyTrading" xml:space="preserve"><value>Copy Trading</value></data>
+  <data name="nav.nodes" xml:space="preserve"><value>Nút</value></data>
+  <data name="nav.users" xml:space="preserve"><value>Người dùng</value></data>
+  <data name="nav.settings" xml:space="preserve"><value>Cài đặt</value></data>
+  <data name="nav.bottom.home" xml:space="preserve"><value>Trang chủ</value></data>
+  <data name="nav.bottom.account" xml:space="preserve"><value>Tài khoản</value></data>
+  <data name="settings.title" xml:space="preserve"><value>Cài đặt</value></data>
+  <data name="settings.close" xml:space="preserve"><value>Đóng cài đặt</value></data>
+  <data name="settings.section.openApi" xml:space="preserve"><value>Open API</value></data>
+  <data name="settings.section.ai" xml:space="preserve"><value>AI</value></data>
+  <data name="settings.section.features" xml:space="preserve"><value>Tính năng</value></data>
+  <data name="settings.section.legal" xml:space="preserve"><value>Pháp lý &amp; Quyền riêng tư</value></data>
+  <data name="settings.section.language" xml:space="preserve"><value>Ngôn ngữ</value></data>
+  <data name="language.title" xml:space="preserve"><value>Ngôn ngữ</value></data>
+  <data name="language.description" xml:space="preserve"><value>Chọn ngôn ngữ giao diện. Lựa chọn của bạn được lưu vào hồ sơ và áp dụng trên toàn ứng dụng.</value></data>
+  <data name="language.current" xml:space="preserve"><value>Ngôn ngữ hiện tại</value></data>
+</root>

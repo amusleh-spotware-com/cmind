@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="common.retry" xml:space="preserve"><value>Yeniden dene</value></data>
+  <data name="common.close" xml:space="preserve"><value>Kapat</value></data>
+  <data name="common.cancel" xml:space="preserve"><value>İptal</value></data>
+  <data name="common.save" xml:space="preserve"><value>Kaydet</value></data>
+  <data name="app.reconnect.reconnecting" xml:space="preserve"><value>Yeniden bağlanıyor…</value></data>
+  <data name="app.reconnect.connectionLost" xml:space="preserve"><value>Bağlantı kesildi</value></data>
+  <data name="app.reconnect.sessionExpired" xml:space="preserve"><value>Oturum süresi doldu</value></data>
+  <data name="app.reconnect.restoring" xml:space="preserve"><value>Sunucuya canlı bağlantınız geri yükleniyor.</value></data>
+  <data name="app.reconnect.retrying" xml:space="preserve"><value>Sunucuya ulaşılamadı. Yeniden deneniyor…</value></data>
+  <data name="app.reconnect.resume" xml:space="preserve"><value>Oturumunuz sürdürülemedi. Lütfen sayfayı yeniden yükleyin.</value></data>
+  <data name="app.reconnect.retryNow" xml:space="preserve"><value>Şimdi yeniden dene</value></data>
+  <data name="app.reconnect.reload" xml:space="preserve"><value>Yeniden yükle</value></data>
+  <data name="layout.toggleNav" xml:space="preserve"><value>Gezinme menüsünü aç/kapat</value></data>
+  <data name="layout.account" xml:space="preserve"><value>Hesap</value></data>
+  <data name="layout.pageError" xml:space="preserve"><value>Bu sayfada bir hata oluştu.</value></data>
+  <data name="nav.dashboard" xml:space="preserve"><value>Pano</value></data>
+  <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.run" xml:space="preserve"><value>Çalıştır</value></data>
+  <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>
+  <data name="nav.optimize" xml:space="preserve"><value>Optimize et</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Bütünlük</value></data>
+  <data name="nav.positionSizing" xml:space="preserve"><value>Pozisyon büyüklüğü</value></data>
+  <data name="nav.strategyHealth" xml:space="preserve"><value>Strateji sağlığı</value></data>
+  <data name="nav.regimeLab" xml:space="preserve"><value>Rejim laboratuvarı</value></data>
+  <data name="nav.executionCost" xml:space="preserve"><value>İşlem maliyeti</value></data>
+  <data name="nav.contrarianPositioning" xml:space="preserve"><value>Ters yönlü konumlanma</value></data>
+  <data name="nav.executionSchedule" xml:space="preserve"><value>İşlem zamanlaması</value></data>
+  <data name="nav.group.ai" xml:space="preserve"><value>YZ</value></data>
+  <data name="nav.ai.build" xml:space="preserve"><value>cBot oluştur</value></data>
+  <data name="nav.ai.review" xml:space="preserve"><value>İnceleme</value></data>
+  <data name="nav.ai.debate" xml:space="preserve"><value>Tartışma</value></data>
+  <data name="nav.ai.sentiment" xml:space="preserve"><value>Piyasa duyarlılığı</value></data>
+  <data name="nav.ai.exposure" xml:space="preserve"><value>Maruziyet kontrolü</value></data>
+  <data name="nav.ai.digest" xml:space="preserve"><value>Portföy özeti</value></data>
+  <data name="nav.ai.tune" xml:space="preserve"><value>Ayar danışmanı</value></data>
+  <data name="nav.ai.optimize" xml:space="preserve"><value>Optimize et</value></data>
+  <data name="nav.agentStudio" xml:space="preserve"><value>Agent Studio</value></data>
+  <data name="nav.journal" xml:space="preserve"><value>İşlem günlüğü</value></data>
+  <data name="nav.portfolioAgent" xml:space="preserve"><value>Portföy ajanı</value></data>
+  <data name="nav.alerts" xml:space="preserve"><value>Uyarılar</value></data>
+  <data name="nav.mcpKeys" xml:space="preserve"><value>MCP anahtarları</value></data>
+  <data name="nav.group.prop" xml:space="preserve"><value>Prop</value></data>
+  <data name="nav.propGuard" xml:space="preserve"><value>Prop Guard</value></data>
+  <data name="nav.challenges" xml:space="preserve"><value>Meydan okumalar</value></data>
+  <data name="nav.tradingAccounts" xml:space="preserve"><value>İşlem hesapları</value></data>
+  <data name="nav.copyTrading" xml:space="preserve"><value>Copy Trading</value></data>
+  <data name="nav.nodes" xml:space="preserve"><value>Düğümler</value></data>
+  <data name="nav.users" xml:space="preserve"><value>Kullanıcılar</value></data>
+  <data name="nav.settings" xml:space="preserve"><value>Ayarlar</value></data>
+  <data name="nav.bottom.home" xml:space="preserve"><value>Ana sayfa</value></data>
+  <data name="nav.bottom.account" xml:space="preserve"><value>Hesap</value></data>
+  <data name="settings.title" xml:space="preserve"><value>Ayarlar</value></data>
+  <data name="settings.close" xml:space="preserve"><value>Ayarları kapat</value></data>
+  <data name="settings.section.openApi" xml:space="preserve"><value>Open API</value></data>
+  <data name="settings.section.ai" xml:space="preserve"><value>YZ</value></data>
+  <data name="settings.section.features" xml:space="preserve"><value>Özellikler</value></data>
+  <data name="settings.section.legal" xml:space="preserve"><value>Yasal ve Gizlilik</value></data>
+  <data name="settings.section.language" xml:space="preserve"><value>Dil</value></data>
+  <data name="language.title" xml:space="preserve"><value>Dil</value></data>
+  <data name="language.description" xml:space="preserve"><value>Arayüz dilini seçin. Seçiminiz profilinize kaydedilir ve uygulamanın tamamında uygulanır.</value></data>
+  <data name="language.current" xml:space="preserve"><value>Geçerli dil</value></data>
+</root>

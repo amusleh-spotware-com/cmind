@@ -38,9 +38,20 @@ const config: Config = {
   },
   themes: ['@docusaurus/theme-mermaid'],
 
+  // Docs site speaks the same 23 languages as the product (Core.Constants.SupportedCultures), so a
+  // trader reads the app and its manual in one language. Scaffold a locale with
+  //   npm run write-translations -- --locale <code>
+  // then translate website/i18n/<code>/. Arabic renders right-to-left. Adding/changing a doc means
+  // updating every locale in the same PR (see the localization mandate in CLAUDE.md).
   i18n: {
     defaultLocale: 'en',
-    locales: ['en'],
+    locales: [
+      'en', 'ar', 'cs', 'de', 'el', 'es', 'fr', 'hu', 'id', 'it', 'ja', 'ko', 'ms',
+      'pl', 'pt-BR', 'ru', 'sk', 'sl', 'sr', 'th', 'tr', 'vi', 'zh-Hans',
+    ],
+    localeConfigs: {
+      ar: { direction: 'rtl' },
+    },
   },
 
   headTags: [
@@ -137,6 +148,7 @@ const config: Config = {
           label: 'GitHub',
           position: 'right',
         },
+        { type: 'localeDropdown', position: 'right' },
       ],
     },
     footer: {

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="common.retry" xml:space="preserve"><value>重试</value></data>
+  <data name="common.close" xml:space="preserve"><value>关闭</value></data>
+  <data name="common.cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="common.save" xml:space="preserve"><value>保存</value></data>
+  <data name="app.reconnect.reconnecting" xml:space="preserve"><value>正在重新连接…</value></data>
+  <data name="app.reconnect.connectionLost" xml:space="preserve"><value>连接已断开</value></data>
+  <data name="app.reconnect.sessionExpired" xml:space="preserve"><value>会话已过期</value></data>
+  <data name="app.reconnect.restoring" xml:space="preserve"><value>正在恢复与服务器的实时连接。</value></data>
+  <data name="app.reconnect.retrying" xml:space="preserve"><value>无法连接服务器。正在重试…</value></data>
+  <data name="app.reconnect.resume" xml:space="preserve"><value>无法恢复您的会话。请重新加载页面。</value></data>
+  <data name="app.reconnect.retryNow" xml:space="preserve"><value>立即重试</value></data>
+  <data name="app.reconnect.reload" xml:space="preserve"><value>重新加载</value></data>
+  <data name="layout.toggleNav" xml:space="preserve"><value>切换导航菜单</value></data>
+  <data name="layout.account" xml:space="preserve"><value>账户</value></data>
+  <data name="layout.pageError" xml:space="preserve"><value>此页面出现问题。</value></data>
+  <data name="nav.dashboard" xml:space="preserve"><value>仪表板</value></data>
+  <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.run" xml:space="preserve"><value>运行</value></data>
+  <data name="nav.backtest" xml:space="preserve"><value>回测</value></data>
+  <data name="nav.optimize" xml:space="preserve"><value>优化</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>完整性</value></data>
+  <data name="nav.positionSizing" xml:space="preserve"><value>仓位规模</value></data>
+  <data name="nav.strategyHealth" xml:space="preserve"><value>策略健康度</value></data>
+  <data name="nav.regimeLab" xml:space="preserve"><value>市场状态实验室</value></data>
+  <data name="nav.executionCost" xml:space="preserve"><value>执行成本</value></data>
+  <data name="nav.contrarianPositioning" xml:space="preserve"><value>逆向持仓</value></data>
+  <data name="nav.executionSchedule" xml:space="preserve"><value>执行计划</value></data>
+  <data name="nav.group.ai" xml:space="preserve"><value>AI</value></data>
+  <data name="nav.ai.build" xml:space="preserve"><value>创建 cBot</value></data>
+  <data name="nav.ai.review" xml:space="preserve"><value>审查</value></data>
+  <data name="nav.ai.debate" xml:space="preserve"><value>辩论</value></data>
+  <data name="nav.ai.sentiment" xml:space="preserve"><value>市场情绪</value></data>
+  <data name="nav.ai.exposure" xml:space="preserve"><value>敞口检查</value></data>
+  <data name="nav.ai.digest" xml:space="preserve"><value>投资组合摘要</value></data>
+  <data name="nav.ai.tune" xml:space="preserve"><value>调优顾问</value></data>
+  <data name="nav.ai.optimize" xml:space="preserve"><value>优化</value></data>
+  <data name="nav.agentStudio" xml:space="preserve"><value>智能体工作室</value></data>
+  <data name="nav.journal" xml:space="preserve"><value>交易日志</value></data>
+  <data name="nav.portfolioAgent" xml:space="preserve"><value>投资组合智能体</value></data>
+  <data name="nav.alerts" xml:space="preserve"><value>提醒</value></data>
+  <data name="nav.mcpKeys" xml:space="preserve"><value>MCP 密钥</value></data>
+  <data name="nav.group.prop" xml:space="preserve"><value>Prop</value></data>
+  <data name="nav.propGuard" xml:space="preserve"><value>Prop Guard</value></data>
+  <data name="nav.challenges" xml:space="preserve"><value>挑战</value></data>
+  <data name="nav.tradingAccounts" xml:space="preserve"><value>交易账户</value></data>
+  <data name="nav.copyTrading" xml:space="preserve"><value>跟单交易</value></data>
+  <data name="nav.nodes" xml:space="preserve"><value>节点</value></data>
+  <data name="nav.users" xml:space="preserve"><value>用户</value></data>
+  <data name="nav.settings" xml:space="preserve"><value>设置</value></data>
+  <data name="nav.bottom.home" xml:space="preserve"><value>首页</value></data>
+  <data name="nav.bottom.account" xml:space="preserve"><value>账户</value></data>
+  <data name="settings.title" xml:space="preserve"><value>设置</value></data>
+  <data name="settings.close" xml:space="preserve"><value>关闭设置</value></data>
+  <data name="settings.section.openApi" xml:space="preserve"><value>Open API</value></data>
+  <data name="settings.section.ai" xml:space="preserve"><value>AI</value></data>
+  <data name="settings.section.features" xml:space="preserve"><value>功能</value></data>
+  <data name="settings.section.legal" xml:space="preserve"><value>法律与隐私</value></data>
+  <data name="settings.section.language" xml:space="preserve"><value>语言</value></data>
+  <data name="language.title" xml:space="preserve"><value>语言</value></data>
+  <data name="language.description" xml:space="preserve"><value>选择界面语言。您的选择将保存到个人资料并应用于整个应用。</value></data>
+  <data name="language.current" xml:space="preserve"><value>当前语言</value></data>
+</root>

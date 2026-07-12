@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="common.retry" xml:space="preserve"><value>Skúsiť znova</value></data>
+  <data name="common.close" xml:space="preserve"><value>Zavrieť</value></data>
+  <data name="common.cancel" xml:space="preserve"><value>Zrušiť</value></data>
+  <data name="common.save" xml:space="preserve"><value>Uložiť</value></data>
+  <data name="app.reconnect.reconnecting" xml:space="preserve"><value>Opätovné pripájanie…</value></data>
+  <data name="app.reconnect.connectionLost" xml:space="preserve"><value>Spojenie sa stratilo</value></data>
+  <data name="app.reconnect.sessionExpired" xml:space="preserve"><value>Relácia vypršala</value></data>
+  <data name="app.reconnect.restoring" xml:space="preserve"><value>Obnovuje sa živé pripojenie k serveru.</value></data>
+  <data name="app.reconnect.retrying" xml:space="preserve"><value>Server je nedostupný. Opakujem…</value></data>
+  <data name="app.reconnect.resume" xml:space="preserve"><value>Reláciu nemožno obnoviť. Znovu načítajte stránku.</value></data>
+  <data name="app.reconnect.retryNow" xml:space="preserve"><value>Skúsiť znova</value></data>
+  <data name="app.reconnect.reload" xml:space="preserve"><value>Znovu načítať</value></data>
+  <data name="layout.toggleNav" xml:space="preserve"><value>Prepnúť navigačné menu</value></data>
+  <data name="layout.account" xml:space="preserve"><value>Účet</value></data>
+  <data name="layout.pageError" xml:space="preserve"><value>Na tejto stránke sa vyskytla chyba.</value></data>
+  <data name="nav.dashboard" xml:space="preserve"><value>Prehľad</value></data>
+  <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.run" xml:space="preserve"><value>Spustiť</value></data>
+  <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>
+  <data name="nav.optimize" xml:space="preserve"><value>Optimalizovať</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Integrita</value></data>
+  <data name="nav.positionSizing" xml:space="preserve"><value>Veľkosť pozície</value></data>
+  <data name="nav.strategyHealth" xml:space="preserve"><value>Zdravie stratégie</value></data>
+  <data name="nav.regimeLab" xml:space="preserve"><value>Laboratórium režimov</value></data>
+  <data name="nav.executionCost" xml:space="preserve"><value>Náklady na vykonanie</value></data>
+  <data name="nav.contrarianPositioning" xml:space="preserve"><value>Protichodné pozicovanie</value></data>
+  <data name="nav.executionSchedule" xml:space="preserve"><value>Plán vykonania</value></data>
+  <data name="nav.group.ai" xml:space="preserve"><value>AI</value></data>
+  <data name="nav.ai.build" xml:space="preserve"><value>Vytvoriť cBot</value></data>
+  <data name="nav.ai.review" xml:space="preserve"><value>Kontrola</value></data>
+  <data name="nav.ai.debate" xml:space="preserve"><value>Debata</value></data>
+  <data name="nav.ai.sentiment" xml:space="preserve"><value>Nálada trhu</value></data>
+  <data name="nav.ai.exposure" xml:space="preserve"><value>Kontrola expozície</value></data>
+  <data name="nav.ai.digest" xml:space="preserve"><value>Prehľad portfólia</value></data>
+  <data name="nav.ai.tune" xml:space="preserve"><value>Poradca ladenia</value></data>
+  <data name="nav.ai.optimize" xml:space="preserve"><value>Optimalizovať</value></data>
+  <data name="nav.agentStudio" xml:space="preserve"><value>Agent Studio</value></data>
+  <data name="nav.journal" xml:space="preserve"><value>Obchodný denník</value></data>
+  <data name="nav.portfolioAgent" xml:space="preserve"><value>Agent portfólia</value></data>
+  <data name="nav.alerts" xml:space="preserve"><value>Upozornenia</value></data>
+  <data name="nav.mcpKeys" xml:space="preserve"><value>Kľúče MCP</value></data>
+  <data name="nav.group.prop" xml:space="preserve"><value>Prop</value></data>
+  <data name="nav.propGuard" xml:space="preserve"><value>Prop Guard</value></data>
+  <data name="nav.challenges" xml:space="preserve"><value>Výzvy</value></data>
+  <data name="nav.tradingAccounts" xml:space="preserve"><value>Obchodné účty</value></data>
+  <data name="nav.copyTrading" xml:space="preserve"><value>Copy Trading</value></data>
+  <data name="nav.nodes" xml:space="preserve"><value>Uzly</value></data>
+  <data name="nav.users" xml:space="preserve"><value>Používatelia</value></data>
+  <data name="nav.settings" xml:space="preserve"><value>Nastavenia</value></data>
+  <data name="nav.bottom.home" xml:space="preserve"><value>Domov</value></data>
+  <data name="nav.bottom.account" xml:space="preserve"><value>Účet</value></data>
+  <data name="settings.title" xml:space="preserve"><value>Nastavenia</value></data>
+  <data name="settings.close" xml:space="preserve"><value>Zavrieť nastavenia</value></data>
+  <data name="settings.section.openApi" xml:space="preserve"><value>Open API</value></data>
+  <data name="settings.section.ai" xml:space="preserve"><value>AI</value></data>
+  <data name="settings.section.features" xml:space="preserve"><value>Funkcie</value></data>
+  <data name="settings.section.legal" xml:space="preserve"><value>Právne informácie a súkromie</value></data>
+  <data name="settings.section.language" xml:space="preserve"><value>Jazyk</value></data>
+  <data name="language.title" xml:space="preserve"><value>Jazyk</value></data>
+  <data name="language.description" xml:space="preserve"><value>Vyberte jazyk rozhrania. Vaša voľba sa uloží do profilu a použije v celej aplikácii.</value></data>
+  <data name="language.current" xml:space="preserve"><value>Aktuálny jazyk</value></data>
+</root>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="common.retry" xml:space="preserve"><value>ลองอีกครั้ง</value></data>
+  <data name="common.close" xml:space="preserve"><value>ปิด</value></data>
+  <data name="common.cancel" xml:space="preserve"><value>ยกเลิก</value></data>
+  <data name="common.save" xml:space="preserve"><value>บันทึก</value></data>
+  <data name="app.reconnect.reconnecting" xml:space="preserve"><value>กำลังเชื่อมต่อใหม่…</value></data>
+  <data name="app.reconnect.connectionLost" xml:space="preserve"><value>การเชื่อมต่อหลุด</value></data>
+  <data name="app.reconnect.sessionExpired" xml:space="preserve"><value>เซสชันหมดอายุ</value></data>
+  <data name="app.reconnect.restoring" xml:space="preserve"><value>กำลังกู้คืนการเชื่อมต่อสดกับเซิร์ฟเวอร์</value></data>
+  <data name="app.reconnect.retrying" xml:space="preserve"><value>ไม่สามารถเข้าถึงเซิร์ฟเวอร์ได้ กำลังลองใหม่…</value></data>
+  <data name="app.reconnect.resume" xml:space="preserve"><value>ไม่สามารถดำเนินเซสชันต่อได้ โปรดโหลดหน้านี้ใหม่</value></data>
+  <data name="app.reconnect.retryNow" xml:space="preserve"><value>ลองใหม่ตอนนี้</value></data>
+  <data name="app.reconnect.reload" xml:space="preserve"><value>โหลดใหม่</value></data>
+  <data name="layout.toggleNav" xml:space="preserve"><value>สลับเมนูนำทาง</value></data>
+  <data name="layout.account" xml:space="preserve"><value>บัญชี</value></data>
+  <data name="layout.pageError" xml:space="preserve"><value>เกิดข้อผิดพลาดในหน้านี้</value></data>
+  <data name="nav.dashboard" xml:space="preserve"><value>แดชบอร์ด</value></data>
+  <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.run" xml:space="preserve"><value>เรียกใช้</value></data>
+  <data name="nav.backtest" xml:space="preserve"><value>แบ็กเทสต์</value></data>
+  <data name="nav.optimize" xml:space="preserve"><value>เพิ่มประสิทธิภาพ</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>ความสมบูรณ์</value></data>
+  <data name="nav.positionSizing" xml:space="preserve"><value>ขนาดสถานะ</value></data>
+  <data name="nav.strategyHealth" xml:space="preserve"><value>สุขภาพกลยุทธ์</value></data>
+  <data name="nav.regimeLab" xml:space="preserve"><value>แล็บเรจีม</value></data>
+  <data name="nav.executionCost" xml:space="preserve"><value>ต้นทุนการดำเนินการ</value></data>
+  <data name="nav.contrarianPositioning" xml:space="preserve"><value>การวางสถานะสวนทาง</value></data>
+  <data name="nav.executionSchedule" xml:space="preserve"><value>ตารางการดำเนินการ</value></data>
+  <data name="nav.group.ai" xml:space="preserve"><value>AI</value></data>
+  <data name="nav.ai.build" xml:space="preserve"><value>สร้าง cBot</value></data>
+  <data name="nav.ai.review" xml:space="preserve"><value>ตรวจทาน</value></data>
+  <data name="nav.ai.debate" xml:space="preserve"><value>ถกเถียง</value></data>
+  <data name="nav.ai.sentiment" xml:space="preserve"><value>ความรู้สึกของตลาด</value></data>
+  <data name="nav.ai.exposure" xml:space="preserve"><value>ตรวจสอบการเปิดรับความเสี่ยง</value></data>
+  <data name="nav.ai.digest" xml:space="preserve"><value>สรุปพอร์ต</value></data>
+  <data name="nav.ai.tune" xml:space="preserve"><value>ที่ปรึกษาการปรับแต่ง</value></data>
+  <data name="nav.ai.optimize" xml:space="preserve"><value>เพิ่มประสิทธิภาพ</value></data>
+  <data name="nav.agentStudio" xml:space="preserve"><value>Agent Studio</value></data>
+  <data name="nav.journal" xml:space="preserve"><value>บันทึกการเทรด</value></data>
+  <data name="nav.portfolioAgent" xml:space="preserve"><value>เอเจนต์พอร์ต</value></data>
+  <data name="nav.alerts" xml:space="preserve"><value>การแจ้งเตือน</value></data>
+  <data name="nav.mcpKeys" xml:space="preserve"><value>คีย์ MCP</value></data>
+  <data name="nav.group.prop" xml:space="preserve"><value>Prop</value></data>
+  <data name="nav.propGuard" xml:space="preserve"><value>Prop Guard</value></data>
+  <data name="nav.challenges" xml:space="preserve"><value>ชาเลนจ์</value></data>
+  <data name="nav.tradingAccounts" xml:space="preserve"><value>บัญชีเทรด</value></data>
+  <data name="nav.copyTrading" xml:space="preserve"><value>Copy Trading</value></data>
+  <data name="nav.nodes" xml:space="preserve"><value>โหนด</value></data>
+  <data name="nav.users" xml:space="preserve"><value>ผู้ใช้</value></data>
+  <data name="nav.settings" xml:space="preserve"><value>การตั้งค่า</value></data>
+  <data name="nav.bottom.home" xml:space="preserve"><value>หน้าแรก</value></data>
+  <data name="nav.bottom.account" xml:space="preserve"><value>บัญชี</value></data>
+  <data name="settings.title" xml:space="preserve"><value>การตั้งค่า</value></data>
+  <data name="settings.close" xml:space="preserve"><value>ปิดการตั้งค่า</value></data>
+  <data name="settings.section.openApi" xml:space="preserve"><value>Open API</value></data>
+  <data name="settings.section.ai" xml:space="preserve"><value>AI</value></data>
+  <data name="settings.section.features" xml:space="preserve"><value>ฟีเจอร์</value></data>
+  <data name="settings.section.legal" xml:space="preserve"><value>กฎหมายและความเป็นส่วนตัว</value></data>
+  <data name="settings.section.language" xml:space="preserve"><value>ภาษา</value></data>
+  <data name="language.title" xml:space="preserve"><value>ภาษา</value></data>
+  <data name="language.description" xml:space="preserve"><value>เลือกภาษาของอินเทอร์เฟซ ตัวเลือกของคุณจะถูกบันทึกในโปรไฟล์และใช้ทั่วทั้งแอป</value></data>
+  <data name="language.current" xml:space="preserve"><value>ภาษาปัจจุบัน</value></data>
+</root>

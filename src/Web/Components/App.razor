@@ -1,10 +1,15 @@
+@using System.Globalization
+@using Core.Constants
 @using Microsoft.AspNetCore.Components.Web
 @inject Microsoft.Extensions.Options.IOptionsMonitor<Core.Options.AppOptions> Options
+@inject IStringLocalizer<Ui> L
 @{
     var branding = Options.CurrentValue.Branding;
+    var culture = CultureInfo.CurrentUICulture.Name is { Length: > 0 } cultureName ? cultureName : SupportedCultures.Default;
+    var direction = SupportedCultures.Direction(culture);
 }
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@culture" dir="@direction">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -63,18 +68,18 @@
         <div class="app-reconnect-card">
             <div class="app-reconnect-spinner" aria-hidden="true"></div>
             <div class="app-reconnect-title">
-                <span class="app-reconnect-when-show">Reconnecting…</span>
-                <span class="app-reconnect-when-failed">Connection lost</span>
-                <span class="app-reconnect-when-rejected">Session expired</span>
+                <span class="app-reconnect-when-show">@L["app.reconnect.reconnecting"]</span>
+                <span class="app-reconnect-when-failed">@L["app.reconnect.connectionLost"]</span>
+                <span class="app-reconnect-when-rejected">@L["app.reconnect.sessionExpired"]</span>
             </div>
             <div class="app-reconnect-text">
-                <span class="app-reconnect-when-show">Restoring your live connection to the server.</span>
-                <span class="app-reconnect-when-failed">We couldn't reach the server. Retrying…</span>
-                <span class="app-reconnect-when-rejected">Your session could not be resumed. Please reload the page.</span>
+                <span class="app-reconnect-when-show">@L["app.reconnect.restoring"]</span>
+                <span class="app-reconnect-when-failed">@L["app.reconnect.retrying"]</span>
+                <span class="app-reconnect-when-rejected">@L["app.reconnect.resume"]</span>
             </div>
             <div class="app-reconnect-actions">
-                <button class="app-reconnect-btn app-reconnect-when-failed" onclick="window.Blazor.reconnect()">Retry now</button>
-                <button class="app-reconnect-btn app-reconnect-when-rejected" onclick="location.reload()">Reload</button>
+                <button class="app-reconnect-btn app-reconnect-when-failed" onclick="window.Blazor.reconnect()">@L["app.reconnect.retryNow"]</button>
+                <button class="app-reconnect-btn app-reconnect-when-rejected" onclick="location.reload()">@L["app.reconnect.reload"]</button>
             </div>
         </div>
     </div>

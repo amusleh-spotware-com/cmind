@@ -44,6 +44,7 @@ const sidebars: SidebarsConfig = {
         'features/two-factor-auth',
         'features/user-registration',
         'features/white-label',
+        'features/localization',
         'features/feature-toggles',
         'features/compliance',
         'features/pwa',

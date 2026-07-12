@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="common.retry" xml:space="preserve"><value>Cuba semula</value></data>
+  <data name="common.close" xml:space="preserve"><value>Tutup</value></data>
+  <data name="common.cancel" xml:space="preserve"><value>Batal</value></data>
+  <data name="common.save" xml:space="preserve"><value>Simpan</value></data>
+  <data name="app.reconnect.reconnecting" xml:space="preserve"><value>Menyambung semula…</value></data>
+  <data name="app.reconnect.connectionLost" xml:space="preserve"><value>Sambungan terputus</value></data>
+  <data name="app.reconnect.sessionExpired" xml:space="preserve"><value>Sesi tamat</value></data>
+  <data name="app.reconnect.restoring" xml:space="preserve"><value>Memulihkan sambungan langsung anda ke pelayan.</value></data>
+  <data name="app.reconnect.retrying" xml:space="preserve"><value>Pelayan tidak dapat dicapai. Mencuba semula…</value></data>
+  <data name="app.reconnect.resume" xml:space="preserve"><value>Sesi anda tidak dapat disambung semula. Sila muat semula halaman.</value></data>
+  <data name="app.reconnect.retryNow" xml:space="preserve"><value>Cuba sekarang</value></data>
+  <data name="app.reconnect.reload" xml:space="preserve"><value>Muat semula</value></data>
+  <data name="layout.toggleNav" xml:space="preserve"><value>Togol menu navigasi</value></data>
+  <data name="layout.account" xml:space="preserve"><value>Akaun</value></data>
+  <data name="layout.pageError" xml:space="preserve"><value>Sesuatu telah berlaku pada halaman ini.</value></data>
+  <data name="nav.dashboard" xml:space="preserve"><value>Papan pemuka</value></data>
+  <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.run" xml:space="preserve"><value>Jalankan</value></data>
+  <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>
+  <data name="nav.optimize" xml:space="preserve"><value>Optimumkan</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Integriti</value></data>
+  <data name="nav.positionSizing" xml:space="preserve"><value>Saiz posisi</value></data>
+  <data name="nav.strategyHealth" xml:space="preserve"><value>Kesihatan strategi</value></data>
+  <data name="nav.regimeLab" xml:space="preserve"><value>Makmal rejim</value></data>
+  <data name="nav.executionCost" xml:space="preserve"><value>Kos pelaksanaan</value></data>
+  <data name="nav.contrarianPositioning" xml:space="preserve"><value>Kedudukan kontrarian</value></data>
+  <data name="nav.executionSchedule" xml:space="preserve"><value>Jadual pelaksanaan</value></data>
+  <data name="nav.group.ai" xml:space="preserve"><value>AI</value></data>
+  <data name="nav.ai.build" xml:space="preserve"><value>Bina cBot</value></data>
+  <data name="nav.ai.review" xml:space="preserve"><value>Semakan</value></data>
+  <data name="nav.ai.debate" xml:space="preserve"><value>Perdebatan</value></data>
+  <data name="nav.ai.sentiment" xml:space="preserve"><value>Sentimen pasaran</value></data>
+  <data name="nav.ai.exposure" xml:space="preserve"><value>Semakan pendedahan</value></data>
+  <data name="nav.ai.digest" xml:space="preserve"><value>Ringkasan portfolio</value></data>
+  <data name="nav.ai.tune" xml:space="preserve"><value>Penasihat penalaan</value></data>
+  <data name="nav.ai.optimize" xml:space="preserve"><value>Optimumkan</value></data>
+  <data name="nav.agentStudio" xml:space="preserve"><value>Agent Studio</value></data>
+  <data name="nav.journal" xml:space="preserve"><value>Jurnal dagangan</value></data>
+  <data name="nav.portfolioAgent" xml:space="preserve"><value>Ejen portfolio</value></data>
+  <data name="nav.alerts" xml:space="preserve"><value>Amaran</value></data>
+  <data name="nav.mcpKeys" xml:space="preserve"><value>Kunci MCP</value></data>
+  <data name="nav.group.prop" xml:space="preserve"><value>Prop</value></data>
+  <data name="nav.propGuard" xml:space="preserve"><value>Prop Guard</value></data>
+  <data name="nav.challenges" xml:space="preserve"><value>Cabaran</value></data>
+  <data name="nav.tradingAccounts" xml:space="preserve"><value>Akaun dagangan</value></data>
+  <data name="nav.copyTrading" xml:space="preserve"><value>Copy Trading</value></data>
+  <data name="nav.nodes" xml:space="preserve"><value>Nod</value></data>
+  <data name="nav.users" xml:space="preserve"><value>Pengguna</value></data>
+  <data name="nav.settings" xml:space="preserve"><value>Tetapan</value></data>
+  <data name="nav.bottom.home" xml:space="preserve"><value>Utama</value></data>
+  <data name="nav.bottom.account" xml:space="preserve"><value>Akaun</value></data>
+  <data name="settings.title" xml:space="preserve"><value>Tetapan</value></data>
+  <data name="settings.close" xml:space="preserve"><value>Tutup tetapan</value></data>
+  <data name="settings.section.openApi" xml:space="preserve"><value>Open API</value></data>
+  <data name="settings.section.ai" xml:space="preserve"><value>AI</value></data>
+  <data name="settings.section.features" xml:space="preserve"><value>Ciri</value></data>
+  <data name="settings.section.legal" xml:space="preserve"><value>Undang-undang &amp; Privasi</value></data>
+  <data name="settings.section.language" xml:space="preserve"><value>Bahasa</value></data>
+  <data name="language.title" xml:space="preserve"><value>Bahasa</value></data>
+  <data name="language.description" xml:space="preserve"><value>Pilih bahasa antara muka. Pilihan anda disimpan ke profil dan digunakan di seluruh apl.</value></data>
+  <data name="language.current" xml:space="preserve"><value>Bahasa semasa</value></data>
+</root>

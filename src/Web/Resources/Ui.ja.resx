@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="common.retry" xml:space="preserve"><value>再試行</value></data>
+  <data name="common.close" xml:space="preserve"><value>閉じる</value></data>
+  <data name="common.cancel" xml:space="preserve"><value>キャンセル</value></data>
+  <data name="common.save" xml:space="preserve"><value>保存</value></data>
+  <data name="app.reconnect.reconnecting" xml:space="preserve"><value>再接続しています…</value></data>
+  <data name="app.reconnect.connectionLost" xml:space="preserve"><value>接続が切断されました</value></data>
+  <data name="app.reconnect.sessionExpired" xml:space="preserve"><value>セッションの有効期限が切れました</value></data>
+  <data name="app.reconnect.restoring" xml:space="preserve"><value>サーバーへのライブ接続を復元しています。</value></data>
+  <data name="app.reconnect.retrying" xml:space="preserve"><value>サーバーに到達できませんでした。再試行しています…</value></data>
+  <data name="app.reconnect.resume" xml:space="preserve"><value>セッションを再開できませんでした。ページを再読み込みしてください。</value></data>
+  <data name="app.reconnect.retryNow" xml:space="preserve"><value>今すぐ再試行</value></data>
+  <data name="app.reconnect.reload" xml:space="preserve"><value>再読み込み</value></data>
+  <data name="layout.toggleNav" xml:space="preserve"><value>ナビゲーションメニューの切り替え</value></data>
+  <data name="layout.account" xml:space="preserve"><value>アカウント</value></data>
+  <data name="layout.pageError" xml:space="preserve"><value>このページで問題が発生しました。</value></data>
+  <data name="nav.dashboard" xml:space="preserve"><value>ダッシュボード</value></data>
+  <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.run" xml:space="preserve"><value>実行</value></data>
+  <data name="nav.backtest" xml:space="preserve"><value>バックテスト</value></data>
+  <data name="nav.optimize" xml:space="preserve"><value>最適化</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>整合性</value></data>
+  <data name="nav.positionSizing" xml:space="preserve"><value>ポジションサイズ</value></data>
+  <data name="nav.strategyHealth" xml:space="preserve"><value>戦略の健全性</value></data>
+  <data name="nav.regimeLab" xml:space="preserve"><value>レジームラボ</value></data>
+  <data name="nav.executionCost" xml:space="preserve"><value>執行コスト</value></data>
+  <data name="nav.contrarianPositioning" xml:space="preserve"><value>逆張りポジション</value></data>
+  <data name="nav.executionSchedule" xml:space="preserve"><value>執行スケジュール</value></data>
+  <data name="nav.group.ai" xml:space="preserve"><value>AI</value></data>
+  <data name="nav.ai.build" xml:space="preserve"><value>cBotを作成</value></data>
+  <data name="nav.ai.review" xml:space="preserve"><value>レビュー</value></data>
+  <data name="nav.ai.debate" xml:space="preserve"><value>ディベート</value></data>
+  <data name="nav.ai.sentiment" xml:space="preserve"><value>市場センチメント</value></data>
+  <data name="nav.ai.exposure" xml:space="preserve"><value>エクスポージャー確認</value></data>
+  <data name="nav.ai.digest" xml:space="preserve"><value>ポートフォリオ要約</value></data>
+  <data name="nav.ai.tune" xml:space="preserve"><value>チューニングアドバイザー</value></data>
+  <data name="nav.ai.optimize" xml:space="preserve"><value>最適化</value></data>
+  <data name="nav.agentStudio" xml:space="preserve"><value>エージェントスタジオ</value></data>
+  <data name="nav.journal" xml:space="preserve"><value>取引ジャーナル</value></data>
+  <data name="nav.portfolioAgent" xml:space="preserve"><value>ポートフォリオエージェント</value></data>
+  <data name="nav.alerts" xml:space="preserve"><value>アラート</value></data>
+  <data name="nav.mcpKeys" xml:space="preserve"><value>MCPキー</value></data>
+  <data name="nav.group.prop" xml:space="preserve"><value>Prop</value></data>
+  <data name="nav.propGuard" xml:space="preserve"><value>Prop Guard</value></data>
+  <data name="nav.challenges" xml:space="preserve"><value>チャレンジ</value></data>
+  <data name="nav.tradingAccounts" xml:space="preserve"><value>取引口座</value></data>
+  <data name="nav.copyTrading" xml:space="preserve"><value>コピートレード</value></data>
+  <data name="nav.nodes" xml:space="preserve"><value>ノード</value></data>
+  <data name="nav.users" xml:space="preserve"><value>ユーザー</value></data>
+  <data name="nav.settings" xml:space="preserve"><value>設定</value></data>
+  <data name="nav.bottom.home" xml:space="preserve"><value>ホーム</value></data>
+  <data name="nav.bottom.account" xml:space="preserve"><value>アカウント</value></data>
+  <data name="settings.title" xml:space="preserve"><value>設定</value></data>
+  <data name="settings.close" xml:space="preserve"><value>設定を閉じる</value></data>
+  <data name="settings.section.openApi" xml:space="preserve"><value>Open API</value></data>
+  <data name="settings.section.ai" xml:space="preserve"><value>AI</value></data>
+  <data name="settings.section.features" xml:space="preserve"><value>機能</value></data>
+  <data name="settings.section.legal" xml:space="preserve"><value>法務とプライバシー</value></data>
+  <data name="settings.section.language" xml:space="preserve"><value>言語</value></data>
+  <data name="language.title" xml:space="preserve"><value>言語</value></data>
+  <data name="language.description" xml:space="preserve"><value>インターフェースの言語を選択してください。選択内容はプロフィールに保存され、アプリ全体に適用されます。</value></data>
+  <data name="language.current" xml:space="preserve"><value>現在の言語</value></data>
+</root>

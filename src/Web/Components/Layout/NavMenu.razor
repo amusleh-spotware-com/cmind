@@ -2,103 +2,104 @@
 @using Web.Components.Dialogs
 @inject IFeatureGate Gate
 @inject IDialogService Dialogs
+@inject IStringLocalizer<Ui> L
 
 @* Expandable, grouped navigation (TradingView/cTrader-inspired). Feature-gated groups collapse to
    nothing when all their children are disabled. Settings is pinned to the bottom of the drawer. *@
 
 <div class="nav-shell d-flex flex-column">
     <MudNavMenu Class="flex-grow-1">
-        <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+        <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">@L["nav.dashboard"]</MudNavLink>
 
         @if (AnyAuthoring)
         {
-            <MudNavGroup Title="cBots" Icon="@Icons.Material.Filled.Memory" Expanded="false">
+            <MudNavGroup Title="@L["nav.group.cbots"]" Icon="@Icons.Material.Filled.Memory" Expanded="false">
                 @if (Gate.IsEnabled(FeatureFlag.Authoring))
                 {
-                    <MudNavLink Href="/cbots" Icon="@Icons.Material.Filled.Code">cBots</MudNavLink>
+                    <MudNavLink Href="/cbots" Icon="@Icons.Material.Filled.Code">@L["nav.cbots"]</MudNavLink>
                 }
                 @if (Gate.IsEnabled(FeatureFlag.Execution))
                 {
-                    <MudNavLink Href="/run" Icon="@Icons.Material.Filled.PlayArrow">Run</MudNavLink>
+                    <MudNavLink Href="/run" Icon="@Icons.Material.Filled.PlayArrow">@L["nav.run"]</MudNavLink>
                 }
                 @if (Gate.IsEnabled(FeatureFlag.Backtesting))
                 {
-                    <MudNavLink Href="/backtest" Icon="@Icons.Material.Filled.History">Backtest</MudNavLink>
-                    <MudNavLink Href="/optimize" Icon="@Icons.Material.Filled.Tune">Optimize</MudNavLink>
-                    <MudNavLink Href="/quant/integrity" Icon="@Icons.Material.Filled.VerifiedUser">Integrity</MudNavLink>
-                    <MudNavLink Href="/quant/sizing" Icon="@Icons.Material.Filled.Balance">Position Sizing</MudNavLink>
-                    <MudNavLink Href="/quant/health" Icon="@Icons.Material.Filled.MonitorHeart">Strategy Health</MudNavLink>
-                    <MudNavLink Href="/quant/regimes" Icon="@Icons.Material.Filled.Layers">Regime Lab</MudNavLink>
-                    <MudNavLink Href="/quant/tca" Icon="@Icons.Material.Filled.Receipt">Execution Cost</MudNavLink>
-                    <MudNavLink Href="/quant/positioning" Icon="@Icons.Material.Filled.SwapVert">Contrarian Positioning</MudNavLink>
-                    <MudNavLink Href="/quant/execution" Icon="@Icons.Material.Filled.ViewWeek">Execution Schedule</MudNavLink>
+                    <MudNavLink Href="/backtest" Icon="@Icons.Material.Filled.History">@L["nav.backtest"]</MudNavLink>
+                    <MudNavLink Href="/optimize" Icon="@Icons.Material.Filled.Tune">@L["nav.optimize"]</MudNavLink>
+                    <MudNavLink Href="/quant/integrity" Icon="@Icons.Material.Filled.VerifiedUser">@L["nav.integrity"]</MudNavLink>
+                    <MudNavLink Href="/quant/sizing" Icon="@Icons.Material.Filled.Balance">@L["nav.positionSizing"]</MudNavLink>
+                    <MudNavLink Href="/quant/health" Icon="@Icons.Material.Filled.MonitorHeart">@L["nav.strategyHealth"]</MudNavLink>
+                    <MudNavLink Href="/quant/regimes" Icon="@Icons.Material.Filled.Layers">@L["nav.regimeLab"]</MudNavLink>
+                    <MudNavLink Href="/quant/tca" Icon="@Icons.Material.Filled.Receipt">@L["nav.executionCost"]</MudNavLink>
+                    <MudNavLink Href="/quant/positioning" Icon="@Icons.Material.Filled.SwapVert">@L["nav.contrarianPositioning"]</MudNavLink>
+                    <MudNavLink Href="/quant/execution" Icon="@Icons.Material.Filled.ViewWeek">@L["nav.executionSchedule"]</MudNavLink>
                 }
             </MudNavGroup>
         }
 
         @if (Gate.IsEnabled(FeatureFlag.Ai))
         {
-            <MudNavGroup Title="AI" Icon="@Icons.Material.Filled.AutoAwesome" Expanded="false">
-                <MudNavLink Href="/ai/build" Icon="@Icons.Material.Filled.Bolt">Build cBot</MudNavLink>
-                <MudNavLink Href="/ai/review" Icon="@Icons.Material.Filled.RateReview">Review</MudNavLink>
-                <MudNavLink Href="/ai/debate" Icon="@Icons.Material.Filled.Forum">Debate</MudNavLink>
-                <MudNavLink Href="/ai/sentiment" Icon="@Icons.Material.Filled.Insights">Market Sentiment</MudNavLink>
-                <MudNavLink Href="/ai/exposure" Icon="@Icons.Material.Filled.Radar">Exposure Check</MudNavLink>
-                <MudNavLink Href="/ai/digest" Icon="@Icons.Material.Filled.Summarize">Portfolio Digest</MudNavLink>
-                <MudNavLink Href="/ai/tune" Icon="@Icons.Material.Filled.TrendingDown">Tune Advisor</MudNavLink>
-                <MudNavLink Href="/ai/optimize" Icon="@Icons.Material.Filled.AutoFixHigh">Optimize</MudNavLink>
+            <MudNavGroup Title="@L["nav.group.ai"]" Icon="@Icons.Material.Filled.AutoAwesome" Expanded="false">
+                <MudNavLink Href="/ai/build" Icon="@Icons.Material.Filled.Bolt">@L["nav.ai.build"]</MudNavLink>
+                <MudNavLink Href="/ai/review" Icon="@Icons.Material.Filled.RateReview">@L["nav.ai.review"]</MudNavLink>
+                <MudNavLink Href="/ai/debate" Icon="@Icons.Material.Filled.Forum">@L["nav.ai.debate"]</MudNavLink>
+                <MudNavLink Href="/ai/sentiment" Icon="@Icons.Material.Filled.Insights">@L["nav.ai.sentiment"]</MudNavLink>
+                <MudNavLink Href="/ai/exposure" Icon="@Icons.Material.Filled.Radar">@L["nav.ai.exposure"]</MudNavLink>
+                <MudNavLink Href="/ai/digest" Icon="@Icons.Material.Filled.Summarize">@L["nav.ai.digest"]</MudNavLink>
+                <MudNavLink Href="/ai/tune" Icon="@Icons.Material.Filled.TrendingDown">@L["nav.ai.tune"]</MudNavLink>
+                <MudNavLink Href="/ai/optimize" Icon="@Icons.Material.Filled.AutoFixHigh">@L["nav.ai.optimize"]</MudNavLink>
                 @if (Gate.IsEnabled(FeatureFlag.AgentStudio))
                 {
-                    <MudNavLink Href="/agent-studio" Icon="@Icons.Material.Filled.SmartToy">Agent Studio</MudNavLink>
+                    <MudNavLink Href="/agent-studio" Icon="@Icons.Material.Filled.SmartToy">@L["nav.agentStudio"]</MudNavLink>
                 }
-                <MudNavLink Href="/journal" Icon="@Icons.Material.Filled.MenuBook">Trading Journal</MudNavLink>
+                <MudNavLink Href="/journal" Icon="@Icons.Material.Filled.MenuBook">@L["nav.journal"]</MudNavLink>
                 @if (Gate.IsEnabled(FeatureFlag.PortfolioAgent))
                 {
-                    <MudNavLink Href="/agent" Icon="@Icons.Material.Filled.SmartToy">Portfolio Agent</MudNavLink>
+                    <MudNavLink Href="/agent" Icon="@Icons.Material.Filled.SmartToy">@L["nav.portfolioAgent"]</MudNavLink>
                 }
                 @if (Gate.IsEnabled(FeatureFlag.Alerts))
                 {
-                    <MudNavLink Href="/alerts" Icon="@Icons.Material.Filled.NotificationsActive">Alerts</MudNavLink>
+                    <MudNavLink Href="/alerts" Icon="@Icons.Material.Filled.NotificationsActive">@L["nav.alerts"]</MudNavLink>
                 }
                 @if (Gate.IsEnabled(FeatureFlag.Mcp))
                 {
-                    <MudNavLink Href="/mcp" Icon="@Icons.Material.Filled.Key">MCP Keys</MudNavLink>
+                    <MudNavLink Href="/mcp" Icon="@Icons.Material.Filled.Key">@L["nav.mcpKeys"]</MudNavLink>
                 }
             </MudNavGroup>
         }
 
         @if (AnyProp)
         {
-            <MudNavGroup Title="Prop" Icon="@Icons.Material.Filled.EmojiEvents" Expanded="false">
+            <MudNavGroup Title="@L["nav.group.prop"]" Icon="@Icons.Material.Filled.EmojiEvents" Expanded="false">
                 @if (Gate.IsEnabled(FeatureFlag.PropGuard))
                 {
-                    <MudNavLink Href="/prop-guard" Icon="@Icons.Material.Filled.Shield">Prop Guard</MudNavLink>
+                    <MudNavLink Href="/prop-guard" Icon="@Icons.Material.Filled.Shield">@L["nav.propGuard"]</MudNavLink>
                 }
                 @if (Gate.IsEnabled(FeatureFlag.PropFirm))
                 {
-                    <MudNavLink Href="/prop-firm" Icon="@Icons.Material.Filled.EmojiEvents">Challenges</MudNavLink>
+                    <MudNavLink Href="/prop-firm" Icon="@Icons.Material.Filled.EmojiEvents">@L["nav.challenges"]</MudNavLink>
                 }
             </MudNavGroup>
         }
 
         @if (Gate.IsEnabled(FeatureFlag.Accounts))
         {
-            <MudNavLink Href="/accounts" Icon="@Icons.Material.Filled.AccountBalance">Trading Accounts</MudNavLink>
+            <MudNavLink Href="/accounts" Icon="@Icons.Material.Filled.AccountBalance">@L["nav.tradingAccounts"]</MudNavLink>
         }
         @if (Gate.IsEnabled(FeatureFlag.CopyTrading))
         {
-            <MudNavLink Href="/copy-trading" Icon="@Icons.Material.Filled.Repeat">Copy Trading</MudNavLink>
+            <MudNavLink Href="/copy-trading" Icon="@Icons.Material.Filled.Repeat">@L["nav.copyTrading"]</MudNavLink>
         }
 
         <AuthorizeView Policy="AdminOrAbove">
-            <MudNavLink Href="/nodes" Icon="@Icons.Material.Filled.Hub">Nodes</MudNavLink>
-            <MudNavLink Href="/users" Icon="@Icons.Material.Filled.Group">Users</MudNavLink>
+            <MudNavLink Href="/nodes" Icon="@Icons.Material.Filled.Hub">@L["nav.nodes"]</MudNavLink>
+            <MudNavLink Href="/users" Icon="@Icons.Material.Filled.Group">@L["nav.users"]</MudNavLink>
         </AuthorizeView>
     </MudNavMenu>
 
     <MudDivider />
     <MudNavMenu>
-        <MudNavLink Icon="@Icons.Material.Filled.Settings" data-testid="nav-settings" OnClick="OpenSettings">Settings</MudNavLink>
+        <MudNavLink Icon="@Icons.Material.Filled.Settings" data-testid="nav-settings" OnClick="OpenSettings">@L["nav.settings"]</MudNavLink>
     </MudNavMenu>
 </div>
 

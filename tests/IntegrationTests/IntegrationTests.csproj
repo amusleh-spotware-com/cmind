@@ -2,6 +2,9 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- Hosts the Web app in-process (WebApplicationFactory); globalization mode is process-wide and set
+         at startup, so the test host must also enable ICU for the localization pipeline to resolve cultures. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Web\Web.csproj" />

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="common.retry" xml:space="preserve"><value>Повторить</value></data>
+  <data name="common.close" xml:space="preserve"><value>Закрыть</value></data>
+  <data name="common.cancel" xml:space="preserve"><value>Отмена</value></data>
+  <data name="common.save" xml:space="preserve"><value>Сохранить</value></data>
+  <data name="app.reconnect.reconnecting" xml:space="preserve"><value>Повторное подключение…</value></data>
+  <data name="app.reconnect.connectionLost" xml:space="preserve"><value>Соединение потеряно</value></data>
+  <data name="app.reconnect.sessionExpired" xml:space="preserve"><value>Сеанс истёк</value></data>
+  <data name="app.reconnect.restoring" xml:space="preserve"><value>Восстановление активного соединения с сервером.</value></data>
+  <data name="app.reconnect.retrying" xml:space="preserve"><value>Не удалось связаться с сервером. Повторная попытка…</value></data>
+  <data name="app.reconnect.resume" xml:space="preserve"><value>Не удалось возобновить сеанс. Обновите страницу.</value></data>
+  <data name="app.reconnect.retryNow" xml:space="preserve"><value>Повторить сейчас</value></data>
+  <data name="app.reconnect.reload" xml:space="preserve"><value>Обновить</value></data>
+  <data name="layout.toggleNav" xml:space="preserve"><value>Переключить меню навигации</value></data>
+  <data name="layout.account" xml:space="preserve"><value>Аккаунт</value></data>
+  <data name="layout.pageError" xml:space="preserve"><value>На этой странице произошла ошибка.</value></data>
+  <data name="nav.dashboard" xml:space="preserve"><value>Панель</value></data>
+  <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.run" xml:space="preserve"><value>Запустить</value></data>
+  <data name="nav.backtest" xml:space="preserve"><value>Бэктест</value></data>
+  <data name="nav.optimize" xml:space="preserve"><value>Оптимизировать</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Целостность</value></data>
+  <data name="nav.positionSizing" xml:space="preserve"><value>Размер позиции</value></data>
+  <data name="nav.strategyHealth" xml:space="preserve"><value>Здоровье стратегии</value></data>
+  <data name="nav.regimeLab" xml:space="preserve"><value>Лаборатория режимов</value></data>
+  <data name="nav.executionCost" xml:space="preserve"><value>Стоимость исполнения</value></data>
+  <data name="nav.contrarianPositioning" xml:space="preserve"><value>Контртрендовое позиционирование</value></data>
+  <data name="nav.executionSchedule" xml:space="preserve"><value>График исполнения</value></data>
+  <data name="nav.group.ai" xml:space="preserve"><value>ИИ</value></data>
+  <data name="nav.ai.build" xml:space="preserve"><value>Создать cBot</value></data>
+  <data name="nav.ai.review" xml:space="preserve"><value>Обзор</value></data>
+  <data name="nav.ai.debate" xml:space="preserve"><value>Дебаты</value></data>
+  <data name="nav.ai.sentiment" xml:space="preserve"><value>Настроение рынка</value></data>
+  <data name="nav.ai.exposure" xml:space="preserve"><value>Проверка экспозиции</value></data>
+  <data name="nav.ai.digest" xml:space="preserve"><value>Сводка портфеля</value></data>
+  <data name="nav.ai.tune" xml:space="preserve"><value>Советник по настройке</value></data>
+  <data name="nav.ai.optimize" xml:space="preserve"><value>Оптимизировать</value></data>
+  <data name="nav.agentStudio" xml:space="preserve"><value>Студия агентов</value></data>
+  <data name="nav.journal" xml:space="preserve"><value>Журнал сделок</value></data>
+  <data name="nav.portfolioAgent" xml:space="preserve"><value>Агент портфеля</value></data>
+  <data name="nav.alerts" xml:space="preserve"><value>Оповещения</value></data>
+  <data name="nav.mcpKeys" xml:space="preserve"><value>Ключи MCP</value></data>
+  <data name="nav.group.prop" xml:space="preserve"><value>Prop</value></data>
+  <data name="nav.propGuard" xml:space="preserve"><value>Prop Guard</value></data>
+  <data name="nav.challenges" xml:space="preserve"><value>Челленджи</value></data>
+  <data name="nav.tradingAccounts" xml:space="preserve"><value>Торговые счета</value></data>
+  <data name="nav.copyTrading" xml:space="preserve"><value>Копи-трейдинг</value></data>
+  <data name="nav.nodes" xml:space="preserve"><value>Узлы</value></data>
+  <data name="nav.users" xml:space="preserve"><value>Пользователи</value></data>
+  <data name="nav.settings" xml:space="preserve"><value>Настройки</value></data>
+  <data name="nav.bottom.home" xml:space="preserve"><value>Главная</value></data>
+  <data name="nav.bottom.account" xml:space="preserve"><value>Аккаунт</value></data>
+  <data name="settings.title" xml:space="preserve"><value>Настройки</value></data>
+  <data name="settings.close" xml:space="preserve"><value>Закрыть настройки</value></data>
+  <data name="settings.section.openApi" xml:space="preserve"><value>Open API</value></data>
+  <data name="settings.section.ai" xml:space="preserve"><value>ИИ</value></data>
+  <data name="settings.section.features" xml:space="preserve"><value>Функции</value></data>
+  <data name="settings.section.legal" xml:space="preserve"><value>Правовая информация и конфиденциальность</value></data>
+  <data name="settings.section.language" xml:space="preserve"><value>Язык</value></data>
+  <data name="language.title" xml:space="preserve"><value>Язык</value></data>
+  <data name="language.description" xml:space="preserve"><value>Выберите язык интерфейса. Ваш выбор сохранится в профиле и применится во всём приложении.</value></data>
+  <data name="language.current" xml:space="preserve"><value>Текущий язык</value></data>
+</root>

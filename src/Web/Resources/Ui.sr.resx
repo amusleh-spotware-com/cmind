@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="common.retry" xml:space="preserve"><value>Покушај поново</value></data>
+  <data name="common.close" xml:space="preserve"><value>Затвори</value></data>
+  <data name="common.cancel" xml:space="preserve"><value>Откажи</value></data>
+  <data name="common.save" xml:space="preserve"><value>Сачувај</value></data>
+  <data name="app.reconnect.reconnecting" xml:space="preserve"><value>Поновно повезивање…</value></data>
+  <data name="app.reconnect.connectionLost" xml:space="preserve"><value>Веза је изгубљена</value></data>
+  <data name="app.reconnect.sessionExpired" xml:space="preserve"><value>Сесија је истекла</value></data>
+  <data name="app.reconnect.restoring" xml:space="preserve"><value>Обнавља се веза уживо са сервером.</value></data>
+  <data name="app.reconnect.retrying" xml:space="preserve"><value>Сервер није доступан. Покушавам поново…</value></data>
+  <data name="app.reconnect.resume" xml:space="preserve"><value>Сесија не може да се настави. Поново учитајте страницу.</value></data>
+  <data name="app.reconnect.retryNow" xml:space="preserve"><value>Покушај сада</value></data>
+  <data name="app.reconnect.reload" xml:space="preserve"><value>Поново учитај</value></data>
+  <data name="layout.toggleNav" xml:space="preserve"><value>Промени навигациони мени</value></data>
+  <data name="layout.account" xml:space="preserve"><value>Налог</value></data>
+  <data name="layout.pageError" xml:space="preserve"><value>Дошло је до грешке на овој страници.</value></data>
+  <data name="nav.dashboard" xml:space="preserve"><value>Контролна табла</value></data>
+  <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.run" xml:space="preserve"><value>Покрени</value></data>
+  <data name="nav.backtest" xml:space="preserve"><value>Бектест</value></data>
+  <data name="nav.optimize" xml:space="preserve"><value>Оптимизуј</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Интегритет</value></data>
+  <data name="nav.positionSizing" xml:space="preserve"><value>Величина позиције</value></data>
+  <data name="nav.strategyHealth" xml:space="preserve"><value>Здравље стратегије</value></data>
+  <data name="nav.regimeLab" xml:space="preserve"><value>Лабораторија режима</value></data>
+  <data name="nav.executionCost" xml:space="preserve"><value>Трошак извршења</value></data>
+  <data name="nav.contrarianPositioning" xml:space="preserve"><value>Супротно позиционирање</value></data>
+  <data name="nav.executionSchedule" xml:space="preserve"><value>Распоред извршења</value></data>
+  <data name="nav.group.ai" xml:space="preserve"><value>ВИ</value></data>
+  <data name="nav.ai.build" xml:space="preserve"><value>Направи cBot</value></data>
+  <data name="nav.ai.review" xml:space="preserve"><value>Преглед</value></data>
+  <data name="nav.ai.debate" xml:space="preserve"><value>Дебата</value></data>
+  <data name="nav.ai.sentiment" xml:space="preserve"><value>Расположење тржишта</value></data>
+  <data name="nav.ai.exposure" xml:space="preserve"><value>Провера изложености</value></data>
+  <data name="nav.ai.digest" xml:space="preserve"><value>Сажетак портфолија</value></data>
+  <data name="nav.ai.tune" xml:space="preserve"><value>Саветник за подешавање</value></data>
+  <data name="nav.ai.optimize" xml:space="preserve"><value>Оптимизуј</value></data>
+  <data name="nav.agentStudio" xml:space="preserve"><value>Agent Studio</value></data>
+  <data name="nav.journal" xml:space="preserve"><value>Дневник трговања</value></data>
+  <data name="nav.portfolioAgent" xml:space="preserve"><value>Агент портфолија</value></data>
+  <data name="nav.alerts" xml:space="preserve"><value>Обавештења</value></data>
+  <data name="nav.mcpKeys" xml:space="preserve"><value>MCP кључеви</value></data>
+  <data name="nav.group.prop" xml:space="preserve"><value>Prop</value></data>
+  <data name="nav.propGuard" xml:space="preserve"><value>Prop Guard</value></data>
+  <data name="nav.challenges" xml:space="preserve"><value>Изазови</value></data>
+  <data name="nav.tradingAccounts" xml:space="preserve"><value>Трговински налози</value></data>
+  <data name="nav.copyTrading" xml:space="preserve"><value>Copy Trading</value></data>
+  <data name="nav.nodes" xml:space="preserve"><value>Чворови</value></data>
+  <data name="nav.users" xml:space="preserve"><value>Корисници</value></data>
+  <data name="nav.settings" xml:space="preserve"><value>Подешавања</value></data>
+  <data name="nav.bottom.home" xml:space="preserve"><value>Почетна</value></data>
+  <data name="nav.bottom.account" xml:space="preserve"><value>Налог</value></data>
+  <data name="settings.title" xml:space="preserve"><value>Подешавања</value></data>
+  <data name="settings.close" xml:space="preserve"><value>Затвори подешавања</value></data>
+  <data name="settings.section.openApi" xml:space="preserve"><value>Open API</value></data>
+  <data name="settings.section.ai" xml:space="preserve"><value>ВИ</value></data>
+  <data name="settings.section.features" xml:space="preserve"><value>Функције</value></data>
+  <data name="settings.section.legal" xml:space="preserve"><value>Правно и приватност</value></data>
+  <data name="settings.section.language" xml:space="preserve"><value>Језик</value></data>
+  <data name="language.title" xml:space="preserve"><value>Језик</value></data>
+  <data name="language.description" xml:space="preserve"><value>Изаберите језик интерфејса. Ваш избор се чува у профилу и примењује у целој апликацији.</value></data>
+  <data name="language.current" xml:space="preserve"><value>Тренутни језик</value></data>
+</root>

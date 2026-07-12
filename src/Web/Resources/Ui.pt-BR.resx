@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="common.retry" xml:space="preserve"><value>Tentar novamente</value></data>
+  <data name="common.close" xml:space="preserve"><value>Fechar</value></data>
+  <data name="common.cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="common.save" xml:space="preserve"><value>Salvar</value></data>
+  <data name="app.reconnect.reconnecting" xml:space="preserve"><value>Reconectando…</value></data>
+  <data name="app.reconnect.connectionLost" xml:space="preserve"><value>Conexão perdida</value></data>
+  <data name="app.reconnect.sessionExpired" xml:space="preserve"><value>Sessão expirada</value></data>
+  <data name="app.reconnect.restoring" xml:space="preserve"><value>Restaurando sua conexão ao vivo com o servidor.</value></data>
+  <data name="app.reconnect.retrying" xml:space="preserve"><value>Não foi possível acessar o servidor. Tentando novamente…</value></data>
+  <data name="app.reconnect.resume" xml:space="preserve"><value>Não foi possível retomar sua sessão. Recarregue a página.</value></data>
+  <data name="app.reconnect.retryNow" xml:space="preserve"><value>Tentar agora</value></data>
+  <data name="app.reconnect.reload" xml:space="preserve"><value>Recarregar</value></data>
+  <data name="layout.toggleNav" xml:space="preserve"><value>Alternar o menu de navegação</value></data>
+  <data name="layout.account" xml:space="preserve"><value>Conta</value></data>
+  <data name="layout.pageError" xml:space="preserve"><value>Ocorreu um erro nesta página.</value></data>
+  <data name="nav.dashboard" xml:space="preserve"><value>Painel</value></data>
+  <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.run" xml:space="preserve"><value>Executar</value></data>
+  <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>
+  <data name="nav.optimize" xml:space="preserve"><value>Otimizar</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Integridade</value></data>
+  <data name="nav.positionSizing" xml:space="preserve"><value>Tamanho da posição</value></data>
+  <data name="nav.strategyHealth" xml:space="preserve"><value>Saúde da estratégia</value></data>
+  <data name="nav.regimeLab" xml:space="preserve"><value>Laboratório de regimes</value></data>
+  <data name="nav.executionCost" xml:space="preserve"><value>Custo de execução</value></data>
+  <data name="nav.contrarianPositioning" xml:space="preserve"><value>Posicionamento contrário</value></data>
+  <data name="nav.executionSchedule" xml:space="preserve"><value>Cronograma de execução</value></data>
+  <data name="nav.group.ai" xml:space="preserve"><value>IA</value></data>
+  <data name="nav.ai.build" xml:space="preserve"><value>Criar cBot</value></data>
+  <data name="nav.ai.review" xml:space="preserve"><value>Revisão</value></data>
+  <data name="nav.ai.debate" xml:space="preserve"><value>Debate</value></data>
+  <data name="nav.ai.sentiment" xml:space="preserve"><value>Sentimento do mercado</value></data>
+  <data name="nav.ai.exposure" xml:space="preserve"><value>Verificação de exposição</value></data>
+  <data name="nav.ai.digest" xml:space="preserve"><value>Resumo da carteira</value></data>
+  <data name="nav.ai.tune" xml:space="preserve"><value>Consultor de ajuste</value></data>
+  <data name="nav.ai.optimize" xml:space="preserve"><value>Otimizar</value></data>
+  <data name="nav.agentStudio" xml:space="preserve"><value>Agent Studio</value></data>
+  <data name="nav.journal" xml:space="preserve"><value>Diário de negociação</value></data>
+  <data name="nav.portfolioAgent" xml:space="preserve"><value>Agente de carteira</value></data>
+  <data name="nav.alerts" xml:space="preserve"><value>Alertas</value></data>
+  <data name="nav.mcpKeys" xml:space="preserve"><value>Chaves MCP</value></data>
+  <data name="nav.group.prop" xml:space="preserve"><value>Prop</value></data>
+  <data name="nav.propGuard" xml:space="preserve"><value>Prop Guard</value></data>
+  <data name="nav.challenges" xml:space="preserve"><value>Desafios</value></data>
+  <data name="nav.tradingAccounts" xml:space="preserve"><value>Contas de negociação</value></data>
+  <data name="nav.copyTrading" xml:space="preserve"><value>Copy Trading</value></data>
+  <data name="nav.nodes" xml:space="preserve"><value>Nós</value></data>
+  <data name="nav.users" xml:space="preserve"><value>Usuários</value></data>
+  <data name="nav.settings" xml:space="preserve"><value>Configurações</value></data>
+  <data name="nav.bottom.home" xml:space="preserve"><value>Início</value></data>
+  <data name="nav.bottom.account" xml:space="preserve"><value>Conta</value></data>
+  <data name="settings.title" xml:space="preserve"><value>Configurações</value></data>
+  <data name="settings.close" xml:space="preserve"><value>Fechar configurações</value></data>
+  <data name="settings.section.openApi" xml:space="preserve"><value>Open API</value></data>
+  <data name="settings.section.ai" xml:space="preserve"><value>IA</value></data>
+  <data name="settings.section.features" xml:space="preserve"><value>Recursos</value></data>
+  <data name="settings.section.legal" xml:space="preserve"><value>Jurídico e privacidade</value></data>
+  <data name="settings.section.language" xml:space="preserve"><value>Idioma</value></data>
+  <data name="language.title" xml:space="preserve"><value>Idioma</value></data>
+  <data name="language.description" xml:space="preserve"><value>Escolha o idioma da interface. Sua escolha é salva no seu perfil e aplicada em todo o app.</value></data>
+  <data name="language.current" xml:space="preserve"><value>Idioma atual</value></data>
+</root>

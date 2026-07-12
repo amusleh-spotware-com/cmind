@@ -5,9 +5,11 @@ using Core;
 using Core.Constants;
 using Core.Options;
 using Infrastructure.Persistence;
+using Core.Localization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -263,6 +265,23 @@ public static class AuthEndpoints
         };
         await ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(identity), authProps);
+
+        // Carry the user's saved language into the culture cookie so the very next request (and the Blazor
+        // circuit that boots from it) renders in their language without waiting for a manual switch.
+        if (CultureName.TryFrom(user.Profile.Locale, out var culture))
+        {
+            ctx.Response.Cookies.Append(
+                CookieRequestCultureProvider.DefaultCookieName,
+                CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture.Value)),
+                new CookieOptions
+                {
+                    MaxAge = TimeSpan.FromDays(365),
+                    SameSite = SameSiteMode.Lax,
+                    Secure = ctx.Request.IsHttps,
+                    IsEssential = true,
+                    Path = "/"
+                });
+        }
     }
 
     private static async Task<(string Email, string Password, string? ReturnUrl, bool RememberMe, bool IsForm)>

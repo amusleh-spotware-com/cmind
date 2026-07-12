@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="common.retry" xml:space="preserve"><value>Retry</value></data>
+  <data name="common.close" xml:space="preserve"><value>Close</value></data>
+  <data name="common.cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="common.save" xml:space="preserve"><value>Save</value></data>
+  <data name="app.reconnect.reconnecting" xml:space="preserve"><value>Reconnecting…</value></data>
+  <data name="app.reconnect.connectionLost" xml:space="preserve"><value>Connection lost</value></data>
+  <data name="app.reconnect.sessionExpired" xml:space="preserve"><value>Session expired</value></data>
+  <data name="app.reconnect.restoring" xml:space="preserve"><value>Restoring your live connection to the server.</value></data>
+  <data name="app.reconnect.retrying" xml:space="preserve"><value>We couldn't reach the server. Retrying…</value></data>
+  <data name="app.reconnect.resume" xml:space="preserve"><value>Your session could not be resumed. Please reload the page.</value></data>
+  <data name="app.reconnect.retryNow" xml:space="preserve"><value>Retry now</value></data>
+  <data name="app.reconnect.reload" xml:space="preserve"><value>Reload</value></data>
+  <data name="layout.toggleNav" xml:space="preserve"><value>Toggle navigation menu</value></data>
+  <data name="layout.account" xml:space="preserve"><value>Account</value></data>
+  <data name="layout.pageError" xml:space="preserve"><value>Something went wrong on this page.</value></data>
+  <data name="nav.dashboard" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.run" xml:space="preserve"><value>Run</value></data>
+  <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>
+  <data name="nav.optimize" xml:space="preserve"><value>Optimize</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Integrity</value></data>
+  <data name="nav.positionSizing" xml:space="preserve"><value>Position Sizing</value></data>
+  <data name="nav.strategyHealth" xml:space="preserve"><value>Strategy Health</value></data>
+  <data name="nav.regimeLab" xml:space="preserve"><value>Regime Lab</value></data>
+  <data name="nav.executionCost" xml:space="preserve"><value>Execution Cost</value></data>
+  <data name="nav.contrarianPositioning" xml:space="preserve"><value>Contrarian Positioning</value></data>
+  <data name="nav.executionSchedule" xml:space="preserve"><value>Execution Schedule</value></data>
+  <data name="nav.group.ai" xml:space="preserve"><value>AI</value></data>
+  <data name="nav.ai.build" xml:space="preserve"><value>Build cBot</value></data>
+  <data name="nav.ai.review" xml:space="preserve"><value>Review</value></data>
+  <data name="nav.ai.debate" xml:space="preserve"><value>Debate</value></data>
+  <data name="nav.ai.sentiment" xml:space="preserve"><value>Market Sentiment</value></data>
+  <data name="nav.ai.exposure" xml:space="preserve"><value>Exposure Check</value></data>
+  <data name="nav.ai.digest" xml:space="preserve"><value>Portfolio Digest</value></data>
+  <data name="nav.ai.tune" xml:space="preserve"><value>Tune Advisor</value></data>
+  <data name="nav.ai.optimize" xml:space="preserve"><value>Optimize</value></data>
+  <data name="nav.agentStudio" xml:space="preserve"><value>Agent Studio</value></data>
+  <data name="nav.journal" xml:space="preserve"><value>Trading Journal</value></data>
+  <data name="nav.portfolioAgent" xml:space="preserve"><value>Portfolio Agent</value></data>
+  <data name="nav.alerts" xml:space="preserve"><value>Alerts</value></data>
+  <data name="nav.mcpKeys" xml:space="preserve"><value>MCP Keys</value></data>
+  <data name="nav.group.prop" xml:space="preserve"><value>Prop</value></data>
+  <data name="nav.propGuard" xml:space="preserve"><value>Prop Guard</value></data>
+  <data name="nav.challenges" xml:space="preserve"><value>Challenges</value></data>
+  <data name="nav.tradingAccounts" xml:space="preserve"><value>Trading Accounts</value></data>
+  <data name="nav.copyTrading" xml:space="preserve"><value>Copy Trading</value></data>
+  <data name="nav.nodes" xml:space="preserve"><value>Nodes</value></data>
+  <data name="nav.users" xml:space="preserve"><value>Users</value></data>
+  <data name="nav.settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="nav.bottom.home" xml:space="preserve"><value>Home</value></data>
+  <data name="nav.bottom.account" xml:space="preserve"><value>Account</value></data>
+  <data name="settings.title" xml:space="preserve"><value>Settings</value></data>
+  <data name="settings.close" xml:space="preserve"><value>Close settings</value></data>
+  <data name="settings.section.openApi" xml:space="preserve"><value>Open API</value></data>
+  <data name="settings.section.ai" xml:space="preserve"><value>AI</value></data>
+  <data name="settings.section.features" xml:space="preserve"><value>Features</value></data>
+  <data name="settings.section.legal" xml:space="preserve"><value>Legal &amp; Privacy</value></data>
+  <data name="settings.section.language" xml:space="preserve"><value>Language</value></data>
+  <data name="language.title" xml:space="preserve"><value>Language</value></data>
+  <data name="language.description" xml:space="preserve"><value>Choose the language for the interface. Your choice is saved to your profile and applied across the app.</value></data>
+  <data name="language.current" xml:space="preserve"><value>Current language</value></data>
+</root>

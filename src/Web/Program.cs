@@ -42,6 +42,27 @@ builder.Services.AddHealthChecks()
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents(o => o.DetailedErrors = builder.Environment.IsDevelopment());
 builder.Services.AddMudServices();
+
+// Localization: resources live in src/Web/Resources (Ui.resx + one Ui.<culture>.resx per language).
+// The request-culture pipeline (below) picks the culture from the cookie the switcher/login writes,
+// then the browser's Accept-Language on a first visit, falling back to English.
+builder.Services.AddLocalization(o => o.ResourcesPath = "Resources");
+builder.Services.Configure<Microsoft.AspNetCore.Builder.RequestLocalizationOptions>(o =>
+{
+    var supported = SupportedCultures.All
+        .Select(c => new System.Globalization.CultureInfo(c))
+        .ToArray();
+    o.DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture(SupportedCultures.Default);
+    o.SupportedCultures = supported;
+    o.SupportedUICultures = supported;
+    o.FallBackToParentUICultures = true;
+    o.ApplyCurrentCultureToResponseHeaders = true;
+    o.RequestCultureProviders =
+    [
+        new Microsoft.AspNetCore.Localization.CookieRequestCultureProvider(),
+        new Microsoft.AspNetCore.Localization.AcceptLanguageHeaderRequestCultureProvider()
+    ];
+});
 // S6 Web scale-out: with multiple Web replicas, a Redis backplane fans SignalR hub messages (logs hub,
 // Blazor Server negotiation) across replicas so a circuit reconnecting to a different pod stays live.
 // Absent connection string => single-replica in-memory (unchanged).
@@ -153,11 +174,13 @@ app.UseAntiforgery();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRequestLocalization();
 app.UseMiddleware<Web.Security.MfaEnforcementMiddleware>();
 
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 app.MapAuthEndpoints();
+app.MapLocalizationEndpoints();
 app.MapRegistrationEndpoints();
 app.MapCBotEndpoints();
 app.MapNodeEndpoints();

@@ -1,0 +1,39 @@
+﻿@using System.Globalization
+@using Core.Constants
+@inject NavigationManager Nav
+@inject IStringLocalizer<Ui> L
+
+@* Language picker. A Blazor Server circuit can't change culture live, so each choice force-navigates to
+   the /set-culture endpoint (a full HTTP GET, outside the circuit) which sets the cookie + persists the
+   choice; the reload boots a fresh circuit in the chosen language and re-evaluates RTL. *@
+
+<MudMenu Icon="@Icons.Material.Filled.Language" Color="Color.Inherit"
+         AriaLabel="@L["settings.section.language"]" data-testid="language-switcher"
+         AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+    @foreach (var culture in SupportedCultures.All)
+    {
+        var isCurrent = string.Equals(culture, _current, StringComparison.OrdinalIgnoreCase);
+        <MudMenuItem OnClick="@(() => SwitchTo(culture))"
+                     data-testid="@($"language-option-{culture}")"
+                     Icon="@(isCurrent ? Icons.Material.Filled.Check : null)">
+            @SupportedCultures.NativeNames[culture]
+        </MudMenuItem>
+    }
+</MudMenu>
+
+@code {
+    private string _current = SupportedCultures.Default;
+
+    protected override void OnInitialized() =>
+        _current = CultureInfo.CurrentUICulture.Name is { Length: > 0 } name
+            ? name
+            : SupportedCultures.Default;
+
+    private void SwitchTo(string culture)
+    {
+        if (string.Equals(culture, _current, StringComparison.OrdinalIgnoreCase)) return;
+        var back = "/" + Nav.ToBaseRelativePath(Nav.Uri);
+        var url = $"/set-culture?culture={Uri.EscapeDataString(culture)}&redirectUri={Uri.EscapeDataString(back)}";
+        Nav.NavigateTo(url, forceLoad: true);
+    }
+}

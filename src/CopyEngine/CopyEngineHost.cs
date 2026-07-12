@@ -174,7 +174,7 @@ public sealed class CopyEngineHost(
         {
             _tokenUpdates.Writer.TryComplete();
             _flattenSignals.Writer.TryComplete();
-            loopCts.Cancel();
+            await loopCts.CancelAsync();
             try { await tokenSwapLoop; } catch { /* swap loop cancellation is expected on shutdown */ }
             try { await equityGuardLoop; } catch { /* equity guard cancellation is expected on shutdown */ }
             try { await flattenLoop; } catch { /* flatten loop cancellation is expected on shutdown */ }

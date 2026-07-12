@@ -46,7 +46,7 @@ public sealed class PropFirmTrackingSupervisor(
             await Task.Delay(options.CurrentValue.PropFirm.ReconcileInterval, stoppingToken);
         }
 
-        foreach (var handle in _running.Values) handle.Cts.Cancel();
+        foreach (var handle in _running.Values) await handle.Cts.CancelAsync();
     }
 
     private async Task ReconcileAsync(CancellationToken stoppingToken)
@@ -69,7 +69,7 @@ public sealed class PropFirmTrackingSupervisor(
         foreach (var (id, handle) in _running.ToArray())
         {
             if (mineIds.Contains(id)) continue;
-            handle.Cts.Cancel();
+            await handle.Cts.CancelAsync();
             _running.TryRemove(id, out _);
         }
 

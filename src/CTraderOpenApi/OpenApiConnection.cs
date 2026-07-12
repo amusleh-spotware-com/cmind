@@ -137,7 +137,7 @@ public sealed class OpenApiConnection : IAsyncDisposable
             finally
             {
                 FailPending("Connection lost");
-                attemptCts.Cancel();
+                await attemptCts.CancelAsync();
                 if (_transport is not null)
                 {
                     await _transport.DisposeAsync();
@@ -181,7 +181,7 @@ public sealed class OpenApiConnection : IAsyncDisposable
         var watchdog = WatchdogAsync(ct);
 
         await Task.WhenAny(receive, send, heartbeat, watchdog);
-        attemptCts.Cancel();
+        await attemptCts.CancelAsync();
         await Task.WhenAll(Swallow(receive), Swallow(send), Swallow(heartbeat), Swallow(watchdog));
 
         foreach (var task in new[] { receive, send, heartbeat, watchdog })
@@ -370,7 +370,8 @@ public sealed class OpenApiConnection : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        _lifetimeCts?.Cancel();
+        if (_lifetimeCts is not null)
+            await _lifetimeCts.CancelAsync();
         if (_runLoop is not null)
             await Swallow(_runLoop);
         if (_transport is not null)

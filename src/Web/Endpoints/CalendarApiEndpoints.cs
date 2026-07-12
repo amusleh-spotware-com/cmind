@@ -115,7 +115,7 @@ public static class CalendarApiEndpoints
         });
 
         v1.MapGet("/events", async (HttpContext http, IEconomicCalendar calendar, CancellationToken ct) =>
-            Results.Ok(await calendar.GetEventsAsync(ParseQuery(http.Request), ct)))
+            Cacheable(http, await calendar.GetEventsAsync(ParseQuery(http.Request), ct)))
             .RequireCalendarScope(CalendarScopes.Read);
 
         v1.MapGet("/events/{id:guid}", async (
@@ -128,7 +128,7 @@ public static class CalendarApiEndpoints
         }).RequireCalendarScope(CalendarScopes.Read);
 
         v1.MapGet("/history", async (HttpContext http, IEconomicCalendar calendar, CancellationToken ct) =>
-            Results.Ok(await calendar.GetEventsAsync(ParseQuery(http.Request), ct)))
+            Cacheable(http, await calendar.GetEventsAsync(ParseQuery(http.Request), ct)))
             .RequireCalendarScope(CalendarScopes.Read);
 
         v1.MapGet("/series", async (HttpContext http, IEconomicCalendar calendar, CancellationToken ct) =>
@@ -228,6 +228,20 @@ public static class CalendarApiEndpoints
         Enum.TryParse<ImpactLevel>(value, ignoreCase: true, out var level) ? level : null;
 
     private static string Hash(string raw) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(raw)));
+
+    /// <summary>
+    /// Serves an event list with a weak <c>ETag</c> derived from the result (ids + impact + actual + instant),
+    /// honouring <c>If-None-Match</c> with a <c>304</c> so a backtest hammering history transfers bytes once.
+    /// </summary>
+    private static IResult Cacheable(HttpContext http, IReadOnlyList<CalendarEventView> events)
+    {
+        var basis = string.Join('|', events.Select(e => $"{e.Id.Value}:{e.ImpactScore}:{e.Actual}:{e.EffectiveAt.Ticks}"));
+        var etag = "\"cal-" + Hash(basis)[..16] + "\"";
+        if (string.Equals(http.Request.Headers.IfNoneMatch.ToString(), etag, StringComparison.Ordinal))
+            return Results.StatusCode(StatusCodes.Status304NotModified);
+        http.Response.Headers.ETag = etag;
+        return Results.Ok(events);
+    }
 
     private static bool FixedTimeEquals(string a, string b) =>
         CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(a), Encoding.UTF8.GetBytes(b));

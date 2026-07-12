@@ -136,6 +136,28 @@ public class CalendarApiHttpTests(PostgresFixture fixture) : IClassFixture<Postg
     }
 
     [Fact]
+    public async Task Events_are_cacheable_via_etag_and_return_304_on_if_none_match()
+    {
+        await using var app = CreateApp();
+        var owner = await LoginAsync(app);
+        await SeedEventAsync(app);
+        var (clientId, secret) = await IssueClientAsync(owner, CalendarScopes.Read);
+
+        var anon = app.CreateClient();
+        var token = await TokenAsync(anon, clientId, secret);
+        anon.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var first = await anon.GetAsync("/api/calendar/v1/events?from=2024-01-01&to=2025-01-01");
+        first.StatusCode.Should().Be(HttpStatusCode.OK);
+        var etag = first.Headers.ETag!.Tag;
+        etag.Should().NotBeNullOrEmpty();
+
+        anon.DefaultRequestHeaders.IfNoneMatch.ParseAdd(etag);
+        var second = await anon.GetAsync("/api/calendar/v1/events?from=2024-01-01&to=2025-01-01");
+        second.StatusCode.Should().Be(HttpStatusCode.NotModified);
+    }
+
+    [Fact]
     public async Task Openapi_document_is_served_and_lists_the_events_path()
     {
         await using var app = CreateApp();

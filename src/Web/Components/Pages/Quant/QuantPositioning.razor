@@ -1,0 +1,85 @@
+@page "/quant/positioning"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject MudBlazor.ISnackbar Snack
+
+<PageTitle>Quant · Contrarian Positioning</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Contrarian Retail Positioning</MudText>
+    <HelpTip Text="The retail crowd is a contrarian indicator in FX: when most are long, price tends to fall. Enter the % of retail traders long (from your broker or a sentiment feed) and we give the contrarian read." />
+</MudStack>
+
+<MudGrid>
+    <MudItem xs="12" md="5">
+        <MudPaper Class="pa-4" Elevation="1">
+            <MudText Typo="Typo.body2" Class="mb-2">Retail long: <b>@_longPercent.ToString("0")%</b> · short: <b>@((100 - _longPercent).ToString("0"))%</b></MudText>
+            <MudSlider @bind-Value="_longPercent" Min="0" Max="100" Step="1" Color="Color.Primary" />
+            <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.SwapVert" OnClick="Read"
+                       Disabled="_loading" data-testid="positioning-read">
+                Get contrarian read
+            </MudButton>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="7">
+        @if (_result is { } r)
+        {
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudAlert Severity="@BiasSeverity(r.bias)" data-testid="positioning-bias">
+                    Contrarian bias: <b>@r.bias</b> (strength @((r.strength * 100).ToString("0"))%)
+                </MudAlert>
+                <MudText Typo="Typo.body2" Class="mt-3">
+                    @(r.bias switch
+                    {
+                        "Bearish" => "The crowd is heavily long — historically a headwind. Favour the short side or fade longs.",
+                        "Bullish" => "The crowd is heavily short — historically a tailwind. Favour the long side or fade shorts.",
+                        _ => "Positioning is balanced — no contrarian edge from the crowd right now."
+                    })
+                </MudText>
+            </MudPaper>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">Set the retail long % and press Get contrarian read.</MudText>
+        }
+    </MudItem>
+</MudGrid>
+
+@code {
+    private double _longPercent = 50;
+    private bool _loading;
+    private PositioningResult? _result;
+
+    private async Task Read()
+    {
+        _loading = true;
+        try
+        {
+            var response = await Http.PostAsJsonAsync("/api/quant/positioning", new { LongPercent = _longPercent });
+            if (response.IsSuccessStatusCode)
+                _result = await response.Content.ReadFromJsonAsync<PositioningResult>();
+            else
+                Snack.Add("Could not read that positioning.", Severity.Error);
+        }
+        catch
+        {
+            Snack.Add("Could not read that positioning.", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static Severity BiasSeverity(string bias) => bias switch
+    {
+        "Bullish" => Severity.Success,
+        "Bearish" => Severity.Error,
+        _ => Severity.Info
+    };
+
+    private sealed record PositioningResult(double longPercent, double shortPercent, string bias, double strength);
+}

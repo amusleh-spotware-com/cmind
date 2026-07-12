@@ -67,6 +67,25 @@ public static class QuantEndpoints
             }
         });
 
+        g.MapPost("/positioning", (PositioningRequest req) =>
+        {
+            try
+            {
+                var p = new Core.Signals.RetailPositioning(req.LongPercent ?? 50.0);
+                return Results.Ok(new
+                {
+                    longPercent = p.LongPercent,
+                    shortPercent = p.ShortPercent,
+                    bias = p.Bias.ToString(),
+                    strength = p.Strength
+                });
+            }
+            catch (DomainException ex)
+            {
+                return Results.BadRequest(new { error = ex.Code });
+            }
+        });
+
         g.MapPost("/tca", (TcaRequest req, Core.Execution.ITransactionCostAnalyzer analyzer) =>
         {
             if (req.ArrivalPrice is not { } arrival || req.Fills is not { Length: > 0 })
@@ -218,6 +237,8 @@ public sealed record IntegrityBacktestRequest(int? Trials);
 public sealed record PboRequest(double[][]? Trials, int? Slices);
 
 public sealed record RegimeRequest(double[]? Returns, double[]? Equity, int? Window);
+
+public sealed record PositioningRequest(double? LongPercent);
 
 public sealed record TcaFill(double Price, double Quantity);
 public sealed record TcaRequest(double? ArrivalPrice, string? Side, TcaFill[]? Fills);

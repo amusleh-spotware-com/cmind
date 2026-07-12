@@ -1,4 +1,6 @@
-﻿namespace Core.Ai;
+﻿using Core;
+
+namespace Core.Ai;
 
 /// <summary>
 /// The normalized request handed to a provider adapter. It carries the feature-neutral
@@ -72,11 +74,22 @@ public sealed record UpsertAiProviderCommand(
 public interface IAiProviderStore
 {
     bool HasActive { get; }
+
+    /// <summary>The provider resolved for the current request user: their own active credential if any,
+    /// else the deployment default, else the legacy config key.</summary>
     ActiveAiProvider? Active { get; }
+
+    // Deployment-scope management (owner-managed white-label default).
     Task<IReadOnlyList<AiProviderView>> ListAsync(CancellationToken ct);
     Task<Guid> UpsertAsync(UpsertAiProviderCommand command, CancellationToken ct);
     Task ActivateAsync(Guid id, CancellationToken ct);
     Task RemoveAsync(Guid id, CancellationToken ct);
+
+    // Per-user management: a user's own providers override the deployment default for themselves.
+    Task<IReadOnlyList<AiProviderView>> ListForUserAsync(UserId user, CancellationToken ct);
+    Task<Guid> UpsertForUserAsync(UserId user, UpsertAiProviderCommand command, CancellationToken ct);
+    Task ActivateForUserAsync(UserId user, Guid id, CancellationToken ct);
+    Task RemoveForUserAsync(UserId user, Guid id, CancellationToken ct);
 
     /// <summary>
     /// Idempotently imports any deployment-seeded providers (<c>App:Ai:Providers[]</c>) into the store if

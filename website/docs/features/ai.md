@@ -38,6 +38,25 @@ AI unconfigured → AI pages dim actions and show a banner plus a one-time promp
 providers managed (owner-only) via `GET/PUT /api/ai/providers`, `POST /api/ai/providers/{id}/activate`,
 `DELETE /api/ai/providers/{id}`, and a `POST /api/ai/providers/test` connectivity ping.
 
+## Deployment default vs a user's own provider
+
+AI credentials have two scopes:
+
+- **Deployment default (owner-managed).** The owner configures a provider (or ships one via
+  `App:Ai:Providers[]` / the legacy `App:Ai:ApiKey`). It becomes the **shared default for every user** —
+  so a broker or hosting provider can fund AI for all their users with **no per-user setup and no
+  per-user limit**. Managed via the owner-only `/api/ai/providers` routes above.
+- **A user's own provider (self-service).** Any signed-in user may add their own provider under
+  `GET/PUT /api/ai/my-providers`, `POST /api/ai/my-providers/{id}/activate`,
+  `DELETE /api/ai/my-providers/{id}`. When present, their **own active provider overrides the deployment
+  default for their own AI features**; removing it falls back to the default.
+
+**Resolution order** (in `AiProviderStore`, per request user): the user's own active credential → the
+deployment default → the legacy config key → none (AI disabled). Exactly one credential is active
+**per scope** (a partial unique index per `OwnerUserId`), and each scope is resolved independently, so a
+user activating their own key never disturbs the shared default. Background/non-Web contexts (no request
+user) always resolve the deployment default.
+
 ## Provider capability matrix
 
 Capabilities default per provider and are owner-overridable. When a capability is off the feature

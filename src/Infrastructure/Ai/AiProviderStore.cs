@@ -23,6 +23,7 @@ public sealed class AiProviderStore(
     DataContext db,
     IMemoryCache cache,
     ISecretProtector protector,
+    ICurrentUser currentUser,
     TimeProvider timeProvider) : IAiProviderStore
 {
     public bool HasActive => Active is not null;
@@ -31,21 +32,32 @@ public sealed class AiProviderStore(
     {
         get
         {
-            if (cache.TryGetValue(AiConstants.ActiveProviderCacheKey, out ActiveAiProvider? cached))
+            var user = currentUser.UserId;
+            var cacheKey = CacheKey(user);
+            if (cache.TryGetValue(cacheKey, out ActiveAiProvider? cached))
                 return cached;
 
-            var resolved = Resolve();
-            cache.Set(AiConstants.ActiveProviderCacheKey, resolved, AiConstants.ActiveProviderCacheTtl);
+            var resolved = Resolve(user);
+            cache.Set(cacheKey, resolved, AiConstants.ActiveProviderCacheTtl);
             return resolved;
         }
     }
 
-    private ActiveAiProvider? Resolve()
+    // Resolution order: the current user's own active credential, then the deployment default (the
+    // white-label shared provider), then the legacy single-key config. So a deployment key powers every
+    // user with no setup, while a user who adds their own provider overrides it for themselves.
+    private ActiveAiProvider? Resolve(UserId? user)
     {
-        var active = db.Set<AiProviderCredential>().AsNoTracking().FirstOrDefault(c => c.IsActive);
-        if (active is not null)
-            return new ActiveAiProvider(active.Kind, active.BaseUrl, active.Model,
-                Decrypt(active.EncryptedApiKey), active.Capabilities, active.MaxTokens);
+        if (user is { } uid)
+        {
+            var mine = db.Set<AiProviderCredential>().AsNoTracking()
+                .FirstOrDefault(c => c.OwnerUserId == uid && c.IsActive);
+            if (mine is not null) return ToActive(mine);
+        }
+
+        var deployment = db.Set<AiProviderCredential>().AsNoTracking()
+            .FirstOrDefault(c => c.OwnerUserId == null && c.IsActive);
+        if (deployment is not null) return ToActive(deployment);
 
         // No stored credentials — honour the legacy single-key config as a default Anthropic provider.
         var legacyKey = LegacyKey();
@@ -56,15 +68,32 @@ public sealed class AiProviderStore(
             AiProviderCapabilities.DefaultFor(AiProviderKind.Anthropic), ai.MaxTokens);
     }
 
-    public async Task<IReadOnlyList<AiProviderView>> ListAsync(CancellationToken ct)
+    private ActiveAiProvider ToActive(AiProviderCredential c) =>
+        new(c.Kind, c.BaseUrl, c.Model, Decrypt(c.EncryptedApiKey), c.Capabilities, c.MaxTokens);
+
+    private static string CacheKey(UserId? user) =>
+        user is { } u ? $"{AiConstants.ActiveProviderCacheKey}:{u.Value}" : AiConstants.ActiveProviderCacheKey;
+
+    public Task<IReadOnlyList<AiProviderView>> ListAsync(CancellationToken ct) => ListScopedAsync(null, ct);
+
+    public Task<IReadOnlyList<AiProviderView>> ListForUserAsync(UserId user, CancellationToken ct) =>
+        ListScopedAsync(user, ct);
+
+    private async Task<IReadOnlyList<AiProviderView>> ListScopedAsync(UserId? owner, CancellationToken ct)
     {
-        var rows = await db.Set<AiProviderCredential>().AsNoTracking()
+        var rows = await db.Set<AiProviderCredential>().AsNoTracking().Where(c => c.OwnerUserId == owner)
             .OrderByDescending(c => c.IsActive).ThenByDescending(c => c.CreatedAt).ToListAsync(ct);
         return rows.Select(c => new AiProviderView(
             c.Id.Value, c.Kind, c.BaseUrl, c.Model, c.HasKey, c.IsActive, c.MaxTokens, c.Capabilities)).ToList();
     }
 
-    public async Task<Guid> UpsertAsync(UpsertAiProviderCommand command, CancellationToken ct)
+    public Task<Guid> UpsertAsync(UpsertAiProviderCommand command, CancellationToken ct) =>
+        UpsertScopedAsync(null, command, ct);
+
+    public Task<Guid> UpsertForUserAsync(UserId user, UpsertAiProviderCommand command, CancellationToken ct) =>
+        UpsertScopedAsync(user, command, ct);
+
+    private async Task<Guid> UpsertScopedAsync(UserId? owner, UpsertAiProviderCommand command, CancellationToken ct)
     {
         var now = timeProvider.GetUtcNow();
         var baseUrl = new AiEndpoint(command.BaseUrl);
@@ -78,7 +107,8 @@ public sealed class AiProviderStore(
         if (command.Id is { } id)
         {
             var cid = AiProviderCredentialId.From(id);
-            credential = await db.Set<AiProviderCredential>().FirstOrDefaultAsync(c => c.Id == cid, ct)
+            credential = await db.Set<AiProviderCredential>()
+                .FirstOrDefaultAsync(c => c.Id == cid && c.OwnerUserId == owner, ct)
                 ?? throw new InvalidOperationException("Provider credential not found.");
             credential.Retarget(baseUrl, model, maxTokens, now);
             credential.OverrideCapabilities(caps, now);
@@ -87,38 +117,48 @@ public sealed class AiProviderStore(
         }
         else
         {
-            credential = AiProviderCredential.Create(command.Kind, baseUrl, model, encrypted, caps, maxTokens, now);
+            credential = AiProviderCredential.Create(command.Kind, baseUrl, model, encrypted, caps, maxTokens, now, owner);
             db.Set<AiProviderCredential>().Add(credential);
         }
 
-        if (command.Activate) await DeactivateOthersAndActivateAsync(credential, now, ct);
+        if (command.Activate) await DeactivateOthersAndActivateAsync(credential, owner, now, ct);
 
         await db.SaveChangesAsync(ct);
-        Invalidate();
+        Invalidate(owner);
         return credential.Id.Value;
     }
 
-    public async Task ActivateAsync(Guid id, CancellationToken ct)
+    public Task ActivateAsync(Guid id, CancellationToken ct) => ActivateScopedAsync(null, id, ct);
+
+    public Task ActivateForUserAsync(UserId user, Guid id, CancellationToken ct) => ActivateScopedAsync(user, id, ct);
+
+    private async Task ActivateScopedAsync(UserId? owner, Guid id, CancellationToken ct)
     {
         var cid = AiProviderCredentialId.From(id);
-        var credential = await db.Set<AiProviderCredential>().FirstOrDefaultAsync(c => c.Id == cid, ct)
+        var credential = await db.Set<AiProviderCredential>()
+            .FirstOrDefaultAsync(c => c.Id == cid && c.OwnerUserId == owner, ct)
             ?? throw new InvalidOperationException("Provider credential not found.");
-        await DeactivateOthersAndActivateAsync(credential, timeProvider.GetUtcNow(), ct);
+        await DeactivateOthersAndActivateAsync(credential, owner, timeProvider.GetUtcNow(), ct);
         await db.SaveChangesAsync(ct);
-        Invalidate();
+        Invalidate(owner);
     }
 
-    public async Task RemoveAsync(Guid id, CancellationToken ct)
+    public Task RemoveAsync(Guid id, CancellationToken ct) => RemoveScopedAsync(null, id, ct);
+
+    public Task RemoveForUserAsync(UserId user, Guid id, CancellationToken ct) => RemoveScopedAsync(user, id, ct);
+
+    private async Task RemoveScopedAsync(UserId? owner, Guid id, CancellationToken ct)
     {
         var cid = AiProviderCredentialId.From(id);
-        var credential = await db.Set<AiProviderCredential>().FirstOrDefaultAsync(c => c.Id == cid, ct);
+        var credential = await db.Set<AiProviderCredential>()
+            .FirstOrDefaultAsync(c => c.Id == cid && c.OwnerUserId == owner, ct);
         if (credential is null) return;
         // Soft delete (base is ISoftDeletable) — clear active first so the partial-unique active index
         // never counts a removed row.
         credential.Deactivate(timeProvider.GetUtcNow());
         db.Set<AiProviderCredential>().Remove(credential);
         await db.SaveChangesAsync(ct);
-        Invalidate();
+        Invalidate(owner);
     }
 
     public async Task SeedFromConfigAsync(CancellationToken ct)
@@ -157,7 +197,7 @@ public sealed class AiProviderStore(
         }
 
         await db.SaveChangesAsync(ct);
-        Invalidate();
+        Invalidate(null);
     }
 
     private async Task SeedBuiltInAsync(AppOptions app, CancellationToken ct)
@@ -176,17 +216,27 @@ public sealed class AiProviderStore(
         credential.Activate(now);
         db.Set<AiProviderCredential>().Add(credential);
         await db.SaveChangesAsync(ct);
-        Invalidate();
+        Invalidate(null);
     }
 
-    private async Task DeactivateOthersAndActivateAsync(AiProviderCredential target, DateTimeOffset now, CancellationToken ct)
+    private async Task DeactivateOthersAndActivateAsync(
+        AiProviderCredential target, UserId? owner, DateTimeOffset now, CancellationToken ct)
     {
-        var others = await db.Set<AiProviderCredential>().Where(c => c.IsActive && c.Id != target.Id).ToListAsync(ct);
+        // Exclusivity is per scope: activating a user's provider only deactivates that user's others;
+        // activating the deployment default only touches deployment-scoped rows.
+        var others = await db.Set<AiProviderCredential>()
+            .Where(c => c.OwnerUserId == owner && c.IsActive && c.Id != target.Id).ToListAsync(ct);
         foreach (var other in others) other.Deactivate(now);
         target.Activate(now);
     }
 
-    private void Invalidate() => cache.Remove(AiConstants.ActiveProviderCacheKey);
+    private void Invalidate(UserId? owner)
+    {
+        cache.Remove(CacheKey(owner));
+        // A deployment-default change also affects users with no own credential (they fall back to it);
+        // their per-user cache entries expire on the short TTL rather than being enumerated here.
+        if (owner is not null) cache.Remove(CacheKey(null));
+    }
 
     private string? LegacyKey()
     {

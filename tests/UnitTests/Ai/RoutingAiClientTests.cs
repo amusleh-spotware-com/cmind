@@ -17,6 +17,12 @@ public sealed class RoutingAiClientTests
         public Task<Guid> UpsertAsync(UpsertAiProviderCommand command, CancellationToken ct) => Task.FromResult(Guid.NewGuid());
         public Task ActivateAsync(Guid id, CancellationToken ct) => Task.CompletedTask;
         public Task RemoveAsync(Guid id, CancellationToken ct) => Task.CompletedTask;
+        public Task<IReadOnlyList<AiProviderView>> ListForUserAsync(Core.UserId user, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<AiProviderView>>([]);
+        public Task<Guid> UpsertForUserAsync(Core.UserId user, UpsertAiProviderCommand command, CancellationToken ct) =>
+            Task.FromResult(Guid.NewGuid());
+        public Task ActivateForUserAsync(Core.UserId user, Guid id, CancellationToken ct) => Task.CompletedTask;
+        public Task RemoveForUserAsync(Core.UserId user, Guid id, CancellationToken ct) => Task.CompletedTask;
         public Task SeedFromConfigAsync(CancellationToken ct) => Task.CompletedTask;
     }
 

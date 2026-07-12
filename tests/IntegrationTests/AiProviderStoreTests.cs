@@ -18,9 +18,10 @@ public class AiProviderStoreTests(PostgresFixture fixture) : IClassFixture<Postg
             .AddInterceptors(new AuditStampingInterceptor(TimeProvider.System))
             .Options);
 
-    private static AiProviderStore CreateStore(DataContext db, AppOptions? options = null) =>
+    private static AiProviderStore CreateStore(DataContext db, AppOptions? options = null, ICurrentUser? currentUser = null) =>
         new(new StaticOptionsMonitor<AppOptions>(options ?? new AppOptions()), db,
-            new MemoryCache(new MemoryCacheOptions()), new PassthroughSecretProtector(), TimeProvider.System);
+            new MemoryCache(new MemoryCacheOptions()), new PassthroughSecretProtector(),
+            currentUser ?? new NullCurrentUser(), TimeProvider.System);
 
     private async Task<DataContext> FreshAsync()
     {

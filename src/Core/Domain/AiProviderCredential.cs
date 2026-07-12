@@ -12,6 +12,16 @@ namespace Core;
 /// </summary>
 public class AiProviderCredential : AuditedEntity<AiProviderCredentialId>
 {
+    /// <summary>
+    /// Owner of this credential. <c>null</c> = <b>deployment scope</b> (the white-label default shared by
+    /// every user, managed by the app owner); a value = a specific user's own provider. AI resolves a
+    /// user's own active credential first, then the deployment default. Exactly one credential is active
+    /// per scope.
+    /// </summary>
+    public UserId? OwnerUserId { get; private set; }
+
+    public bool IsDeploymentScoped => OwnerUserId is null;
+
     public AiProviderKind Kind { get; private set; }
     public string BaseUrl { get; private set; } = default!;
     public string Model { get; private set; } = default!;
@@ -39,10 +49,12 @@ public class AiProviderCredential : AuditedEntity<AiProviderCredentialId>
         byte[]? encryptedApiKey,
         AiProviderCapabilities capabilities,
         int maxTokens,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        UserId? ownerUserId = null)
     {
         var credential = new AiProviderCredential
         {
+            OwnerUserId = ownerUserId,
             Kind = kind,
             BaseUrl = baseUrl.Value,
             Model = model.Value,

@@ -78,6 +78,45 @@ public static class AiEndpoints
             return Results.Ok(new { success = result.Success, latencyMs = sw.ElapsedMilliseconds, error = result.Error });
         }).RequireAuthorization(AuthPolicies.Owner);
 
+        // Per-user providers: any signed-in user may add their own AI provider, which overrides the
+        // deployment default for their own AI features (UserOrAbove — inherited from the group).
+        g.MapGet("/my-providers", async (IAiProviderStore store, ICurrentUser u, CancellationToken ct) =>
+            u.UserId is { } uid ? Results.Ok(await store.ListForUserAsync(uid, ct)) : Results.Unauthorized());
+
+        g.MapPut("/my-providers", async (UpsertProviderRequest req, IAiProviderStore store, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            if (string.IsNullOrWhiteSpace(req.BaseUrl)) return Results.BadRequest("Base URL is required");
+            if (string.IsNullOrWhiteSpace(req.Model)) return Results.BadRequest("Model is required");
+            try
+            {
+                var caps = req.Capabilities is { } c
+                    ? new Core.Ai.AiProviderCapabilities(c.SupportsWebSearch, c.SupportsVision, c.SupportsSystemRole, c.SupportsTools)
+                    : (Core.Ai.AiProviderCapabilities?)null;
+                var id = await store.UpsertForUserAsync(uid, new Core.Ai.UpsertAiProviderCommand(
+                    req.Id, req.Kind, req.BaseUrl!, req.Model!, req.ApiKey, req.MaxTokens, caps, req.Activate), ct);
+                return Results.Ok(new { id });
+            }
+            catch (Core.Domain.DomainException ex)
+            {
+                return Results.BadRequest(ex.Code);
+            }
+        });
+
+        g.MapPost("/my-providers/{id:guid}/activate", async (Guid id, IAiProviderStore store, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            await store.ActivateForUserAsync(uid, id, ct);
+            return Results.Ok(new { enabled = store.HasActive });
+        });
+
+        g.MapDelete("/my-providers/{id:guid}", async (Guid id, IAiProviderStore store, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            await store.RemoveForUserAsync(uid, id, ct);
+            return Results.Ok(new { enabled = store.HasActive });
+        });
+
         g.MapPost("/generate", async (GenerateCBotRequest req, IAiFeatureService ai, CancellationToken ct) =>
             Results.Ok(await ai.GenerateCBotAsync(req.Language ?? "CSharp", req.Description ?? "", ct)));
 

@@ -251,9 +251,13 @@ public class DataContext : DbContext, IDataProtectionKeyContext
 
         modelBuilder.Entity<AiProviderCredential>(e =>
         {
-            // At most one active credential — a partial unique index enforces it at the DB, backing the
-            // store's activate-exclusivity (defence in depth against a concurrent activate racing).
-            e.HasIndex(x => x.IsActive).IsUnique().HasFilter("\"IsActive\" = true AND \"IsDeleted\" = false");
+            // At most one active credential PER SCOPE — two partial unique indexes enforce it at the DB
+            // (defence in depth behind the store's activate-exclusivity): one active deployment default
+            // (OwnerUserId IS NULL) and one active credential per user (OwnerUserId IS NOT NULL).
+            e.HasIndex(x => x.IsActive).IsUnique()
+                .HasFilter("\"OwnerUserId\" IS NULL AND \"IsActive\" = true AND \"IsDeleted\" = false");
+            e.HasIndex(x => new { x.OwnerUserId, x.IsActive }).IsUnique()
+                .HasFilter("\"OwnerUserId\" IS NOT NULL AND \"IsActive\" = true AND \"IsDeleted\" = false");
             e.Property(x => x.Kind).HasConversion<string>().HasMaxLength(24);
             e.Property(x => x.BaseUrl).HasMaxLength(512);
             e.Property(x => x.Model).HasMaxLength(256);

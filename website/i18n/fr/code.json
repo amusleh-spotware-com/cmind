@@ -1,0 +1,22 @@
+{
+  "riskDisclaimer.title": {
+    "message": "Avertissement sur les risques",
+    "description": "Title of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.body": {
+    "message": "La négociation de devises (Forex) et de contrats sur différence (CFD) sur marge comporte un niveau de risque élevé et peut ne pas convenir à tous les investisseurs. L’effet de levier élevé peut jouer en votre faveur comme en votre défaveur. Vous pouvez subir la perte d’une partie ou de la totalité de votre capital investi ; vous ne devez donc pas investir de l’argent que vous ne pouvez pas vous permettre de perdre. Les performances passées et les résultats de backtests ne préjugent pas des résultats futurs. cMind est un logiciel auto-hébergé fourni « en l’état » qui ne fournit aucun conseil en investissement, financier, juridique ou fiscal. Toutes les décisions de trading, ainsi que les gains ou pertes qui en résultent, sont prises à votre seule discrétion et relèvent de votre entière et pleine responsabilité.",
+    "description": "Body text of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.prompt": {
+    "message": "Pour continuer, vous devez confirmer que vous comprenez et acceptez ces risques. Si vous n’acceptez pas, vous ne pouvez pas utiliser ce site.",
+    "description": "Instruction line above the accept / decline buttons"
+  },
+  "riskDisclaimer.decline": {
+    "message": "Je n’accepte pas — quitter",
+    "description": "Decline button that navigates the visitor off the site"
+  },
+  "riskDisclaimer.accept": {
+    "message": "Je comprends et j’accepte",
+    "description": "Accept button that dismisses the risk-disclaimer gate"
+  }
+}

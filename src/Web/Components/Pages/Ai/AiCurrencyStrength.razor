@@ -1,0 +1,181 @@
+﻿@page "/ai/currency-strength"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@inherits AiFeaturePageBase
+@using System.Net.Http.Json
+
+<PageTitle>AI · Currency Strength</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Macro Currency Strength</MudText>
+    <HelpTip Text="A deterministic macro model ranks currencies by fundamental strength and projects a forward directional bias for every pair over a chosen horizon. The AI gathers the forward trajectory and geopolitics; the ranking and pair math are deterministic. Fundamentals are a medium/long-term positioning filter, not a short-term timing signal." />
+    <MudSpacer />
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh"
+               OnClick="Refresh" Disabled="Busy" data-testid="cs-refresh">Refresh now</MudButton>
+</MudStack>
+
+<AiFeatureNotice EnabledChanged="OnAiStatus" />
+
+<MudStack Row="true" Wrap="Wrap.Wrap" AlignItems="AlignItems.Center" Class="mb-3" Spacing="2">
+    <MudChipSet T="string" SelectedValue="@_horizon" SelectedValueChanged="OnHorizonChanged"
+                SelectionMode="SelectionMode.SingleSelection" Variant="Variant.Filled" Color="Color.Primary">
+        <MudChip T="string" Value="@("1M")">1M</MudChip>
+        <MudChip T="string" Value="@("3M")">3M</MudChip>
+        <MudChip T="string" Value="@("6M")">6M</MudChip>
+        <MudChip T="string" Value="@("12M")">12M</MudChip>
+    </MudChipSet>
+    <MudSpacer />
+    <MudChipSet T="string" SelectedValue="@_tier" SelectedValueChanged="OnTierChanged"
+                SelectionMode="SelectionMode.SingleSelection" Variant="Variant.Outlined" Color="Color.Secondary">
+        <MudChip T="string" Value="@("All")">All</MudChip>
+        <MudChip T="string" Value="@("Majors")">Majors</MudChip>
+        <MudChip T="string" Value="@("EM")">EM</MudChip>
+        <MudChip T="string" Value="@("Exotics")">Exotics</MudChip>
+    </MudChipSet>
+</MudStack>
+
+@if (_view is null)
+{
+    <MudPaper Class="pa-6" Elevation="1">
+        <MudText Typo="Typo.body1" Align="Align.Center" Class="mud-text-secondary">
+            No snapshot yet. Configure AI, then press <b>Refresh now</b> to generate the macro picture.
+        </MudText>
+    </MudPaper>
+}
+else
+{
+    <MudGrid>
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4" Elevation="1" data-testid="cs-ranking">
+                <MudText Typo="Typo.subtitle1" Class="mb-2">Current ranking</MudText>
+                <MudTable Items="_view.Ranking" Dense="true" Breakpoint="Breakpoint.None" Hover="true">
+                    <HeaderContent>
+                        <MudTh>#</MudTh><MudTh>Ccy</MudTh><MudTh>Tier</MudTh><MudTh>Score</MudTh><MudTh>Conf</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="#">@context.Rank</MudTd>
+                        <MudTd DataLabel="Ccy"><b>@context.Code</b></MudTd>
+                        <MudTd DataLabel="Tier">@context.Tier</MudTd>
+                        <MudTd DataLabel="Score">@context.Composite.ToString("+0.00;-0.00;0.00")</MudTd>
+                        <MudTd DataLabel="Conf">@context.Confidence</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4" Elevation="1" data-testid="cs-forecast">
+                <MudText Typo="Typo.subtitle1" Class="mb-2">Forward forecast (@_view.Horizon)</MudText>
+                <MudTable Items="_view.Forecasts.OrderByDescending(f => f.Projected)" Dense="true" Breakpoint="Breakpoint.None">
+                    <HeaderContent>
+                        <MudTh>Ccy</MudTh><MudTh>Current</MudTh><MudTh>Projected</MudTh><MudTh>Δ</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Ccy"><b>@context.Code</b></MudTd>
+                        <MudTd DataLabel="Current">@context.Current.ToString("+0.00;-0.00;0.00")</MudTd>
+                        <MudTd DataLabel="Projected">@context.Projected.ToString("+0.00;-0.00;0.00")</MudTd>
+                        <MudTd DataLabel="Δ">@((context.Projected - context.Current).ToString("+0.00;-0.00;0.00"))</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudPaper Class="pa-4" Elevation="1" data-testid="cs-matrix">
+                <MudText Typo="Typo.subtitle1" Class="mb-2">Pair outlook (@_view.Horizon)</MudText>
+                <div style="overflow-x:auto;">
+                    <MudTable Items="_view.Pairs.OrderByDescending(p => p.Conviction)" Dense="true" Breakpoint="Breakpoint.None" Hover="true">
+                        <HeaderContent>
+                            <MudTh>Pair</MudTh><MudTh>Bias</MudTh><MudTh>Conviction</MudTh><MudTh>Differential</MudTh><MudTh>Flags</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Pair"><b>@context.Base/@context.Quote</b></MudTd>
+                            <MudTd DataLabel="Bias">
+                                <MudChip T="string" Size="Size.Small" Color="@BiasColor(context.Bias)">@BiasArrow(context.Bias) @context.Bias</MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Conviction">@context.Conviction.ToString("0.00")</MudTd>
+                            <MudTd DataLabel="Differential">@context.Differential.ToString("+0.00;-0.00;0.00")</MudTd>
+                            <MudTd DataLabel="Flags">
+                                @if (context.Pegged) { <MudChip T="string" Size="Size.Small" Color="Color.Warning">peg</MudChip> }
+                                @if (context.Confidence == "Low") { <MudChip T="string" Size="Size.Small" Color="Color.Default">low conf</MudChip> }
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </div>
+            </MudPaper>
+        </MudItem>
+
+        @if (!string.IsNullOrWhiteSpace(_view.Narrative))
+        {
+            <MudItem xs="12">
+                <MudPaper Class="pa-4" Elevation="1" data-testid="cs-narrative">
+                    <MudText Typo="Typo.subtitle1" Class="mb-2">Why</MudText>
+                    <MudText Typo="Typo.body2" Style="white-space:pre-wrap;">@_view.Narrative</MudText>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+
+    <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mt-3">
+        As of @_view.AsOf.ToLocalTime().ToString("g") · source @_view.Source
+    </MudText>
+}
+
+@code {
+    private string _horizon = "3M";
+    private string _tier = "All";
+    private CsView? _view;
+
+    protected override async Task OnInitializedAsync() => await Load();
+
+    private async Task OnHorizonChanged(string value) { _horizon = value ?? "3M"; await Load(); }
+    private async Task OnTierChanged(string value) { _tier = value ?? "All"; await Load(); }
+
+    private async Task Refresh()
+    {
+        Loading = true;
+        try
+        {
+            var response = await Http.PostAsync($"/api/ai/currency-strength/refresh", null);
+            if (response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.NoContent)
+                _view = await response.Content.ReadFromJsonAsync<CsView>();
+            else if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
+                Snack.Add("Refresh produced no data (AI and calendar both unavailable).", MudBlazor.Severity.Warning);
+        }
+        catch { Snack.Add("Refresh failed", MudBlazor.Severity.Error); }
+        finally { Loading = false; }
+    }
+
+    private async Task Load()
+    {
+        try
+        {
+            var response = await Http.GetAsync($"/api/ai/currency-strength/latest?horizon={_horizon}&tier={_tier}");
+            _view = response.StatusCode == System.Net.HttpStatusCode.OK
+                ? await response.Content.ReadFromJsonAsync<CsView>()
+                : null;
+        }
+        catch { _view = null; }
+        StateHasChanged();
+    }
+
+    private static Color BiasColor(string bias) => bias switch
+    {
+        nameof(Core.Ai.CurrencyStrength.DirectionalBias.Appreciate) => Color.Success,
+        nameof(Core.Ai.CurrencyStrength.DirectionalBias.Depreciate) => Color.Error,
+        _ => Color.Default
+    };
+
+    private static string BiasArrow(string bias) => bias switch
+    {
+        nameof(Core.Ai.CurrencyStrength.DirectionalBias.Appreciate) => "▲",
+        nameof(Core.Ai.CurrencyStrength.DirectionalBias.Depreciate) => "▼",
+        _ => "▬"
+    };
+
+    private sealed record CsView(
+        DateTimeOffset AsOf, string Horizon, string Source, DateTimeOffset? CalendarKnownAt, string Narrative,
+        List<RankRow> Ranking, List<ForecastRow> Forecasts, List<PairRow> Pairs);
+    private sealed record RankRow(string Code, string Tier, int Rank, double Composite, string Confidence);
+    private sealed record ForecastRow(string Code, string Tier, double Projected, double Current, string Confidence);
+    private sealed record PairRow(string Base, string Quote, string Bias, double Conviction, double Differential, string Confidence, bool Pegged);
+}

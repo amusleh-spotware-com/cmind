@@ -1,0 +1,22 @@
+{
+  "riskDisclaimer.title": {
+    "message": "リスク警告",
+    "description": "Title of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.body": {
+    "message": "証拠金取引による外国為替（Forex）および差金決済取引（CFD）は高いリスクを伴い、すべての投資家に適しているとは限りません。高いレバレッジは有利にも不利にも作用します。投資した資金の一部またはすべてを失う可能性があるため、失っても差し支えのない資金以外で取引を行ってはなりません。過去の実績やバックテストの結果は、将来の成果を示すものではありません。cMind はセルフホスト型のソフトウェアであり「現状のまま」提供され、投資・金融・法務・税務に関する助言を提供するものではありません。すべての取引判断およびそれによって生じる利益または損失は、お客様ご自身の裁量と、お客様のみの完全な責任において行われます。",
+    "description": "Body text of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.prompt": {
+    "message": "続行するには、これらのリスクを理解し受け入れることを確認する必要があります。同意されない場合、本サイトをご利用いただけません。",
+    "description": "Instruction line above the accept / decline buttons"
+  },
+  "riskDisclaimer.decline": {
+    "message": "同意しません — 退出",
+    "description": "Decline button that navigates the visitor off the site"
+  },
+  "riskDisclaimer.accept": {
+    "message": "理解し、同意します",
+    "description": "Accept button that dismisses the risk-disclaimer gate"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "riskDisclaimer.title": {
+    "message": "위험 경고",
+    "description": "Title of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.body": {
+    "message": "증거금 방식의 외환(Forex) 및 차액결제거래(CFD) 거래는 높은 수준의 위험을 수반하며 모든 투자자에게 적합하지 않을 수 있습니다. 높은 레버리지는 유리하게 작용할 수도 있지만 불리하게 작용할 수도 있습니다. 투자한 자본의 일부 또는 전부를 잃을 수 있으므로 잃어도 감당할 수 있는 자금 이외의 돈을 투자해서는 안 됩니다. 과거 성과와 백테스트 결과는 미래의 성과를 보장하지 않습니다. cMind는 자체 호스팅 소프트웨어로 \"있는 그대로\" 제공되며 투자, 금융, 법률 또는 세무 자문을 제공하지 않습니다. 모든 거래 결정과 그로 인해 발생하는 이익 또는 손실은 귀하의 재량에 따라 이루어지며 전적으로 귀하의 단독 책임입니다.",
+    "description": "Body text of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.prompt": {
+    "message": "계속하려면 이러한 위험을 이해하고 동의함을 확인해야 합니다. 동의하지 않으면 이 사이트를 이용할 수 없습니다.",
+    "description": "Instruction line above the accept / decline buttons"
+  },
+  "riskDisclaimer.decline": {
+    "message": "동의하지 않음 — 나가기",
+    "description": "Decline button that navigates the visitor off the site"
+  },
+  "riskDisclaimer.accept": {
+    "message": "이해하고 동의합니다",
+    "description": "Accept button that dismisses the risk-disclaimer gate"
+  }
+}

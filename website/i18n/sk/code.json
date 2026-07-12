@@ -1,0 +1,22 @@
+{
+  "riskDisclaimer.title": {
+    "message": "Upozornenie na riziko",
+    "description": "Title of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.body": {
+    "message": "Obchodovanie s devízami (forex) a rozdielovými zmluvami (CFD) na maržu nesie vysokú mieru rizika a nemusí byť vhodné pre všetkých investorov. Vysoká páka môže pôsobiť vo váš prospech, ale aj proti vám. Môžete prísť o časť alebo o celý investovaný kapitál, a preto by ste nemali investovať peniaze, ktorých stratu si nemôžete dovoliť. Minulá výkonnosť ani výsledky spätného testovania nie sú zárukou budúcich výsledkov. cMind je softvér prevádzkovaný vo vlastnej réžii, poskytovaný „tak, ako je“, a neposkytuje investičné, finančné, právne ani daňové poradenstvo. Všetky obchodné rozhodnutia a z nich vyplývajúce zisky či straty robíte podľa vlastného uváženia a na svoju plnú a výhradnú zodpovednosť.",
+    "description": "Body text of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.prompt": {
+    "message": "Ak chcete pokračovať, musíte potvrdiť, že týmto rizikám rozumiete a prijímate ich. Ak ich neprijmete, nemôžete túto stránku používať.",
+    "description": "Instruction line above the accept / decline buttons"
+  },
+  "riskDisclaimer.decline": {
+    "message": "Neprijímam — odísť",
+    "description": "Decline button that navigates the visitor off the site"
+  },
+  "riskDisclaimer.accept": {
+    "message": "Rozumiem a prijímam",
+    "description": "Accept button that dismisses the risk-disclaimer gate"
+  }
+}

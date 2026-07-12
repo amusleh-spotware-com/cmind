@@ -1,0 +1,22 @@
+{
+  "riskDisclaimer.title": {
+    "message": "Opozorilo o tveganju",
+    "description": "Title of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.body": {
+    "message": "Trgovanje z valutami (forex) in pogodbami na razliko (CFD) z vzvodom prinaša visoko stopnjo tveganja in morda ni primerno za vse vlagatelje. Visok finančni vzvod lahko deluje v vašo korist ali proti vam. Izgubite lahko del ali celoten vloženi kapital, zato ne smete vlagati denarja, katerega izgube si ne morete privoščiti. Pretekli rezultati in rezultati povratnega testiranja niso pokazatelj prihodnjih rezultatov. cMind je programska oprema za lastno gostovanje, ki je na voljo „takšna, kot je“, in ne zagotavlja naložbenega, finančnega, pravnega ali davčnega svetovanja. Vse trgovalne odločitve ter morebitni dobiček ali izguba, ki iz njih izhajajo, so sprejete po vaši lastni presoji in so vaša izključna in polna odgovornost.",
+    "description": "Body text of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.prompt": {
+    "message": "Za nadaljevanje morate potrditi, da razumete in sprejemate ta tveganja. Če jih ne sprejmete, tega spletnega mesta ne morete uporabljati.",
+    "description": "Instruction line above the accept / decline buttons"
+  },
+  "riskDisclaimer.decline": {
+    "message": "Ne sprejemam — zapusti",
+    "description": "Decline button that navigates the visitor off the site"
+  },
+  "riskDisclaimer.accept": {
+    "message": "Razumem in sprejemam",
+    "description": "Accept button that dismisses the risk-disclaimer gate"
+  }
+}

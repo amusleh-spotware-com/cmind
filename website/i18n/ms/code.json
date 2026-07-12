@@ -1,0 +1,22 @@
+{
+  "riskDisclaimer.title": {
+    "message": "Amaran Risiko",
+    "description": "Title of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.body": {
+    "message": "Perdagangan pertukaran asing (Forex) dan Kontrak untuk Perbezaan (CFD) secara margin membawa tahap risiko yang tinggi dan mungkin tidak sesuai untuk semua pelabur. Leveraj yang tinggi boleh bertindak menentang anda dan juga memihak kepada anda. Anda mungkin mengalami kerugian sebahagian atau keseluruhan modal yang dilaburkan, oleh itu anda tidak seharusnya melabur wang yang anda tidak mampu untuk kehilangannya. Prestasi lampau dan keputusan ujian belakang bukan petunjuk keputusan masa depan. cMind ialah perisian layan diri yang disediakan \"sebagaimana adanya\" dan tidak memberikan nasihat pelaburan, kewangan, undang-undang atau cukai. Semua keputusan dagangan, serta sebarang keuntungan atau kerugian yang terhasil, dibuat mengikut budi bicara anda sendiri dan merupakan tanggungjawab anda sepenuhnya.",
+    "description": "Body text of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.prompt": {
+    "message": "Untuk meneruskan, anda mesti mengesahkan bahawa anda memahami dan menerima risiko ini. Jika anda tidak menerima, anda tidak boleh menggunakan tapak ini.",
+    "description": "Instruction line above the accept / decline buttons"
+  },
+  "riskDisclaimer.decline": {
+    "message": "Saya tidak menerima — keluar",
+    "description": "Decline button that navigates the visitor off the site"
+  },
+  "riskDisclaimer.accept": {
+    "message": "Saya faham dan menerima",
+    "description": "Accept button that dismisses the risk-disclaimer gate"
+  }
+}

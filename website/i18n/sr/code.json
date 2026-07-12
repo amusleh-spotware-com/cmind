@@ -1,0 +1,22 @@
+{
+  "riskDisclaimer.title": {
+    "message": "Упозорење о ризику",
+    "description": "Title of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.body": {
+    "message": "Трговање девизама (форекс) и уговорима на разлику (ЦФД) уз маргину носи висок ниво ризика и можда није погодно за све инвеститоре. Висока полуга може деловати како у вашу корист тако и против вас. Можете изгубити део или цео уложени капитал, па стога не бисте требали да улажете новац који не можете себи да приуштите да изгубите. Прошли учинак и резултати повратног тестирања нису показатељ будућих резултата. cMind је софтвер за самостално хостовање који се пружа „такав какав јесте“ и не пружа инвестиционе, финансијске, правне нити пореске савете. Све трговинске одлуке, као и сваки добитак или губитак који из њих произлазе, доносите по сопственом нахођењу и на своју искључиву и пуну одговорност.",
+    "description": "Body text of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.prompt": {
+    "message": "Да бисте наставили, морате потврдити да разумете и прихватате ове ризике. Ако не прихватите, не можете користити овај сајт.",
+    "description": "Instruction line above the accept / decline buttons"
+  },
+  "riskDisclaimer.decline": {
+    "message": "Не прихватам — напусти",
+    "description": "Decline button that navigates the visitor off the site"
+  },
+  "riskDisclaimer.accept": {
+    "message": "Разумем и прихватам",
+    "description": "Accept button that dismisses the risk-disclaimer gate"
+  }
+}

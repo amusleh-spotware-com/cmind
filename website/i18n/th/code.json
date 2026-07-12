@@ -1,0 +1,22 @@
+{
+  "riskDisclaimer.title": {
+    "message": "คำเตือนความเสี่ยง",
+    "description": "Title of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.body": {
+    "message": "การซื้อขายเงินตราต่างประเทศ (ฟอเร็กซ์) และสัญญาซื้อขายส่วนต่าง (CFD) แบบมาร์จิ้นมีระดับความเสี่ยงสูงและอาจไม่เหมาะสมกับนักลงทุนทุกราย เลเวอเรจที่สูงสามารถส่งผลทั้งในทางที่เป็นประโยชน์และเป็นโทษต่อคุณได้ คุณอาจสูญเสียเงินลงทุนบางส่วนหรือทั้งหมด ดังนั้นคุณจึงไม่ควรลงทุนด้วยเงินที่คุณไม่สามารถรับความเสียหายได้ ผลการดำเนินงานในอดีตและผลการทดสอบย้อนหลังไม่ได้เป็นเครื่องบ่งชี้ผลลัพธ์ในอนาคต cMind เป็นซอฟต์แวร์แบบโฮสต์เองที่ให้บริการ \"ตามสภาพ\" และไม่ได้ให้คำแนะนำด้านการลงทุน การเงิน กฎหมาย หรือภาษี การตัดสินใจซื้อขายทั้งหมด รวมถึงกำไรหรือขาดทุนที่เกิดขึ้น เป็นดุลยพินิจของคุณเองและเป็นความรับผิดชอบของคุณแต่เพียงผู้เดียวโดยสมบูรณ์",
+    "description": "Body text of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.prompt": {
+    "message": "หากต้องการดำเนินการต่อ คุณต้องยืนยันว่าคุณเข้าใจและยอมรับความเสี่ยงเหล่านี้ หากคุณไม่ยอมรับ คุณจะไม่สามารถใช้เว็บไซต์นี้ได้",
+    "description": "Instruction line above the accept / decline buttons"
+  },
+  "riskDisclaimer.decline": {
+    "message": "ฉันไม่ยอมรับ — ออก",
+    "description": "Decline button that navigates the visitor off the site"
+  },
+  "riskDisclaimer.accept": {
+    "message": "ฉันเข้าใจและยอมรับ",
+    "description": "Accept button that dismisses the risk-disclaimer gate"
+  }
+}

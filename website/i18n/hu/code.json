@@ -1,0 +1,22 @@
+{
+  "riskDisclaimer.title": {
+    "message": "Kockázati figyelmeztetés",
+    "description": "Title of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.body": {
+    "message": "A deviza (Forex) és a különbözeti ügyletek (CFD-k) tőkeáttétellel történő kereskedése magas kockázattal jár, és nem feltétlenül alkalmas minden befektető számára. A magas tőkeáttétel ugyanúgy dolgozhat ön ellen, mint az ön javára. A befektetett tőke egy részét vagy egészét is elveszítheti, ezért ne fektessen be olyan pénzt, amelynek elvesztését nem engedheti meg magának. A múltbeli teljesítmény és a visszatesztelés eredményei nem jelentenek garanciát a jövőbeli eredményekre. A cMind saját üzemeltetésű szoftver, amelyet „adott állapotában” biztosítunk, és nem nyújt befektetési, pénzügyi, jogi vagy adózási tanácsadást. Minden kereskedési döntést, valamint az abból származó nyereséget vagy veszteséget saját belátása szerint és kizárólagos, teljes felelősségére hoz meg.",
+    "description": "Body text of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.prompt": {
+    "message": "A folytatáshoz meg kell erősítenie, hogy megérti és elfogadja ezeket a kockázatokat. Ha nem fogadja el, nem használhatja ezt az oldalt.",
+    "description": "Instruction line above the accept / decline buttons"
+  },
+  "riskDisclaimer.decline": {
+    "message": "Nem fogadom el — kilépés",
+    "description": "Decline button that navigates the visitor off the site"
+  },
+  "riskDisclaimer.accept": {
+    "message": "Megértem és elfogadom",
+    "description": "Accept button that dismisses the risk-disclaimer gate"
+  }
+}

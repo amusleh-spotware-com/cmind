@@ -1,0 +1,73 @@
+﻿@using Core.Ai.CurrencyStrength
+@inject ICurrencyStrengthQuery CurrencyStrength
+@inject NavigationManager Nav
+
+<MudPaper Class="pa-4" Elevation="1" data-testid="dash-currency-strength">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+        <MudIcon Icon="@Icons.Material.Filled.Public" Color="Color.Primary" />
+        <MudText Typo="Typo.subtitle1">Currency strength</MudText>
+        <MudSpacer />
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
+                   OnClick="@(() => Nav.NavigateTo("/ai/currency-strength"))">Open</MudButton>
+    </MudStack>
+
+    @if (_view is null)
+    {
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">
+            No snapshot yet. Configure AI and refresh to generate the macro picture.
+        </MudText>
+    }
+    else
+    {
+        <MudGrid>
+            <MudItem xs="6">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Strongest</MudText>
+                @foreach (var row in _view.Ranking.Take(3))
+                {
+                    <MudText Typo="Typo.body2">@row.Code <MudText Typo="Typo.caption" Class="mud-text-secondary" Inline="true">@row.Composite.ToString("+0.00;-0.00;0.00")</MudText></MudText>
+                }
+            </MudItem>
+            <MudItem xs="6">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Weakest</MudText>
+                @foreach (var row in _view.Ranking.TakeLast(3).Reverse())
+                {
+                    <MudText Typo="Typo.body2">@row.Code <MudText Typo="Typo.caption" Class="mud-text-secondary" Inline="true">@row.Composite.ToString("+0.00;-0.00;0.00")</MudText></MudText>
+                }
+            </MudItem>
+        </MudGrid>
+
+        @if (_topPair is not null)
+        {
+            <MudDivider Class="my-2" />
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">Top 3M call</MudText>
+            <MudText Typo="Typo.body2">
+                @_topPair.Base/@_topPair.Quote — @_topPair.Bias
+                <MudText Typo="Typo.caption" Class="mud-text-secondary" Inline="true">(conviction @_topPair.Conviction.ToString("0.00"))</MudText>
+            </MudText>
+        }
+
+        <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mt-2">
+            As of @_view.AsOf.ToLocalTime().ToString("g") · @_view.Source
+        </MudText>
+    }
+</MudPaper>
+
+@code {
+    private CurrencyStrengthView? _view;
+    private PairRow? _topPair;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _view = await CurrencyStrength.LatestAsync(Horizon.ThreeMonths, null, CancellationToken.None);
+            _topPair = _view?.Pairs
+                .OrderByDescending(p => p.Conviction)
+                .FirstOrDefault(p => p.Bias == nameof(DirectionalBias.Appreciate));
+        }
+        catch
+        {
+            _view = null;
+        }
+    }
+}

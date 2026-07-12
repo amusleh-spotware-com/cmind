@@ -1,0 +1,22 @@
+{
+  "riskDisclaimer.title": {
+    "message": "تحذير المخاطر",
+    "description": "Title of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.body": {
+    "message": "ينطوي تداول العملات الأجنبية (الفوركس) وعقود الفروقات (CFDs) بالهامش على مستوى عالٍ من المخاطر وقد لا يكون مناسبًا لجميع المستثمرين. يمكن للرافعة المالية العالية أن تعمل ضدك كما تعمل لصالحك. قد تتكبد خسارة جزء من رأس المال المستثمر أو كله، ولذلك يجب ألا تستثمر أموالًا لا يمكنك تحمّل خسارتها. الأداء السابق ونتائج الاختبار التاريخي لا تُعدّ مؤشرًا على النتائج المستقبلية. cMind هو برنامج ذاتي الاستضافة يُقدَّم «كما هو» ولا يقدّم أي مشورة استثمارية أو مالية أو قانونية أو ضريبية. جميع قرارات التداول وأي أرباح أو خسائر ناتجة عنها تقع على مسؤوليتك وحدك وبتقديرك الكامل.",
+    "description": "Body text of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.prompt": {
+    "message": "للمتابعة يجب أن تؤكد أنك تفهم هذه المخاطر وتقبلها. إذا لم توافق، فلن تتمكن من استخدام هذا الموقع.",
+    "description": "Instruction line above the accept / decline buttons"
+  },
+  "riskDisclaimer.decline": {
+    "message": "لا أوافق — مغادرة",
+    "description": "Decline button that navigates the visitor off the site"
+  },
+  "riskDisclaimer.accept": {
+    "message": "أفهم وأوافق",
+    "description": "Accept button that dismisses the risk-disclaimer gate"
+  }
+}

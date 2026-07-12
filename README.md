@@ -4,6 +4,17 @@
 
 <h1 align="center">cMind</h1>
 
+> [!CAUTION]
+> **Risk Warning — Trading involves substantial risk of loss.**
+> Trading foreign exchange (Forex) and Contracts for Difference (CFDs) on margin carries a high level
+> of risk and may not be suitable for all investors. The high degree of leverage can work against you
+> as well as for you. **You may sustain a loss of some or all of your invested capital, and therefore
+> you should not invest money that you cannot afford to lose.** Past performance and backtest results
+> are not indicative of future results. cMind is self-hostable software provided "as is" and does
+> **not** provide investment, financial, legal, or tax advice. **Any and all trading decisions, and
+> any resulting profits or losses, are made at your own discretion and are your sole and full
+> responsibility.** By using this software you accept these risks in full.
+
 <p align="center">
   <b>The self-hostable trading-operations platform for cTrader.</b><br/>
   Build · backtest · run · copy — across a distributed node fleet, with an AI core watching the risk.

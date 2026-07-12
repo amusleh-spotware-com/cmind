@@ -1,0 +1,22 @@
+{
+  "riskDisclaimer.title": {
+    "message": "Ostrzeżenie o ryzyku",
+    "description": "Title of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.body": {
+    "message": "Handel walutami (Forex) oraz kontraktami na różnicę (CFD) z użyciem dźwigni wiąże się z wysokim poziomem ryzyka i może nie być odpowiedni dla wszystkich inwestorów. Wysoka dźwignia może działać zarówno na Twoją korzyść, jak i na Twoją niekorzyść. Możesz stracić część lub całość zainwestowanego kapitału, dlatego nie powinieneś inwestować środków, na których utratę nie możesz sobie pozwolić. Wyniki historyczne oraz rezultaty testów wstecznych nie stanowią gwarancji przyszłych wyników. cMind to oprogramowanie hostowane we własnym zakresie, udostępniane „w stanie, w jakim jest”, i nie stanowi doradztwa inwestycyjnego, finansowego, prawnego ani podatkowego. Wszelkie decyzje handlowe oraz wynikające z nich zyski lub straty podejmujesz według własnego uznania i na swoją wyłączną i pełną odpowiedzialność.",
+    "description": "Body text of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.prompt": {
+    "message": "Aby kontynuować, musisz potwierdzić, że rozumiesz i akceptujesz to ryzyko. Jeśli nie zaakceptujesz, nie możesz korzystać z tej witryny.",
+    "description": "Instruction line above the accept / decline buttons"
+  },
+  "riskDisclaimer.decline": {
+    "message": "Nie akceptuję — opuść",
+    "description": "Decline button that navigates the visitor off the site"
+  },
+  "riskDisclaimer.accept": {
+    "message": "Rozumiem i akceptuję",
+    "description": "Accept button that dismisses the risk-disclaimer gate"
+  }
+}

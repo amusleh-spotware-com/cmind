@@ -1,0 +1,22 @@
+{
+  "riskDisclaimer.title": {
+    "message": "Risk Uyarısı",
+    "description": "Title of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.body": {
+    "message": "Marjla döviz (Forex) ve Fark Sözleşmeleri (CFD) ticareti yüksek düzeyde risk taşır ve tüm yatırımcılar için uygun olmayabilir. Yüksek kaldıraç lehinize olduğu kadar aleyhinize de işleyebilir. Yatırdığınız sermayenin bir kısmını veya tamamını kaybedebilirsiniz; bu nedenle kaybetmeyi göze alamayacağınız parayı yatırmamalısınız. Geçmiş performans ve geriye dönük test sonuçları gelecekteki sonuçların göstergesi değildir. cMind, \"olduğu gibi\" sunulan, kendi kendine barındırılan bir yazılımdır ve yatırım, finansal, hukuki veya vergisel tavsiye vermez. Tüm alım satım kararları ile bunlardan doğan kâr veya zararlar tamamen sizin takdirinizde ve münhasır, tam sorumluluğunuzdadır.",
+    "description": "Body text of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.prompt": {
+    "message": "Devam etmek için bu riskleri anladığınızı ve kabul ettiğinizi onaylamanız gerekir. Kabul etmezseniz bu siteyi kullanamazsınız.",
+    "description": "Instruction line above the accept / decline buttons"
+  },
+  "riskDisclaimer.decline": {
+    "message": "Kabul etmiyorum — çık",
+    "description": "Decline button that navigates the visitor off the site"
+  },
+  "riskDisclaimer.accept": {
+    "message": "Anlıyorum ve kabul ediyorum",
+    "description": "Accept button that dismisses the risk-disclaimer gate"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "riskDisclaimer.title": {
+    "message": "Cảnh báo rủi ro",
+    "description": "Title of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.body": {
+    "message": "Giao dịch ngoại hối (Forex) và Hợp đồng chênh lệch (CFD) với ký quỹ mang mức độ rủi ro cao và có thể không phù hợp với tất cả nhà đầu tư. Đòn bẩy cao có thể có lợi nhưng cũng có thể gây bất lợi cho bạn. Bạn có thể mất một phần hoặc toàn bộ số vốn đã đầu tư, vì vậy bạn không nên đầu tư số tiền mà bạn không đủ khả năng để mất. Kết quả trong quá khứ và kết quả kiểm thử ngược không phải là chỉ báo cho kết quả trong tương lai. cMind là phần mềm tự lưu trữ được cung cấp \"nguyên trạng\" và không cung cấp tư vấn đầu tư, tài chính, pháp lý hoặc thuế. Mọi quyết định giao dịch, cũng như bất kỳ khoản lợi nhuận hoặc thua lỗ nào phát sinh, đều do bạn tự quyết định và thuộc trách nhiệm duy nhất và hoàn toàn của bạn.",
+    "description": "Body text of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.prompt": {
+    "message": "Để tiếp tục, bạn phải xác nhận rằng bạn hiểu và chấp nhận những rủi ro này. Nếu không chấp nhận, bạn không thể sử dụng trang web này.",
+    "description": "Instruction line above the accept / decline buttons"
+  },
+  "riskDisclaimer.decline": {
+    "message": "Tôi không chấp nhận — rời đi",
+    "description": "Decline button that navigates the visitor off the site"
+  },
+  "riskDisclaimer.accept": {
+    "message": "Tôi hiểu và chấp nhận",
+    "description": "Accept button that dismisses the risk-disclaimer gate"
+  }
+}

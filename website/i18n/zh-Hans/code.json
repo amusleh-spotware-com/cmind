@@ -1,0 +1,22 @@
+{
+  "riskDisclaimer.title": {
+    "message": "风险警告",
+    "description": "Title of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.body": {
+    "message": "以保证金方式交易外汇（Forex）和差价合约（CFD）具有高风险，可能并不适合所有投资者。高杠杆既可能对您有利，也可能对您不利。您可能损失部分或全部投入资金，因此不应投入您无法承受损失的资金。过往业绩和回测结果并不预示未来表现。cMind 是一款可自行托管的软件，按“现状”提供，不提供任何投资、财务、法律或税务建议。所有交易决策以及由此产生的任何盈亏，均由您自行决定，并由您独自承担全部责任。",
+    "description": "Body text of the first-visit risk-disclaimer dialog"
+  },
+  "riskDisclaimer.prompt": {
+    "message": "要继续，您必须确认您理解并接受这些风险。如果您不接受，则无法使用本网站。",
+    "description": "Instruction line above the accept / decline buttons"
+  },
+  "riskDisclaimer.decline": {
+    "message": "我不接受 — 离开",
+    "description": "Decline button that navigates the visitor off the site"
+  },
+  "riskDisclaimer.accept": {
+    "message": "我理解并接受",
+    "description": "Accept button that dismisses the risk-disclaimer gate"
+  }
+}

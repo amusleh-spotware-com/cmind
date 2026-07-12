@@ -83,6 +83,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'testing/dev-credentials',
         'testing/fake-trading-session',
+        'testing/failure-paths',
         'testing/live-copy-trading',
         'testing/stress-testing',
         'testing/copy-trading-verification-run',

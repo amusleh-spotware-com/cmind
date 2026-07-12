@@ -23,7 +23,7 @@ public class PropRulePersistenceTests(PostgresFixture fixture) : IClassFixture<P
         var user = OwnerUser.Create(new Email($"prop-{Guid.NewGuid():N}@test.local"), "x",
             Guid.NewGuid().ToByteArray());
         var ctid = CTraderIdAccount.Create(user.Id, $"ct-{Guid.NewGuid():N}", "pw"u8.ToArray());
-        var account = ctid.AddTradingAccount(12345, "Test", isLive: false, label: null);
+        var account = ctid.AddTradingAccount(12345, "Test", isLive: false, label: null, Core.Accounts.BrokerAllowlist.Unrestricted);
         var rule = PropRule.Create(user.Id, account.Id, "FTMO", 2, 0, 10, autoFlatten: true);
 
         await using (var write = CreateContext())

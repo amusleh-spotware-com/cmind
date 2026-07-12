@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Core.Accounts;
 using Core.Agent;
 using Core.Constants;
 using Core.Domain;
@@ -400,17 +401,21 @@ public class CTraderIdAccount : AuditedEntity<CtidId>
         EncryptedPassword = encryptedPassword;
     }
 
-    public TradingAccount AddTradingAccount(long accountNumber, string broker, bool isLive, string? label)
+    public TradingAccount AddTradingAccount(
+        long accountNumber, string broker, bool isLive, string? label, BrokerAllowlist allowlist)
     {
-        var account = TradingAccount.Create(Id, accountNumber, broker, isLive, label);
+        var brokerName = GuardBrokerAllowed(broker, allowlist);
+        var account = TradingAccount.Create(Id, accountNumber, brokerName.Value, isLive, label);
         _tradingAccounts.Add(account);
 
         return account;
     }
 
     public TradingAccount LinkOpenApiAccount(long accountNumber, string broker, bool isLive,
-        CtidTraderAccountId ctidTraderAccountId, OpenApiAuthorizationId authorizationId, string? label)
+        CtidTraderAccountId ctidTraderAccountId, OpenApiAuthorizationId authorizationId, string? label,
+        BrokerAllowlist allowlist)
     {
+        var brokerName = GuardBrokerAllowed(broker, allowlist);
         var existing = _tradingAccounts.FirstOrDefault(a => a.AccountNumber == accountNumber);
         if (existing is not null)
         {
@@ -420,10 +425,17 @@ public class CTraderIdAccount : AuditedEntity<CtidId>
         }
 
         var account = TradingAccount.CreateFromOpenApi(
-            Id, accountNumber, broker, isLive, ctidTraderAccountId, authorizationId, label);
+            Id, accountNumber, brokerName.Value, isLive, ctidTraderAccountId, authorizationId, label);
         _tradingAccounts.Add(account);
 
         return account;
+    }
+
+    private static BrokerName GuardBrokerAllowed(string broker, BrokerAllowlist allowlist)
+    {
+        var brokerName = new BrokerName(broker);
+        if (!allowlist.Allows(brokerName)) throw new DomainException(DomainErrors.BrokerNotAllowed);
+        return brokerName;
     }
 }
 

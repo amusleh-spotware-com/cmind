@@ -73,6 +73,56 @@ The link is emitted by the dashboard component and reads the flag through `IBran
 [White-label for business](../white-label-for-business.md#the-powered-by-cmind-link) for the
 business-facing summary.
 
+## Broker allowlist
+
+A white-label deployment can restrict which brokers' trading accounts its users may add — so a broker
+running cMind for its own clients only ever serves its own book. Configured under `App:Accounts`:
+
+```json
+{
+  "App": {
+    "Accounts": {
+      "AllowedBrokers": ["Pepperstone", "IC Markets"]
+    }
+  }
+}
+```
+
+Environment-variable form: `App__Accounts__AllowedBrokers__0=Pepperstone`.
+
+**Behaviour:**
+
+- **Empty list (default) ⇒ unrestricted.** Every broker is allowed and **no verification runs** — a
+  stock deployment is completely unchanged.
+- **Non-empty ⇒ restricted.** cMind checks every account a user tries to add against the list
+  (case-insensitive):
+  - **Open API (OAuth) link** — the broker name is reported authoritatively by the cTrader Open API, so
+    a disallowed account is simply **skipped** (allowed accounts in the same grant still link); the
+    authorization page tells the user which brokers were skipped.
+  - **Manual cID (username / password)** — the user-typed broker is **not** trusted. cMind **verifies**
+    the account's real broker by running the shipped broker-probe cBot through the cTrader CLI (reading
+    `Account.BrokerName`) and persists that verified name. A disallowed broker is rejected with a
+    notification; a verification failure (bad credentials, no node, timeout) is surfaced too, and the
+    account is not added.
+
+**Model:**
+
+- `Core.Options.AccountsOptions` — bound from `App:Accounts` (`AllowedBrokers`, `BrokerProbeTimeout`,
+  `BrokerProbeAlgoPath`).
+- `Core.Accounts.BrokerName` — value object (trimmed, case-insensitive equality).
+- `Core.Accounts.BrokerAllowlist` — `IsRestricted` / `Allows(broker)`; empty = allow all. Enforced as an
+  invariant inside `CTraderIdAccount.AddTradingAccount` / `LinkOpenApiAccount`
+  (`domain.account.broker_not_allowed`).
+- `Core.Accounts.IBrokerVerifier` → `Web.Accounts.BrokerVerifier` — runs the probe container on the web
+  host (which has the Docker socket), tails logs, and parses the broker via
+  `Core.Accounts.BrokerProbeOutput`. Only invoked when the allowlist is restricted.
+
+**Broker-probe cBot:** the probe source lives in `tools/broker-probe/`. Build it into
+`broker-probe.algo` and place it at the path given by `App:Accounts:BrokerProbeAlgoPath` (default
+`broker-probe/broker-probe.algo` next to the web host). When the algo is absent, manual-cID verification
+fails closed — accounts under a restricted allowlist can still be linked via the Open API path, which
+needs no probe. See `tools/broker-probe/README.md`.
+
 ## Design tokens (CSS variables)
 
 Branding also reaches the app's **own** stylesheet + custom components, not just MudBlazor. `Web.Branding.BrandingCss.BuildRootVariables(BrandingOptions)` emits the branded palette as CSS custom properties on `:root` (`--app-primary`, `--app-primary-hover`, `--app-surface`, `--app-appbar`, `--app-success`/`--app-error`/`--app-warning`/`--app-info`, …), injected in `App.razor` right after `site.css`. `site.css` and every component read `var(--app-*)` — **no hard-coded colours** — so a reseller's palette flows everywhere (login hero, bottom nav, help tips, offline page) for free. Neutral surface tones default in `site.css :root`; `CustomCss` (injected last) can override any token. See [ui-guidelines.md](../ui-guidelines.md) §2.

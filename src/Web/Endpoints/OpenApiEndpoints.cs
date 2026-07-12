@@ -137,11 +137,11 @@ public static class OpenApiEndpoints
                 var tokens = await tokenClient.ExchangeCodeAsync(
                     application.ClientId, clientSecret, code, application.RedirectUri, ct);
                 var grant = await client.LoadGrantAsync(application.ClientId, clientSecret, tokens.AccessToken, ct);
-                await linker.LinkAsync(result.UserId, application, grant, tokens, ct);
+                var linkResult = await linker.LinkAsync(result.UserId, application, grant, tokens, ct);
                 var redirectTo = result.IsInvite
                     ? Core.Constants.OpenApiEndpoints.InviteRedirectPath
                     : Core.Constants.OpenApiEndpoints.AuthorizedRedirectPath;
-                return Html(SuccessPage(grant.Accounts.Count, redirectTo));
+                return Html(SuccessPage(linkResult.Linked, linkResult.SkippedBrokers, redirectTo));
             }
             catch (Exception ex)
             {
@@ -190,12 +190,18 @@ public static class OpenApiEndpoints
 
     private static IResult Html(string html) => Results.Content(html, "text/html; charset=utf-8");
 
-    private static string SuccessPage(int accountCount, string redirectUrl)
+    private static string SuccessPage(int accountCount, IReadOnlyList<string> skippedBrokers, string redirectUrl)
     {
         var delay = Core.Constants.OpenApiEndpoints.SuccessRedirectDelaySeconds;
+        var skippedNote = skippedBrokers.Count == 0
+            ? string.Empty
+            : $"<p class=\"muted\">{skippedBrokers.Count} account(s) were not added because their broker " +
+              $"({System.Net.WebUtility.HtmlEncode(string.Join(", ", skippedBrokers.Distinct(StringComparer.OrdinalIgnoreCase)))}) " +
+              "is not allowed on this deployment.</p>";
         return Page(
             "Accounts authorized",
             $"<h1>&#10003; You're all set</h1><p>{accountCount} trading account(s) were added and authorized.</p>" +
+            skippedNote +
             $"<p class=\"muted\">Taking you back in {delay} seconds&hellip;</p>",
             redirectUrl);
     }

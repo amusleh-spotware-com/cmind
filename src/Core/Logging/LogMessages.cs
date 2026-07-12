@@ -358,4 +358,16 @@ public static partial class LogMessages
     [LoggerMessage(EventId = 1106, Level = LogLevel.Information,
         Message = "Email transport not configured; skipped sending to {ToAddress}: {Subject}")]
     public static partial void EmailNotConfigured(this ILogger logger, string toAddress, string subject);
+
+    [LoggerMessage(EventId = 1107, Level = LogLevel.Warning,
+        Message = "Broker verification could not run for account {AccountNumber}: {Reason}")]
+    public static partial void BrokerProbeUnavailable(this ILogger logger, long accountNumber, string reason);
+
+    [LoggerMessage(EventId = 1108, Level = LogLevel.Warning,
+        Message = "Broker verification failed for account {AccountNumber}: {Error}")]
+    public static partial void BrokerProbeFailed(this ILogger logger, long accountNumber, string error);
+
+    [LoggerMessage(EventId = 1109, Level = LogLevel.Information,
+        Message = "Broker verified for account {AccountNumber}: {Broker}")]
+    public static partial void BrokerProbeVerified(this ILogger logger, long accountNumber, string broker);
 }

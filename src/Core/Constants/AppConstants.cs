@@ -431,6 +431,9 @@ public static class FilePaths
     public const string CtidPwdFile = "ctid.pwd";
     public const string ReportJsonFile = "report.json";
     public const string ReportHtmlFile = "report.html";
+    public const string BrokerProbeAlgoFile = "broker-probe.algo";
+    // Default web-host path to the prebuilt broker-probe .algo (source: tools/broker-probe/).
+    public const string BrokerProbeAlgoDefault = "broker-probe/broker-probe.algo";
     public static readonly string BuildWorkRootDefault =
         System.IO.Path.Combine(System.IO.Path.GetTempPath(), "app", "builds");
     public static readonly string LocalRunWorkRootDefault =

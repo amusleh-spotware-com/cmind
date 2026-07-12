@@ -52,7 +52,17 @@
         var r = await Http.PostAsJsonAsync($"/api/ctids/{CtidId}/accounts",
             new { data.AccountNumber, data.Broker, data.IsLive });
         if (r.IsSuccessStatusCode) await Load();
-        else Snack.Add("Failed", Severity.Error);
+        else Snack.Add(await ProblemDetailAsync(r) ?? "Failed", Severity.Error);
+    }
+
+    private static async Task<string?> ProblemDetailAsync(HttpResponseMessage response)
+    {
+        try
+        {
+            var body = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+            return body.TryGetProperty("detail", out var detail) ? detail.GetString() : null;
+        }
+        catch { return null; }
     }
 
     private async Task Remove(Guid id) { await Http.DeleteAsync($"/api/accounts/{id}"); await Load(); }

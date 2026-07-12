@@ -1,4 +1,5 @@
 using Core;
+using Core.Accounts;
 using Core.Domain;
 using FluentAssertions;
 using Xunit;
@@ -34,8 +35,8 @@ public sealed class AccountLinkingTests
         var cid = CTraderIdAccount.CreateForOpenApi(UserId.New(), new CtidUserId(500), "cID 500");
         var authorizationId = OpenApiAuthorizationId.New();
 
-        var first = cid.LinkOpenApiAccount(111, "Broker", true, new CtidTraderAccountId(1), authorizationId, null);
-        var second = cid.LinkOpenApiAccount(111, "Broker", true, new CtidTraderAccountId(1), authorizationId, null);
+        var first = cid.LinkOpenApiAccount(111, "Broker", true, new CtidTraderAccountId(1), authorizationId, null, BrokerAllowlist.Unrestricted);
+        var second = cid.LinkOpenApiAccount(111, "Broker", true, new CtidTraderAccountId(1), authorizationId, null, BrokerAllowlist.Unrestricted);
 
         cid.TradingAccounts.Should().ContainSingle();
         second.Should().BeSameAs(first);
@@ -48,8 +49,8 @@ public sealed class AccountLinkingTests
         var cid = CTraderIdAccount.CreateForOpenApi(UserId.New(), new CtidUserId(500), "cID 500");
         var authorizationId = OpenApiAuthorizationId.New();
 
-        cid.LinkOpenApiAccount(111, "Broker", true, new CtidTraderAccountId(1), authorizationId, null);
-        cid.LinkOpenApiAccount(222, "Broker", false, new CtidTraderAccountId(2), authorizationId, null);
+        cid.LinkOpenApiAccount(111, "Broker", true, new CtidTraderAccountId(1), authorizationId, null, BrokerAllowlist.Unrestricted);
+        cid.LinkOpenApiAccount(222, "Broker", false, new CtidTraderAccountId(2), authorizationId, null, BrokerAllowlist.Unrestricted);
 
         cid.TradingAccounts.Should().HaveCount(2);
     }

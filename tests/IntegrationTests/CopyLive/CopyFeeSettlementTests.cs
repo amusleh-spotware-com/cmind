@@ -57,7 +57,7 @@ public sealed class CopyFeeSettlementTests : IAsyncLifetime
             seed.Add(user);
             var cid = CTraderIdAccount.Create(user.Id, "u", new byte[] { 1 });
             var account = cid.LinkOpenApiAccount(111, "Broker", isLive: false,
-                new CtidTraderAccountId(555), OpenApiAuthorizationId.New(), null);
+                new CtidTraderAccountId(555), OpenApiAuthorizationId.New(), null, Core.Accounts.BrokerAllowlist.Unrestricted);
             seed.Add(cid);
 
             var profile = CopyProfile.Create(user.Id, $"p-{Guid.NewGuid():N}", TradingAccountId.New());

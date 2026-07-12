@@ -151,6 +151,7 @@ builder.Services.AddScoped(sp =>
     return http;
 });
 builder.Services.AddScoped<Web.OpenApi.OpenApiAccountLinker>();
+builder.Services.AddScoped<Core.Accounts.IBrokerVerifier, Web.Accounts.BrokerVerifier>();
 builder.Services.AddHostedService<OwnerSeeder>();
 builder.Services.AddHostedService<LocalNodeSeeder>();
 builder.Services.AddHostedService<InstanceReconciler>();

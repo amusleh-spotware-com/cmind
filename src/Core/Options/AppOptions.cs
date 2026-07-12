@@ -33,6 +33,7 @@ public sealed record AppOptions
     public PropFirmOptions PropFirm { get; init; } = new();
     public FeaturesOptions Features { get; init; } = new();
     public BrandingOptions Branding { get; init; } = new();
+    public AccountsOptions Accounts { get; init; } = new();
     public RegistrationOptions Registration { get; init; } = new();
     public EmailOptions Email { get; init; } = new();
 }

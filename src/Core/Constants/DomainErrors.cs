@@ -53,6 +53,9 @@ public static class DomainErrors
 
     public const string BrandingColorInvalid = "domain.branding.color_invalid";
 
+    public const string BrokerNameRequired = "domain.account.broker_name_required";
+    public const string BrokerNotAllowed = "domain.account.broker_not_allowed";
+
     public const string MfaSecretRequired = "domain.mfa.secret_required";
     public const string MfaEnrollmentNotPending = "domain.mfa.enrollment_not_pending";
     public const string MfaAlreadyEnabled = "domain.mfa.already_enabled";

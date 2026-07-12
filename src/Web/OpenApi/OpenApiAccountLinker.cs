@@ -1,13 +1,20 @@
 using System.Text;
 using Core;
+using Core.Accounts;
 using Core.Constants;
 using Core.Domain;
+using Core.Options;
 using CTraderOpenApi.Auth;
 using CTraderOpenApi.Client;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Web.OpenApi;
+
+/// <summary>Outcome of linking an OAuth grant: how many accounts were linked and which were skipped
+/// because their broker is not on the deployment's <see cref="BrokerAllowlist"/>.</summary>
+public sealed record OpenApiLinkResult(int Linked, IReadOnlyList<string> SkippedBrokers);
 
 /// <summary>
 /// Application service that turns an OAuth token grant into persisted domain state: one
@@ -15,17 +22,19 @@ namespace Web.OpenApi;
 /// <see cref="CTraderIdAccount"/> for grouping, and a linked (or merged) <see cref="TradingAccount"/>
 /// per discovered account. Each aggregate is mutated in its own transaction.
 /// </summary>
-public sealed class OpenApiAccountLinker(DataContext db, ISecretProtector protector, TimeProvider timeProvider)
+public sealed class OpenApiAccountLinker(
+    DataContext db, ISecretProtector protector, TimeProvider timeProvider, IOptionsMonitor<AppOptions> options)
 {
     private const string DefaultBroker = "cTrader";
 
-    public async Task LinkAsync(
+    public async Task<OpenApiLinkResult> LinkAsync(
         UserId userId,
         OpenApiApplication application,
         OpenApiGrant grant,
         OpenApiTokenResponse tokens,
         CancellationToken ct)
     {
+        var allowlist = BrokerAllowlist.FromNames(options.CurrentValue.Accounts.AllowedBrokers);
         var encryptedAccess = protector.Protect(
             Encoding.UTF8.GetBytes(tokens.AccessToken), EncryptionPurposes.OpenApiAccessToken);
         var encryptedRefresh = protector.Protect(
@@ -59,8 +68,20 @@ public sealed class OpenApiAccountLinker(DataContext db, ISecretProtector protec
             await db.SaveChangesAsync(ct);
         }
 
+        var linked = 0;
+        var skipped = new List<string>();
         foreach (var account in grant.Accounts)
         {
+            var broker = string.IsNullOrWhiteSpace(account.Broker) ? DefaultBroker : account.Broker!;
+
+            // The Open API reports the broker authoritatively, so a disallowed account is skipped (not
+            // linked) — allowed accounts in the same grant still link. Empty allowlist ⇒ everything links.
+            if (allowlist.IsRestricted && !allowlist.Allows(new BrokerName(broker)))
+            {
+                skipped.Add(broker);
+                continue;
+            }
+
             var existing = await db.TradingAccounts.Include(t => t.CTid)
                 .FirstOrDefaultAsync(t => t.CTid.UserId == userId && t.AccountNumber == account.TraderLogin, ct);
 
@@ -70,13 +91,17 @@ public sealed class OpenApiAccountLinker(DataContext db, ISecretProtector protec
 
             root.LinkOpenApiAccount(
                 account.TraderLogin,
-                string.IsNullOrWhiteSpace(account.Broker) ? DefaultBroker : account.Broker!,
+                broker,
                 account.IsLive,
                 new CtidTraderAccountId(account.CtidTraderAccountId),
                 authorization.Id,
-                label: null);
+                label: null,
+                allowlist);
 
             await db.SaveChangesAsync(ct);
+            linked++;
         }
+
+        return new OpenApiLinkResult(linked, skipped);
     }
 }

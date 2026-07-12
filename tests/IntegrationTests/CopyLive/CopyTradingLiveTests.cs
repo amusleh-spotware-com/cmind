@@ -114,6 +114,50 @@ public sealed class CopyTradingLiveTests(LiveCopyFixture fixture, ITestOutputHel
         result.SlaveTrailing.Should().BeTrue("a master trailing stop must be mirrored onto the slave copy");
     }
 
+    [Fact]
+    public async Task Master_full_close_closes_the_slave_copy()
+    {
+        if (!fixture.Available) { output.WriteLine(fixture.SkipReason); return; }
+        var accounts = SameCid(1);
+        var slave = new LiveCopyScenario.SlaveSetup(accounts[1], LiveCopyScenario.Destination());
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        var result = await new LiveCopyScenario(fixture, output).RunFullCloseAsync(accounts[0], slave, cts.Token);
+
+        if (result.Inconclusive) { output.WriteLine($"INCONCLUSIVE: {result.Reason}"); return; }
+        result.SlaveClosed.Should().BeTrue("a master full close must close the mirrored slave copy");
+    }
+
+    [Fact]
+    public async Task Master_stop_loss_mirrors_onto_the_slave_copy()
+    {
+        if (!fixture.Available) { output.WriteLine(fixture.SkipReason); return; }
+        var accounts = SameCid(1);
+        var slave = new LiveCopyScenario.SlaveSetup(accounts[1],
+            LiveCopyScenario.Destination(d => d.SetCopyProtection(true, false)));
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        var result = await new LiveCopyScenario(fixture, output).RunStopLossAsync(accounts[0], slave, cts.Token);
+
+        if (result.Inconclusive) { output.WriteLine($"INCONCLUSIVE: {result.Reason}"); return; }
+        result.SlaveStopLossSet.Should().BeTrue("a master stop loss must mirror onto the slave copy");
+    }
+
+    [Fact]
+    public async Task Master_position_open_before_host_start_is_resynced_to_the_slave()
+    {
+        if (!fixture.Available) { output.WriteLine(fixture.SkipReason); return; }
+        var accounts = SameCid(1);
+        var slave = new LiveCopyScenario.SlaveSetup(accounts[1], LiveCopyScenario.Destination());
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        var result = await new LiveCopyScenario(fixture, output).RunStartWithOpenAsync(accounts[0], slave, cts.Token);
+
+        if (result.Inconclusive) { output.WriteLine($"INCONCLUSIVE: {result.Reason}"); return; }
+        result.SlaveCopied.Should().BeTrue(
+            "a position open before the host starts must be picked up by the start-up resync and copied");
+    }
+
     private async Task RunAsync(IReadOnlyList<LiveCopyFixture.LiveAccount> accounts, bool masterIsBuy,
         bool reverse, Action<LiveCopyScenario.ScenarioResult> assert)
     {

@@ -296,6 +296,117 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
         return new StartWithOpenResult(false, null, copied);
     }
 
+    public sealed record FullCloseResult(bool Inconclusive, string? Reason, bool SlaveClosed);
+
+    // Opens a master position, waits for the slave copy, fully closes the master, and asserts the slave
+    // copy is closed too (a master full close must propagate). Demo only; cleans up.
+    public async Task<FullCloseResult> RunFullCloseAsync(LiveCopyFixture.LiveAccount master,
+        SlaveSetup slave, CancellationToken ct)
+    {
+        var masterCtid = master.Ctid;
+        var plan = new CopyProfilePlan(CopyProfileId.New(), Live: false, fixture.ClientId, fixture.ClientSecret,
+            masterCtid, master.AccessToken, 1,
+            [new CopyDestinationPlan(slave.Account.Ctid, slave.Account.AccessToken, 1, slave.Config)]);
+        var host = new CopyEngineHost(plan, new OpenApiTradingSessionFactory(fixture.ConnectionFactory),
+            new CopyDecisionEngine(new CopySizingCalculator()), TimeProvider.System, NullLogger.Instance);
+        using var hostCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var hostTask = Task.Run(() => host.RunAsync(hostCts.Token), CancellationToken.None);
+
+        await using var probe = fixture.NewSession(new[] { master, slave.Account });
+        await probe.StartAsync(ct);
+
+        var symbolId = await ResolveSymbolAsync(probe, masterCtid, [slave.Account.Ctid], ct);
+        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct)).First();
+        var volume = details.MinVolume > 0 ? details.MinVolume : details.StepVolume;
+
+        var label = $"cmind-fc-{Guid.NewGuid():N}"[..24];
+        await Task.Delay(HostWarmup, ct);
+        await probe.SendMarketOrderAsync(masterCtid, symbolId, isBuy: true, volume, label, ct);
+
+        var masterPosition = await PollAsync(() => FindByLabelAsync(probe, masterCtid, label, ct), TimeSpan.FromSeconds(12), ct);
+        if (masterPosition is null)
+        {
+            await StopHostAsync(hostCts, hostTask);
+            return new FullCloseResult(true, "Master order did not fill (market likely closed).", false);
+        }
+
+        var sourceId = masterPosition.PositionId.ToString();
+        var copy = await PollAsync(() => FindByLabelAsync(probe, slave.Account.Ctid, sourceId, ct), CopyTimeout, ct);
+        if (copy is null)
+        {
+            await CleanupAsync(probe, masterCtid, sourceId, [slave], ct);
+            await StopHostAsync(hostCts, hostTask);
+            return new FullCloseResult(true, "Slave copy never appeared.", false);
+        }
+
+        await probe.ClosePositionAsync(masterCtid, masterPosition.PositionId, masterPosition.Volume, ct); // full close
+        var slaveClosed = await PollUntilAsync(
+            async () => await FindByLabelAsync(probe, slave.Account.Ctid, sourceId, ct) is null, CopyTimeout, ct);
+        output.WriteLine($"full close: slave copy closed={slaveClosed}");
+
+        await CleanupAsync(probe, masterCtid, sourceId, [slave], ct);
+        await StopHostAsync(hostCts, hostTask);
+        return new FullCloseResult(false, null, slaveClosed);
+    }
+
+    public sealed record StopLossResult(bool Inconclusive, string? Reason, bool SlaveStopLossSet);
+
+    // Opens a master position, waits for the slave copy, sets a (non-trailing) stop loss on the master,
+    // and asserts the slave copy receives a stop loss too. Demo only; cleans up.
+    public async Task<StopLossResult> RunStopLossAsync(LiveCopyFixture.LiveAccount master,
+        SlaveSetup slave, CancellationToken ct)
+    {
+        var masterCtid = master.Ctid;
+        var plan = new CopyProfilePlan(CopyProfileId.New(), Live: false, fixture.ClientId, fixture.ClientSecret,
+            masterCtid, master.AccessToken, 1,
+            [new CopyDestinationPlan(slave.Account.Ctid, slave.Account.AccessToken, 1, slave.Config)]);
+        var host = new CopyEngineHost(plan, new OpenApiTradingSessionFactory(fixture.ConnectionFactory),
+            new CopyDecisionEngine(new CopySizingCalculator()), TimeProvider.System, NullLogger.Instance);
+        using var hostCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var hostTask = Task.Run(() => host.RunAsync(hostCts.Token), CancellationToken.None);
+
+        await using var probe = fixture.NewSession(new[] { master, slave.Account });
+        await probe.StartAsync(ct);
+
+        var symbolId = await ResolveSymbolAsync(probe, masterCtid, [slave.Account.Ctid], ct, FxPreference);
+        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct)).First();
+        var volume = details.MinVolume > 0 ? details.MinVolume : details.StepVolume;
+        var (bid, _) = await probe.LoadSpotPriceAsync(masterCtid, symbolId, ct);
+
+        var label = $"cmind-sl-{Guid.NewGuid():N}"[..24];
+        await Task.Delay(HostWarmup, ct);
+        await probe.SendMarketOrderAsync(masterCtid, symbolId, isBuy: true, volume, label, ct);
+
+        var masterPosition = await PollAsync(() => FindByLabelAsync(probe, masterCtid, label, ct), TimeSpan.FromSeconds(12), ct);
+        if (masterPosition is null)
+        {
+            await StopHostAsync(hostCts, hostTask);
+            return new StopLossResult(true, "Master order did not fill (market likely closed).", false);
+        }
+
+        var sourceId = masterPosition.PositionId.ToString();
+        var copy = await PollAsync(() => FindByLabelAsync(probe, slave.Account.Ctid, sourceId, ct), CopyTimeout, ct);
+        if (copy is null)
+        {
+            await CleanupAsync(probe, masterCtid, sourceId, [slave], ct);
+            await StopHostAsync(hostCts, hostTask);
+            return new StopLossResult(true, "Slave copy never appeared.", false);
+        }
+
+        var stopLoss = Math.Round(bid * 0.99, 5); // SL below market for a long
+        await probe.AmendPositionSltpAsync(masterCtid, masterPosition.PositionId, stopLoss, null, trailingStopLoss: false, ct);
+        var slaveWithSl = await PollAsync(async () =>
+        {
+            var current = await FindByLabelAsync(probe, slave.Account.Ctid, sourceId, ct);
+            return current is { StopLoss: not null } ? current : null;
+        }, CopyTimeout, ct);
+        output.WriteLine($"stop loss: slave copy has SL={slaveWithSl is not null}");
+
+        await CleanupAsync(probe, masterCtid, sourceId, [slave], ct);
+        await StopHostAsync(hostCts, hostTask);
+        return new StopLossResult(false, null, slaveWithSl is not null);
+    }
+
     private static async Task<bool> PollUntilAsync(Func<Task<bool>> condition, TimeSpan timeout, CancellationToken ct)
     {
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
@@ -379,7 +490,7 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
 
     private static async Task StopHostAsync(CancellationTokenSource hostCts, Task hostTask)
     {
-        hostCts.Cancel();
+        await hostCts.CancelAsync();
         try { await hostTask.WaitAsync(TimeSpan.FromSeconds(5)); } catch { /* best effort */ }
     }
 

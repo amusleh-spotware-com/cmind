@@ -28,7 +28,8 @@ public static class UserEndpoints
                 .Select(u => new { u.Id, u.Email, Role = u.RoleName, u.CreatedAt })
                 .ToListAsync());
 
-        g.MapPost("/{id:guid}/approve", async (Guid id, DataContext db) =>
+        g.MapPost("/{id:guid}/approve", async (Guid id, DataContext db,
+            Microsoft.Extensions.Logging.ILogger<Program> logger) =>
         {
             var uid = UserId.From(id);
             var target = await db.Users.FirstOrDefaultAsync(u => u.Id == uid);
@@ -42,6 +43,7 @@ public static class UserEndpoints
                 return Results.BadRequest(new { error = ex.Code });
             }
             await db.SaveChangesAsync();
+            Core.Logging.LogMessages.UserApprovedLog(logger, target.Id.Value);
             return Results.Ok(new { target.Id });
         });
 

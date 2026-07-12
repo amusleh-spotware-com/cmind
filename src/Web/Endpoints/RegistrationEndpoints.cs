@@ -151,7 +151,8 @@ public static class RegistrationEndpoints
             return NeutralAccepted(mode);
         }).DisableAntiforgery();
 
-        g.MapGet("/verify", async (string? token, DataContext db, TimeProvider clock, CancellationToken ct) =>
+        g.MapGet("/verify", async (string? token, DataContext db, TimeProvider clock,
+            ILogger<Program> logger, CancellationToken ct) =>
         {
             if (string.IsNullOrWhiteSpace(token)) return Results.Redirect("/login?verifyError=1");
             var hash = RegistrationTokens.Hash(token);
@@ -160,6 +161,7 @@ public static class RegistrationEndpoints
             if (user is null || !user.RedeemEmailVerificationToken(hash, clock.GetUtcNow()))
                 return Results.Redirect("/login?verifyError=1");
             await db.SaveChangesAsync(ct);
+            logger.UserEmailVerified(user.Id.Value);
             return Results.Redirect("/login?verified=1");
         });
 
@@ -248,7 +250,8 @@ public static class RegistrationEndpoints
         user.IssueEmailVerificationToken(RegistrationTokens.Hash(raw), clock.GetUtcNow().Add(reg.TokenLifetime));
         await db.SaveChangesAsync(ct);
 
-        var product = options.CurrentValue.Branding.ProductName;
+        var product = System.Text.Encodings.Web.HtmlEncoder.Default.Encode(
+            options.CurrentValue.Branding.ProductName);
         var link = $"{ctx.Request.Scheme}://{ctx.Request.Host}/api/register/verify?token={Uri.EscapeDataString(raw)}";
         var html = $"""
             <p>Welcome to {product}.</p>

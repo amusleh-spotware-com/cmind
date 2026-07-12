@@ -18,7 +18,7 @@ namespace Infrastructure.Persistence.Migrations
                 type: "character varying(32)",
                 maxLength: 32,
                 nullable: false,
-                defaultValue: "");
+                defaultValue: "Active");
 
             migrationBuilder.AddColumn<bool>(
                 name: "Profile_AgeConfirmed",

@@ -1,0 +1,27 @@
+@using Web.Endpoints
+@inject NavigationManager Nav
+
+<div class="app-chart-card app-chart-card-click" @onclick="@(() => Nav.NavigateTo("/backtest"))" data-testid="backtests-widget">
+    <div class="app-section-head">
+        <span>Backtests</span>
+        <HelpTip Text="Your backtests by state, all time." />
+    </div>
+    <div class="app-backtest-tiles">
+        <div class="app-backtest-tile">
+            <span class="app-backtest-num" style="color:var(--app-info);">@Data.Running</span>
+            <span class="app-backtest-label">Running</span>
+        </div>
+        <div class="app-backtest-tile">
+            <span class="app-backtest-num" style="color:var(--app-success);">@Data.Completed</span>
+            <span class="app-backtest-label">Completed</span>
+        </div>
+        <div class="app-backtest-tile">
+            <span class="app-backtest-num" style="color:var(--app-error);">@Data.Failed</span>
+            <span class="app-backtest-label">Failed</span>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public DashboardBacktests Data { get; set; } = default!;
+}

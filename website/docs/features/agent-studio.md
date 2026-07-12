@@ -50,11 +50,27 @@ Give an agent **measurable objectives** — e.g. *keep max drawdown below 4%*, *
 1.5*, *win rate ≥ 55%*. Each target is **Hard** (a guardrail — a breach trips the circuit breaker) or
 **Soft** (steers reasoning only), evaluated as On-track / At-risk / Breached.
 
+## The decision pipeline
+
+Once started, an agent runs a **24/7 supervised loop** (`AgentRuntimeService`). Each tick, for every
+managed account, it: reads the **deterministic account state** (ground truth, never the model's memory);
+asks the decision engine for a move; passes it through the **safety gate** (`AgentDecisionProcessor`) —
+autonomy level → circuit breaker → risk envelope; writes an append-only **`AgentDecisionRecord`**; and
+halts or executes as the gate directs. The loop is **fault-isolated** (one agent's failure never touches
+another or the host) and **safe by default**: it is inert unless AI is configured *and*
+`App:Ai:AgentRuntimeEnabled` is set, and it never opens fresh risk while the AI provider is unavailable.
+
+- **Approval gate** — an **Approval-gated** agent's proposed order is recorded as **Pending** and does
+  nothing until the owner approves it (`POST /api/agent-studio/{id}/decisions/{seq}/approve` or
+  `/reject`); **Full Auto** clears through the envelope with no per-trade approval; **Advisory** only
+  proposes.
+- **Audit ledger** — every decision is replayable: reasoning (XAI), the evidence it cited, the gate
+  verdict, the order intent and whether it executed, at `GET /api/agent-studio/{id}/decisions`.
+
 ## Scope
 
-Today Agent Studio ships the full agent lifecycle: create/configure/persist agents, manage their goals
-and accounts, and Start/Stop/Kill them, with every safety invariant enforced by the aggregate and the
-kernel. The autonomous 24/7 decision loop — the multi-account, point-in-time Open-API state store
-(read-only to the model), the ReAct tool loop over the quant tools, layered memory/reflection, and the
-`AgentDecisionRecord` audit ledger — is the next increment; it is gated on the Anthropic API key and the
-live Open API, so the app runs unchanged without them.
+Shipped: the full agent lifecycle, the deterministic safety gate, the 24/7 runtime, the human-in-the-loop
+approval gate, and the audit ledger — all persisted and tested. **Requires the Anthropic API key + live
+cTrader Open API** (so gated/degraded until provided): automatic order extraction from the model, the live
+Open-API account-state store and order executor, multi-agent debate roles, and layered memory/reflection.
+Without them the app runs unchanged and agents stay safely idle.

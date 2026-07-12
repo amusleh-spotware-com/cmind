@@ -87,6 +87,43 @@ public class AgentDecisionProcessorTests
     }
 
     [Fact]
+    public void Approval_gated_order_awaits_approval()
+    {
+        var a = TradingAgent.Create(UserId.New(), "Gated", AgentArchetype.DayTrader, AgentTemperament.Balanced);
+        a.SetManagedAccounts([Account]);
+        a.SetAutonomy(AutonomyLevel.ApprovalGated);
+
+        var r = _processor.Process(a, State(), Order(1), aiAvailable: true, hardGoalBreached: false);
+        r.Outcome.Should().Be(DecisionOutcome.PendingApproval);
+        r.ShouldExecute.Should().BeFalse();
+        r.Order.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Approval_transitions_on_the_record()
+    {
+        var agent = FullAuto();
+        var pending = _processor.Process(
+            TradingAgentWithGate(), State(), Order(1), true, false);
+        var record = AgentDecisionRecord.Create(agent.Id, agent.UserId, 1, Order(1), pending);
+        record.Approval.Should().Be(DecisionApproval.Pending);
+
+        record.Approve();
+        record.Approval.Should().Be(DecisionApproval.Approved);
+        record.ShouldExecute.Should().BeTrue();
+
+        record.Invoking(x => x.Reject()).Should().Throw<Core.Domain.DomainException>();
+    }
+
+    private static TradingAgent TradingAgentWithGate()
+    {
+        var a = TradingAgent.Create(UserId.New(), "Gate", AgentArchetype.NewsTrader, AgentTemperament.Balanced);
+        a.SetManagedAccounts([Account]);
+        a.SetAutonomy(AutonomyLevel.ApprovalGated);
+        return a;
+    }
+
+    [Fact]
     public void No_order_is_held()
     {
         var r = _processor.Process(FullAuto(), State(), Hold(), aiAvailable: true, hardGoalBreached: false);

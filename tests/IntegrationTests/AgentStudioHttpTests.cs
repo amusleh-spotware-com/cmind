@@ -1,9 +1,15 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Core;
+using Core.Agent;
+using Core.Execution;
 using FluentAssertions;
+using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace IntegrationTests;
@@ -102,6 +108,42 @@ public class AgentStudioHttpTests(PostgresFixture fixture) : IClassFixture<Postg
         decisions.EnumerateArray().Should().BeEmpty();
 
         (await client.GetAsync($"/api/agent-studio/{Guid.NewGuid()}/decisions")).StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Owner_approves_a_pending_decision()
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+        var id = await CreateAsync(client, new { Name = "Gated", Archetype = "DayTrader", Autonomy = "ApprovalGated" });
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+            var aid = TradingAgentId.From(id);
+            var agent = await db.TradingAgents.FirstAsync(a => a.Id == aid);
+            var decision = new AgentDecision("buy signal",
+                new AgentOrderIntent(TradingAccountId.New(), "EURUSD", OrderSide.Buy, 1), []);
+            var processed = new ProcessedDecision(DecisionOutcome.PendingApproval, "awaiting", false, false, decision.Order);
+            db.AgentDecisionRecords.Add(AgentDecisionRecord.Create(agent.Id, agent.UserId, 1, decision, processed));
+            await db.SaveChangesAsync();
+        }
+
+        var approve = await client.PostAsync($"/api/agent-studio/{id}/decisions/1/approve", null);
+        approve.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await approve.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("approval").GetString().Should().Be("Approved");
+
+        // Re-approving an already-approved decision is an invalid transition.
+        (await client.PostAsync($"/api/agent-studio/{id}/decisions/1/approve", null)).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Approving_a_missing_decision_is_not_found()
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+        var id = await CreateAsync(client, new { Name = "X", Archetype = "Scalper" });
+        (await client.PostAsync($"/api/agent-studio/{id}/decisions/99/approve", null)).StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]

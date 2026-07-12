@@ -105,20 +105,42 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<AppUser>(e =>
         {
             e.HasIndex(x => x.NormalizedEmail).IsUnique();
+            e.HasIndex(x => x.ActivationState);
             e.HasDiscriminator<string>("Role")
                 .HasValue<OwnerUser>("Owner")
                 .HasValue<AdminUser>("Admin")
                 .HasValue<RegularUser>("User")
                 .HasValue<ViewerUser>("Viewer");
+            e.Property(x => x.ActivationState).HasConversion<string>().HasMaxLength(32);
             e.HasMany(x => x.BackupCodes).WithOne().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasMany(x => x.EmailVerificationTokens).WithOne().HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.OwnsOne(x => x.Profile, p =>
+            {
+                p.Property(v => v.FullName).HasMaxLength(128);
+                p.Property(v => v.DisplayName).HasMaxLength(128);
+                p.Property(v => v.CountryCode).HasMaxLength(2);
+                p.Property(v => v.PhoneNumber).HasMaxLength(20);
+                p.Property(v => v.Company).HasMaxLength(128);
+                p.Property(v => v.Locale).HasMaxLength(32);
+            });
         });
 
         modelBuilder.Entity<AppUser>().Navigation(x => x.BackupCodes)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+        modelBuilder.Entity<AppUser>().Navigation(x => x.EmailVerificationTokens)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+        modelBuilder.Entity<AppUser>().Navigation(x => x.Profile)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         modelBuilder.Entity<MfaBackupCode>(e =>
         {
             e.HasIndex(x => new { x.UserId, x.CodeHash });
+        });
+
+        modelBuilder.Entity<EmailVerificationToken>(e =>
+        {
+            e.HasIndex(x => x.TokenHash);
         });
 
         modelBuilder.Entity<CTraderIdAccount>(e =>
@@ -297,6 +319,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         {
             e.HasIndex(x => new { x.AgentId, x.Sequence });
             e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.Approval).HasConversion<string>().HasMaxLength(16);
         });
 
         modelBuilder.Entity<LegalDocument>(e =>

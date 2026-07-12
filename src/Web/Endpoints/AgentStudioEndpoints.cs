@@ -56,9 +56,16 @@ public static class AgentStudioEndpoints
                 order = r.OrderJson,
                 evidence = r.EvidenceCsv,
                 executed = r.Executed,
+                approval = r.Approval.ToString(),
                 at = r.CreatedAt
             }));
         });
+
+        g.MapPost("/{id:guid}/decisions/{seq:long}/approve", (Guid id, long seq, DataContext db, ICurrentUser u, CancellationToken ct) =>
+            DecideApprovalAsync(db, u, id, seq, r => r.Approve(), ct));
+
+        g.MapPost("/{id:guid}/decisions/{seq:long}/reject", (Guid id, long seq, DataContext db, ICurrentUser u, CancellationToken ct) =>
+            DecideApprovalAsync(db, u, id, seq, r => r.Reject(), ct));
 
         g.MapPost("/", async (CreateAgentRequest req, DataContext db, ICurrentUser u, TimeProvider time, CancellationToken ct) =>
         {
@@ -112,6 +119,26 @@ public static class AgentStudioEndpoints
         });
 
         return app;
+    }
+
+    private static async Task<IResult> DecideApprovalAsync(
+        DataContext db, ICurrentUser u, Guid agentId, long sequence, Action<Core.Agent.AgentDecisionRecord> action, CancellationToken ct)
+    {
+        if (u.UserId is not { } uid) return Results.Unauthorized();
+        var aid = TradingAgentId.From(agentId);
+        var record = await db.AgentDecisionRecords
+            .FirstOrDefaultAsync(r => r.AgentId == aid && r.UserId == uid && r.Sequence == sequence, ct);
+        if (record is null) return Results.NotFound();
+        try
+        {
+            action(record);
+            await db.SaveChangesAsync(ct);
+            return Results.Ok(new { approval = record.Approval.ToString() });
+        }
+        catch (DomainException ex)
+        {
+            return Results.BadRequest(new { error = ex.Code });
+        }
     }
 
     private static async Task<IResult> Mutate(DataContext db, Guid id, ICurrentUser u, CancellationToken ct, Action<TradingAgent> action)

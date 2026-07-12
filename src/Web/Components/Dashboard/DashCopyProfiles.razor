@@ -1,0 +1,46 @@
+@using Web.Endpoints
+@inject NavigationManager Nav
+
+<div class="app-chart-card">
+    <div class="app-section-head">
+        <span>Copy trading</span>
+        <HelpTip Text="Your copy-trading profiles and whether each is live." />
+    </div>
+    @if (Items.Count == 0)
+    {
+        <div class="app-feed-empty" data-testid="copy-profiles-empty">
+            No copy profiles yet — create one on the Copy Trading page.
+        </div>
+    }
+    else
+    {
+        <div class="app-feed" data-testid="copy-profiles">
+            @foreach (var item in Items)
+            {
+                <div class="app-feed-row app-feed-row-click" @onclick="@(() => Nav.NavigateTo("/copy-trading"))">
+                    <span class="app-feed-dot" style="@($"background:{StatusColor(item.Status)};")"></span>
+                    <div class="app-feed-main">
+                        <div class="app-feed-title">@item.Name</div>
+                        <div class="app-feed-sub">@item.Status · @item.Destinations destination@(item.Destinations == 1 ? "" : "s")</div>
+                    </div>
+                    @if (item.IsRunning)
+                    {
+                        <span class="app-live" aria-label="Running"><span class="app-live-dot"></span>Live</span>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<DashboardCopyProfile> Items { get; set; } = [];
+
+    private static string StatusColor(string status) => status switch
+    {
+        "Running" => "var(--app-success)",
+        "Paused" => "var(--app-warning)",
+        "Error" => "var(--app-error)",
+        _ => "var(--app-text-muted)"
+    };
+}

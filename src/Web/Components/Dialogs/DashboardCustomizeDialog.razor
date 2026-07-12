@@ -1,0 +1,110 @@
+@using System.Net.Http.Json
+@using Web.Components.Dashboard
+@using Web.Endpoints
+@using Web.Json
+@inject HttpClient Http
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center" style="width:100%;">
+            <MudIcon Icon="@Icons.Material.Filled.DashboardCustomize" Class="mr-2" />
+            <MudText Typo="Typo.h6">Customize dashboard</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+            Show, hide and reorder your dashboard widgets. Changes are saved to your account.
+        </MudText>
+        <div data-testid="customize-list">
+            @foreach (var (item, index) in _items.Select((w, i) => (w, i)))
+            {
+                var meta = DashboardWidgetMeta.For(item.Key);
+                <div class="app-customize-row" data-testid="@($"customize-{item.Key}")">
+                    <MudIcon Icon="@meta.Icon" Class="mr-2" />
+                    <span class="app-customize-label">@meta.Label</span>
+                    <MudSpacer />
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small"
+                                   aria-label="@($"Move {meta.Label} up")" Disabled="@(index == 0)"
+                                   OnClick="@(() => Move(index, -1))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small"
+                                   aria-label="@($"Move {meta.Label} down")" Disabled="@(index == _items.Count - 1)"
+                                   OnClick="@(() => Move(index, 1))" />
+                    <MudSwitch T="bool" Color="Color.Primary" @bind-Value="item.Visible"
+                               data-testid="@($"toggle-{item.Key}")" aria-label="@($"Show {meta.Label}")" />
+                </div>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="ResetAsync" Disabled="_saving" data-testid="customize-reset">Reset to default</MudButton>
+        <MudSpacer />
+        <MudButton OnClick="Cancel" Disabled="_saving">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync"
+                   Disabled="_saving" data-testid="customize-save">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    // The available widgets in the user's current order. Only widgets this user/deployment can use.
+    [Parameter, EditorRequired] public IReadOnlyList<DashboardWidgetView> Widgets { get; set; } = [];
+
+    private sealed class Editable
+    {
+        public required string Key { get; init; }
+        public bool Visible { get; set; }
+    }
+
+    private List<Editable> _items = [];
+    private bool _saving;
+
+    protected override void OnInitialized() =>
+        _items = Widgets.Select(w => new Editable { Key = w.Key, Visible = w.Visible }).ToList();
+
+    private void Move(int index, int delta)
+    {
+        var target = index + delta;
+        if (target < 0 || target >= _items.Count) return;
+        (_items[index], _items[target]) = (_items[target], _items[index]);
+    }
+
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        try
+        {
+            var body = new DashboardLayoutUpdate
+            {
+                Widgets = _items.Select(i => new DashboardWidgetView { Key = i.Key, Visible = i.Visible }).ToList()
+            };
+            var response = await Http.PutAsJsonAsync("/api/dashboard/layout", body, JsonDefaults.DynamicWeb);
+            response.EnsureSuccessStatusCode();
+            var updated = await response.Content.ReadFromJsonAsync<DashboardLayoutView>(JsonDefaults.DynamicWeb);
+            Dialog.Close(DialogResult.Ok(updated));
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task ResetAsync()
+    {
+        _saving = true;
+        try
+        {
+            var body = new DashboardLayoutUpdate { Widgets = [] };
+            var response = await Http.PutAsJsonAsync("/api/dashboard/layout", body, JsonDefaults.DynamicWeb);
+            response.EnsureSuccessStatusCode();
+            var updated = await response.Content.ReadFromJsonAsync<DashboardLayoutView>(JsonDefaults.DynamicWeb);
+            Dialog.Close(DialogResult.Ok(updated));
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel() => Dialog.Cancel();
+}

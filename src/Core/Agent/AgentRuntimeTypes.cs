@@ -28,8 +28,11 @@ public sealed record AgentDecision(string Reasoning, AgentOrderIntent? Order, IR
 /// <summary>What actually happened to a decision after the safety gate.</summary>
 public enum DecisionOutcome
 {
-    /// <summary>No order, or advisory/approval-gated — recorded as a proposal, not executed.</summary>
+    /// <summary>No order (a hold), or an advisory agent — recorded, not executed.</summary>
     Held,
+
+    /// <summary>An approval-gated agent proposed an order — awaiting the owner's approval before it can act.</summary>
+    PendingApproval,
 
     /// <summary>Passed every check and is cleared to execute.</summary>
     Cleared,
@@ -39,6 +42,19 @@ public enum DecisionOutcome
 
     /// <summary>The circuit breaker tripped — the agent must halt new entries.</summary>
     HaltedByBreaker
+}
+
+/// <summary>The specialist role a reasoning step plays on the research desk (for multi-agent debate).</summary>
+public enum AgentRole
+{
+    Alpha,
+    Sentiment,
+    News,
+    Technical,
+    Risk,
+    Portfolio,
+    Execution,
+    Reviewer
 }
 
 /// <summary>The safety gate's verdict on a proposed decision.</summary>

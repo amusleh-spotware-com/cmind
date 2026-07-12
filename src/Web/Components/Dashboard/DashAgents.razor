@@ -1,0 +1,57 @@
+@using Web.Endpoints
+@inject NavigationManager Nav
+@inject TimeProvider Time
+
+<div class="app-chart-card">
+    <div class="app-section-head">
+        <span>AI agents</span>
+        <HelpTip Text="Your persona-driven trading agents and their run state." />
+    </div>
+    @if (Items.Count == 0)
+    {
+        <div class="app-feed-empty" data-testid="agents-empty">
+            No agents yet — create one in Agent Studio.
+        </div>
+    }
+    else
+    {
+        <div class="app-feed" data-testid="agents">
+            @foreach (var item in Items)
+            {
+                <div class="app-feed-row app-feed-row-click" @onclick="@(() => Nav.NavigateTo("/agent-studio"))">
+                    <span class="app-feed-dot" style="@($"background:{StatusColor(item.Status)};")"></span>
+                    <div class="app-feed-main">
+                        <div class="app-feed-title">@item.Name</div>
+                        <div class="app-feed-sub">@item.Archetype · @item.Status</div>
+                    </div>
+                    @if (item.LastActionAt is { } at)
+                    {
+                        <span class="app-feed-time">@Relative(at)</span>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<DashboardAgent> Items { get; set; } = [];
+
+    private static string StatusColor(string status) => status switch
+    {
+        "Running" => "var(--app-success)",
+        "Halted" => "var(--app-error)",
+        "Draft" => "var(--app-info)",
+        _ => "var(--app-text-muted)"
+    };
+
+    private string Relative(DateTimeOffset at)
+    {
+        var span = Time.GetUtcNow() - at;
+        if (span < TimeSpan.Zero) span = TimeSpan.Zero;
+        if (span.TotalSeconds < 60) return "just now";
+        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
+        if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
+        return $"{(int)span.TotalDays}d ago";
+    }
+}

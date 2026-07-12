@@ -38,11 +38,15 @@ public sealed class AgentDecisionProcessor : IAgentDecisionProcessor
                 !aiAvailable ? "AI provider unavailable." : "A hard performance goal was breached.", false, true, null);
         }
 
-        // Only Full Auto may auto-execute; Advisory/Approval-gated decisions are recorded as proposals.
-        if (agent.Autonomy != AutonomyLevel.FullAuto || decision.Order is null)
-            return new ProcessedDecision(DecisionOutcome.Held,
-                decision.Order is null ? "No order proposed." : "Not Full Auto — recorded as a proposal for approval.",
-                false, false, decision.Order);
+        // No order → a hold, whatever the autonomy level.
+        if (decision.Order is null)
+            return new ProcessedDecision(DecisionOutcome.Held, "No order proposed.", false, false, null);
+
+        // Advisory proposes only; approval-gated proposes and waits for the owner; only Full Auto auto-executes.
+        if (agent.Autonomy == AutonomyLevel.Advisory)
+            return new ProcessedDecision(DecisionOutcome.Held, "Advisory — recorded as a proposal.", false, false, decision.Order);
+        if (agent.Autonomy == AutonomyLevel.ApprovalGated)
+            return new ProcessedDecision(DecisionOutcome.PendingApproval, "Awaiting owner approval before this order can act.", false, false, decision.Order);
 
         // Full Auto with an order → validate against the hard risk envelope (guaranteed present here).
         var order = decision.Order;

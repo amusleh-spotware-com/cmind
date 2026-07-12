@@ -1,8 +1,25 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
+using Core.Constants;
 using Core.Domain;
 
 namespace Core.Agent;
+
+/// <summary>The human-in-the-loop approval state of a proposed order.</summary>
+public enum DecisionApproval
+{
+    /// <summary>No approval needed (a hold, an executed Full-Auto order, or a rejected one).</summary>
+    NotRequired,
+
+    /// <summary>An approval-gated order awaiting the owner's decision.</summary>
+    Pending,
+
+    /// <summary>The owner approved the order; it is cleared to execute.</summary>
+    Approved,
+
+    /// <summary>The owner rejected the order.</summary>
+    Rejected
+}
 
 /// <summary>
 /// An append-only record of one autonomous decision: the reasoning (XAI), the evidence it cited, the
@@ -23,6 +40,7 @@ public sealed class AgentDecisionRecord : AuditedEntity<AgentDecisionRecordId>
     public bool ShouldExecute { get; private set; }
     public bool ShouldHalt { get; private set; }
     public bool Executed { get; private set; }
+    public DecisionApproval Approval { get; private set; }
 
     private AgentDecisionRecord()
     {
@@ -45,11 +63,27 @@ public sealed class AgentDecisionRecord : AuditedEntity<AgentDecisionRecordId>
             EvidenceCsv = decision.Evidence.Count > 0 ? Clip(string.Join(',', decision.Evidence), 1024) : string.Empty,
             ShouldExecute = processed.ShouldExecute,
             ShouldHalt = processed.ShouldHalt,
+            Approval = processed.Outcome == DecisionOutcome.PendingApproval ? DecisionApproval.Pending : DecisionApproval.NotRequired,
         };
     }
 
     /// <summary>Marks that the cleared order actually executed on the live account.</summary>
     public void MarkExecuted() => Executed = true;
+
+    /// <summary>Owner approves a pending order — it becomes cleared to execute on the next runtime tick.</summary>
+    public void Approve()
+    {
+        if (Approval != DecisionApproval.Pending) throw new DomainException(DomainErrors.AgentTransitionInvalid);
+        Approval = DecisionApproval.Approved;
+        ShouldExecute = true;
+    }
+
+    /// <summary>Owner rejects a pending order — it will never act.</summary>
+    public void Reject()
+    {
+        if (Approval != DecisionApproval.Pending) throw new DomainException(DomainErrors.AgentTransitionInvalid);
+        Approval = DecisionApproval.Rejected;
+    }
 
     private static string Clip(string value, int max) => value.Length <= max ? value : value[..max];
 }

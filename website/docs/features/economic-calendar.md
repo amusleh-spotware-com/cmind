@@ -156,8 +156,10 @@ so re-enabling is instant.
   case is warm without waiting for a user miss. **Per-source freshness** is now real too: the worker
   records each source's last successful poll, consecutive-failure count and a tripped-circuit flag
   (persisted in app settings, cross-process), and the `/health` endpoint + `calendar_health` MCP tool
-  report a truthful `stale` verdict per source. Still to come: BLS/BEA/Census/ECB/Eurostat/OECD sources
-  + central-bank schedules and the reconciliation pass.
+  report a truthful `stale` verdict per source. **BLS** (a 2nd value source) and a **central-bank
+  schedule source** (forward FOMC / ECB / BoE decision dates, synced into a horizon window by the
+  worker) are in. Still to come: BEA/Census/ECB-SDW/Eurostat/OECD value sources and the reconciliation
+  pass.
 - **P4 — deep integration**: **MCP tools** *(implemented — full read-API parity: `calendar_events`,
   `calendar_event`, `calendar_history`, `calendar_series`, `calendar_surprises`, `calendar_next`,
   `calendar_blackout`, `calendar_affected_symbols`, `calendar_health`, gated on the feature)*; cBot

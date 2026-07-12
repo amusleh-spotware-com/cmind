@@ -61,6 +61,9 @@ public sealed record CalendarOptions
     /// <summary>Days of recent history the reconciliation pass re-syncs to catch late-published revisions.</summary>
     public int ReconcileLookbackDays { get; init; } = 7;
 
+    /// <summary>Days ahead the worker syncs forward release schedules (e.g. central-bank meeting dates).</summary>
+    public int ScheduleHorizonDays { get; init; } = 120;
+
     /// <summary>Base URL of the FRED API; a deployment supplies its own key via <see cref="FredApiKey"/>.</summary>
     public string FredBaseUrl { get; init; } = "https://api.stlouisfed.org/fred";
 

@@ -114,6 +114,23 @@ public static class DependencyInjection
         services.AddHttpClient<Core.Access.ICaptchaValidator, Infrastructure.Access.HttpCaptchaValidator>();
         services.AddMemoryCache();
         services.AddScoped<Core.Features.IFeatureGate, Infrastructure.Features.FeatureGate>();
+
+        // White-label owner settings: decorate the AppOptions monitor so owner overrides take effect live for
+        // every consumer, and expose the read/write surface. The inner monitor is built from the framework
+        // options infrastructure so it still reflects configuration + reloads; the decorator overlays overrides.
+        services.AddSingleton<Infrastructure.WhiteLabel.WhiteLabelOverrideStore>();
+        services.AddSingleton<Infrastructure.WhiteLabel.WhiteLabelOptionsMonitor>(sp =>
+        {
+            var inner = new OptionsMonitor<AppOptions>(
+                sp.GetRequiredService<IOptionsFactory<AppOptions>>(),
+                sp.GetRequiredService<IEnumerable<IOptionsChangeTokenSource<AppOptions>>>(),
+                sp.GetRequiredService<IOptionsMonitorCache<AppOptions>>());
+            return new Infrastructure.WhiteLabel.WhiteLabelOptionsMonitor(
+                inner, sp.GetRequiredService<Infrastructure.WhiteLabel.WhiteLabelOverrideStore>());
+        });
+        services.AddSingleton<IOptionsMonitor<AppOptions>>(sp =>
+            sp.GetRequiredService<Infrastructure.WhiteLabel.WhiteLabelOptionsMonitor>());
+        services.AddSingleton<Core.WhiteLabel.IWhiteLabelSettings, Infrastructure.WhiteLabel.WhiteLabelSettings>();
         services.AddHttpClient<IGithubContainerRegistryTagProvider, GithubContainerRegistryTagProvider>();
         services.AddScoped<CBotBuilder>();
         services.TryAddScoped<ICurrentUser, Infrastructure.Ai.NullCurrentUser>();
@@ -151,6 +168,7 @@ public static class DependencyInjection
             var calendar = sp.GetRequiredService<IOptionsMonitor<AppOptions>>().CurrentValue.Calendar;
             client.BaseAddress = new Uri(calendar.BlsBaseUrl);
         }).AddHttpMessageHandler<Infrastructure.Calendar.CalendarRateLimitHandler>();
+        services.AddSingleton<Core.Calendar.ICalendarSource, Infrastructure.Calendar.CentralBankScheduleSource>();
         services.AddHostedService<Infrastructure.Calendar.CalendarBackfillService>();
         services.AddHostedService<Infrastructure.Calendar.CalendarIngestionService>();
         return services;

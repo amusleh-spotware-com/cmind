@@ -41,6 +41,12 @@ public static class CalendarSeedData
         new(new SeriesCode("US.PPI"), new CountryCode("US"), "US Producer Price Index",
             MarketMovingCategory.Inflation, ReleaseCadence.Monthly, 0.60, "BLS", "WPSFD4"),
         new(new SeriesCode("US.JOLTS"), new CountryCode("US"), "US JOLTS Job Openings",
-            MarketMovingCategory.Employment, ReleaseCadence.Monthly, 0.55, "BLS", "JTS000000000000000JOL")
+            MarketMovingCategory.Employment, ReleaseCadence.Monthly, 0.55, "BLS", "JTS000000000000000JOL"),
+        new(new SeriesCode("US.FOMC"), new CountryCode("US"), "US Fed Funds Rate Decision (FOMC)",
+            MarketMovingCategory.InterestRate, ReleaseCadence.PerMeeting, 0.98, "CentralBankSchedule", "FOMC"),
+        new(new SeriesCode("EU.ECB"), new CountryCode("EU"), "ECB Rate Decision",
+            MarketMovingCategory.InterestRate, ReleaseCadence.PerMeeting, 0.95, "CentralBankSchedule", "ECB"),
+        new(new SeriesCode("GB.BOE"), new CountryCode("GB"), "Bank of England Rate Decision",
+            MarketMovingCategory.InterestRate, ReleaseCadence.PerMeeting, 0.90, "CentralBankSchedule", "BOE")
     ];
 }

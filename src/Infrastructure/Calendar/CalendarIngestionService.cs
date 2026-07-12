@@ -75,6 +75,13 @@ public sealed class CalendarIngestionService(
                 var releases = await source.FetchReleasesAsync(s.SourceSeriesId, from, now, ct);
                 foreach (var release in releases)
                     await writer.IngestReleaseAsync(s, release, ct);
+
+                // Forward schedule sync (e.g. central-bank meeting dates) into the horizon window.
+                var horizon = now + TimeSpan.FromDays(options.CurrentValue.Calendar.ScheduleHorizonDays);
+                var scheduled = await source.FetchScheduleAsync(s.SourceSeriesId, now, horizon, ct);
+                foreach (var item in scheduled)
+                    await writer.IngestScheduleAsync(s, item, ct);
+
                 await health.RecordSuccessAsync(source.Name, ct);
             }
             catch (Exception)

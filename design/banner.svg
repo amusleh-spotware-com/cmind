@@ -1,55 +1,115 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" width="1200" height="360" role="img" aria-label="cMind">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 460" width="1200" height="460" role="img" aria-label="cMind — build, run &amp; backtest cTrader bots across a distributed fleet, with an AI core watching the risk.">
   <defs>
-    <radialGradient id="glow" cx="30%" cy="42%" r="55%">
+    <radialGradient id="rmGlow" cx="34%" cy="42%" r="55%">
       <stop offset="0%" stop-color="#26C281" stop-opacity="0.16"/>
       <stop offset="60%" stop-color="#26C281" stop-opacity="0.03"/>
       <stop offset="100%" stop-color="#26C281" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="curveFill" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#26C281" stop-opacity="0.18"/>
+      <stop offset="0%" stop-color="#26C281" stop-opacity="0.22"/>
       <stop offset="100%" stop-color="#26C281" stop-opacity="0"/>
     </linearGradient>
   </defs>
 
-  <rect width="1200" height="360" fill="#141414"/>
-  <rect width="1200" height="360" fill="url(#glow)"/>
+  <rect width="1200" height="460" fill="#141414"/>
+  <rect width="1200" height="460" fill="url(#rmGlow)"/>
 
-  <!-- faint node network drifting right -->
-  <g stroke="#26C281" stroke-opacity="0.10">
-    <line x1="760" y1="70" x2="860" y2="120"/>
-    <line x1="860" y1="120" x2="960" y2="90"/>
-    <line x1="960" y1="90" x2="1050" y2="150"/>
-    <line x1="820" y1="230" x2="900" y2="280"/>
-    <line x1="900" y1="280" x2="1010" y2="250"/>
-    <line x1="1050" y1="150" x2="1120" y2="210"/>
+  <!-- faint node cluster -->
+  <g stroke="#26C281">
+    <line x1="313.6" y1="126.9" x2="305.6" y2="101.4" stroke-opacity="0.138"/>
+    <line x1="313.6" y1="126.9" x2="257.7" y2="140.6" stroke-opacity="0.102"/>
+    <line x1="257.7" y1="140.6" x2="305.6" y2="101.4" stroke-opacity="0.097"/>
+    <line x1="960.5" y1="84.1" x2="1030.7" y2="89.6" stroke-opacity="0.087"/>
+    <line x1="960.5" y1="84.1" x2="1042.9" y2="36.8" stroke-opacity="0.057"/>
+    <line x1="800.3" y1="32" x2="815.4" y2="60" stroke-opacity="0.132"/>
+    <line x1="800.3" y1="32" x2="879.2" y2="4" stroke-opacity="0.071"/>
+    <line x1="548.8" y1="81.9" x2="514.6" y2="30.5" stroke-opacity="0.097"/>
+    <line x1="1042.9" y1="36.8" x2="1030.7" y2="89.6" stroke-opacity="0.106"/>
+    <line x1="879.2" y1="4" x2="815.4" y2="60" stroke-opacity="0.069"/>
+    <line x1="115.1" y1="176.6" x2="44.6" y2="138.1" stroke-opacity="0.075"/>
+    <line x1="29.1" y1="241.7" x2="30.9" y2="274.5" stroke-opacity="0.131"/>
+    <line x1="257" y1="71.2" x2="289.1" y2="72.9" stroke-opacity="0.132"/>
+    <line x1="257" y1="71.2" x2="254.1" y2="25" stroke-opacity="0.115"/>
+    <line x1="305.6" y1="101.4" x2="289.1" y2="72.9" stroke-opacity="0.131"/>
+    <line x1="188.4" y1="364.6" x2="150.3" y2="438.6" stroke-opacity="0.071"/>
+    <line x1="615.4" y1="349.3" x2="673.8" y2="344.7" stroke-opacity="0.101"/>
+    <line x1="771.5" y1="335.8" x2="673.8" y2="344.7" stroke-opacity="0.054"/>
+    <line x1="254.1" y1="25" x2="273" y2="4.2" stroke-opacity="0.137"/>
+    <line x1="1030.7" y1="89.6" x2="1079" y2="133.6" stroke-opacity="0.093"/>
   </g>
   <g fill="#26C281">
-    <circle cx="760" cy="70" r="3" fill-opacity="0.30"/>
-    <circle cx="860" cy="120" r="4" fill-opacity="0.38"/>
-    <circle cx="960" cy="90" r="2.5" fill-opacity="0.28"/>
-    <circle cx="1050" cy="150" r="4.5" fill-opacity="0.42"/>
-    <circle cx="820" cy="230" r="3" fill-opacity="0.26"/>
-    <circle cx="900" cy="280" r="2.5" fill-opacity="0.22"/>
-    <circle cx="1010" cy="250" r="3.5" fill-opacity="0.34"/>
-    <circle cx="1120" cy="210" r="3" fill-opacity="0.28"/>
+    <circle cx="313.6" cy="126.9" r="3.86" fill-opacity="0.47"/>
+    <circle cx="257.7" cy="140.6" r="4.62" fill-opacity="0.47"/>
+    <circle cx="960.5" cy="84.1" r="2.76" fill-opacity="0.27"/>
+    <circle cx="800.3" cy="32" r="2.97" fill-opacity="0.32"/>
+    <circle cx="548.8" cy="81.9" r="3.24" fill-opacity="0.4"/>
+    <circle cx="1042.9" cy="36.8" r="2.71" fill-opacity="0.24"/>
+    <circle cx="879.2" cy="4" r="2.95" fill-opacity="0.29"/>
+    <circle cx="115.1" cy="176.6" r="3.97" fill-opacity="0.45"/>
+    <circle cx="29.1" cy="241.7" r="3.98" fill-opacity="0.39"/>
+    <circle cx="514.6" cy="30.5" r="3.56" fill-opacity="0.41"/>
+    <circle cx="257" cy="71.2" r="4.52" fill-opacity="0.5"/>
+    <circle cx="305.6" cy="101.4" r="4.73" fill-opacity="0.48"/>
+    <circle cx="188.4" cy="364.6" r="3.46" fill-opacity="0.29"/>
+    <circle cx="44.6" cy="138.1" r="3.65" fill-opacity="0.47"/>
+    <circle cx="30.9" cy="274.5" r="3.31" fill-opacity="0.36"/>
+    <circle cx="815.4" cy="60" r="2.8" fill-opacity="0.32"/>
+    <circle cx="615.4" cy="349.3" r="2.18" fill-opacity="0.25"/>
+    <circle cx="3.2" cy="15.8" r="3.81" fill-opacity="0.47"/>
+    <circle cx="150.3" cy="438.6" r="2.19" fill-opacity="0.22"/>
+    <circle cx="1016" cy="438.9" r="1.51" fill-opacity="0.11"/>
+    <circle cx="126.7" cy="0.3" r="3.69" fill-opacity="0.48"/>
+    <circle cx="771.5" cy="335.8" r="2.86" fill-opacity="0.23"/>
+    <circle cx="289.1" cy="72.9" r="3.95" fill-opacity="0.49"/>
+    <circle cx="358.3" cy="313.1" r="2.87" fill-opacity="0.32"/>
+    <circle cx="254.1" cy="25" r="4.31" fill-opacity="0.48"/>
+    <circle cx="273" cy="4.2" r="4.19" fill-opacity="0.47"/>
+    <circle cx="1030.7" cy="89.6" r="2.58" fill-opacity="0.24"/>
+    <circle cx="730.3" cy="80.5" r="2.97" fill-opacity="0.34"/>
+    <circle cx="673.8" cy="344.7" r="2.78" fill-opacity="0.25"/>
+    <circle cx="1079" cy="133.6" r="2.01" fill-opacity="0.22"/>
   </g>
 
-  <!-- rising equity curve to a profit node -->
-  <polyline points="720,300 800,278 880,240 980,200 1080,150 1150,120"
-            fill="none" stroke="#26C281" stroke-width="3" stroke-opacity="0.75" stroke-linejoin="round"/>
-  <circle cx="1150" cy="120" r="6" fill="#26C281"/>
+  <!-- rising equity curve: gradient area fill + line + end marker -->
+  <path d="M 120.0 364.4 C 144.6 361.6, 169.2 360.3, 193.8 356.1 C 218.5 351.9, 243.1 335.5, 267.7 329.8 C 292.3 324.0, 316.9 322.8, 341.5 317.0 C 366.2 311.1, 390.8 294.7, 415.4 289.4 C 440.0 284.1, 464.6 282.3, 489.2 278.3 C 513.8 274.2, 538.5 270.6, 563.1 265.1 C 587.7 259.6, 612.3 247.8, 636.9 243.1 C 661.5 238.4, 686.2 237.8, 710.8 232.7 C 735.4 227.5, 760.0 208.4, 784.6 203.1 C 809.2 197.7, 833.8 196.5, 858.5 192.1 C 883.1 187.8, 907.7 181.5, 932.3 175.5 C 956.9 169.6, 981.5 164.2, 1006.2 156.1 C 1030.8 148.0, 1055.4 134.7, 1080.0 124.0 L 1080.0 460 L 120.0 460 Z" fill="url(#curveFill)" stroke="none"/>
+  <path d="M 120.0 364.4 C 144.6 361.6, 169.2 360.3, 193.8 356.1 C 218.5 351.9, 243.1 335.5, 267.7 329.8 C 292.3 324.0, 316.9 322.8, 341.5 317.0 C 366.2 311.1, 390.8 294.7, 415.4 289.4 C 440.0 284.1, 464.6 282.3, 489.2 278.3 C 513.8 274.2, 538.5 270.6, 563.1 265.1 C 587.7 259.6, 612.3 247.8, 636.9 243.1 C 661.5 238.4, 686.2 237.8, 710.8 232.7 C 735.4 227.5, 760.0 208.4, 784.6 203.1 C 809.2 197.7, 833.8 196.5, 858.5 192.1 C 883.1 187.8, 907.7 181.5, 932.3 175.5 C 956.9 169.6, 981.5 164.2, 1006.2 156.1 C 1030.8 148.0, 1055.4 134.7, 1080.0 124.0" fill="none" stroke="#26C281" stroke-width="2.5" stroke-linecap="round" stroke-opacity="0.9"/>
+  <circle cx="1080" cy="124" r="5" fill="#26C281" fill-opacity="0.25"/>
+  <circle cx="1080" cy="124" r="2.6" fill="#26C281"/>
+
+  <!-- rising candles -->
+  <g>
+    <line x1="565" y1="295.4" x2="565" y2="344.0" stroke="#26C281" stroke-width="1.5" stroke-opacity="0.30"/>
+    <rect x="560" y="303.1" width="10" height="33.2" rx="1" fill="#26C281" fill-opacity="0.28"/>
+    <line x1="591" y1="277.0" x2="591" y2="323.5" stroke="#26C281" stroke-width="1.5" stroke-opacity="0.30"/>
+    <rect x="586" y="282.6" width="10" height="35.3" rx="1" fill="#26C281" fill-opacity="0.28"/>
+    <line x1="617" y1="251.9" x2="617" y2="302.8" stroke="#26C281" stroke-width="1.5" stroke-opacity="0.30"/>
+    <rect x="612" y="257.8" width="10" height="39" rx="1" fill="#26C281" fill-opacity="0.28"/>
+    <line x1="643" y1="261.6" x2="643" y2="315.1" stroke="#26C281" stroke-width="1.5" stroke-opacity="0.30"/>
+    <rect x="638" y="270.7" width="10" height="35.3" rx="1" fill="#26C281" fill-opacity="0.28"/>
+    <line x1="669" y1="260.8" x2="669" y2="287.1" stroke="#26C281" stroke-width="1.5" stroke-opacity="0.30"/>
+    <rect x="664" y="265.3" width="10" height="17.3" rx="1" fill="#26C281" fill-opacity="0.28"/>
+    <line x1="695" y1="236.5" x2="695" y2="273.3" stroke="#26C281" stroke-width="1.5" stroke-opacity="0.30"/>
+    <rect x="690" y="244.9" width="10" height="20" rx="1" fill="#26C281" fill-opacity="0.28"/>
+    <line x1="721" y1="210.1" x2="721" y2="258.3" stroke="#26C281" stroke-width="1.5" stroke-opacity="0.30"/>
+    <rect x="716" y="219.1" width="10" height="30.2" rx="1" fill="#26C281" fill-opacity="0.28"/>
+  </g>
 
   <!-- lock-up: symbol + wordmark + tagline -->
-  <g transform="translate(70 92) scale(2.7)" fill="#26C281">
-    <path d="M39.5 22.4 A15 15 0 1 0 39.5 41.6" fill="none" stroke="#26C281" stroke-width="6" stroke-linecap="butt"/>
-    <circle cx="28" cy="32" r="6" fill="none" stroke="#26C281" stroke-width="2.4"/>
-    <circle cx="28" cy="32" r="2.4"/>
-    <line x1="35.2" y1="32" x2="42" y2="32" stroke="#26C281" stroke-width="2.4"/>
-    <line x1="42" y1="32" x2="49.5" y2="25.5" stroke="#26C281" stroke-width="2.4"/>
-    <line x1="42" y1="32" x2="49.5" y2="38.5" stroke="#26C281" stroke-width="2.4" stroke-opacity="0.55"/>
-    <circle cx="49.5" cy="25.5" r="2.9"/>
-    <circle cx="49.5" cy="38.5" r="2.1" fill-opacity="0.55"/>
+  <g transform="translate(64 150)">
+    <svg x="0" y="-24" width="58" height="49" viewBox="0 0 76 64" style="color:#26C281;overflow:visible">
+      <circle cx="42" cy="32" r="22" fill="#26C281" opacity="0.18" style="filter:blur(8px)"/>
+      <g transform="translate(6 0)" fill="currentColor">
+        <path d="M43.5 22.4 A15 15 0 1 0 43.5 41.6" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="butt"/>
+        <circle cx="32" cy="32" r="6" fill="none" stroke="currentColor" stroke-width="2.4"/>
+        <circle cx="32" cy="32" r="2.4"/>
+        <line x1="39.2" y1="32" x2="46" y2="32" stroke="currentColor" stroke-width="2.4"/>
+        <line x1="46" y1="32" x2="53.5" y2="25.5" stroke="currentColor" stroke-width="2.4"/>
+        <line x1="46" y1="32" x2="53.5" y2="38.5" stroke="currentColor" stroke-width="2.4" stroke-opacity="0.55"/>
+        <circle cx="53.5" cy="25.5" r="2.9"/>
+        <circle cx="53.5" cy="38.5" r="2.1" fill-opacity="0.55"/>
+      </g>
+    </svg>
+    <text x="74" y="15" font-family="'Space Grotesk','Segoe UI',Arial,sans-serif" font-size="52" font-weight="600" letter-spacing="-1.5" fill="#F5F7F5">cMind</text>
+    <text x="2" y="66" font-family="'Space Grotesk','Segoe UI',Arial,sans-serif" font-size="19" font-weight="400" fill="#B7BDB7">Build, run &amp; backtest cTrader bots across a distributed fleet — with an AI core watching the risk.</text>
   </g>
-  <text x="270" y="176" font-family="'Space Grotesk','Segoe UI',Arial,sans-serif" font-size="76" font-weight="600" letter-spacing="-2" fill="#F5F7F5">cMind</text>
-  <text x="272" y="222" font-family="'Space Grotesk','Segoe UI',Arial,sans-serif" font-size="22" font-weight="400" fill="#B7BDB7">Build, run &amp; backtest cTrader bots across a distributed fleet — with an AI core watching the risk.</text>
 </svg>

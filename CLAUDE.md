@@ -94,6 +94,13 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
    mobile + desktop) or an authenticated API call. **Failure paths count** — connection drop, order
    rejection, desync/resync, token rotation, node death + lease reclaim. New route → add to
    `PageSmokeTests`. → `tests/CLAUDE.md`.
+   **Missing credentials/API keys is NEVER a reason to skip a test tier, and never a reason to ask.**
+   Always write every applicable tier — unit, integration, **and E2E** — even when the AI key, Open API
+   creds, or a live cluster are absent. Test the parts that don't need the secret directly (UI renders,
+   the disabled/degraded path, gated 404s, the deterministic core via a fake `IAiClient`/
+   `FakeTradingSession`/seeded state); for the part that genuinely needs the secret, add a live test
+   that **skips cleanly when the secret is absent** (see the `CopyLive`/onboarding pattern) — do not
+   defer it, do not leave a tier unwritten, do not ask the user whether to add it. Just add it.
 3. **`FakeTradingSession` stays cTrader-faithful.** Extend it for new cTrader behavior; never weaken
    the simulator or a test to make CI pass. Fix the code. (`tests/UnitTests/CopyTrading/`)
 4. **Never `DateTime.UtcNow`/`.Now`/`DateTimeOffset.UtcNow`.** Inject `TimeProvider`, read

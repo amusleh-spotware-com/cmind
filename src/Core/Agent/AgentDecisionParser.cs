@@ -71,7 +71,7 @@ public static class AgentDecisionParser
     private static string? GetString(JsonElement o, string name) =>
         o.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
 
-    private static IReadOnlyList<string> ParseEvidence(JsonElement root)
+    private static List<string> ParseEvidence(JsonElement root)
     {
         if (!root.TryGetProperty("evidence", out var e) || e.ValueKind != JsonValueKind.Array) return [];
         var list = new List<string>();

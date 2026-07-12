@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Core;
+using Core.Calendar;
 using Core.Dashboard;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -47,7 +48,13 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<OpenApiAuthorization> OpenApiAuthorizations => Set<OpenApiAuthorization>();
     public DbSet<CopyProfile> CopyProfiles => Set<CopyProfile>();
     public DbSet<CopyDestination> CopyDestinations => Set<CopyDestination>();
+    public DbSet<EconomicSeries> CalendarSeries => Set<EconomicSeries>();
+    public DbSet<EconomicEvent> EconomicEvents => Set<EconomicEvent>();
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
+    // The calendar module lives in its own Postgres schema so its append-only churn stays logically
+    // isolated from the trading core and can be dropped wholesale when white-label-disabled.
+    public const string CalendarSchema = "calendar";
 
     public override int SaveChanges() { ApplySoftDelete(); return base.SaveChanges(); }
 
@@ -96,6 +103,8 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<CopyProviderListingId>().HaveConversion<StrongIdConverter<CopyProviderListingId>>();
         configurationBuilder.Properties<CopyRunId>().HaveConversion<StrongIdConverter<CopyRunId>>();
         configurationBuilder.Properties<PropFirmChallengeId>().HaveConversion<StrongIdConverter<PropFirmChallengeId>>();
+        configurationBuilder.Properties<EconomicSeriesId>().HaveConversion<StrongIdConverter<EconomicSeriesId>>();
+        configurationBuilder.Properties<CalendarEventId>().HaveConversion<StrongIdConverter<CalendarEventId>>();
         configurationBuilder.Properties<LegalDocumentId>().HaveConversion<StrongIdConverter<LegalDocumentId>>();
         configurationBuilder.Properties<ConsentRecordId>().HaveConversion<StrongIdConverter<ConsentRecordId>>();
         configurationBuilder.Properties<UserDashboardId>().HaveConversion<StrongIdConverter<UserDashboardId>>();
@@ -429,6 +438,44 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             .UsePropertyAccessMode(PropertyAccessMode.Field);
         modelBuilder.Entity<AlertRule>().Navigation(x => x.Events)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        modelBuilder.Entity<EconomicSeries>(e =>
+        {
+            e.ToTable("series", CalendarSchema);
+            e.Ignore(x => x.Code);
+            e.Ignore(x => x.Country);
+            e.HasIndex(x => x.SeriesCodeValue).IsUnique().HasFilter("\"IsDeleted\" = false");
+            e.Property(x => x.Category).HasConversion<string>().HasMaxLength(24);
+            e.Property(x => x.Cadence).HasConversion<string>().HasMaxLength(16);
+            e.Property(x => x.DefaultImpact).HasConversion<string>().HasMaxLength(16);
+        });
+
+        modelBuilder.Entity<EconomicEvent>(e =>
+        {
+            e.ToTable("economic_event", CalendarSchema);
+            e.Ignore(x => x.SeriesCode);
+            e.Ignore(x => x.Country);
+            e.Ignore(x => x.LatestRevision);
+            // The two hot queries: "next events by currency+impact" (EffectiveAt) and idempotent upsert
+            // by (series, instant).
+            e.HasIndex(x => new { x.SeriesId, x.EffectiveAt }).IsUnique().HasFilter("\"IsDeleted\" = false");
+            e.HasIndex(x => x.EffectiveAt);
+            e.Property(x => x.Precision).HasConversion<string>().HasMaxLength(16);
+            e.OwnsMany(x => x.Revisions, b =>
+            {
+                b.ToTable("event_revision", CalendarSchema);
+                b.WithOwner().HasForeignKey("CalendarEventId");
+                b.HasKey("CalendarEventId", nameof(EventRevision.Sequence));
+                b.Property(r => r.Sequence).ValueGeneratedNever();
+                b.HasIndex("CalendarEventId", nameof(EventRevision.KnownAt));
+                b.Property(r => r.Kind).HasConversion<string>().HasMaxLength(16);
+                b.Property(r => r.ImpactLevel).HasConversion<string>().HasMaxLength(16);
+                b.Property(r => r.Actual).HasPrecision(18, 6);
+                b.Property(r => r.Forecast).HasPrecision(18, 6);
+                b.Property(r => r.Previous).HasPrecision(18, 6);
+            });
+            e.Navigation(x => x.Revisions).UsePropertyAccessMode(PropertyAccessMode.Field);
+        });
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {

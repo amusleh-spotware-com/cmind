@@ -41,12 +41,14 @@ public sealed class CalendarWriteService(DataContext db, TimeProvider timeProvid
         var now = timeProvider.GetUtcNow();
 
         var economicEvent = await db.EconomicEvents
-            .Include(x => x.Revisions)
             .FirstOrDefaultAsync(x => x.SeriesId == series.Id && x.EffectiveAt == effectiveAt, ct);
 
         if (economicEvent is null)
         {
-            economicEvent = series.ScheduleRelease(ReleaseWindow.Exact(effectiveAt), "UTC", now);
+            // When backfilling history the vintage KnownAt precedes wall-clock now; the scheduled prior must
+            // not be stamped later than the release it precedes, or the append-only chain is non-monotonic.
+            var scheduledAt = item.KnownAt < now ? item.KnownAt : now;
+            economicEvent = series.ScheduleRelease(ReleaseWindow.Exact(effectiveAt), "UTC", scheduledAt);
             db.EconomicEvents.Add(economicEvent);
         }
 
@@ -79,7 +81,6 @@ public sealed class CalendarWriteService(DataContext db, TimeProvider timeProvid
         var impact = ImpactModel.Score(new ImpactInputs(series.ImpactPrior, 0, 0));
 
         var existing = await db.EconomicEvents
-            .Include(x => x.Revisions)
             .FirstOrDefaultAsync(x => x.SeriesId == series.Id && x.EffectiveAt == instant, ct);
 
         if (existing is null)

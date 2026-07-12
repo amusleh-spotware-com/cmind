@@ -55,7 +55,7 @@ public sealed class CalendarIngestionService(
     }
 
     private async Task RunCycleAsync(
-        IReadOnlyDictionary<string, ICalendarSource> sourcesByName, CancellationToken ct)
+        Dictionary<string, ICalendarSource> sourcesByName, CancellationToken ct)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();

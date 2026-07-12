@@ -117,6 +117,28 @@ public static class DependencyInjection
         services.AddAiHttpClient();
         services.AddScoped<IAiClient, RoutingAiClient>();
         services.AddScoped<IAiFeatureService, AiFeatureService>();
+        services.AddCalendarInfrastructure();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers the economic-calendar module: the read side (<see cref="Core.Calendar.IEconomicCalendar"/>),
+    /// the append-only write service, the pure news-window policy, the default (null) forecast port, the FRED
+    /// source behind a resilient typed client, and the (config-gated) ingestion worker.
+    /// </summary>
+    public static IServiceCollection AddCalendarInfrastructure(this IServiceCollection services)
+    {
+        services.TryAddSingleton<Core.Calendar.INewsWindowPolicy, Core.Calendar.NewsWindowPolicy>();
+        services.TryAddSingleton<Core.Calendar.IForecastProvider, Infrastructure.Calendar.NullForecastProvider>();
+        services.AddScoped<Infrastructure.Calendar.CalendarWriteService>();
+        services.AddScoped<Core.Calendar.IEconomicCalendar, Infrastructure.Calendar.EconomicCalendarReader>();
+        services.AddHttpClient<Core.Calendar.ICalendarSource, Infrastructure.Calendar.FredSource>((sp, client) =>
+        {
+            var calendar = sp.GetRequiredService<IOptionsMonitor<AppOptions>>().CurrentValue.Calendar;
+            var baseUrl = calendar.FredBaseUrl.EndsWith('/') ? calendar.FredBaseUrl : calendar.FredBaseUrl + "/";
+            client.BaseAddress = new Uri(baseUrl);
+        });
+        services.AddHostedService<Infrastructure.Calendar.CalendarIngestionService>();
         return services;
     }
 }

@@ -25,7 +25,7 @@ public sealed class EconomicCalendarReader(
 
     public async Task<IReadOnlyList<CalendarEventView>> GetEventsAsync(CalendarQuery query, CancellationToken ct)
     {
-        var q = db.EconomicEvents.Include(x => x.Revisions).AsNoTracking().AsQueryable();
+        var q = db.EconomicEvents.AsNoTracking().AsQueryable();
 
         if (query.From is { } from) q = q.Where(x => x.EffectiveAt >= from);
         if (query.To is { } to) q = q.Where(x => x.EffectiveAt <= to);
@@ -43,8 +43,8 @@ public sealed class EconomicCalendarReader(
 
         if (!string.IsNullOrWhiteSpace(query.Keyword))
         {
-            var keyword = query.Keyword.ToUpperInvariant();
-            q = q.Where(x => x.SeriesCodeValue.Contains(keyword));
+            var pattern = $"%{query.Keyword}%";
+            q = q.Where(x => EF.Functions.ILike(x.SeriesCodeValue, pattern));
         }
 
         var events = await q.OrderBy(x => x.EffectiveAt).Take(Math.Max(1, query.Limit) * 4).ToListAsync(ct);
@@ -67,7 +67,7 @@ public sealed class EconomicCalendarReader(
     public async Task<CalendarEventView?> GetEventAsync(
         CalendarEventId id, IReadOnlyList<string>? watchlist, DateTimeOffset? asOf, CancellationToken ct)
     {
-        var economicEvent = await db.EconomicEvents.Include(x => x.Revisions).AsNoTracking()
+        var economicEvent = await db.EconomicEvents.AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id, ct);
         return economicEvent is null ? null : Project(economicEvent, asOf, watchlist, includeChain: true);
     }
@@ -75,7 +75,7 @@ public sealed class EconomicCalendarReader(
     public async Task<IReadOnlyList<SurprisePoint>> GetSurprisesAsync(
         SeriesCode series, int count, DateTimeOffset? asOf, CancellationToken ct)
     {
-        var events = await db.EconomicEvents.Include(x => x.Revisions).AsNoTracking()
+        var events = await db.EconomicEvents.AsNoTracking()
             .Where(x => x.SeriesCodeValue == series.Value)
             .OrderByDescending(x => x.EffectiveAt)
             .Take(Math.Max(1, count) * 2)
@@ -111,8 +111,8 @@ public sealed class EconomicCalendarReader(
 
         if (!string.IsNullOrWhiteSpace(query.Keyword))
         {
-            var keyword = query.Keyword.ToUpperInvariant();
-            q = q.Where(x => x.SeriesCodeValue.Contains(keyword) || x.Name.ToUpper().Contains(keyword));
+            var pattern = $"%{query.Keyword}%";
+            q = q.Where(x => EF.Functions.ILike(x.SeriesCodeValue, pattern) || EF.Functions.ILike(x.Name, pattern));
         }
 
         var series = await q.OrderBy(x => x.SeriesCodeValue).ToListAsync(ct);
@@ -125,7 +125,7 @@ public sealed class EconomicCalendarReader(
     public async Task<CalendarEventView?> GetNextForSymbolAsync(
         Symbol symbol, ImpactLevel minImpact, DateTimeOffset now, CancellationToken ct)
     {
-        var events = await db.EconomicEvents.Include(x => x.Revisions).AsNoTracking()
+        var events = await db.EconomicEvents.AsNoTracking()
             .Where(x => x.EffectiveAt >= now)
             .OrderBy(x => x.EffectiveAt)
             .Take(200)
@@ -149,7 +149,7 @@ public sealed class EconomicCalendarReader(
         {
             var windowStart = at - rule.Before;
             var windowEnd = at + rule.After;
-            var events = await db.EconomicEvents.Include(x => x.Revisions).AsNoTracking()
+            var events = await db.EconomicEvents.AsNoTracking()
                 .Where(x => x.EffectiveAt >= windowStart && x.EffectiveAt <= windowEnd)
                 .ToListAsync(ct);
 
@@ -183,7 +183,7 @@ public sealed class EconomicCalendarReader(
     private static EventRevision? Resolve(EconomicEvent economicEvent, DateTimeOffset? asOf) =>
         asOf is { } pit ? economicEvent.RevisionAsOf(pit) : economicEvent.LatestRevision;
 
-    private CalendarEventView Project(
+    private static CalendarEventView Project(
         EconomicEvent economicEvent, DateTimeOffset? asOf, IReadOnlyList<string>? watchlist, bool includeChain = false)
     {
         var revision = Resolve(economicEvent, asOf);
@@ -231,7 +231,7 @@ public sealed class EconomicCalendarReader(
         return eventCurrencies.Intersect(wanted).Any();
     }
 
-    private static double RollingStdDev(IReadOnlyList<decimal> values)
+    private static double RollingStdDev(List<decimal> values)
     {
         if (values.Count < 2) return 0;
         var window = values.Count > 12 ? values.Skip(values.Count - 12).ToArray() : values.ToArray();

@@ -7,10 +7,11 @@ aggregator. It is point-in-time correct, keeps ≥10 years of history, and is wi
 public API, MCP, cBots, AI, alerts and backtests. It is a decoupled module: it can be disabled with
 zero effect on the trading core.
 
-> **Status.** The domain core (this page's guarantees — impact model, country→symbol mapping,
-> news-window policy, point-in-time revision chains, two-tier gating) is implemented and unit-tested.
-> Persistence, the primary-source connectors, the ingestion worker, the JWT REST API, the MCP tools
-> and the UI land in the subsequent rollout phases described below.
+> **Status.** The domain core (impact model, country→symbol mapping, news-window policy, point-in-time
+> revision chains, two-tier gating) **and** persistence (the `calendar` Postgres schema, the append-only
+> read/write side, the FRED connector and the config-gated ingestion worker) are implemented and tested
+> (unit + Testcontainers integration). The JWT REST API, the MCP tools and the UI land in the subsequent
+> rollout phases described below.
 
 ## What makes it different
 
@@ -113,7 +114,10 @@ so re-enabling is instant.
 
 - **P0 — domain core** *(implemented)*: aggregates, value objects, ports, impact model,
   country→symbol mapping, news-window policy, two-tier gating, full unit suite.
-- **P1 — persistence + one source**: EF `calendar` schema, FRED connector, ingestion worker.
+- **P1 — persistence + one source** *(implemented)*: EF `calendar` schema (own tables, append-only,
+  hot indexes), the read-through `IEconomicCalendar` reader with point-in-time `asOf`, the idempotent
+  append-only write service, the FRED connector behind a resilient typed client, and the config-gated
+  ingestion worker; Testcontainers integration tests (persistence, PIT, idempotency, blackout).
 - **P2 — public JWT REST API + Web UI**: the versioned `/api/calendar/v1` API and the mobile-first
   calendar + full-history browser.
 - **P3 — more sources**: BLS/BEA/Census/ECB/Eurostat/OECD + central-bank schedules; reconciliation;

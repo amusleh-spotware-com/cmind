@@ -66,6 +66,13 @@ another or the host) and **safe by default**: it is inert unless AI is configure
   proposes.
 - **Audit ledger** — every decision is replayable: reasoning (XAI), the evidence it cited, the gate
   verdict, the order intent and whether it executed, at `GET /api/agent-studio/{id}/decisions`.
+- **Research desk** — an on-demand multi-agent debate: Alpha/Sentiment/Technical/Risk analysts each give
+  a view and a Reviewer synthesises a proposal (`POST /api/agent-studio/{id}/debate`).
+- **Memory** — the agent remembers each decision and recalls recent memory into its next prompt for
+  continuity (`GET /api/agent-studio/{id}/memory`).
+
+Each roster row's **Details** opens the agent's decision feed (with Approve/Reject on pending orders),
+its memory, and a Run-debate tab.
 
 ## Scope
 

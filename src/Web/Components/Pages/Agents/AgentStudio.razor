@@ -38,6 +38,7 @@ else
             <MudTd><MudChip T="string" Size="Size.Small" Color="@StatusColor(context.status)">@context.status</MudChip></MudTd>
             <MudTd>@(context.lastAction ?? "—")</MudTd>
             <MudTd>
+                <MudButton Size="Size.Small" OnClick="() => OpenDetail(context.id, context.name)" data-testid="agent-details">Details</MudButton>
                 <MudButton Size="Size.Small" OnClick="() => Start(context.id)" Disabled="@(context.status == "Running")">Start</MudButton>
                 <MudButton Size="Size.Small" OnClick="() => Stop(context.id)" Disabled="@(context.status is "Draft" or "Stopped")">Stop</MudButton>
                 <MudButton Size="Size.Small" Color="Color.Error" OnClick="() => Kill(context.id)"
@@ -71,6 +72,17 @@ else
             if (response.IsSuccessStatusCode) { await Reload(); StateHasChanged(); }
             else Snack.Add("Could not create the agent.", Severity.Error);
         }
+    }
+
+    private Task OpenDetail(Guid id, string name)
+    {
+        var parameters = new DialogParameters<AgentDetailDialog>
+        {
+            { x => x.AgentId, id },
+            { x => x.Name, name }
+        };
+        return Dialogs.ShowAsync<AgentDetailDialog>(name, parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseOnEscapeKey = true });
     }
 
     private Task Start(Guid id) => Lifecycle(id, "start");

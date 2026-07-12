@@ -1,0 +1,115 @@
+﻿@* Agent detail: the decision audit feed (with approve/reject), memory, and an on-demand research debate. *@
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject MudBlazor.ISnackbar Snack
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@Name</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
+            <MudTabPanel Text="Decisions">
+                @if (_decisions.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">No decisions recorded yet.</MudText>
+                }
+                else
+                {
+                    @foreach (var d in _decisions)
+                    {
+                        <MudPaper Class="pa-2 mb-2" Elevation="0" Outlined="true" data-testid="agent-decision">
+                            <MudText Typo="Typo.caption">#@d.sequence · @d.outcome @(d.executed ? "· executed" : "")</MudText>
+                            <MudText Typo="Typo.body2">@d.reasoning</MudText>
+                            @if (d.approval == "Pending")
+                            {
+                                <MudButton Size="Size.Small" Color="Color.Success" OnClick="() => Decide(d.sequence, true)">Approve</MudButton>
+                                <MudButton Size="Size.Small" Color="Color.Error" OnClick="() => Decide(d.sequence, false)">Reject</MudButton>
+                            }
+                            else if (d.approval != "NotRequired")
+                            {
+                                <MudChip T="string" Size="Size.Small">@d.approval</MudChip>
+                            }
+                        </MudPaper>
+                    }
+                }
+            </MudTabPanel>
+            <MudTabPanel Text="Memory">
+                @if (_memory.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">No memory yet.</MudText>
+                }
+                else
+                {
+                    @foreach (var m in _memory)
+                    {
+                        <MudText Typo="Typo.body2">· <b>@m.tier</b>: @m.content</MudText>
+                    }
+                }
+            </MudTabPanel>
+            <MudTabPanel Text="Research desk">
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Forum"
+                           OnClick="Debate" Disabled="_debating" data-testid="agent-debate">Run debate</MudButton>
+                @if (_debate is { } debate)
+                {
+                    <MudText Typo="Typo.subtitle2" Class="mt-3">Synthesis</MudText>
+                    <MudText Typo="Typo.body2">@debate.synthesis</MudText>
+                    @foreach (var o in debate.opinions)
+                    {
+                        <MudText Typo="Typo.body2" Class="mt-1"><b>@o.role</b>: @o.opinion</MudText>
+                    }
+                }
+            </MudTabPanel>
+        </MudTabs>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+    [Parameter] public Guid AgentId { get; set; }
+    [Parameter] public string Name { get; set; } = "";
+
+    private List<DecisionRow> _decisions = [];
+    private List<MemoryRow> _memory = [];
+    private DebateResult? _debate;
+    private bool _debating;
+
+    protected override Task OnInitializedAsync() => Load();
+
+    private async Task Load()
+    {
+        try { _decisions = await Http.GetFromJsonAsync<List<DecisionRow>>($"/api/agent-studio/{AgentId}/decisions") ?? []; } catch { _decisions = []; }
+        try { _memory = await Http.GetFromJsonAsync<List<MemoryRow>>($"/api/agent-studio/{AgentId}/memory") ?? []; } catch { _memory = []; }
+    }
+
+    private async Task Decide(long sequence, bool approve)
+    {
+        var verb = approve ? "approve" : "reject";
+        var response = await Http.PostAsync($"/api/agent-studio/{AgentId}/decisions/{sequence}/{verb}", null);
+        if (response.IsSuccessStatusCode) { await Load(); StateHasChanged(); }
+        else Snack.Add($"Could not {verb} that decision.", Severity.Error);
+    }
+
+    private async Task Debate()
+    {
+        _debating = true;
+        try
+        {
+            var response = await Http.PostAsync($"/api/agent-studio/{AgentId}/debate", null);
+            if (response.IsSuccessStatusCode) _debate = await response.Content.ReadFromJsonAsync<DebateResult>();
+            else Snack.Add("Could not run the debate.", Severity.Error);
+        }
+        catch { Snack.Add("Could not run the debate.", Severity.Error); }
+        finally { _debating = false; }
+    }
+
+    private void Close() => Dialog.Close();
+
+    private sealed record DecisionRow(long sequence, string outcome, string reasoning, string? reason, bool executed, string approval);
+    private sealed record MemoryRow(string tier, string content);
+    private sealed record DebateResult(List<OpinionRow> opinions, string synthesis);
+    private sealed record OpinionRow(string role, string opinion);
+}

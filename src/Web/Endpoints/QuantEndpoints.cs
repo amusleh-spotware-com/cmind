@@ -67,6 +67,33 @@ public static class QuantEndpoints
             }
         });
 
+        g.MapPost("/regimes", (RegimeRequest req, Core.Regimes.IRegimeAnalyzer analyzer) =>
+        {
+            try
+            {
+                var series = BuildSeries(req.Returns, req.Equity);
+                var result = analyzer.Analyze(series, req.Window is > 1 ? req.Window.Value : 10);
+                return Results.Ok(new
+                {
+                    hurstExponent = result.HurstExponent,
+                    byRegime = result.ByRegime.Select(p => new
+                    {
+                        regime = p.Regime.ToString(),
+                        observations = p.Observations,
+                        meanReturn = p.MeanReturn,
+                        volatility = p.Volatility,
+                        sharpe = p.Sharpe
+                    }),
+                    segments = result.Labels.Count,
+                    rationale = result.Rationale
+                });
+            }
+            catch (DomainException ex)
+            {
+                return Results.BadRequest(new { error = ex.Code });
+            }
+        });
+
         g.MapPost("/health", (IntegrityRequest req, Core.Health.IStrategyHealthMonitor monitor) =>
         {
             try
@@ -161,6 +188,8 @@ public sealed record IntegrityRequest(
 public sealed record IntegrityBacktestRequest(int? Trials);
 
 public sealed record PboRequest(double[][]? Trials, int? Slices);
+
+public sealed record RegimeRequest(double[]? Returns, double[]? Equity, int? Window);
 
 public sealed record SizingRequest(
     double[]? Returns, double[]? Equity, double? TargetVolatility, double? KellyFraction,

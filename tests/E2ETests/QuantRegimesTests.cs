@@ -1,0 +1,33 @@
+using System.Globalization;
+using System.Linq;
+using Microsoft.Playwright;
+using Xunit;
+
+namespace E2ETests;
+
+[Collection(AppCollection.Name)]
+public sealed class QuantRegimesTests(AppFixture app)
+{
+    private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 15000 };
+
+    [Fact]
+    public async Task Analyze_renders_a_regime_breakdown()
+    {
+        // Calm first half, turbulent second half.
+        var series = string.Join(", ", Enumerable.Range(0, 60).Select(i =>
+        {
+            var jitter = i < 30 ? 0.0005 : 0.02;
+            return (i % 2 == 0 ? jitter : -jitter).ToString("0.0000", CultureInfo.InvariantCulture);
+        }));
+
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/quant/regimes");
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        await page.GetByLabel("Returns or equity curve").FillAsync(series);
+        await page.ClickAsync("[data-testid=regimes-analyze]");
+
+        await Assertions.Expect(page.Locator("[data-testid=regimes-result]")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.Locator("[data-testid=regimes-result]")).ToContainTextAsync("Hurst");
+    }
+}

@@ -34,6 +34,7 @@ const sidebars: SidebarsConfig = {
         'features/backtest-integrity',
         'features/position-sizing',
         'features/strategy-health',
+        'features/regime-lab',
         'features/mcp',
         'features/prop-firm',
         'features/two-factor-auth',

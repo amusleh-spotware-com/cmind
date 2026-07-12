@@ -1,0 +1,119 @@
+@page "/quant/regimes"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject MudBlazor.ISnackbar Snack
+
+<PageTitle>Quant · Regime Lab</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Regime Lab</MudText>
+    <HelpTip Text="One Sharpe hides 'great in calm markets, dead in turbulence'. We label the history into Calm / Normal / Turbulent volatility regimes and show your performance in each, plus the Hurst exponent (trend vs mean-reversion)." />
+</MudStack>
+
+<MudGrid>
+    <MudItem xs="12" md="5">
+        <MudPaper Class="pa-4" Elevation="1">
+            <MudTextField @bind-Value="_series" Label="Returns or equity curve"
+                          Lines="6" Variant="Variant.Outlined"
+                          HelperText="Comma/space/newline separated numbers, oldest first." />
+            <MudRadioGroup @bind-Value="_mode" Class="mt-2">
+                <MudRadio Value="@("returns")" Color="Color.Primary">Periodic returns</MudRadio>
+                <MudRadio Value="@("equity")" Color="Color.Primary">Equity / balance curve</MudRadio>
+            </MudRadioGroup>
+            <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Layers" OnClick="Analyze"
+                       Disabled="_loading" data-testid="regimes-analyze">
+                Analyze regimes
+            </MudButton>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="7">
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+        }
+        else if (_result is { } r)
+        {
+            <MudPaper Class="pa-4" Elevation="1" data-testid="regimes-result">
+                <MudText Typo="Typo.subtitle1" Class="mb-2">Hurst exponent: <b>@r.hurstExponent.ToString("0.00")</b></MudText>
+                <MudSimpleTable Dense="true" Hover="true">
+                    <thead>
+                        <tr><th>Regime</th><th>Obs</th><th>Mean</th><th>Volatility</th><th>Sharpe</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in r.byRegime)
+                        {
+                            <tr>
+                                <td>@p.regime</td>
+                                <td>@p.observations</td>
+                                <td>@((p.meanReturn * 100).ToString("0.00"))%</td>
+                                <td>@((p.volatility * 100).ToString("0.00"))%</td>
+                                <td>@p.sharpe.ToString("0.00")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+                <MudText Typo="Typo.body2" Class="mt-3">@r.rationale</MudText>
+            </MudPaper>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                Paste a return series (oldest first) and press Analyze regimes.
+            </MudText>
+        }
+    </MudItem>
+</MudGrid>
+
+@code {
+    private string _series = "";
+    private string _mode = "returns";
+    private bool _loading;
+    private RegimeResult? _result;
+
+    private async Task Analyze()
+    {
+        var numbers = Parse(_series);
+        if (numbers.Length < 6)
+        {
+            Snack.Add("Enter at least six numbers.", Severity.Warning);
+            return;
+        }
+
+        _loading = true;
+        _result = null;
+        try
+        {
+            var body = _mode == "equity" ? (object)new { Equity = numbers } : new { Returns = numbers };
+            var response = await Http.PostAsJsonAsync("/api/quant/regimes", body);
+            if (response.IsSuccessStatusCode)
+                _result = await response.Content.ReadFromJsonAsync<RegimeResult>();
+            else
+                Snack.Add("Could not analyze that series.", Severity.Error);
+        }
+        catch
+        {
+            Snack.Add("Could not analyze that series.", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static double[] Parse(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return [];
+        var tokens = text.Split([',', ' ', '\n', '\r', '\t', ';'], StringSplitOptions.RemoveEmptyEntries);
+        var values = new List<double>(tokens.Length);
+        foreach (var token in tokens)
+            if (double.TryParse(token, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var v))
+                values.Add(v);
+        return values.ToArray();
+    }
+
+    private sealed record RegimeResult(double hurstExponent, List<RegimeRow> byRegime, int segments, string rationale);
+    private sealed record RegimeRow(string regime, int observations, double meanReturn, double volatility, double sharpe);
+}

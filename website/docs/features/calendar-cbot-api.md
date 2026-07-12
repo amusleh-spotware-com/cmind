@@ -6,10 +6,11 @@ feature parity with the FXStreet Calendar API and goes past it: point-in-time `a
 chains, deterministic impact rationale, surprise analytics, country→symbol resolution, and blackout
 math that other calendar APIs do not expose.
 
-> **Status.** The API contract below is the design target for rollout phase **P2**. The domain that
-> backs it — impact scoring, revision chains, point-in-time reads, country→symbol mapping and the
-> news-window/blackout policy — is implemented and unit-tested in phase P0. This page documents the
-> surface cBot authors and integrators build against.
+> **Status.** The JWT security (client issuance + token exchange), the gating, and the core read
+> endpoints — `token`, `events`, `events/{id}`, `history`, `series`, `surprises`, `next`, `blackout`,
+> `affected-symbols`, `health` — are **implemented and integration-tested** (auth, scope enforcement,
+> feature/white-label 404). Still to come: cursor pagination, `ETag`/304, the SSE `stream`, signed
+> `webhooks`, `events:batch`, the OpenAPI document and the shipped typed client snippet.
 
 ## Security — JWT
 

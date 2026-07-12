@@ -50,6 +50,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<CopyDestination> CopyDestinations => Set<CopyDestination>();
     public DbSet<EconomicSeries> CalendarSeries => Set<EconomicSeries>();
     public DbSet<EconomicEvent> EconomicEvents => Set<EconomicEvent>();
+    public DbSet<CalendarApiClient> CalendarApiClients => Set<CalendarApiClient>();
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     // The calendar module lives in its own Postgres schema so its append-only churn stays logically
@@ -105,6 +106,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<PropFirmChallengeId>().HaveConversion<StrongIdConverter<PropFirmChallengeId>>();
         configurationBuilder.Properties<EconomicSeriesId>().HaveConversion<StrongIdConverter<EconomicSeriesId>>();
         configurationBuilder.Properties<CalendarEventId>().HaveConversion<StrongIdConverter<CalendarEventId>>();
+        configurationBuilder.Properties<CalendarApiClientId>().HaveConversion<StrongIdConverter<CalendarApiClientId>>();
         configurationBuilder.Properties<LegalDocumentId>().HaveConversion<StrongIdConverter<LegalDocumentId>>();
         configurationBuilder.Properties<ConsentRecordId>().HaveConversion<StrongIdConverter<ConsentRecordId>>();
         configurationBuilder.Properties<UserDashboardId>().HaveConversion<StrongIdConverter<UserDashboardId>>();
@@ -475,6 +477,13 @@ public class DataContext : DbContext, IDataProtectionKeyContext
                 b.Property(r => r.Previous).HasPrecision(18, 6);
             });
             e.Navigation(x => x.Revisions).UsePropertyAccessMode(PropertyAccessMode.Field);
+        });
+
+        modelBuilder.Entity<CalendarApiClient>(e =>
+        {
+            e.ToTable("api_client", CalendarSchema);
+            e.HasIndex(x => x.KeyPrefix).IsUnique().HasFilter("\"IsDeleted\" = false");
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.OwnerId).OnDelete(DeleteBehavior.Cascade);
         });
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())

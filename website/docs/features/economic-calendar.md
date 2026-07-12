@@ -118,8 +118,10 @@ so re-enabling is instant.
   hot indexes), the read-through `IEconomicCalendar` reader with point-in-time `asOf`, the idempotent
   append-only write service, the FRED connector behind a resilient typed client, and the config-gated
   ingestion worker; Testcontainers integration tests (persistence, PIT, idempotency, blackout).
-- **P2 — public JWT REST API + Web UI**: the versioned `/api/calendar/v1` API and the mobile-first
-  calendar + full-history browser.
+- **P2 — public JWT REST API** *(implemented)* **+ Web UI** *(pending)*: the versioned, JWT-secured
+  `/api/calendar/v1` API — client issuance, token exchange, and the core read endpoints (events,
+  history, series, surprises, next, blackout, affected-symbols, health) with scope enforcement and
+  two-tier gating; integration-tested. The mobile-first calendar page + full-history browser follow.
 - **P3 — more sources**: BLS/BEA/Census/ECB/Eurostat/OECD + central-bank schedules; reconciliation;
   10-year backfill.
 - **P4 — deep integration**: cBot client, MCP tools, alerts trigger, copy-trade / prop-guard blackout,

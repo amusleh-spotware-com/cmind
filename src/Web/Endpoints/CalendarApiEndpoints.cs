@@ -1,0 +1,237 @@
+﻿using System.Security.Cryptography;
+using System.Text;
+using Core;
+using Core.Calendar;
+using Core.Features;
+using Core.Options;
+using Infrastructure.Persistence;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Web.Calendar;
+
+namespace Web.Endpoints;
+
+public sealed record CalendarTokenRequest(string ClientId, string ClientSecret);
+
+public sealed record CreateCalendarClientRequest(string Name, string[] Scopes, int? ExpiresInDays);
+
+/// <summary>
+/// The public, versioned, JWT-secured Calendar REST API (<c>/api/calendar/v1</c>) plus the owner-only admin
+/// surface to issue and revoke API clients. The whole tree 404s when the calendar is disabled (either the
+/// white-label hard gate or the runtime toggle). Reads never touch external HTTP.
+/// </summary>
+public static class CalendarApiEndpoints
+{
+    public static IEndpointRouteBuilder MapCalendarApiEndpoints(this IEndpointRouteBuilder app)
+    {
+        MapAdmin(app);
+        MapV1(app);
+        return app;
+    }
+
+    private static void MapAdmin(IEndpointRouteBuilder app)
+    {
+        var admin = app.MapGroup("/api/calendar/clients")
+            .RequireAuthorization()
+            .RequireCalendarEnabled();
+
+        admin.MapGet("/", async (DataContext db, ICurrentUser user) =>
+        {
+            var ownerId = user.UserId!.Value;
+            var clients = await db.CalendarApiClients
+                .Where(c => c.OwnerId == ownerId)
+                .Select(c => new { c.Id, c.Name, c.KeyPrefix, c.ScopesCsv, c.ExpiresAt, c.DisabledAt, c.CreatedAt })
+                .ToListAsync();
+            return Results.Ok(clients);
+        });
+
+        admin.MapPost("/", async (
+            CreateCalendarClientRequest request, DataContext db, ICurrentUser user, TimeProvider timeProvider) =>
+        {
+            if (user.UserId is not { } ownerId) return Results.Unauthorized();
+
+            var raw = "calk_" + Convert.ToHexString(RandomNumberGenerator.GetBytes(24)).ToLowerInvariant();
+            var prefix = raw[..16];
+            var hash = Hash(raw);
+            var expiresAt = request.ExpiresInDays is { } days and > 0
+                ? timeProvider.GetUtcNow().AddDays(days)
+                : (DateTimeOffset?)null;
+
+            var client = CalendarApiClient.Create(ownerId, request.Name, request.Scopes, prefix, hash, expiresAt);
+            db.CalendarApiClients.Add(client);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { clientId = prefix, clientSecret = raw, id = client.Id, scopes = client.Scopes });
+        });
+
+        admin.MapDelete("/{id:guid}", async (Guid id, DataContext db, ICurrentUser user, TimeProvider timeProvider) =>
+        {
+            var ownerId = user.UserId!.Value;
+            var clientId = CalendarApiClientId.From(id);
+            var client = await db.CalendarApiClients.FirstOrDefaultAsync(c => c.Id == clientId && c.OwnerId == ownerId);
+            if (client is null) return Results.NotFound();
+            client.Disable(timeProvider.GetUtcNow());
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        });
+    }
+
+    private static void MapV1(IEndpointRouteBuilder app)
+    {
+        var v1 = app.MapGroup("/api/calendar/v1").RequireCalendarEnabled();
+
+        v1.MapPost("/token", async (
+            CalendarTokenRequest request, DataContext db, CalendarJwt jwt, TimeProvider timeProvider, CancellationToken ct) =>
+        {
+            var client = await db.CalendarApiClients.FirstOrDefaultAsync(c => c.KeyPrefix == request.ClientId, ct);
+            if (client is null || !client.IsActive(timeProvider.GetUtcNow())
+                || !FixedTimeEquals(client.KeyHash, Hash(request.ClientSecret)))
+                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized, title: "invalid_client");
+
+            var (token, expiresAt) = await jwt.IssueAsync(client, ct);
+            return Results.Ok(new { token, expiresAt, scopes = client.Scopes });
+        });
+
+        v1.MapGet("/events", async (HttpContext http, IEconomicCalendar calendar, CancellationToken ct) =>
+            Results.Ok(await calendar.GetEventsAsync(ParseQuery(http.Request), ct)))
+            .RequireCalendarScope(CalendarScopes.Read);
+
+        v1.MapGet("/events/{id:guid}", async (
+            Guid id, HttpContext http, IEconomicCalendar calendar, CancellationToken ct) =>
+        {
+            var watchlist = SplitCsv(http.Request.Query["watchlist"]);
+            var asOf = ParseInstant(http.Request.Query["asOf"]);
+            var view = await calendar.GetEventAsync(CalendarEventId.From(id), watchlist, asOf, ct);
+            return view is null ? Results.NotFound() : Results.Ok(view);
+        }).RequireCalendarScope(CalendarScopes.Read);
+
+        v1.MapGet("/history", async (HttpContext http, IEconomicCalendar calendar, CancellationToken ct) =>
+            Results.Ok(await calendar.GetEventsAsync(ParseQuery(http.Request), ct)))
+            .RequireCalendarScope(CalendarScopes.Read);
+
+        v1.MapGet("/series", async (HttpContext http, IEconomicCalendar calendar, CancellationToken ct) =>
+            Results.Ok(await calendar.GetSeriesAsync(ParseQuery(http.Request), ct)))
+            .RequireCalendarScope(CalendarScopes.Read);
+
+        v1.MapGet("/surprises", async (HttpContext http, IEconomicCalendar calendar, CancellationToken ct) =>
+        {
+            var series = http.Request.Query["series"].ToString();
+            if (string.IsNullOrWhiteSpace(series)) return Results.BadRequest();
+            var count = int.TryParse(http.Request.Query["count"], out var c) ? c : 24;
+            var asOf = ParseInstant(http.Request.Query["asOf"]);
+            return Results.Ok(await calendar.GetSurprisesAsync(new SeriesCode(series), count, asOf, ct));
+        }).RequireCalendarScope(CalendarScopes.Surprises);
+
+        v1.MapGet("/next", async (
+            HttpContext http, IEconomicCalendar calendar, TimeProvider timeProvider, CancellationToken ct) =>
+        {
+            var symbol = http.Request.Query["symbol"].ToString();
+            if (string.IsNullOrWhiteSpace(symbol)) return Results.BadRequest();
+            var minImpact = ParseImpact(http.Request.Query["minImpact"]) ?? ImpactLevel.Low;
+            var view = await calendar.GetNextForSymbolAsync(
+                new Symbol(symbol), minImpact, timeProvider.GetUtcNow(), ct);
+            return view is null ? Results.NoContent() : Results.Ok(view);
+        }).RequireCalendarScope(CalendarScopes.Read);
+
+        v1.MapGet("/blackout", async (
+            HttpContext http, IEconomicCalendar calendar, TimeProvider timeProvider, CancellationToken ct) =>
+        {
+            var symbol = http.Request.Query["symbol"].ToString();
+            if (string.IsNullOrWhiteSpace(symbol)) return Results.BadRequest();
+            var at = ParseInstant(http.Request.Query["at"]) ?? timeProvider.GetUtcNow();
+            var minImpact = ParseImpact(http.Request.Query["minImpact"]) ?? ImpactLevel.High;
+            var before = int.TryParse(http.Request.Query["before"], out var b) ? b : 15;
+            var after = int.TryParse(http.Request.Query["after"], out var a) ? a : 15;
+            var rule = new NewsWindowRule(minImpact, before, after);
+            var result = await calendar.GetBlackoutAsync(new Symbol(symbol), at, rule, ct);
+            return Results.Ok(result);
+        }).RequireCalendarScope(CalendarScopes.Blackout);
+
+        v1.MapGet("/affected-symbols", async (
+            HttpContext http, IEconomicCalendar calendar, CancellationToken ct) =>
+        {
+            if (!Guid.TryParse(http.Request.Query["eventId"], out var eventId)) return Results.BadRequest();
+            var watchlist = SplitCsv(http.Request.Query["watchlist"]) ?? [];
+            var symbols = await calendar.GetAffectedSymbolsAsync(CalendarEventId.From(eventId), watchlist, ct);
+            return Results.Ok(symbols.Select(s => s.Value));
+        }).RequireCalendarScope(CalendarScopes.Read);
+
+        v1.MapGet("/health", async (IEconomicCalendar calendar, CancellationToken ct) =>
+            Results.Ok(await calendar.GetHealthAsync(ct)))
+            .RequireCalendarScope(CalendarScopes.Read);
+    }
+
+    private static CalendarQuery ParseQuery(HttpRequest request)
+    {
+        var q = request.Query;
+        return new CalendarQuery
+        {
+            From = ParseInstant(q["from"]),
+            To = ParseInstant(q["to"]),
+            Countries = SplitCsv(q["countries"]),
+            Currencies = SplitCsv(q["currencies"]),
+            Series = SplitCsv(q["series"]),
+            MinImpact = ParseImpact(q["minImpact"]),
+            Keyword = string.IsNullOrWhiteSpace(q["q"]) ? null : q["q"].ToString(),
+            AsOf = ParseInstant(q["asOf"]),
+            Limit = int.TryParse(q["limit"], out var limit) ? Math.Clamp(limit, 1, 1000) : 200
+        };
+    }
+
+    private static string[]? SplitCsv(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    private static DateTimeOffset? ParseInstant(string? value) =>
+        DateTimeOffset.TryParse(value, System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal,
+            out var instant)
+            ? instant
+            : null;
+
+    private static ImpactLevel? ParseImpact(string? value) =>
+        Enum.TryParse<ImpactLevel>(value, ignoreCase: true, out var level) ? level : null;
+
+    private static string Hash(string raw) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(raw)));
+
+    private static bool FixedTimeEquals(string a, string b) =>
+        CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(a), Encoding.UTF8.GetBytes(b));
+
+    /// <summary>404s the whole calendar tree unless both the white-label gate and the runtime toggle allow it.</summary>
+    private static TBuilder RequireCalendarEnabled<TBuilder>(this TBuilder builder)
+        where TBuilder : IEndpointConventionBuilder
+    {
+        builder.AddEndpointFilter(async (context, next) =>
+        {
+            var options = context.HttpContext.RequestServices.GetRequiredService<IOptionsMonitor<AppOptions>>();
+            var gate = context.HttpContext.RequestServices.GetRequiredService<IFeatureGate>();
+            return CalendarEnablement.IsEnabled(options.CurrentValue.Branding, gate)
+                ? await next(context)
+                : Results.NotFound();
+        });
+        return builder;
+    }
+
+    /// <summary>Validates the bearer JWT and enforces the required scope; 401 otherwise.</summary>
+    private static RouteHandlerBuilder RequireCalendarScope(this RouteHandlerBuilder builder, string scope)
+    {
+        builder.AddEndpointFilter(async (context, next) =>
+        {
+            var jwt = context.HttpContext.RequestServices.GetRequiredService<CalendarJwt>();
+            var header = context.HttpContext.Request.Headers.Authorization.ToString();
+            var token = header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) ? header[7..] : null;
+
+            var principal = await jwt.ValidateAsync(token, context.HttpContext.RequestAborted);
+            if (principal is null)
+                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized, title: "invalid_token");
+            if (!CalendarJwt.ScopesOf(principal).Contains(scope))
+                return Results.Problem(statusCode: StatusCodes.Status403Forbidden, title: "insufficient_scope");
+
+            return await next(context);
+        });
+        return builder;
+    }
+}

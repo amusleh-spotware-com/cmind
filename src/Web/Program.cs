@@ -33,6 +33,7 @@ builder.Services
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddNodes(builder.Configuration);
+builder.Services.AddScoped<Web.Calendar.CalendarJwt>();
 
 builder.Services.AddHealthChecks()
     .AddNpgSql(sp => builder.Configuration.GetConnectionString(ConnectionStrings.AppDb)
@@ -192,6 +193,7 @@ app.MapOpenApiEndpoints();
 app.MapCopyEndpoints();
 app.MapParamSetEndpoints();
 app.MapMcpKeyEndpoints();
+app.MapCalendarApiEndpoints();
 app.MapBuilderEndpoints();
 app.MapDashboardEndpoints();
 app.MapUsageEndpoints();

@@ -106,6 +106,34 @@ public class CalendarApiHttpTests(PostgresFixture fixture) : IClassFixture<Postg
     }
 
     [Fact]
+    public async Task Owner_registers_lists_and_disables_a_webhook()
+    {
+        await using var app = CreateApp();
+        var owner = await LoginAsync(app);
+
+        var create = await owner.PostAsJsonAsync("/api/calendar/webhooks",
+            new { url = "https://example.com/hook", secret = "s3cret", minImpact = "High", currencies = "USD" });
+        create.StatusCode.Should().Be(HttpStatusCode.OK);
+        var id = (await create.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+
+        var list = await owner.GetFromJsonAsync<JsonElement>("/api/calendar/webhooks");
+        list.EnumerateArray().Should().Contain(w => w.GetProperty("url").GetString() == "https://example.com/hook");
+
+        (await owner.DeleteAsync($"/api/calendar/webhooks/{id}")).StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task Registering_a_webhook_with_a_bad_url_is_rejected()
+    {
+        await using var app = CreateApp();
+        var owner = await LoginAsync(app);
+
+        var create = await owner.PostAsJsonAsync("/api/calendar/webhooks",
+            new { url = "not-a-url", secret = "s3cret", minImpact = "High", currencies = (string?)null });
+        create.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task Missing_token_is_unauthorized()
     {
         await using var app = CreateApp();

@@ -124,4 +124,15 @@ public static class DomainErrors
     public const string AiProviderKindNotAllowed = "domain.ai.provider_kind_not_allowed";
     public const string AiLocalProviderNotAllowed = "domain.ai.local_provider_not_allowed";
     public const string AiBuiltInNotAllowed = "domain.ai.built_in_not_allowed";
+
+    public const string CalendarSeriesCodeRequired = "domain.calendar.series_code_required";
+    public const string CalendarCountryCodeInvalid = "domain.calendar.country_code_invalid";
+    public const string CalendarCurrencyCodeInvalid = "domain.calendar.currency_code_invalid";
+    public const string CalendarImpactScoreOutOfRange = "domain.calendar.impact_score_out_of_range";
+    public const string CalendarRevisionOutOfOrder = "domain.calendar.revision_out_of_order";
+    public const string CalendarActualBeforeRelease = "domain.calendar.actual_before_release";
+    public const string CalendarEventTransitionInvalid = "domain.calendar.event_transition_invalid";
+    public const string CalendarNewsWindowInvalid = "domain.calendar.news_window_invalid";
+    public const string CalendarApiClientNameRequired = "domain.calendar.api_client_name_required";
+    public const string CalendarApiScopeInvalid = "domain.calendar.api_scope_invalid";
 }

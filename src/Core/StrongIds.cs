@@ -244,6 +244,27 @@ public readonly record struct AiProviderCredentialId(Guid Value) : IStronglyType
     public override string ToString() => Value.ToString();
 }
 
+public readonly record struct EconomicSeriesId(Guid Value) : IStronglyTypedId<EconomicSeriesId>
+{
+    public static EconomicSeriesId New() => new(Guid.NewGuid());
+    public static EconomicSeriesId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
+public readonly record struct CalendarEventId(Guid Value) : IStronglyTypedId<CalendarEventId>
+{
+    public static CalendarEventId New() => new(Guid.NewGuid());
+    public static CalendarEventId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
+public readonly record struct CalendarApiClientId(Guid Value) : IStronglyTypedId<CalendarApiClientId>
+{
+    public static CalendarApiClientId New() => new(Guid.NewGuid());
+    public static CalendarApiClientId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct Email
 {
     public string Value { get; }

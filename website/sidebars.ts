@@ -48,6 +48,8 @@ const sidebars: SidebarsConfig = {
         'features/execution-tca',
         'features/contrarian-positioning',
         'features/mcp',
+        'features/economic-calendar',
+        'features/calendar-cbot-api',
         'features/prop-firm',
         'features/two-factor-auth',
         'features/user-registration',

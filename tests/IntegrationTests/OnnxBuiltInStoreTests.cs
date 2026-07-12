@@ -21,7 +21,8 @@ public class OnnxBuiltInStoreTests(PostgresFixture fixture) : IClassFixture<Post
 
     private static AiProviderStore CreateStore(DataContext db, AppOptions options) =>
         new(new StaticOptionsMonitor<AppOptions>(options), db,
-            new MemoryCache(new MemoryCacheOptions()), new PassthroughSecretProtector(), TimeProvider.System);
+            new MemoryCache(new MemoryCacheOptions()), new PassthroughSecretProtector(), new NullCurrentUser(),
+            TimeProvider.System);
 
     private async Task<DataContext> FreshAsync()
     {

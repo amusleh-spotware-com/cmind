@@ -131,8 +131,11 @@ public sealed class EconomicEvent : AuditedEntity<CalendarEventId>
         return found;
     }
 
-    public ImpactLevel ImpactLevelAsOf(DateTimeOffset asOf) =>
-        RevisionAsOf(asOf)?.ImpactLevel ?? _revisions.FirstOrDefault()?.ImpactLevel ?? ImpactLevel.Low;
+    /// <summary>
+    /// The impact level known at <paramref name="asOf"/>. Before any revision was known it defaults to
+    /// <see cref="ImpactLevel.Low"/> — never the first revision's level, which would be a look-ahead leak.
+    /// </summary>
+    public ImpactLevel ImpactLevelAsOf(DateTimeOffset asOf) => RevisionAsOf(asOf)?.ImpactLevel ?? ImpactLevel.Low;
 
     /// <summary>A pure snapshot for the news-window policy, at the given point in time.</summary>
     public CalendarEventSnapshot SnapshotAsOf(DateTimeOffset asOf) =>

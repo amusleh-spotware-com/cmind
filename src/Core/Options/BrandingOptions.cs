@@ -60,4 +60,11 @@ public sealed record BrandingOptions
     /// <c>Anthropic</c>, <c>OpenAiCompatible</c>) to lock down which AI providers users may add.
     /// </summary>
     public IReadOnlyList<string> AllowedAiProviderKinds { get; init; } = [];
+
+    /// <summary>
+    /// White-label hard gate for the economic calendar (Tier 2). Defaults to <c>true</c> — the calendar,
+    /// its REST API and MCP tools ship on. A reseller sets it <c>false</c> to remove the feature entirely
+    /// from that build: it never appears and an operator cannot re-enable it via the runtime toggle.
+    /// </summary>
+    public bool EnableEconomicCalendar { get; init; } = true;
 }

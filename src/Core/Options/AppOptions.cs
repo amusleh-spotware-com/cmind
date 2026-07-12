@@ -36,6 +36,46 @@ public sealed record AppOptions
     public AccountsOptions Accounts { get; init; } = new();
     public RegistrationOptions Registration { get; init; } = new();
     public EmailOptions Email { get; init; } = new();
+    public CalendarOptions Calendar { get; init; } = new();
+}
+
+public sealed record CalendarOptions
+{
+    /// <summary>
+    /// Whether the ingestion worker (schedule-sync + release-poll + reconciliation) runs. Off by default —
+    /// the domain, lazy read-through backfill and REST/MCP read side work without it; a deployment turns it
+    /// on to proactively keep the calendar warm. Independent of the feature gate, which controls visibility.
+    /// </summary>
+    public bool IngestionEnabled { get; init; }
+
+    public TimeSpan ScheduleSyncInterval { get; init; } = TimeSpan.FromHours(6);
+    public TimeSpan ReleasePollInterval { get; init; } = TimeSpan.FromSeconds(30);
+    public TimeSpan ReconcileInterval { get; init; } = TimeSpan.FromHours(1);
+
+    /// <summary>How long a node's claim on the singleton ingestion worker stays valid without renewal (self-heal on death).</summary>
+    public TimeSpan LeaseTtl { get; init; } = TimeSpan.FromSeconds(120);
+
+    /// <summary>Stable identity of the node hosting the ingestion worker; defaults to the machine name.</summary>
+    public string NodeName { get; init; } = string.Empty;
+
+    /// <summary>Days of recent history the reconciliation pass re-syncs to catch late-published revisions.</summary>
+    public int ReconcileLookbackDays { get; init; } = 7;
+
+    /// <summary>Base URL of the FRED API; a deployment supplies its own key via <see cref="FredApiKey"/>.</summary>
+    public string FredBaseUrl { get; init; } = "https://api.stlouisfed.org/fred";
+
+    /// <summary>FRED API key. Absent ⇒ the FRED source degrades to a typed failure; the rest of the calendar works.</summary>
+    public string? FredApiKey { get; init; }
+
+    /// <summary>
+    /// When a blackout answer is uncertain (source/DB fault, data gap), the conservative default: <c>true</c>
+    /// = fail-closed ("assume in-blackout") for risk-off bots, <c>false</c> = fail-open. Never silently
+    /// green-lights trading through a data gap.
+    /// </summary>
+    public bool BlackoutFailClosed { get; init; } = true;
+
+    /// <summary>Short JWT lifetime for issued Calendar API client tokens.</summary>
+    public TimeSpan ApiTokenLifetime { get; init; } = TimeSpan.FromMinutes(15);
 }
 
 public sealed record CopyOptions

@@ -22,5 +22,6 @@ public enum FeatureFlag
     OpenApi,
     Mcp,
     Compliance,
-    Registration
+    Registration,
+    EconomicCalendar
 }

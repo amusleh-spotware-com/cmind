@@ -115,4 +115,14 @@ public sealed class EconomicEventTests
         snapshot.Series.Value.Should().Be("US.CPI.MOM");
         snapshot.Impact.Should().Be(Impact.Level);
     }
+
+    [Fact]
+    public void SnapshotAsOf_before_scheduling_defaults_to_low_no_look_ahead()
+    {
+        var e = Scheduled(Effective.AddDays(-7));
+
+        // Before we knew anything about the event, its impact must not leak the scheduled prior.
+        e.ImpactLevelAsOf(Effective.AddDays(-10)).Should().Be(ImpactLevel.Low);
+        e.SnapshotAsOf(Effective.AddDays(-10)).Impact.Should().Be(ImpactLevel.Low);
+    }
 }

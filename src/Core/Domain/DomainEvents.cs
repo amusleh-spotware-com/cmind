@@ -1,4 +1,5 @@
 using Core.Agent;
+using Core.Calendar;
 using Core.PropFirm;
 
 namespace Core.Domain;
@@ -77,4 +78,15 @@ public sealed record PropFirmChallengeBreached(PropFirmChallengeId ChallengeId, 
 public sealed record PropFirmChallengeStopped(PropFirmChallengeId ChallengeId, UserId UserId) : DomainEventBase;
 
 public sealed record PropFirmDrawdownWarning(PropFirmChallengeId ChallengeId, UserId UserId, double PercentUsed)
+    : DomainEventBase;
+
+public sealed record EconomicEventReleased(
+    CalendarEventId EventId, EconomicSeriesId SeriesId, decimal Actual, DateTimeOffset EffectiveAt)
+    : DomainEventBase;
+
+public sealed record EconomicEventRevised(
+    CalendarEventId EventId, EconomicSeriesId SeriesId, decimal Actual, DateTimeOffset KnownAt) : DomainEventBase;
+
+public sealed record EconomicEventRescheduled(
+    CalendarEventId EventId, EconomicSeriesId SeriesId, DateTimeOffset PreviousInstant, DateTimeOffset NewInstant)
     : DomainEventBase;

@@ -16,6 +16,7 @@ public sealed record FeaturesOptions
     public bool CopyTrading { get; init; } = true;
     public bool Ai { get; init; } = true;
     public bool PortfolioAgent { get; init; } = true;
+    public bool AgentStudio { get; init; } = true;
     public bool Alerts { get; init; } = true;
     public bool PropGuard { get; init; } = true;
     public bool PropFirm { get; init; } = true;
@@ -32,6 +33,7 @@ public sealed record FeaturesOptions
         FeatureFlag.CopyTrading => CopyTrading,
         FeatureFlag.Ai => Ai,
         FeatureFlag.PortfolioAgent => PortfolioAgent,
+        FeatureFlag.AgentStudio => AgentStudio,
         FeatureFlag.Alerts => Alerts,
         FeatureFlag.PropGuard => PropGuard,
         FeatureFlag.PropFirm => PropFirm,

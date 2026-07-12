@@ -19,7 +19,8 @@ public static class AgentStudioEndpoints
 {
     public static IEndpointRouteBuilder MapAgentStudioEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/api/agent-studio").RequireAuthorization("UserOrAbove");
+        var g = app.MapGroup("/api/agent-studio").RequireAuthorization("UserOrAbove")
+            .RequireFeature(Core.Features.FeatureFlag.AgentStudio);
 
         g.MapGet("/", async (DataContext db, ICurrentUser u, CancellationToken ct) =>
         {

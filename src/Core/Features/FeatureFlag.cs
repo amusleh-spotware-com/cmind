@@ -14,6 +14,7 @@ public enum FeatureFlag
     CopyTrading,
     Ai,
     PortfolioAgent,
+    AgentStudio,
     Alerts,
     PropGuard,
     PropFirm,

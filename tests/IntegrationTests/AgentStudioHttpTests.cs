@@ -92,6 +92,22 @@ public class AgentStudioHttpTests(PostgresFixture fixture) : IClassFixture<Postg
     }
 
     [Fact]
+    public async Task White_label_can_disable_agent_studio()
+    {
+        await using var app = new WebApplicationFactory<Program>().WithWebHostBuilder(b =>
+        {
+            b.UseEnvironment("Development");
+            b.UseSetting("ConnectionStrings:appdb", fixture.Container.GetConnectionString());
+            b.UseSetting("App:OwnerEmail", Owner);
+            b.UseSetting("App:OwnerPassword", Password);
+            b.UseSetting("App:Features:AgentStudio", "false");
+        });
+        var client = await LoginAsync(app);
+
+        (await client.GetAsync("/api/agent-studio")).StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
     public async Task Full_auto_creation_requires_envelope()
     {
         await using var app = CreateApp();

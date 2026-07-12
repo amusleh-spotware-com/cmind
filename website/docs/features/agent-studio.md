@@ -70,7 +70,10 @@ another or the host) and **safe by default**: it is inert unless AI is configure
 ## Scope
 
 Shipped: the full agent lifecycle, the deterministic safety gate, the 24/7 runtime, the human-in-the-loop
-approval gate, and the audit ledger — all persisted and tested. **Requires the Anthropic API key + live
-cTrader Open API** (so gated/degraded until provided): automatic order extraction from the model, the live
-Open-API account-state store and order executor, multi-agent debate roles, and layered memory/reflection.
-Without them the app runs unchanged and agents stay safely idle.
+approval gate, the audit ledger, and the **live cTrader Open API integration** — the account-state store
+(reads real balance, positions and open exposure in lots) and the order executor (places real market
+orders, lots→volume via the symbol lot size), both resolving each managed account's OAuth credentials and
+degrading safely when an account is not linked. **Requires the Anthropic API key** for the model to
+generate orders (until then the engine holds); still to come are multi-agent debate roles and layered
+memory/reflection. The runtime is off unless `App:Ai:AgentRuntimeEnabled` is set, so live trading only
+happens on an explicit, fully-consented opt-in.

@@ -82,8 +82,8 @@ public static class DependencyInjection
         services.AddSingleton<Core.Execution.IExecutionScheduler, Core.Execution.AlmgrenChrissScheduler>();
         services.AddSingleton<Core.Journal.IJournalAnalyzer, Core.Journal.JournalAnalyzer>();
         services.AddSingleton<Core.Agent.IAgentDecisionProcessor, Core.Agent.AgentDecisionProcessor>();
-        services.AddSingleton<Core.Agent.IAccountStateStore, Infrastructure.Agent.NullAccountStateStore>();
-        services.AddSingleton<Core.Agent.IAgentOrderExecutor, Infrastructure.Agent.NullAgentOrderExecutor>();
+        services.AddSingleton<Core.Agent.IAccountStateStore, Infrastructure.Agent.OpenApiAccountStateStore>();
+        services.AddSingleton<Core.Agent.IAgentOrderExecutor, Infrastructure.Agent.OpenApiAgentOrderExecutor>();
         services.AddScoped<Core.Agent.IAgentDecisionEngine, Infrastructure.Agent.AiAgentDecisionEngine>();
         services.AddHostedService<Infrastructure.Agent.AgentRuntimeService>();
         services.AddHttpClient<CTraderOpenApi.Auth.IOpenApiTokenClient, CTraderOpenApi.Auth.OpenApiTokenClient>(
@@ -95,6 +95,17 @@ public static class DependencyInjection
         services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
         services.AddSingleton<IPasswordHasher, Argon2PasswordHasher>();
         services.AddSingleton<ITotpAuthenticator, OtpNetTotpAuthenticator>();
+
+        // Email transport: a real SMTP sender only when App:Email is configured; otherwise a no-op that
+        // logs — so a deployment without mail infrastructure runs unchanged and email-verification
+        // registration transparently downgrades to admin approval.
+        var emailConfigured = config.GetSection(AppOptions.SectionName)
+            .GetSection(nameof(AppOptions.Email))[nameof(EmailOptions.Host)] is { Length: > 0 };
+        if (emailConfigured)
+            services.AddSingleton<Core.Notifications.IEmailSender, Infrastructure.Notifications.SmtpEmailSender>();
+        else
+            services.AddSingleton<Core.Notifications.IEmailSender, Infrastructure.Notifications.NoOpEmailSender>();
+        services.AddHttpClient<Core.Access.ICaptchaValidator, Infrastructure.Access.HttpCaptchaValidator>();
         services.AddMemoryCache();
         services.AddScoped<Core.Features.IFeatureGate, Infrastructure.Features.FeatureGate>();
         services.AddHttpClient<IGithubContainerRegistryTagProvider, GithubContainerRegistryTagProvider>();

@@ -170,9 +170,11 @@ so re-enabling is instant.
   `POST /api/alerts/rules/economic-event`)*. The prop-guard news-blackout gate **and the
   copy-trade blackout pause** are in (§5.1 — an opt-in `App:Copy:NewsPauseEnabled`, default off: a source
   open whose symbol sits in a Critical-impact blackout is skipped, byte-identical hot path when off). The
-  **backtest event overlay** backend is in too — `GET /api/calendar/v1/for-symbol` and the
+  **backtest event overlay** is in — `GET /api/calendar/v1/for-symbol` and the
   `calendar_events_for_symbol` MCP tool return the point-in-time-correct events affecting a symbol in a
-  window, ready to overlay as markers on a backtest report.
+  window, and the **instance/backtest report page** renders the high-impact releases that fell inside the
+  backtest window beneath the equity curve (so an author sees which trades landed on NFP), gated and
+  localized. The whole plan is now implemented.
 - **P5 — extras**: surprise analytics, iCal/CSV export, keyword search, pluggable consensus.
 
 See the [cBot & REST API reference](calendar-cbot-api.md) for the integration surface.

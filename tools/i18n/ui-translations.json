@@ -109,7 +109,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "Indicator history"
+      "calendar.series.title": "Indicator history",
+      "calendar.backtestEvents": "Calendar events during this backtest"
     },
     "ar": {
       "common.retry": "إعادة المحاولة",
@@ -219,7 +220,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "سجل المؤشر"
+      "calendar.series.title": "سجل المؤشر",
+      "calendar.backtestEvents": "أحداث التقويم خلال هذا الاختبار الرجعي"
     },
     "cs": {
       "common.retry": "Zkusit znovu",
@@ -329,7 +331,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "Historie ukazatele"
+      "calendar.series.title": "Historie ukazatele",
+      "calendar.backtestEvents": "Události kalendáře během tohoto backtestu"
     },
     "de": {
       "common.retry": "Wiederholen",
@@ -439,7 +442,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "Indikatorverlauf"
+      "calendar.series.title": "Indikatorverlauf",
+      "calendar.backtestEvents": "Kalenderereignisse während dieses Backtests"
     },
     "el": {
       "common.retry": "Επανάληψη",
@@ -549,7 +553,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "Ιστορικό δείκτη"
+      "calendar.series.title": "Ιστορικό δείκτη",
+      "calendar.backtestEvents": "Γεγονότα ημερολογίου κατά τη διάρκεια αυτού του backtest"
     },
     "es": {
       "common.retry": "Reintentar",
@@ -659,7 +664,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "Historial del indicador"
+      "calendar.series.title": "Historial del indicador",
+      "calendar.backtestEvents": "Eventos del calendario durante este backtest"
     },
     "fr": {
       "common.retry": "Réessayer",
@@ -769,7 +775,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "Historique de l'indicateur"
+      "calendar.series.title": "Historique de l'indicateur",
+      "calendar.backtestEvents": "Événements du calendrier pendant ce backtest"
     },
     "hu": {
       "common.retry": "Újra",
@@ -879,7 +886,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "Mutató előzményei"
+      "calendar.series.title": "Mutató előzményei",
+      "calendar.backtestEvents": "Naptáresemények a backteszt alatt"
     },
     "id": {
       "common.retry": "Coba lagi",
@@ -989,7 +997,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "Riwayat indikator"
+      "calendar.series.title": "Riwayat indikator",
+      "calendar.backtestEvents": "Peristiwa kalender selama backtest ini"
     },
     "it": {
       "common.retry": "Riprova",
@@ -1099,7 +1108,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "Storico indicatore"
+      "calendar.series.title": "Storico indicatore",
+      "calendar.backtestEvents": "Eventi del calendario durante questo backtest"
     },
     "ja": {
       "common.retry": "再試行",
@@ -1209,7 +1219,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "指標の履歴"
+      "calendar.series.title": "指標の履歴",
+      "calendar.backtestEvents": "このバックテスト中の経済カレンダーイベント"
     },
     "ko": {
       "common.retry": "다시 시도",
@@ -1319,7 +1330,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "지표 기록"
+      "calendar.series.title": "지표 기록",
+      "calendar.backtestEvents": "이 백테스트 기간의 캘린더 이벤트"
     },
     "ms": {
       "common.retry": "Cuba semula",
@@ -1429,7 +1441,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "Sejarah penunjuk"
+      "calendar.series.title": "Sejarah penunjuk",
+      "calendar.backtestEvents": "Peristiwa kalendar semasa backtest ini"
     },
     "pl": {
       "common.retry": "Ponów",
@@ -1539,7 +1552,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "Historia wskaźnika"
+      "calendar.series.title": "Historia wskaźnika",
+      "calendar.backtestEvents": "Wydarzenia kalendarza podczas tego backtestu"
     },
     "pt-BR": {
       "common.retry": "Tentar novamente",
@@ -1649,7 +1663,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "Histórico do indicador"
+      "calendar.series.title": "Histórico do indicador",
+      "calendar.backtestEvents": "Eventos do calendário durante este backtest"
     },
     "ru": {
       "common.retry": "Повторить",
@@ -1759,7 +1774,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "История показателя"
+      "calendar.series.title": "История показателя",
+      "calendar.backtestEvents": "События календаря во время этого бэктеста"
     },
     "sk": {
       "common.retry": "Skúsiť znova",
@@ -1869,7 +1885,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "História ukazovateľa"
+      "calendar.series.title": "História ukazovateľa",
+      "calendar.backtestEvents": "Udalosti kalendára počas tohto backtestu"
     },
     "sl": {
       "common.retry": "Poskusi znova",
@@ -1979,7 +1996,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "Zgodovina kazalnika"
+      "calendar.series.title": "Zgodovina kazalnika",
+      "calendar.backtestEvents": "Koledarski dogodki med tem backtestom"
     },
     "sr": {
       "common.retry": "Покушај поново",
@@ -2089,7 +2107,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "Istorija indikatora"
+      "calendar.series.title": "Istorija indikatora",
+      "calendar.backtestEvents": "Događaji kalendara tokom ovog bektesta"
     },
     "th": {
       "common.retry": "ลองอีกครั้ง",
@@ -2199,7 +2218,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "ประวัติตัวชี้วัด"
+      "calendar.series.title": "ประวัติตัวชี้วัด",
+      "calendar.backtestEvents": "เหตุการณ์ปฏิทินระหว่างการทดสอบย้อนหลังนี้"
     },
     "tr": {
       "common.retry": "Yeniden dene",
@@ -2309,7 +2329,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "Gösterge geçmişi"
+      "calendar.series.title": "Gösterge geçmişi",
+      "calendar.backtestEvents": "Bu geri testi sırasındaki takvim olayları"
     },
     "vi": {
       "common.retry": "Thử lại",
@@ -2419,7 +2440,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "Lịch sử chỉ số"
+      "calendar.series.title": "Lịch sử chỉ số",
+      "calendar.backtestEvents": "Sự kiện lịch trong backtest này"
     },
     "zh-Hans": {
       "common.retry": "重试",
@@ -2529,7 +2551,8 @@
       "whitelabel.cat.ai": "AI",
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
-      "calendar.series.title": "指标历史"
+      "calendar.series.title": "指标历史",
+      "calendar.backtestEvents": "此回测期间的日历事件"
     }
   }
 }

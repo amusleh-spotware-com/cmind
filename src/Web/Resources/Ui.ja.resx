@@ -112,4 +112,5 @@
   <data name="whitelabel.cat.openApi" xml:space="preserve"><value>Open API</value></data>
   <data name="whitelabel.cat.propFirm" xml:space="preserve"><value>Prop firm</value></data>
   <data name="calendar.series.title" xml:space="preserve"><value>指標の履歴</value></data>
+  <data name="calendar.backtestEvents" xml:space="preserve"><value>このバックテスト中の経済カレンダーイベント</value></data>
 </root>

@@ -1,11 +1,20 @@
 @page "/instance/{Id:guid}"
 @using Web.Json
+@using Core
+@using Core.Calendar
+@using Core.Features
+@using Core.Options
+@using Microsoft.Extensions.Options
+@using Microsoft.AspNetCore.SignalR.Client
+@using ApexCharts
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inject HttpClient Http
 @inject NavigationManager Nav
+@inject IStringLocalizer<Ui> L
+@inject IEconomicCalendar Calendar
+@inject IFeatureGate Gate
+@inject IOptionsMonitor<AppOptions> Options
 @implements IAsyncDisposable
-@using Microsoft.AspNetCore.SignalR.Client
-@using ApexCharts
 
 <PageTitle>Instance</PageTitle>
 <MudText Typo="Typo.h5" Class="mb-2">Instance @Id</MudText>
@@ -23,6 +32,20 @@
             <ApexPointSeries TItem="EquityPoint" Items="_equity" Name="Equity"
                              XValue="@(p => p.Ts)" YValue="@(p => (decimal)p.Value)" SeriesType="SeriesType.Line" />
         </ApexChart>
+
+        @if (_calendarEvents.Count > 0)
+        {
+            <MudText Typo="Typo.subtitle2" Class="mt-2 mb-1">@L["calendar.backtestEvents"]</MudText>
+            <MudStack Spacing="1" data-testid="backtest-calendar-events">
+                @foreach (var e in _calendarEvents)
+                {
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@e.EffectiveAt.ToLocalTime().DateTime.ToString("g")</MudText>
+                        <MudChip T="string" Size="MudBlazor.Size.Small" Color="@ImpactColor(e.Impact)">@e.SeriesCode</MudChip>
+                    </MudStack>
+                }
+            </MudStack>
+        }
     }
 }
 
@@ -36,6 +59,7 @@
     private bool _isBacktest;
     private List<string> _logs = new();
     private List<EquityPoint> _equity = new();
+    private List<CalendarEventView> _calendarEvents = new();
     private HubConnection? _hub;
 
     public record EquityPoint(DateTime Ts, double Value);
@@ -50,6 +74,8 @@
                 _equity.Add(new EquityPoint(((DateTimeOffset)p.timestamp).UtcDateTime, (double)p.value));
         }
 
+        await LoadCalendarOverlayAsync();
+
         _hub = new HubConnectionBuilder().WithUrl(Nav.ToAbsoluteUri("/hubs/logs")).Build();
         await _hub.StartAsync();
         var stream = _hub.StreamAsync<string>("Tail", Id);
@@ -63,6 +89,36 @@
             }
         });
     }
+
+    // Point-in-time-correct economic-event overlay: the high-impact releases affecting the backtested
+    // symbol that fell inside the backtest window (no look-ahead — asOf is the window end).
+    private async Task LoadCalendarOverlayAsync()
+    {
+        if (!_isBacktest || _equity.Count == 0
+            || !CalendarEnablement.IsEnabled(Options.CurrentValue.Branding, Gate)
+            || _detail?.symbol is not { } symbolValue)
+            return;
+
+        try
+        {
+            var symbol = new Symbol((string)symbolValue);
+            var from = new DateTimeOffset(_equity.Min(p => p.Ts), TimeSpan.Zero);
+            var to = new DateTimeOffset(_equity.Max(p => p.Ts), TimeSpan.Zero);
+            var events = await Calendar.GetEventsForSymbolAsync(symbol, from, to, to, CancellationToken.None);
+            _calendarEvents = events.Where(e => e.Impact >= ImpactLevel.High).ToList();
+        }
+        catch
+        {
+            _calendarEvents = [];
+        }
+    }
+
+    private static MudBlazor.Color ImpactColor(ImpactLevel level) => level switch
+    {
+        ImpactLevel.Critical => MudBlazor.Color.Error,
+        ImpactLevel.High => MudBlazor.Color.Warning,
+        _ => MudBlazor.Color.Default
+    };
 
     public async ValueTask DisposeAsync() { if (_hub is not null) await _hub.DisposeAsync(); }
 }

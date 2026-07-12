@@ -124,8 +124,10 @@ so re-enabling is instant.
   two-tier gating; integration-tested. The mobile-first calendar page + full-history browser follow.
 - **P3 — more sources**: BLS/BEA/Census/ECB/Eurostat/OECD + central-bank schedules; reconciliation;
   10-year backfill.
-- **P4 — deep integration**: cBot client, MCP tools, alerts trigger, copy-trade / prop-guard blackout,
-  backtest overlay.
+- **P4 — deep integration**: **MCP tools** *(implemented — full read-API parity: `calendar_events`,
+  `calendar_event`, `calendar_history`, `calendar_series`, `calendar_surprises`, `calendar_next`,
+  `calendar_blackout`, `calendar_affected_symbols`, `calendar_health`, gated on the feature)*; cBot
+  client, alerts trigger, copy-trade / prop-guard blackout, backtest overlay still to come.
 - **P5 — extras**: surprise analytics, iCal/CSV export, keyword search, pluggable consensus.
 
 See the [cBot & REST API reference](calendar-cbot-api.md) for the integration surface.

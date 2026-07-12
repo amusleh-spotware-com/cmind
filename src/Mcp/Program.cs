@@ -36,6 +36,7 @@ if (features.Execution) mcp.WithTools<InstanceTools>();
 if (features.Ai) mcp.WithTools<AiTools>();
 if (features.CopyTrading) mcp.WithTools<CopyTools>();
 if (features.PropFirm) mcp.WithTools<PropFirmTools>();
+if (features.EconomicCalendar) mcp.WithTools<CalendarTools>();
 
 var app = builder.Build();
 app.UseSerilogRequestLogging();

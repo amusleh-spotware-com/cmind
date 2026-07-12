@@ -32,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<NewsBlackoutRiskFilter>();
         if (features.Ai) services.AddHostedService<AiRiskGuard>();
         if (features.PortfolioAgent) services.AddHostedService<PortfolioAgentService>();
+        services.AddScoped<Nodes.Alerts.EconomicAlertEvaluator>();
         if (features.Alerts) services.AddHostedService<AlertEvaluator>();
         if (features.PropGuard) services.AddHostedService<PropGuardService>();
         if (features.CopyTrading)

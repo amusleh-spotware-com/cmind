@@ -303,6 +303,8 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         {
             e.HasIndex(x => new { x.UserId, x.Name }).IsUnique().HasFilter("\"IsDeleted\" = false");
             e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.Trigger).HasConversion<string>().HasMaxLength(24);
+            e.Ignore(x => x.MinImpact);
         });
 
         modelBuilder.Entity<AlertEvent>(e =>

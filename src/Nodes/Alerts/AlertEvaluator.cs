@@ -38,10 +38,8 @@ public sealed class AlertEvaluator(
         if (!config.Enabled) return;
 
         using var scope = scopeFactory.CreateScope();
-        var ai = scope.ServiceProvider.GetRequiredService<IAiFeatureService>();
-        if (!ai.Enabled) return;
-
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var ai = scope.ServiceProvider.GetRequiredService<IAiFeatureService>();
         var now = timeProvider.GetUtcNow();
 
         // Coarse, translatable SQL prefilter at the minimum interval (a superset of what's due),
@@ -50,22 +48,45 @@ public sealed class AlertEvaluator(
         var candidates = await db.AlertRules
             .Where(r => r.Enabled && (r.LastEvaluatedAt == null || r.LastEvaluatedAt < coarseCutoff))
             .OrderBy(r => r.LastEvaluatedAt)
-            .Select(r => new { r.Id, r.Symbol, r.IntervalMinutes, r.LastEvaluatedAt })
+            .Select(r => new { r.Id, r.Symbol, r.IntervalMinutes, r.LastEvaluatedAt, r.Trigger })
             .Take(config.MaxRulesPerCycle * 4)
             .ToListAsync(ct);
 
         var due = candidates
             .Where(r => r.LastEvaluatedAt == null || r.LastEvaluatedAt < now.AddMinutes(-r.IntervalMinutes))
+            // Market-watch rules need AI; when it is off, leave them un-selected (not marked evaluated) so
+            // they are picked up once AI returns and never crowd the per-cycle budget out of economic rules.
+            .Where(r => r.Trigger == AlertTriggerKind.EconomicEvent || ai.Enabled)
             .Take(config.MaxRulesPerCycle)
             .ToList();
 
         foreach (var rule in due)
         {
             ct.ThrowIfCancellationRequested();
-            try { await EvaluateAsync(ai, rule.Id, rule.Symbol, ct); }
+            try
+            {
+                if (rule.Trigger == AlertTriggerKind.EconomicEvent)
+                    await EvaluateEconomicAsync(rule.Id, ct);
+                else
+                    await EvaluateAsync(ai, rule.Id, rule.Symbol, ct);
+            }
             catch (OperationCanceledException) { throw; }
             catch (Exception ex) { logger.AlertRuleFailed(rule.Id.Value, ex); }
         }
+    }
+
+    private async Task EvaluateEconomicAsync(AlertRuleId ruleId, CancellationToken ct)
+    {
+        using var scope = scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var evaluator = scope.ServiceProvider.GetRequiredService<EconomicAlertEvaluator>();
+
+        var rule = await db.AlertRules.FirstOrDefaultAsync(r => r.Id == ruleId, ct);
+        if (rule is null) return;
+
+        var raised = await evaluator.EvaluateAsync(rule, ct);
+        if (raised is not null) logger.AlertRaised(rule.Id.Value, raised.Severity);
+        await db.SaveChangesAsync(ct);
     }
 
     private async Task EvaluateAsync(IAiFeatureService ai, AlertRuleId ruleId, string symbol, CancellationToken ct)

@@ -162,8 +162,12 @@ so re-enabling is instant.
   pass.
 - **P4 — deep integration**: **MCP tools** *(implemented — full read-API parity: `calendar_events`,
   `calendar_event`, `calendar_history`, `calendar_series`, `calendar_surprises`, `calendar_next`,
-  `calendar_blackout`, `calendar_affected_symbols`, `calendar_health`, gated on the feature)*; cBot
-  client, alerts trigger, copy-trade / prop-guard blackout, backtest overlay still to come.
+  `calendar_blackout`, `calendar_affected_symbols`, `calendar_health`, gated on the feature)* and the
+  **alerts `EconomicEvent` trigger** *(implemented — an `AlertRule` that fires N minutes ahead of an
+  upcoming release at/above a chosen impact, optionally narrowed to currencies; evaluated by the
+  existing alert worker with no AI, de-duplicated per release; created via
+  `POST /api/alerts/rules/economic-event`)*. The prop-guard news-blackout gate is in (§5.1); the
+  copy-trade blackout pause and the backtest overlay are still to come.
 - **P5 — extras**: surprise analytics, iCal/CSV export, keyword search, pluggable consensus.
 
 See the [cBot & REST API reference](calendar-cbot-api.md) for the integration surface.

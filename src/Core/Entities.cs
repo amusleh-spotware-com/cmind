@@ -1521,6 +1521,13 @@ public class AgentProposal : AuditedEntity<AgentProposalId>
 
 // ---------------- Alerts (AI-assessed market alerts) ----------------
 
+/// <summary>What an <see cref="AlertRule"/> watches: an AI read of a symbol, or upcoming calendar events.</summary>
+public enum AlertTriggerKind
+{
+    MarketWatch,
+    EconomicEvent
+}
+
 public class AlertRule : AuditedEntity<AlertRuleId>
 {
     private readonly List<AlertEvent> _events = [];
@@ -1534,6 +1541,16 @@ public class AlertRule : AuditedEntity<AlertRuleId>
     public DateTimeOffset? LastEvaluatedAt { get; private set; }
     public IReadOnlyList<AlertEvent> Events => _events;
 
+    public AlertTriggerKind Trigger { get; private set; } = AlertTriggerKind.MarketWatch;
+
+    // Economic-event trigger config (only set when Trigger == EconomicEvent).
+    [MaxLength(16)] public string? MinImpactLevel { get; private set; }
+    public int? MinutesBefore { get; private set; }
+    [MaxLength(64)] public string? Currencies { get; private set; }
+
+    // Dedup: the last calendar event this rule fired for, so it does not re-alert on the same release.
+    [MaxLength(64)] public string? LastTriggeredEventKey { get; private set; }
+
     public static AlertRule Create(UserId userId, string name, Symbol symbol, EvaluationInterval interval)
         => new()
         {
@@ -1541,8 +1558,54 @@ public class AlertRule : AuditedEntity<AlertRuleId>
             Name = DomainGuard.AgainstNullOrWhiteSpace(name, DomainErrors.NameRequired),
             Symbol = symbol.Value,
             IntervalMinutes = interval.Minutes,
-            Enabled = true
+            Enabled = true,
+            Trigger = AlertTriggerKind.MarketWatch
         };
+
+    /// <summary>
+    /// A calendar-driven rule: alert <paramref name="minutesBefore"/> ahead of an upcoming release at/above
+    /// <paramref name="minImpact"/>, optionally narrowed to <paramref name="currencies"/>. Not symbol-scoped.
+    /// </summary>
+    public static AlertRule CreateEconomicEvent(
+        UserId userId, string name, Core.Calendar.ImpactLevel minImpact, int minutesBefore, string? currencies,
+        EvaluationInterval interval)
+    {
+        if (minutesBefore is < 0 or > 10080) throw new DomainException(DomainErrors.IntervalOutOfRange);
+        return new AlertRule
+        {
+            UserId = userId,
+            Name = DomainGuard.AgainstNullOrWhiteSpace(name, DomainErrors.NameRequired),
+            Symbol = string.Empty,
+            IntervalMinutes = interval.Minutes,
+            Enabled = true,
+            Trigger = AlertTriggerKind.EconomicEvent,
+            MinImpactLevel = minImpact.ToString(),
+            MinutesBefore = minutesBefore,
+            Currencies = string.IsNullOrWhiteSpace(currencies) ? null : currencies.Trim()
+        };
+    }
+
+    /// <summary>The minimum impact this economic-event rule watches (defaults to High when unset/legacy).</summary>
+    public Core.Calendar.ImpactLevel MinImpact =>
+        Enum.TryParse<Core.Calendar.ImpactLevel>(MinImpactLevel, out var level) ? level : Core.Calendar.ImpactLevel.High;
+
+    /// <summary>
+    /// Raises for a specific upcoming calendar event, de-duplicated so the same release alerts at most once.
+    /// Returns the new event, or <c>null</c> when this event was already alerted.
+    /// </summary>
+    public AlertEvent? RaiseForEvent(CalendarEventId eventId, AlertSeverity severity, string message, DateTimeOffset now)
+    {
+        if (!Enabled) throw new DomainException(DomainErrors.AlertRuleDisabled);
+        var key = eventId.Value.ToString();
+        if (string.Equals(LastTriggeredEventKey, key, StringComparison.Ordinal))
+        {
+            LastEvaluatedAt = now;
+            return null;
+        }
+
+        LastTriggeredEventKey = key;
+        return Raise(severity, message, now);
+    }
 
     public void SetInterval(EvaluationInterval interval)
     {

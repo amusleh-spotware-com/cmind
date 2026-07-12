@@ -51,4 +51,31 @@ public class AlertPersistenceTests(PostgresFixture fixture) : IClassFixture<Post
         await using var after = CreateContext();
         (await after.AlertRules.AnyAsync(r => r.Id == rule.Id)).Should().BeFalse();
     }
+
+    [Fact]
+    public async Task Economic_event_rule_round_trips_its_config()
+    {
+        await using var setup = CreateContext();
+        await setup.Database.MigrateAsync();
+
+        var user = OwnerUser.Create(new Email($"eco-{Guid.NewGuid():N}@test.local"), "x",
+            Guid.NewGuid().ToByteArray());
+        var rule = AlertRule.CreateEconomicEvent(user.Id, $"eco-{Guid.NewGuid():N}",
+            Core.Calendar.ImpactLevel.Critical, minutesBefore: 45, currencies: "USD,EUR",
+            new EvaluationInterval(30));
+
+        await using (var write = CreateContext())
+        {
+            write.Users.Add(user);
+            write.AlertRules.Add(rule);
+            await write.SaveChangesAsync();
+        }
+
+        await using var read = CreateContext();
+        var loaded = await read.AlertRules.FirstAsync(r => r.Id == rule.Id);
+        loaded.Trigger.Should().Be(AlertTriggerKind.EconomicEvent);
+        loaded.MinImpact.Should().Be(Core.Calendar.ImpactLevel.Critical);
+        loaded.MinutesBefore.Should().Be(45);
+        loaded.Currencies.Should().Be("USD,EUR");
+    }
 }

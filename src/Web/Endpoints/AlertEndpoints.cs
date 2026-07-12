@@ -51,6 +51,32 @@ public static class AlertEndpoints
             return Results.Ok(new { id = rule.Id.Value });
         });
 
+        g.MapPost("/rules/economic-event", async (
+            CreateEconomicAlertRequest req, DataContext db, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            if (string.IsNullOrWhiteSpace(req.Name)) return Results.BadRequest("name required");
+
+            var impact = Enum.TryParse<Core.Calendar.ImpactLevel>(req.MinImpact, ignoreCase: true, out var parsed)
+                ? parsed
+                : Core.Calendar.ImpactLevel.High;
+            var minutes = Math.Clamp(req.IntervalMinutes ?? AlertConstants.DefaultIntervalMinutes,
+                AlertConstants.MinIntervalMinutes, AlertConstants.MaxIntervalMinutes);
+            var before = Math.Clamp(req.MinutesBefore ?? 60, 1, 10080);
+
+            try
+            {
+                var rule = AlertRule.CreateEconomicEvent(
+                    uid, req.Name!.Trim(), impact, before, req.Currencies, new EvaluationInterval(minutes));
+                if (req.Enabled == false) rule.Disable();
+                db.AlertRules.Add(rule);
+                await db.SaveChangesAsync(ct);
+                return Results.Ok(new { id = rule.Id.Value });
+            }
+            catch (Core.Domain.DomainException ex) { return Results.BadRequest(new { error = ex.Code }); }
+            catch (DbUpdateException) { return Results.Conflict("a rule with that name already exists"); }
+        });
+
         g.MapPut("/rules/{id:guid}", async (Guid id, UpdateAlertRuleRequest req, DataContext db, ICurrentUser u, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
@@ -117,4 +143,6 @@ public static class AlertEndpoints
 }
 
 public sealed record CreateAlertRuleRequest(string? Name, string? Symbol, int? IntervalMinutes, bool? Enabled);
+public sealed record CreateEconomicAlertRequest(
+    string? Name, string? MinImpact, int? MinutesBefore, string? Currencies, int? IntervalMinutes, bool? Enabled);
 public sealed record UpdateAlertRuleRequest(string? Name, string? Symbol, int? IntervalMinutes, bool? Enabled);

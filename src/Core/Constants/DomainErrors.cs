@@ -83,6 +83,10 @@ public static class DomainErrors
     public const string SentimentScoreInvalid = "domain.signals.sentiment_score_invalid";
     public const string PointInTimeSignalInvalid = "domain.signals.point_in_time_invalid";
 
+    public const string RiskEnvelopeInvalid = "domain.autonomy.risk_envelope_invalid";
+    public const string DisclaimerConsentInvalid = "domain.autonomy.disclaimer_consent_invalid";
+    public const string PerformanceTargetInvalid = "domain.autonomy.performance_target_invalid";
+
     public const string VolatilityTargetInvalid = "domain.portfolio.vol_target_invalid";
     public const string KellyFractionInvalid = "domain.portfolio.kelly_fraction_invalid";
     public const string LeverageCapInvalid = "domain.portfolio.leverage_cap_invalid";

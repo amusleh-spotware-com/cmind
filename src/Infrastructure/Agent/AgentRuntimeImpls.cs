@@ -44,7 +44,11 @@ public sealed class AiAgentDecisionEngine(IAiFeatureService ai) : IAgentDecision
 
         var objective = agent.CompileSystemPrompt();
         var result = await ai.ProposeAgentActionAsync(agent.Name, objective, "{}", null, MaxTokens, ct);
-        var reasoning = result is { Success: true } ? result.Text : result.Error ?? "AI returned no decision.";
-        return new AgentDecision(reasoning, Order: null, Evidence: []);
+        if (result is not { Success: true })
+            return new AgentDecision(result.Error ?? "AI returned no decision.", Order: null, Evidence: []);
+
+        // Deterministically parse the model reply into an order for this account; anything malformed holds.
+        var parsed = AgentDecisionParser.Parse(result.Text);
+        return AgentDecisionParser.ToDecision(parsed, state.Account);
     }
 }

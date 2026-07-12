@@ -1,0 +1,202 @@
+@page "/register"
+@layout EmptyLayout
+@inject Web.Branding.IBrandingThemeProvider Branding
+
+<PageTitle>Create account — @Branding.Branding.ProductName</PageTitle>
+
+<div class="app-auth" data-testid="register-page">
+    <aside class="app-auth-hero">
+        <div class="app-auth-hero-glow"></div>
+        <div class="app-auth-hero-content">
+            <div class="app-auth-hero-brand">
+                @if (!string.IsNullOrWhiteSpace(Branding.Branding.LogoUrl))
+                {
+                    <img src="@Branding.Branding.LogoUrl" alt="@Branding.Branding.ProductName" height="40" />
+                }
+                else
+                {
+                    <BrandMark Size="40" />
+                }
+                <span class="app-login-brand">@Branding.Branding.ProductName</span>
+            </div>
+            <h1 class="app-auth-hero-title">Create your account.</h1>
+            <p class="app-auth-hero-tagline">@Branding.Branding.Description</p>
+        </div>
+    </aside>
+
+    <main class="app-auth-panel">
+        <div class="app-login-card">
+            <div class="app-login-logo app-auth-panel-brand">
+                <BrandMark Size="40" />
+                <span class="app-login-brand">@Branding.Branding.ProductName</span>
+            </div>
+
+            <div class="app-login-tabs">
+                <div class="app-login-tab app-login-tab-active">CREATE ACCOUNT</div>
+            </div>
+
+            <div id="register-closed" class="app-login-error" role="alert" data-testid="register-closed" hidden>
+                Registration is not available. Please contact your administrator.
+            </div>
+
+            <div id="register-success" class="app-login-success" role="status" data-testid="register-success" hidden></div>
+
+            <form id="register-form" class="app-login-form" data-testid="register-form" hidden>
+                <div class="app-login-field">
+                    <input type="email" name="Email" placeholder="Email" required autocomplete="email" inputmode="email" />
+                </div>
+                <div class="app-login-field">
+                    <input type="password" name="Password" placeholder="Password (min 8 characters)" required
+                           minlength="8" autocomplete="new-password" />
+                </div>
+
+                <div class="app-login-field reg-attr" data-attr="fullName" hidden>
+                    <input type="text" name="FullName" placeholder="Full name" maxlength="128" />
+                </div>
+                <div class="app-login-field reg-attr" data-attr="displayName" hidden>
+                    <input type="text" name="DisplayName" placeholder="Display name" maxlength="128" />
+                </div>
+                <div class="app-login-field reg-attr" data-attr="country" hidden>
+                    <input type="text" name="Country" placeholder="Country (ISO code, e.g. US)" maxlength="2" />
+                </div>
+                <div class="app-login-field reg-attr" data-attr="phone" hidden>
+                    <input type="tel" name="Phone" placeholder="Phone (+14155552671)" maxlength="20" />
+                </div>
+                <div class="app-login-field reg-attr" data-attr="company" hidden>
+                    <input type="text" name="Company" placeholder="Company" maxlength="128" />
+                </div>
+                <div class="app-login-field reg-attr" data-attr="locale" hidden>
+                    <input type="text" name="Locale" placeholder="Locale (e.g. en-US)" maxlength="32" />
+                </div>
+
+                <label class="app-login-remember reg-attr" data-attr="ageConfirmation" hidden>
+                    <input type="checkbox" name="AgeConfirmed" value="true" />
+                    <span>I confirm I meet the minimum age requirement</span>
+                </label>
+                <label class="app-login-remember reg-attr" data-attr="marketingOptIn" hidden>
+                    <input type="checkbox" name="MarketingOptIn" value="true" />
+                    <span>Send me product updates (optional)</span>
+                </label>
+                <label id="register-terms" class="app-login-remember" hidden>
+                    <input type="checkbox" name="AcceptTerms" value="true" />
+                    <span>I accept the Terms and Privacy Policy</span>
+                </label>
+
+                <div id="register-captcha" hidden></div>
+
+                <div id="register-error" class="app-login-error" role="alert" data-testid="register-error" hidden></div>
+
+                <button class="app-login-button" type="submit" id="register-submit">
+                    <span class="app-login-button-label">CREATE ACCOUNT</span>
+                    <span class="app-login-spinner" aria-hidden="true"></span>
+                </button>
+            </form>
+
+            <a class="app-login-support" href="/login">Already have an account? Log in</a>
+        </div>
+    </main>
+</div>
+
+<script>
+    (function () {
+        var form = document.getElementById('register-form');
+        var closed = document.getElementById('register-closed');
+        var success = document.getElementById('register-success');
+        var error = document.getElementById('register-error');
+        var termsLabel = document.getElementById('register-terms');
+        var captcha = document.getElementById('register-captcha');
+
+        function show(el) { if (el) el.hidden = false; }
+        function hide(el) { if (el) el.hidden = true; }
+
+        function applyAttr(name, policy) {
+            var el = form.querySelector('.reg-attr[data-attr="' + name + '"]');
+            if (!el) return;
+            if (policy === 'Off') { el.hidden = true; return; }
+            el.hidden = false;
+            var input = el.querySelector('input');
+            if (input && input.type !== 'checkbox' && policy === 'Required') input.required = true;
+        }
+
+        fetch('/api/register/config', { headers: { 'Accept': 'application/json' } })
+            .then(function (r) { if (!r.ok) throw new Error('closed'); return r.json(); })
+            .then(function (cfg) {
+                if (!cfg.enabled) { show(closed); return; }
+                show(form);
+                var a = cfg.attributes || {};
+                applyAttr('fullName', a.fullName);
+                applyAttr('displayName', a.displayName);
+                applyAttr('country', a.country);
+                applyAttr('phone', a.phone);
+                applyAttr('company', a.company);
+                applyAttr('locale', a.locale);
+                applyAttr('ageConfirmation', a.ageConfirmation);
+                applyAttr('marketingOptIn', a.marketingOptIn);
+                if (cfg.requireTerms) show(termsLabel);
+                if (cfg.captcha && cfg.captcha.enabled) {
+                    captcha.hidden = false;
+                    captcha.setAttribute('data-sitekey', cfg.captcha.siteKey || '');
+                    captcha.className = 'g-recaptcha cf-turnstile h-captcha';
+                }
+                form.__mode = cfg.mode;
+            })
+            .catch(function () { show(closed); });
+
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                hide(error);
+                var submit = document.getElementById('register-submit');
+                submit.classList.add('app-login-button-loading');
+                submit.disabled = true;
+
+                var fd = new FormData(form);
+                var tokenEl = form.querySelector('[name="g-recaptcha-response"], [name="cf-turnstile-response"], [name="h-captcha-response"]');
+                var payload = {
+                    Email: fd.get('Email'),
+                    Password: fd.get('Password'),
+                    FullName: fd.get('FullName'),
+                    DisplayName: fd.get('DisplayName'),
+                    Country: fd.get('Country'),
+                    Phone: fd.get('Phone'),
+                    Company: fd.get('Company'),
+                    Locale: fd.get('Locale'),
+                    MarketingOptIn: fd.get('MarketingOptIn') === 'true',
+                    AgeConfirmed: fd.get('AgeConfirmed') === 'true',
+                    AcceptTerms: fd.get('AcceptTerms') === 'true',
+                    CaptchaToken: tokenEl ? tokenEl.value : null
+                };
+
+                fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).then(function (r) {
+                    return r.json().then(function (body) { return { ok: r.ok, status: r.status, body: body }; });
+                }).then(function (res) {
+                    submit.classList.remove('app-login-button-loading');
+                    submit.disabled = false;
+                    if (res.ok) {
+                        hide(form);
+                        var status = (res.body && res.body.status) || 'active';
+                        var msg = status === 'pending_email_verification'
+                            ? 'Almost there — check your inbox for a verification link to activate your account.'
+                            : status === 'pending_approval'
+                                ? 'Thanks for registering. Your account is awaiting approval by an administrator.'
+                                : 'Your account is ready. You can now log in.';
+                        success.textContent = msg;
+                        show(success);
+                    } else {
+                        error.textContent = 'Registration could not be completed. Please check your details and try again.';
+                        show(error);
+                    }
+                }).catch(function () {
+                    submit.classList.remove('app-login-button-loading');
+                    submit.disabled = false;
+                    error.textContent = 'Something went wrong. Please try again.';
+                    show(error);
+                });
+            });
+        }
+    })();
+</script>

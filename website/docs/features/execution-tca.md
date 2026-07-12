@@ -26,6 +26,19 @@ POST /api/quant/tca
   "fills": [ { "price": 1.1010, "quantity": 100 }, { "price": 1.1020, "quantity": 100 } ] }
 ```
 
+## Smart slicing (Almgren-Chriss)
+
+Beyond measuring cost, cMind can plan a large order to *minimise* it. **cBots → Execution Schedule**
+(`/quant/execution`) builds an **Almgren-Chriss optimal-execution schedule**: given the total quantity,
+a number of slices, your risk aversion, volatility and temporary market impact, it returns the size to
+trade in each slice. Higher risk aversion **front-loads** the schedule (cutting timing risk); zero risk
+aversion flattens to an even **TWAP**. The slices always sum to the total.
+
+```http
+POST /api/quant/execution-schedule
+{ "totalQuantity": 100, "slices": 5, "riskAversion": 2, "volatility": 0.02, "temporaryImpact": 0.1 }
+```
+
 ## Why it is reliable
 
 Pure, deterministic domain code (`Core.Execution`) with no infrastructure dependency and no external

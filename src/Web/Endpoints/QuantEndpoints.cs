@@ -67,6 +67,24 @@ public static class QuantEndpoints
             }
         });
 
+        g.MapPost("/execution-schedule", (ExecutionScheduleRequest req, Core.Execution.IExecutionScheduler scheduler) =>
+        {
+            try
+            {
+                var slices = scheduler.Schedule(
+                    req.TotalQuantity ?? 0,
+                    req.Slices is > 0 ? req.Slices.Value : 5,
+                    req.RiskAversion ?? 0.0,
+                    req.Volatility ?? 0.0,
+                    req.TemporaryImpact ?? 0.0);
+                return Results.Ok(new { slices = slices.Select(s => new { s.Index, s.Quantity }) });
+            }
+            catch (DomainException ex)
+            {
+                return Results.BadRequest(new { error = ex.Code });
+            }
+        });
+
         g.MapPost("/positioning", (PositioningRequest req) =>
         {
             try
@@ -239,6 +257,9 @@ public sealed record PboRequest(double[][]? Trials, int? Slices);
 public sealed record RegimeRequest(double[]? Returns, double[]? Equity, int? Window);
 
 public sealed record PositioningRequest(double? LongPercent);
+
+public sealed record ExecutionScheduleRequest(
+    double? TotalQuantity, int? Slices, double? RiskAversion, double? Volatility, double? TemporaryImpact);
 
 public sealed record TcaFill(double Price, double Quantity);
 public sealed record TcaRequest(double? ArrivalPrice, string? Side, TcaFill[]? Fills);

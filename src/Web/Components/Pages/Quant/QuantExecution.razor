@@ -1,0 +1,97 @@
+@page "/quant/execution"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject MudBlazor.ISnackbar Snack
+
+<PageTitle>Quant · Execution Schedule</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">Optimal Execution Schedule</MudText>
+    <HelpTip Text="Splitting a large order reduces market impact. The Almgren-Chriss schedule front-loads more when you are risk-averse (cutting timing risk) and flattens toward an even TWAP when you are patient." />
+</MudStack>
+
+<MudGrid>
+    <MudItem xs="12" md="5">
+        <MudPaper Class="pa-4" Elevation="1">
+            <MudNumericField @bind-Value="_total" Label="Total quantity (lots)" Min="0" Variant="Variant.Outlined" />
+            <MudNumericField @bind-Value="_slices" Label="Number of slices" Min="1" Max="50" Variant="Variant.Outlined" Class="mt-2" />
+            <MudNumericField @bind-Value="_riskAversion" Label="Risk aversion" Min="0" Variant="Variant.Outlined" Class="mt-2"
+                             HelperText="0 = patient (even TWAP); higher = front-loaded." />
+            <MudNumericField @bind-Value="_volatility" Label="Volatility" Min="0" Variant="Variant.Outlined" Class="mt-2" />
+            <MudNumericField @bind-Value="_impact" Label="Temporary impact" Min="0" Variant="Variant.Outlined" Class="mt-2" />
+            <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.ViewWeek" OnClick="Build"
+                       Disabled="_loading" data-testid="execution-build">
+                Build schedule
+            </MudButton>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="7">
+        @if (_result is { Count: > 0 })
+        {
+            <MudPaper Class="pa-4" Elevation="1" data-testid="execution-result">
+                <MudSimpleTable Dense="true" Hover="true">
+                    <thead><tr><th>Slice</th><th>Quantity</th></tr></thead>
+                    <tbody>
+                        @foreach (var s in _result)
+                        {
+                            <tr><td>@s.Index</td><td>@s.Quantity.ToString("0.####")</td></tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            </MudPaper>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">Enter the order parameters and press Build schedule.</MudText>
+        }
+    </MudItem>
+</MudGrid>
+
+@code {
+    private double _total = 100;
+    private int _slices = 5;
+    private double _riskAversion = 1;
+    private double _volatility = 0.02;
+    private double _impact = 0.1;
+    private bool _loading;
+    private List<Slice>? _result;
+
+    private async Task Build()
+    {
+        _loading = true;
+        try
+        {
+            var response = await Http.PostAsJsonAsync("/api/quant/execution-schedule", new
+            {
+                TotalQuantity = _total,
+                Slices = _slices,
+                RiskAversion = _riskAversion,
+                Volatility = _volatility,
+                TemporaryImpact = _impact
+            });
+            if (response.IsSuccessStatusCode)
+            {
+                var payload = await response.Content.ReadFromJsonAsync<ScheduleResponse>();
+                _result = payload?.Slices ?? [];
+            }
+            else
+            {
+                Snack.Add("Could not build that schedule.", Severity.Error);
+            }
+        }
+        catch
+        {
+            Snack.Add("Could not build that schedule.", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private sealed record ScheduleResponse(List<Slice> Slices);
+    private sealed record Slice(int Index, double Quantity);
+}

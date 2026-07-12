@@ -52,6 +52,28 @@ public class QuantTcaHttpTests(PostgresFixture fixture) : IClassFixture<Postgres
     }
 
     [Fact]
+    public async Task Execution_schedule_sums_to_total()
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+
+        var response = await client.PostAsJsonAsync("/api/quant/execution-schedule", new
+        {
+            TotalQuantity = 100.0,
+            Slices = 5,
+            RiskAversion = 2.0,
+            Volatility = 0.02,
+            TemporaryImpact = 0.1
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var slices = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("slices").EnumerateArray()
+            .Select(s => s.GetProperty("quantity").GetDouble()).ToArray();
+        slices.Should().HaveCount(5);
+        slices.Sum().Should().BeApproximately(100.0, 1e-6);
+    }
+
+    [Fact]
     public async Task Rejects_missing_fills()
     {
         await using var app = CreateApp();

@@ -53,6 +53,12 @@ public sealed class AiRiskGuard(
             .Select(i => new AiInstanceContext(i.CBotName, "Run", "Running", i.Symbol, i.Timeframe, null))
             .ToList();
 
+        // Deterministic pre-check: flag running bots whose symbol is inside a Critical news-window blackout.
+        var blackoutFilter = scope.ServiceProvider.GetRequiredService<NewsBlackoutRiskFilter>();
+        var blackedOut = await blackoutFilter.SymbolsInBlackoutAsync(entities.Select(i => i.Symbol), ct);
+        if (blackedOut.Count > 0)
+            logger.RiskGuardNewsBlackout(blackedOut.Count, blackedOut);
+
         if (!ai.RiskGuardAutoStop)
         {
             var summary = await aiService.AssessRiskAsync(contexts, ct);

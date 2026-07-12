@@ -56,6 +56,9 @@ public static partial class LogMessages
     [LoggerMessage(EventId = 1016, Level = LogLevel.Information, Message = "AI risk-guard assessed {Count} running bots: {Summary}")]
     public static partial void RiskGuardAssessment(this ILogger logger, int count, string summary);
 
+    [LoggerMessage(EventId = 1120, Level = LogLevel.Warning, Message = "News blackout: {Count} running bot symbol(s) inside a high-impact window: {Symbols}")]
+    public static partial void RiskGuardNewsBlackout(this ILogger logger, int count, IReadOnlyList<string> symbols);
+
     [LoggerMessage(EventId = 1017, Level = LogLevel.Error, Message = "Portfolio agent cycle failed")]
     public static partial void AgentCycleFailed(this ILogger logger, Exception ex);
 

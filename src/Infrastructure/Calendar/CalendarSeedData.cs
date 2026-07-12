@@ -37,6 +37,10 @@ public static class CalendarSeedData
         new(new SeriesCode("US.FEDFUNDS"), new CountryCode("US"), "US Federal Funds Rate",
             MarketMovingCategory.InterestRate, ReleaseCadence.Monthly, 0.90, "FRED", "FEDFUNDS"),
         new(new SeriesCode("US.RETAIL"), new CountryCode("US"), "US Retail Sales",
-            MarketMovingCategory.Consumption, ReleaseCadence.Monthly, 0.70, "FRED", "RSAFS")
+            MarketMovingCategory.Consumption, ReleaseCadence.Monthly, 0.70, "FRED", "RSAFS"),
+        new(new SeriesCode("US.PPI"), new CountryCode("US"), "US Producer Price Index",
+            MarketMovingCategory.Inflation, ReleaseCadence.Monthly, 0.60, "BLS", "WPSFD4"),
+        new(new SeriesCode("US.JOLTS"), new CountryCode("US"), "US JOLTS Job Openings",
+            MarketMovingCategory.Employment, ReleaseCadence.Monthly, 0.55, "BLS", "JTS000000000000000JOL")
     ];
 }

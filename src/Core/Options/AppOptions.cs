@@ -79,6 +79,12 @@ public sealed record CalendarOptions
     /// <summary>Years of history the one-time proactive backfill pulls for the core high-impact series.</summary>
     public int BackfillYears { get; init; } = 10;
 
+    /// <summary>Base URL of the BLS (US Bureau of Labor Statistics) public API v2 timeseries endpoint.</summary>
+    public string BlsBaseUrl { get; init; } = "https://api.bls.gov/publicAPI/v2/timeseries/data/";
+
+    /// <summary>Optional BLS registration key (raises the daily quota). Absent ⇒ the public low-quota tier.</summary>
+    public string? BlsApiKey { get; init; }
+
     /// <summary>A source with no successful poll within this window is reported as stale in the health view.</summary>
     public TimeSpan SourceStaleAfter { get; init; } = TimeSpan.FromHours(2);
 

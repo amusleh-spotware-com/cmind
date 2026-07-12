@@ -146,6 +146,11 @@ public static class DependencyInjection
             var baseUrl = calendar.FredBaseUrl.EndsWith('/') ? calendar.FredBaseUrl : calendar.FredBaseUrl + "/";
             client.BaseAddress = new Uri(baseUrl);
         }).AddHttpMessageHandler<Infrastructure.Calendar.CalendarRateLimitHandler>();
+        services.AddHttpClient<Core.Calendar.ICalendarSource, Infrastructure.Calendar.BlsSource>((sp, client) =>
+        {
+            var calendar = sp.GetRequiredService<IOptionsMonitor<AppOptions>>().CurrentValue.Calendar;
+            client.BaseAddress = new Uri(calendar.BlsBaseUrl);
+        }).AddHttpMessageHandler<Infrastructure.Calendar.CalendarRateLimitHandler>();
         services.AddHostedService<Infrastructure.Calendar.CalendarBackfillService>();
         services.AddHostedService<Infrastructure.Calendar.CalendarIngestionService>();
         return services;

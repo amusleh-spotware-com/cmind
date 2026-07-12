@@ -36,17 +36,31 @@ of macro drivers*, and the forward view is a *deterministic projection of those 
 expected trajectory* (rate path, inflation trend, growth momentum, geopolitical shift) — pure math in
 `src/Core`, fully unit-testable with zero flaky external calls.
 
+**Primary data comes from our own Economic Calendar, not the LLM.** The hard numbers — policy rates,
+CPI vs target, GDP, employment, trade balance, *and their surprise z-scores + revision history* — are
+sourced **point-in-time** from the `plans/economic-calendar.md` module (primary authorities: FRED,
+BLS, BEA, ECB SDW, Eurostat, central-bank schedules). The LLM is used **only** for what the calendar
+does not publish: **forward** expectations (expected policy-rate path over the horizon, consensus
+lean) and **geopolitics** (risk regime, tariffs, elections, fiscal/debt) — plus EM/exotic gaps the
+primary sources cover thinly.
+
 **The LLM never invents a rank, a direction, or a number.** Its job is narrow and degradable:
-1. **Gather** — for each major, the *current* fundamentals **and** their *forward* trajectory:
-   expected policy-rate path over the horizon, inflation trend vs target, growth momentum, and a
-   geopolitical outlook (risk-on/off, tariffs, fiscal/debt, elections) — returned as **structured
-   JSON** matching a strict schema.
+1. **Gather (LLM, only the calendar-absent inputs)** — per currency: the *forward* trajectory
+   (expected rate path bp, inflation-trend-vs-target lean, growth momentum) and a **geopolitical
+   outlook** (risk-on/off, tariffs, fiscal/debt, elections), plus any EM/exotic current figures the
+   calendar lacks — structured JSON, strict schema.
 2. **Explain** — narrate the deterministic ranking *and* the pair outlook in plain language.
 
+**Current fundamentals + surprise momentum come from the calendar** (`IEconomicCalendar`): the latest
+released actual per driver and its `Surprise` z-score (recent beats/misses = momentum), PIT-correct so
+a historical/backtested snapshot never leaks look-ahead.
+
 Core computes both the current ranking **and** the forward pair-outlook matrix deterministically from
-the gathered indicators + trajectories. If the AI is off, the key is missing, or the JSON is malformed
-→ the tool degrades gracefully (widget hidden / last snapshot shown / clear error), and **the app runs
-unchanged** — same contract as every other AI feature (`AiResult.Fail`, gated on `AppOptions.Ai.ApiKey`).
+(calendar actuals + surprises) + (AI trajectories + geopolitics). Degradation is layered: **calendar
+off/absent** ⇒ fall back to AI-gathered current figures (lower confidence badge); **AI off/malformed**
+⇒ show calendar-only current ranking without the forward projection; **both off** ⇒ widget hidden /
+last snapshot / clear error. The app runs unchanged either way (`AiResult.Fail`, gated on
+`AppOptions.Ai.ApiKey`; calendar gated on `BrandingOptions.EnableEconomicCalendar` + its runtime toggle).
 
 ---
 
@@ -142,6 +156,11 @@ Verified against the codebase (patterns to reuse, not reinvent):
 - **Settings** — `AiSettings.razor` (Owner, key entry), `FeatureSettings.razor` (Owner, deployment
   flags). **Gap:** there is **no per-user preference store today** — we add one (§3.4).
 - **MCP** — `src/Mcp/Tools/AiTools.cs` exposes AI features to agents; add a `currency_strength` tool.
+- **Economic Calendar (`plans/economic-calendar.md`)** — the **primary fundamentals source**. Reuse
+  its Core ports/VOs rather than rebuild: `IEconomicCalendar` (PIT actuals + surprises), `Surprise`
+  z-score VO, `CurrencyExposure` (country→currency→symbol), `CountryCode`/`CurrencyCode` VOs, and its
+  release/revision history. Reuse its **`ApiClient` aggregate + `CalendarJwt` HS256 token machinery +
+  scopes** for the cBot REST surface (§3.8) — don't invent a second JWT scheme.
 - **Options/constants** — `AppOptions.Ai` (Model, MaxTokens), `AiConstants` (tokens/model/web-search
   tool names). Add currency-strength constants + tuned token budget there (no magic strings).
 
@@ -162,14 +181,21 @@ New folder `src/Core/Ai/CurrencyStrength/`:
   PegAnchor)` in play, built from config; the calculators operate over *whatever* the universe holds
   (N currencies, N×N matrix), so majors-only and majors+EM+exotics are the same code path.
 - **`MacroDriver` enum** — majors + shared: `PolicyRate`, `RateTrajectory`, `Inflation`, `GdpGrowth`,
-  `Employment`, `TradeBalance`, `PolicyStance`, `GeopoliticalRisk`; **EM/exotic-relevant:** `RealYield`
-  (carry), `ExternalVulnerability` (CA/fiscal/reserves/external-debt), `PoliticalInstitutionalRisk`,
-  `TermsOfTrade` (commodity exporters). Drivers absent for a tier get zero weight, not a bad guess.
+  `Employment`, `TradeBalance`, `PolicyStance`, `GeopoliticalRisk`, `SurpriseMomentum` (calendar-fed);
+  **EM/exotic-relevant:** `RealYield` (carry), `ExternalVulnerability` (CA/fiscal/reserves/external-
+  debt), `PoliticalInstitutionalRisk`, `TermsOfTrade` (commodity exporters). Drivers absent for a tier
+  get zero weight, not a bad guess.
 - **`CurrencyIndicators` VO** — raw per-currency inputs (rate %, CPI %, target %, GDP % YoY,
   unemployment %, trade-balance %GDP, stance enum, geo-risk enum) **plus EM/exotic fields** (real
   yield %, FX-reserves-months / reserve-adequacy, external-debt %GDP, terms-of-trade signal, political
-  /institutional-risk enum) and a **`DataConfidence`** (per-tier, AI-reported). Immutable `record`;
-  tier-aware range guards (exotic hyperinflation/negative-reserve cases allowed but flagged).
+  /institutional-risk enum), each carrying its **`Provenance`** (Calendar / Ai / Derived) + `KnownAt`,
+  and a **`DataConfidence`** (per-tier). Immutable `record`; tier-aware range guards (exotic
+  hyperinflation/negative-reserve cases allowed but flagged). **Current figures preferentially bind
+  from the calendar's latest release per series** (via `CurrencyExposure` country→currency); AI only
+  fills what the calendar lacks.
+- **Surprise momentum** — a driver fed by the calendar's `Surprise` z-scores: recent beats (positive
+  surprises on rate/CPI/employment) add forward strength, misses subtract. Reuses the calendar
+  `Surprise` VO; no new stats.
 - **`DriverScore` VO** — `(MacroDriver Driver, double Normalized, double Weight, double Contribution,
   string Rationale)`. The per-driver breakdown that powers the "why" charts.
 - **`CurrencyStrengthScore` VO** — `(Currency, double Composite, IReadOnlyList<DriverScore> Breakdown)`.
@@ -192,7 +218,8 @@ New folder `src/Core/Ai/CurrencyStrength/`:
 - **`Horizon` enum** — `OneMonth`, `ThreeMonths`, `SixMonths`, `TwelveMonths`.
 - **`CurrencyTrajectory` VO** — per-currency forward inputs: expected policy-rate path (bp over
   horizon), inflation trend vs target, growth momentum, geopolitical forward-risk delta. Immutable,
-  range-guarded. (Gathered by AI alongside the current `CurrencyIndicators`.)
+  range-guarded. **Gathered by AI** (the calendar has no forward view) and **seeded by calendar
+  surprise momentum** where available.
 - **`CurrencyForecast` VO** — `(Currency, Horizon, double ProjectedScore, IReadOnlyList<DriverScore>
   ForwardBreakdown)` — the current composite carried along the trajectory.
 - **`DirectionalBias` enum** — `Appreciate`, `Neutral`, `Depreciate` (with dead-band thresholds so a
@@ -219,39 +246,43 @@ exhaustive unit tests, no flaky external dependency, no LLM anywhere in the math
 Extend `IAiFeatureService` (`AiContracts.cs`) + `AiFeatureService` (`Infrastructure/Ai`):
 
 ```csharp
-// One gather returns BOTH the current indicators AND the forward trajectory per major.
-Task<AiResult> GatherCurrencyMacroAsync(CancellationToken ct);           // JSON: 8× {indicators, trajectory}
+// AI supplies ONLY what the calendar can't: forward trajectory + geopolitics (+ EM/exotic gaps).
+Task<AiResult> GatherCurrencyForwardAsync(string calendarContextJson, CancellationToken ct);  // JSON: N× {trajectory, geo, gap-fill}
 Task<AiResult> ExplainCurrencyOutlookAsync(string rankingJson, string pairOutlookJson, int maxTokens, CancellationToken ct);
 ```
 
-- `GatherCurrencyMacroAsync(universe)` → `AiTextRequest` with `EnableWebSearch: true` and a strict
-  **`AiPrompts.CurrencyGatherSystem`** demanding JSON-only output for **every currency in the
-  configured universe** (majors + EM + exotics) matching a documented schema — per currency:
-  **current** (policy rate, last move, CPI + target, GDP YoY, unemployment, trade balance %GDP,
-  stance; for EM/exotic also real yield, reserves, external debt, terms-of-trade, political risk,
-  peg) **plus forward** (expected rate path over horizon in bp, inflation trend vs target, growth
-  momentum, geopolitical/forward-risk note) **plus a self-reported `dataConfidence` per currency**
-  (majors high, exotics often low). Token budget scales with universe size (bounded `AiConstants`
-  value); very large universes chunk the gather to stay within limits.
-- Parsing lives in **Infrastructure** (`CurrencyMacroParser`): deserialize AI JSON → validate → build
-  `CurrencyIndicators` + `CurrencyTrajectory` VOs. Malformed/partial ⇒ `AiResult.Fail` (no throw on
-  the request path).
+- **Current fundamentals bind from the calendar first.** An Infra `CurrencyMacroAssembler` pulls each
+  driver's latest release + `Surprise` per currency from `IEconomicCalendar` (via `CurrencyExposure`),
+  builds `CurrencyIndicators` with `Provenance = Calendar`, and passes a compact `calendarContextJson`
+  into the AI call so the model anchors its forward view on real actuals (not re-guessing them).
+- `GatherCurrencyForwardAsync(calendarContext)` → `AiTextRequest` with `EnableWebSearch: true` and a
+  strict **`AiPrompts.CurrencyForwardSystem`** demanding JSON-only output for **every currency in the
+  configured universe** — the **forward** trajectory (expected rate path bp, inflation-trend-vs-target,
+  growth momentum, geopolitical/forward-risk note) **plus** any EM/exotic **current** figures the
+  calendar didn't cover (`Provenance = Ai`), each with a `dataConfidence`. Token budget scales with
+  universe size (bounded `AiConstants` value); large universes chunk to stay within limits.
+- Parsing in **Infrastructure** (`CurrencyMacroParser`): deserialize AI JSON → validate → merge with
+  the calendar-sourced indicators → build `CurrencyIndicators` + `CurrencyTrajectory` VOs. Malformed/
+  partial ⇒ keep calendar-only current ranking, skip forward (no throw on the request path).
 - `ExplainCurrencyOutlookAsync` feeds the *already-computed* ranking + pair-outlook matrix back for a
   plain-English "why #1 / why EUR/USD bullish 3M".
 
 ### 3.3 Persistence — snapshot for fast load + history/trend (Infrastructure + EF)
 
 - **`CurrencyStrengthSnapshot` entity** (aggregate; deployment-scoped, not per-user — the macro
-  picture is global): `Id`, `AsOf`, `RankingJson` (scores + breakdown), `IndicatorsJson`,
-  `TrajectoriesJson`, `PairOutlookJson` (the 28-cross matrix per horizon), `Narrative`, `Source`
-  (Ai/Fallback), audited via existing `AuditedEntity`. **One `SaveChanges` = one aggregate.** The
-  matrix for all four horizons is computed from the single gathered trajectory and stored together.
+  picture is global): `Id`, `AsOf`, `RankingJson` (scores + breakdown + per-driver `Provenance`),
+  `IndicatorsJson`, `TrajectoriesJson`, `PairOutlookJson` (the N×N matrix per horizon), `Narrative`,
+  `Source` (Calendar+Ai / Ai-only / Calendar-only), `CalendarKnownAt` (the PIT anchor of the
+  calendar data used), audited via existing `AuditedEntity`. **One `SaveChanges` = one aggregate.**
+  All four horizons computed from the single gather, stored together.
 - Repository/query in Infrastructure; latest snapshot served to the widget instantly; historical
-  snapshots power the **strength-over-time trend chart**.
+  snapshots power the **strength-over-time trend chart** (and align with the calendar's own history).
 - **Refresh** is explicit (owner-triggered "Refresh now") and/or a scheduled `BackgroundService`
-  in `src/Nodes` (e.g. every N hours, `TimeProvider`-driven) that: gather → parse → `Compute`
-  (ranking) → `Project` (pair outlook, all horizons) → explain → persist. Background worker
-  **orchestrates**, the domain **decides** (calculators). Gated: no key ⇒ worker no-ops.
+  in `src/Nodes` (e.g. every N hours, `TimeProvider`-driven) that: **assemble calendar actuals +
+  surprises** → gather AI forward/geo → parse+merge → `Compute` (ranking) → `Project` (pair outlook,
+  all horizons) → explain → persist. Background worker **orchestrates**, the domain **decides**
+  (calculators). Gated: calendar-off ⇒ AI-only figures; AI-off ⇒ calendar-only ranking; both off ⇒
+  worker no-ops.
 - **EF migration** via the `migration` skill: `AddCurrencyStrengthSnapshot` +
   `AddUserDashboardPreferences` (§3.4), canonical layout under `Persistence/Migrations`.
 
@@ -296,6 +327,10 @@ New group `/api/ai/currency-strength` under `.RequireAuthorization("UserOrAbove"
 - **Strength-over-time line chart** — composite per currency across snapshots (trend / realized).
 - **Per-currency driver breakdown** — select a currency → **radar/stacked-bar** of current + forward
   `DriverScore` contributions (rate, inflation, GDP, employment, trade, stance, geo) with AI rationale.
+- **Upcoming-catalyst strip (calendar-linked)** — per currency, the **next high-impact release**
+  (from the calendar's `next`/`events`) that could move the outlook, with a countdown; a "watch —
+  event risk" flag on cells whose currencies have a Critical release inside the horizon. Deep-links to
+  the calendar event detail. Degrades silently if the calendar is disabled.
 - **AI narrative panel** — "why #1 / why EUR/USD bullish 3M" (reuse `AiOutputPanel`).
 - Empty/degraded states: no key → `AiFeatureNotice`; no snapshot → "Refresh to generate".
 - Charts follow `DashActivityChart` pattern (themed, dark, in-place update, no remount race).
@@ -331,28 +366,32 @@ outlook into their prompts/decisions. Pure DI, gated on `FeatureFlag.Ai`.
 
 **(b) MCP** — §3.7, MCP-key auth. For external AI clients/agents.
 
-**(c) cBot REST API, secured by JWT** — cBots run in **sandboxed containers** with no cookie/session,
-so they authenticate with a **short-lived HS256 JWT**, mirroring the proven
-main→CtraderCliNode scheme (`HttpContainerDispatcher.CreateToken` + `AddJwtBearer` validation):
-- **New JWT scheme in `src/Web`** — `AddJwtBearer(AuthSchemes.CBotJwt)` with `TokenValidationParameters`:
-  `ValidIssuer = "app-main"`, **`ValidAudience = "app-cbot"`** (new `CBotTokenAuth` constants),
-  `ValidateLifetime`/`ValidateIssuerSigningKey` true, `IssuerSigningKey` = `SymmetricSecurityKey` from
-  a deployment **cBot-signing secret** (encrypted at rest via `ISecretProtector` /
-  `EncryptionPurposes.CBotTokenSecret`, config-seeded — never plaintext/logged). Web's default scheme
-  stays cookie; this scheme is additive.
-- **Token issuance** — `ICBotAccessTokenIssuer` (Core interface, Infra impl): mints a JWT scoped to
-  `{ userId, instanceId, scope=market:read }`, TTL bounded (short, refreshable), `TimeProvider`-clock.
-  **Injected into the run/backtest container env at dispatch** (`src/Nodes` Local/Http dispatchers,
-  alongside the existing container env) plus the Web base URL, so the cBot reads
-  `CMIND_API_TOKEN` + `CMIND_API_BASEURL` from env and calls back. Token lifetime tracks the instance;
-  a finished/terminated instance ⇒ token invalid (short TTL + `instanceId` claim checked live).
-- **cBot endpoints** — new group `/api/market/currency-strength` (public-facing, machine):
-  `GET /latest?horizon=&tier=`, `GET /history?days=`, `GET /pair/{base}/{quote}?horizon=`. Under a
-  policy `CBotMarketRead` accepting **`AuthSchemes.CBotJwt`** (and optionally cookie/MCP so the same
-  data is reachable from UI/agents), `.RequireFeature(FeatureFlag.Ai)`, **rate-limited**, read-only.
-  `scope=market:read` claim required; user-scoped where relevant. Returns the shared query DTOs.
-- **`AuthPolicies`/`AuthSchemes`** — add `CBotJwt`, `CBotMarketRead`; `CBotTokenAuth.Issuer/Audience/
-  TokenLifetime`; `EncryptionPurposes.CBotTokenSecret`. Constants only, no magic strings.
+**(c) cBot REST API, secured by JWT — reuse the Economic Calendar's API machinery, don't invent a
+second scheme.** The calendar plan (`economic-calendar.md` §5.6) already ships a versioned,
+JWT-secured public API: an **`ApiClient` aggregate** (issue/revoke, scopes), a **`CalendarJwt`** HS256
+token (`POST /api/calendar/v1/token`, `iss=cmind-calendar`, `aud=calendar-api`, short-lived,
+`scope` claim), `AddJwtBearer` validation, per-client rate limiting, and RFC-7807 errors. cBots
+already authenticate to it. Currency-strength rides the **same** surface:
+- **Add a `market:read` scope** to the calendar's scope set (alongside `calendar:read`/`blackout`/…).
+  A cBot token that carries it can read the currency-strength endpoints.
+- **Serve under the same versioned API + same `JwtBearer`** — new endpoints
+  `GET /api/calendar/v1/currency-strength/latest?horizon=&tier=`, `/history?days=`,
+  `/pair/{base}/{quote}?horizon=` (or a sibling `/api/market/v1/**` guarded by the identical scheme —
+  one decision at build time). Same cursor pagination, `ETag`, `problem+json`, rate-limit, and
+  `BrandingOptions` gate conventions as the calendar API. `.RequireFeature(FeatureFlag.Ai)` **and**
+  `market:read` scope; returns the shared `ICurrencyStrengthQuery` DTOs.
+- **Container convenience (optional):** at run/backtest dispatch (`src/Nodes` Local/Http dispatchers)
+  inject `CMIND_API_BASEURL` + a **calendar-scheme** JWT (minted for the instance's user with
+  `market:read`, bounded TTL) into the container env, so a cBot calls back with zero client
+  registration. This is a *convenience issuer over the existing `CalendarJwt`*, **not** a new JWT
+  scheme — same issuer/audience/signing-secret/validation.
+- **No new `AuthScheme`/signing secret** — one JWT scheme (`CalendarJwt`) for all machine callers;
+  add only the `market:read` scope constant. Avoids a parallel `app-cbot` scheme and a second secret.
+
+> Cross-plan note: the currency-strength cBot API is a **thin add-on to the calendar API**, sharing its
+> token, scopes, rate-limiting, pagination, error, and gating machinery. If the calendar module is
+> white-label-disabled, prefer serving currency-strength under the sibling `/api/market/v1` so the two
+> feature gates stay independent (currency-strength gated on `FeatureFlag.Ai`, calendar on its own).
 
 ### 3.9 Constants / options / logging (no magic strings, no raw logs)
 - `AppOptions`: **currency universe config** — the tiered list `{ code, tier, isPegged, pegAnchor }`
@@ -370,9 +409,14 @@ main→CtraderCliNode scheme (`HttpContainerDispatcher.CreateToken` + `AddJwtBea
 ### 4.1 Unit (`tests/UnitTests/Ai/CurrencyStrength/`) — the deterministic core, exhaustive
 - `Currency` / `CurrencyUniverse` VO: any configured currency (major/EM/exotic) accepts; code outside
   the universe / bad ISO ⇒ `DomainException`; tier + peg metadata resolved correctly.
-- **`ICBotAccessTokenIssuer`** (Infra unit): minted JWT has correct `iss=app-main`/`aud=app-cbot`/
-  `instanceId`/`scope` claims, HS256, bounded lifetime (`FakeTimeProvider`); round-trips through the
-  same `TokenValidationParameters` the Web scheme uses; expired/wrong-secret ⇒ validation fails.
+- **Calendar-scheme token w/ `market:read`** (Infra unit): the convenience issuer mints a valid
+  `CalendarJwt` (`iss=cmind-calendar`/`aud=calendar-api`, `market:read` scope, bounded lifetime via
+  `FakeTimeProvider`) that round-trips the calendar API's own `TokenValidationParameters`;
+  expired/wrong-secret/missing-scope ⇒ rejected. No new scheme.
+- **`CurrencyMacroAssembler`** (Infra unit): binds current indicators from a fake `IEconomicCalendar`
+  (via `CurrencyExposure`), tags `Provenance = Calendar`, computes `SurpriseMomentum` from `Surprise`
+  z-scores; a currency the calendar doesn't cover falls to AI/gap `Provenance`; **PIT** — assembling
+  as-of a past instant uses then-known releases only (look-ahead guard, shared with the calendar).
 - `CurrencyIndicators`: tier-aware range guards; out-of-range ⇒ `DomainException`; exotic edge cases
   (hyperinflation, low reserves) accepted-but-flagged, not rejected.
 - **Tier/peg behaviour:** EM/exotic weighting lifts carry + risk + external-vulnerability vs majors;
@@ -403,19 +447,24 @@ main→CtraderCliNode scheme (`HttpContainerDispatcher.CreateToken` + `AddJwtBea
 ### 4.2 Integration (`tests/IntegrationTests/`, Testcontainers PG)
 - `CurrencyStrengthSnapshot` round-trip persistence; latest-snapshot + history queries.
 - `UserDashboardPreferences` persistence; default false; toggle persists per user.
-- Endpoints with a **stubbed `IAiClient`** returning canned indicator+trajectory JSON: `POST /refresh`
-  → computes ranking **+ projects all-horizon matrix** + persists; `GET /latest?horizon=` returns the
-  right matrix per horizon; `/history` shape; `/api/preferences/dashboard` GET/PUT.
+- Endpoints with a **stubbed `IAiClient`** (canned forward JSON) **+ a seeded `IEconomicCalendar`**
+  (fixture actuals + surprises): `POST /refresh` → assembles calendar current + AI forward → computes
+  ranking **+ projects all-horizon matrix** + persists with `Provenance`/`CalendarKnownAt`;
+  `GET /latest?horizon=` returns the right matrix; `/history`; `/api/preferences/dashboard` GET/PUT.
+- **Calendar integration:** current figures bind from the calendar (not AI) when present;
+  `SurpriseMomentum` reflects seeded surprises; **PIT** — a snapshot built as-of a past instant uses
+  then-known calendar releases (integration look-ahead guard). **Calendar disabled** ⇒ falls back to
+  AI current figures, `Source=Ai-only`, lower confidence surfaced.
 - **Feature-gate off** (`FeatureFlag.Ai=false`) ⇒ endpoints `404`/blocked (matches `RequireFeature`).
 - **`ICurrencyStrengthQuery`** shared read model: latest/history/pair shapes; tier filter; empty state.
-- **cBot JWT security (`/api/market/currency-strength`):** `ICBotAccessTokenIssuer` mints a valid
-  token → endpoint returns data; **expired** token ⇒ `401`; **wrong audience** (node/other) ⇒ `401`;
-  **tampered/invalid signature** ⇒ `401`; missing `scope=market:read` ⇒ `403`; token for a
-  finished/terminated `instanceId` ⇒ `401`; feature-gated off ⇒ blocked; rate-limit trips on abuse.
+- **cBot JWT security (reused calendar API):** a `CalendarJwt` with `market:read` → currency-strength
+  endpoints return data; **expired** ⇒ `401`; **wrong audience** ⇒ `401`; **tampered signature** ⇒
+  `401`; **missing `market:read` scope** (e.g. a `calendar:read`-only token) ⇒ `403`; revoked
+  `ApiClient` ⇒ `401`; feature-gated off ⇒ blocked; per-client rate-limit trips → `429 Retry-After`.
 - **In-app consumption:** an AI feature (e.g. `AiRiskGuard`/`TradingAgent`) reads the snapshot via
   `ICurrencyStrengthQuery` in-process (no HTTP).
-- **Failure paths:** malformed AI JSON ⇒ refresh fails cleanly, **prior snapshot preserved**; AI
-  key absent ⇒ `/latest` degrades, refresh returns `Fail`; empty history handled.
+- **Failure paths:** malformed AI JSON ⇒ keep calendar-only ranking, **prior snapshot preserved**; AI
+  key absent ⇒ calendar-only; calendar + AI both absent ⇒ `/latest` degrades; empty history handled.
 
 ### 4.3 E2E (`tests/E2ETests/`, Playwright, mobile + desktop)
 - Widget **hidden by default**; user enables it in settings → widget **appears** on dashboard.
@@ -425,9 +474,10 @@ main→CtraderCliNode scheme (`HttpContainerDispatcher.CreateToken` + `AddJwtBea
 - Universe with EM+exotic currencies renders on 360px without horizontal scroll (matrix
   virtualized/scoped).
 - Add both routes (`/ai/currency-strength`, `/settings/dashboard`) to **`PageSmokeTests`** (mandate).
-- **Authenticated-API E2E (cBot path):** call `GET /api/market/currency-strength` with a real minted
-  cBot JWT → 200 + expected shape; with an expired/wrong-audience token → 401 (the mandate's
-  "authenticated API call" E2E form for a machine surface). MCP tool call returns the same data.
+- **Authenticated-API E2E (cBot path):** obtain a `CalendarJwt` with `market:read` (calendar
+  `POST /token` flow or the injected container token), call the currency-strength endpoint → 200 +
+  expected shape; expired/scope-missing token → 401/403 (the mandate's "authenticated API call" E2E
+  form for a machine surface). MCP tool call returns the same data.
 - No horizontal scroll 320–1920px; screenshot captured for docs (`CAPTURE_SCREENSHOTS=1`).
 
 ---
@@ -439,44 +489,58 @@ main→CtraderCliNode scheme (`HttpContainerDispatcher.CreateToken` + `AddJwtBea
   deterministic" contract, how to configure the universe + enable (key → per-user widget), and the
   **honest limitation** (medium/long-term positioning filter, not a short-term signal).
 - Add id to `website/sidebars.ts`. Screenshot into `website/static/img/screenshots/`.
+- **Note the calendar dependency:** doc states current fundamentals + surprises come from the
+  Economic Calendar (PIT), AI supplies only forward + geopolitics, and the graceful-degradation
+  matrix (calendar-off / AI-off / both-off). Cross-link `features/economic-calendar.md`.
 - `website/docs/operations` note: refresh cadence / background worker + snapshot table.
-- **`website/docs/features/currency-strength.md` + a cBot/API section:** MCP tool usage, and the
-  **JWT-secured cBot REST API** — how the token is injected (`CMIND_API_TOKEN`/`CMIND_API_BASEURL`),
-  a copy-paste cBot sample hitting `/api/market/currency-strength`, and the endpoint reference.
-- `website/docs/deployment`: the cBot-token signing secret config + rotation.
+- **cBot/API section** — extends the calendar's `calendar-cbot-api.md`: the added `market:read` scope
+  + currency-strength endpoints, a copy-paste cBot sample (obtain `CalendarJwt` → call
+  `/currency-strength/latest`), env injection (`CMIND_API_BASEURL` + token). No separate token doc —
+  reuse the calendar API auth doc.
 
 ---
 
 ## 6. Delivery phases (each phase self-contained, green before next)
+
+> **Dependency:** ideally lands after the Economic Calendar's **P1 (persistence + FRED source)** so
+> current fundamentals + surprises bind from real calendar data. Core engine (below) needs neither —
+> build it in parallel; wire the `IEconomicCalendar` assembler when the calendar read side exists.
+> Until then the AI-gather path (current + forward) is the fallback source.
 
 1. **Core engine** — `Currency`, `CurrencyTier`, `CurrencyUniverse`, `CurrencyIndicators`,
    `CurrencyTrajectory`, `DriverScore`, `CurrencyStrengthScore`, `CurrencyStrengthRanking`,
    `StrengthWeights`/`ForwardWeights` (tier-keyed), `CurrencyStrengthCalculator` +
    `ForwardOutlookCalculator` + full unit suite (majors, EM, exotics, pegs, mixed universe). *No AI,
    no DB, no UI — pure, provable math first.*
-2. **AI gather/explain + parser** — contract methods, universe-driven prompts, `CurrencyMacroParser`
-   (indicators + trajectories + per-tier confidence), unit tests with substituted client.
-3. **Persistence + refresh worker** — snapshot entity, EF migration, repository, gated
-   `BackgroundService`; integration tests.
+2. **Data assembly + AI forward** — `CurrencyMacroAssembler` (calendar actuals + surprises via
+   `IEconomicCalendar`/`CurrencyExposure`, PIT), `GatherCurrencyForwardAsync` prompt + `CurrencyMacro
+   Parser` (merge calendar + AI, provenance, per-tier confidence); unit tests w/ fake calendar + stub client.
+3. **Persistence + refresh worker** — snapshot entity (+ `Provenance`/`CalendarKnownAt`), EF migration,
+   repository, gated `BackgroundService` (assemble → gather → compute → project → persist); integration tests.
 4. **Per-user preference** — `UserDashboardPreferences`, migration, endpoints; integration tests.
 5. **Web API + full page UI** — endpoints, `AiCurrencyStrength.razor` charts; E2E page render.
 6. **Dashboard widget + settings toggle** — `DashCurrencyStrength.razor`, settings switch, conditional
    render on `Index.razor`; E2E enable-flow; `PageSmokeTests` routes.
 7. **Programmatic access** — `ICurrencyStrengthQuery` shared read model; in-app AI consumers wired;
-   MCP `currency_strength` tool; **cBot JWT** (`AddJwtBearer` scheme + `CBotMarketRead` policy +
-   `ICBotAccessTokenIssuer` + dispatch env injection) and `/api/market/currency-strength` endpoints;
-   full security test set (unit + integration + authenticated-API E2E).
-8. **Docs + screenshots** — feature doc, sidebar, screenshot; deployment doc for the cBot-signing
-   secret + `CMIND_API_BASEURL`/`CMIND_API_TOKEN` env; a minimal cBot code sample calling the REST API.
+   MCP `currency_strength` tool; **cBot REST reusing the calendar API** (add `market:read` scope +
+   currency-strength endpoints under the calendar/`market/v1` `JwtBearer`, optional container-token
+   convenience issuer); full security test set (unit + integration + authenticated-API E2E).
+8. **Docs + screenshots** — feature doc, sidebar, screenshot; extend the calendar cBot-API doc with the
+   `market:read` scope + endpoints + a cBot sample; cross-link the calendar feature doc.
 
 ---
 
 ## 7. Risks & mitigations
-- **AI data reliability (worse for EM/exotics)** — web-searched macro figures can be stale/wrong, and
-  EM/exotic stats are low-frequency, revised, or opaque. Mitigate: strict JSON schema + tier-aware
-  range validation; per-currency `DataConfidence` surfaced as a reliability badge; wider dead-band +
-  capped conviction for exotics; show `AsOf` + source prominently; deterministic math means a bad
-  *number* is visible/bounded, never a silent wrong rank. UX frames it as a research aid.
+- **AI data reliability (worse for EM/exotics)** — mostly mitigated by sourcing current fundamentals
+  from the **calendar** (primary authorities, PIT, revision-tracked) instead of the LLM; AI is left
+  only the forward view + geopolitics + EM/exotic gaps, each tagged `Provenance` + `DataConfidence`
+  and shown as a reliability badge. Where AI must fill a gap: strict JSON schema + tier-aware range
+  validation, wider dead-band + capped conviction for exotics; deterministic math means a bad *number*
+  is visible/bounded, never a silent wrong rank.
+- **Calendar coupling** — currency-strength consumes the calendar but must not hard-depend on it:
+  calendar white-label-off/disabled ⇒ AI-only fallback (labelled lower-confidence), feature still
+  works; the two feature gates stay independent (Ai vs `EnableEconomicCalendar`). Serve the cBot API
+  under `/api/market/v1` when the calendar tree is gated off so it doesn't 404 with the calendar.
 - **Managed/pegged regimes** — HKD/AED/SAR pegs, CNH management: flagged, trajectory down-weighted,
   outlook clamped toward `Neutral` so a peg isn't read as a free-floating signal.
 - **Universe scale (N×N)** — large universes cost tokens + screen space. Mitigate: chunked gather,
@@ -488,11 +552,11 @@ main→CtraderCliNode scheme (`HttpContainerDispatcher.CreateToken` + `AddJwtBea
   open-ended news scraping, to stay testable.
 - **DDD hazard** — snapshot is deployment-scoped, preferences are user-scoped: two aggregates, two
   `SaveChanges`, referenced by strong ID; no cross-aggregate nav.
-- **cBot token security** — a leaked JWT is read-only, market-scoped, short-lived, and dies with the
-  instance (`instanceId` claim + TTL), limiting blast radius; signed with an encrypted deployment
-  secret (rotatable); endpoints rate-limited. Never log the token. If cBots can't reach the Web host
-  (network policy), the REST path degrades and the cBot proceeds without the macro read — never blocks
-  the trade. Reuses the audited main→node JWT pattern rather than inventing new crypto.
+- **cBot token security** — reuses the calendar's `CalendarJwt` + `ApiClient` scheme (one JWT scheme,
+  one encrypted signing secret, one rate-limiter), adding only a `market:read` scope. A leaked token is
+  read-only, market-scoped, short-lived, revocable via the `ApiClient`; never logged. If a cBot can't
+  reach the host, the REST path degrades and the bot proceeds without the macro read — never blocks the
+  trade. No new crypto, no second secret.
 
 ---
 
@@ -503,10 +567,11 @@ main→CtraderCliNode scheme (`HttpContainerDispatcher.CreateToken` + `AddJwtBea
 - [ ] `src/Core` stays infra-free; ranking **and forward-projection** math is 100% deterministic &
       unit-proven across majors + EM + exotics + pegs + mixed universe.
 - [ ] Data reachable 3 ways off one `ICurrencyStrengthQuery`: in-app AI (DI), MCP (`mcpk_` key),
-      **cBot REST secured by HS256 JWT** (`aud=app-cbot`, scoped, short-lived, rate-limited); 401/403
-      failure paths proven.
-- [ ] No `DateTime.UtcNow`; no secrets/magic strings (cBot-signing secret encrypted via
-      `ISecretProtector`); source-gen logging; modern C# 14.
+      **cBot REST reusing the calendar `CalendarJwt` + `market:read` scope** (short-lived, revocable,
+      rate-limited); 401/403 failure paths proven. No second JWT scheme/secret introduced.
+- [ ] Current fundamentals + surprises sourced PIT from the Economic Calendar; AI supplies only
+      forward + geopolitics; calendar-off/AI-off/both-off degradation all verified.
+- [ ] No `DateTime.UtcNow`; no secrets/magic strings; source-gen logging; modern C# 14.
 - [ ] Forward pair-outlook matrix (all horizons) + tiered universe (majors/EM/exotics) shipped;
       pegs/low-confidence flagged; N×N view legible on 360px.
 - [ ] Widget hidden until (feature flag ✔ + AI key ✔ + per-user toggle ✔); AI-off path verified.

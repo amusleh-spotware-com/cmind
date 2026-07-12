@@ -56,6 +56,8 @@ Environment-variable form: `App__Branding__ProductName=AcmeFX`, `App__Branding__
 | `CustomCss` | injected `<style>` in `<head>` (deployment-trusted) | *(empty)* |
 | `ShowSiteLink` | show the "Powered by cMind" credit link on the dashboard | `true` |
 | `RequireMfa` | require every user to set up two-factor authentication before using the app | `false` |
+| `NodesUi` | how much of the Nodes surface ships: `Full` (list + manual add/delete), `Monitor` (read-only list, no add/delete), `Hidden` (no nav, no page, no manual API) | `Full` |
+| `RestrictNodesToOwner` | when `true`, only the owner may see/manage nodes; otherwise the whole admin-or-above staff surface can. Normal users never see nodes either way | `false` |
 
 Assets referenced by `LogoUrl`/`FaviconUrl` served from Web app `wwwroot` (e.g. mount `wwwroot/branding/` folder) or any absolute URL.
 
@@ -134,6 +136,62 @@ linked via the Open API path, which needs no probe.
   (skips cleanly otherwise).
 - **E2E** — `E2ETests/BrokerAllowlistTests.cs`: a restricted deployment rejects a manual add through the
   real UI and shows the "couldn't verify" notification (no account row added).
+
+## Nodes UI visibility
+
+Nodes are infrastructure most tenants never manage by hand — cTrader CLI agents
+[self-register and heartbeat](../operations/node-discovery.md), so a white-label deployment can hide the
+manual controls, or the Nodes surface entirely, and still run a healthy cluster through auto-discovery.
+Two config-only branding keys govern this:
+
+```json
+{
+  "App": {
+    "Branding": {
+      "NodesUi": "Monitor",
+      "RestrictNodesToOwner": true
+    }
+  }
+}
+```
+
+Environment-variable form: `App__Branding__NodesUi=Hidden`, `App__Branding__RestrictNodesToOwner=true`.
+
+**`NodesUi` — three modes:**
+
+- **`Full` (default)** — the stock product: the node list plus the manual **New Node** and **Delete**
+  controls. `POST`/`DELETE /api/nodes` work.
+- **`Monitor`** — a read-only surface: the list and live stats stay, but manual add and delete are
+  removed. Nodes only ever appear through auto-discovery. `POST`/`DELETE /api/nodes` return **404**.
+- **`Hidden`** — the Nodes nav link and page are gone entirely and the page route redirects to the
+  dashboard; the manual add/delete API is off. The cluster is auto-discovery only.
+
+**`RestrictNodesToOwner`** floors who may see and manage nodes. Default `false` keeps the standard
+**admin-or-above** staff surface (`AdminOrAbove`); set `true` to make it **owner-only** (`Owner`). Either
+way **normal users never see nodes** — this only chooses between owner-only and the wider staff surface.
+
+Node **auto-discovery is unaffected by both keys**: the anonymous `POST /api/nodes/register` self-register
++ heartbeat endpoint always works, so a `Hidden`/`Monitor` deployment still grows its cluster
+automatically.
+
+**Model:**
+
+- `Core.Nodes.NodesUiMode` — `Full` / `Monitor` / `Hidden`.
+- `Core.Nodes.NodesUiAccess` — the single source of truth composing the mode + owner-restriction:
+  `IsPageVisible`, `AllowsManualManagement`, `RequiredPolicy(restrictToOwner)`. Nav
+  (`NavMenu.razor`), the page (`Pages/Nodes.razor`) and the endpoints (`NodeEndpoints`) all read it so
+  the UI and API can never disagree.
+- `Core.Options.BrandingOptions.NodesUi` / `.RestrictNodesToOwner` — bound from `App:Branding`.
+
+## Nodes UI visibility — tests
+
+- **Unit** — `UnitTests/Nodes/NodesUiAccessTests.cs`: page-visibility, manual-management and
+  required-policy resolution across every mode + default branding.
+- **Integration** — `IntegrationTests/NodeUiGatingTests.cs`: over real HTTP + Postgres — `Full` allows a
+  manual add, `Monitor`/`Hidden` 404 add and delete, and `RestrictNodesToOwner` forbids an admin while the
+  owner still reads the list.
+- **E2E** — `E2ETests/NodesUiTests.cs` (default `Full`: nav link + page + New Node button render) and
+  `E2ETests/NodesHiddenTests.cs` (`Hidden`: nav link gone, `/nodes` redirects).
 
 ## Design tokens (CSS variables)
 

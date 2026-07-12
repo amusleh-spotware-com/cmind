@@ -5,12 +5,14 @@ using Core.Constants;
 using Core.Domain;
 using Core.Logging;
 using Core.NodeAgent;
+using Core.Nodes;
 using Core.Options;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -26,7 +28,11 @@ public static class NodeEndpoints
     {
         app.MapPost(NodeDiscoveryRoutes.Register, RegisterNodeAsync).AllowAnonymous();
 
-        var g = app.MapGroup("/api/nodes").RequireAuthorization("AdminOrAbove");
+        // The node surface floors at owner-only or admin-or-above per the white-label branding gate. This is
+        // read once at startup: branding is deployment configuration, not a runtime-toggled feature flag.
+        var branding = app.ServiceProvider.GetRequiredService<IOptionsMonitor<AppOptions>>().CurrentValue.Branding;
+        var g = app.MapGroup("/api/nodes")
+            .RequireAuthorization(NodesUiAccess.RequiredPolicy(branding.RestrictNodesToOwner));
 
         g.MapGet("/", async (DataContext db) =>
         {
@@ -57,8 +63,13 @@ public static class NodeEndpoints
             return rows;
         });
 
-        g.MapPost("/", async (CreateNodeRequest req, DataContext db, ISecretProtector p) =>
+        g.MapPost("/", async (CreateNodeRequest req, DataContext db, ISecretProtector p,
+            IOptionsMonitor<AppOptions> options) =>
         {
+            // Monitor / Hidden modes strip manual add: the cluster grows by auto-discovery only. Read per
+            // request so a config reload takes effect without an app restart.
+            if (!NodesUiAccess.AllowsManualManagement(options.CurrentValue.Branding.NodesUi))
+                return Results.NotFound();
             if (string.IsNullOrWhiteSpace(req.BaseUrl) || !Uri.TryCreate(req.BaseUrl, UriKind.Absolute, out _))
                 return Results.BadRequest("invalid base url");
             if (req.ApiSecret.Length < NodeAgentAuth.MinSecretLength)
@@ -82,8 +93,10 @@ public static class NodeEndpoints
         });
 
         g.MapDelete("/{id:guid}", async (Guid id, DataContext db, IContainerDispatcherFactory factory,
-            TimeProvider timeProvider) =>
+            TimeProvider timeProvider, IOptionsMonitor<AppOptions> options) =>
         {
+            if (!NodesUiAccess.AllowsManualManagement(options.CurrentValue.Branding.NodesUi))
+                return Results.NotFound();
             var nid = NodeId.From(id);
             var node = await db.Nodes.Include(n => n.LatestStats).FirstOrDefaultAsync(n => n.Id == nid);
             if (node is null) return Results.NotFound();

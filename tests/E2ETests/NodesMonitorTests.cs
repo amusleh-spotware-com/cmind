@@ -39,7 +39,8 @@ public sealed class NodesMonitorTests(NodesMonitorFixture app)
         await page.GotoAsync("/nodes");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
         page.Url.Should().EndWith("/nodes");
-        await Assertions.Expect(page.GetByText("Nodes")).ToBeVisibleAsync(Slow);
+        // The page rendered (not redirected away): its node table is present.
+        await Assertions.Expect(page.Locator(".mud-table").First).ToBeVisibleAsync(Slow);
 
         // ...but the manual add control is gone.
         (await page.Locator("button:has-text('New Node')").CountAsync()).Should().Be(0);

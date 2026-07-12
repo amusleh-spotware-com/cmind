@@ -67,3 +67,9 @@ Auto-registered nodes share **one cluster secret** (`JoinToken` == each agent's 
 ## Manual nodes still work
 
 `POST /api/nodes` (admin UI) continues to register pinned nodes with own per-node secret. Discovery is additive.
+
+A white-label deployment can **hide the manual controls** (or the whole Nodes surface) and rely purely on
+auto-discovery: `App:Branding:NodesUi=Monitor` drops manual add/delete, `Hidden` removes the nav, page and
+manual API, and `App:Branding:RestrictNodesToOwner` floors the surface at owner-only. The self-register +
+heartbeat endpoint here is unaffected in every mode. See
+[White-label → Nodes UI visibility](../features/white-label.md#nodes-ui-visibility).

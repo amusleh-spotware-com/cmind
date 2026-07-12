@@ -1,5 +1,6 @@
 @using Core.Calendar
 @using Core.Features
+@using Core.Nodes
 @using Core.Options
 @using Microsoft.Extensions.Options
 @using Web.Components.Dialogs
@@ -100,8 +101,13 @@
             <MudNavLink Href="/copy-trading" Icon="@Icons.Material.Filled.Repeat">@L["nav.copyTrading"]</MudNavLink>
         }
 
+        @if (NodesPageVisible)
+        {
+            <AuthorizeView Policy="@NodesPolicy">
+                <MudNavLink Href="/nodes" Icon="@Icons.Material.Filled.Hub">@L["nav.nodes"]</MudNavLink>
+            </AuthorizeView>
+        }
         <AuthorizeView Policy="AdminOrAbove">
-            <MudNavLink Href="/nodes" Icon="@Icons.Material.Filled.Hub">@L["nav.nodes"]</MudNavLink>
             <MudNavLink Href="/users" Icon="@Icons.Material.Filled.Group">@L["nav.users"]</MudNavLink>
         </AuthorizeView>
     </MudNavMenu>
@@ -127,6 +133,12 @@
 
     private bool CalendarOn =>
         CalendarEnablement.IsEnabled(AppOptionsMonitor.CurrentValue.Branding, Gate);
+
+    private bool NodesPageVisible =>
+        NodesUiAccess.IsPageVisible(AppOptionsMonitor.CurrentValue.Branding.NodesUi);
+
+    private string NodesPolicy =>
+        NodesUiAccess.RequiredPolicy(AppOptionsMonitor.CurrentValue.Branding.RestrictNodesToOwner);
 
     private Task OpenSettings() =>
         // Centered, windowed dialog (Claude-settings style): a fixed-size panel over a dimmed backdrop,

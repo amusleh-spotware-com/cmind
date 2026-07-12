@@ -1,10 +1,19 @@
 @page "/nodes"
+@using Core.Constants
+@using Core.Nodes
+@using Microsoft.AspNetCore.Authorization
+@using Core.Options
+@using Microsoft.Extensions.Options
 @using Web.Json
 @using Web.Components.Dialogs
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
 @inject IDialogService Dialogs
+@inject IOptionsMonitor<AppOptions> AppOptionsMonitor
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthProvider
+@inject IAuthorizationService Authz
 
 <PageTitle>Nodes</PageTitle>
 
@@ -12,10 +21,13 @@
     <MudText Typo="Typo.h5">Nodes</MudText>
     <HelpTip Text="Nodes are the machines that run your cBot containers. The local node is the web host; remote nodes are cTrader CLI node agents reached over HTTP." />
     <MudSpacer />
-    <MudButton Color="Color.Primary" Variant="Variant.Filled"
-               StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew">
-        New Node
-    </MudButton>
+    @if (_allowManage)
+    {
+        <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew">
+            New Node
+        </MudButton>
+    }
 </MudStack>
 
 <MudTable Items="_items" Class="mt-3" Dense="true" Breakpoint="Breakpoint.Sm">
@@ -40,7 +52,10 @@
             else
             {
                 <MudIconButton Icon="@Icons.Material.Filled.CleaningServices" Size="Size.Small" aria-label="Clean backtest data" OnClick="@(() => Clean((Guid)context.id))" />
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="Delete node" OnClick="@(() => Remove((Guid)context.id))" />
+                @if (_allowManage)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="Delete node" OnClick="@(() => Remove((Guid)context.id))" />
+                }
             }
         </MudTd>
     </RowTemplate>
@@ -48,8 +63,31 @@
 
 @code {
     private dynamic[] _items = [];
+    private bool _allowManage;
 
-    protected override Task OnInitializedAsync() => Load();
+    protected override async Task OnInitializedAsync()
+    {
+        // Guard the load: a white-label deployment can hide the page entirely or restrict it to the owner.
+        // Follows the gated-load pattern so a hidden/forbidden page redirects instead of erroring on the API.
+        var branding = AppOptionsMonitor.CurrentValue.Branding;
+        if (!NodesUiAccess.IsPageVisible(branding.NodesUi))
+        {
+            Nav.NavigateTo("/");
+            return;
+        }
+        if (branding.RestrictNodesToOwner)
+        {
+            var auth = await AuthProvider.GetAuthenticationStateAsync();
+            if (!(await Authz.AuthorizeAsync(auth.User, AuthPolicies.Owner)).Succeeded)
+            {
+                Nav.NavigateTo("/");
+                return;
+            }
+        }
+        _allowManage = NodesUiAccess.AllowsManualManagement(branding.NodesUi);
+        await Load();
+    }
+
     private async Task Load() => _items = await Http.GetDynamicArrayAsync("/api/nodes/");
 
     private async Task OpenNew()

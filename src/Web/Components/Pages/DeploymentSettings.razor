@@ -1,0 +1,168 @@
+﻿@page "/settings/deployment"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "Owner")]
+@using System.Net.Http.Json
+@using Web.Components.Dialogs
+@inject HttpClient Http
+@inject ISnackbar Snack
+@inject IDialogService Dialogs
+@inject IStringLocalizer<Ui> L
+
+<PageTitle>@L["whitelabel.title"]</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2" Wrap="Wrap.Wrap">
+    <MudText Typo="Typo.h5">@L["whitelabel.title"]</MudText>
+    <MudSpacer />
+    <MudButton Color="Color.Error" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.RestartAlt"
+               OnClick="ResetAll" data-testid="wl-reset-all">@L["whitelabel.resetAll"]</MudButton>
+</MudStack>
+<MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">@L["whitelabel.description"]</MudText>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else
+{
+    <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2"
+             MinimumTabWidth="96px" data-testid="wl-tabs">
+        @foreach (var category in _categories)
+        {
+            <MudTabPanel Text="@CategoryLabel(category)" data-testid="@($"wl-tab-{category}")">
+                <MudStack Spacing="2">
+                    @foreach (var option in _byCategory[category])
+                    {
+                        <MudPaper Class="pa-3" Elevation="1" data-testid="@($"wl-opt-{option.Key}")">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+                                <MudStack Spacing="0" Style="min-width:0;flex:1 1 200px;">
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                        <MudText Typo="Typo.subtitle2">@option.Label</MudText>
+                                        <HelpTip Text="@option.Description" />
+                                    </MudStack>
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary"
+                                             Style="overflow-wrap:anywhere;" data-testid="@($"wl-value-{option.Key}")">
+                                        @DisplayValue(option)
+                                    </MudText>
+                                </MudStack>
+                                <MudSpacer />
+                                <MudChip T="string" Size="Size.Small" Color="SourceColor(option.Source)"
+                                         data-testid="@($"wl-source-{option.Key}")">@SourceLabel(option.Source)</MudChip>
+                                @if (option.DelegatedToSection is { Length: > 0 })
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Default"
+                                             Icon="@Icons.Material.Filled.OpenInNew">@L["whitelabel.managedElsewhere"]</MudChip>
+                                }
+                                else if (option.OwnerEditable)
+                                {
+                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit"
+                                                   aria-label="@L["whitelabel.edit"]"
+                                                   OnClick="@(() => Edit(option))" data-testid="@($"wl-edit-{option.Key}")" />
+                                    @if (option.HasOverride)
+                                    {
+                                        <MudIconButton Size="Size.Small" Color="Color.Warning"
+                                                       Icon="@Icons.Material.Filled.Undo" aria-label="@L["whitelabel.revert"]"
+                                                       OnClick="@(() => Revert(option))" data-testid="@($"wl-revert-{option.Key}")" />
+                                    }
+                                }
+                            </MudStack>
+                        </MudPaper>
+                    }
+                </MudStack>
+            </MudTabPanel>
+        }
+    </MudTabs>
+}
+
+@code {
+    private bool _loading = true;
+    private List<OptionView> _options = [];
+    private readonly Dictionary<string, List<OptionView>> _byCategory = [];
+    private List<string> _categories = [];
+
+    protected override Task OnInitializedAsync() => Load();
+
+    private async Task Load()
+    {
+        _loading = true;
+        try
+        {
+            _options = await Http.GetFromJsonAsync<List<OptionView>>("/api/whitelabel/") ?? [];
+        }
+        catch
+        {
+            _options = [];
+        }
+
+        _byCategory.Clear();
+        foreach (var option in _options)
+        {
+            if (!_byCategory.TryGetValue(option.Category, out var list))
+                _byCategory[option.Category] = list = [];
+            list.Add(option);
+        }
+        _categories = _byCategory.Keys.ToList();
+        _loading = false;
+    }
+
+    private async Task Edit(OptionView option)
+    {
+        var parameters = new DialogParameters<EditWhiteLabelOptionDialog>
+        {
+            { x => x.Kind, option.Kind },
+            { x => x.Label, option.Label },
+            { x => x.Description, option.Description },
+            { x => x.EnumValues, option.EnumValues },
+            { x => x.CurrentValue, option.IsSecret ? null : option.Value }
+        };
+        var dialog = await Dialogs.ShowAsync<EditWhiteLabelOptionDialog>(option.Label, parameters);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled || result.Data is not EditWhiteLabelOptionDialog.Result r) return;
+
+        var resp = await Http.PutAsJsonAsync($"/api/whitelabel/{option.Key}", new { value = r.Value });
+        Snack.Add(resp.IsSuccessStatusCode ? L["whitelabel.saved"] : L["whitelabel.saveFailed"],
+            resp.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        await Load();
+    }
+
+    private async Task Revert(OptionView option)
+    {
+        var resp = await Http.DeleteAsync($"/api/whitelabel/{option.Key}");
+        Snack.Add(resp.IsSuccessStatusCode ? L["whitelabel.reverted"] : L["whitelabel.saveFailed"],
+            resp.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        await Load();
+    }
+
+    private async Task ResetAll()
+    {
+        var resp = await Http.PostAsync("/api/whitelabel/reset", null);
+        Snack.Add(resp.IsSuccessStatusCode ? L["whitelabel.reverted"] : L["whitelabel.saveFailed"],
+            resp.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        await Load();
+    }
+
+    private string DisplayValue(OptionView option)
+    {
+        if (option.IsSecret) return option.HasValue ? L["whitelabel.set"] : L["whitelabel.notSet"];
+        return string.IsNullOrEmpty(option.Value) ? L["whitelabel.notSet"] : option.Value!;
+    }
+
+    private string CategoryLabel(string category) => L[$"whitelabel.cat.{char.ToLowerInvariant(category[0])}{category[1..]}"];
+
+    private string SourceLabel(string source) => source switch
+    {
+        "Owner" => L["whitelabel.source.owner"],
+        "Config" => L["whitelabel.source.config"],
+        _ => L["whitelabel.source.default"]
+    };
+
+    private static Color SourceColor(string source) => source switch
+    {
+        "Owner" => Color.Primary,
+        "Config" => Color.Info,
+        _ => Color.Default
+    };
+
+    private sealed record OptionView(
+        string Key, string ConfigKey, string Kind, string Category, string Label, string Description,
+        bool OwnerEditable, bool IsSecret, bool IsFeatureFlag, string? DelegatedToSection,
+        IReadOnlyList<string> EnumValues, string? Value, bool HasValue, string Source, bool HasOverride);
+}

@@ -96,6 +96,7 @@ public static class EncryptionPurposes
     public const string AiApiKey = "ai.api_key";
     public const string MfaSecret = "mfa.secret";
     public const string MfaPendingCookie = "mfa.pending_cookie";
+    public const string WhiteLabelSecret = "whitelabel.secret";
 }
 
 public static class MfaConstants

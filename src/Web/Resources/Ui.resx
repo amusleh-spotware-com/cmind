@@ -86,4 +86,29 @@
   <data name="calendar.filter.minImpact" xml:space="preserve"><value>Minimum impact</value></data>
   <data name="calendar.filter.apply" xml:space="preserve"><value>Apply</value></data>
   <data name="calendar.filter.fromDate" xml:space="preserve"><value>From date</value></data>
+  <data name="settings.section.deployment" xml:space="preserve"><value>Deployment</value></data>
+  <data name="whitelabel.title" xml:space="preserve"><value>Deployment</value></data>
+  <data name="whitelabel.description" xml:space="preserve"><value>Every white-label option this deployment supports. Overrides take effect immediately and win over configuration; revert any option to fall back to the deployment configuration.</value></data>
+  <data name="whitelabel.resetAll" xml:space="preserve"><value>Reset all to config</value></data>
+  <data name="whitelabel.managedElsewhere" xml:space="preserve"><value>Managed elsewhere</value></data>
+  <data name="whitelabel.edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="whitelabel.revert" xml:space="preserve"><value>Revert to config</value></data>
+  <data name="whitelabel.saved" xml:space="preserve"><value>Saved</value></data>
+  <data name="whitelabel.saveFailed" xml:space="preserve"><value>Save failed</value></data>
+  <data name="whitelabel.reverted" xml:space="preserve"><value>Reverted</value></data>
+  <data name="whitelabel.set" xml:space="preserve"><value>Set</value></data>
+  <data name="whitelabel.notSet" xml:space="preserve"><value>Not set</value></data>
+  <data name="whitelabel.secretHint" xml:space="preserve"><value>Leave blank to keep the current secret</value></data>
+  <data name="whitelabel.source.owner" xml:space="preserve"><value>Owner override</value></data>
+  <data name="whitelabel.source.config" xml:space="preserve"><value>Config</value></data>
+  <data name="whitelabel.source.default" xml:space="preserve"><value>Default</value></data>
+  <data name="whitelabel.cat.branding" xml:space="preserve"><value>Branding</value></data>
+  <data name="whitelabel.cat.theme" xml:space="preserve"><value>Theme</value></data>
+  <data name="whitelabel.cat.features" xml:space="preserve"><value>Features</value></data>
+  <data name="whitelabel.cat.registration" xml:space="preserve"><value>Registration</value></data>
+  <data name="whitelabel.cat.accounts" xml:space="preserve"><value>Accounts</value></data>
+  <data name="whitelabel.cat.email" xml:space="preserve"><value>Email</value></data>
+  <data name="whitelabel.cat.ai" xml:space="preserve"><value>AI</value></data>
+  <data name="whitelabel.cat.openApi" xml:space="preserve"><value>Open API</value></data>
+  <data name="whitelabel.cat.propFirm" xml:space="preserve"><value>Prop firm</value></data>
 </root>

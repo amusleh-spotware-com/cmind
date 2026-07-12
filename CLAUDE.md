@@ -140,6 +140,17 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
    (`<html dir>` + MudBlazor `MudRTLProvider`). The build **fails** on a hard-coded string
    (`NoHardcodedUiTextTests`) or a missing/blank translation (`ResourceParityTests`) — a new feature is
    born fully localized or it does not merge. → `src/Web/CLAUDE.md` + `website/docs/features/localization.md`.
+10. **White-label options are owner-tunable and always in sync.** Every white-label option — a property on
+    a white-label options record (`BrandingOptions`, `FeaturesOptions`, `RegistrationOptions` + nested,
+    `AccountsOptions`, `EmailOptions`, or the white-label subset of `OpenApiOptions`/`AiOptions`/
+    `PropFirmOptions`) or any new `App:*` deployment knob — MUST, in the **same commit**: (a) be registered
+    in `Core/WhiteLabel/WhiteLabelCatalog`; (b) be surfaced in the owner **Settings → Deployment** section so
+    the owner can change it at runtime exactly as a deployment does via config; and (c) be reachable through
+    `IWhiteLabelSettings` (overlaid on `AppOptions` by the decorated `IOptionsMonitor`, or delegated to
+    `IFeatureGate` for feature flags) so the override takes effect without a redeploy — **or** be explicitly
+    listed in `WhiteLabelCatalog.IntentionallyExcluded` with a reason (operational-only/restart-only). The
+    build **fails** (`WhiteLabelCatalogParityTests`) if a white-label options-record property is neither
+    catalogued nor excluded. Never add a config-only white-label flag. → `website/docs/features/white-label-owner-settings.md`.
 
 ## Modern C# — MANDATORY (target C# 14 / .NET 10, `LangVersion=latest`)
 

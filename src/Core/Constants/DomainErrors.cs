@@ -54,6 +54,10 @@ public static class DomainErrors
 
     public const string BrandingColorInvalid = "domain.branding.color_invalid";
 
+    public const string WhiteLabelOptionUnknown = "domain.whitelabel.option_unknown";
+    public const string WhiteLabelOptionNotEditable = "domain.whitelabel.option_not_editable";
+    public const string WhiteLabelValueInvalid = "domain.whitelabel.value_invalid";
+
     public const string BrokerNameRequired = "domain.account.broker_name_required";
     public const string BrokerNotAllowed = "domain.account.broker_not_allowed";
 

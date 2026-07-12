@@ -198,6 +198,7 @@ app.MapBuilderEndpoints();
 app.MapDashboardEndpoints();
 app.MapUsageEndpoints();
 app.MapFeatureEndpoints();
+app.MapWhiteLabelSettingsEndpoints();
 app.MapAiEndpoints();
 app.MapQuantEndpoints();
 app.MapAgentStudioEndpoints();

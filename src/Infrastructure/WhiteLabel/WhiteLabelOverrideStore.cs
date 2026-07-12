@@ -101,11 +101,23 @@ public sealed class WhiteLabelOverrideStore(
         {
             if (cache.TryGetValue(WhiteLabelSettingsKeys.OverrideCacheKey, out _)) return;
 
-            using var scope = scopeFactory.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<DataContext>();
-            var rows = db.AppSettings.AsNoTracking()
-                .Where(s => s.Key.StartsWith(WhiteLabelSettingsKeys.OverrideKeyPrefix))
-                .ToList();
+            List<AppSetting> rows;
+            try
+            {
+                using var scope = scopeFactory.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+                rows = db.AppSettings.AsNoTracking()
+                    .Where(s => s.Key.StartsWith(WhiteLabelSettingsKeys.OverrideKeyPrefix))
+                    .ToList();
+            }
+            catch
+            {
+                // Fail open to the configuration baseline: the database may not be migrated yet (startup) or
+                // may be briefly unavailable — an override read must never break the whole options pipeline.
+                // Cache briefly and retry so overrides load as soon as the database is reachable.
+                cache.Set(WhiteLabelSettingsKeys.OverrideCacheKey, true, TimeSpan.FromSeconds(2));
+                return;
+            }
 
             var map = new Dictionary<string, string>(StringComparer.Ordinal);
             foreach (var row in rows)

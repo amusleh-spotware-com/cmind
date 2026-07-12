@@ -16,7 +16,7 @@ public sealed class PageSmokeTests(AppFixture app)
         "/prop-firm", "/prop-guard", "/mcp", "/users", "/account", "/optimize", "/quant/integrity", "/quant/sizing", "/quant/health", "/quant/regimes", "/quant/tca", "/quant/positioning", "/quant/execution",
         "/ai/build", "/ai/review", "/ai/debate", "/ai/sentiment", "/ai/exposure", "/ai/digest",
         "/ai/tune", "/ai/optimize", "/agent-studio", "/journal", "/economic-calendar",
-        "/settings/ai", "/settings/openapi", "/settings/features", "/settings/legal",
+        "/settings/ai", "/settings/openapi", "/settings/features", "/settings/deployment", "/settings/legal",
     }.Select(r => new object[] { r });
 
     [Theory]

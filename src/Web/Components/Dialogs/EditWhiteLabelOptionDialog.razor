@@ -1,0 +1,92 @@
+﻿@using Core.WhiteLabel
+@inject IStringLocalizer<Ui> L
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@Label</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="3" Style="min-width:min(90vw,420px);">
+            @if (!string.IsNullOrWhiteSpace(Description))
+            {
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">@Description</MudText>
+            }
+
+            @switch (_kind)
+            {
+                case WhiteLabelValueKind.Bool:
+                    <MudSwitch T="bool" @bind-Value="_boolValue" Color="Color.Primary"
+                               Label="@Label" data-testid="wl-edit-bool" />
+                    break;
+                case WhiteLabelValueKind.Enum:
+                    <MudSelect T="string" @bind-Value="_value" Label="@Label" data-testid="wl-edit-enum">
+                        @foreach (var name in EnumValues)
+                        {
+                            <MudSelectItem T="string" Value="@name">@name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    break;
+                case WhiteLabelValueKind.MultilineString:
+                    <MudTextField T="string" @bind-Value="_value" Label="@Label" Lines="4"
+                                  data-testid="wl-edit-text" />
+                    break;
+                case WhiteLabelValueKind.Secret:
+                    <MudTextField T="string" @bind-Value="_value" Label="@Label"
+                                  InputType="InputType.Password" Placeholder="@L["whitelabel.secretHint"]"
+                                  HelperText="@L["whitelabel.secretHint"]" data-testid="wl-edit-secret" />
+                    break;
+                case WhiteLabelValueKind.Int:
+                case WhiteLabelValueKind.Number:
+                    <MudTextField T="string" @bind-Value="_value" Label="@Label"
+                                  InputType="InputType.Number" data-testid="wl-edit-number" />
+                    break;
+                case WhiteLabelValueKind.Color:
+                    <MudTextField T="string" @bind-Value="_value" Label="@Label" Placeholder="#26C281"
+                                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Palette"
+                                  data-testid="wl-edit-color" />
+                    break;
+                default:
+                    <MudTextField T="string" @bind-Value="_value" Label="@Label" data-testid="wl-edit-text" />
+                    break;
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" data-testid="wl-edit-cancel">@L["common.cancel"]</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit"
+                   data-testid="wl-edit-save">@L["common.save"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public string Kind { get; set; } = nameof(WhiteLabelValueKind.String);
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public string Description { get; set; } = string.Empty;
+    [Parameter] public IReadOnlyList<string> EnumValues { get; set; } = [];
+    [Parameter] public string? CurrentValue { get; set; }
+
+    private WhiteLabelValueKind _kind;
+    private string _value = string.Empty;
+    private bool _boolValue;
+
+    protected override void OnInitialized()
+    {
+        _kind = System.Enum.TryParse<WhiteLabelValueKind>(Kind, out var parsed) ? parsed : WhiteLabelValueKind.String;
+        _value = CurrentValue ?? string.Empty;
+        _boolValue = bool.TryParse(CurrentValue, out var b) && b;
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    private void Submit()
+    {
+        var value = _kind == WhiteLabelValueKind.Bool
+            ? (_boolValue ? bool.TrueString : bool.FalseString)
+            : _value;
+        Dialog.Close(DialogResult.Ok(new Result(value)));
+    }
+
+    public sealed record Result(string Value);
+}

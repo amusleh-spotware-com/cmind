@@ -40,6 +40,11 @@
                                     OnClick="@(() => _active = Section.Features)"
                                     Class="@ActiveClass(Section.Features)">@L["settings.section.features"]</MudNavLink>
                     </AuthorizeView>
+                    <AuthorizeView Policy="Owner">
+                        <MudNavLink Icon="@Icons.Material.Filled.Tune" data-testid="settings-section-deployment"
+                                    OnClick="@(() => _active = Section.Deployment)"
+                                    Class="@ActiveClass(Section.Deployment)">@L["settings.section.deployment"]</MudNavLink>
+                    </AuthorizeView>
                     <MudNavLink Icon="@Icons.Material.Filled.Language" data-testid="settings-section-language"
                                 OnClick="@(() => _active = Section.Language)"
                                 Class="@ActiveClass(Section.Language)">@L["settings.section.language"]</MudNavLink>
@@ -62,6 +67,9 @@
                         break;
                     case Section.Features:
                         <AuthorizeView Policy="Owner"><Authorized><FeatureSettings /></Authorized></AuthorizeView>
+                        break;
+                    case Section.Deployment:
+                        <AuthorizeView Policy="Owner"><Authorized><DeploymentSettings /></Authorized></AuthorizeView>
                         break;
                     case Section.Language:
                         <div class="d-flex flex-column ga-3" data-testid="settings-language-panel">
@@ -86,7 +94,7 @@
 @code {
     [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
 
-    private enum Section { OpenApi, Ai, Features, Language, Legal }
+    private enum Section { OpenApi, Ai, Features, Deployment, Language, Legal }
 
     private Section _active = Section.Features;
     private string _currentLanguageName = SupportedCultures.NativeNames[SupportedCultures.Default];

@@ -178,7 +178,7 @@ public static class WhiteLabelCatalog
         };
 
         // ---- Features (delegated to IFeatureGate) ----
-        foreach (var flag in Enum.GetValues<FeatureFlag>())
+        foreach (var flag in System.Enum.GetValues<FeatureFlag>())
             list.Add(new WhiteLabelOption
             {
                 Key = "features." + char.ToLowerInvariant(flag.ToString()[0]) + flag.ToString()[1..],

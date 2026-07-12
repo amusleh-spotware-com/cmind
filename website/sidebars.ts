@@ -55,6 +55,7 @@ const sidebars: SidebarsConfig = {
         'features/two-factor-auth',
         'features/user-registration',
         'features/white-label',
+        'features/white-label-owner-settings',
         'features/localization',
         'features/feature-toggles',
         'features/compliance',

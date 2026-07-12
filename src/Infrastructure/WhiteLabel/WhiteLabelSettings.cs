@@ -71,7 +71,7 @@ public sealed class WhiteLabelSettings(
             var effectiveRaw = WhiteLabelOverlay.ReadRaw(effective, option);
             var baselineRaw = WhiteLabelOverlay.ReadRaw(baseline, option);
             var defaultRaw = WhiteLabelOverlay.ReadRaw(Defaults, option);
-            var source = hasRowOverride
+            var valueSource = hasRowOverride
                 ? WhiteLabelValueSource.Owner
                 : !string.Equals(baselineRaw, defaultRaw, StringComparison.Ordinal)
                     ? WhiteLabelValueSource.Config
@@ -82,7 +82,7 @@ public sealed class WhiteLabelSettings(
                 Option = option,
                 Value = option.IsSecret ? null : effectiveRaw,
                 HasValue = !string.IsNullOrEmpty(effectiveRaw),
-                Source = source,
+                Source = valueSource,
                 HasOverride = hasRowOverride
             });
         }

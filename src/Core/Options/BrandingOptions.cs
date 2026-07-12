@@ -1,4 +1,5 @@
 using Core.Constants;
+using Core.Nodes;
 
 namespace Core.Options;
 
@@ -67,4 +68,18 @@ public sealed record BrandingOptions
     /// from that build: it never appears and an operator cannot re-enable it via the runtime toggle.
     /// </summary>
     public bool EnableEconomicCalendar { get; init; } = true;
+
+    /// <summary>
+    /// How much of the Nodes surface this deployment exposes. Defaults to <see cref="NodesUiMode.Full"/>
+    /// (list plus manual add/delete). A white-label deployment sets <see cref="NodesUiMode.Monitor"/> to
+    /// keep a read-only view but drop manual add/delete, or <see cref="NodesUiMode.Hidden"/> to remove the
+    /// nav link, page and manual API entirely and run the cluster purely through node auto-discovery.
+    /// </summary>
+    public NodesUiMode NodesUi { get; init; } = NodesUiMode.Full;
+
+    /// <summary>
+    /// When <c>true</c>, only the owner may see and manage nodes; otherwise the whole admin-or-above staff
+    /// surface can. Defaults to <c>false</c>. Normal users never see nodes regardless of this flag.
+    /// </summary>
+    public bool RestrictNodesToOwner { get; init; }
 }

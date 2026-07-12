@@ -1,7 +1,13 @@
 ---
 slug: /audience
 title: Who is cMind for?
-description: cMind is built for algorithmic traders, quant-leaning developers, and prop firms / trading desks who self-host and want full control.
+description: cMind is for cTrader traders, brokers, and cloud/VPS providers. Find your path — self-host as a trader, white-label as a broker, or offer managed hosting as a provider — plus how to contribute.
+keywords:
+  - cTrader platform
+  - algorithmic trading
+  - white-label broker
+  - managed trading hosting
+  - open source trading
 sidebar_position: 2
 ---
 
@@ -9,50 +15,53 @@ sidebar_position: 2
 
 Short version: **people with money on the line who like being in control.** cMind is a serious
 algorithmic-trading operations console — not a consumer fintech toy with a confetti animation when
-you make $3. If you live in dark dashboards, charts, terminals, and IDEs, keep reading. You&apos;ll
-feel at home.
+you make $3. Whether you trade, broker, or host, there's a path below built for you.
 
-## 📈 Algorithmic traders
+## 📈 Traders — self-host your whole desk
 
-You already trade on cTrader and you&apos;re tired of juggling a code editor, a backtester, a VPS,
-and three browser tabs. cMind puts authoring, backtesting, live execution, and monitoring in one
-place — with equity curves and logs streaming back in real time.
+You trade on cTrader and you're tired of gluing together an editor, a backtester, a VPS, and three
+browser tabs. Self-host cMind and get authoring, backtesting, live execution, copy trading, and
+monitoring in one AI-powered console — on your own box, your data never leaving it.
 
-- Write a cBot, backtest it across a fleet, run it live — same app, no context-switching.
-- Let the AI draft a strategy or explain why last night&apos;s backtest fell apart.
-- Watch everything from your phone (it&apos;s an installable app).
+**Read:** [cMind for cTrader traders →](./for-traders.md)
 
-**Start here:** [Build & backtest](./features/build-and-backtest.md) → [Copy trading](./features/copy-trading.md).
+## 🏦 Brokers — white-label it for your clients
 
-## 🧑‍💻 Quant-leaning developers
+You run a cTrader brokerage and want an edge over competitors offering nothing but a terminal. Ship
+cMind as your own product: give clients AI, copy trading, and prop-firm challenges under your brand,
+restrict accounts to your book, and open new revenue lines.
 
-You want to *own* your stack. cMind is C# 14 / .NET 10, strict DDD, EF Core + PostgreSQL, .NET
-Aspire, and an MCP server — all open source and hackable.
+**Read:** [cMind for cTrader brokers →](./for-brokers.md) ·
+[White-label for business →](./white-label-for-business.md)
 
-- Real Monaco IDE, C# **and** Python templates, sandboxed `dotnet build`.
-- A built-in [MCP server](./features/mcp.md) so your AI client can drive it.
-- Clean domain model, three test tiers, and docs (hi 👋) that don&apos;t lie to you.
+## 🖥️ Cloud & VPS providers — sell it as managed hosting
 
-**Start here:** [Contributing](./contributing.md) → [MCP server](./features/mcp.md).
+You rent compute. Offer managed cMind hosting and land a high-value, compute-hungry, sticky workload —
+and monetize the subscription, the metered compute, the white-label, and the AI.
 
-## 🏢 Prop firms & trading desks
+**Read:** [cMind for cloud & VPS providers →](./for-cloud-providers.md)
 
-You need multi-tenant, branded, auditable infrastructure that onboards traders under *your* name.
+## 🧑‍💻 Contributors — help make it better
 
-- **[White-label](./features/white-label.md)** every surface — name, colors, logo, favicon.
-- **[Prop-firm rule simulation](./features/prop-firm.md)** — daily loss, drawdown, targets, live equity.
-- **[Compliance](./features/compliance.md)** logs and [feature toggles](./features/feature-toggles.md) to shape what each tenant sees.
-- **[Performance fees](./features/copy-performance-fees.md)** and a **[provider marketplace](./features/copy-provider-marketplace.md)** for copy-trading businesses.
+cMind is open source (MIT) and community-shaped: C# 14 / .NET 10, strict DDD, EF Core + PostgreSQL,
+.NET Aspire, an MCP server, and three test tiers. Every persona above can — and should — push it
+forward:
 
-**Start here:** [White-label for business](./white-label-for-business.md).
+- **Traders:** add cBot templates, request features, report bugs.
+- **Brokers:** contribute the integrations and controls your desk needs.
+- **Providers:** upstream your operational fixes and IaC improvements.
+
+File issues, add UI translations or AI provider adapters, and send PRs — the
+[Contributing guide](./contributing.md) and [MCP server docs](./features/mcp.md) get you going.
 
 ## Is cMind *not* for you?
 
 Be honest with yourself. cMind might be overkill if:
 
-- You&apos;ve never touched a terminal and don&apos;t want to start (self-hosting means *you* run the server).
-- You only trade manually and don&apos;t care about bots, backtests, or copy trading.
-- You want a hosted SaaS with a support hotline — cMind is self-hosted; *you* are the ops team
-  (though it tries very hard to make that painless).
+- You've never touched a terminal and don't want to start — though a
+  [cloud/VPS provider can host it for you](./for-cloud-providers.md).
+- You only trade manually and don't care about bots, backtests, or copy trading.
+- You want a hosted SaaS with a support hotline and you don't want anyone self-hosting it — cMind is
+  self-hosted by design (it just tries very hard to make that painless).
 
-If you&apos;re still nodding along, welcome aboard. → [Run it locally](./deployment/local.md)
+Still nodding along? Welcome aboard. → [Run it locally](./deployment/local.md)

@@ -7,7 +7,15 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Getting started',
       collapsed: false,
-      items: ['intro', 'audience', 'white-label-for-business', 'contributing'],
+      items: [
+        'intro',
+        'audience',
+        'for-traders',
+        'for-brokers',
+        'for-cloud-providers',
+        'white-label-for-business',
+        'contributing',
+      ],
     },
     {
       type: 'category',

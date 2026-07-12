@@ -353,18 +353,21 @@ function Deploy() {
 const audience = [
   {
     emoji: '📈',
-    title: 'Algorithmic traders',
-    text: 'You live in dark dashboards and equity curves. Write a cBot, backtest it across nodes, run it live — all in one place.',
+    title: 'Traders',
+    text: 'Self-host your whole desk. Write a cBot, backtest it across nodes, run it live, and copy it — all in one AI-powered console, your data never leaving your box.',
+    to: '/docs/for-traders',
   },
   {
-    emoji: '🧑‍💻',
-    title: 'Quant-leaning developers',
-    text: 'C# or Python, a real IDE, sandboxed builds, an MCP server, and an API. Automate the boring parts with the AI.',
+    emoji: '🏦',
+    title: 'Brokers',
+    text: 'White-label cMind for your clients. Give them AI, copy trading, and prop-firm challenges under your brand, restrict accounts to your book, and open new revenue.',
+    to: '/docs/for-brokers',
   },
   {
-    emoji: '🏢',
-    title: 'Prop firms & trading desks',
-    text: 'Multi-tenant, white-label, compliance logs, and prop-firm rule simulation. Onboard traders under your own brand.',
+    emoji: '🖥️',
+    title: 'Cloud & VPS providers',
+    text: 'Offer managed cMind hosting. Land a sticky, compute-hungry workload and monetize the subscription, the metered compute, the white-label, and the AI.',
+    to: '/docs/for-cloud-providers',
   },
 ];
 
@@ -376,14 +379,17 @@ function Audience() {
         <Heading as="h2" className={styles.sectionTitle}>
           Built for people with money on the line.
         </Heading>
+        <p className={styles.sectionLede}>
+          Trader, broker, or hosting provider — <Link to="/docs/audience">find your path →</Link>
+        </p>
       </div>
       <div className={styles.audience}>
         {audience.map((a) => (
-          <div key={a.title} className={styles.audCard}>
+          <Link key={a.title} to={a.to} className={styles.audCard}>
             <div className={styles.audEmoji}>{a.emoji}</div>
             <h3>{a.title}</h3>
             <p>{a.text}</p>
-          </div>
+          </Link>
         ))}
       </div>
     </section>

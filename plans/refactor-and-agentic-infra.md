@@ -27,6 +27,18 @@ Shipped to `main` this run (each an atomic, always-green commit):
   CA1861/CA1825 there.
 - ✅ **§3.1/§3.2 docs** — `website/docs/architecture.md` (module map + mermaid diagram + request flows)
   and six ADRs promoting the non-inferable decisions; wired into the sidebar.
+- ✅ **docs link-gate real** — Docusaurus `onBrokenLinks` flipped `warn`→`throw` (site verified
+  link-clean), so the CI docs job now fails on a dangling link; deprecated `onBrokenMarkdownLinks`
+  migrated to `markdown.hooks`.
+- ✅ **§5.2 failure-path map** — `website/docs/testing/failure-paths.md` maps every mandated failure
+  scenario to the test(s) that exercise it; flags three thin spots to verify (MCP auth reject, CBot
+  build-failure surfacing, gated live execution).
+
+Audited and found already-optimal (no change needed, evidence for the record):
+
+- **§2.1 EF hot path** — `DashboardQuery` (the most-polled read) already uses `AsNoTracking` +
+  server-side projections/aggregates; the one full-row materialize is a documented TPH constraint.
+  No low-hanging `AsNoTracking`/projection wins in the hot path — the data layer is disciplined.
 
 Verified already-satisfied (no action needed):
 

@@ -115,8 +115,12 @@ public static class CalendarApiEndpoints
         });
 
         v1.MapGet("/events", async (HttpContext http, IEconomicCalendar calendar, CancellationToken ct) =>
-            Cacheable(http, await calendar.GetEventsAsync(ParseQuery(http.Request), ct)))
-            .RequireCalendarScope(CalendarScopes.Read);
+        {
+            var query = ParseQuery(http.Request);
+            var events = await calendar.GetEventsAsync(query, ct);
+            SetNextLink(http, events, query.Limit);
+            return Cacheable(http, events);
+        }).RequireCalendarScope(CalendarScopes.Read);
 
         v1.MapGet("/events/{id:guid}", async (
             Guid id, HttpContext http, IEconomicCalendar calendar, CancellationToken ct) =>
@@ -128,8 +132,12 @@ public static class CalendarApiEndpoints
         }).RequireCalendarScope(CalendarScopes.Read);
 
         v1.MapGet("/history", async (HttpContext http, IEconomicCalendar calendar, CancellationToken ct) =>
-            Cacheable(http, await calendar.GetEventsAsync(ParseQuery(http.Request), ct)))
-            .RequireCalendarScope(CalendarScopes.Read);
+        {
+            var query = ParseQuery(http.Request);
+            var events = await calendar.GetEventsAsync(query, ct);
+            SetNextLink(http, events, query.Limit);
+            return Cacheable(http, events);
+        }).RequireCalendarScope(CalendarScopes.Read);
 
         v1.MapGet("/series", async (HttpContext http, IEconomicCalendar calendar, CancellationToken ct) =>
             Results.Ok(await calendar.GetSeriesAsync(ParseQuery(http.Request), ct)))
@@ -228,6 +236,15 @@ public static class CalendarApiEndpoints
         Enum.TryParse<ImpactLevel>(value, ignoreCase: true, out var level) ? level : null;
 
     private static string Hash(string raw) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(raw)));
+
+    /// <summary>Emits a keyset <c>Link: rel="next"</c> when the page is full, so a client can walk deep history.</summary>
+    private static void SetNextLink(HttpContext http, IReadOnlyList<CalendarEventView> events, int limit)
+    {
+        if (events.Count == 0 || events.Count < limit) return;
+        var last = events[^1];
+        var cursor = CalendarCursor.Encode(last.EffectiveAt, last.Id.Value);
+        http.Response.Headers.Link = $"<{http.Request.Path}?cursor={Uri.EscapeDataString(cursor)}>; rel=\"next\"";
+    }
 
     /// <summary>
     /// Serves an event list with a weak <c>ETag</c> derived from the result (ids + impact + actual + instant),

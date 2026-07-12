@@ -10,8 +10,9 @@ math that other calendar APIs do not expose.
 > endpoints — `token`, `events`, `events/{id}`, `history`, `series`, `surprises`, `next`, `blackout`,
 > `affected-symbols`, `health` — are **implemented and integration-tested** (auth, scope enforcement,
 > feature/white-label 404), plus **`events/batch`** (bounded multiplex) and a discoverable
-> **`/openapi.json`** document, and **`ETag`/`If-None-Match` 304** on the event/history reads. Still to
-> come: cursor pagination, the SSE `stream`, signed `webhooks`, and the shipped typed client snippet.
+> **`/openapi.json`** document, **`ETag`/`If-None-Match` 304** on the event/history reads, and
+> **keyset cursor pagination** (`Link: rel="next"`). Still to come: the SSE `stream`, signed `webhooks`,
+> and the shipped typed client snippet.
 
 ## Security — JWT
 

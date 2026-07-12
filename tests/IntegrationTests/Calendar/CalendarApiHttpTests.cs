@@ -158,6 +158,25 @@ public class CalendarApiHttpTests(PostgresFixture fixture) : IClassFixture<Postg
     }
 
     [Fact]
+    public async Task Full_page_emits_a_next_cursor_link_header()
+    {
+        await using var app = CreateApp();
+        var owner = await LoginAsync(app);
+        await SeedEventAsync(app);
+        var (clientId, secret) = await IssueClientAsync(owner, CalendarScopes.Read);
+
+        var anon = app.CreateClient();
+        var token = await TokenAsync(anon, clientId, secret);
+        anon.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await anon.GetAsync("/api/calendar/v1/events?from=2024-01-01&to=2025-01-01&limit=1");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.Headers.TryGetValues("Link", out var link).Should().BeTrue();
+        link!.First().Should().Contain("cursor=").And.Contain("rel=\"next\"");
+    }
+
+    [Fact]
     public async Task Openapi_document_is_served_and_lists_the_events_path()
     {
         await using var app = CreateApp();

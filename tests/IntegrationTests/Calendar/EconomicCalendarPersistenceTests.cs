@@ -109,6 +109,34 @@ public class EconomicCalendarPersistenceTests(PostgresFixture fixture) : IClassF
     }
 
     [Fact]
+    public async Task Cursor_pagination_walks_events_without_overlap()
+    {
+        await using var db = await FreshAsync();
+        var series = await SeedCpiAsync(db);
+        var writer = Writer(db);
+        foreach (var offset in new[] { 0, 1, 2 })
+        {
+            var effectiveAt = Effective.AddDays(offset);
+            await writer.IngestReleaseAsync(series,
+                new SourceReleaseItem("CPIAUCSL", effectiveAt, effectiveAt.AddMinutes(1), 3.1m, null, "%", "src"),
+                CancellationToken.None);
+        }
+
+        var reader = Reader(db);
+        var window = new CalendarQuery { From = Effective.AddDays(-1), To = Effective.AddDays(5), Limit = 2 };
+        var page1 = await reader.GetEventsAsync(window, CancellationToken.None);
+        page1.Should().HaveCount(2);
+        page1.Select(e => e.EffectiveAt).Should().BeInAscendingOrder();
+
+        var cursor = CalendarCursor.Encode(page1[^1].EffectiveAt, page1[^1].Id.Value);
+        var page2 = await reader.GetEventsAsync(window with { Cursor = cursor }, CancellationToken.None);
+
+        page2.Should().ContainSingle();
+        page2[0].EffectiveAt.Should().Be(Effective.AddDays(2));
+        page2.Select(e => e.Id).Should().NotIntersectWith(page1.Select(e => e.Id));
+    }
+
+    [Fact]
     public async Task Blackout_reader_reports_symbol_in_window()
     {
         await using var db = await FreshAsync();

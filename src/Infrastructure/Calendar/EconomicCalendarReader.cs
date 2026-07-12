@@ -47,12 +47,21 @@ public sealed class EconomicCalendarReader(
             q = q.Where(x => EF.Functions.ILike(x.SeriesCodeValue, pattern));
         }
 
-        var events = await q.OrderBy(x => x.EffectiveAt).Take(Math.Max(1, query.Limit) * 4).ToListAsync(ct);
+        var cursor = CalendarCursor.TryDecode(query.Cursor);
+        if (cursor is { } start) q = q.Where(x => x.EffectiveAt >= start.EffectiveAt);
+
+        var events = await q.OrderBy(x => x.EffectiveAt).ThenBy(x => x.Id)
+            .Take(Math.Max(1, query.Limit) * 4).ToListAsync(ct);
         var asOf = query.AsOf;
 
         var views = new List<CalendarEventView>();
         foreach (var economicEvent in events)
         {
+            // Keyset skip: past the cursor's instant, or same instant with an id already returned.
+            if (cursor is { } c
+                && (economicEvent.EffectiveAt < c.EffectiveAt
+                    || (economicEvent.EffectiveAt == c.EffectiveAt && economicEvent.Id.Value.CompareTo(c.Id) <= 0)))
+                continue;
             if (asOf is { } pit && !economicEvent.Revisions.Any(r => r.KnownAt <= pit)) continue;
             var view = Project(economicEvent, asOf, null);
             if (query.MinImpact is { } min && view.Impact < min) continue;

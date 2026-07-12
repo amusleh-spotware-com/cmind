@@ -30,7 +30,7 @@ public sealed class BrokerVerifier(
     public async Task<BrokerVerificationResult> VerifyAsync(BrokerProbeRequest request, CancellationToken ct)
     {
         var accounts = options.CurrentValue.Accounts;
-        var algoPath = accounts.BrokerProbeAlgoPath;
+        var algoPath = ResolveAlgoPath(accounts.BrokerProbeAlgoPath);
         if (string.IsNullOrWhiteSpace(algoPath) || !File.Exists(algoPath))
         {
             log.BrokerProbeUnavailable(request.AccountNumber, $"probe algo not found at '{algoPath}'");
@@ -71,6 +71,13 @@ public sealed class BrokerVerifier(
             try { if (Directory.Exists(workDir)) Directory.Delete(workDir, recursive: true); } catch { /* swallow */ }
         }
     }
+
+    // A relative probe path resolves against the app base directory (where the packaged broker-probe/
+    // broker-probe.algo lands via CopyToOutputDirectory); an absolute path is used as given.
+    private static string ResolveAlgoPath(string path) =>
+        string.IsNullOrWhiteSpace(path) || Path.IsPathRooted(path)
+            ? path
+            : Path.Combine(AppContext.BaseDirectory, path);
 
     private BrokerVerificationResult Interpret(BrokerProbeRequest request, bool timedOut, string output)
     {

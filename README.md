@@ -94,7 +94,9 @@
 ## 🎯 Who it's for
 
 - **Algorithmic traders &amp; quants** who write cBots and want to run, backtest, and optimize them at scale — not babysit a single terminal.
+- **cTrader brokers** who run a white-label cMind for their own clients — AI, copy trading and prop-firm challenges under your brand, with accounts restricted to your brokerage. → [For brokers](https://amusleh-spotware-com.github.io/cmind/docs/for-brokers)
 - **Prop-firm operators &amp; trading desks** mirroring strategies across many accounts with rule-guards and a full audit trail.
+- **Cloud &amp; VPS providers** offering managed cMind hosting as a product — monetize the subscription, the compute, the white-label, and the AI. → [For cloud &amp; VPS providers](https://amusleh-spotware-com.github.io/cmind/docs/for-cloud-providers)
 - **Developers &amp; resellers** who want a hardened, white-labelable, self-hosted trading-ops console — with an MCP + API surface to build on.
 
 ## 🗂️ What's inside

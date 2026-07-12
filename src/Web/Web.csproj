@@ -10,6 +10,13 @@
     <InternalsVisibleTo Include="IntegrationTests" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Prebuilt broker-probe .algo shipped to the output dir under broker-probe/ so the default
+         App:Accounts:BrokerProbeAlgoPath resolves at runtime (see Web.Accounts.BrokerVerifier). -->
+    <Content Include="BrokerProbe\broker-probe.algo" Link="broker-probe\broker-probe.algo">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Core\Core.csproj" />
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
     <ProjectReference Include="..\Nodes\Nodes.csproj" />

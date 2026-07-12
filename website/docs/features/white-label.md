@@ -117,11 +117,23 @@ Environment-variable form: `App__Accounts__AllowedBrokers__0=Pepperstone`.
   host (which has the Docker socket), tails logs, and parses the broker via
   `Core.Accounts.BrokerProbeOutput`. Only invoked when the allowlist is restricted.
 
-**Broker-probe cBot:** the probe source lives in `tools/broker-probe/`. Build it into
-`broker-probe.algo` and place it at the path given by `App:Accounts:BrokerProbeAlgoPath` (default
-`broker-probe/broker-probe.algo` next to the web host). When the algo is absent, manual-cID verification
-fails closed — accounts under a restricted allowlist can still be linked via the Open API path, which
-needs no probe. See `tools/broker-probe/README.md`.
+**Broker-probe cBot:** a prebuilt `broker-probe.algo` ships with the Web app (`src/Web/BrokerProbe/`,
+copied to the output as `broker-probe/broker-probe.algo`), so the default
+`App:Accounts:BrokerProbeAlgoPath` resolves out of the box — a relative path is resolved against the app
+base directory, an absolute path is used as given. The source lives in `tools/broker-probe/`. When the
+algo is absent, manual-cID verification fails closed — accounts under a restricted allowlist can still be
+linked via the Open API path, which needs no probe.
+
+## Broker allowlist — tests
+
+- **Unit** — `UnitTests/Accounts/`: `BrokerName`/`BrokerAllowlist` value objects, `BrokerProbeOutput`
+  parser, and the `CTraderIdAccount` allowlist invariant.
+- **Integration** — `IntegrationTests/BrokerAllowlistTests.cs`: manual-cID endpoint with a fake verifier
+  (unrestricted / verified / disallowed / verification-failed) + Open API linker skipping disallowed
+  accounts. `BrokerVerifierLiveTests.cs` runs the **real** probe when cID creds + the algo are provided
+  (skips cleanly otherwise).
+- **E2E** — `E2ETests/BrokerAllowlistTests.cs`: a restricted deployment rejects a manual add through the
+  real UI and shows the "couldn't verify" notification (no account row added).
 
 ## Design tokens (CSS variables)
 

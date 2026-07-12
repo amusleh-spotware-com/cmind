@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>Język</value></data>
   <data name="language.description" xml:space="preserve"><value>Wybierz język interfejsu. Twój wybór zostanie zapisany w profilu i zastosowany w całej aplikacji.</value></data>
   <data name="language.current" xml:space="preserve"><value>Bieżący język</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>Kalendarz ekonomiczny</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>Kalendarz ekonomiczny</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>Nadchodzące</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>Kraj</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>Waluta</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>Wpływ</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>Rzeczywista</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>Prognoza</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>Poprzednia</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>Opublikowano</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>Brak wydarzeń w tym zakresie.</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>Niski</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>Średni</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>Wysoki</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>Krytyczny</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>Filtry</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>Waluty</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>Minimalny wpływ</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>Zastosuj</value></data>
 </root>

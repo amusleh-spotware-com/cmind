@@ -118,10 +118,13 @@ so re-enabling is instant.
   hot indexes), the read-through `IEconomicCalendar` reader with point-in-time `asOf`, the idempotent
   append-only write service, the FRED connector behind a resilient typed client, and the config-gated
   ingestion worker; Testcontainers integration tests (persistence, PIT, idempotency, blackout).
-- **P2 — public JWT REST API** *(implemented)* **+ Web UI** *(pending)*: the versioned, JWT-secured
-  `/api/calendar/v1` API — client issuance, token exchange, and the core read endpoints (events,
-  history, series, surprises, next, blackout, affected-symbols, health) with scope enforcement and
-  two-tier gating; integration-tested. The mobile-first calendar page + full-history browser follow.
+- **P2 — public JWT REST API + Web UI** *(implemented)*: the versioned, JWT-secured `/api/calendar/v1`
+  API — client issuance, token exchange, and the core read endpoints (events, history, series,
+  surprises, next, blackout, affected-symbols, health) with scope enforcement and two-tier gating,
+  integration-tested. Plus the mobile-first **`/economic-calendar` page** — a gated, fully-localized
+  (23 languages) agenda of upcoming releases as phone-friendly cards with colour-banded impact chips
+  and a MudBlazor **filter dialog** (currencies + minimum impact); nav entry, smoke/mobile/a11y/E2E
+  tested. The deep full-history browser + series charts follow.
 - **P3 — more sources**: BLS/BEA/Census/ECB/Eurostat/OECD + central-bank schedules; reconciliation;
   10-year backfill.
 - **P4 — deep integration**: **MCP tools** *(implemented — full read-API parity: `calendar_events`,

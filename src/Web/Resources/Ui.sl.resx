@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>Jezik</value></data>
   <data name="language.description" xml:space="preserve"><value>Izberite jezik vmesnika. Vaša izbira se shrani v profil in uporabi v celotni aplikaciji.</value></data>
   <data name="language.current" xml:space="preserve"><value>Trenutni jezik</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>Ekonomski koledar</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>Ekonomski koledar</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>Prihajajoče</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>Država</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>Valuta</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>Vpliv</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>Dejansko</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>Napoved</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>Prejšnje</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>Objavljeno</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>V tem obsegu ni dogodkov.</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>Nizko</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>Srednje</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>Visoko</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>Kritično</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>Filtri</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>Valute</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>Najmanjši vpliv</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>Uporabi</value></data>
 </root>

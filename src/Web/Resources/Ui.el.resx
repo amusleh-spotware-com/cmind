@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>Γλώσσα</value></data>
   <data name="language.description" xml:space="preserve"><value>Επιλέξτε τη γλώσσα της διεπαφής. Η επιλογή σας αποθηκεύεται στο προφίλ σας και εφαρμόζεται σε όλη την εφαρμογή.</value></data>
   <data name="language.current" xml:space="preserve"><value>Τρέχουσα γλώσσα</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>Οικονομικό ημερολόγιο</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>Οικονομικό ημερολόγιο</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>Επερχόμενα</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>Χώρα</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>Νόμισμα</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>Επίδραση</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>Πραγματικό</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>Πρόβλεψη</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>Προηγούμενο</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>Δημοσιεύτηκε</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>Δεν υπάρχουν γεγονότα σε αυτό το εύρος.</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>Χαμηλή</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>Μεσαία</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>Υψηλή</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>Κρίσιμη</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>Φίλτρα</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>Νομίσματα</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>Ελάχιστη επίδραση</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>Εφαρμογή</value></data>
 </root>

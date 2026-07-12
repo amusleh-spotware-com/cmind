@@ -1,0 +1,149 @@
+﻿@page "/economic-calendar"
+@using Core.Calendar
+@using Core.Features
+@using Core.Options
+@using Microsoft.Extensions.Options
+@using Web.Components.Dialogs
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@inject IStringLocalizer<Ui> L
+@inject IEconomicCalendar Calendar
+@inject IDialogService DialogService
+@inject IFeatureGate Gate
+@inject IOptionsMonitor<AppOptions> Options
+@inject TimeProvider Time
+
+<PageTitle>@L["calendar.title"]</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">@L["calendar.title"]</MudText>
+    <MudSpacer />
+    @if (_enabled)
+    {
+        <MudButton StartIcon="@Icons.Material.Filled.FilterList" Variant="Variant.Outlined"
+                   OnClick="OpenFilterAsync">@L["calendar.filter.title"]</MudButton>
+    }
+</MudStack>
+
+@if (!_enabled)
+{
+    <MudAlert Severity="Severity.Info">@L["calendar.empty"]</MudAlert>
+}
+else if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (_events.Count == 0)
+{
+    <MudAlert Severity="Severity.Normal">@L["calendar.empty"]</MudAlert>
+}
+else
+{
+    <MudText Typo="Typo.subtitle2" Class="mb-2 mud-text-secondary">@L["calendar.upcoming"]</MudText>
+    <MudStack Spacing="2">
+        @foreach (var e in _events)
+        {
+            <MudCard Elevation="1">
+                <MudCardContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudText Typo="Typo.body2">@e.EffectiveAt.ToLocalTime().DateTime.ToString("g")</MudText>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@e.Country</MudChip>
+                        <MudChip T="string" Size="Size.Small" Color="@ImpactColor(e.Impact)">@ImpactLabel(e.Impact)</MudChip>
+                        <MudSpacer />
+                        @if (e.Released)
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@L["calendar.released"]</MudChip>
+                        }
+                    </MudStack>
+                    <MudText Typo="Typo.subtitle2" Class="mt-1">@e.SeriesCode</MudText>
+                    <MudStack Row="true" Spacing="4" Class="mt-1">
+                        <div>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">@L["calendar.actual"]</MudText>
+                            <MudText Typo="Typo.body2">@Format(e.Actual)</MudText>
+                        </div>
+                        <div>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">@L["calendar.forecast"]</MudText>
+                            <MudText Typo="Typo.body2">@Format(e.Forecast)</MudText>
+                        </div>
+                        <div>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">@L["calendar.previous"]</MudText>
+                            <MudText Typo="Typo.body2">@Format(e.Previous)</MudText>
+                        </div>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        }
+    </MudStack>
+}
+
+@code {
+    private IReadOnlyList<CalendarEventView> _events = [];
+    private ImpactLevel _minImpact = ImpactLevel.Low;
+    private string? _currencies;
+    private bool _enabled;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _enabled = CalendarEnablement.IsEnabled(Options.CurrentValue.Branding, Gate);
+        if (!_enabled)
+        {
+            _loading = false;
+            return;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        var now = Time.GetUtcNow();
+        var query = new CalendarQuery
+        {
+            From = now.AddDays(-1),
+            To = now.AddDays(30),
+            MinImpact = _minImpact == ImpactLevel.Low ? null : _minImpact,
+            Currencies = string.IsNullOrWhiteSpace(_currencies)
+                ? null
+                : _currencies.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+            Limit = 100
+        };
+        _events = await Calendar.GetEventsAsync(query, CancellationToken.None);
+        _loading = false;
+    }
+
+    private async Task OpenFilterAsync()
+    {
+        var parameters = new DialogParameters<CalendarFilterDialog>
+        {
+            { x => x.MinImpact, _minImpact },
+            { x => x.Currencies, _currencies }
+        };
+        var dialog = await DialogService.ShowAsync<CalendarFilterDialog>(L["calendar.filter.title"], parameters);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: CalendarFilterDialog.CalendarFilter filter })
+        {
+            _minImpact = filter.MinImpact;
+            _currencies = filter.Currencies;
+            await LoadAsync();
+        }
+    }
+
+    private static string Format(decimal? value) => value?.ToString("0.##") ?? "—";
+
+    private static Color ImpactColor(ImpactLevel level) => level switch
+    {
+        ImpactLevel.Critical => Color.Error,
+        ImpactLevel.High => Color.Warning,
+        ImpactLevel.Medium => Color.Info,
+        _ => Color.Default
+    };
+
+    private string ImpactLabel(ImpactLevel level) => L[level switch
+    {
+        ImpactLevel.Critical => "calendar.impact.critical",
+        ImpactLevel.High => "calendar.impact.high",
+        ImpactLevel.Medium => "calendar.impact.medium",
+        _ => "calendar.impact.low"
+    }];
+}

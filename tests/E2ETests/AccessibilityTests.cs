@@ -31,7 +31,7 @@ public sealed class AccessibilityTests(AppFixture app)
         "/mcp", "/prop-firm", "/copy-trading", "/accounts", "/alerts", "/agent",
         "/settings/ai", "/settings/openapi", "/settings/features", "/settings/legal",
         "/run", "/backtest", "/prop-guard", "/optimize",
-        "/ai/build", "/ai/review", "/ai/optimize",
+        "/ai/build", "/ai/review", "/ai/optimize", "/economic-calendar",
     }.Select(r => new object[] { r });
 
     [Theory]

@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>Язык</value></data>
   <data name="language.description" xml:space="preserve"><value>Выберите язык интерфейса. Ваш выбор сохранится в профиле и применится во всём приложении.</value></data>
   <data name="language.current" xml:space="preserve"><value>Текущий язык</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>Экономический календарь</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>Экономический календарь</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>Предстоящие</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>Страна</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>Валюта</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>Влияние</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>Факт</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>Прогноз</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>Пред.</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>Опубликовано</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>Нет событий в этом диапазоне.</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>Низкое</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>Среднее</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>Высокое</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>Критическое</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>Фильтры</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>Валюты</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>Минимальное влияние</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>Применить</value></data>
 </root>

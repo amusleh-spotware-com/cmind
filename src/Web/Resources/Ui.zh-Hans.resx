@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>语言</value></data>
   <data name="language.description" xml:space="preserve"><value>选择界面语言。您的选择将保存到个人资料并应用于整个应用。</value></data>
   <data name="language.current" xml:space="preserve"><value>当前语言</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>经济日历</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>经济日历</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>即将到来</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>国家/地区</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>货币</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>影响</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>实际值</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>预测值</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>前值</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>已发布</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>此范围内没有事件。</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>低</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>中</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>高</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>严重</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>筛选</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>货币</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>最小影响</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>应用</value></data>
 </root>

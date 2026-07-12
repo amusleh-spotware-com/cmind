@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>Bahasa</value></data>
   <data name="language.description" xml:space="preserve"><value>Pilih bahasa antarmuka. Pilihan Anda disimpan ke profil dan diterapkan di seluruh aplikasi.</value></data>
   <data name="language.current" xml:space="preserve"><value>Bahasa saat ini</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>Kalender Ekonomi</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>Kalender Ekonomi</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>Akan datang</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>Negara</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>Mata uang</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>Dampak</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>Aktual</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>Perkiraan</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>Sebelumnya</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>Dirilis</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>Tidak ada peristiwa dalam rentang ini.</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>Rendah</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>Sedang</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>Tinggi</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>Kritis</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>Filter</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>Mata uang</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>Dampak minimum</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>Terapkan</value></data>
 </root>

@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>Idioma</value></data>
   <data name="language.description" xml:space="preserve"><value>Escolha o idioma da interface. Sua escolha é salva no seu perfil e aplicada em todo o app.</value></data>
   <data name="language.current" xml:space="preserve"><value>Idioma atual</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>Calendário econômico</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>Calendário econômico</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>Próximos</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>País</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>Moeda</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>Impacto</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>Atual</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>Previsão</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>Anterior</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>Divulgado</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>Nenhum evento neste período.</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>Baixo</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>Médio</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>Alto</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>Crítico</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>Filtros</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>Moedas</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>Impacto mínimo</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>Aplicar</value></data>
 </root>

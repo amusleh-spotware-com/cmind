@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>언어</value></data>
   <data name="language.description" xml:space="preserve"><value>인터페이스 언어를 선택하세요. 선택 내용은 프로필에 저장되어 앱 전체에 적용됩니다.</value></data>
   <data name="language.current" xml:space="preserve"><value>현재 언어</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>경제 캘린더</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>경제 캘린더</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>예정</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>국가</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>통화</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>영향</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>실제</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>예측</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>이전</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>발표됨</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>이 범위에 이벤트가 없습니다.</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>낮음</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>보통</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>높음</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>심각</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>필터</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>통화</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>최소 영향</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>적용</value></data>
 </root>

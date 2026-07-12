@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>اللغة</value></data>
   <data name="language.description" xml:space="preserve"><value>اختر لغة الواجهة. يُحفَظ اختيارك في ملفك الشخصي ويُطبَّق في كامل التطبيق.</value></data>
   <data name="language.current" xml:space="preserve"><value>اللغة الحالية</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>التقويم الاقتصادي</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>التقويم الاقتصادي</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>القادمة</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>الدولة</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>العملة</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>التأثير</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>الفعلي</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>التوقع</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>السابق</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>صدر</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>لا توجد أحداث في هذا النطاق.</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>منخفض</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>متوسط</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>مرتفع</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>حرج</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>عوامل التصفية</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>العملات</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>الحد الأدنى للتأثير</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>تطبيق</value></data>
 </root>

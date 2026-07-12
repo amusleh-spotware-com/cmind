@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>Jazyk</value></data>
   <data name="language.description" xml:space="preserve"><value>Vyberte jazyk rozhrania. Vaša voľba sa uloží do profilu a použije v celej aplikácii.</value></data>
   <data name="language.current" xml:space="preserve"><value>Aktuálny jazyk</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>Ekonomický kalendár</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>Ekonomický kalendár</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>Nadchádzajúce</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>Krajina</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>Mena</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>Dopad</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>Skutočnosť</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>Prognóza</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>Predchádzajúce</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>Zverejnené</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>V tomto rozsahu nie sú žiadne udalosti.</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>Nízky</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>Stredný</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>Vysoký</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>Kritický</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>Filtre</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>Meny</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>Minimálny dopad</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>Použiť</value></data>
 </root>

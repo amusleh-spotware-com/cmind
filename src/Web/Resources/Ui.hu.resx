@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>Nyelv</value></data>
   <data name="language.description" xml:space="preserve"><value>Válassza ki a felület nyelvét. A választás a profiljába mentődik, és az egész alkalmazásban érvényesül.</value></data>
   <data name="language.current" xml:space="preserve"><value>Jelenlegi nyelv</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>Gazdasági naptár</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>Gazdasági naptár</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>Közelgő</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>Ország</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>Pénznem</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>Hatás</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>Tényleges</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>Előrejelzés</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>Előző</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>Közzétéve</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>Nincsenek események ebben a tartományban.</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>Alacsony</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>Közepes</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>Magas</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>Kritikus</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>Szűrők</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>Pénznemek</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>Minimális hatás</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>Alkalmaz</value></data>
 </root>

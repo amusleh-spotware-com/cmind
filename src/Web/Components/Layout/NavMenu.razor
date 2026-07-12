@@ -1,7 +1,11 @@
+@using Core.Calendar
 @using Core.Features
+@using Core.Options
+@using Microsoft.Extensions.Options
 @using Web.Components.Dialogs
 @inject IFeatureGate Gate
 @inject IDialogService Dialogs
+@inject IOptionsMonitor<AppOptions> AppOptionsMonitor
 @inject IStringLocalizer<Ui> L
 
 @* Expandable, grouped navigation (TradingView/cTrader-inspired). Feature-gated groups collapse to
@@ -10,6 +14,11 @@
 <div class="nav-shell d-flex flex-column">
     <MudNavMenu Class="flex-grow-1">
         <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">@L["nav.dashboard"]</MudNavLink>
+
+        @if (CalendarOn)
+        {
+            <MudNavLink Href="/economic-calendar" Icon="@Icons.Material.Filled.CalendarMonth">@L["nav.economicCalendar"]</MudNavLink>
+        }
 
         @if (AnyAuthoring)
         {
@@ -115,6 +124,9 @@
 
     private bool AnyProp =>
         Gate.IsEnabled(FeatureFlag.PropGuard) || Gate.IsEnabled(FeatureFlag.PropFirm);
+
+    private bool CalendarOn =>
+        CalendarEnablement.IsEnabled(AppOptionsMonitor.CurrentValue.Branding, Gate);
 
     private Task OpenSettings() =>
         // Centered, windowed dialog (Claude-settings style): a fixed-size panel over a dimmed backdrop,

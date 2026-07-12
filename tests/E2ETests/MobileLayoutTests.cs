@@ -14,7 +14,7 @@ public sealed class MobileLayoutTests(AppFixture app)
     public static IEnumerable<object[]> MobileRoutes() => new[]
     {
         "/", "/cbots", "/run", "/backtest", "/accounts", "/copy-trading",
-        "/ai/build", "/nodes", "/users", "/account", "/settings/features",
+        "/ai/build", "/nodes", "/users", "/account", "/settings/features", "/economic-calendar",
     }.Select(r => new object[] { r });
 
     // Shell-simple pages that must never scroll sideways on a phone right now. Grows every phase.
@@ -23,7 +23,7 @@ public sealed class MobileLayoutTests(AppFixture app)
         "/", "/account", "/settings/features", "/nodes", "/users", "/cbots", "/run", "/backtest",
         "/mcp", "/prop-firm", "/settings/legal", "/copy-trading",
         "/agent", "/alerts", "/prop-guard", "/settings/ai", "/settings/openapi", "/accounts",
-        "/ai/build", "/ai/review", "/ai/optimize", "/optimize",
+        "/ai/build", "/ai/review", "/ai/optimize", "/optimize", "/economic-calendar",
     }.Select(r => new object[] { r });
 
     [Theory]

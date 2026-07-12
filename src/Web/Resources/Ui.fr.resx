@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>Langue</value></data>
   <data name="language.description" xml:space="preserve"><value>Choisissez la langue de l'interface. Votre choix est enregistré dans votre profil et appliqué à toute l'application.</value></data>
   <data name="language.current" xml:space="preserve"><value>Langue actuelle</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>Calendrier économique</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>Calendrier économique</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>À venir</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>Pays</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>Devise</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>Impact</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>Réel</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>Prévision</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>Précédent</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>Publié</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>Aucun événement dans cette plage.</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>Faible</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>Moyen</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>Élevé</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>Critique</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>Filtres</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>Devises</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>Impact minimum</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>Appliquer</value></data>
 </root>

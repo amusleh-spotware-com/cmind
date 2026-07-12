@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>Dil</value></data>
   <data name="language.description" xml:space="preserve"><value>Arayüz dilini seçin. Seçiminiz profilinize kaydedilir ve uygulamanın tamamında uygulanır.</value></data>
   <data name="language.current" xml:space="preserve"><value>Geçerli dil</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>Ekonomik Takvim</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>Ekonomik Takvim</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>Yaklaşan</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>Ülke</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>Para birimi</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>Etki</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>Gerçekleşen</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>Tahmin</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>Önceki</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>Yayınlandı</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>Bu aralıkta etkinlik yok.</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>Düşük</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>Orta</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>Yüksek</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>Kritik</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>Filtreler</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>Para birimleri</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>Minimum etki</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>Uygula</value></data>
 </root>

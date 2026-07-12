@@ -1,0 +1,45 @@
+﻿@using Core.Calendar
+@inject IStringLocalizer<Ui> L
+
+@* Economic-calendar filter (mandate 7: a dialog, never an inline form). Returns CalendarFilter on apply. *@
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L["calendar.filter.title"]</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudSelect T="ImpactLevel" @bind-Value="_minImpact" Label="@L["calendar.filter.minImpact"]" Class="mb-2">
+            <MudSelectItem Value="@ImpactLevel.Low">@L["calendar.impact.low"]</MudSelectItem>
+            <MudSelectItem Value="@ImpactLevel.Medium">@L["calendar.impact.medium"]</MudSelectItem>
+            <MudSelectItem Value="@ImpactLevel.High">@L["calendar.impact.high"]</MudSelectItem>
+            <MudSelectItem Value="@ImpactLevel.Critical">@L["calendar.impact.critical"]</MudSelectItem>
+        </MudSelect>
+        <MudTextField @bind-Value="_currencies" Label="@L["calendar.filter.currencies"]" Placeholder="USD,EUR" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@L["common.cancel"]</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">@L["calendar.filter.apply"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public ImpactLevel MinImpact { get; set; } = ImpactLevel.Low;
+    [Parameter] public string? Currencies { get; set; }
+
+    private ImpactLevel _minImpact;
+    private string? _currencies;
+
+    protected override void OnInitialized()
+    {
+        _minImpact = MinImpact;
+        _currencies = Currencies;
+    }
+
+    private void Submit() => Dialog.Close(DialogResult.Ok(new CalendarFilter(_minImpact, _currencies)));
+
+    private void Cancel() => Dialog.Cancel();
+
+    public sealed record CalendarFilter(ImpactLevel MinImpact, string? Currencies);
+}

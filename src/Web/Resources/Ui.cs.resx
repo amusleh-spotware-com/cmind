@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>Jazyk</value></data>
   <data name="language.description" xml:space="preserve"><value>Zvolte jazyk rozhraní. Vaše volba se uloží do profilu a použije v celé aplikaci.</value></data>
   <data name="language.current" xml:space="preserve"><value>Aktuální jazyk</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>Ekonomický kalendář</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>Ekonomický kalendář</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>Nadcházející</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>Země</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>Měna</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>Dopad</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>Skutečnost</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>Prognóza</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>Předchozí</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>Zveřejněno</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>V tomto rozsahu nejsou žádné události.</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>Nízký</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>Střední</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>Vysoký</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>Kritický</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>Filtry</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>Měny</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>Minimální dopad</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>Použít</value></data>
 </root>

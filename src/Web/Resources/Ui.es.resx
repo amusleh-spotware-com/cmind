@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>Idioma</value></data>
   <data name="language.description" xml:space="preserve"><value>Elige el idioma de la interfaz. Tu elección se guarda en tu perfil y se aplica en toda la app.</value></data>
   <data name="language.current" xml:space="preserve"><value>Idioma actual</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>Calendario económico</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>Calendario económico</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>Próximos</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>País</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>Moneda</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>Impacto</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>Real</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>Previsión</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>Anterior</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>Publicado</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>No hay eventos en este rango.</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>Bajo</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>Medio</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>Alto</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>Crítico</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>Filtros</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>Monedas</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>Impacto mínimo</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>Aplicar</value></data>
 </root>

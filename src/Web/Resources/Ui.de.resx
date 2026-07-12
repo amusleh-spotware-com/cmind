@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>Sprache</value></data>
   <data name="language.description" xml:space="preserve"><value>Wählen Sie die Sprache der Benutzeroberfläche. Ihre Auswahl wird in Ihrem Profil gespeichert und app-weit angewendet.</value></data>
   <data name="language.current" xml:space="preserve"><value>Aktuelle Sprache</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>Wirtschaftskalender</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>Wirtschaftskalender</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>Anstehend</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>Land</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>Währung</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>Auswirkung</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>Aktuell</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>Prognose</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>Vorherig</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>Veröffentlicht</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>Keine Ereignisse in diesem Zeitraum.</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>Niedrig</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>Mittel</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>Hoch</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>Kritisch</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>Filter</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>Währungen</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>Mindestauswirkung</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>Anwenden</value></data>
 </root>

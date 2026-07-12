@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>Lingua</value></data>
   <data name="language.description" xml:space="preserve"><value>Scegli la lingua dell'interfaccia. La tua scelta viene salvata nel profilo e applicata in tutta l'app.</value></data>
   <data name="language.current" xml:space="preserve"><value>Lingua attuale</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>Calendario economico</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>Calendario economico</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>In arrivo</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>Paese</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>Valuta</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>Impatto</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>Effettivo</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>Previsione</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>Precedente</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>Pubblicato</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>Nessun evento in questo intervallo.</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>Basso</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>Medio</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>Alto</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>Critico</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>Filtri</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>Valute</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>Impatto minimo</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>Applica</value></data>
 </root>

@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>ภาษา</value></data>
   <data name="language.description" xml:space="preserve"><value>เลือกภาษาของอินเทอร์เฟซ ตัวเลือกของคุณจะถูกบันทึกในโปรไฟล์และใช้ทั่วทั้งแอป</value></data>
   <data name="language.current" xml:space="preserve"><value>ภาษาปัจจุบัน</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>ปฏิทินเศรษฐกิจ</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>ปฏิทินเศรษฐกิจ</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>ที่กำลังจะมาถึง</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>ประเทศ</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>สกุลเงิน</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>ผลกระทบ</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>ค่าจริง</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>การคาดการณ์</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>ครั้งก่อน</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>เผยแพร่แล้ว</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>ไม่มีเหตุการณ์ในช่วงนี้</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>ต่ำ</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>ปานกลาง</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>สูง</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>วิกฤต</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>ตัวกรอง</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>สกุลเงิน</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>ผลกระทบขั้นต่ำ</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>ใช้</value></data>
 </root>

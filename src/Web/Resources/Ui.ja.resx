@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>言語</value></data>
   <data name="language.description" xml:space="preserve"><value>インターフェースの言語を選択してください。選択内容はプロフィールに保存され、アプリ全体に適用されます。</value></data>
   <data name="language.current" xml:space="preserve"><value>現在の言語</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>経済カレンダー</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>経済カレンダー</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>予定</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>国</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>通貨</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>影響度</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>結果</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>予想</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>前回</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>発表済み</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>この範囲にイベントはありません。</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>低</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>中</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>高</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>重大</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>フィルター</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>通貨</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>最小の影響度</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>適用</value></data>
 </root>

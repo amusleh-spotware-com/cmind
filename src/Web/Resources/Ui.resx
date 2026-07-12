@@ -66,4 +66,23 @@
   <data name="language.title" xml:space="preserve"><value>Language</value></data>
   <data name="language.description" xml:space="preserve"><value>Choose the language for the interface. Your choice is saved to your profile and applied across the app.</value></data>
   <data name="language.current" xml:space="preserve"><value>Current language</value></data>
+  <data name="nav.economicCalendar" xml:space="preserve"><value>Economic Calendar</value></data>
+  <data name="calendar.title" xml:space="preserve"><value>Economic Calendar</value></data>
+  <data name="calendar.upcoming" xml:space="preserve"><value>Upcoming</value></data>
+  <data name="calendar.country" xml:space="preserve"><value>Country</value></data>
+  <data name="calendar.currency" xml:space="preserve"><value>Currency</value></data>
+  <data name="calendar.impact" xml:space="preserve"><value>Impact</value></data>
+  <data name="calendar.actual" xml:space="preserve"><value>Actual</value></data>
+  <data name="calendar.forecast" xml:space="preserve"><value>Forecast</value></data>
+  <data name="calendar.previous" xml:space="preserve"><value>Previous</value></data>
+  <data name="calendar.released" xml:space="preserve"><value>Released</value></data>
+  <data name="calendar.empty" xml:space="preserve"><value>No events in this range.</value></data>
+  <data name="calendar.impact.low" xml:space="preserve"><value>Low</value></data>
+  <data name="calendar.impact.medium" xml:space="preserve"><value>Medium</value></data>
+  <data name="calendar.impact.high" xml:space="preserve"><value>High</value></data>
+  <data name="calendar.impact.critical" xml:space="preserve"><value>Critical</value></data>
+  <data name="calendar.filter.title" xml:space="preserve"><value>Filters</value></data>
+  <data name="calendar.filter.currencies" xml:space="preserve"><value>Currencies</value></data>
+  <data name="calendar.filter.minImpact" xml:space="preserve"><value>Minimum impact</value></data>
+  <data name="calendar.filter.apply" xml:space="preserve"><value>Apply</value></data>
 </root>

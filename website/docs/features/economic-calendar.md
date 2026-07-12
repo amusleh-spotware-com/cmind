@@ -149,8 +149,11 @@ so re-enabling is instant.
   (23 languages) agenda of upcoming releases as phone-friendly cards with colour-banded impact chips
   and a MudBlazor **filter dialog** (currencies + minimum impact); nav entry, smoke/mobile/a11y/E2E
   tested. The deep full-history browser + series charts follow.
-- **P3 — more sources**: BLS/BEA/Census/ECB/Eurostat/OECD + central-bank schedules; reconciliation;
-  10-year backfill.
+- **P3 — more sources & warm-up** *(started)*: a **core-series catalog** (CPI, Core CPI, NFP,
+  unemployment, GDP, PCE, Fed funds, retail sales → their FRED ids) is seeded on first enable, and a
+  one-time, idempotent, year-chunked **proactive backfill** pulls their ≥10-year history so the common
+  case is warm without waiting for a user miss. Still to come: BLS/BEA/Census/ECB/Eurostat/OECD sources
+  + central-bank schedules, the reconciliation pass, and per-source freshness/observability.
 - **P4 — deep integration**: **MCP tools** *(implemented — full read-API parity: `calendar_events`,
   `calendar_event`, `calendar_history`, `calendar_series`, `calendar_surprises`, `calendar_next`,
   `calendar_blackout`, `calendar_affected_symbols`, `calendar_health`, gated on the feature)*; cBot

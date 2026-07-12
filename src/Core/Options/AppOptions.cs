@@ -76,6 +76,9 @@ public sealed record CalendarOptions
     /// <summary>Fallback cooldown applied to a source after a 429 that carries no usable <c>Retry-After</c>.</summary>
     public TimeSpan RateLimitBackoff { get; init; } = TimeSpan.FromSeconds(60);
 
+    /// <summary>Years of history the one-time proactive backfill pulls for the core high-impact series.</summary>
+    public int BackfillYears { get; init; } = 10;
+
     /// <summary>
     /// When a blackout answer is uncertain (source/DB fault, data gap), the conservative default: <c>true</c>
     /// = fail-closed ("assume in-blackout") for risk-off bots, <c>false</c> = fail-open. Never silently

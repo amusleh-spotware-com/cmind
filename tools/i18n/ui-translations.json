@@ -82,7 +82,8 @@
       "calendar.filter.title": "Filters",
       "calendar.filter.currencies": "Currencies",
       "calendar.filter.minImpact": "Minimum impact",
-      "calendar.filter.apply": "Apply"
+      "calendar.filter.apply": "Apply",
+      "calendar.filter.fromDate": "From date"
     },
     "ar": {
       "common.retry": "إعادة المحاولة",
@@ -165,7 +166,8 @@
       "calendar.filter.title": "عوامل التصفية",
       "calendar.filter.currencies": "العملات",
       "calendar.filter.minImpact": "الحد الأدنى للتأثير",
-      "calendar.filter.apply": "تطبيق"
+      "calendar.filter.apply": "تطبيق",
+      "calendar.filter.fromDate": "من تاريخ"
     },
     "cs": {
       "common.retry": "Zkusit znovu",
@@ -248,7 +250,8 @@
       "calendar.filter.title": "Filtry",
       "calendar.filter.currencies": "Měny",
       "calendar.filter.minImpact": "Minimální dopad",
-      "calendar.filter.apply": "Použít"
+      "calendar.filter.apply": "Použít",
+      "calendar.filter.fromDate": "Od data"
     },
     "de": {
       "common.retry": "Wiederholen",
@@ -331,7 +334,8 @@
       "calendar.filter.title": "Filter",
       "calendar.filter.currencies": "Währungen",
       "calendar.filter.minImpact": "Mindestauswirkung",
-      "calendar.filter.apply": "Anwenden"
+      "calendar.filter.apply": "Anwenden",
+      "calendar.filter.fromDate": "Ab Datum"
     },
     "el": {
       "common.retry": "Επανάληψη",
@@ -414,7 +418,8 @@
       "calendar.filter.title": "Φίλτρα",
       "calendar.filter.currencies": "Νομίσματα",
       "calendar.filter.minImpact": "Ελάχιστη επίδραση",
-      "calendar.filter.apply": "Εφαρμογή"
+      "calendar.filter.apply": "Εφαρμογή",
+      "calendar.filter.fromDate": "Από ημερομηνία"
     },
     "es": {
       "common.retry": "Reintentar",
@@ -497,7 +502,8 @@
       "calendar.filter.title": "Filtros",
       "calendar.filter.currencies": "Monedas",
       "calendar.filter.minImpact": "Impacto mínimo",
-      "calendar.filter.apply": "Aplicar"
+      "calendar.filter.apply": "Aplicar",
+      "calendar.filter.fromDate": "Desde fecha"
     },
     "fr": {
       "common.retry": "Réessayer",
@@ -580,7 +586,8 @@
       "calendar.filter.title": "Filtres",
       "calendar.filter.currencies": "Devises",
       "calendar.filter.minImpact": "Impact minimum",
-      "calendar.filter.apply": "Appliquer"
+      "calendar.filter.apply": "Appliquer",
+      "calendar.filter.fromDate": "À partir du"
     },
     "hu": {
       "common.retry": "Újra",
@@ -663,7 +670,8 @@
       "calendar.filter.title": "Szűrők",
       "calendar.filter.currencies": "Pénznemek",
       "calendar.filter.minImpact": "Minimális hatás",
-      "calendar.filter.apply": "Alkalmaz"
+      "calendar.filter.apply": "Alkalmaz",
+      "calendar.filter.fromDate": "Dátumtól"
     },
     "id": {
       "common.retry": "Coba lagi",
@@ -746,7 +754,8 @@
       "calendar.filter.title": "Filter",
       "calendar.filter.currencies": "Mata uang",
       "calendar.filter.minImpact": "Dampak minimum",
-      "calendar.filter.apply": "Terapkan"
+      "calendar.filter.apply": "Terapkan",
+      "calendar.filter.fromDate": "Dari tanggal"
     },
     "it": {
       "common.retry": "Riprova",
@@ -829,7 +838,8 @@
       "calendar.filter.title": "Filtri",
       "calendar.filter.currencies": "Valute",
       "calendar.filter.minImpact": "Impatto minimo",
-      "calendar.filter.apply": "Applica"
+      "calendar.filter.apply": "Applica",
+      "calendar.filter.fromDate": "Dalla data"
     },
     "ja": {
       "common.retry": "再試行",
@@ -912,7 +922,8 @@
       "calendar.filter.title": "フィルター",
       "calendar.filter.currencies": "通貨",
       "calendar.filter.minImpact": "最小の影響度",
-      "calendar.filter.apply": "適用"
+      "calendar.filter.apply": "適用",
+      "calendar.filter.fromDate": "開始日"
     },
     "ko": {
       "common.retry": "다시 시도",
@@ -995,7 +1006,8 @@
       "calendar.filter.title": "필터",
       "calendar.filter.currencies": "통화",
       "calendar.filter.minImpact": "최소 영향",
-      "calendar.filter.apply": "적용"
+      "calendar.filter.apply": "적용",
+      "calendar.filter.fromDate": "시작 날짜"
     },
     "ms": {
       "common.retry": "Cuba semula",
@@ -1078,7 +1090,8 @@
       "calendar.filter.title": "Penapis",
       "calendar.filter.currencies": "Mata wang",
       "calendar.filter.minImpact": "Kesan minimum",
-      "calendar.filter.apply": "Guna"
+      "calendar.filter.apply": "Guna",
+      "calendar.filter.fromDate": "Dari tarikh"
     },
     "pl": {
       "common.retry": "Ponów",
@@ -1161,7 +1174,8 @@
       "calendar.filter.title": "Filtry",
       "calendar.filter.currencies": "Waluty",
       "calendar.filter.minImpact": "Minimalny wpływ",
-      "calendar.filter.apply": "Zastosuj"
+      "calendar.filter.apply": "Zastosuj",
+      "calendar.filter.fromDate": "Od daty"
     },
     "pt-BR": {
       "common.retry": "Tentar novamente",
@@ -1244,7 +1258,8 @@
       "calendar.filter.title": "Filtros",
       "calendar.filter.currencies": "Moedas",
       "calendar.filter.minImpact": "Impacto mínimo",
-      "calendar.filter.apply": "Aplicar"
+      "calendar.filter.apply": "Aplicar",
+      "calendar.filter.fromDate": "A partir da data"
     },
     "ru": {
       "common.retry": "Повторить",
@@ -1327,7 +1342,8 @@
       "calendar.filter.title": "Фильтры",
       "calendar.filter.currencies": "Валюты",
       "calendar.filter.minImpact": "Минимальное влияние",
-      "calendar.filter.apply": "Применить"
+      "calendar.filter.apply": "Применить",
+      "calendar.filter.fromDate": "С даты"
     },
     "sk": {
       "common.retry": "Skúsiť znova",
@@ -1410,7 +1426,8 @@
       "calendar.filter.title": "Filtre",
       "calendar.filter.currencies": "Meny",
       "calendar.filter.minImpact": "Minimálny dopad",
-      "calendar.filter.apply": "Použiť"
+      "calendar.filter.apply": "Použiť",
+      "calendar.filter.fromDate": "Od dátumu"
     },
     "sl": {
       "common.retry": "Poskusi znova",
@@ -1493,7 +1510,8 @@
       "calendar.filter.title": "Filtri",
       "calendar.filter.currencies": "Valute",
       "calendar.filter.minImpact": "Najmanjši vpliv",
-      "calendar.filter.apply": "Uporabi"
+      "calendar.filter.apply": "Uporabi",
+      "calendar.filter.fromDate": "Od datuma"
     },
     "sr": {
       "common.retry": "Покушај поново",
@@ -1576,7 +1594,8 @@
       "calendar.filter.title": "Filteri",
       "calendar.filter.currencies": "Valute",
       "calendar.filter.minImpact": "Minimalni uticaj",
-      "calendar.filter.apply": "Primeni"
+      "calendar.filter.apply": "Primeni",
+      "calendar.filter.fromDate": "Od datuma"
     },
     "th": {
       "common.retry": "ลองอีกครั้ง",
@@ -1659,7 +1678,8 @@
       "calendar.filter.title": "ตัวกรอง",
       "calendar.filter.currencies": "สกุลเงิน",
       "calendar.filter.minImpact": "ผลกระทบขั้นต่ำ",
-      "calendar.filter.apply": "ใช้"
+      "calendar.filter.apply": "ใช้",
+      "calendar.filter.fromDate": "ตั้งแต่วันที่"
     },
     "tr": {
       "common.retry": "Yeniden dene",
@@ -1742,7 +1762,8 @@
       "calendar.filter.title": "Filtreler",
       "calendar.filter.currencies": "Para birimleri",
       "calendar.filter.minImpact": "Minimum etki",
-      "calendar.filter.apply": "Uygula"
+      "calendar.filter.apply": "Uygula",
+      "calendar.filter.fromDate": "Başlangıç tarihi"
     },
     "vi": {
       "common.retry": "Thử lại",
@@ -1825,7 +1846,8 @@
       "calendar.filter.title": "Bộ lọc",
       "calendar.filter.currencies": "Tiền tệ",
       "calendar.filter.minImpact": "Tác động tối thiểu",
-      "calendar.filter.apply": "Áp dụng"
+      "calendar.filter.apply": "Áp dụng",
+      "calendar.filter.fromDate": "Từ ngày"
     },
     "zh-Hans": {
       "common.retry": "重试",
@@ -1908,7 +1930,8 @@
       "calendar.filter.title": "筛选",
       "calendar.filter.currencies": "货币",
       "calendar.filter.minImpact": "最小影响",
-      "calendar.filter.apply": "应用"
+      "calendar.filter.apply": "应用",
+      "calendar.filter.fromDate": "起始日期"
     }
   }
 }

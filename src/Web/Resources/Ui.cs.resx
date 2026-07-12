@@ -85,4 +85,5 @@
   <data name="calendar.filter.currencies" xml:space="preserve"><value>Měny</value></data>
   <data name="calendar.filter.minImpact" xml:space="preserve"><value>Minimální dopad</value></data>
   <data name="calendar.filter.apply" xml:space="preserve"><value>Použít</value></data>
+  <data name="calendar.filter.fromDate" xml:space="preserve"><value>Od data</value></data>
 </root>

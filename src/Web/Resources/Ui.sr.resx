@@ -85,4 +85,5 @@
   <data name="calendar.filter.currencies" xml:space="preserve"><value>Valute</value></data>
   <data name="calendar.filter.minImpact" xml:space="preserve"><value>Minimalni uticaj</value></data>
   <data name="calendar.filter.apply" xml:space="preserve"><value>Primeni</value></data>
+  <data name="calendar.filter.fromDate" xml:space="preserve"><value>Od datuma</value></data>
 </root>

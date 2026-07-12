@@ -85,4 +85,5 @@
   <data name="calendar.filter.currencies" xml:space="preserve"><value>货币</value></data>
   <data name="calendar.filter.minImpact" xml:space="preserve"><value>最小影响</value></data>
   <data name="calendar.filter.apply" xml:space="preserve"><value>应用</value></data>
+  <data name="calendar.filter.fromDate" xml:space="preserve"><value>起始日期</value></data>
 </root>

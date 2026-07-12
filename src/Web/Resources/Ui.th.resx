@@ -85,4 +85,5 @@
   <data name="calendar.filter.currencies" xml:space="preserve"><value>สกุลเงิน</value></data>
   <data name="calendar.filter.minImpact" xml:space="preserve"><value>ผลกระทบขั้นต่ำ</value></data>
   <data name="calendar.filter.apply" xml:space="preserve"><value>ใช้</value></data>
+  <data name="calendar.filter.fromDate" xml:space="preserve"><value>ตั้งแต่วันที่</value></data>
 </root>

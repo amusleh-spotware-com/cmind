@@ -85,4 +85,5 @@
   <data name="calendar.filter.currencies" xml:space="preserve"><value>통화</value></data>
   <data name="calendar.filter.minImpact" xml:space="preserve"><value>최소 영향</value></data>
   <data name="calendar.filter.apply" xml:space="preserve"><value>적용</value></data>
+  <data name="calendar.filter.fromDate" xml:space="preserve"><value>시작 날짜</value></data>
 </root>

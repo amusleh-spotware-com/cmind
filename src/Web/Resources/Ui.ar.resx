@@ -85,4 +85,5 @@
   <data name="calendar.filter.currencies" xml:space="preserve"><value>العملات</value></data>
   <data name="calendar.filter.minImpact" xml:space="preserve"><value>الحد الأدنى للتأثير</value></data>
   <data name="calendar.filter.apply" xml:space="preserve"><value>تطبيق</value></data>
+  <data name="calendar.filter.fromDate" xml:space="preserve"><value>من تاريخ</value></data>
 </root>

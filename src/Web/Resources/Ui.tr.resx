@@ -85,4 +85,5 @@
   <data name="calendar.filter.currencies" xml:space="preserve"><value>Para birimleri</value></data>
   <data name="calendar.filter.minImpact" xml:space="preserve"><value>Minimum etki</value></data>
   <data name="calendar.filter.apply" xml:space="preserve"><value>Uygula</value></data>
+  <data name="calendar.filter.fromDate" xml:space="preserve"><value>Başlangıç tarihi</value></data>
 </root>

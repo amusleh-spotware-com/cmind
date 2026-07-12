@@ -85,4 +85,5 @@
   <data name="calendar.filter.currencies" xml:space="preserve"><value>Tiền tệ</value></data>
   <data name="calendar.filter.minImpact" xml:space="preserve"><value>Tác động tối thiểu</value></data>
   <data name="calendar.filter.apply" xml:space="preserve"><value>Áp dụng</value></data>
+  <data name="calendar.filter.fromDate" xml:space="preserve"><value>Từ ngày</value></data>
 </root>

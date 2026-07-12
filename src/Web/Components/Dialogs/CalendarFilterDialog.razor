@@ -14,7 +14,8 @@
             <MudSelectItem Value="@ImpactLevel.High">@L["calendar.impact.high"]</MudSelectItem>
             <MudSelectItem Value="@ImpactLevel.Critical">@L["calendar.impact.critical"]</MudSelectItem>
         </MudSelect>
-        <MudTextField @bind-Value="_currencies" Label="@L["calendar.filter.currencies"]" Placeholder="USD,EUR" />
+        <MudTextField @bind-Value="_currencies" Label="@L["calendar.filter.currencies"]" Placeholder="USD,EUR" Class="mb-2" />
+        <MudDatePicker @bind-Date="_fromDate" Label="@L["calendar.filter.fromDate"]" Clearable="true" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">@L["common.cancel"]</MudButton>
@@ -27,19 +28,22 @@
 
     [Parameter] public ImpactLevel MinImpact { get; set; } = ImpactLevel.Low;
     [Parameter] public string? Currencies { get; set; }
+    [Parameter] public DateTime? FromDate { get; set; }
 
     private ImpactLevel _minImpact;
     private string? _currencies;
+    private DateTime? _fromDate;
 
     protected override void OnInitialized()
     {
         _minImpact = MinImpact;
         _currencies = Currencies;
+        _fromDate = FromDate;
     }
 
-    private void Submit() => Dialog.Close(DialogResult.Ok(new CalendarFilter(_minImpact, _currencies)));
+    private void Submit() => Dialog.Close(DialogResult.Ok(new CalendarFilter(_minImpact, _currencies, _fromDate)));
 
     private void Cancel() => Dialog.Cancel();
 
-    public sealed record CalendarFilter(ImpactLevel MinImpact, string? Currencies);
+    public sealed record CalendarFilter(ImpactLevel MinImpact, string? Currencies, DateTime? FromDate);
 }

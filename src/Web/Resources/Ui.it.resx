@@ -85,4 +85,5 @@
   <data name="calendar.filter.currencies" xml:space="preserve"><value>Valute</value></data>
   <data name="calendar.filter.minImpact" xml:space="preserve"><value>Impatto minimo</value></data>
   <data name="calendar.filter.apply" xml:space="preserve"><value>Applica</value></data>
+  <data name="calendar.filter.fromDate" xml:space="preserve"><value>Dalla data</value></data>
 </root>

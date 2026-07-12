@@ -79,6 +79,7 @@ else
     private IReadOnlyList<CalendarEventView> _events = [];
     private ImpactLevel _minImpact = ImpactLevel.Low;
     private string? _currencies;
+    private DateTime? _fromDate;
     private bool _enabled;
     private bool _loading = true;
 
@@ -98,10 +99,13 @@ else
     {
         _loading = true;
         var now = Time.GetUtcNow();
+        // History browsing: when a start date is picked, jump to that instant across the full history;
+        // otherwise default to the upcoming window. No cap — any past date is reachable.
+        var from = _fromDate is { } date ? new DateTimeOffset(date, TimeSpan.Zero) : now.AddDays(-1);
         var query = new CalendarQuery
         {
-            From = now.AddDays(-1),
-            To = now.AddDays(30),
+            From = from,
+            To = from.AddDays(30),
             MinImpact = _minImpact == ImpactLevel.Low ? null : _minImpact,
             Currencies = string.IsNullOrWhiteSpace(_currencies)
                 ? null
@@ -117,7 +121,8 @@ else
         var parameters = new DialogParameters<CalendarFilterDialog>
         {
             { x => x.MinImpact, _minImpact },
-            { x => x.Currencies, _currencies }
+            { x => x.Currencies, _currencies },
+            { x => x.FromDate, _fromDate }
         };
         var dialog = await DialogService.ShowAsync<CalendarFilterDialog>(L["calendar.filter.title"], parameters);
         var result = await dialog.Result;
@@ -125,6 +130,7 @@ else
         {
             _minImpact = filter.MinImpact;
             _currencies = filter.Currencies;
+            _fromDate = filter.FromDate;
             await LoadAsync();
         }
     }

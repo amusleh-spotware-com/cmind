@@ -147,8 +147,9 @@ so re-enabling is instant.
   surprises, next, blackout, affected-symbols, health) with scope enforcement and two-tier gating,
   integration-tested. Plus the mobile-first **`/economic-calendar` page** — a gated, fully-localized
   (23 languages) agenda of upcoming releases as phone-friendly cards with colour-banded impact chips
-  and a MudBlazor **filter dialog** (currencies + minimum impact); nav entry, smoke/mobile/a11y/E2E
-  tested. The deep full-history browser + series charts follow.
+  and a MudBlazor **filter dialog** (currencies + minimum impact + a **From-date** picker to jump to
+  **any** past date across the full history — no 60-day cap, no wall); nav entry, smoke/mobile/a11y/E2E
+  tested. The per-indicator series charts + infinite-scroll history browser follow.
 - **P3 — more sources & warm-up** *(started)*: a **core-series catalog** (CPI, Core CPI, NFP,
   unemployment, GDP, PCE, Fed funds, retail sales → their FRED ids) is seeded on first enable, and a
   one-time, idempotent, year-chunked **proactive backfill** pulls their ≥10-year history so the common

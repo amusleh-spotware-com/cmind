@@ -85,4 +85,5 @@
   <data name="calendar.filter.currencies" xml:space="preserve"><value>Mata uang</value></data>
   <data name="calendar.filter.minImpact" xml:space="preserve"><value>Dampak minimum</value></data>
   <data name="calendar.filter.apply" xml:space="preserve"><value>Terapkan</value></data>
+  <data name="calendar.filter.fromDate" xml:space="preserve"><value>Dari tanggal</value></data>
 </root>

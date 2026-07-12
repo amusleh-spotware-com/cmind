@@ -85,4 +85,5 @@
   <data name="calendar.filter.currencies" xml:space="preserve"><value>Monedas</value></data>
   <data name="calendar.filter.minImpact" xml:space="preserve"><value>Impacto mínimo</value></data>
   <data name="calendar.filter.apply" xml:space="preserve"><value>Aplicar</value></data>
+  <data name="calendar.filter.fromDate" xml:space="preserve"><value>Desde fecha</value></data>
 </root>

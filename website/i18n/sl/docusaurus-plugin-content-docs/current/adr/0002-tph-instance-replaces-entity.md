@@ -1,7 +1,12 @@
 ---
 title: 0002 — Stanje instance je TPH; prehod zamenja entiteto
 description: Zakaj se ID instance spremeni, ko se premika skozi svoj cikel, in zakaj je ID posode stabilen ključ.
-keywords: TPH, Table-Per-Hierarchy, instance, stanje, EF Core
+keywords:
+  - TPH
+  - Table-Per-Hierarchy
+  - instance
+  - stanje
+  - EF Core
 ---
 
 # 0002 — Stanje instance je TPH; prehod zamenja entiteto

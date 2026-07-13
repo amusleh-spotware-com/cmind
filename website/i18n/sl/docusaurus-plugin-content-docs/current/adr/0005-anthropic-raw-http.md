@@ -1,7 +1,12 @@
 ---
 title: 0005 — Odjemalec AI uporablja surovi HTTP, ne SDK Anthropic
 description: Zakaj IAiClient klice Anthropic API preko tipanega HttpClient namesto uradnega SDK in zakaj je AI v celoti zaklenjen na ključ.
-keywords: Anthropic, AI, HTTP, SDK, varnost
+keywords:
+  - Anthropic
+  - AI
+  - HTTP
+  - SDK
+  - varnost
 ---
 
 # 0005 — Odjemalec AI uporablja surovi HTTP, ne SDK Anthropic

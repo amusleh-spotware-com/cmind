@@ -1,7 +1,12 @@
 ---
 title: 0004 — CBotBuilder teče na spletnem gostitelju v peskovniku
 description: Zakaj se nezaupani cBot gradnja zgodi na spletnem gostitelju v enkratni SDK posodi, ne pa na vozlišču.
-keywords: CBotBuilder, peskovnik, varnost, Docker, cBot
+keywords:
+  - CBotBuilder
+  - peskovnik
+  - varnost
+  - Docker
+  - cBot
 ---
 
 # 0004 — `CBotBuilder` teče na spletnem gostitelju v peskovniku

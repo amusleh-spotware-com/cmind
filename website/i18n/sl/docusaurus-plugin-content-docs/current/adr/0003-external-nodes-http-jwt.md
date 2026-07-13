@@ -1,7 +1,12 @@
 ---
 title: 0003 — Vozlišča cTrader CLI so HTTP + JWT, brez SSH/shell
 description: Zakaj daljinska vozlišča agent izpostavljajo le HTTP API s kratkoživimi JWT-ji in nikoli shell.
-keywords: HTTP, JWT, varnost, vozlišče, cTrader CLI
+keywords:
+  - HTTP
+  - JWT
+  - varnost
+  - vozlišče
+  - cTrader CLI
 ---
 
 # 0003 — Vozlišča cTrader CLI so HTTP + JWT, brez SSH/shell

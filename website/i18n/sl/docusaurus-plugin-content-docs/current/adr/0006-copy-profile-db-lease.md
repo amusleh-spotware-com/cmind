@@ -1,7 +1,12 @@
 ---
 title: 0006 — Gostovanje kopije je usklajeno z atomsko DB zakupo
 description: Zakaj so kopije profilov zahtevane preko atomske Postgres zakupe namesto namenske koordinatorja in kako to preprečuje dvojno kopiranje.
-keywords: zakupa, kopiranje, Postgres, koordinacija, atomska
+keywords:
+  - zakupa
+  - kopiranje
+  - Postgres
+  - koordinacija
+  - atomska
 ---
 
 # 0006 — Gostovanje kopije je usklajeno z atomsko DB zakupo

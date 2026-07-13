@@ -1,7 +1,12 @@
 ---
 title: 0001 — Stroga DDD s čisto Core
 description: Zakaj je poslovna logika postavljena na agregaty v Core projektu brez infrastrukturnih odvisnosti.
-keywords: DDD, Domain-Driven Design, arhitektura, Core, čista logika
+keywords:
+  - DDD
+  - Domain-Driven Design
+  - arhitektura
+  - Core
+  - čista logika
 ---
 
 # 0001 — Stroga DDD s čisto `Core`

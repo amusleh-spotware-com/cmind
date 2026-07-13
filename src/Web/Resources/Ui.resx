@@ -148,4 +148,9 @@
   <data name="cs.refresh.ownerOnly" xml:space="preserve"><value>Only the deployment owner can refresh the currency-strength snapshot.</value></data>
   <data name="calendar.help" xml:space="preserve"><value>Upcoming high-impact economic releases (CPI, NFP, rate decisions). Configure a FRED/BLS data source in Settings -&gt; Deployment to populate the calendar.</value></data>
   <data name="calendar.series.help" xml:space="preserve"><value>Full release history for this economic series - actual vs forecast vs previous. Configure a FRED/BLS data source in Settings -&gt; Deployment to populate it.</value></data>
+  <data name="users.tempPassword.title" xml:space="preserve"><value>Temporary password</value></data>
+  <data name="users.tempPassword.warning" xml:space="preserve"><value>Copy this password now - it is shown only once. The user must change it on next sign-in.</value></data>
+  <data name="users.tempPassword.label" xml:space="preserve"><value>Temporary password</value></data>
+  <data name="common.copy" xml:space="preserve"><value>Copy</value></data>
+  <data name="common.copiedToClipboard" xml:space="preserve"><value>Copied to clipboard</value></data>
 </root>

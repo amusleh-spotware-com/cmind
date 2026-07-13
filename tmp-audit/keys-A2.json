@@ -1,0 +1,7 @@
+{
+  "users.tempPassword.title": "Temporary password",
+  "users.tempPassword.warning": "Copy this password now - it is shown only once. The user must change it on next sign-in.",
+  "users.tempPassword.label": "Temporary password",
+  "common.copy": "Copy",
+  "common.copiedToClipboard": "Copied to clipboard"
+}

@@ -148,4 +148,9 @@
   <data name="cs.refresh.ownerOnly" xml:space="preserve"><value>Only the deployment owner can refresh the currency-strength snapshot.</value></data>
   <data name="calendar.help" xml:space="preserve"><value>Upcoming high-impact economic releases (CPI, NFP, rate decisions). Configure a FRED/BLS data source in Settings -&gt; Deployment to populate the calendar.</value></data>
   <data name="calendar.series.help" xml:space="preserve"><value>Full release history for this economic series - actual vs forecast vs previous. Configure a FRED/BLS data source in Settings -&gt; Deployment to populate it.</value></data>
+  <data name="users.tempPassword.title" xml:space="preserve"><value>Προσωρινός κωδικός</value></data>
+  <data name="users.tempPassword.warning" xml:space="preserve"><value>Αντιγράψτε τώρα αυτόν τον κωδικό - εμφανίζεται μόνο μία φορά. Ο χρήστης πρέπει να τον αλλάξει στην επόμενη σύνδεση.</value></data>
+  <data name="users.tempPassword.label" xml:space="preserve"><value>Προσωρινός κωδικός</value></data>
+  <data name="common.copy" xml:space="preserve"><value>Αντιγραφή</value></data>
+  <data name="common.copiedToClipboard" xml:space="preserve"><value>Αντιγράφηκε στο πρόχειρο</value></data>
 </root>

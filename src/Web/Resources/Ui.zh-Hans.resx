@@ -148,4 +148,9 @@
   <data name="cs.refresh.ownerOnly" xml:space="preserve"><value>Only the deployment owner can refresh the currency-strength snapshot.</value></data>
   <data name="calendar.help" xml:space="preserve"><value>Upcoming high-impact economic releases (CPI, NFP, rate decisions). Configure a FRED/BLS data source in Settings -&gt; Deployment to populate the calendar.</value></data>
   <data name="calendar.series.help" xml:space="preserve"><value>Full release history for this economic series - actual vs forecast vs previous. Configure a FRED/BLS data source in Settings -&gt; Deployment to populate it.</value></data>
+  <data name="users.tempPassword.title" xml:space="preserve"><value>临时密码</value></data>
+  <data name="users.tempPassword.warning" xml:space="preserve"><value>请立即复制此密码 - 仅显示一次。用户必须在下次登录时更改。</value></data>
+  <data name="users.tempPassword.label" xml:space="preserve"><value>临时密码</value></data>
+  <data name="common.copy" xml:space="preserve"><value>复制</value></data>
+  <data name="common.copiedToClipboard" xml:space="preserve"><value>已复制到剪贴板</value></data>
 </root>

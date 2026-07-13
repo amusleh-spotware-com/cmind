@@ -1,0 +1,17 @@
+# Destructive-action confirmation ratchet baseline — components that perform a DELETE/erase
+# WITHOUT Dialogs.ConfirmAsync. Enforced by DestructiveActionConfirmTests. May ONLY shrink:
+# wire ConfirmAsync into the handler, then delete its line here. New unconfirmed destructive
+# action fails the build. When empty, delete this file.
+Dialogs/CBotParamSetsDialog.razor
+Dialogs/CopyProfileDialog.razor
+Pages/Accounts.razor
+Pages/Agent.razor
+Pages/AiSettings.razor
+Pages/Alerts.razor
+Pages/CBots.razor
+Pages/CopyTrading.razor
+Pages/DeploymentSettings.razor
+Pages/Mcp.razor
+Pages/Nodes.razor
+Pages/OpenApiApplications.razor
+Pages/TradingAccountList.razor

@@ -1,6 +1,9 @@
 @inject HttpClient Http
 @using Web.Json
+@using Web.Components.Dialogs
 @inject NavigationManager Nav
+@inject IDialogService Dialogs
+@inject ISnackbar Snack
 
 <MudTable Items="_items" Dense="true" Breakpoint="Breakpoint.Sm">
     <HeaderContent>
@@ -37,8 +40,17 @@
     protected override Task OnInitializedAsync() => Load();
     private async Task Load()
     {
-        var all = await Http.GetDynamicArrayAsync("/api/instances/");
-        _items = all.Where(i => (string)i.kind == Type).ToArray();
+        // A transient 5xx on the instances feed must not tear down the host page (Run/Backtest) via the
+        // ErrorBoundary — degrade to an empty table and let the next poll/refresh recover.
+        try
+        {
+            var all = await Http.GetDynamicArrayAsync("/api/instances/");
+            _items = all.Where(i => (string)i.kind == Type).ToArray();
+        }
+        catch
+        {
+            _items = [];
+        }
     }
 
     // An instance is only stoppable while it is still executing; once terminal (Stopped/Completed/Failed)
@@ -54,6 +66,23 @@
     };
 
     private void Open(Guid id) => Nav.NavigateTo($"/instance/{id}");
-    private async Task Stop(Guid id) { await Http.PostAsync($"/api/instances/{id}/stop", null); await Load(); }
-    private async Task Delete(Guid id) { await Http.DeleteAsync($"/api/instances/{id}"); await Load(); }
+    private async Task Stop(Guid id)
+    {
+        var r = await Http.PostAsync($"/api/instances/{id}/stop", null);
+        Snack.Add(r.IsSuccessStatusCode ? "Instance stopping" : "Stop failed",
+            r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        await Load();
+    }
+
+    private async Task Delete(Guid id)
+    {
+        if (!await Dialogs.ConfirmAsync(
+            "Delete instance?",
+            "This permanently removes the instance, its logs and equity history. This cannot be undone.",
+            "Delete", "Cancel")) return;
+        var r = await Http.DeleteAsync($"/api/instances/{id}");
+        Snack.Add(r.IsSuccessStatusCode ? "Instance deleted" : "Delete failed",
+            r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        await Load();
+    }
 }

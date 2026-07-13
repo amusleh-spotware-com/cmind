@@ -4,11 +4,13 @@ using Microsoft.AspNetCore.Http;
 namespace Web.Security;
 
 /// <summary>
-/// White-label mandatory 2FA (App:Branding:RequireMfa). A user who has authenticated but still owes
-/// enrollment carries the <see cref="MfaConstants.SetupRequiredClaimType"/> claim; this middleware redirects
-/// their page navigations to <c>/account</c> until they finish setup. Only full-page GET (text/html) requests
-/// are gated — API calls, the account page itself, auth routes, SignalR and static assets pass through so the
-/// enrollment flow can complete.
+/// Gates page navigations for a fully-authenticated principal that still owes an account action, redirecting
+/// to <c>/account</c> until it is done. Two triggers: white-label mandatory 2FA (App:Branding:RequireMfa,
+/// <see cref="MfaConstants.SetupRequiredClaimType"/>) and a temporary/reset password
+/// (<see cref="PasswordPolicyConstants.MustChangePasswordClaimType"/>) — the latter stops a temp-password
+/// session from roaming the app before a new password is set. Only full-page GET (text/html) requests are
+/// gated — API calls, the account page itself, auth routes, SignalR and static assets pass through so the
+/// remediation flow can complete.
 /// </summary>
 public sealed class MfaEnforcementMiddleware(RequestDelegate next)
 {
@@ -26,7 +28,10 @@ public sealed class MfaEnforcementMiddleware(RequestDelegate next)
     {
         var user = context.User;
         if (user.Identity?.IsAuthenticated != true) return false;
-        if (!user.HasClaim(MfaConstants.SetupRequiredClaimType, MfaConstants.SetupRequiredClaimValue)) return false;
+        var owesAction =
+            user.HasClaim(MfaConstants.SetupRequiredClaimType, MfaConstants.SetupRequiredClaimValue)
+            || user.HasClaim(PasswordPolicyConstants.MustChangePasswordClaimType, PasswordPolicyConstants.MustChangePasswordClaimValue);
+        if (!owesAction) return false;
         if (!HttpMethods.IsGet(context.Request.Method)) return false;
 
         var accept = context.Request.Headers.Accept.ToString();

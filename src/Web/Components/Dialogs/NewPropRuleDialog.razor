@@ -1,0 +1,61 @@
+@* Modal dialog to create a prop-guard rule (exposure limits per trading account). Returns
+   NewPropRuleResult on confirm. Replaces the former inline page form per UI mandate 7. *@
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">New rule</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="_name" Label="Rule name" Placeholder="FTMO 100k" Required="true"
+                          RequiredError="Rule name is required" Immediate="true" Class="mb-2" />
+            <MudSelect T="Guid?" @bind-Value="_accountId" Label="Trading account" Dense="true" Required="true"
+                       RequiredError="Trading account is required" Class="mb-2">
+                @foreach (var a in Accounts)
+                {
+                    <MudSelectItem T="Guid?" Value="@a.Id">@a.Label</MudSelectItem>
+                }
+            </MudSelect>
+            <MudNumericField T="int" @bind-Value="_maxConcurrent" Label="Max concurrent live bots" Min="0" Max="100" Class="mb-2" />
+            <MudStack Row="true" Spacing="2" Class="mb-2">
+                <MudNumericField T="double" @bind-Value="_dailyLoss" Label="Daily loss limit" Min="0" />
+                <MudNumericField T="double" @bind-Value="_maxDrawdown" Label="Max drawdown %" Min="0" Max="100" />
+            </MudStack>
+            <MudSwitch @bind-Value="_autoFlatten" Label="Auto-flatten on breach" Color="Color.Error" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Create rule</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public IReadOnlyList<PropRuleAccountOption> Accounts { get; set; } = [];
+
+    private MudForm? _form;
+    private string _name = "";
+    private Guid? _accountId;
+    private int _maxConcurrent = 3;
+    private double _dailyLoss;
+    private double _maxDrawdown;
+    private bool _autoFlatten;
+
+    private async Task Submit()
+    {
+        if (_form is not null) await _form.Validate();
+        if (string.IsNullOrWhiteSpace(_name) || _accountId is null) return;
+        Dialog.Close(DialogResult.Ok(new NewPropRuleResult(
+            _name.Trim(), _accountId.Value, _maxConcurrent, _dailyLoss, _maxDrawdown, _autoFlatten)));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    public sealed record PropRuleAccountOption(Guid Id, string Label);
+
+    public sealed record NewPropRuleResult(
+        string Name, Guid TradingAccountId, int MaxConcurrentLiveInstances,
+        double DailyLossLimit, double MaxDrawdownPercent, bool AutoFlatten);
+}

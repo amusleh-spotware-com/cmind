@@ -125,6 +125,15 @@ public static class MfaConstants
     public const string SetupRequiredClaimValue = "true";
 }
 
+public static class PasswordPolicyConstants
+{
+    // Claim stamped on a principal whose account was provisioned/reset with a temporary password
+    // (AppUser.MustChangePassword). The enforcement guard redirects their page navigations to /account
+    // until they set a new password, so a temp-password session can't roam the app.
+    public const string MustChangePasswordClaimType = "app:must_change_password";
+    public const string MustChangePasswordClaimValue = "true";
+}
+
 public static class NodeAgentAuth
 {
     public const string Issuer = "app-main";

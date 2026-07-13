@@ -127,8 +127,8 @@ public static class AuthEndpoints
             return Results.Ok();
         });
 
-        g.MapPost("/change-password", async (ChangePasswordRequest req, ICurrentUser current,
-            DataContext db, IPasswordHasher hasher) =>
+        g.MapPost("/change-password", async (ChangePasswordRequest req, HttpContext ctx, ICurrentUser current,
+            DataContext db, IPasswordHasher hasher, IOptionsMonitor<AppOptions> options, TimeProvider timeProvider) =>
         {
             if (current.UserId is not { } uid) return Results.Unauthorized();
             var user = await db.Users.FindAsync(uid);
@@ -136,6 +136,13 @@ public static class AuthEndpoints
             if (!hasher.Verify(req.CurrentPassword, user.PasswordHash)) return Results.Unauthorized();
             user.ChangePassword(hasher.Hash(req.NewPassword));
             await db.SaveChangesAsync();
+
+            // Re-issue the auth cookie so the now-cleared MustChangePassword claim leaves the principal
+            // immediately — otherwise the enforcement guard keeps redirecting to /account this session.
+            var setupRequired = options.CurrentValue.Branding.RequireMfa && !user.MfaEnabled;
+            var existing = await ctx.AuthenticateAsync();
+            var persistent = existing.Properties?.IsPersistent == true;
+            await SignInAsync(ctx, user, persistent, timeProvider.GetUtcNow(), setupRequired);
             return Results.Ok();
         }).RequireAuthorization();
 
@@ -256,6 +263,8 @@ public static class AuthEndpoints
         };
         if (setupRequired)
             claims.Add(new Claim(MfaConstants.SetupRequiredClaimType, MfaConstants.SetupRequiredClaimValue));
+        if (user.MustChangePassword)
+            claims.Add(new Claim(PasswordPolicyConstants.MustChangePasswordClaimType, PasswordPolicyConstants.MustChangePasswordClaimValue));
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var authProps = new AuthenticationProperties

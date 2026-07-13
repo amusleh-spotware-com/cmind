@@ -1,0 +1,87 @@
+@* Read-only detail view for a single prop-firm challenge: rule configuration, live equity progression
+   and the breach cause. Renders for any state (active, passed, failed, stopped, or missing) without
+   crashing the circuit — every fetch is guarded. Opened from the /prop-firm table's view icon. *@
+@using System.Net.Http.Json
+@inject HttpClient Http
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(_challenge?.name ?? Name)</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_notFound)
+        {
+            <MudAlert Severity="Severity.Warning" data-testid="challenge-detail-not-found">
+                This challenge could not be found. It may have been deleted.
+            </MudAlert>
+        }
+        else if (_challenge is null)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+        }
+        else
+        {
+            <MudSimpleTable Dense="true" Elevation="0" data-testid="challenge-detail">
+                <tbody>
+                    <tr><td>Kind</td><td>@_challenge.kind</td></tr>
+                    <tr><td>Phase</td><td>@_challenge.phase</td></tr>
+                    <tr>
+                        <td>Status</td>
+                        <td>
+                            <MudChip T="string" Size="Size.Small" Color="StatusColor((string)_challenge.status)">@_challenge.status</MudChip>
+                            @if ((string)_challenge.status == "Failed" && (string)_challenge.breach != "None")
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Error" data-testid="challenge-detail-breach">@_challenge.breach</MudChip>
+                            }
+                        </td>
+                    </tr>
+                    <tr><td>Starting balance</td><td>@_challenge.startingBalance</td></tr>
+                    <tr><td>Current equity</td><td>@_challenge.currentEquity</td></tr>
+                    <tr><td>Current balance</td><td>@_challenge.currentBalance</td></tr>
+                    <tr><td>Peak equity</td><td>@_challenge.peakEquity</td></tr>
+                    <tr><td>Trading days</td><td>@_challenge.tradingDaysCount</td></tr>
+                    <tr><td>Profit target %</td><td>@_challenge.profitTargetPercent</td></tr>
+                    <tr><td>Max daily loss %</td><td>@_challenge.maxDailyLossPercent</td></tr>
+                    <tr><td>Max total drawdown %</td><td>@_challenge.maxTotalDrawdownPercent</td></tr>
+                    <tr><td>Drawdown mode</td><td>@_challenge.drawdownMode</td></tr>
+                    <tr><td>Min trading days</td><td>@_challenge.minTradingDays</td></tr>
+                </tbody>
+            </MudSimpleTable>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public Guid ChallengeId { get; set; }
+    [Parameter] public string Name { get; set; } = "";
+
+    private dynamic? _challenge;
+    private bool _notFound;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await Http.GetAsync($"/api/prop-firm/challenges/{ChallengeId}");
+            if (!response.IsSuccessStatusCode) { _notFound = true; return; }
+            _challenge = await response.Content.ReadFromJsonAsync<dynamic>();
+        }
+        catch { _notFound = true; }
+    }
+
+    private static Color StatusColor(string status) => status switch
+    {
+        "Passed" => Color.Success,
+        "Failed" => Color.Error,
+        "Active" => Color.Info,
+        "Stopped" => Color.Warning,
+        _ => Color.Default
+    };
+
+    private void Close() => Dialog.Close();
+}

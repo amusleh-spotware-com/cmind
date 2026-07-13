@@ -17,7 +17,16 @@
 @implements IAsyncDisposable
 
 <PageTitle>Instance</PageTitle>
-<MudText Typo="Typo.h5" Class="mb-2">Instance @Id</MudText>
+<MudText Typo="Typo.h5" Class="mb-2">@(_detail is not null ? $"{_detail.symbol} — {_detail.status}" : L["instance.title"])</MudText>
+
+@if (_loaded && _detail is null)
+{
+    <MudAlert Severity="Severity.Warning" Class="mb-3" data-testid="instance-not-found">
+        @L["instance.notFound"]
+        <MudButton Class="ms-2" Size="MudBlazor.Size.Small" Variant="Variant.Filled" Color="MudBlazor.Color.Primary"
+                   Href="/run" data-testid="instance-back">@L["instance.back"]</MudButton>
+    </MudAlert>
+}
 
 @if (_detail is not null)
 {
@@ -49,13 +58,17 @@
     }
 }
 
-<MudPaper Class="pa-2" Style="background:#0E1218;color:#E6E8EC;max-height:400px;overflow:auto;font-family:monospace;">
-    @foreach (var l in _logs) { <div>@l</div> }
-</MudPaper>
+@if (_detail is not null)
+{
+    <MudPaper Class="pa-2" Style="background:#0E1218;color:#E6E8EC;max-height:400px;overflow:auto;font-family:monospace;">
+        @foreach (var l in _logs) { <div>@l</div> }
+    </MudPaper>
+}
 
 @code {
     [Parameter] public Guid Id { get; set; }
     private dynamic? _detail;
+    private bool _loaded;
     private bool _isBacktest;
     private List<string> _logs = new();
     private List<EquityPoint> _equity = new();
@@ -68,6 +81,7 @@
     {
         try { _detail = await Http.GetDynamicAsync($"/api/instances/{Id}"); }
         catch { _detail = null; }
+        _loaded = true;
         if (_detail is null) return;
         _isBacktest = (string)_detail.kind == "Backtest";
         if (_isBacktest && _detail?.equity is not null)

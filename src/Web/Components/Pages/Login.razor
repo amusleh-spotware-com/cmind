@@ -3,6 +3,7 @@
 @using Core.Options
 @inject Web.Branding.IBrandingThemeProvider Branding
 @inject Microsoft.Extensions.Options.IOptionsMonitor<AppOptions> Options
+@inject TimeProvider Clock
 
 <PageTitle>Log in — @Branding.Branding.ProductName</PageTitle>
 
@@ -76,6 +77,10 @@
                 {
                     <div class="app-login-error" role="alert" data-testid="login-error">Invalid credentials. Check your email and password.</div>
                 }
+                @if (IsPending)
+                {
+                    <div class="app-login-error" role="alert" data-testid="login-pending">Your account is awaiting activation. An administrator must approve it before you can sign in.</div>
+                }
 
                 <button class="app-login-button" type="submit" id="app-login-submit">
                     <span class="app-login-button-label">LOG IN</span>
@@ -92,7 +97,7 @@
                 <a class="app-login-support" href="@Branding.Branding.SupportUrl" target="_blank" rel="noopener">Need help signing in?</a>
             }
             <div class="app-login-copyright">
-                &copy; @DateTime.UtcNow.Year @(string.IsNullOrWhiteSpace(Branding.Branding.CompanyName) ? Branding.Branding.ProductName : Branding.Branding.CompanyName)
+                &copy; @Clock.GetUtcNow().Year @(string.IsNullOrWhiteSpace(Branding.Branding.CompanyName) ? Branding.Branding.ProductName : Branding.Branding.CompanyName)
             </div>
         </div>
     </main>
@@ -124,7 +129,9 @@
 @code {
     [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
     [SupplyParameterFromQuery(Name = "error")] public string? Error { get; set; }
+    [SupplyParameterFromQuery(Name = "pending")] public string? Pending { get; set; }
     private bool HasError => !string.IsNullOrEmpty(Error);
+    private bool IsPending => Pending == "1";
 
     private bool RegistrationEnabled =>
         Options.CurrentValue.Features.Registration && Options.CurrentValue.Registration.Enabled;

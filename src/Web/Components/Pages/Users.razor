@@ -91,5 +91,15 @@
         if (r.IsSuccessStatusCode) Snack.Add($"Temp password: {pw}", Severity.Info);
     }
 
-    private async Task Remove(Guid id) { await Http.DeleteAsync($"/api/users/{id}"); await Load(); }
+    private async Task Remove(Guid id)
+    {
+        if (!await Dialogs.ConfirmAsync(
+            "Delete user?",
+            "This permanently removes the user and cannot be undone.",
+            "Delete", "Cancel")) return;
+        var r = await Http.DeleteAsync($"/api/users/{id}");
+        Snack.Add(r.IsSuccessStatusCode ? "User deleted" : "Delete failed",
+            r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        await Load();
+    }
 }

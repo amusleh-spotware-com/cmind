@@ -16,9 +16,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <!-- The full suite boots one Postgres Testcontainer + web host per class; on a many-core box xUnit's
+         default (one thread per core) would spin dozens at once and exhaust Docker. Cap the concurrency. -->
+    <None Update="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="coverlet.collector" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />

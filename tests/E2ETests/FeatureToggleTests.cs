@@ -40,4 +40,22 @@ public sealed class FeatureToggleTests(AppFixture app)
         var copyWhenOn = await page.APIRequest.GetAsync($"{app.BaseUrl}/api/copy/profiles");
         copyWhenOn.Status.Should().Be(200);
     }
+
+    // H-04: the feature list must show a human-readable label ("Portfolio Agent"), not the raw
+    // adjacent-caps enum name ("PortfolioAgent"), and never expose a raw PascalCase identifier.
+    [Fact]
+    public async Task Feature_settings_shows_human_labels_not_raw_enum_names()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/settings/features", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        await Assertions.Expect(page.Locator("[data-testid=feature-label]").Filter(new() { HasTextString = "Portfolio Agent" }))
+            .ToBeVisibleAsync(Slow);
+
+        var labels = await page.Locator("[data-testid=feature-label]").AllInnerTextsAsync();
+        labels.Should().NotBeEmpty();
+        labels.Should().NotContain("PortfolioAgent", "raw adjacent-caps enum names must not reach the UI");
+        labels.Should().NotContain("EconomicCalendar");
+    }
 }

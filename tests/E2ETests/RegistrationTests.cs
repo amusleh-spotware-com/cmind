@@ -32,4 +32,20 @@ public sealed class RegistrationTests(AppFixture app)
         await Assertions.Expect(page.Locator("[data-testid=register-closed]")).ToBeVisibleAsync(Slow);
         (await page.Locator("[data-testid=register-form]").IsVisibleAsync()).Should().BeFalse();
     }
+
+    // H-05: pins the deliberate carve-out — /register stays HTTP 200 (not 404) with Registration off,
+    // showing the closed notice, unlike other feature flags that 404 both nav and API. If someone later
+    // adds a page-level gate that 404s /register, this fails and forces the decision to be re-examined.
+    [Fact]
+    public async Task Register_page_returns_200_with_closed_notice_when_feature_off()
+    {
+        var page = await app.NewAnonymousPageAsync();
+
+        var response = await page.APIRequest.GetAsync($"{app.BaseUrl}/register");
+        response.Status.Should().Be(200,
+            "register page stays accessible showing the closed notice when the feature is off");
+
+        await page.GotoAsync("/register", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await Assertions.Expect(page.Locator("[data-testid=register-closed]")).ToBeVisibleAsync(Slow);
+    }
 }

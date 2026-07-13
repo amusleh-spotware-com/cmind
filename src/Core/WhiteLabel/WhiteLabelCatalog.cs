@@ -229,7 +229,9 @@ public static class WhiteLabelCatalog
     private static WhiteLabelOption Delegated(string key, string path, WhiteLabelCategory cat, string label, string desc, string section) =>
         new() { Key = key, PropertyPath = path, Kind = WhiteLabelValueKind.String, Category = cat, Label = label, Description = desc, OwnerEditable = false, DelegatedToSection = section };
 
-    private static string SplitPascal(string value)
+    // Turns a PascalCase identifier ("PortfolioAgent") into a spaced human label ("Portfolio Agent").
+    // Public so the feature-settings UI can render the same friendly base label for a FeatureFlag.
+    public static string SplitPascal(string value)
     {
         var builder = new System.Text.StringBuilder(value.Length + 4);
         for (var i = 0; i < value.Length; i++)

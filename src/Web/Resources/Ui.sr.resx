@@ -148,4 +148,24 @@
   <data name="cs.refresh.ownerOnly" xml:space="preserve"><value>Only the deployment owner can refresh the currency-strength snapshot.</value></data>
   <data name="calendar.help" xml:space="preserve"><value>Upcoming high-impact economic releases (CPI, NFP, rate decisions). Configure a FRED/BLS data source in Settings -&gt; Deployment to populate the calendar.</value></data>
   <data name="calendar.series.help" xml:space="preserve"><value>Full release history for this economic series - actual vs forecast vs previous. Configure a FRED/BLS data source in Settings -&gt; Deployment to populate it.</value></data>
+  <data name="common.failed" xml:space="preserve"><value>Неуспешно</value></data>
+  <data name="features.toggle" xml:space="preserve"><value>Укључи/искључи {0}</value></data>
+  <data name="features.enabled" xml:space="preserve"><value>{0} омогућено</value></data>
+  <data name="features.disabled" xml:space="preserve"><value>{0} онемогућено</value></data>
+  <data name="feature.Authoring" xml:space="preserve"><value>Authoring</value></data>
+  <data name="feature.Backtesting" xml:space="preserve"><value>Backtesting</value></data>
+  <data name="feature.Execution" xml:space="preserve"><value>Execution</value></data>
+  <data name="feature.CopyTrading" xml:space="preserve"><value>Copy Trading</value></data>
+  <data name="feature.Ai" xml:space="preserve"><value>AI</value></data>
+  <data name="feature.PortfolioAgent" xml:space="preserve"><value>Portfolio Agent</value></data>
+  <data name="feature.AgentStudio" xml:space="preserve"><value>Agent Studio</value></data>
+  <data name="feature.Alerts" xml:space="preserve"><value>Alerts</value></data>
+  <data name="feature.PropGuard" xml:space="preserve"><value>Prop Guard</value></data>
+  <data name="feature.PropFirm" xml:space="preserve"><value>Prop Firm</value></data>
+  <data name="feature.Accounts" xml:space="preserve"><value>Accounts</value></data>
+  <data name="feature.OpenApi" xml:space="preserve"><value>Open API</value></data>
+  <data name="feature.Mcp" xml:space="preserve"><value>MCP</value></data>
+  <data name="feature.Compliance" xml:space="preserve"><value>Compliance</value></data>
+  <data name="feature.Registration" xml:space="preserve"><value>Registration</value></data>
+  <data name="feature.EconomicCalendar" xml:space="preserve"><value>Economic Calendar</value></data>
 </root>

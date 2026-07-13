@@ -3,6 +3,7 @@
 @using Web.Json
 @inject HttpClient Http
 @inject ISnackbar Snack
+@inject IStringLocalizer<Ui> L
 
 <PageTitle>Features</PageTitle>
 
@@ -19,10 +20,10 @@
 <MudTable Items="_items" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
     <HeaderContent><MudTh>Feature</MudTh><MudTh>Enabled</MudTh></HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="Feature">@context.flag</MudTd>
+        <MudTd DataLabel="Feature" data-testid="feature-label">@Label((string)context.flag)</MudTd>
         <MudTd DataLabel="Enabled">
             <MudSwitch T="bool" Value="@((bool)context.enabled)" Color="Color.Primary"
-                       aria-label="@($"Toggle {context.flag}")"
+                       aria-label="@L["features.toggle", Label((string)context.flag)]"
                        ValueChanged="@(v => Toggle((string)context.flag, v))" />
         </MudTd>
     </RowTemplate>
@@ -35,10 +36,22 @@
 
     private async Task Load() => _items = await Http.GetDynamicArrayAsync("/api/features/");
 
+    // Maps the raw FeatureFlag wire name to a localized human label, falling back to a split-pascal
+    // rendering of the enum name for any flag without a dedicated translation key.
+    private string Label(string flag)
+    {
+        var key = $"feature.{flag}";
+        var localized = L[key];
+        return localized.ResourceNotFound ? Core.WhiteLabel.WhiteLabelCatalog.SplitPascal(flag) : localized.Value;
+    }
+
     private async Task Toggle(string flag, bool enabled)
     {
         var r = await Http.PutAsJsonAsync($"/api/features/{flag}", new { Enabled = enabled });
-        Snack.Add(r.IsSuccessStatusCode ? $"{flag} {(enabled ? "enabled" : "disabled")}" : "Failed",
+        Snack.Add(
+            r.IsSuccessStatusCode
+                ? L[enabled ? "features.enabled" : "features.disabled", Label(flag)].Value
+                : L["common.failed"].Value,
             r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
         await Load();
     }

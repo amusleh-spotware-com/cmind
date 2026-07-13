@@ -1,0 +1,25 @@
+{
+  "_note": "Lane H fix keys (H-04). Seeded directly into all 23 src/Web/Resources/Ui*.resx (parity green). Reconcile into tools/i18n/ui-translations.json before the next gen-resx.ps1 run. English base values shown here; per-locale translations for the 4 UI-verb keys were seeded into each Ui.<culture>.resx. The feature.* labels are product feature names kept in English (split-pascal) across all locales.",
+  "en": {
+    "common.failed": "Failed",
+    "features.toggle": "Toggle {0}",
+    "features.enabled": "{0} enabled",
+    "features.disabled": "{0} disabled",
+    "feature.Authoring": "Authoring",
+    "feature.Backtesting": "Backtesting",
+    "feature.Execution": "Execution",
+    "feature.CopyTrading": "Copy Trading",
+    "feature.Ai": "AI",
+    "feature.PortfolioAgent": "Portfolio Agent",
+    "feature.AgentStudio": "Agent Studio",
+    "feature.Alerts": "Alerts",
+    "feature.PropGuard": "Prop Guard",
+    "feature.PropFirm": "Prop Firm",
+    "feature.Accounts": "Accounts",
+    "feature.OpenApi": "Open API",
+    "feature.Mcp": "MCP",
+    "feature.Compliance": "Compliance",
+    "feature.Registration": "Registration",
+    "feature.EconomicCalendar": "Economic Calendar"
+  }
+}

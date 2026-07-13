@@ -69,7 +69,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromSeconds(30),
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
+            // Pin the signing algorithm so a token is accepted only when signed with HS256 — defence in
+            // depth against algorithm-confusion, matching the calendar JWT validator.
+            ValidAlgorithms = [SecurityAlgorithms.HmacSha256]
         };
     });
 builder.Services.AddAuthorization();

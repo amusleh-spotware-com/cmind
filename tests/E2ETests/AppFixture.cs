@@ -130,6 +130,15 @@ public class AppFixture : IAsyncLifetime
         // The shipped built-in AI is on by default; the base fixture keeps it OFF so the keyless
         // "not configured" gate tests stay valid. Specialized fixtures opt back in as needed.
         psi.Environment["App__Ai__BuiltIn__Enabled"] = "false";
+        // Calendar ingestion and currency-strength refresh warm-up workers are ON by default in
+        // production, but with no FRED/BLS/AI source configured here they can only wake, back off and
+        // retry — producing no data the suite asserts on (every calendar/currency E2E verifies the
+        // source-less/keyless GATED path, which is identical whether the workers run) while churning CPU
+        // and DB against the single shared app for the whole ~9-minute run. That background load
+        // intermittently starved the circuit and flaked otherwise-unrelated tests, so keep them OFF here
+        // (mirrors IntegrationTests' TestBootstrap).
+        psi.Environment["App__Calendar__IngestionEnabled"] = "false";
+        psi.Environment["App__CurrencyStrength__RefreshEnabled"] = "false";
         ConfigureApp(psi);
 
         _app = new Process { StartInfo = psi };

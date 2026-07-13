@@ -50,7 +50,9 @@ public sealed class CopyEngineHostTests
 
     private static async Task WaitUntil(Func<bool> condition, TimeSpan? timeout = null)
     {
-        var limit = timeout ?? TimeSpan.FromSeconds(3);
+        // Generous by default: these host actions run on a real-clock background task, so a tight limit
+        // flakes under CI load (the wait must simply be shorter than the host's own ~10s lifetime).
+        var limit = timeout ?? TimeSpan.FromSeconds(8);
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         while (stopwatch.Elapsed < limit)
         {

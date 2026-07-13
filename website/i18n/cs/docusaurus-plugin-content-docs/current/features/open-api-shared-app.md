@@ -1,8 +1,8 @@
 ---
-description: "Ship one cTrader Open API application for every user (white-label shared mode), the single redirect URL to register, and per-message-type client rate limits."
+description: "Dodejte jednu aplikaci cTrader Open API pro každého uživatele (sdílený režim white-label), jednu adresu URL přesměrování k registraci a limity sazby klienta pro jednotlivé typy zpráv."
 ---
 
-# Shared Open API application & rate limits
+# Sdílená aplikace Open API & omezení sazeb
 
 By default every user registers their **own** cTrader Open API application under
 **Settings → Open API**. A white-label operator (typically a cTrader broker or reseller) can instead

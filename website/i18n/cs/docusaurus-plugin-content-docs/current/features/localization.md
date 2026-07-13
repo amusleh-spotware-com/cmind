@@ -1,58 +1,36 @@
-# Localization (i18n)
+# Lokalizace (i18n)
 
-cMind is fully localizable and ships in the **same 23 languages cTrader itself supports**, so a trader
-uses the platform — and reads these docs — in their own language. English is the fallback; any missing
-translation degrades gracefully to English rather than showing a blank or a raw key.
+cMind je plně lokalizovatelný a dodává se ve **stejných 23 jazycích, které cTrader sám podporuje**, aby obchodník používal platformu — a četl tyto dokumenty — ve svém vlastním jazyce. Angličtina je fallback; jakýkoli chybějící překlad se elegantně degraduje na angličtinu spíše než zobrazuje prázdné nebo surové klíče.
 
-## Supported languages
+## Podporované jazyky
 
-Arabic (RTL), Chinese (Simplified), Czech, English, French, German, Greek, Hungarian, Indonesian,
-Italian, Japanese, Korean, Malay, Polish, Portuguese (Brazil), Russian, Serbian, Slovak, Slovenian,
-Spanish, Thai, Turkish, Vietnamese.
+Arabština (RTL), Čínština (zjednodušená), Čeština, Angličtina, Francouzština, Němčina, Řečtina, Maďarština, Indonéština, Italština, Japonština, Korejština, Malajština, Polština, Portugalština (Brazílie), Ruština, Srbština, Slovenština, Slovenština, Španělština, Thajština, Turečtina, Vietnamština.
 
-The one source of truth is `Core.Constants.SupportedCultures` — the request-culture middleware, the
-language switcher, the resource-parity test, and the no-hardcoded-string gate all read from it. Adding a
-language is a one-line change there plus its resource files.
+Jediným zdrojem pravdy je `Core.Constants.SupportedCultures` — middleware žádosti kultury, přepínač jazyku, test parity zdrojů a brána bez pevně zakódovaných řetězců si z něj čtou. Přidání jazyka je jednořádkovou změnou tam plus jeho soubory zdrojů.
 
-## How it works (Blazor Server)
+## Jak to funguje (Blazor Server)
 
-- **Resources.** UI strings live in `src/Web/Resources/Ui.resx` (English base) plus one
-  `Ui.<culture>.resx` per language. Components read them through `IStringLocalizer<Ui>` — `@L["key"]`,
-  never a literal. The `.resx` files are generated from `tools/i18n/ui-translations.json`
-  (`pwsh tools/i18n/gen-resx.ps1`), the translator-friendly source of truth.
-- **Culture resolution.** `RequestLocalizationMiddleware` picks the culture from the `.AspNetCore.Culture`
-  cookie first, then the browser's `Accept-Language`, then English.
-- **Switching.** The app-bar language switcher (and the **Settings → Language** section) navigates to
-  the `GET /set-culture` endpoint — a full-reload outside the Blazor circuit, because a circuit cannot
-  change culture live. It writes the cookie and, for a signed-in user, persists the choice to their
-  profile (`UserProfile.Locale`); the reload boots a fresh circuit in the chosen language.
-- **Persistence & login.** The saved profile locale is written back into the culture cookie at sign-in,
-  so a user lands in their language on every device.
-- **Right-to-left.** Arabic (and any future RTL language) sets `<html dir="rtl">` and wraps the layout in
-  MudBlazor's `MudRTLProvider`, mirroring the whole shell.
-- **ICU.** The Web host runs with ICU enabled (`InvariantGlobalization=false`); wire/parse code stays on
-  `CultureInfo.InvariantCulture`, so only per-culture UI formatting is affected — never a backtest or CSV.
+- **Zdroje.** Řetězce uživatelského rozhraní existují v `src/Web/Resources/Ui.resx` (základní angličtina) plus jeden `Ui.<culture>.resx` na jazyk. Komponenty je čtou přes `IStringLocalizer<Ui>` — `@L["key"]`, nikdy doslova. Soubory `.resx` se generují z `tools/i18n/ui-translations.json` (`pwsh tools/i18n/gen-resx.ps1`), přátelský zdroj pravdy překladatele.
+- **Rozlišení kultury.** `RequestLocalizationMiddleware` nejprve vybere kulturu z souboru cookie `.AspNetCore.Culture`, poté z `Accept-Language` prohlížeče, poté z angličtiny.
+- **Přepínání.** Přepínač jazyku na pruhu aplikace (a část **Nastavení → Jazyk**) přejde na koncový bod `GET /set-culture` — úplné znovunačtení mimo obvod Blazor, protože obvod nemůže live změnit kulturu. Zapíše soubor cookie a pro přihlášeného uživatele připraví volbu do jeho profilu (`UserProfile.Locale`); znovunačtení zavádí nový obvod ve zvoleném jazyce.
+- **Perzistence & přihlášení.** Uložená lokalizace profilu se při přihlášení zapíše zpět do souboru cookie kultury, takže se uživatel dostane do svého jazyka na každém zařízení.
+- **Zprava doleva.** Arabština (a všechny budoucí jazyky RTL) nastavuje `<html dir="rtl">` a zabaluje rozvržení do MudBlazorovny `MudRTLProvider`, zrcadlící celé prostředí.
+- **ICU.** Web host běží s ICU povoleným (`InvariantGlobalization=false`); kód v drátě/parseuje zůstane na `CultureInfo.InvariantCulture`, takže je ovlivněno pouze formátování uživatelského rozhraní na kulturu — nikdy backtest nebo CSV.
 
-## The gate — no hard-coded UI text
+## Brána — bez pevně zakódovaného textu uživatelského rozhraní
 
-New user-facing strings **cannot** be merged un-localized in the covered scope:
+Nové řetězce viditelné uživatelem **nemohou** být sloučeny nelokalizované v krytém rozsahu:
 
-- A build-failing arch-guard test (`NoHardcodedUiTextTests`) scans migrated `.razor` files and fails on
-  any literal, text-bearing attribute (`Label`, `Text`, `Title`, `Placeholder`, `HelperText`,
-  `aria-label`, `alt`) that isn't an `@L["…"]` lookup.
-- A resource-parity test (`ResourceParityTests`) fails the build if any language is missing a key or ships
-  a blank value — every language always has every key.
+- Test arch-guard selhávající při sestavě (`NoHardcodedUiTextTests`) prohledá migrované soubory `.razor` a selže na jakémkoli literálu, atributu s textem (`Label`, `Text`, `Title`, `Placeholder`, `HelperText`, `aria-label`, `alt`), který není `@L["…"]` vyhledáním.
+- Test parity zdrojů (`ResourceParityTests`) selhává v případě, že jakýkoli jazyk chybí klíč nebo dodá prázdnou hodnotu — každý jazyk vždy má každý klíč.
 
-## Adding or changing a string
+## Přidání nebo změna řetězce
 
-1. Add/edit the key in `tools/i18n/ui-translations.json` for **every** culture.
-2. Regenerate the `.resx`: `pwsh tools/i18n/gen-resx.ps1`.
-3. Reference it in the component with `@L["your.key"]`.
-4. `dotnet test` — the parity and hardcoded-text gates keep you honest.
+1. Přidejte/upravte klíč v `tools/i18n/ui-translations.json` pro **každou** kulturu.
+2. Regenerujte `.resx`: `pwsh tools/i18n/gen-resx.ps1`.
+3. Odkažte na něj v součásti s `@L["your.key"]`.
+4. `dotnet test` — brány parity a pevně zakódovaného textu vás drží upřímní.
 
-## Docs localization
+## Lokalizace dokumentů
 
-These docs are localized too. Docusaurus i18n is configured for all 23 locales (`website/i18n/`), with a
-locale dropdown in the navbar and RTL for Arabic. Scaffold a locale's translation files with
-`npm run write-translations -- --locale <code>` and translate under `website/i18n/<code>/`. Per the
-localization mandate, **adding or changing any doc means updating every locale in the same change.**
+Tyto dokumenty jsou také lokalizovány. Docusaurus i18n je konfigurován pro všechny 23 lokality (`website/i18n/`), s rozevírací nabídkou lokality v navigačním panelu a RTL pro arabštinu. Vygenerujte soubory překladu lokality pomocí `npm run write-translations -- --locale <code>` a překládejte pod `website/i18n/<code>/`. Dle mandátu lokalizace **přidání nebo změna jakéhokoli dokumentu znamená aktualizaci každé lokality ve stejné změně.**

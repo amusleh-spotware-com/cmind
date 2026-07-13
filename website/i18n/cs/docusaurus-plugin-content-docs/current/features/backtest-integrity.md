@@ -1,76 +1,53 @@
 ---
-description: "Backtest Integrity Lab — deterministic, fund-grade overfitting statistics (Probabilistic & Deflated Sharpe, t-stat) that turn a raw backtest into a Robust / Fragile / Overfit verdict, correcting for how many configurations you tried."
+description: "Backtest Integrity Lab — deterministické, institucijní statistiky overfittingu (Probabilistic & Deflated Sharpe, t-stat), které změní surový backtest na Robust / Fragile / Overfit verdikt, korekce pro počet vyzkoušených konfigurací."
 ---
 
 # Backtest Integrity Lab
 
-Retail platforms show you a backtest's Sharpe or net profit and stop there. Institutions never trust a
-raw backtest — they ask whether the result survives **correction for selection bias and the number of
-configurations tried**. The Backtest Integrity Lab brings that check to cMind. It is **deterministic
-math** (no AI, no external calls), so the verdict is reproducible and every number is explainable.
+Retailové platformy vám ukážou Sharpe nebo čistý zisk backtestu a skončí. Instituce nikdy nedůvěřují surému backtestu — ptají se, zda výsledek přežije **korekci pro selekční zkreslení a počet vyzkoušených konfigurací**. Backtest Integrity Lab přináší tuto kontrolu do cMind. Jedná se o **deterministickou matematiku** (bez AI, bez externích hovorů), takže verdikt je reprodukovatelný a každé číslo je vysvětlitelné.
 
-Open it at **cBots → Integrity** (`/quant/integrity`).
+Otevřete jej na **cBots → Integrity** (`/quant/integrity`).
 
-## What it computes
+## Co počítá
 
-Given a return series (or an equity/balance curve) and the number of parameter sets you tried to arrive
-at it, the analyzer reports:
+Vzhledem k řadě výnosů (nebo křivce vlastního kapitálu/zůstatku) a počtu sad parametrů, které jste vyzkoušeli, aby jste jej dosáhli, anylyzátor hlásí:
 
-- **Sharpe ratio** — per-period and annualized (square-root-of-time).
-- **Probabilistic Sharpe Ratio (PSR)** — the confidence that the *true* Sharpe beats the benchmark,
-  accounting for track-record length, skewness and kurtosis (Bailey & López de Prado, 2012). A short or
-  fat-tailed record lowers it.
-- **Deflated Sharpe Ratio (DSR)** — PSR measured against a **deflated benchmark**: the Sharpe you would
-  expect from the *best of N random trials* under the null (the False Strategy Theorem). The more
-  configurations you tried, the higher the bar — this is what catches overfitting.
-- **t-statistic** of the mean return. Following Harvey, Liu & Zhu, a genuine edge should clear **t ≥ 3.0**,
-  not the textbook 2.0.
-- **Skewness / kurtosis** of the returns, which feed the PSR/DSR corrections.
+- **Sharpe ratio** — za období a anualizované (square-root-of-time).
+- **Probabilistic Sharpe Ratio (PSR)** — důvěra, že *skutečný* Sharpe překonává benchmark, zohledňující délku stopy, šikmost a špičatost (Bailey & López de Prado, 2012). Krátký nebo tlustý záznam to snižuje.
+- **Deflated Sharpe Ratio (DSR)** — PSR měřeno proti **deflovanému benchmarku**: Sharpe, který byste očekávali od *nejlepšího z N náhodných pokusů* pod nulou (False Strategy Theorem). Čím více konfigurací jste vyzkoušeli, tím vyšší je lišta — to je to, co chytá overfitting.
+- **t-statistic** průměrného výnosu. Podle Harveye, Liu & Zhu, skutečná výhoda by měla překonat **t ≥ 3.0**, ne v učebnicích 2.0.
+- **Šikmost / špičatost** výnosů, které krmí opravy PSR/DSR.
 
-## The verdict
+## Verdikt
 
-| Verdict | Meaning | Rule |
+| Verdikt | Význam | Pravidlo |
 |---|---|---|
-| **Robust** | The edge survives the trials you ran. | DSR ≥ 95% **and** PSR ≥ 95% **and** \|t\| ≥ 3.0 |
-| **Fragile** | Statistically alive but not convincingly so — do not size up on this alone. | between the two |
-| **Overfit** | Most likely an artefact of selection bias, not a real edge. | DSR < 90% |
+| **Robust** | Výhoda přežije pokusy, které jste spustili. | DSR ≥ 95% **a** PSR ≥ 95% **a** \|t\| ≥ 3.0 |
+| **Fragile** | Statisticky naživu, ale ne přesvědčivě — nezvyšujte velikost jen na základě tohoto. | mezi těmito dvěma |
+| **Overfit** | Nejpravděpodobněji artefakt selekčního zkreslení, ne skutečná výhoda. | DSR < 90% |
 
-Every result carries a plain-English rationale so the "why" is never hidden.
+Každý výsledek obsahuje jasně napsaný důvod, takže "proč" nikdy není skryt.
 
-## Probability of Backtest Overfitting (across trials)
+## Pravděpodobnost backtestu Overfittingu (v rámci pokusů)
 
-Feeding a trial *count* is good; feeding the **actual out-of-sample series of every configuration you
-tried** is better. Paste them into the optional **trial grid** (one series per line) and cMind runs
-**Combinatorially-Symmetric Cross-Validation** (Bailey, Borwein, López de Prado & Zhu, 2015): it splits
-the observations into groups, and for every way of choosing half as in-sample it picks the in-sample
-best configuration and checks whether that winner lands in the bottom half **out-of-sample**. The
-**Probability of Backtest Overfitting (PBO)** is the fraction of splits where the winner failed to
-generalize. A PBO near 0 means the best configuration is genuinely best; a PBO of 0.5 or more means your
-selection process is picking noise — the verdict becomes **Overfit** regardless of how good the winner
-looked.
+Podání počtu pokusů je dobré; podání **skutečné out-of-sample série každé konfigurace, kterou jste vyzkoušeli** je lepší. Vlepte je do volitelné **trial grid** (jedna řada na řádek) a cMind spustí **Combinatorially-Symmetric Cross-Validation** (Bailey, Borwein, López de Prado & Zhu, 2015): rozdělí pozorování do skupin, a pro každý způsob výběru poloviny jako in-sample vybere nejlepší konfiguraci v in-sample a zkontroluje, zda vítěz dopadá v dolní polovině **out-of-sample**. **Probability of Backtest Overfitting (PBO)** je frakce dělení, kde vítěz selhal zobecnit. PBO blízko 0 znamená, že nejlepší konfigurace je skutečně nejlepší; PBO 0,5 nebo více znamená, že váš proces výběru vybírá šum — verdikt se stane **Overfit** bez ohledu na to, jak dobrý vítěz vypadal.
 
 ```http
 POST /api/quant/pbo
 { "trials": [[...], [...], ...] }
 ```
 
-When the native cTrader Console optimizer lands, cMind will feed its full trial surface here
-automatically.
+Když přijde nativní cTrader Console optimizer, cMind sem automaticky vloží svůj úplný povrch pokusů.
 
-## Trials — the number that matters
+## Pokusy — číslo, které má smysl
 
-`Trials` is **how many parameter sets you tested** before picking this one. Testing one strategy and
-testing ten thousand and keeping the best are wildly different things: the second manufactures a
-high in-sample Sharpe by chance. Feeding the honest trial count is the whole point — it raises the
-deflation and can move a "great" backtest to **Overfit**. When the native cTrader Console optimizer
-lands, cMind feeds it the sweep's real grid size automatically.
+`Trials` je **kolik sad parametrů jste testovali** před výběrem tohoto. Testování jedné strategie a testování deset tisíc a udržení nejlepších jsou divoce odlišné věci: druhá vyrábí vysoký in-sample Sharpe náhodou. Podání upřímného počtu pokusů je celý bod — zvyšuje to deflaci a může přesunout "skvělý" backtest na **Overfit**. Když přijde nativní cTrader Console optimizer, cMind mu automaticky podá skutečnou velikost mřížky tahu.
 
-## Inputs
+## Vstupy
 
-- **Periodic returns** — one number per period (e.g. `0.01` = +1%). At least two.
-- **Equity / balance curve** — cMind derives the consecutive simple returns for you.
-- Or run it straight on a completed backtest: `POST /api/quant/integrity/backtest/{instanceId}` reads the
-  stored report's equity curve.
+- **Periodické výnosy** — jedno číslo na období (např. `0.01` = +1%). Alespoň dva.
+- **Vlastní kapitál / zůstatkový graf** — cMind pro vás odvozuje postupné jednoduché výnosy.
+- Nebo jej spusťte přímo na dokončeném backtestu: `POST /api/quant/integrity/backtest/{instanceId}` čte zůstatkový graf uloženého reportu.
 
 ## API
 
@@ -79,12 +56,8 @@ POST /api/quant/integrity
 { "returns": [0.006, 0.004, 0.006, ...], "trials": 250 }
 ```
 
-Returns the verdict, all metrics, and the rationale. `POST /api/quant/integrity/backtest/{id}` runs the
-same analysis on a completed backtest you own.
+Vrátí verdikt, všechny metriky a důvod. `POST /api/quant/integrity/backtest/{id}` spustí stejnou analýzu na dokončeném backtestu, který vlastníte.
 
-## Why it is reliable
+## Proč je spolehlivý
 
-The statistics are pure functions in the domain core (`Core.Quant`) with zero infrastructure
-dependencies — they cannot be taken down by a network blip, and they are pinned by golden-vector unit
-tests against the published formulas. The normal CDF/inverse are closed-form approximations
-(Abramowitz-Stegun / Acklam), so the same inputs always yield the same verdict.
+Statistiky jsou čisté funkce v domén jádru (`Core.Quant`) s nulovou závislostí infrastruktury — nemohou být sraženy síťovým poruchou a jsou připraveny golden-vector testy jednotky proti publikovaným vzorcům. Normální CDF/inverse jsou aproximace v uzavřené formě (Abramowitz-Stegun / Acklam), takže stejné vstupy vždy produkují stejný verdikt.

@@ -1,67 +1,54 @@
 ---
 slug: /audience
-title: Who is cMind for?
-description: cMind is for cTrader traders, brokers, and cloud/VPS providers. Find your path — self-host as a trader, white-label as a broker, or offer managed hosting as a provider — plus how to contribute.
+title: Ki számára való a cMind?
+description: A cMind cTrader kereskedőknek, brókereknek és felhő/VPS szolgáltatóknak. Találja meg az Ön útját — önfenntartó kereskedőként, fehér címkés brókerként, vagy felügyelt üzemeltetés biztosítóként — plusz hogyan járulhat hozzá.
 keywords:
   - cTrader platform
-  - algorithmic trading
-  - white-label broker
-  - managed trading hosting
-  - open source trading
+  - algoritmikus kereskedelem
+  - fehér címkés broker
+  - felügyelt kereskedelem üzemeltetés
+  - nyílt forráskódú kereskedelem
 sidebar_position: 2
 ---
 
-# Who is cMind for?
+# Ki számára való a cMind?
 
-Short version: **people with money on the line who like being in control.** cMind is a serious
-algorithmic-trading operations console — not a consumer fintech toy with a confetti animation when
-you make $3. Whether you trade, broker, or host, there's a path below built for you.
+Rövid verzió: **emberek, akiknek pénze a tét és szeretik az irányítást.** A cMind egy komoly algoritmikus-kereskedelem operációs konzol — nem egy fogyasztó fintech játékszer, amely konfetti animációt mutat, amikor $3-t kerestek. Függetlenül attól, hogy Ön kereskedik, bróker vagy üzemeltet, van egy Ön számára felépített út alább.
 
-## 📈 Traders — self-host your whole desk
+## 📈 Kereskedők — saját asztalt önfenntartó
 
-You trade on cTrader and you're tired of gluing together an editor, a backtester, a VPS, and three
-browser tabs. Self-host cMind and get authoring, backtesting, live execution, copy trading, and
-monitoring in one AI-powered console — on your own box, your data never leaving it.
+Kereskedik a cTrader-en és fáradt, hogy összeragassz egy szerkesztőt, egy backtest-et, egy VPS-t és három böngészőlapot. Saját fenntartás cMind és kapj szerzőséget, backtesting-et, élő végrehajtást, másolati kereskedelmét és monitorozást egy AI-hajtott konzolban — a saját dobozban, az adataid soha nem hagyják el.
 
-**Read:** [cMind for cTrader traders →](./for-traders.md)
+**Olvasás:** [cMind cTrader kereskedőkhöz →](./for-traders.md)
 
-## 🏦 Brokers — white-label it for your clients
+## 🏦 Brokerek — fehér címke az ügyfeleinek
 
-You run a cTrader brokerage and want an edge over competitors offering nothing but a terminal. Ship
-cMind as your own product: give clients AI, copy trading, and prop-firm challenges under your brand,
-restrict accounts to your book, and open new revenue lines.
+Ön egy cTrader brókerség működtet és az előnyt szeretné megelőzni a konkurenseket ajánló semmi de egy terminál. Szállít cMind-t saját termékként: adj az ügyfeleknek AI-t, másolat kereskedelmét és prop-firm kihívás az Ön márkanév alatt, korlátozz fiókokat az Ön könyv-hez, és nyiss új bevétel vonalakat.
 
-**Read:** [cMind for cTrader brokers →](./for-brokers.md) ·
-[White-label for business →](./white-label-for-business.md)
+**Olvasás:** [cMind cTrader brókerekhez →](./for-brokers.md) · [Fehér címke az üzlethez →](./white-label-for-business.md)
 
-## 🖥️ Cloud & VPS providers — sell it as managed hosting
+## 🖥️ Felhő és VPS szolgáltatók — eladj felügyelt üzemeltetésként
 
-You rent compute. Offer managed cMind hosting and land a high-value, compute-hungry, sticky workload —
-and monetize the subscription, the metered compute, the white-label, and the AI.
+Ön számítást bérel. Kínálj felügyelt cMind üzemeltetést és leszáll egy magas érték, számítás-éhes, ragadós munkaterhelésre — és pénzeszközöt a feliratkozás, a mért számítás, a fehér címke és az AI segítségével.
 
-**Read:** [cMind for cloud & VPS providers →](./for-cloud-providers.md)
+**Olvasás:** [cMind felhő és VPS szolgáltatókhoz →](./for-cloud-providers.md)
 
-## 🧑‍💻 Contributors — help make it better
+## 🧑‍💻 Hozzájáruló — segítséget nyújtanak, hogy jobb legyen
 
-cMind is open source (MIT) and community-shaped: C# 14 / .NET 10, strict DDD, EF Core + PostgreSQL,
-.NET Aspire, an MCP server, and three test tiers. Every persona above can — and should — push it
-forward:
+A cMind nyílt forráskódú (MIT) és közösség-alakított: C# 14 / .NET 10, szigorú DDD, EF Core + PostgreSQL, .NET Aspire, egy MCP szerver, és három teszt szint. Minden személyként fent fel tud — és kellene — előre tud nyomni:
 
-- **Traders:** add cBot templates, request features, report bugs.
-- **Brokers:** contribute the integrations and controls your desk needs.
-- **Providers:** upstream your operational fixes and IaC improvements.
+- **Kereskedők:** cBot sablonok hozzáadása, funkciókhöz kérés, hibáktól jelentés.
+- **Brokerek:** hozzájáruld az integrációt és irányítást, amelyre az asztal szüksége van.
+- **Szolgáltatók:** felfelé az operációs javításokat és IaC fejlesztéseket.
 
-File issues, add UI translations or AI provider adapters, and send PRs — the
-[Contributing guide](./contributing.md) and [MCP server docs](./features/mcp.md) get you going.
+Fájl-problémákat, UI fordítások vagy AI szolgáltató adapterek hozzáadása, és PRs küldés — az [Hozzájárulási útmutató](./contributing.md) és az [MCP szerver docs](./features/mcp.md) indulnak.
 
-## Is cMind *not* for you?
+## A cMind *nem* az Ön számára?
 
-Be honest with yourself. cMind might be overkill if:
+Légy becsületes magaddal. A cMind túlmérethalkodás lehetne ha:
 
-- You've never touched a terminal and don't want to start — though a
-  [cloud/VPS provider can host it for you](./for-cloud-providers.md).
-- You only trade manually and don't care about bots, backtests, or copy trading.
-- You want a hosted SaaS with a support hotline and you don't want anyone self-hosting it — cMind is
-  self-hosted by design (it just tries very hard to make that painless).
+- Soha nem érintette meg a terminált és nem akarsz elkezdeni — bár egy [felhő/VPS szolgáltató üzemeltet-het az Ön számára](./for-cloud-providers.md).
+- Csak kézileg keresked és nem érdekel botok, backtesz vagy másolat kereskedelem.
+- Akarsz üzemeltetett SaaS-t egy támogat hotline-nal és nem akarsz, hogy bárki önfenntartó lenne — a cMind önfenntartó a tervezés szerint (csak nagyon nehéz fájdalommentessé tenni).
 
-Still nodding along? Welcome aboard. → [Run it locally](./deployment/local.md)
+Továbbra is bólogatva? Üdvözöljük a fedélzeten. → [Futtasd helyileg](./deployment/local.md)

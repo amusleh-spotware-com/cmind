@@ -4,7 +4,7 @@
 // copies that some translation agents leave behind). Writes gaps.json = { locale: [relPath, ...] }
 // for re-dispatch, and prints a per-locale summary.
 
-import { readdirSync, readFileSync, existsSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, existsSync, writeFileSync, rmSync } from 'node:fs';
 import { join, relative, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -38,8 +38,10 @@ const docs = walk(DOCS)
 
 const srcBody = new Map(docs.map((r) => [r, body(readFileSync(join(DOCS, r), 'utf8'))]));
 
+const PRUNE = process.argv.includes('--prune');
 const gaps = {};
 let doneTotal = 0;
+let pruned = 0;
 for (const locale of LOCALES) {
   const base = join(ROOT, 'i18n', locale, 'docusaurus-plugin-content-docs', 'current');
   const need = [];
@@ -47,7 +49,16 @@ for (const locale of LOCALES) {
     const t = join(base, r);
     if (!existsSync(t)) { need.push(r); continue; }
     const tb = body(readFileSync(t, 'utf8'));
-    if (tb.length === 0 || tb === srcBody.get(r)) need.push(r); // empty or still English
+    const src = srcBody.get(r);
+    // Compact scripts (CJK/Thai) render far fewer characters than English for the same content, so a
+    // length ratio would false-flag real translations — for them only "missing/empty/English" counts.
+    const compact = ['ja', 'ko', 'zh-Hans', 'th'].includes(locale);
+    const minRatio = compact ? 0.18 : 0.5;
+    const isGap = tb.length === 0 || tb === src || tb.length < src.length * minRatio;
+    if (isGap) {
+      need.push(r);
+      if (PRUNE) { rmSync(t); pruned++; } // remove stub/English copy so it is cleanly re-created
+    }
   }
   if (need.length) gaps[locale] = need;
   const done = docs.length - need.length;
@@ -57,5 +68,5 @@ for (const locale of LOCALES) {
 
 writeFileSync(join(ROOT, 'gaps.json'), JSON.stringify(gaps, null, 0));
 const total = docs.length * LOCALES.length;
-console.log(`\nTOTAL ${doneTotal}/${total} translated  ·  ${total - doneTotal} remaining  ·  gaps.json written`);
+console.log(`\nTOTAL ${doneTotal}/${total} translated  ·  ${total - doneTotal} remaining` + (PRUNE ? `  ·  pruned ${pruned} stub/placeholder files` : '') + `  ·  gaps.json written`);
 process.exit(Object.keys(gaps).length ? 1 : 0);

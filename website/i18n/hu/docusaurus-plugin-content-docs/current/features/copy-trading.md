@@ -1,100 +1,99 @@
 ---
-description: "Mirror master cTrader account onto one+ slave accounts — cross-broker, cross-cID — with per-destination control + money-grade reconciliation."
+description: "Másolja a master cTrader fiók pozícióit egy vagy több slave fiókra — több broker, több cID — célonként beállítható vezérléssel és pénzügyi szintű egyeztetéssel."
 ---
 
-# Copy trading
+# Másolási kereskedelem
 
-Mirror **master** cTrader account onto one+ **slave** accounts — cross-broker, cross-cID — with per-destination control + money-grade reconciliation.
+Tükrözze a **master** cTrader fiók pozícióit egy vagy több **slave** fiókra — több broker, több cID — célonként beállítható vezérléssel és pénzügyi szintű egyeztetéssel.
 
-## Concepts
+## Fogalmak
 
-- **Copy profile** — one master (`SourceAccountId`) + one+ **destinations**. Lifecycle: `Draft → Running → Paused → Stopped` (`Error` on failure). Aggregate root: `CopyProfile` (owns `CopyDestination`).
-- **Destination** — one slave account + full rule set for how master copied onto it. All config per-destination, so one master feeds conservative + aggressive slaves at once.
-- **Copy engine host** — running worker for profile (`CopyEngineHost`). Subscribes master execution stream, applies each event to every destination.
-- **Supervisor** — `CopyEngineSupervisor`, background service on each node. Hosts assigned profiles, self-heals across cluster (see [scaling](../deployment/scaling.md)).
+- **Másolási profil** — egy master (`SourceAccountId`) + egy vagy több **célfiók**. Életciklus: `Draft → Running → Paused → Stopped` (hibánál `Error`). Aggregátumgyök: `CopyProfile` (birtokol `CopyDestination` objektumokat).
+- **Célfiók** — egy slave fiók + teljes szabályrendszer a master másolásához. Minden konfiguráció célfiók alapú, így egy master etethet egyszerre konzervatív és agresszív slave fiókokat.
+- **Másolási motor gazdagépe** — profil futó feldolgozója (`CopyEngineHost`). Feliratkozik a master végrehajtási streamre, alkalmazva minden eseményt minden célfiókra.
+- **Felügyelő** — `CopyEngineSupervisor`, background szolgáltatás minden csomóponton. Üzemeltet hozzárendelt profilokat, öngyógyító működés a fürt szintjén (lásd [scaling](../deployment/scaling.md)).
 
-## What gets mirrored
+## Mit tükrözünk
 
-| Master event | Slave action |
+| Master esemény | Slave művelet |
 |--------------|--------------|
-| Market / market-range position open | Open a sized copy (labelled with the source position id) |
-| Limit / stop / stop-limit pending order | Place the matching pending order |
-| Pending order amend | Amend the mirrored pending order in place |
-| Pending order cancel / expiry | Cancel the mirrored pending order |
-| Partial close | Close the same proportion of the slave position |
-| Scale-in (volume increase) | Open the added volume (opt-in) |
-| Stop-loss / trailing-stop change | Amend the slave position's protection |
-| Full close | Close the slave copy |
+| Piaci / piaci tartomány pozíciónyitás | Méretezett másolat megnyitása (jelölve a forrás pozícióazonosítóval) |
+| Limit / stop / stop-limit függőben lévő megbízás | Megfelelő függőben lévő megbízás helyezése |
+| Függőben lévő megbízás módosítása | A tükrözött függőben lévő megbízás módosítása |
+| Függőben lévő megbízás törlése / lejárata | A tükrözött függőben lévő megbízás törlése |
+| Részleges zárás | A slave pozíciónak ugyanilyen arányú zárása |
+| Bejátszás (volumen növekedés) | Az hozzáadott volumen megnyitása (opcionális) |
+| Stop-loss / trailing-stop módosítás | A slave pozícióvédelem módosítása |
+| Teljes zárás | A slave másolat zárása |
 
-Every copy **labelled with source position/order id**. After reconnect host rebuilds state from reconcile: opens copies master holds but slave missing, closes slave "orphans" master no longer holds — **without duplicating trades**.
+Minden másolat **jelölve a forrás pozícióazonosítóval/megbízásazonosítóval**. Újracsatlakozás után a gazdagép az egyeztetésből felépíti az állapotot: megnyitja azokat a másolatokat, amelyeket a master tart, de a slave hiányzik, zárja a slave "árvákat", amelyeket a master már nem tart — **duplikált kereskedelem nélkül**.
 
-## Creating a profile
+## Profil létrehozása
 
-**New Profile** dialog on Copy Trading page collects all up front: profile name, source (master) account, destination (slave) accounts (multi-select with **Select all** button; chosen master excluded from slave list), + full per-destination option set below. All inputs **validated before saving** — missing name/source/destination, non-positive sizing param, negative/inconsistent lot bounds, out-of-range drawdown %, no order type enabled, empty symbol filter, or malformed symbol-map pairs surface as error list + block save. On confirm, profile created + every selected slave added with chosen settings.
+A Copy Trading oldalon a **New Profile** (Új profil) dialógus összegyűjt mindent előre: profilnév, forrás (master) fiók, célfiók (slave) fiókok (többválasztás **Select all** (Összes kiválasztása) gombbal; kiválasztott master kizárva a slave listából), + teljes célfiok-alapú opcióhalmaz. Minden bemenet **elmentés előtt validálva** — hiányzó név/forrás/cél, nem pozitív méretezési paraméter, negatív/inkonzisztens lot határok, érvénytelen tartományú leszálló %, nincs engedélyezve megbízástípus, üres szimbólumszűrő vagy helytelenül formázott szimbólumleképezés párok felszínre hozottak hibalistáként + blokkolt mentés. Megerősítéskor profil létrehozva + minden kiválasztott slave hozzáadva a választott beállításokkal.
 
-Row actions respect lifecycle: **Start** enabled only when not running, **Stop** + **Pause** only when running, **Delete** disabled while running + asks confirmation before removing profile + destinations.
+Sorműveletek tiszteletben tartják az életciklust: **Start** csak amikor nem fut, **Stop** + **Pause** csak amikor fut, **Delete** (Törlés) letiltva míg fut + megerősítés kér profil + célfiók eltávolítása előtt.
 
-## Per-destination options
+## Célfiok alapú lehetőségek
 
-Set in New Profile dialog, on Copy Trading page's per-destination panel, or via `POST /api/copy/profiles/{id}/destinations`:
+Beállítható az Új profil dialógusban, a Copy Trading oldal célfiok-alapú paneljén, vagy `POST /api/copy/profiles/{id}/destinations` útján:
 
-- **Sizing** (`MoneyManagementMode` + parameter): fixed lot, lot/notional multiplier, proportional balance/equity/free-margin, fixed risk %, fixed leverage, auto-proportional, **risk-%-from-stop** (M7). Plus min/max lot bounds + force-min-lot. **Risk-from-stop** sizes destination so it risks configured percent of *its own* balance, derived from **master's stop-loss distance** (`master risks 2% → slave auto-risks 2%`): `lots = balance×% ÷ (stopDistance ×
-  contractSize)`. Master open **without** stop-loss has no distance to size against → uses configured **max-risk fallback lot** (M7) if set, else skipped (`no_stop_loss`) not guessed. Proportional-**equity**/**free-margin** size off real account **equity** (`balance + Σ floating P&L`, derived per cTrader Open API which doesn't deliver equity), not plain balance — so master sitting on open profit/loss sizes copies right. Used margin not exposed by reconcile API, so free-margin treated as equity (honest available-funds proxy); other modes read balance + skip extra revaluation round-trip.
-- **Direction filter**: both / long-only / short-only. **Reverse**: flip side (+ swap SL↔TP) for contrarian copy.
-- **Manage-only** (Ignore-New-Trades / Close-Only): mirror closes, partial closes + protection changes on already-copied positions, but open **no** new positions/pending orders (skipped `manage_only`). Use to wind destination down without cutting existing copies.
-- **Sync-Open-on-start** / **Sync-Closed-on-start** (default on): on profile's **first** resync, whether to open copies for master's pre-existing positions, + whether to close copies master closed while profile stopped. Both apply only at start — mid-run reconnect always reconciles fully so desync recovers regardless.
-- **Symbol map** + **symbol filter** (whitelist / blacklist). Each symbol-map entry carries optional **per-symbol volume multiplier** (cMAM per-symbol override) scaling copy size for that symbol on top of destination's sizing (1 = no change). Whole map imports/exports as **CSV** (`GET …/symbol-map.csv`, `PUT …/symbol-map/csv`; columns `Source,Destination,VolumeMultiplier`) — each row validated through domain value objects, so malformed file can't produce invalid map.
-- **Trading-hours window** (C18) — per-destination daily UTC window (`start`/`end` minutes-of-day, end exclusive; `start == end` = all-day). New opens outside window skipped (`trading_hours`); window with `start > end` wraps past midnight (e.g. 22:00–06:00). Existing positions stay managed.
-- **Source-label filter** (C18, cTrader equivalent of MT magic-number filter) — when set, copy only master trades whose label matches **exactly** (e.g. one bot's trades, or manual-only label); else skipped (`source_label`). Empty = copy all. Carried on `ExecutionEvent.SourceLabel` from master position/order's `TradeData.Label`, honored on resync too.
-- **Account protection** (ZuluGuard / Global Account Protection) — watch destination's **live equity** (`balance + Σ floating P&L`, polled every `CopyDefaults.EquityGuardInterval`) against `StopEquity` floor and/or optional `TakeEquity` ceiling. On breach, apply mode: **CloseOnly** (stop new copies, keep managing existing), **Frozen** (stop opening), **SellOut** (close **every** copy on destination immediately). Once fired, destination latched — no new opens until host restarts — + `CopyAccountProtectionTriggered` alert raised. `SellOut` requires `StopEquity`; `TakeEquity` must sit above `StopEquity`. **No-guarantee caveat:** sell-out uses market execution — like every competitor's equivalent, can't guarantee fill price in fast/gapped market.
-- **Flatten-All panic button** (C8) — `POST /api/copy/profiles/{id}/flatten` immediately closes **every** copied position on every destination + locks against new opens. Routed cross-process: API sets flag, supervisor delivers to running host (reusing token-rotation channel), which flattens in place; flag cleared so fires exactly once (`CopyFlattenAll` alert). User then pauses/stops profile.
-- **Prop-firm rule guard** (C7) — enforcement prop-firm copier users ask for. Per destination, **daily-loss cap** (loss from day's opening equity) and/or **trailing-drawdown** limit (loss from running peak equity), both in deposit currency. On breach destination **auto-flattened** (every copy closed) + **locked out** rest of UTC day (new opens skipped `prop_lockout`); `CopyPropRuleBreached` alert fires. Lockout clears when UTC day rolls over (fresh baseline/peak taken). Shares same live-equity poll as account protection.
-- **Execution jitter** (C11, off by default) — random `0..N` ms delay before placing each copy, to de-correlate near-identical order timestamps across user's **own** accounts. **Compliance caveat:** aid for prop firms that *permit* copying — **not** tool to evade firm that forbids it; staying within your firm's rules is your responsibility.
-- **Config lock** (C9) — freeze destination's settings for period (`POST …/destinations/{id}/lock` with minutes). While locked, destination can't be removed (aggregate rejects with `CopyDestinationConfigLocked`) — deliberate guard against impulsive changes during drawdown. Lock expires automatically at its timestamp.
-- **Consistency pre-alert** (C10) — warn (once per UTC day) when destination's **daily profit** reaches configured percent of day's opening equity (`CopyConsistencyThresholdApproaching`), so prop-firm consistency rule respected *before* it trips. Profit-side, independent of loss-side lockout; runs off same day baseline as prop-rule guard.
-- **Order-type filter** — choose exactly which master order types to copy: market, market-range, limit, stop, stop-limit (`CopyOrderTypes` flags; default all). cMAM-style selectivity.
-- **Copy SL / Copy TP** — mirror master's stop-loss / take-profit, or manage protection independently.
-- **Copy trailing stop**, **mirror partial close**, **mirror scale-in** — each independently toggleable.
-- **Copy pending expiry** (default on) — mirror master pending order's Good-Till-Date expiry timestamp.
-- **Copy master slippage** (default on) — for market-range + stop-limit orders, place slave order with master's exact slippage-in-points (base price taken from slave's live spot).
-- **Guards**: max drawdown %, daily loss cap, max copy delay, slippage filter (skip copy if slave price moved beyond N pips from master entry). **Max copy delay** measured against master event's real server timestamp (`ExecutionEvent.ServerTimestamp`) via injected `TimeProvider`: signal older than configured max-lag skipped, so stale copy never placed late (previously delay always zero + guard dead).
-- **SL/TP precision normalization** (M6) — copied stop-loss/take-profit prices rounded to **destination** symbol's digit precision before amend, so master price at finer precision (or cross-broker digit mismatch) never trips server's `INVALID_STOPLOSS_TAKEPROFIT`.
-- **Rejection circuit breaker / Follower Guard** (G8) — destination rejecting `CopyDefaults.RejectionBudget` opens in a row is **tripped**: no new opens for cooldown window (`CopyDestinationTripped` alert fires), stopping rejection storm from hammering (prop-firm) account. Existing positions still managed + closed while tripped; breaker auto-resets after cooldown + successful copy clears counter.
-- **Lot sanity ceiling** (C14) — absolute max copy size and/or multiple-of-master cap. Computed copy exceeding absolute cap, or exceeding `N×` master's own lot size, **hard-blocked** (surfaced as `lot_sanity` skip, counted on `cmind.copy.skipped`) not placed — defends against catastrophic-oversize class (0.23-lot master turning into 3 lots on each receiver via runaway multiplier or rounding bug). Both dimensions default `0` (off).
+- **Méretezés** (`MoneyManagementMode` + paraméter): fix lot, lot/notional szorzó, arányos egyenleg/equity/szabad margó, fix kockázat %, fix tőkeáttétel, auto-arányos, **risk-%-from-stop** (M7). Plus min/max lot határok + force-min-lot. **Risk-from-stop** méretez a célfiókot úgy, hogy az a saját egyenlegének konfigurált százalékát kockáztassa, a **master stop-loss távolságából** levezetett (`master kockáztat 2% → slave auto-kockáztat 2%`): `lots = balance×% ÷ (stopDistance × contractSize)`. Master nyitás **stop-loss nélkül** nincs távolsága a méretezéshez → a konfigurált **max-risk fallback lot** (M7) használja, ha be van állítva, egyébként kihagyva (`no_stop_loss`). Arányos-**equity**/**szabad margó** méretez a valós fiók **equity**-jén (`egyenleg + Σ lebegő P&L`, a cTrader Open API-ból levezetett, amely nem szállít equity-t), nem tiszta egyenleg — így a master nyitott profit/veszteségen ül a másolatokat helyesen méretez. Felhasznált margó nincs kitéve az egyeztetési API-n, így a szabad margó equity-ként kezelendő (becsült rendelkezésre álló pénzügyi proxy); egyéb módok egyenleget olvasnak + kihagynak az extra revaluálási kört.
+- **Irányszűrő**: mindkettő / csak long / csak short. **Reverse** (Fordított): oldalváltás (+ SL↔TP csere) ellentétes másolathoz.
+- **Manage-only** (Csak kezelés / Close-Only): tükröz zárásokat, részleges zárásokat + védelemmódosításokat már másolat pozíciókon, de megnyit **nem** új pozíciókat/függőben lévő megbízásokat (kihagyott `manage_only`). Használja a célfiók csökkentéséhez meglévő másolatok vágása nélkül.
+- **Sync-Open-on-start** / **Sync-Closed-on-start** (alapértelmezés bekapcsolt): a profil **első** szinkronizációján, hogy másolatokat nyitunk-e a master meglévő pozícióihoz, + hogy zárunk-e másolatokat, amelyeket a master zárta, amíg profil megállt volt. Mindkettő csak indításkor érvényes — futó közben újracsatlakozás mindig teljes szinkronizálást végez, így az aszinkronizálódás függetlenül helyreáll.
+- **Szimbólumleképezés** + **szimbólumszűrő** (fehérlista / fekete lista). Minden szimbólumleképezés-bejegyzés opcionális **szimbólumonkénti volumenszorzót** (cMAM szimbólumonkénti felülbírálat) hordoz, amely méretezi a másolat méretét az adott szimbólum esetén a célfiók méretezésén felül (1 = nincs változás). Az egész leképezés **CSV** formátumban importálható/exportálható (`GET …/symbol-map.csv`, `PUT …/symbol-map/csv`; oszlopok `Source,Destination,VolumeMultiplier`) — minden sor domain értékobjektumokon keresztül validálva, így a helytelenül formázott fájl nem állíthat elő érvénytelen leképezést.
+- **Kereskedési órák ablaka** (C18) — célfiok alapú napi UTC ablak (`start`/`end` perc-a-napban, vég kizáró; `start == end` = egész nap). Ablakán kívüli új nyitások kihagyottak (`trading_hours`); ablak `start > end` értékkel éjfél után fordul (pl. 22:00–06:00). Meglévő pozíciók maradnak kezelve.
+- **Forrás-címke szűrő** (C18, cTrader megfelelője MT magic-number szűrőnek) — ha beállított, másolja csak a master kereskedelmét, amelynek a címkéje **pontosan** megegyezik (pl. egy bot kereskedelmei, vagy csak kézi címke); egyébként kihagyott (`source_label`). Üres = minden másolja. A master pozícióazonosítójának `TradeData.Label` értékén keresztül szállítva, szinkronizáláson is tiszteletben tartva.
+- **Fiók védelme** (ZuluGuard / Global Account Protection) — figyeld a célfiók **élő equity**-jét (`egyenleg + Σ lebegő P&L`, szavazott minden `CopyDefaults.EquityGuardInterval`) az `StopEquity` emelet + opcionális `TakeEquity` mennyezet ellen. A megsértés esetén alkalmazzuk az üzemmódot: **CloseOnly** (állj meg új másolatoknál, tartsd kezelve a meglévőket), **Frozen** (állj meg nyitásnál), **SellOut** (zárjuk **minden** másolatot a célfiók-ból azonnal). Miután megindul, a célfiók lakatlanított — nincs új nyitás amíg a gazdagép újraindul — + `CopyAccountProtectionTriggered` riasztás emelésse. `SellOut` igényel `StopEquity`-t; `TakeEquity`-nek a `StopEquity` fölött kell lenni. **Garancia nélküli figyelmeztető:** az eladás piaci végrehajtást használ — mint minden verseny megfelelője, nem garantálhat kitöltési árat gyors/közvetített piacon.
+- **Flatten-All pánikgomb** (C8) — `POST /api/copy/profiles/{id}/flatten` azonnal zárja meg **minden** másolat pozícióját minden célfiók-ból + zárollja az új nyitások ellen. Keresztfolyamaton irányított: az API zaszlót állít, a felügyelő szállít a futó gazdagéphez (újrahasznosító token-forgatási csatorna), amely rendben megsimít; zaszló törlödve úgy tüz pontosan egyszer (`CopyFlattenAll` riasztás). A felhasználó ezután szünetelteti/leállítja a profilt.
+- **Prop-firm szabályvédelem** (C7) — prop-firm másoló felhasználók kértek erősítést. Célfiok alapú, **napi veszteségkorlát** (a nap nyitó equity-jéből való veszteség) + opcionális **trailing-drawdown** (a futó csúcs equity-ből való veszteség) korlát, mindkettő letéti pénznemben. A megsértés célfiók **auto-kilapított** (minden másolat zárva) + **kizárt** az UTC nap többi részéből (új nyitások kihagyottak `prop_lockout`); `CopyPropRuleBreached` riasztás tüzel. A kizárás az UTC nap végén tisztázódik (friss alapérték/csúcs szállítva). Megosztja ugyanazon az élő-equity szavazattal, mint a fiók védelme.
+- **Végrehajtás jitter** (C11, alapértelmezés kikapcsolt) — véletlen `0..N` ms késleltetés minden másolat helyezése előtt, a visszautalások korrelációja a felhasználó **saját** fiókjain keresztül. **Megfelelőségi figyelmeztető:** segítség prop vállalatoknak, amelyek *engedélyezik* másolást — **nem** eszköz a letiltó cégek elkerülésére; a cég szabályai betartása az Ön felelőssége.
+- **Konfiguráció zárolása** (C9) — fagyasszon meg célfiók beállításokat (egy időtartamra) (`POST …/destinations/{id}/lock` percekkel). Zárolt, célfiók nem távolítható el (aggregátum elutasít `CopyDestinationConfigLocked` értékkel) — szándékos védelem az impulzív változások ellen a csökkenés alatt. Zárolás automatikusan lejár az időbélyegzésénél.
+- **Konzisztencia előriasztás** (C10) — figyelmeztess (naponta egyszer UTC alapon), amikor a célfiók **napi nyeresége** eléri a nap nyitó equity-jének konfigurált százalékát (`CopyConsistencyThresholdApproaching`), így a prop-firm konzisztencia szabály tiszteletben tartja *mielőtt* megindul. Nyereség oldali, független veszteség-oldali zárásáról; fut az ugyanazon napi alapértékből, mint a prop-szabály védelme.
+- **Megbízástípus szűrő** — válassza pontosan, mely master megbízástípusokat másolja: piaci, piaci tartomány, limit, stop, stop-limit (`CopyOrderTypes` zaszlók; alapértelmezés mind). cMAM-stílus szelektivitás.
+- **Másolat SL / Másolat TP** — tükrözze a master stop-loss / take-profit, vagy kezelje a védelmet függetlenül.
+- **Másolat trailing stop**, **tükrözött részleges zárás**, **tükrözött bejátszás** — mindegyik egymástól függetlenül váltható.
+- **Másolat függőben lévő lejárata** (alapértelmezés bekapcsolt) — tükrözze a master függőben lévő megbízás Good-Till-Date lejárati időbélyegzését.
+- **Másolat master csúszása** (alapértelmezés bekapcsolt) — piaci-tartomány + stop-limit megbízások esetén helyezze a slave megbízást a master pontos csúszáspont értékével (alapár a slave élő spotjáról).
+- **Őrök**: max leszálló %, napi veszteségkorlát, max másolat késleltetés, csúszásszűrő (másolás kihagyása, ha slave ár a master bejegyzésből N pip-nél többet mozgott). **Max másolat késleltetés** a master esemény valódi szerver időbélyegzése ellen mérve (`ExecutionEvent.ServerTimestamp`) az injektált `TimeProvider` segítségével: az aláírás régebbi, mint a konfigurált max-lag kihagyott, így az elavult másolat soha nem helyezhető késve.
+- **SL/TP pontosság normalizálása** (M6) — másolat stop-loss/take-profit árak kerekítve a **célfiók** szimbólumának pontosságához módosítás előtt, így a master ár finomabb pontosságban (vagy broker közötti pont eltérés) soha nem okoz szervernek `INVALID_STOPLOSS_TAKEPROFIT`.
+- **Elutasítás áramkör-szakadó / Follower Guard** (G8) — célfiók elutasít `CopyDefaults.RejectionBudget` nyitásokat egymás után **kiváltódva**: nincsenek új nyitások a hűtési ablakban (`CopyDestinationTripped` riasztás tüzel), megakadályozva az elutasítás viharát a (prop-firm) fiók kalapálásából. Meglévő pozíciók maradnak kezelve + zárva a kiváltódás alatt; szakadó auto-alaphelyzetez a hűtési után + sikeres másolat kitörlődik a számlálóból.
+- **Lot józanság mennyezete** (C14) — abszolút max másolat mérete + több-mint-master korlát. Számított másolat meghaladva az abszolút korlátot, vagy meghaladva `N×` master saját lot méretét, **kemény-blokkolt** (felszínre hoztva mint `lot_sanity` kihagyás, számlált `cmind.copy.skipped` értéken) nem helyezve — véd a katasztrófális túlméretezés osztály ellen (0.23-lot master 3 lotba fordulva minden vevőn futó szorzó vagy kerekítési hiba útján). Mindkét dimenzió alapértelmezés `0` (kikapcsolt).
 
-## Reliability & edge cases
+## Megbízhatóság és határesetei
 
-Engine built for reality that anything can fail anytime:
+A motor valóságra épül, hogy bármi meghiúsulhat bármikor:
 
-- **Slave-pending fill-correlation timeout** (C13) — mirrored slave pending whose master pending vanished (neither resting nor freshly filled) cancelled after correlation timeout, so slave copy can't fill uncorrelated into unmanaged position (`CopyPendingTimedOut`). Resync also cleans order-id-labelled filled-pending orphan.
-- **Robust close/flatten** (M8) — closing orphan on resync, or flattening on guard breach, tolerates position broker already closed (`POSITION_NOT_FOUND`): each close runs independently, so one stale id never aborts resync or leaves rest of account un-flattened.
+- **Slave-függőben lévő betöltés-korrelációs időtúllépés** (C13) — tükrözött slave függőben lévő, amelynek master függőben lévő eltűnt (sem nem pihen, sem nem frissen töltődik) törlödve a korrelációs időtúllépés után, így a slave másolat nem tölthető fel korreláció nélküli kezeletlen pozícióba (`CopyPendingTimedOut`). Szinkronizálás is megtisztítja az order-id-jelölt kitöltött-függőben lévő árva.
+- **Robosztus zárás/kilapítás** (M8) — árva zárása szinkronizációnál vagy flökkítés az őr megsértésnél, tűri a pozíciót a broker már zárva (`POSITION_NOT_FOUND`): minden zárás függetlenül fut, így egy elavult id soha nem szakítja meg a szinkronizálást vagy hagyja a többi fiók kilapítatlant.
 
-- **Start with master already in trades** — on start host reconciles + opens copies for master's existing positions.
-- **Connection drops / desync** — on reconnect host reconciles: opens missing copies, closes orphans, re-labels pendings. No duplicate orders.
-- **Order placement failure** — failure on one destination logged, never blocks other destinations.
-- **Single valid token per cID** — cTrader invalidates cID's old access token moment new one issued. cMind swaps running host's token **in place** (re-auth on live socket) so copying continues without dropping stream. See [token lifecycle](token-lifecycle.md).
+- **Indítás a master már kereskedelmekben** — indulásnál a gazdagép szinkronizál + másolatokat nyit a master meglévő pozícióihoz.
+- **Csatlakozási kimaradás / aszinkronizálódás** — újracsatlakozás a gazdagép szinkronizál: megnyitja a hiányzó másolatokat, zárja az árvákat, újcímkézi a függőben lévő köztörvényadókat. Nincs duplikált megbízás.
+- **Megbízás helyezési kudarc** — kudarc egy célfiók-on naplózva, soha nem blokkol más célfiók-okat.
+- **Egyetlen érvényes token per cID** — cTrader érvényteleníti a cID régi hozzáférési tokenjét amikor új kibocsátódik. cMind felcseréli a futó gazdagép tokenját **helyben** (újra-hitelesítés élő socketből), így a másolás folytatódik a stream eldobása nélkül. Lásd [token lifecycle](token-lifecycle.md).
 
-## Auditability
+## Auditálhatóság
 
-Every action emits structured, source-generated log event (`LogMessages`) with profile id, destination cID, order/position ids, + values — order placed/skipped (with reason), partial close, protection applied, trailing applied, pending placed/amended/cancelled, expiry mirrored, market-range slippage mirrored, token swapped, resync summary. This is the audit trail for compliance + dispute resolution.
+Minden művelet sűrű, forrás-generált napló eseményt bocsát ki (`LogMessages`) profil azonosító, célfiók cID, megbízás/pozícióazonosítók, + értékek — megbízás helyezett/kihagyott (ok), részleges zárás, védelem alkalmazva, trailing alkalmazva, függőben lévő helyezett/módosított/törölt, lejárat tükrözve, piaci-tartomány csúszás tükrözve, token felcserélve, szinkronizálási összefoglalás. Ez az audit nyomvonal megfelelőséghez + vitás felbontáshoz.
 
-Alongside logs, engine emits **OpenTelemetry metrics** on `cMind.Copy` meter (registered in shared OTel pipeline, exported over OTLP / to Azure Monitor like rest): `cmind.copy.latency` (master-event → dispatch, ms), `cmind.copy.dispatch.duration` (fan-out to all destinations, ms), `cmind.copy.slippage.points`, `cmind.copy.placed` (tagged by destination), `cmind.copy.skipped` (tagged by reason), + `cmind.copy.failed`. These make latency/slippage regression measurable, not just visible in log line — live suite asserts them against budget.
+A naplók mellett a motor **OpenTelemetry metrikákat** bocsát ki a `cMind.Copy` méteren (regisztrálva a közös OTel vezetékbe, exportálva OTLP / Azure Monitor-hoz mint többi): `cmind.copy.latency` (master-esemény → dispatch, ms), `cmind.copy.dispatch.duration` (fan-out minden célfiók-hoz, ms), `cmind.copy.slippage.points`, `cmind.copy.placed` (jelölt célfiok-al), `cmind.copy.skipped` (jelölt ok szerint), + `cmind.copy.failed`. Ezek teszik a késleltetés/csúszás regresszió mérhetővé, nem csak láthatóvá a napló sorban — élő test asztért tette be őket a költségvetés ellen.
 
 ## API
 
-- `GET /api/copy/profiles` — list.
-- `POST /api/copy/profiles` — create (with optional destination account ids).
-- `GET /api/copy/profiles/{id}` — full detail incl. every destination option.
-- `POST /api/copy/profiles/{id}/destinations` — add a destination with the full option set.
-- `DELETE /api/copy/profiles/{id}/destinations/{destinationId}` — remove.
-- `POST /api/copy/profiles/{id}/{start|pause|stop}` — lifecycle.
+- `GET /api/copy/profiles` — lista.
+- `POST /api/copy/profiles` — létrehozás (opcionális célfiók fiókazonosítók).
+- `GET /api/copy/profiles/{id}` — teljes részletek minden célfiók opciójával.
+- `POST /api/copy/profiles/{id}/destinations` — célfiók hozzáadása az opció halmazzel.
+- `DELETE /api/copy/profiles/{id}/destinations/{destinationId}` — eltávolítás.
+- `POST /api/copy/profiles/{id}/{start|pause|stop}` — életciklus.
 
-## Tests
+## Tesztek
 
-- **Unit** (`tests/UnitTests/CopyTrading`) — sizing modes, decision filters, order-type filter, expiry copy, market-range/stop-limit slippage, SL/TP toggles, partial close, pending amend/cancel, start-with-open, disconnect→desync→resync, in-place token swap, cross-cID invalidation. Runs against `FakeTradingSession`, cTrader-faithful in-memory simulator.
-- **Integration** (`tests/IntegrationTests/CopyLive`) — node-affinity/lease claim, token-version propagation on real Postgres.
-- **E2E** (`tests/E2ETests`) — destination-option round-trip through API + UI, full lifecycle.
-- **Stress / DST** (`tests/StressTests`) — deterministic-simulation testing: seeded randomized workloads + fault injection (socket flap, order rejection, market-range rejection, token rotation, node death) drive `CopyEngineHost` to quiescence + assert convergence invariants. See [testing/stress-testing.md](../testing/stress-testing.md). This suite surfaced + fixed real startup race: `OnReconnected` wired before initial reference-load + resync, so socket flap during startup could run second resync concurrently + corrupt host's non-concurrent state dictionaries — startup load + first resync now run under `_stateGate`.
-- **Live** — real cTrader demo accounts; see [testing/live-copy-trading.md](../testing/live-copy-trading.md).
+- **Egység** (`tests/UnitTests/CopyTrading`) — méretezés módok, döntésszűrők, megbízástípus szűrő, lejárat másolat, piaci-tartomány/stop-limit csúszás, SL/TP váltók, részleges zárás, függőben lévő módosítás/törlés, indítás-nyitott, szétkapcsolódás→aszinkronizálódás→szinkronizálás, helyben token csere, cID közötti érvénytelenítés. A `FakeTradingSession`, cTrader-hű memória-beli szimulátor ellen fut.
+- **Integráció** (`tests/IntegrationTests/CopyLive`) — csomópont-affinitás/lízing igénylés, token-verzió terjedés valódi Postgres-en.
+- **E2E** (`tests/E2ETests`) — célfiok-opció körút az API + UI-n, teljes életciklus.
+- **Stressz / DST** (`tests/StressTests`) — determinisztikus-szimulációs tesztelés: vetett véletlenített terhelés + hibainjektor (socket flap, megbízás elutasítás, piaci-tartomány elutasítás, token forgatás, csomópont halál) hajtja a `CopyEngineHost` nyugalomra + esztergonyt az egyezés invariánsokon. Lásd [testing/stress-testing.md](../testing/stress-testing.md). Ez az ízületlet szabad + javított valódi indulási versenyhelyzet: `OnReconnected` vezetékelt az eredeti referencia-terhelés + szinkronizálás előtt, így socket flap indítás alatt tudna futtat másik szinkronizálást párhuzamosan + korrupt a gazdagép nem-konkurrens állapotszótárainak — indulási terhelés + első szinkronizálás most futnak `_stateGate` alatt.
+- **Élő** — valódi cTrader demo fiókok; lásd [testing/live-copy-trading.md](../testing/live-copy-trading.md).
 
-See [dev-credentials.md](../testing/dev-credentials.md) for single credentials file live + E2E tiers read.
+Lásd [dev-credentials.md](../testing/dev-credentials.md) egyéni hitelesítő fájlhoz az élő + E2E szintek beolvasásához.

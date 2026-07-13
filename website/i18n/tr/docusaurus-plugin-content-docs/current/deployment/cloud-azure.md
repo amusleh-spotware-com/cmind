@@ -1,23 +1,23 @@
 ---
-description: "deploy/azure/main.bicep, Azure Container Apps artı Postgres Esnek Sunucu + Günlük Analitikleri sağlamlaştırır."
+description: "deploy/azure/main.bicep durumsuz katmanı Azure Container Apps artı Postgres Flexible Server + Log Analytics'te sağlar."
 ---
 
-# Azure dağıtımı — adım adım
+# Azure konuşlandırması — adım adım
 
-`deploy/azure/main.bicep` **Azure Container Apps** artı **Postgres Esnek Sunucu** + Günlük Analitikleri sağlamlaştırır.
+`deploy/azure/main.bicep` durumsuz katmanı **Azure Container Apps** artı **Postgres Flexible Server** + Log Analytics'te sağlar.
 
 ## 1. Ön koşullar
 
-- Azure CLI (`az login` yapıldı), abonelik, kaynak grupları oluşturma izni.
-- Azure'un çekebildiği kayıt defterine üç görüntü itildi (örn. GHCR ortak veya ACR).
+- Azure CLI (`az login` bitti), abonelik, kaynak grubu oluşturma izni.
+- Azure çekebileceği kayıt defterine itilen üç görüntü (örneğin GHCR genel veya ACR).
 
-## 2. Kaynak grubu oluştur
+## 2. Bir kaynak grubu oluştur
 
 ```bash
 az group create -n cmind-rg -l westeurope
 ```
 
-## 3. Bicep'i dağıt
+## 3. Bicep'ı konuşlandır
 
 ```bash
 az deployment group create -g cmind-rg -f deploy/azure/main.bicep \
@@ -28,25 +28,25 @@ az deployment group create -g cmind-rg -f deploy/azure/main.bicep \
      discoveryJoinToken="$(openssl rand -hex 24)"
 ```
 
-Oluşturur: Container Apps ortamı, Web (harici giriş), MCP (harici giriş), Postgres Esnek Sunucu + `appdb`, Günlük Analitikleri, **çalışma alanı temelli Application Insights** bileşeni. Web için bulma açık. Bağlantı dizesi Web + MCP'ye `APPLICATIONINSIGHTS_CONNECTION_STRING` olarak enjekte edilir, bu nedenle izlemeler + metrikler yerel olarak App Insights'a aktarılırken günlükler aynı Günlük Analitikleri çalışma alanına iner — toplayıcıya gerek yok. OTLP toplayıcıya *ayrıca* iletmek için `-p otlpEndpoint=...` geç.
+Oluşturur: Container Apps ortamı, Web (harici giriş), MCP (harici giriş), Postgres Flexible Server + `appdb`, Log Analytics, **çalışma alanı tabanlı Application Insights** bileşeni. Web için keşif aç. Bağlantı dizesi Web + MCP'ye `APPLICATIONINSIGHTS_CONNECTION_STRING` olarak enjekte edilir, bu nedenle izler + metrikler App Insights'a doğal olarak dışa aktarılırken günlükler aynı Log Analytics çalışma alanında yer alır — toplayıcı gerekli değildir. OTLP toplayıcısına *ayrıca* iletmek için `-p otlpEndpoint=...` geçirin.
 
-## 4. URL'leri al
+## 4. URL'leri alın
 
 ```bash
 az deployment group show -g cmind-rg -n main --query properties.outputs
 # webUrl, mcpUrl
 ```
 
-`webUrl` aç, sahibi (ilk girişte zorunlu şifre değişikliği) ile oturum aç.
+`webUrl` 'yi açın, sahibi ile oturum açın (ilk oturum açımda zorla şifre değişikliği).
 
-## 5. Düğüm aracılarını ekle (ayrı)
+## 5. Düğüm aracılarını ekleyin (ayrı)
 
-Container Apps ayrıcalıklı/DinD çalıştıramaz, bu nedenle aracıları başka yerlerde çalıştırıp `webUrl` noktasına işaret et:
+Container Apps ayrıcalıklı/DinD'yi çalıştıramaz, bu nedenle başka yerde aracıları çalıştırın, `webUrl` 'ye yönlendirin:
 
-- **AKS** — Helm grafiğini dağıt ([kubernetes.md](kubernetes.md)) `nodeAgent.privileged=true` ile, Web/MCP'yi isterseniz ölçeği 0'a indir.
-- **VM / VMSS** — `cmind-node-agent` görüntüsünü `--privileged` ile çalıştır; `NodeAgent:MainUrl=<webUrl>`, `NodeAgent:AdvertiseUrl=<vm reachable url>`, `NodeAgent:JwtSecret=<discoveryJoinToken>`.
+- **AKS** — Helm grafiğini ([kubernetes.md](kubernetes.md)) `nodeAgent.privileged=true` ile konuşlandırın, orada sadece aracı katmanı isterseniz Web/MCP'yi 0'a ölçekleyin.
+- **VM / VMSS** — `cmind-node-agent` görüntüsünü `NodeAgent:MainUrl=<webUrl>`, `NodeAgent:AdvertiseUrl=<vm reachable url>`, `NodeAgent:JwtSecret=<discoveryJoinToken>` ile `--privileged` ile çalıştırın.
 
-Aracılar bir sinyal süresi içinde kendi kendini kaydettirir — bkz. [../operations/node-discovery.md](../operations/node-discovery.md).
+Aracılar bir kalp atışı aralığı içinde kendi kendini kaydeder — bkz. [../operations/node-discovery.md](../operations/node-discovery.md).
 
 ## 6. Doğrula
 
@@ -57,12 +57,4 @@ curl -s <webUrl>/version
 
 ## Üretim notları
 
-- Web'i Azure Front Door / App Gateway ile TLS + WAF için arkaya al.
-- Sırları Anahtar Kasası'nda sakla; veri koruma sertifikası sabit tutun (`App__DataProtectionCertBase64` / `...Password`), bu nedenle anahtar halka çoğaltma yeniden başlatmalarında kalır.
-- App Insights (izlemeler+metrikler) + Günlük Analitikleri (günlükler) otomatik olarak bağlanır; `trace_id` üzerinde ilişkilendir. Bkz. [../operations/logging.md](../operations/logging.md#azure--application-insights--log-analytics).
-- `otlpEndpoint` parametresini ayarla (veya uygulamalarda `OTEL_EXPORTER_OTLP_ENDPOINT`) toplayıcıya *ayrıca* iletmek için.
-- Container Apps `scale` kuralları (min/max) Bicep'te bağlı.
-
-## Kopya alım aracısı + Anahtar Kasası (S5)
-
-`deploy/azure/main.bicep` ayrıca **kopya aracısı** Container App'i sağlamlaştırır; `CopyEngineSupervisor` barındırır (`App:Copy:Enabled=true`, `App:Features:CopyTrading=true`), **giriş yok** — uzun ömürlü cTrader soketleri tutun. DB bağlantı dizesini **Anahtar Kasası**'ndan okur; **kullanıcı tarafından atanan yönetilen kimlik** (Anahtar Kasası Sırları Kullanıcısı rolü) aracılığıyla, satır içi düz metin sırrı yerine. Her çoğaltmanın `NodeName` varsayılan değeri kap adı (benzersiz), bu nedenle DB kiralama çoğaltma başına profilleri öznitelendirir ve iki çoğaltma hiçbir zaman birini çift barındırmaz. `minReplicas`/`maxReplicas`'ı kopyala kapasitesi eklemek için ölçeklendir; DataProtection anahtar halka Postgres üzerinden paylaşılır, bu nedenle herhangi bir çoğaltma depolanmış Open API belirteçlerini şifresini çözebilir. Çıktılar: `copyAgentName`, `keyVaultName`.
+- Web'i TLS + WAF için Azure Front Door / App Gateway ile ön koy.

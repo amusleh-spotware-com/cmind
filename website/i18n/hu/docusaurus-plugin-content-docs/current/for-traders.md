@@ -1,65 +1,65 @@
 ---
-slug: /hu/for-traders
+slug: /for-traders
 title: cMind cTrader kereskedőknek
-description: Miért egy cTrader kereskedő legyen öngazda cMind-et — saját stack és adatok, szerző, backtest, futtatás és monitor cBot-ot az egyik AI-meghatározott konzol, az laptopon, VPS vagy telefonon.
+description: Miért egy cTrader kereskedő legyen saját üzemeltetésű cMind — saját stack és adatok, szerzőség, backtest, futtatás és monitoring cBotoknak egy AI-meghajtott konzolban, laptopon, VPS-en vagy telefonon.
 keywords:
   - cTrader
-  - algoritmus kereskedés
-  - öngazda kereskedés platform
+  - algoritmikus kereskedelem
+  - saját üzemeltetésű kereskedelem platform
   - cBot backtesting
-  - AI kereskedés botok
-  - nyílt forráskódú kereskedés szoftver
+  - AI kereskedelem botok
+  - nyílt forráskódú kereskedelem szoftver
 sidebar_position: 5
 ---
 
 # cMind cTrader kereskedőknek 📈
 
-Már kereskedik a cTrader-en. Már juggling egy kód szerkesztő, egy backtester, egy VPS, és három böngésző lapot. **A cMind összeomlik az összes azt az egy sötét, billentyűbarát konzol amely az futtat magad** — és ez nyílt forráskódú, így semmi körülötted az él, az stratégiák, vagy az hitelesítő adatok soha nem hagyja az dobozat.
+Már kereskedik a cTrader-ben. Már juggel egy kódszerkesztővel, egy backtest-tel, egy VPS-sel és három böngészőlappal. **A cMind összecsomagol mindent egy sötét, billentyűbarát konzolba, amelyet Ön maga futtat** — és nyílt forráskódú, így az Ön előnyei, stratégiái vagy hitelesítő adatai soha nem hagyják el a dobozt.
 
 :::tip TL;DR
-Öngazda cMind az laptop, az olcsó VPS, vagy az házi szerver. Szerző, backtest, futtatás, és monitor cBot-okat az egy hely, az AI mag még az rá csuklik. → [Futtatódik azt az 5 perc](./deployment/local.md)
+Saját üzemeltetésben futassa a cMind-et egy laptopon, egy olcsó VPS-en vagy egy otthoni szerveren. Szerzőség, backtest, futtatás és monitoring cBotoknak egy helyen, az AI maggal kezelve a rutinfeladatokat. → [5 percben futtat](./deployment/local.md)
 :::
 
-## Miért öngazda helyette az üzemeltetett szolgáltatás?
+## Miért saját üzemeltetés helyett üzemeltetett szolgáltatás?
 
-- **Saját az stack és az adatok.** Az cBot-ok, hitelesítő adatok, tokenek, és saját-történet az él az **az saját infrastruktúrát** — nincs külső-fél, nincs lock-in, nincs "az cél az terméket."
-- **Ez az valóban az te az megváltoztatni.** C# 14 / .NET 10, szigorú DDD, EF Core + PostgreSQL, az MCP szerver — az összes nyílt forráskódú és hacker. Villanyöd azt, kiterjeszted azt, küldd egy PR.
-- **Nincs per-funkció paywall.** Hozz az saját AI kulcsot az bármi szolgáltató; az mindegyik AI funkció az.
+- **Sajátja a stack és az adatok.** Az Ön cBotjai, hitelesítő adatai, tokenei és tőke-története az **Ön infrastruktúráján** élnek — nincs harmadik fél, nincs zárolás, nincs "ezt a terméket leállítjuk" e-mail.
+- **Tényleg az Öntulajdona, amely módosítható.** C# 14 / .NET 10, szigorú DDD, EF Core + PostgreSQL, MCP szerver — mind nyílt forráskódú és módosítható. Forkozzék, bővítse, küldjön PR-t.
+- **Nincs funkciónkénti paywall.** Hozza az Ön AI kulcsát bármely szolgáltatóhoz; minden AI funkció bekapcsolt.
 
-Szeretne nem futtatódik szerver magad? Az üzemeltetési vállalat lehet futtat az felügyelt cMind az te — lásd az [Az felhő & VPS szolgáltatóknak](./for-cloud-providers.md).
+Nem szeretne szervereket saját maga futtatni? Egy üzemeltetési vállalat futtathat Ön számára felügyelt cMind-et — lásd: [Felhő és VPS szolgáltatók számára](./for-cloud-providers.md).
 
-## Egy konzol, nincs lap-juggling
+## Egy konzol, nincs lapjuggling
 
-- **Szerző** az egy valódi Monaco IDE (az VS Code szerkesztő), az C# **és** Python sablonokat és az sandboxed `dotnet build` az eldobható konténerek. → [Építés & backtest](./features/build-and-backtest.md)
-- **Backtest** az flotta az node-ok és az nézet egyenlőség görbék áramlik vissza él.
-- **Futtatódik** stratégiák él és **monitor** azokat az egy műsorfal. → [Műsorfal](./features/dashboard.md)
-- **Másolás** egy fő számlát az sok számlák az felett az brókerek és az cTrader ID-ked, az egyeztetés amely az túléli az csökkent összeköttetések és az forgató tokenek. → [Másolás kereskedés](./features/copy-trading.md)
+- **Szerzőség** egy valódi Monaco IDE-ben (a VS Code szerkesztő), C# **és** Python sablonokkal, valamint sandboxolt `dotnet build`-kel dobható konténerekben. → [Build és backtest](./features/build-and-backtest.md)
+- **Backtest** egy csomópontos flottán keresztül, és figyeljük az equity görbéket élőben visszaáramlani.
+- **Futtasson** stratégiákat élőben és **figyelje** őket egy irányítópultról. → [Irányítópult](./features/dashboard.md)
+- **Másolja** a master fiókot sok fiókra brokerek és cTrader ID-k között, egyeztetéssel, amely túléli az összeomlott csatlakozásokat és a tokenrotációt. → [Másolási kereskedelem](./features/copy-trading.md)
 
-## AI amit az marad az rá csuklik, nem az apró beszélgetés
+## AI, amely elvégzi a rutinfeladatokat, nem csevegést
 
-Hozz az saját API kulcsot (az bármi támogatott szolgáltató — az felhő vagy az helyi modell) és az kap az egyenes-angol → az egy valódi compiláció cBot az self-javítás hurok, az paraméter tuning, az backtest után-mortemek, és az kockázat őr amely lehet azt önállóan-leállítás egy misbehaving bot. → [Találkozni az AI mag](./features/ai.md)
+Hozza az Ön API kulcsát (bármely támogatott szolgáltató — felhő vagy helyi modell), és kapjon egy valódi fordítható cBotot egyszerű angol nyelvből egy öno javítási hurokkal, paraméter-hangolással, backtest utólagos boncolással és egy olyan kockázati őrséggel, amely képes egy hibás botot auto-megállítani. → [Ismerjük meg az AI maggal](./features/ai.md)
 
-## Intézmények-minőség: eszközök, az egy
+## Intézményi szintű szerszámozás, egy személyre
 
-Az azonos szigor egy asztal fizet az, az saját dobozat:
+Ugyanez az ápolgatási szigor, amelyet egy asztal megfizetne, saját dobozán:
 
 - [Backtest integritás](./features/backtest-integrity.md) · [Pozíció méretezés](./features/position-sizing.md)
-- [Stratégia egészség](./features/strategy-health.md) · [Rezsim labor](./features/regime-lab.md)
-- [Végre hajtás TCA](./features/execution-tca.md) · [Kereskedés napló](./features/trading-journal.md)
+- [Stratégia egészség](./features/strategy-health.md) · [Regime labor](./features/regime-lab.md)
+- [Végrehajtás TCA](./features/execution-tca.md) · [Kereskedelem napló](./features/trading-journal.md)
 - [Ügynök Studio](./features/agent-studio.md) · [Ellentétes pozicionálás](./features/contrarian-positioning.md)
 
-## Futtatódik ahol az te
+## Ott fut, ahol Ön
 
-Kezdem az laptoppal az `docker compose up`, végzem az olcsó VPS vagy az házi szerver amikor az kész volt, és az bejelöl az cBot-ok az laptopon — a cMind az egy telepíthető, mobil-első [PWA](./features/pwa.md). → [Futtatódik azt helyileg](./deployment/local.md)
+Kezdje a laptopon a `docker compose up`-val, lépjen egy olcsó VPS-re vagy egy otthoni szerverre, amikor készen van, és figyelje meg a botjait a telefonon — a cMind egy telepíthető, mobilbarát [PWA](./features/pwa.md). → [Helyileg futtatása](./deployment/local.md)
 
-Szeretnél az AI kliens az meghajtás azt? Van egy beépített [MCP szerver](./features/mcp.md).
+Szeretné, ha az Ön AI kliense üzemeltetné? Van egy beépített [MCP szerver](./features/mcp.md).
 
-## Segítséget nyújt ajánló az azt
+## Segítsen, hogy jobb legyen
 
-A cMind nyílt forráskódú és MIT-Licensed — az útitérkép közösség-alakított:
+A cMind nyílt forráskódú és MIT licencelt — az ütemterv közösség alakít:
 
-- Fájl problémákat és funkció kérelmeket, és szavazat az mi tét.
-- Adjon hozzá cBot sablonokat, AI szolgáltató adaptációkat, vagy UI fordítások.
-- Küldjön PR-eket — három teszt szintek (egység + integráció + E2E) és szigorú DDD megtartani az rúd magas, és az [Közreműködés útmutató](./contributing.md) járul során azt.
+- Nyisson be hibákat és funkcióköveteléseket, és szavazzon arról, mi számít.
+- cBot sablonok, AI szolgáltató adapterek vagy felhasználói felület fordítások hozzáadása.
+- Küldjön PR-eket — három teszt szint (egység + integráció + E2E) és szigorú DDD tartja a magas szintet, az [Közreműködési útmutató](./contributing.md) végigvezeti.
 
-Kész? → [Olvas az bevezetés](./intro.md) majd [futtatódik azt helyileg](./deployment/local.md).
+Kész? → [Olvassa el a bevezető](./intro.md), majd [helyileg futtatása](./deployment/local.md).

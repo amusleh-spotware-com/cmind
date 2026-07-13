@@ -1,16 +1,17 @@
 ---
 slug: /contributing
 title: Berkontribusi
-description: Cara berkontribusi ke cMind — PR manusia atau berbantuan AI diterima. Kontribusi pertama dalam 10 menit.
+description: Cara berkontribusi ke cMind — PR manual atau berbantuan AI diterima. Kontribusi pertama dalam 10 menit.
 sidebar_position: 5
 ---
 
-# Berkontribusi ke cMind
+# Berkontribusi ke cMind 🛠️
 
-Terima kasih sudah di sini. cMind menjadi lebih baik setiap kali seseorang membuka issue, melaporkan perilaku cTrader yang tepat, memperbaiki typo di dokumen ini, atau mengirim PR. **Anda tidak perlu menjadi wizard .NET** — tester, trader, dan doc-fixer sama berharganya dengan orang yang menulis agregat.
+Terima kasih telah berada di sini. cMind menjadi lebih baik setiap kali seseorang membuka issue, melaporkan perilaku cTrader yang tepat, memperbaiki typo di docs ini, atau mengirimkan PR. **Anda tidak perlu menjadi wizard .NET** — tester, trader, dan doc-fixer sama berharganya dengan orang yang menulis agregat.
 
-:::tip Panduan canonical hidup di repo
-Halaman ini adalah friendly on-ramp. Proses penuh, selalu-terkini — aturan dasar, konvensi coding, alur review — ada di **[CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md)**.
+:::tip Panduan kanonik hidup di repo
+Halaman ini adalah on-ramp yang ramah. Proses penuh, selalu-terkini — aturan dasar, konvensi coding,
+aliran review — ada di **[CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md)**.
 :::
 
 ## Kontribusi pertama Anda dalam ~10 menit
@@ -19,40 +20,48 @@ Halaman ini adalah friendly on-ramp. Proses penuh, selalu-terkini — aturan das
 git clone https://github.com/amusleh-spotware-com/cmind.git
 cd cmind
 dotnet restore
-dotnet build          # 0 warning, atau CI akan politely menolak Anda
+dotnet build          # 0 warnings, atau CI akan dengan sopan menolak Anda
 dotnet test           # unit + integration + E2E
 ```
 
-Menemukan sesuatu untuk diperbaiki? Branch, ubah, tambahkan test, dan buka PR. Itulah seluruh loop.
+Menemukan sesuatu yang diperbaiki? Branch itu, ubah, tambahkan tes, dan buka PR. Itu seluruh loop.
 
 ## Cara membantu (tidak semuanya adalah kode)
 
 | Kontribusi | Usaha | Di mana |
 |---|---|---|
-| Laporkan bug yang dapat direproduksi | 10 min | [Bug report](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml) |
-| Sarankan fitur | 10 min | [Feature request](https://github.com/amusleh-spotware-com/cmind/issues/new?template=feature_request.yml) |
-| Tingkatkan dokumen ini | 15 min | Edit di bawah `website/docs/` dan PR |
-| Tambahkan test yang hilang | 30 min | `tests/UnitTests` · `IntegrationTests` · `E2ETests` |
-| Laporkan perilaku cTrader yang tepat | 10 min | [Buka Discussion](https://github.com/amusleh-spotware-com/cmind/discussions) |
+| 🐛 Laporkan bug yang dapat direproduksi | 10 menit | [Bug report](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml) |
+| 💡 Sarankan fitur | 10 menit | [Feature request](https://github.com/amusleh-spotware-com/cmind/issues/new?template=feature_request.yml) |
+| 📖 Tingkatkan docs ini | 15 menit | Edit di bawah `website/docs/` dan PR |
+| 🧪 Tambahkan tes yang hilang | 30 menit | `tests/UnitTests` · `IntegrationTests` · `E2ETests` |
+| 🧠 Laporkan perilaku cTrader yang tepat | 10 menit | [Buka Diskusi](https://github.com/amusleh-spotware-com/cmind/discussions) |
 
-## Aturan rumah (versi singkat)
+## Aturan rumah (versi pendek)
 
-cMind menangani **uang nyata**, jadi beberapa hal tidak dapat ditawar — dan jujur, itu membuat codebase menjadi kesenangan untuk dikerjakan:
+cMind memindahkan **uang nyata**, jadi beberapa hal tidak dapat dinegosiasikan — dan jujur, mereka membuat codebase
+menjadi kesenangan untuk dikerjakan:
 
-- **Strict Domain-Driven Design.** Logika bisnis hidup pada agregat dan value object, tidak pernah di endpoint atau UI. (Ada playbook friendly untuk itu di repo.)
-- **Tiga test tier, setiap perubahan.** Unit + integration + E2E, *termasuk* failure path (dropped connection, rejected order, dead node). Test hijau adalah harga masuk.
-- **Zero warning.** `TreatWarningsAsErrors=true`. Idiom C# 14 modern.
-- **Tidak ada secret, tidak ada magic string, tidak pernah `DateTime.UtcNow`** (inject `TimeProvider` sebagai gantinya).
-- **Docs dalam commit yang sama.** Ubah behavior → update doc-nya. Ya, termasuk site ini.
+- **Domain-Driven Design yang ketat.** Logika bisnis hidup di agregat dan value object, tidak pernah di
+  endpoint atau UI. (Ada playbook yang ramah untuk itu di repo.)
+- **Tiga tingkat tes, setiap perubahan.** Unit + integration + E2E, *termasuk* jalur kegagalan (koneksi dropped,
+  order ditolak, node mati). Tes hijau adalah harga penerimaan.
+- **Nol peringatan.** `TreatWarningsAsErrors=true`. Idiom C# 14 modern.
+- **Tidak ada secrets, tidak ada magic strings, tidak pernah `DateTime.UtcNow`** (injeksi `TimeProvider` sebaliknya).
+- **Docs dalam commit yang sama.** Ubah perilaku → perbarui docs-nya. Ya, itu termasuk situs ini.
 
-Detail penuh, dengan *mengapa* di balik setiap aturan, di [CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md) dan [AGENTS.md](https://github.com/amusleh-spotware-com/cmind/blob/main/AGENTS.md).
+Detail lengkap, dengan *mengapa* di balik setiap aturan, dalam
+[CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md) dan
+[AGENTS.md](https://github.com/amusleh-spotware-com/cmind/blob/main/AGENTS.md).
 
-## Berkontribusi dengan AI
+## Berkontribusi dengan AI 🤖
 
-Kami benar-benar menyambut **PR berbantuan AI** — proyek ini dibangun untuk dikerjakan oleh agent serta manusia. Jika Anda mengemudi Claude, Copilot, atau sejenisnya: arahkan ke [AGENTS.md](https://github.com/amusleh-spotware-com/cmind/blob/main/AGENTS.md), biarkan itu membaca file `CLAUDE.md` bersarang, dan pegang ke bar yang sama (test, zero warning, DDD). PR AI yang baik tidak dapat dibedakan dari PR manusia yang baik — review yang sama, sambutan yang sama.
+Kami benar-benar menyambut **PR berbantuan AI** — proyek ini dibangun untuk dikerjakan oleh agen serta manusia. Jika Anda menjalankan Claude, Copilot, atau serupa: arahkan ke [AGENTS.md](https://github.com/amusleh-spotware-com/cmind/blob/main/AGENTS.md), biarkan baca
+file `CLAUDE.md` bersarang, dan tahan ke standar yang sama (tes, nol peringatan, DDD). PR AI yang baik tidak bisa dibedakan dari PR manusia yang baik — review yang sama, selamat yang sama.
 
-## Jadilah hebat satu sama lain
+## Jadilah excellent satu sama lain
 
-Kami punya [Code of Conduct](https://github.com/amusleh-spotware-com/cmind/blob/main/CODE_OF_CONDUCT.md). Intinya: bersikaplah baik, asumsikan itikad baik, dan ingat ada orang (atau agent orang) di ujung lain. Tanyakan pertanyaan lebih awal — itu kekuatan, bukan gangguan.
+Kami memiliki [Code of Conduct](https://github.com/amusleh-spotware-com/cmind/blob/main/CODE_OF_CONDUCT.md).
+Intinya: bersikap baik, asumsikan good faith, dan ingat ada orang (atau agen orang) di
+ujung lain. Tanyakan pertanyaan lebih awal — itu adalah kekuatan, bukan gangguan.
 
-Selamat datang. Kami tidak sabar untuk melihat apa yang Anda bangun.
+Selamat datang di papan. Kami tidak sabar untuk melihat apa yang Anda bangun. 🎉

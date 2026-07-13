@@ -1,77 +1,57 @@
 ---
-description: "Secure, white-label-gated self-service user registration — an on-app sign-up page and a server-to-server provisioning API, with configurable user attributes, admin-approval or email-verification gating, and anti-abuse guards. Disabled by default."
+description: "Biztonságos, fehér címkés-kapu önkiszolgáló felhasználó regisztráció — egy alkalmazás-oldali bejelentkezés oldal és egy szerver-a-szerver biztosítási API, konfigurálható felhasználó tulajdonságok, admin-jóváhagyás vagy e-mail-ellenőrzés kapu, és visszaélés-ellenes őrségek. Alapértelmezés szerint letiltva."
 ---
 
-# User registration
+# Felhasználó regisztráció
 
-By default the **owner/admin adds users manually** (Users page → *New User*). For white-label deployments
-that need to onboard users at scale — or integrate the app with another service — cMind also ships a
-**secure, self-service registration** path. It is **disabled by default**: a stock deployment is unchanged
-and the page and API both return 404 until a deployment opts in.
+Alapértelmezés szerint a **tulajdonos/admin kézi felhasználókat ad hozzá** (Felhasználók oldal → *Új felhasználó*). Fehér címkés telepítésekhez, amelyeknek nagy mértékben kell felhasználókat felvenni — vagy az alkalmazást egy másik szolgáltatóhoz integrálni — cMind egy **biztonságos, önkiszolgáló regisztrációs** útvonalat is szállít. Ez **alapértelmezés szerint letiltva**: egy tőzsdei telepítés megváltozatlan és az oldal és az API egyaránt 404-t adnak vissza amíg egy telepítés be nem opt-in.
 
-There are two entry points sharing one domain flow:
+Két bejegyzési pont van, amely egy domain áramlást oszt meg:
 
-1. **On-app page** (`/register`) — a branded, mobile-first sign-up page in the same shell as `/login`.
-2. **Provisioning API** (`POST /api/provision`) — a server-to-server endpoint for an integrating service to
-   create accounts, authenticated by a per-deployment provisioning secret.
+1. **Alkalmazás-oldali oldal** (`/register`) — egy márka nézete, mobilbarát bejelentkezés oldal az ugyanazon héjban mint a `/login`.
+2. **Biztosítási API** (`POST /api/provision`) — egy szerver-a-szerver végpont egy integrált szolgáltató számára fiókok létrehozásához, egy telepítés-biztosítási titkot hitelesítve.
 
-## What gets recorded — data minimization
+## Mit rögzítünk — adatminimalizálás
 
-cMind is trading **tooling**: it builds/runs/backtests cBots and mirrors trades over each user's *own*
-cTrader Open API credentials. It **does not open trading accounts or custody client money**, so KYC/AML
-identity verification is the **broker's** obligation, not this platform's. The registration form therefore
-records **only an email by default** — the minimum needed to provide the service (GDPR Art. 5(1)(c) data
-minimization; lawful basis = contract). cMind deliberately ships **no** national-ID / date-of-birth /
-address fields.
+A cMind egy **kereskedelem eszköz**: felépít/futtat/backtest cBotokat és tükröz kereskedelmeket az egyes felhasználó *saját* cTrader Open API hitelesítési adatain. Ez **nem nyit kereskedelem fiókokat vagy letétkezelés kliens pénzt**, így KYC/AML identitás ellenőrzés a **broker** kötelezettség, nem ezt a platformot. A regisztrációs forma ezért rögzít **csak egy emailt alapértelmezés szerint** — a szükséges minimum a szolgáltatás biztosításához (GDPR Art. 5(1)(c) adatminimalizálás; jogszerű alap = szerződés). A cMind szándékosan szállít **nincs** nemzeti-ID / születési nap / címzet mezők.
 
-Every other attribute is **opt-in per deployment** via `App:Registration:Attributes`, each independently
-`Off` / `Optional` / `Required`:
+Minden más tulajdonság egy **opt-in telepítés-nként** az `App:Registration:Attributes`-n keresztül, mindegyik függetlenül `Off` / `Optional` / `Required`:
 
-| Attribute | Notes |
+| Tulajdonság | Megjegyzések |
 |---|---|
-| `FullName`, `DisplayName`, `Company` | Free text, length-bounded. |
-| `Country` | ISO 3166-1 alpha-2, validated against a fixed code set. |
-| `Phone` | E.164 format (`+14155552671`). |
-| `Locale` | BCP-47 shape (`en-US`), normalized. |
-| `MarketingOptIn` | Separate, **unticked** checkbox — never bundled with the mandatory consent (CAN-SPAM). |
-| `AgeConfirmation` | A checkbox only; **no** date of birth is stored. |
+| `FullName`, `DisplayName`, `Company` | Szabad szöveg, hossz-korlátozott. |
+| `Country` | ISO 3166-1 alfa-2, validálva egy fix kódlista ellen. |
+| `Phone` | E.164 formátum (`+14155552671`). |
+| `Locale` | BCP-47 forma (`en-US`), normalizálva. |
+| `MarketingOptIn` | Külön, **bepipálatlan** jelölőnégyzet — soha nincs megjelenítve a kötelező beleegyezés (CAN-SPAM). |
+| `AgeConfirmation` | Csak egy jelölőnégyzet; **nincs** születési nap tárolva. |
 
-Attributes live in the `UserProfile` value object owned by the `AppUser` aggregate, validated at
-construction. **GDPR erasure** (`AppUser.Anonymize()`) scrubs the profile and any verification tokens.
+A tulajdonságok az `UserProfile` érték objektumban élnek az `AppUser` aggregátum által birtokolva, validálva a construccióban. **GDPR törlés** (`AppUser.Anonymize()`) megtisztít a profilt és bármilyen ellenőrzési tokeneket.
 
-**Consent.** When `RequireTermsAcceptance` is on, the user must accept the published legal documents
-(Terms, Privacy, Risk Disclosure). Acceptance is recorded through the existing `ConsentRecord` aggregate —
-version-stamped, timestamped, with originating IP — the same store used elsewhere for MiFID/ESMA-grade
-record-keeping.
+**Beleegyezés.** Amikor a `RequireTermsAcceptance` bekapcsolt, a felhasználó el kell, hogy fogadja a közzétett jogi dokumentumokat (Feltételek, Adatvédelem, Kockázat nyilatkozat). Az elfogadás az meglévő `ConsentRecord` aggregátumon keresztül rögzített — verzió-bélyegzett, időbélyegzett, eredető IP-vel — ugyanez a boltban használva másutt MiFID/ESMA-fokú nyilvántartás-tartáshoz.
 
-## Gating modes
+## Kapu módok
 
-A self-registered account cannot sign in until it clears its gate (`App:Registration:Mode`):
+Egy önregisztrált fiók nem tud bejelentkezni amíg nem tisztázza kapu (`App:Registration:Mode`):
 
-- **`AdminApproval`** (default) — the account is queued; an owner/admin approves it on the **Users** page
-  (*Pending approval* section). Needs no mail infrastructure.
-- **`EmailVerification`** — a single-use, expiring verification link is emailed; the account activates when
-  the link is opened. Requires an email transport (`App:Email`). **If no transport is configured, this mode
-  automatically downgrades to `AdminApproval`** at startup, so enabling registration never silently breaks.
-- **`Open`** — the account is active immediately (trusted/dev only).
+- **`AdminApproval`** (alapértelmezés) — a fiók sorkában áll; egy tulajdonos/admin jóváhagyja a **Felhasználók** oldalon (*Függőben jóváhagyás* szakasz). Nincs szükséges levél infrastruktúrára.
+- **`EmailVerification`** — egy egyszeri, lejáró ellenőrzési link emailt kapott; a fiók aktiválódik amikor az link megnyitódik. Igényel egy levél szállítót (`App:Email`). **Ha nem konfigurált szállító ez a mód automatikusan csökken az `AdminApproval`-hoz** indítás alatt, így az regisztráció engedélyezés soha csendes nem szakít.
+- **`Open`** — a fiók azonnali aktív (megbízott/dev csak).
 
-Self-registered users are always created as **`User`** (or `Viewer` if configured) — the domain
-**hard-refuses** minting an Owner/Admin through self-registration.
+Az önregisztrált felhasználók mindig létrehozottak mint **`User`** (vagy `Viewer` ha konfigurált) — a domain **kemény-visszautasít** az Owner/Admin süllyedése az önregisztráción keresztül.
 
-## Security & anti-abuse
+## Biztonság és visszaélés-ellenes
 
-- **Anti-enumeration.** A duplicate email yields the **same** neutral `202 Accepted` as a fresh sign-up and
-  creates nothing — the app never discloses whether an address already has an account.
-- **Rate limiting.** The public endpoints are throttled per IP (harder than the auth limiter).
-- **Password policy.** Minimum length enforced; passwords are hashed (Argon2 via `IPasswordHasher`);
-  verification tokens are stored only as SHA-256 hashes and are single-use + expiring.
-- **Email hygiene.** Optional allow-list of email domains and a disposable-provider block-list.
-- **CAPTCHA (optional).** reCAPTCHA / hCaptcha / Turnstile via their shared verify contract.
-- **Login gate.** A pending account is refused at login with a neutral response.
+- **Anti-felsorolás.** A duplikált e-mail az adja **ugyanaz** semleges `202 Accepted` mint egy friss bejelentkezés és semmit nem hoz létre — az alkalmazás soha nem nyilatkozik meg hogy egy cím már rendelkezik fiókkal.
+- **Sebességkorlát.** A nyilvános végpontok szabályozottak per IP (nehezebb az auth limiternél).
+- **Jelszó politika.** Minimális hossz erőltetett; jelszavak háttárolódnak (Argon2 az `IPasswordHasher` segítségével); az ellenőrzési tokenek tárolódnak csak SHA-256 titkosítottként és egy-felhasználatú + lejáró.
+- **E-mail higiénia.** Opcionális engedélyezett listája e-mail tartomány és egy jednorazowy-szállító blokkold-lista.
+- **CAPTCHA (opcionális).** reCAPTCHA / hCaptcha / Turnstile az azonos ellenőrzési szerződés segítségével.
+- **Bejelentkezés kapu.** Egy függőben fiók visszautasít bejelentkezés a semleges válasz.
 
-## Provisioning API (integration)
+## Biztosítási API (integráció)
 
-With `App:Registration:Api:Enabled` and a `Secret` set, another service can create users:
+Az `App:Registration:Api:Enabled` és egy `Secret` beállítva egy másik szolgáltatás lehet felhasználók létrehozása:
 
 ```
 POST /api/provision
@@ -79,22 +59,21 @@ X-Provision-Secret: <the configured secret>
 { "email": "user@example.com", "password": "…", "role": 2 }
 ```
 
-The secret is compared in constant time. Provisioned accounts are created **active** (or invited with
-`MustChangePassword`) depending on `Api.ActivateImmediately` / `Api.InviteMustChangePassword`.
+A titok az összehasonlított az állandó idő. Biztosított fiókok létrehozottak **aktív** (vagy hívva az `MustChangePassword`) attól függően `Api.ActivateImmediately` / `Api.InviteMustChangePassword`.
 
-## Enabling it
+## Engedélyezés
 
-Registration requires **both** the feature flag and the master switch:
+A regisztráció igényli az **mindkettő** a funkció zaszló és a fő kapcsoló:
 
 ```jsonc
 "App": {
   "Features": { "Registration": true },
   "Registration": {
     "Enabled": true,
-    "Mode": "AdminApproval",           // or EmailVerification / Open
-    "DefaultRole": "User",             // never Owner/Admin
+    "Mode": "AdminApproval",           // vagy EmailVerification / Open
+    "DefaultRole": "User",             // soha Owner/Admin
     "RequireTermsAcceptance": true,
-    "AllowedEmailDomains": [],          // empty = any
+    "AllowedEmailDomains": [],          // üres = bármi
     "BlockDisposableEmail": true,
     "Attributes": { "FullName": "Optional", "Country": "Off" },
     "Api": { "Enabled": false, "Secret": "" }
@@ -102,15 +81,8 @@ Registration requires **both** the feature flag and the master switch:
 }
 ```
 
-The `App:Email` section (SMTP `Host`, `Port`, `UseStartTls`, `Username`, `Password`, `FromAddress`,
-`FromName`) configures the transport used by `EmailVerification` mode; leave `Host` unset to run with no
-mail (the no-op sender). See [feature toggles](./feature-toggles.md) and [white-label](./white-label.md) for
-how deployments turn features on and rebrand. When registration is enabled, the login page shows a **Create
-account** link.
+Az `App:Email` szakasz (SMTP `Host`, `Port`, `UseStartTls`, `Username`, `Password`, `FromAddress`, `FromName`) konfigurál a szállítót használva az `EmailVerification` mód; hagyjon `Host` beállítva futni posta nélkül (nincs műveletek szállító). Lásd [funkció kapcsoló](./feature-toggles.md) és [fehér címke](./white-label.md) mennyi telepítéseket kapcsol be a jellemzőket és rebrand. Amikor regisztráció engedélyezve, a bejelentkezés oldal mutatok egy **Fiók létrehozása** link.
 
-## Tested
+## Tesztelt
 
-Unit (profile validation, `SelfRegister` role guard, activation transitions, single-use tokens, erasure),
-integration (disabled-by-default 404, approval flow, email-verification downgrade, anti-enumeration, abuse
-guards, required attributes, provisioning + bad secret), and E2E (default-off login has no sign-up link; the
-`/register` page renders its branded closed state).
+Egység (profil validáció, `SelfRegister` szerep őr, aktiváció átmenet, egy-felhasználatú tokenek, törlés), integráció (letiltva-alapértelmezés 404, jóváhagyás áramlás, e-mail-ellenőrzés csökkenés, anti-felsorolás, visszaélés őrségek, szükséges tulajdonságok, biztosítás + rossz titok), és E2E (alapértelmezés-ki bejelentkezés nincs bejelentkezés link; a `/register` oldal rendereli az márka zárt állapot).

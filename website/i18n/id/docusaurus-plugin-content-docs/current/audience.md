@@ -1,54 +1,60 @@
 ---
 slug: /audience
-title: Siapa cMind untuk?
-description: cMind adalah untuk trader cTrader, broker, dan cloud/VPS provider. Temukan jalur Anda — self-host sebagai trader, white-label sebagai broker, atau tawarkan managed hosting sebagai provider — plus bagaimana berkontribusi.
+title: Siapa cMind?
+description: cMind adalah untuk trader, broker, dan penyedia cloud/VPS cTrader. Temukan jalur Anda — self-host sebagai trader, white-label sebagai broker, atau tawarkan hosting terkelola sebagai penyedia — plus cara berkontribusi.
 keywords:
   - Platform cTrader
   - Perdagangan algoritmik
   - Broker white-label
-  - Managed trading hosting
+  - Hosting perdagangan terkelola
   - Perdagangan open source
 sidebar_position: 2
 ---
 
-# Siapa cMind untuk?
+# Siapa cMind?
 
-Versi singkat: **orang dengan uang dalam taruhan yang suka mengendalikan.** cMind adalah konsol operasi perdagangan algoritmik yang serius — bukan mainan fintech konsumen dengan animasi confetti saat Anda untung $3. Apakah Anda berdagang, broker, atau host, ada jalur di bawah yang dibangun untuk Anda.
+Versi pendek: **orang dengan uang di garis yang suka mengendalikan.** cMind adalah konsol operasi perdagangan algoritmik yang serius — bukan mainan fintech konsumen dengan animasi konfeti ketika Anda menghasilkan $3. Baik Anda bergerak, broker, atau host, ada jalur di bawah yang dibangun untuk Anda.
 
-## Trader — self-host seluruh desk Anda
+## 📈 Trader — self-host seluruh desk Anda
 
-Anda berdagang di cTrader dan Anda bosan menempelkan editor, backtester, VPS, dan tiga tab browser. Self-host cMind dan dapatkan authoring, backtesting, live execution, copy trading, dan monitoring dalam satu konsol bertenaga AI — di box Anda sendiri, data Anda tidak pernah meninggalkannya.
+Anda berdagang di cTrader dan lelah menggabungkan editor, backtester, VPS, dan tiga tab browser. Self-host cMind dan dapatkan authoring, backtesting, live execution, copy trading, dan monitoring dalam satu konsol bertenaga AI — di kotak Anda sendiri, data Anda tidak pernah meninggalkannya.
 
 **Baca:** [cMind untuk trader cTrader →](./for-traders.md)
 
-## Broker — white-label untuk klien Anda
+## 🏦 Broker — white-label untuk klien Anda
 
-Anda menjalankan broker cTrader dan ingin keunggulan atas kompetitor yang tidak menawarkan apa-apa kecuali terminal. Kirim cMind sebagai produk Anda sendiri: berikan klien AI, copy trading, dan prop-firm challenge di bawah brand Anda, batasi account ke buku Anda, dan buka lini revenue baru.
+Anda menjalankan perantara cTrader dan ingin keunggulan atas pesaing yang tidak menawarkan apa pun kecuali terminal. Kirim cMind sebagai produk Anda sendiri: berikan klien AI, copy trading, dan tantangan prop-firm di bawah merek Anda, batasi akun ke buku Anda, dan buka jalur pendapatan baru.
 
-**Baca:** [cMind untuk broker cTrader →](./for-brokers.md) · [White-label untuk bisnis →](./white-label-for-business.md)
+**Baca:** [cMind untuk broker cTrader →](./for-brokers.md) ·
+[White-label untuk bisnis →](./white-label-for-business.md)
 
-## Cloud & VPS provider — jual sebagai managed hosting
+## 🖥️ Cloud & penyedia VPS — jual sebagai hosting terkelola
 
-Anda menyewa compute. Tawarkan managed cMind hosting dan dapatkan workload bernilai tinggi, compute-hungry, sticky — dan monetisasi subscription, metered compute, white-label, dan AI.
+Anda menyewa komputasi. Tawarkan hosting cMind terkelola dan dapatkan beban kerja bernilai tinggi, haus komputasi, dan lengket — dan monetisasi langganan, komputasi terukur, white-label, dan AI.
 
-**Baca:** [cMind untuk cloud & VPS provider →](./for-cloud-providers.md)
+**Baca:** [cMind untuk cloud & penyedia VPS →](./for-cloud-providers.md)
 
-## Kontributor — bantu membuatnya lebih baik
+## 🧑‍💻 Kontributor — bantu membuatnya lebih baik
 
-cMind adalah open source (MIT) dan community-shaped: C# 14 / .NET 10, strict DDD, EF Core + PostgreSQL, .NET Aspire, server MCP, dan tiga test tier. Setiap persona di atas dapat — dan harus — mendorongnya maju:
+cMind adalah open source (MIT) dan dibentuk komunitas: C# 14 / .NET 10, DDD ketat, EF Core + PostgreSQL,
+.NET Aspire, server MCP, dan tiga tingkat uji. Setiap persona di atas dapat — dan harus — mendorongnya
+maju:
 
-- **Trader:** tambahkan template cBot, request fitur, laporkan bug.
-- **Broker:** berkontribusi integrasi dan kontrol yang desk Anda butuhkan.
-- **Provider:** upstream operational fix dan IaC improvement Anda.
+- **Trader:** tambahkan template cBot, minta fitur, laporkan bug.
+- **Broker:** berkontribusi pada integrasi dan kontrol yang dibutuhkan desk Anda.
+- **Penyedia:** upstream perbaikan operasional dan peningkatan IaC Anda.
 
-Ajukan issue, tambahkan terjemahan UI atau adapter AI provider, dan kirim PR — panduan [Contributing](./contributing.md) dan [dokumen server MCP](./features/mcp.md) membuat Anda mulai.
+Daftarkan issue, tambahkan terjemahan UI atau adaptor penyedia AI, dan kirim PR — panduan
+[Contributing](./contributing.md) dan [docs server MCP](./features/mcp.md) membuat Anda pergi.
 
 ## Apakah cMind *bukan* untuk Anda?
 
-Jujur dengan diri sendiri. cMind mungkin overkill jika:
+Jujur pada diri sendiri. cMind mungkin overkill jika:
 
-- Anda belum pernah menyentuh terminal dan tidak ingin mulai — meskipun [cloud/VPS provider dapat di-host untuk Anda](./for-cloud-providers.md).
-- Anda hanya berdagang manual dan tidak peduli tentang bot, backtest, atau copy trading.
-- Anda ingin hosted SaaS dengan hotline support dan Anda tidak ingin siapa pun self-hosting — cMind adalah self-hosted by design (hanya mencoba sangat keras membuat itu painless).
+- Anda tidak pernah menyentuh terminal dan tidak ingin memulai — meskipun
+  [penyedia cloud/VPS dapat menyelenggarakannya untuk Anda](./for-cloud-providers.md).
+- Anda hanya berdagang secara manual dan tidak peduli dengan bot, backtest, atau copy trading.
+- Anda ingin SaaS yang dihosting dengan hotline dukungan dan Anda tidak ingin siapa pun self-hosting — cMind adalah
+  self-hosted by design (hanya mencoba sangat keras membuat itu tanpa rasa sakit).
 
-Masih mengangguk? Selamat datang. → [Jalankan secara lokal](./deployment/local.md)
+Masih mengangguk? Selamat datang di papan. → [Jalankan secara lokal](./deployment/local.md)

@@ -1,57 +1,61 @@
 ---
-title: Ringkasan arsitektur
-description: Bagaimana cMind disusun — modul, bagaimana aliran permintaan build/backtest/copy melintasi web host dan node fleet, dan keputusan desain yang tidak jelas di baliknya.
+title: Gambaran Arsitektur
+description: Bagaimana cMind dibangun — modul-modul, aliran permintaan build/backtest/copy di seluruh host web dan armada node, serta keputusan desain yang tidak jelas di baliknya.
 sidebar_position: 5
 ---
 
-# Ringkasan arsitektur
+# Gambaran Arsitektur
 
-cMind adalah platform multi-tenant **Blazor Server + Minimal API** untuk cTrader, dibangun di **.NET 10 / C# 14**, EF Core + PostgreSQL, dan .NET Aspire, dengan server MCP dan inti AI. Mengikuti **strict Domain-Driven Design**: aturan bisnis hidup pada agregat dan value object dalam `Core` murni, dan semuanya mengorkestra.
+cMind adalah platform **Blazor Server + Minimal API** multi-tenant untuk cTrader, dibangun dengan **.NET 10 /
+C# 14**, EF Core + PostgreSQL, dan .NET Aspire, dengan server MCP dan inti AI. Platform ini mengikuti
+**Domain-Driven Design yang ketat**: aturan bisnis hidup di agregat dan value object dalam `Core` yang murni,
+dan segala sesuatu yang lain mengorkestrasi.
 
-Halaman ini adalah peta. Untuk *mengapa* di balik pilihan spesifik, lihat [Architecture Decision Records](./adr/README.md).
+Halaman ini adalah peta. Untuk alasan *mengapa* di balik pilihan spesifik, lihat
+[Architecture Decision Records](./adr/README.md).
 
 ## Modul
 
 | Proyek | Tanggung Jawab |
 |---|---|
-| `src/Core` | Domain murni — entity, agregat, value object, strong ID, domain event, antarmuka Core-side. **Nol** ketergantungan infra (tidak ada EF/HttpClient/Docker/ASP.NET). |
-| `src/Infrastructure` | EF Core + PostgreSQL, enkripsi DataProtection, klien GHCR, klien Anthropic AI, observability. |
-| `src/Nodes` | Orchestration cross-node — scheduling, dispatch, poller, background service. |
-| `src/CtraderCliNode` | Agent node HTTP standalone di host jarak jauh (JWT-auth, tanpa shell). Menjalankan dan backtest cBot dengan mengemudi **cTrader CLI** di dalam container docker — dan akan optimize juga, setelah cTrader CLI menambahkannya. |
-| `src/CopyEngine` | Host copy-trading: mencerminkan perdagangan dari account source ke destination. |
+| `src/Core` | Domain murni — entitas, agregat, value object, strong ID, domain event, antarmuka sisi Core. **Nol** dependensi infra (tidak ada EF/HttpClient/Docker/ASP.NET). |
+| `src/Infrastructure` | EF Core + PostgreSQL, enkripsi DataProtection, klien GHCR, klien AI Anthropic, observability. |
+| `src/Nodes` | Orkestrasi lintas-node — penjadwalan, dispatch, poller, background service. |
+| `src/CtraderCliNode` | Agen node HTTP standalone di host jarak jauh (JWT-auth, tanpa shell). Menjalankan dan backtest cBot dengan menjalankan **cTrader CLI** di dalam container docker — dan akan mengoptimalkan juga, setelah cTrader CLI menambahkannya. |
+| `src/CopyEngine` | Host copy-trading: mencerminkan perdagangan dari akun sumber ke tujuan. |
 | `src/CTraderOpenApi` | Klien cTrader Open API (protobuf over TCP/SSL) — auth, trading session, equity. |
 | `src/Web` | Blazor Server SSR + Minimal API + SignalR + MudBlazor UI. |
-| `src/Mcp` | Server MCP HTTP+SSE mengekspos tool ke klien AI. |
-| `src/AppHost` | Orchestrator .NET Aspire (Postgres, Web, MCP, pgAdmin). |
+| `src/Mcp` | Server MCP HTTP+SSE yang mengekspos tools ke klien AI. |
+| `src/AppHost` | Orkestraor .NET Aspire (Postgres, Web, MCP, pgAdmin). |
 
-## Gambaran besar
+## Gambaran Besar
 
 ```mermaid
 flowchart TB
     subgraph Clients
         Browser["Browser / PWA"]
-        AiClient["AI client (MCP)"]
+        AiClient["Klien AI (MCP)"]
     end
 
-    subgraph WebHost["Web host (src/Web)"]
+    subgraph WebHost["Host web (src/Web)"]
         UI["Blazor SSR + MudBlazor"]
-        Api["Minimal API endpoints"]
+        Api["Endpoint Minimal API"]
         Builder["CBotBuilder (Docker socket)"]
         LocalNode["Local node dispatcher"]
     end
 
-    Mcp["MCP server (src/Mcp)"]
-    Core["Core domain (agregat, value object)"]
+    Mcp["Server MCP (src/Mcp)"]
+    Core["Domain Core (agregat, value object)"]
     Db[("PostgreSQL (EF Core)")]
 
-    subgraph Fleet["Node fleet"]
-        ExtNode["CtraderCliNode agent (HTTP + JWT)"]
-        Docker["ctrader-console containers"]
+    subgraph Fleet["Armada node"]
+        ExtNode["Agen CtraderCliNode (HTTP + JWT)"]
+        Docker["Container ctrader-console"]
     end
 
-    Copy["CopyEngine host"]
+    Copy["Host CopyEngine"]
     OpenApi["cTrader Open API"]
-    Anthropic["Anthropic API"]
+    Anthropic["API Anthropic"]
 
     Browser --> UI --> Api
     AiClient --> Mcp --> Core
@@ -64,33 +68,34 @@ flowchart TB
     Core -->|AiFeatureService| Anthropic
 ```
 
-## Alur permintaan
+## Aliran Permintaan
 
-### Build & backtest
+### Build & Backtest
 
-1. Pengguna submit proyek source cBot. `CBotBuilder` berjalan **di web host** (itu butuh Docker socket) di dalam container SDK sekali pakai dengan `/work` bind-mounted dan volume `app-nuget-cache` bersama, jadi MSBuild tidak dipercaya tidak dapat mencapai filesystem atau jaringan host.
-2. Container run/backtest mengeksekusi pada node yang dipilih oleh `NodeScheduler`, dispatched melalui `ContainerDispatcherFactory` → baik `Http` (agent `CtraderCliNode` jarak jauh) atau `Local` (node host web sendiri).
-3. Container menjalankan `ghcr.io/spotware/ctrader-console` dengan `--exit-on-stop`. Poller (`RunCompletionPoller`, `BacktestCompletionPoller`) reconcile container yang self-exited: exit 0/null ⇒ Stopped, non-zero ⇒ Failed.
+1. Pengguna mengirimkan proyek sumber cBot. `CBotBuilder` berjalan **di host web** (membutuhkan soket Docker) di dalam container SDK yang dapat dibuang dengan `/work` yang di-bind-mount dan volume `app-nuget-cache` bersama, sehingga MSBuild yang tidak terpercaya tidak dapat menjangkau filesystem atau jaringan host.
+2. Container run/backtest dijalankan pada node yang dipilih oleh `NodeScheduler`, dikirimkan melalui `ContainerDispatcherFactory` → baik `Http` (agen `CtraderCliNode` jarak jauh) atau `Local` (node host web itu sendiri).
+3. Container menjalankan `ghcr.io/spotware/ctrader-console` dengan `--exit-on-stop`. Poller (`RunCompletionPoller`, `BacktestCompletionPoller`) merekonsiliasi container yang keluar sendiri: exit 0/null ⇒ Stopped, non-zero ⇒ Failed.
 
-Status instance adalah **TPH, dan transisi mengganti entity** (discriminator tidak dapat berubah), jadi instance **id berubah** starting → running → terminal. **Container id stabil** dan dibawa over; agent HTTP dikunci oleh container id untuk status/report/stop/logs.
+State instansi adalah **TPH, dan transisi mengganti entitas** (diskriminator tidak dapat berubah), jadi **id instansi berubah** starting → running → terminal. **Container id stabil** dan dibawa ke depan; agen HTTP di-key oleh container id untuk status/report/stop/log.
 
-### Node CLI cTrader
+### Node cTrader CLI
 
-Node CLI cTrader mendapat **tidak ada SSH atau shell**. Aplikasi utama berbicara ke setiap agent melalui HTTP; setiap permintaan membawa JWT **HS256** berumur pendek (5-menit, `iss=app-main` / `aud=app-node`) yang ditandatangani dengan rahasia node itu. Agent hanya menjalankan image yang cocok dengan `AllowedImagePrefix`, exec docker melalui `ArgumentList` (tidak pernah shell), dan stateless (menemukan container menurut label `app.instance`). Agent self-register dan heartbeat ke `POST /api/nodes/register`; aplikasi utama upsert `CtraderCliNode` **berdasarkan nama** sehingga bertahan perubahan IP.
+Node cTrader CLI tidak mendapat **SSH atau shell**. Aplikasi utama berbicara ke setiap agen melalui HTTP; setiap permintaan membawa **JWT** HS256 berumur pendek (5 menit, `iss=app-main` / `aud=app-node`) yang ditandatangani dengan secret node itu. Agen hanya menjalankan citra yang cocok dengan `AllowedImagePrefix`, exec docker melalui `ArgumentList` (tidak pernah shell), dan stateless (menemukan container berdasarkan label `app.instance`). Agen self-register dan heartbeat ke `POST /api/nodes/register`; aplikasi utama melakukan upsert `CtraderCliNode` **berdasarkan nama** sehingga bertahan melalui perubahan IP.
 
-### Copy trading
+### Copy Trading
 
-`CopyEngineSupervisor` (sebuah `BackgroundService`) reconcile running copy profile dengan live `CopyEngineHost` instance — mengklaim profil melalui atomic DB lease (sehingga dua node tidak pernah double-copy), renew lease, dan restart host mati. Setiap `CopyEngineHost` terhubung ke cTrader Open API, mencerminkan source execution ke destination melalui pure `CopyDecisionEngine` (filter direction/latency/slippage + sizing), dan self-heal via resync + partial-fill true-up.
+`CopyEngineSupervisor` (sebuah `BackgroundService`) merekonsiliasi profil copy yang berjalan dengan instansi `CopyEngineHost` live — mengklaim profil melalui atomic DB lease (sehingga dua node tidak pernah double-copy), memperbarui lease, dan memulai ulang host yang mati. Setiap `CopyEngineHost` terhubung ke cTrader Open API, mencerminkan eksekusi sumber ke tujuan melalui `CopyDecisionEngine` murni (filter arah/latensi/slippage + sizing), dan self-heal melalui resync + partial-fill true-up.
 
 ### AI
 
-AI adalah **fully gated di `AppOptions.Ai.ApiKey`** — unset ⇒ setiap fitur mengembalikan `AiResult.Fail` dan aplikasi berjalan tidak berubah (tidak ada kunci yang dibutuhkan untuk build/test/E2E). `IAiClient` memanggil Anthropic melalui **HTTP mentah** (sebuah typed `HttpClient`), deliberately bukan SDK. `AiFeatureService` adalah orchestrator tunggal yang dibagikan oleh endpoint Web, `AiTools` MCP, dan `AiRiskGuard`.
+AI adalah **sepenuhnya gated pada `AppOptions.Ai.ApiKey`** — unset ⇒ setiap fitur mengembalikan `AiResult.Fail` dan aplikasi berjalan tidak berubah (tidak ada kunci yang diperlukan untuk build/test/E2E). `IAiClient` memanggil Anthropic melalui **HTTP raw** (sebuah `HttpClient` yang typed), sengaja bukan SDK. `AiFeatureService` adalah orkestraor tunggal yang dibagikan oleh endpoint Web, `AiTools` MCP, dan `AiRiskGuard`.
 
-## Aturan cross-cutting
+## Aturan Cross-Cutting
 
-- **Satu `SaveChanges` memutasi satu agregat.** Alur cross-agregat menggunakan domain event yang didispatch oleh interceptor EF.
-- **Agregat mereferensikan satu sama lain melalui strong ID**, tidak pernah navigation property.
-- **Tidak ada ambient clock.** Kode inject `TimeProvider`; domain method ambil `DateTimeOffset now`.
-- **Secrets** dienkripsi melalui `ISecretProtector` (`EncryptionPurposes`); **string** hidup di `Core/Constants/`; **logs** melalui source-generated `LogMessages`.
+- **Satu `SaveChanges` memutasi satu agregat.** Aliran lintas-agregat menggunakan domain event yang dikirim oleh interceptor EF.
+- **Agregat mereferensi satu sama lain berdasarkan strong ID**, tidak pernah property navigasi.
+- **Tidak ada ambient clock.** Kode menginjeksi `TimeProvider`; metode domain mengambil `DateTimeOffset now`.
+- **Secrets** dienkripsi melalui `ISecretProtector` (`EncryptionPurposes`); **strings** hidup di
+  `Core/Constants/`; **logs** melalui `LogMessages` yang di-generate sumber.
 
-Ini ditegakkan di CI: analyzer sweep, zero-warning build, dan `ArchitectureGuardTests` (yang gagal build pada ambient-clock read, Core infra dependency, atau direct `ILogger.Log*` call).
+Ini diberlakukan di CI: analyzer sweep, build zero-warning, dan `ArchitectureGuardTests` (yang mengalahkan build pada pembacaan ambient-clock, dependensi infra Core, atau panggilan langsung `ILogger.Log*`).

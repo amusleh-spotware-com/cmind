@@ -1,38 +1,29 @@
 ---
-description: "Contrarian Retail Positioning — turns the % of retail traders long into a contrarian bias (fade the crowd when it is lopsided), plus point-in-time signal value objects that guard against look-ahead bias."
+description: "Contrarian Retail Positioning — změní % prodejců na dlouho na kontrarní zkreslení (selhání davu, když je vychýleno), plus point-in-time signální objekty hodnoty, které chrání před zkreslením look-ahead."
 ---
 
-# Contrarian Retail Positioning
+# Kontrarní Retail Positioning
 
-The retail crowd is one of the few genuinely useful sentiment signals in FX — as a **contrarian**
-indicator. When the great majority of retail traders are long, price has historically tended to fall,
-and vice-versa. This tool turns crowd positioning into an actionable read.
+Maloobchodní dav je jedním z mála skutečně užitečných signálů sentimentu v FX — jako **kontrarní** indikátor. Když je velká většina maloobchodních obchodníků na dlouho, cena historicky měla tendenci klesat a naopak. Tento nástroj změní pozicování davu na lze jednat čtení.
 
-Open **cBots → Contrarian Positioning** (`/quant/positioning`).
+Otevřete **cBots → Contrarian Positioning** (`/quant/positioning`).
 
-## What it does
+## Co dělá
 
-Enter the **% of retail traders long** (from your broker's sentiment page or a feed such as FXSSI) and
-it returns:
+Zadejte **% maloobchodních obchodníků na dlouho** (ze stránky sentimentu vašeho makléře nebo kanálu, jako je FXSSI) a vrátí:
 
-- **Contrarian bias** — **Bearish** when ≥ 60% are long (crowd too long), **Bullish** when ≤ 40% are
-  long (crowd too short), **Neutral** in the 40–60% indecision band;
-- **Strength** — how lopsided the crowd is (0 = balanced, 1 = fully one-sided), to weight the signal.
+- **Kontrarní zkreslení** — **Bearish** když ≥ 60% je na dlouho (dav příliš dlouho), **Bullish** když ≤ 40% je na dlouho (dav příliš krátko), **Neutral** v pásmu 40–60% nejistoty;
+- **Síla** — jak je dav vychýlen (0 = vyvážený, 1 = zcela jednostranný), aby se vážil signál.
 
 ```http
 POST /api/quant/positioning
 { "longPercent": 72 }
 ```
 
-## Point-in-time by construction
+## Point-in-time konstrukcí
 
-Under the hood the signal layer (`Core.Signals`) models a `PointInTimeSignal` that is **stamped with the
-moment it was knowable** and refuses to be constructed without it. Any backtest or autonomous agent that
-consumes a signal checks `IsKnownAt(decisionTime)` — so future data can never leak into a historical
-decision. Look-ahead bias is the top reproducibility killer in quant finance; the domain model makes it
-structurally impossible.
+Pod kapotou signální vrstva (`Core.Signals`) modeluje `PointInTimeSignal`, který je **razítkem s momentem, kdy to bylo poznable** a odmítá být konstruován bez něj. Libovolný backtest nebo autonomní agent, který konzumuje signál, kontroluje `IsKnownAt(decisionTime)` — takže budoucí data nemohou nikdy prosakovat do historického rozhodnutí. Look-ahead zkreslení je největším vrahem reprodukovatelnosti v kvantitativních financích; doménový model to činí strukturálně nemožným.
 
-## Why it is reliable
+## Proč je spolehlivý
 
-Pure, deterministic domain code with no infrastructure dependency — the contrarian thresholds and the
-point-in-time guard are unit-tested, including the 40/60 boundaries and out-of-range rejection.
+Čisté, deterministické doménové kódy bez infrastrukturní závislosti — kontrarní prahové hodnoty a guard point-in-time jsou testovány jednotkami, včetně hranic 40/60 a zamítnutí mimo rozsah.

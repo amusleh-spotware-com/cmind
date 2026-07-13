@@ -1,23 +1,20 @@
 ---
-description: "Helm chart: deploy/helm/cmind. Deploys Web, MCP, self-registering node agents, optional in-cluster Postgres."
+description: "Helm diagram: deploy/helm/cmind. Telepít Web, MCP, önregisztrálódó csomópont ügynökök, opcionális in-cluster Postgres."
 ---
 
-# Kubernetes deployment — step by step
+# Kubernetes telepítés — lépésről lépésre
 
-Helm chart: `deploy/helm/cmind`. Deploys Web, MCP, self-registering node agents, optional
-in-cluster Postgres.
+Helm diagram: `deploy/helm/cmind`. Telepít Web, MCP, önregisztrálódó csomópont ügynökök, opcionális in-cluster Postgres.
 
-> **Validated** end-to-end on local `kind` cluster: all pods reach `Ready`, node agent
-> self-registers with per-pod headless DNS name, `/health` + `/version` return 200, scaled-down
-> agent auto-marked unreachable. Flow below = what tested.
+> **Validálva** végtelenül a helyi `kind` fürtön: mind a podok elérte a `Ready` állapotot, csomópont ügynök önregisztrálódik per-pod headless DNS névvel, `/health` + `/version` visszatér 200-al, leskálázott ügynök automatikusan megjelölt elérhetetlen. Az alatti áramlás = amit tesztelt.
 
-## 0. Prerequisites
+## 0. Előfeltételek
 
-- Kubernetes cluster (managed EKS/AKS/GKE, or local `kind`/`k3d`/`minikube`).
-- `kubectl` (pointed at target context) and `helm` 3.
-- Container registry cluster can pull from (skip for local `kind` — load images instead).
+- Kubernetes fürt (kezelt EKS/AKS/GKE, vagy helyi `kind`/`k3d`/`minikube`).
+- `kubectl` (mutató a cél kontextre) és `helm` 3.
+- Konténer regiszter, amelyből a fürt húz (kihagyat a helyi `kind` — telepítsd a képeket helyette).
 
-## 1. Build the three images
+## 1. Az három kép felépítése
 
 ```bash
 docker build -f Dockerfile.web        -t <registry>/cmind-web:1.0.0 .
@@ -25,8 +22,7 @@ docker build -f Dockerfile.mcp        -t <registry>/cmind-mcp:1.0.0 .
 docker build -f Dockerfile.node-agent -t <registry>/cmind-node-agent:1.0.0 .
 ```
 
-Push (`docker push <registry>/cmind-web:1.0.0`, etc.), **or** for local `kind` cluster load
-direct:
+Nyomás (`docker push <registry>/cmind-web:1.0.0`, stb.), **vagy** a helyi `kind` fürt számára telepít közvetlenül:
 
 ```bash
 kind create cluster --name cmind
@@ -36,16 +32,16 @@ for s in web mcp node-agent; do
 done
 ```
 
-## 2. Pick secrets
+## 2. Válassz titkok
 
 ```bash
 PG_PASSWORD=$(openssl rand -hex 16)
-JOIN_TOKEN=$(openssl rand -hex 24)   # >= 32 chars; shared cluster secret for node auto-discovery
+JOIN_TOKEN=$(openssl rand -hex 24)   # >= 32 chars; megosztott fürt titok csomópont auto-felfedezéshez
 ```
 
-## 3. Install the chart
+## 3. Telepítsd a diagramot
 
-Registry-based (managed cluster):
+Regiszter-alapú (kezelt fürt):
 
 ```bash
 helm upgrade --install cmind deploy/helm/cmind \
@@ -57,7 +53,7 @@ helm upgrade --install cmind deploy/helm/cmind \
   --set secrets.discoveryJoinToken="$JOIN_TOKEN"
 ```
 
-Local `kind` (loaded images, no external Postgres, non-privileged agents):
+Helyi `kind` (telepített képek, nem külső Postgres, nem kiváltságolt ügynökök):
 
 ```bash
 helm upgrade --install cmind deploy/helm/cmind \
@@ -66,38 +62,33 @@ helm upgrade --install cmind deploy/helm/cmind \
   --set secrets.pgPassword="$PG_PASSWORD" --set secrets.discoveryJoinToken="$JOIN_TOKEN"
 ```
 
-> On `kind`/containerd no host Docker socket, so `web.dockerSocket.enabled=false`
-> (in-app builder/LocalNode unavailable) and `nodeAgent.privileged=false` (agent still
-> **self-registers**; just can't run cTrader containers without DinD). For real workload
-> execution, run agents on node pool where `nodeAgent.privileged=true` allowed.
+> A `kind`/containerd esetén nincs gazdagép Docker socket, így `web.dockerSocket.enabled=false` (alkalmazás-belsejű felépítő/LocalNode nem elérhető) és `nodeAgent.privileged=false` (ügynök még mindig **önregisztrálódik**; csak nem tud futtatni cTrader konténereket DinD nélkül). Valós munkaterhelés végrehajtásához futtass ügynökök a csomópont készleten ahol `nodeAgent.privileged=true` engedélyezve.
 
-No `helm` binary? Render and apply:
+Nincs `helm` bináris? Renderelj és alkalmazz:
 
 ```bash
 helm template cmind deploy/helm/cmind -f my-values.yaml | kubectl apply -f -
 ```
 
-## 4. Wait for rollout
+## 4. Várakozz a bevezetésre
 
 ```bash
 kubectl -n cmind get pods -w
 kubectl -n cmind rollout status deploy/cmind-web
 ```
 
-Expect: `cmind-web`, `cmind-mcp`, `cmind-postgres` (Deployments) and `cmind-node-agent-0`
-(StatefulSet) all `Ready`. Web readiness (`/health`) passes only once DB migrated (migrations
-run on startup).
+Várakozz: `cmind-web`, `cmind-mcp`, `cmind-postgres` (Deployments) és `cmind-node-agent-0` (StatefulSet) mind `Ready`. Web készültség (`/health`) csak akkor halad amikor DB migrálódott (migrációk futnak indítás előtt).
 
-## 5. Verify auto-discovery
+## 5. Ellenőrizd az auto-felfedezést
 
 ```bash
-# Node agent should appear in the DB with a per-pod headless DNS BaseUrl and IsReachable=true
+# Csomópont ügynök megjelenik az adatbázisban egy per-pod headless DNS BaseUrl és IsReachable=true
 PG=$(kubectl -n cmind get pod -l app.kubernetes.io/component=postgres -o jsonpath='{.items[0].metadata.name}')
 kubectl -n cmind exec "$PG" -- psql -U postgres -d appdb -c \
   'SELECT "Name","Kind","IsReachable","BaseUrl" FROM "Nodes";'
 ```
 
-Example (verified):
+Példa (ellenőrzött):
 
 ```
           Name           |    Kind     | IsReachable |                     BaseUrl
@@ -105,139 +96,108 @@ Example (verified):
  cmind-node-agent-0      | ActiveMixed | t           | http://cmind-node-agent-0.cmind-node-agent...:8080
 ```
 
-Scale capacity by adding replicas — each new pod self-registers within one heartbeat interval:
+Méretez kapacitás replikák hozzáadásával — minden új pod önregisztrálódik egy szívverés intervallumban:
 
 ```bash
 kubectl -n cmind scale statefulset/cmind-node-agent --replicas=3
 ```
 
-Staleness reconciliation (verified): scale agent down, flips to `IsReachable=f` after
-`discovery.heartbeatTtl`; scale back up, returns online.
+Éltelen egyeztetés (ellenőrzött): méretez ügynök lefelé, csatlakozik az `IsReachable=f`-hez az után `discovery.heartbeatTtl`; méretez vissza felfelé, visszatér online-ra.
 
-## 6. Reach the UI
+## 6. Érj el a UI-hoz
 
 ```bash
 kubectl -n cmind port-forward svc/cmind-web 8080:8080
-# http://localhost:8080  — sign in with the seeded owner
+# http://localhost:8080  — bejelentkezz a vetett tulajdonosként
 ```
 
-External access: set `web.ingress.enabled=true`, `web.ingress.host`, and TLS.
+Külső hozzáférés: állítsd be `web.ingress.enabled=true`, `web.ingress.host`, és TLS.
 
-## Why node agents are a StatefulSet
+## Miért csomópont ügynökök egy StatefulSet
 
-Main node dispatches work to **specific** agent by URL, so each agent needs stable,
-individually-addressable DNS name. Chart uses StatefulSet + headless Service; each pod
-advertises `http://<pod>.<svc>.<ns>.svc.cluster.local:8080` and self-registers under pod name.
-Same discovery mechanism bare cTrader CLI nodes use —
-see [../operations/node-discovery.md](../operations/node-discovery.md).
+A fő csomópont küldi a munkát egy **specifikus** ügynöknek az URL-en, így minden ügynöknek stabil, egyedileg-címezhető DNS neve kell lennie. A diagram StatefulSet + headless Service használ; minden pod meghirdeti `http://<pod>.<svc>.<ns>.svc.cluster.local:8080` és önregisztrálódik a pod név alatt. Ugyanez a felfedezési mechanizmus, amit az eredeti cTrader CLI csomópontok használnak — lásd [../operations/node-discovery.md](../operations/node-discovery.md).
 
-## Web scale-out (SignalR backplane, S6)
+## Web skalázódás (SignalR backplane, S6)
 
-Web app = Blazor Server + SignalR (live dashboard, logs hub). To run **more than one Web replica**,
-set `signalr` connection string to Redis endpoint — app then registers **SignalR Redis
-backplane** (`AddStackExchangeRedis`) so hub messages and circuit negotiation fan across replicas and a
-reconnect landing on different pod stays live. No `signalr` connection string = single-replica
-in-memory (unchanged). Pair with session affinity at ingress for smoothest Blazor Server circuits.
+Web alkalmazás = Blazor Server + SignalR (élő irányítópult, naplók hub). **Több, mint egy Web replika** futtatásához, állítsd be a `signalr` csatlakozási karakterláncot a Redis végpontra — az alkalmazás ezután regisztrál egy **SignalR Redis backplane** (`AddStackExchangeRedis`) így a hub üzenetek és áramkör egyeztetés fan-ek az összes replikához és egy újracsatlakozás egy másik pod-ra leszálló maradjon élő. Nincs `signalr` csatlakozási karakterlánc = egy replika memória (megváltozatlan). Párosítsd a munkamenet affinitás-sal az ingress-ben a legsimasabb Blazor Server áramkörökhöz.
 
-## Copy-agent autoscaling & resilience
+## Másolat-ügynök automatikus-méretezés és reziliencia
 
-Copy-agent hosts long-lived trading sockets, so scales on **work, not CPU**. With
-`copyAgent.keda.enabled=true` chart installs KEDA `ScaledObject` that queries Postgres for
-running copy-profile count and scales replicas so each pod hosts about `copyAgent.keda.profilesPerPod`
-(default 25), between `minReplicas`/`maxReplicas`. KEDA reads DB via `TriggerAuthentication` bound to
-`copyAgent.keda.connectionSecretKey` secret key. When `copyAgent.replicas > 1` (or KEDA scales past 1)
-chart also adds `topologySpreadConstraints` (spread across nodes) and `PodDisruptionBudget`
-(`minAvailable: 1`); on scale-in / rolling update each pod releases leases on `SIGTERM`
-(`terminationGracePeriodSeconds`, default 30) so survivor reclaims immediately — see
-[scaling.md](scaling.md).
+A másolat-ügynök hosszú élettartamú kereskedelem socketeket üzemeltet, így méretez **munka alapján, nem CPU alapján**. A `copyAgent.keda.enabled=true` diagrammal telepít KEDA `ScaledObject`-et, amely lekérdez Postgres-ot futó másolat-profil számbavételhez és skaláz replika így minden pod üzemeltet körülbelül `copyAgent.keda.profilesPerPod` (alapértelmezés 25), közötti `minReplicas`/`maxReplicas`. A KEDA az adatbázis-t olvas `TriggerAuthentication` által kötött `copyAgent.keda.connectionSecretKey` titkoskulcshoz. Amikor `copyAgent.replicas > 1` (vagy KEDA skálázódik 1-nél több) a diagram is hozzáad `topologySpreadConstraints` (terjedj csomópontok között) és `PodDisruptionBudget` (`minAvailable: 1`); a leskálázódás / gördülő frissítés során minden pod kiadja a lízingeket az `SIGTERM` bejelentésén (`terminationGracePeriodSeconds`, alapértelmezés 30) így a túlélő azonnal visszaigényli — lásd [scaling.md](scaling.md).
 
-## Key values
+## Kulcs értékek
 
-| Value | Purpose |
+| Érték | Cél |
 |-------|---------|
-| `image.registry` / `.repository` / `.tag` / `.pullPolicy` | Image coordinates (`local` + `Never` for kind). |
-| `secrets.existingSecret` | Use external/sealed Secret instead of chart-managed values. |
-| `postgres.enabled` | `true` = in-cluster Postgres (dev). `false` + `externalDatabase.connectionString` for managed DB (prod). |
-| `web.ingress.*` / `web.autoscaling` / `mcp.autoscaling` | Ingress + TLS, HPA on CPU. |
-| `nodeAgent.replicas` / `.privileged` / `.mode` / `.maxInstances` | Agent count, DinD privilege, mode, capacity. |
-| `web.dockerSocket.enabled` | hostPath `/var/run/docker.sock` for Web builder/LocalNode (Docker-runtime nodes only). |
-| `observability.otlpEndpoint` | Ship logs+traces+metrics to OTLP collector. |
+| `image.registry` / `.repository` / `.tag` / `.pullPolicy` | Kép koordináták (`local` + `Never` a kind-hez). |
+| `secrets.existingSecret` | Használ külső/lezárt Secret helyett a diagram-kezelt értékek. |
+| `postgres.enabled` | `true` = in-cluster Postgres (dev). `false` + `externalDatabase.connectionString` a kezelt adatbázishoz (prod). |
+| `web.ingress.*` / `web.autoscaling` / `mcp.autoscaling` | Ingress + TLS, HPA a CPU-n. |
+| `nodeAgent.replicas` / `.privileged` / `.mode` / `.maxInstances` | Ügynök szám, DinD kiváltság, mód, kapacitás. |
+| `web.dockerSocket.enabled` | hostPath `/var/run/docker.sock` a Web felépítő/LocalNode-hoz (Docker-futási csomópontok csak). |
+| `observability.otlpEndpoint` | Szállít naplókat+nyomokat+metrikákat az OTLP gyűjtőhöz. |
 
-## Probes
+## Szondák
 
-liveness `/alive`, readiness `/health` (Web) · `/version` (MCP) · `/health` (agent) — mapped in all
-environments.
+liveness `/alive`, readiness `/health` (Web) · `/version` (MCP) · `/health` (ügynök) — képezett az összes környezetben.
 
-## In-cluster test suite
+## In-cluster teszt csomag
 
-Run copy-trading suite as Kubernetes `Job` against deployed app, so regression caught
-in-cluster same as locally. Copy tests need only Web + Postgres + token cache — **no**
-privileged node agents.
+Futtass másolat-kereskedelem csomag mint Kubernetes `Job` a telepített alkalmazás ellen, így regresszió elkapva in-cluster ugyanúgy mint helyileg. Másolat tesztek szükségletek csak Web + Postgres + token cache — **nincs** kiváltságolt csomópont ügynök.
 
-One-shot, reproducible (kind up → build+load images → deploy → run Job → assert exit 0 → tear down):
+Egy-lövés, reprodukálható (kind felfelé → felépítés+telepítés képek → telepítés → futtass Job → állítsd szerzője exit 0 → szétszedés):
 
 ```bash
-scripts/k8s-e2e.sh                                   # deterministic copy suite (no secrets)
-USE_EXISTING_CLUSTER=1 scripts/k8s-e2e.sh            # reuse current kube context
-TEST_FILTER='FullyQualifiedName~CopyTradingLiveTests' COPY_SECRET=cmind-copy-secrets scripts/k8s-e2e.sh  # live
+scripts/k8s-e2e.sh                                   # determinisztikus másolat csomag (nincs titok)
+USE_EXISTING_CLUSTER=1 scripts/k8s-e2e.sh            # újrahasznosít jelenlegi kube kontextus
+TEST_FILTER='FullyQualifiedName~CopyTradingLiveTests' COPY_SECRET=cmind-copy-secrets scripts/k8s-e2e.sh  # élő
 ```
 
-Manual / CI wiring — **deterministic (default, no secrets):**
+Kézi / CI vezetékezés — **determinisztikus (alapértelmezés, nincs titok):**
 
 ```bash
-docker build -f Dockerfile.tests -t cmind-tests:e2e .          # runner image (SDK + built test projects)
+docker build -f Dockerfile.tests -t cmind-tests:e2e .          # futó kép (SDK + felépített teszt projektek)
 helm upgrade cmind deploy/helm/cmind -n cmind --reuse-values --set tests.enabled=true
 kubectl -n cmind wait --for=condition=complete --timeout=15m job/cmind-cmind-tests
 kubectl -n cmind logs job/cmind-cmind-tests
 ```
 
-**Live suite** additionally needs token cache. cTrader **refresh tokens single-use**, so cache
-must be **writable**: Job copies Secret into emptyDir at `/app/secrets` via init-container.
+Az **élő csomag** valamint szükségletei token cache. A cTrader **frissítés tokenek egy-felhasználatú**, így a cache **kell írható legyen**: Job másolat Secret az emptyDir-ből a `/app/secrets` init-container segítségével.
 
 ```bash
-kubectl -n cmind create secret generic cmind-copy-secrets --from-file=secrets/   # never baked into the image
+kubectl -n cmind create secret generic cmind-copy-secrets --from-file=secrets/   # soha nem sütött az képbe
 helm upgrade cmind deploy/helm/cmind -n cmind --reuse-values --set tests.enabled=true \
   --set tests.project='tests/IntegrationTests/IntegrationTests.csproj' \
   --set tests.filter='FullyQualifiedName~CopyTradingLiveTests' \
   --set tests.copySecret=cmind-copy-secrets
 ```
 
-| Value | Purpose |
+| Érték | Cél |
 |-------|---------|
-| `tests.enabled` | Render test `Job` (default `false`). |
-| `tests.project` / `tests.filter` | Which project + `dotnet test --filter` to run (default: deterministic). |
-| `tests.copySecret` | Optional Secret with gitignored `openapi-*.local.json`; copied into **writable** emptyDir at `/app/secrets` for live suite. Empty ⇒ no secret mount. |
-| `tests.backoffLimit` | Job retry count (default `0`). |
+| `tests.enabled` | Renderelj teszt `Job` (alapértelmezés `false`). |
+| `tests.project` / `tests.filter` | Mely projekt + `dotnet test --filter` futtat (alapértelmezés: determinisztikus). |
+| `tests.copySecret` | Opcionális Secret a gitignored `openapi-*.local.json`; másolva az **írható** emptyDir-be a `/app/secrets`-hez az élő csomag-hoz. Üres ⇒ nincs titkos hozzácsatlakoztatás. |
+| `tests.backoffLimit` | Job újrapróbálkozás szám (alapértelmezés `0`). |
 
-`LiveCopySecrets` walks up from `/app` to find `secrets/`; live tests skip cleanly when cache
-absent. `Dockerfile.tests` SDK-based so runs same assertions as local `dotnet test` — both
-deterministic (`101 passed`) and full live (`8 passed`) suites verified running inside this
-image locally against Docker before shipping.
+A `LiveCopySecrets` felfelé sétál az `/app`-ből, hogy megleld a `secrets/`-t; élő tesztek kihagyva tisztán amikor cache hiányzik. A `Dockerfile.tests` SDK-alapú így futtat ugyanazok az állítások mint helyi `dotnet test` — mind determinisztikus (`101 passed`) és teljes élő (`8 passed`) csomagok ellenőrzött futási ezt az képet helyileg Docker ellen szállítás előtt.
 
-## Teardown
+## Szétszedés
 
 ```bash
-helm -n cmind uninstall cmind        # or: kubectl delete -f <rendered>.yaml
-kind delete cluster --name cmind     # local only
+helm -n cmind uninstall cmind        # vagy: kubectl delete -f <rendered>.yaml
+kind delete cluster --name cmind     # helyi csak
 ```
 
-## Running the in-cluster suite cross-platform (Linux / macOS / Windows / WSL)
+## Az in-cluster csomag futtatása kereszt-platform (Linux / macOS / Windows / WSL)
 
-`scripts/k8s-e2e.sh` OS-independent. Converts repo path to native form (`cygpath -m`) so Docker,
-helm and kubectl resolve it on **Windows/git-bash** as well as Linux/macOS — verified end to end on Windows
-(kind cluster up → images built+loaded → chart deployed → in-cluster test Job green → teardown).
+A `scripts/k8s-e2e.sh` OS-független. Konvertál repo útvonalat a natív formára (`cygpath -m`) így Docker, helm és kubectl feloldódik a **Windows/git-bash** úgy mint Linux/macOS — ellenőrzött végtelenül a Windowson (kind fürt felfelé → képek felépít+telepít → diagram telepítve → in-cluster teszt Job zöld → szétszedés).
 
-| Environment | Command |
+| Környezet | Parancs |
 |-------------|---------|
 | Linux / macOS | `scripts/k8s-e2e.sh` |
-| Windows (git-bash) | `bash scripts/k8s-e2e.sh` **or** `pwsh scripts/k8s-e2e.ps1` |
-| Windows → **WSL (preferred)** | `pwsh scripts/k8s-e2e.ps1 -Wsl` |
+| Windows (git-bash) | `bash scripts/k8s-e2e.sh` **vagy** `pwsh scripts/k8s-e2e.ps1` |
+| Windows → **WSL (javasolt)** | `pwsh scripts/k8s-e2e.ps1 -Wsl` |
 
-**Prefer WSL on Windows.** Running inside WSL uses native Linux paths and Docker Desktop's WSL integration,
-avoiding all path-translation edge cases — most robust option. Needs `docker`, `kind`, `helm`,
-`kubectl` and .NET SDK on WSL PATH (Docker Desktop provides `docker`; install rest in distro,
-e.g. `go install sigs.k8s.io/kind@latest`, the helm/kubectl release binaries). `scripts/k8s-e2e.ps1`
-wrapper picks WSL with `-Wsl`, falls back to git-bash otherwise.
+**Javasolt WSL a Windowson.** Futás az WSL-ben natív Linux útvonalak és Docker Desktop WSL integrációs használ, elkerülve mind az útvonal-fordítás határeseteit — legrobusztus lehetőség. Szükségletei `docker`, `kind`, `helm`, `kubectl` és .NET SDK a WSL PATH-en (Docker Desktop biztosít `docker`; telepítsd a többi a distro-ban, pl. `go install sigs.k8s.io/kind@latest`, a helm/kubectl kiadás binárisok). A `scripts/k8s-e2e.ps1` burkoló felvesz WSL a `-Wsl`-kel, vissza a git-bash-hez egyébként.
 
-`kind` + `helm` self-installable if absent (release binaries or `choco install kind kubernetes-helm`);
-do not treat as unavailable. See also [../testing/live-copy-trading.md](../testing/live-copy-trading.md).
+A `kind` + `helm` öntelepíthető ha hiányzik (kiadás binárisok vagy `choco install kind kubernetes-helm`); nem kezel mint nem elérhető. Lásd is [../testing/live-copy-trading.md](../testing/live-copy-trading.md).

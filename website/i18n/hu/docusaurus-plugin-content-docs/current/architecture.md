@@ -1,59 +1,55 @@
 ---
-title: Architecture overview
-description: How cMind is put together — the modules, how a build/backtest/copy request flows across the web host and the node fleet, and the non-obvious design decisions behind it.
+title: Architektura áttekintés
+description: Hogyan épül fel a cMind — a modulok, hogyan áramlik a build/backtest/másolás kérelem a web gazdagépen és a csomópontos flottán keresztül, és az ebögött álló nem nyilvánvaló tervezési döntések.
 sidebar_position: 5
 ---
 
-# Architecture overview
+# Architektura áttekintés
 
-cMind is a multi-tenant **Blazor Server + Minimal API** platform for cTrader, built on **.NET 10 /
-C# 14**, EF Core + PostgreSQL, and .NET Aspire, with an MCP server and an AI core. It follows
-**strict Domain-Driven Design**: business rules live on aggregates and value objects in a pure
-`Core`, and everything else orchestrates.
+cMind egy több-bérlős **Blazor Server + Minimal API** platform cTrader számára, amely a **.NET 10 / C# 14**, EF Core + PostgreSQL és .NET Aspire alapuló, MCP szerverrel és AI maggal. Az **szigorú Domain-Driven Design** követi: az üzleti szabályok egy tiszta `Core`-ban élnek az aggregátumokon és értékobjektumokon, és minden más vezérli.
 
-This page is the map. For the *why* behind specific choices, see the
-[Architecture Decision Records](./adr/README.md).
+Ez az oldal a térkép. Az adott választások *miértjéhez* lásd az [Architecture Decision Records](./adr/README.md) (Architekturális döntési feljegyzések).
 
-## Modules
+## Modulok
 
-| Project | Responsibility |
+| Projekt | Felelősség |
 |---|---|
-| `src/Core` | Pure domain — entities, aggregates, value objects, strong IDs, domain events, Core-side interfaces. **Zero** infra dependencies (no EF/HttpClient/Docker/ASP.NET). |
-| `src/Infrastructure` | EF Core + PostgreSQL, DataProtection encryption, GHCR client, Anthropic AI client, observability. |
-| `src/Nodes` | Cross-node orchestration — scheduling, dispatch, pollers, background services. |
-| `src/CtraderCliNode` | Standalone HTTP node agent on remote hosts (JWT-auth, no shell). Runs and backtests cBots by driving the **cTrader CLI** inside a docker container — and will optimize too, once the cTrader CLI adds it. |
-| `src/CopyEngine` | The copy-trading host: mirrors trades from a source account onto destinations. |
-| `src/CTraderOpenApi` | cTrader Open API client (protobuf over TCP/SSL) — auth, trading session, equity. |
+| `src/Core` | Tiszta domain — entitások, aggregátumok, értékobjektumok, erős ID-k, domain események, Core-oldali interfészek. **Nulla** infrastruktúra függőségek (nincs EF/HttpClient/Docker/ASP.NET). |
+| `src/Infrastructure` | EF Core + PostgreSQL, DataProtection titkosítás, GHCR kliens, Anthropic AI kliens, megfigyelhetőség. |
+| `src/Nodes` | Csomópontok közötti szervezés — ütemezés, közzététel, lekérdezők, background szolgáltatások. |
+| `src/CtraderCliNode` | Önálló HTTP csomópont-ügynök távoli hosztok-ön (JWT-hitelesítés, nincs shell). Futtat és backtest cBotokat a **cTrader CLI** meghajtásával egy docker konténerben — és optimalizál is majd, amikor a cTrader CLI hozzáadja. |
+| `src/CopyEngine` | A másolási kereskedelem gazdagépe: tükrözi a kereskedelmeket egy forrás fiókból a célfiók-okra. |
+| `src/CTraderOpenApi` | cTrader Open API kliens (protobuf TCP/SSL felett) — hitelesítés, kereskedelem ülés, equity. |
 | `src/Web` | Blazor Server SSR + Minimal API + SignalR + MudBlazor UI. |
-| `src/Mcp` | MCP HTTP+SSE server exposing tools to AI clients. |
-| `src/AppHost` | .NET Aspire orchestrator (Postgres, Web, MCP, pgAdmin). |
+| `src/Mcp` | MCP HTTP+SSE szerver, amely szerszámokat tesz elérhetővé AI kliensek számára. |
+| `src/AppHost` | .NET Aspire vezénylő (Postgres, Web, MCP, pgAdmin). |
 
-## The big picture
+## A nagy kép
 
 ```mermaid
 flowchart TB
     subgraph Clients
-        Browser["Browser / PWA"]
-        AiClient["AI client (MCP)"]
+        Browser["Böngésző / PWA"]
+        AiClient["AI kliens (MCP)"]
     end
 
-    subgraph WebHost["Web host (src/Web)"]
+    subgraph WebHost["Web gazdagép (src/Web)"]
         UI["Blazor SSR + MudBlazor"]
-        Api["Minimal API endpoints"]
+        Api["Minimal API végpontok"]
         Builder["CBotBuilder (Docker socket)"]
-        LocalNode["Local node dispatcher"]
+        LocalNode["Helyi csomópont közzétevő"]
     end
 
-    Mcp["MCP server (src/Mcp)"]
-    Core["Core domain (aggregates, value objects)"]
+    Mcp["MCP szerver (src/Mcp)"]
+    Core["Core domain (aggregátumok, értékobjektumok)"]
     Db[("PostgreSQL (EF Core)")]
 
-    subgraph Fleet["Node fleet"]
-        ExtNode["CtraderCliNode agent (HTTP + JWT)"]
-        Docker["ctrader-console containers"]
+    subgraph Fleet["Csomópont flotta"]
+        ExtNode["CtraderCliNode ügynök (HTTP + JWT)"]
+        Docker["ctrader-console konténerek"]
     end
 
-    Copy["CopyEngine host"]
+    Copy["CopyEngine gazdagép"]
     OpenApi["cTrader Open API"]
     Anthropic["Anthropic API"]
 
@@ -68,57 +64,33 @@ flowchart TB
     Core -->|AiFeatureService| Anthropic
 ```
 
-## Request flows
+## Kérelem áramlások
 
-### Build & backtest
+### Build és backtest
 
-1. A user submits a cBot source project. `CBotBuilder` runs **on the web host** (it needs the Docker
-   socket) inside a throwaway SDK container with a bind-mounted `/work` and a shared
-   `app-nuget-cache` volume, so untrusted MSBuild can't reach the host filesystem or network.
-2. Run/backtest containers execute on a node chosen by `NodeScheduler`, dispatched through
-   `ContainerDispatcherFactory` → either `Http` (a remote `CtraderCliNode` agent) or `Local` (the web
-   host's own node).
-3. Containers run `ghcr.io/spotware/ctrader-console` with `--exit-on-stop`. Pollers
-   (`RunCompletionPoller`, `BacktestCompletionPoller`) reconcile self-exited containers: exit 0/null
-   ⇒ Stopped, non-zero ⇒ Failed.
+1. Egy felhasználó bejelenti a cBot forrás projektet. A `CBotBuilder` a **web gazdagépen fut** (szüksége van a Docker socketra) egy eldobható SDK konténerben egy kötött `/work`-kal és egy megosztott `app-nuget-cache` kötettel, így a nem megbízható MSBuild nem érheti el a gazdagép fájlrendszerét vagy hálózatát.
+2. A futtatás/backtest konténerek egy `NodeScheduler` által választott csomóponton futnak, a `ContainerDispatcherFactory`-n keresztül küldve — vagy `Http` (egy távoli `CtraderCliNode` ügynök), vagy `Local` (a web gazdagép saját csomópontja).
+3. A konténerek `ghcr.io/spotware/ctrader-console`-t futtatnak `--exit-on-stop`-pal. Lekérdezők (`RunCompletionPoller`, `BacktestCompletionPoller`) egyeztetik az önmagukat kilépő konténereket: exit 0/null ⇒ Megállt, nem nulla ⇒ Sikertelen.
 
-Instance state is **TPH, and a transition replaces the entity** (the discriminator can't change), so
-an instance **id changes** starting → running → terminal. The **container id is stable** and carried
-over; the HTTP agent is keyed by container id for status/report/stop/logs.
+Az instancia állapot **TPH, és egy átmenet lecseréli az entitást** (a diszkriminátor nem változhat), így az instancia **id változik** kezdés → futás → terminál. A **konténer azonosító stabil** és átvihető; a HTTP ügynök a konténer azonosító alapján kulcsolt az állapot/jelentés/megállítás/naplózáshoz.
 
-### cTrader CLI nodes
+### cTrader CLI csomópontok
 
-cTrader CLI nodes get **no SSH or shell**. The main app talks to each agent over HTTP; every request
-carries a short-lived HS256 **JWT** (5-minute, `iss=app-main` / `aud=app-node`) signed with that
-node's secret. The agent only runs images matching `AllowedImagePrefix`, execs docker via
-`ArgumentList` (never a shell), and is stateless (it finds containers by the `app.instance` label).
-Agents self-register and heartbeat to `POST /api/nodes/register`; the main app upserts the
-`CtraderCliNode` **by name** so it survives IP changes.
+A cTrader CLI csomópontok **nem kapnak SSH-t vagy shellt**. A fő alkalmazás HTTP-n keresztül beszél az ügynökhöz; minden kérés egy rövid élettartamú HS256 **JWT**-t hordoz (5 perc, `iss=app-main` / `aud=app-node`) az adott csomópont titkával aláírva. Az ügynök csak az `AllowedImagePrefix`-szel egyeztetett képeket futtat, exec docker-ot az `ArgumentList`-en keresztül (soha shell), és állapot-nélküli (konténereket az `app.instance` címkével találja). Az ügynökök önregisztrálnak és szívverést küldenek a `POST /api/nodes/register`-hez; a fő alkalmazás felmásol a `CtraderCliNode`-ot **név alapján**, így túléli az IP változásokat.
 
-### Copy trading
+### Másolási kereskedelem
 
-`CopyEngineSupervisor` (a `BackgroundService`) reconciles running copy profiles with live
-`CopyEngineHost` instances — claiming profiles via an atomic DB lease (so two nodes never
-double-copy), renewing leases, and restarting dead hosts. Each `CopyEngineHost` connects to the
-cTrader Open API, mirrors source executions onto destinations through the pure `CopyDecisionEngine`
-(direction/latency/slippage filters + sizing), and self-heals via resync + partial-fill true-up.
+A `CopyEngineSupervisor` (egy `BackgroundService`) egyeztetje a futó másolás profilokat a live `CopyEngineHost` példányokkal — igényelve profilokat atomi DB lízing-en keresztül (így két csomópont soha nem másol dupla), megújítva lízingeket, és újraindítva a halott gazdagépeket. Minden `CopyEngineHost` csatlakozik a cTrader Open API-hoz, tükrözi a forrás végrehajtásokat a célfiók-okra a tiszta `CopyDecisionEngine` (irány/késleltetés/csúszás szűrők + méretezés) segítségével, és öngyógyít szinkronizálás + részleges betöltési igaz feltétele segítségével.
 
 ### AI
 
-AI is **fully gated on `AppOptions.Ai.ApiKey`** — unset ⇒ every feature returns `AiResult.Fail` and
-the app runs unchanged (no key needed for build/test/E2E). `IAiClient` calls Anthropic over **raw
-HTTP** (a typed `HttpClient`), deliberately not the SDK. `AiFeatureService` is the single
-orchestrator shared by Web endpoints, the MCP `AiTools`, and `AiRiskGuard`.
+Az AI **teljes mértékben gátolt `AppOptions.Ai.ApiKey`-en** — beállítatlan ⇒ minden funkció `AiResult.Fail`-t ad vissza és az alkalmazás változatlan marad (nincs szükség kulcsra a build/teszt/E2E-hez). Az `IAiClient` az **Anthropic-ot hívja nyers HTTP-n keresztül** (egy gépelt `HttpClient`), szándékosan nem az SDK. Az `AiFeatureService` az egyetlen vezénylő megosztva a Web végpontok, az MCP `AiTools`, és `AiRiskGuard` között.
 
-## Cross-cutting rules
+## Keresztfunkcionális szabályok
 
-- **One `SaveChanges` mutates one aggregate.** Cross-aggregate flows use domain events dispatched by
-  an EF interceptor.
-- **Aggregates reference each other by strong ID**, never navigation property.
-- **No ambient clock.** Code injects `TimeProvider`; domain methods take a `DateTimeOffset now`.
-- **Secrets** are encrypted via `ISecretProtector` (`EncryptionPurposes`); **strings** live in
-  `Core/Constants/`; **logs** go through source-generated `LogMessages`.
+- **Egy `SaveChanges` egy aggregátumot módosít.** Kereszt-aggregátum folyamatok domain eseményeket használnak az EF elfogó által küldve.
+- **Az aggregátumok egymást erős ID alapján hivatkozják**, soha navigációs tulajdonság.
+- **Nincs körutas óra.** Kód injektál `TimeProvider`-t; domain módszerek egy `DateTimeOffset now` paramétert vesznek.
+- **Titkos adatok** az `ISecretProtector` (`EncryptionPurposes`) segítségével titkosított; **karakterláncok** a `Core/Constants/`-ban élnek; **naplók** forrás-generált `LogMessages`-en mennek keresztül.
 
-These are enforced in CI: the analyzer sweep, the zero-warning build, and
-`ArchitectureGuardTests` (which fail the build on an ambient-clock read, a Core infra dependency, or
-a direct `ILogger.Log*` call).
+Ezek a CI-ben erőltetik: az elemző felmérés, a nulla-figyelmeztetés build és `ArchitectureGuardTests` (amely blokkol a build-et egy körutas óra olvasásnál, egy Core infra függőségnél, vagy egy közvetlen `ILogger.Log*` hívásnál).

@@ -1,15 +1,16 @@
 ---
-description: "deploy/aws = Terraform modülü: ECS Fargate (Web + MCP) ALB arkasında, RDS Postgres, CloudWatch günlükleri."
+description: "deploy/aws = Terraform modülü: ALB arkasında ECS Fargate (Web + MCP), RDS Postgres, CloudWatch günlükleri."
 ---
 
-# AWS dağıtımı — adım adım
+# AWS konuşlandırması — adım adım
 
-`deploy/aws` = Terraform modülü: **ECS Fargate** (Web + MCP) **ALB** arkasında, **RDS Postgres**, CloudWatch günlükleri.
+`deploy/aws` = Terraform modülü: **ALB** arkasında **ECS Fargate** (Web + MCP), **RDS Postgres**, CloudWatch günlükleri.
 
 ## 1. Ön koşullar
 
-- Terraform ≥ 1.5 + AWS kimlik bilgileri (`aws configure` / env vars) ile VPC kapsamlı kaynaklar, ECS, RDS, ALB, IAM oluşturma yetkisi.
-- Kayıt defterinden çekebildiği üç görüntü (ECR veya GHCR ortak).
+- Terraform ≥ 1.5 + AWS kimlik bilgileri (`aws configure` / env vars) VPC kapsamlı kaynaklar, ECS,
+  RDS, ALB, IAM yapma hakkıyla.
+- Kayıt defterinde ECS çekebilecek üç görüntü (ECR veya GHCR genel).
 
 ## 2. Başlat
 
@@ -30,27 +31,36 @@ terraform apply \
   -var discovery_join_token="$(openssl rand -hex 24)"
 ```
 
-Oluşturur: RDS Postgres (`appdb`), ECS kümesi, Web + MCP için Fargate hizmetleri, ALB (Web `/` da, MCP `/mcp` da), güvenlik grupları, CloudWatch günlük grubu, **her görevde ADOT (AWS OpenTelemetry Dağıtımı) toplayıcı kenar görevlisi**. Uygulama OTLP'yi kenar görevlisine aktarır, bu da izlemeleri **X-Ray** ye, metrikleri **CloudWatch** ye (EMF, ad alanı `cmind`) gönderir; günlükler `awslogs` sürücüsünde kompakt JSON olarak kalır. Web için bulma açık. Görev rolü toplayıcı için X-Ray + CloudWatch yazma erişimi verir — kendiniz çalıştıracak toplayıcı yok.
+Şunları yapar: RDS Postgres (`appdb`), ECS kümesi, Web + MCP için Fargate hizmetleri, ALB (Web `/` 'de,
+MCP `/mcp` 'de), güvenlik grupları, CloudWatch günlük grubu, **ADOT (OpenTelemetry için AWS Dağıtımı)
+toplayıcı sidecar** her görevde. Uygulama OTLP'yi sidecar'a ihraç eder, izleri **X-Ray** 'a,
+metrikleri **CloudWatch** 'a (EMF, `cmind` ad alanı) gönderir; günlükler `awslogs` sürücüsünde
+kompakt JSON olarak kalır. Web için keşif aç. Görev rolü sidecar'ı X-Ray + CloudWatch yazma erişimine
+veriyor — çalıştırmak için toplayıcı yok.
 
-> Özlülük için hesabın **varsayılan VPC/alt ağları** kullanır. Üretim için kendi VPC, özel alt ağlar, HTTPS dinleyicisi (ACM sertifikası) bağlayın.
+> Kısalık için hesabın **varsayılan VPC/alt ağları** kullanır. Üretim için, kendi VPC'sini, özel
+> alt ağlarını, HTTPS dinleyiciyi (ACM sertifikası) kablolu.
 
-## 4. URL'leri al
+## 4. URL'leri alın
 
 ```bash
 terraform output web_url   # ALB kökü
 terraform output mcp_url   # ALB /mcp
 ```
 
-`web_url` aç, sahibi (ilk girişte zorunlu şifre değişikliği) ile oturum aç.
+`web_url` 'yi açın, sahibi ile oturum açın (ilk oturum açımda zorla şifre değişikliği).
 
-## 5. Düğüm aracılarını ekle (ayrı)
+## 5. Düğüm aracılarını ekleyin (ayrı)
 
-Fargate ayrıcalıklı/DinD'yi yasaklar, bu nedenle aracıları `web_url` noktasında başka yerlerde çalıştırın:
+Fargate ayrıcalıklı/DinD'yi yasaklar, bu nedenle `web_url` 'yi gösteren başka yerde aracıları çalıştırın:
 
-- **ECS on EC2** — `cmind-node-agent` çalıştıran `privileged = true` görev tanımları ile kapasite sağlayıcısı.
-- **EKS** — Helm grafiği ([kubernetes.md](kubernetes.md)) `nodeAgent.privileged=true` ile.
+- **ECS on EC2** — `privileged = true` görev tanımları ile kapasite sağlayıcı `cmind-node-agent`
+  çalıştırılıyor.
+- **EKS** — Helm grafiği ([kubernetes.md](kubernetes.md)) ile `nodeAgent.privileged=true`.
 
-Şunu ayarla: `NodeAgent__MainUrl=<web_url>`, `NodeAgent__AdvertiseUrl=<agent reachable url>`, `NodeAgent__JwtSecret=<discovery_join_token>`. Aracılar kendi kendini kaydettirir — bkz. [../operations/node-discovery.md](../operations/node-discovery.md).
+`NodeAgent__MainUrl=<web_url>`, `NodeAgent__AdvertiseUrl=<agent reachable url>`,
+`NodeAgent__JwtSecret=<discovery_join_token>` ayarlayın. Aracılar kendi kendini kaydeder — bkz.
+[../operations/node-discovery.md](../operations/node-discovery.md).
 
 ## 6. Doğrula
 
@@ -61,12 +71,24 @@ curl -s "$(terraform output -raw web_url)/version"
 
 ## Üretim notları
 
-- HTTPS dinleyicisi + ACM sertifikası ekle; ALB güvenlik grubunu kısıtla.
-- Sırları AWS Secrets Manager / SSM'de sakla, görev tanımı `secrets` üzerinden enjekte et, düz metin `environment` yerine.
-- RDS Multi-AZ + yedeklemeleri etkinleştir.
-- İzlemeler (X-Ray), metrikler (CloudWatch EMF), günlükler (CloudWatch Logs) ADOT kenar görevlisi aracılığıyla otomatik olarak bağlanır; `trace_id` üzerinde ilişkilendir. Bkz. [../operations/logging.md](../operations/logging.md#aws--x-ray--cloudwatch-adot-sidecar).
-- Uygulama zaten `OTEL_EXPORTER_OTLP_ENDPOINT`'i görev içi kenar görevlisine işaret eder; merkezi leştirmek isterseniz harici toplayıcıya yeniden işaret et.
+- HTTPS dinleyicisi + ACM sertifikası ekleyin; ALB güvenlik grubunu sınırlayın.
+- AWS Secrets Manager / SSM'de sırları saklayın, görev tanımı `secrets` aracılığıyla enjekte edin
+  düz metin `environment` yerine.
+- RDS Multi-AZ + yedeklemeleri etkinleştirin.
+- İzler (X-Ray), metrikler (CloudWatch EMF), günlükler (CloudWatch Logs) ADOT sidecar aracılığıyla
+  otomatik olarak kablolu; `trace_id` 'de ilişkilendirin. Bkz.
+  [../operations/logging.md](../operations/logging.md#aws--x-ray--cloudwatch-adot-sidecar).
+- Uygulama zaten `OTEL_EXPORTER_OTLP_ENDPOINT` 'i görev içi sidecar'a yönlendir; merkezileştirmeyi
+  tercih ederseniz harici toplayıcıya yeniden yönlendirin.
 
-## Kopya alım aracısı + Secrets Manager (S5)
+## Kopya ticaret aracısı + Secrets Manager (S5)
 
-`deploy/aws/copy-agent.tf` **kopya aracısı** ECS Fargate hizmetini ekler; `CopyEngineSupervisor` barındırır (`App:Copy:Enabled=true`, `App:Features:CopyTrading=true`), **ALB yok** — uzun ömürlü cTrader soketleri tutun. DB bağlantı dizesi **AWS Secrets Manager**'da saklanır, görevin `secrets` bloğu aracılığıyla enjekte edilir (yürütme rolü sadece o sırrı `secretsmanager:GetSecretValue` için verir), düz metin env değil. Her görevin `NodeName` varsayılan değeri kap adı (Fargate görevi başına benzersiz), bu nedenle DB kiralama öznitelikleri profilleri görev başına çalıştırır — iki görev hiçbir zaman birini çift barındırmaz. `copy_agent_count` kopyala kapasitesi eklemek için ölçeklendir; DataProtection anahtar halka Postgres üzerinden paylaşılır, bu nedenle herhangi bir görev depolanmış Open API belirteçlerini şifresini çözebilir.
+`deploy/aws/copy-agent.tf` **kopya-aracı** ECS Fargate hizmetini `CopyEngineSupervisor` barındıran
+ekler (`App:Copy:Enabled=true`, `App:Features:CopyTrading=true`) **ALB olmaksızın** — uzun ömürlü
+cTrader soketlerini tutan işçi. DB bağlantı dizesi **AWS Secrets Manager** 'de depolanır, görev
+`secrets` bloğu aracılığıyla enjekte edilir (yürütme rolü sadece bu sırrda `secretsmanager:GetSecretValue`
+verilir), düz metin env değil. Her görevinin `NodeName` 'i konteyner adı varsayılanı (Fargate görevine
+benzersiz), böylece DB kirasıyla çalışan profiller görev başına — iki görev hiçbir zaman birini çift
+barındırmaz. Kopya kapasitesi eklemek için `copy_agent_count` 'ı ölçekleyin; DataProtection anahtar
+halkası Postgres aracılığıyla paylaşılır, bu nedenle herhangi bir görev saklı Open API jetonlarını
+şifre çözbilir.

@@ -1,86 +1,51 @@
 ---
-description: "Agent Studio — create persona-driven, no-code trading agents with a character and archetype that manage accounts toward your goals under the Autonomy & Safety Kernel (risk envelope, circuit breaker, kill switch, versioned disclaimer consent)."
+description: "Agent Studio — vytváření personalizovaných obchodních agentů bez kódu s charakterem a archetypem, který spravují účty směrem k vašim cílům pod Autonomy & Safety Kernel (obálka rizika, pojistka, kill switch, verzovaný souhlas s prohlášením o odpovědnosti)."
 ---
 
 # Agent Studio
 
-Agent Studio lets you create a **trading agent with a character** — no code — and give it management of
-your accounts toward measurable goals. An agent is like a personality-driven cBot: you pick an archetype
-and attitude, set the guardrails, and it runs under the **Autonomy & Safety Kernel**.
+Agent Studio vám umožňuje vytvořit **obchodního agenta s charakterem** — bez kódu — a dát mu správu vašich účtů směrem k měřitelným cílům. Agent je jako osobností řízený cBot: zvolíte archetype a postoj, nastavíte zábrany a běží pod **Autonomy & Safety Kernel**.
 
-Open **AI → Agent Studio** (`/agent-studio`).
+Otevřete **AI → Agent Studio** (`/agent-studio`).
 
-## Create an agent
+## Vytvoření agenta
 
-The **New agent** dialog collects, no-code:
+Dialog **Nový agent** shromažďuje bez kódu:
 
-- **Name** and **archetype** — Scalper, Day Trader, Swing Trader, Position Trader, News Trader,
-  Contrarian, Mean Reversion or Breakout/Momentum. Each preset fixes a sensible cadence and posture.
-- **Attitude** — aggressiveness, patience and trend-following sliders.
-- **Autonomy level** — **Advisory** (proposes only) or **Approval-gated** (acts only after your
-  per-action approval). **Full Auto** (no per-trade approval) additionally requires a **risk envelope**
-  and acceptance of the risk disclaimer before it can arm.
+- **Jméno** a **archetype** — Scalper, Day Trader, Swing Trader, Position Trader, News Trader, Contrarian, Mean Reversion nebo Breakout/Momentum. Každá předvolba nastaví rozumný takt a postoj.
+- **Postoj** — posuvníky agresivity, trpělivosti a sledování trendů.
+- **Úroveň autonomie** — **Advisory** (pouze navrhuje) nebo **Approval-gated** (jedná pouze po vaší schválení per-action). **Full Auto** (bez schválení na obchod) navíc vyžaduje **obálku rizika** a přijetí zřeknutí se odpovědnosti před aktivací.
 
-The persona compiles **deterministically** into the agent's system prompt (no LLM authors it), so the
-same configuration always produces the same instructions — reproducible and auditable.
+Persona se **deterministicky** kompiluje do systémového promptu agenta (žádný LLM ji nesepisuje), takže stejná konfigurace vždy produkuje stejné pokyny — reprodukovatelné a auditovatelné.
 
-## The roster
+## Seznam
 
-Every agent shows in a control-room table: **which agent, its type, how many accounts it manages, its
-goals, run status, and last action**, with **Start / Stop / Kill** controls. The Kill switch halts a
-running agent immediately.
+Každý agent se zobrazí v tabulce řídící místnosti: **který agent, jeho typ, kolik účtů spravuje, jeho cíle, stav běhu a poslední akce**, s ovládacími prvky **Start / Stop / Kill**. Kill switch okamžitě zastaví běžícího agenta.
 
-## Safety is a domain invariant, not a setting
+## Bezpečnost je doménová invarianta, ne nastavení
 
-Everything money-touching routes through the **Autonomy & Safety Kernel**:
+Vše, co se dotýká peněz, prochází **Autonomy & Safety Kernel**:
 
-- **Risk envelope** — hard per-order limits (max daily loss, open exposure, position size, leverage,
-  consecutive losses, orders/hour, allowed symbols). Every order is validated against it before dispatch;
-  a breach is refused, not clamped. Required before an agent can reach Full Auto.
-- **Circuit breaker** — deterministically halts new risk on a loss streak, a daily-loss breach, a **hard
-  performance-goal breach**, or **AI-provider unavailability** (a down or hallucinating model never opens
-  fresh positions).
-- **Versioned disclaimer consent** — a one-time, versioned acceptance is required to arm Full Auto
-  (legally-required consent, not per-trade approval); bumping the disclaimer forces re-consent.
-- **Kill switch** — an idempotent emergency halt on every running agent.
+- **Obálka rizika** — tvrdé limity per-obchod (maximální denní ztráta, otevřená expozice, velikost pozice, páka, po sobě jdoucí ztráty, obchody/hodina, povolené symboly). Každý obchod se před odesláním ověří proti němu; porušení je odmítnuto, ne stlačeno. Vyžadováno před tím, než agent dosáhne Full Auto.
+- **Pojistka** — deterministicky zastaví nové riziko na řetězci ztrát, porušení denní ztráty, **tvrdém porušení cíle výkonu** nebo **nedostupnosti poskytovatele AI** (model, který je vypnutý nebo halucinuje, nikdy neotevře nové pozice).
+- **Verzovaný souhlas s prohlášením** — jednorázové verzované přijetí se vyžaduje k aktivaci Full Auto (právně požadovaný souhlas, ne schválení na obchod); zvýšení prohlášení vynutí opětovný souhlas.
+- **Kill switch** — idempotentní nouzová zastávka na každém běžícím agentovi.
 
-## Goals
+## Cíle
 
-Give an agent **measurable objectives** — e.g. *keep max drawdown below 4%*, *profit factor at least
-1.5*, *win rate ≥ 55%*. Each target is **Hard** (a guardrail — a breach trips the circuit breaker) or
-**Soft** (steers reasoning only), evaluated as On-track / At-risk / Breached.
+Dejte agentovi **měřitelné cíle** — např. *udržovat maximální drawdown pod 4%*, *faktor zisku alespoň 1,5*, *win rate ≥ 55%*. Každý cíl je **Hard** (zábrany — porušení spustí pojistku) nebo **Soft** (pouze řídí uvažování), vyhodnoceno jako On-track / At-risk / Breached.
 
-## The decision pipeline
+## Pipeline rozhodnutí
 
-Once started, an agent runs a **24/7 supervised loop** (`AgentRuntimeService`). Each tick, for every
-managed account, it: reads the **deterministic account state** (ground truth, never the model's memory);
-asks the decision engine for a move; passes it through the **safety gate** (`AgentDecisionProcessor`) —
-autonomy level → circuit breaker → risk envelope; writes an append-only **`AgentDecisionRecord`**; and
-halts or executes as the gate directs. The loop is **fault-isolated** (one agent's failure never touches
-another or the host) and **safe by default**: it is inert unless AI is configured *and*
-`App:Ai:AgentRuntimeEnabled` is set, and it never opens fresh risk while the AI provider is unavailable.
+Po spuštění agent běží v **24/7 supervizované smyčce** (`AgentRuntimeService`). Každý tick pro každý spravovaný účet: přečte si **deterministický stav účtu** (základní pravdu, nikdy paměť modelu); požádá rozhodovací engine o tah; projde to **bezpečnostní bránou** (`AgentDecisionProcessor`) — úroveň autonomie → pojistka → obálka rizika; zapíše si append-only **`AgentDecisionRecord`**; a zastaví se nebo se provede podle toho, jak brána řídí. Smyčka je **fault-isolated** (selhání jednoho agenta se nikdy nedotýká druhého nebo hostitele) a **bezpečná ve výchozím nastavení**: je inertní, pokud AI není nakonfigurena *a* `App:Ai:AgentRuntimeEnabled` není nastaven, a nikdy neotevře nové riziko, když je poskytovatel AI nedostupný.
 
-- **Approval gate** — an **Approval-gated** agent's proposed order is recorded as **Pending** and does
-  nothing until the owner approves it (`POST /api/agent-studio/{id}/decisions/{seq}/approve` or
-  `/reject`); **Full Auto** clears through the envelope with no per-trade approval; **Advisory** only
-  proposes.
-- **Audit ledger** — every decision is replayable: reasoning (XAI), the evidence it cited, the gate
-  verdict, the order intent and whether it executed, at `GET /api/agent-studio/{id}/decisions`.
-- **Research desk** — an on-demand multi-agent debate: Alpha/Sentiment/Technical/Risk analysts each give
-  a view and a Reviewer synthesises a proposal (`POST /api/agent-studio/{id}/debate`).
-- **Memory** — the agent remembers each decision and recalls recent memory into its next prompt for
-  continuity (`GET /api/agent-studio/{id}/memory`).
+- **Brána schválení** — navrhovaný obchod **Approval-gated** agenta se zaznamenává jako **Pending** a nic nedělá, dokud jej vlastník neschválí (`POST /api/agent-studio/{id}/decisions/{seq}/approve` nebo `/reject`); **Full Auto** prochází obálkou bez schválení na obchod; **Advisory** pouze navrhuje.
+- **Kniha auditů** — každé rozhodnutí je přehrávatelné: uvažování (XAI), důkazy, které citovalo, verdikt brány, záměr obchodu a zda se provádel, na `GET /api/agent-studio/{id}/decisions`.
+- **Research desk** — debata na vyžádání s více agenty: analytici Alpha/Sentiment/Technical/Risk každý poskytují názor a Reviewer syntézuje návrh (`POST /api/agent-studio/{id}/debate`).
+- **Paměť** — agent si pamatuje každé rozhodnutí a vyvolá nedávnou paměť do svého dalšího promptu pro kontinuitu (`GET /api/agent-studio/{id}/memory`).
 
-Each roster row's **Details** opens the agent's decision feed (with Approve/Reject on pending orders),
-its memory, and a Run-debate tab.
+Řádek seznamu **Details** otevírá kanál rozhodnutí agenta (se schválením/odmítnutím u nevyřešených obchodů), jeho paměť a kartu Run-debate.
 
-## Scope
+## Rozsah
 
-Shipped: the full agent lifecycle, the deterministic safety gate, the 24/7 runtime, the human-in-the-loop
-approval gate, the audit ledger, and the **live cTrader Open API integration** — the account-state store
-(reads real balance, positions and open exposure in lots) and the order executor (places real market
-orders, lots→volume via the symbol lot size), both resolving each managed account's OAuth credentials and
-degrading safely when an account is not linked. **Requires the Anthropic API key** for the model to
-generate orders (until then the engine holds); still to come are multi-agent debate roles and layered
-memory/reflection. The runtime is off unless `App:Ai:AgentRuntimeEnabled` is set, so live trading only
-happens on an explicit, fully-consented opt-in.
+Dodáno: plný životní cyklus agenta, deterministická bezpečnostní brána, 24/7 runtime, lidský zásah do schválení brány, kniha auditů a **integrace živého cTrader Open API** — úložiště stavu účtu (čte skutečný zůstatek, pozice a otevřenou expozici v lotech) a vykonavatel obchodu (umisťuje skutečné obchody na trhu, loty→objem přes velikost lotu symbolu), oba řeší OAuth pověření každého spravovaného účtu a bezpečně se degradují, pokud účet není propojen. **Vyžaduje klíč Anthropic API** pro model, aby generoval obchody (do té doby engine zadržuje); stále zbývají role debaty s více agenty a vrstvená paměť/reflexe. Runtime je vypnut, pokud není nastaven `App:Ai:AgentRuntimeEnabled`, takže živý obchodován se děje pouze na explicitní, plně přijatý opt-in.

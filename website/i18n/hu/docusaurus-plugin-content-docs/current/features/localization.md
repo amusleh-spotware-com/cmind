@@ -1,58 +1,36 @@
-# Localization (i18n)
+# Lokalizáció (i18n)
 
-cMind is fully localizable and ships in the **same 23 languages cTrader itself supports**, so a trader
-uses the platform — and reads these docs — in their own language. English is the fallback; any missing
-translation degrades gracefully to English rather than showing a blank or a raw key.
+A cMind teljes mértékben lokalizálható, és az **ugyanez a 23 nyelv szállítva, amit a cTrader saját támogat**, így egy kereskedő használja a platformot — és olvassa ezeket a dokumentumokat — saját nyelvén. Az angol a visszalépés; bármilyen hiányzó fordítás kecskesen csökken az angol-ra ahelyett, hogy egy üres vagy egy nyers kulcsot mutatna.
 
-## Supported languages
+## Támogatott nyelvek
 
-Arabic (RTL), Chinese (Simplified), Czech, English, French, German, Greek, Hungarian, Indonesian,
-Italian, Japanese, Korean, Malay, Polish, Portuguese (Brazil), Russian, Serbian, Slovak, Slovenian,
-Spanish, Thai, Turkish, Vietnamese.
+Arab (RTL), kínai (egyszerűsített), cseh, angol, francia, német, görög, magyar, indonéz, olasz, japán, koreai, maláj, lengyel, portugál (Brazília), orosz, szerb, szlovák, szlovén, spanyol, tájlandai, török, vietnami.
 
-The one source of truth is `Core.Constants.SupportedCultures` — the request-culture middleware, the
-language switcher, the resource-parity test, and the no-hardcoded-string gate all read from it. Adding a
-language is a one-line change there plus its resource files.
+Az egy igazság forrása az `Core.Constants.SupportedCultures` — a kérelem-kultúra middleware, a nyelvváltó, a erőforrás-paritás teszt, és a nem-kódolt-karakterlánc kapu mind ebből olvasnak. Egy nyelv hozzáadása egy egy-sor változtatás ott plusz az erőforrás fájlok.
 
-## How it works (Blazor Server)
+## Hogyan működik (Blazor Server)
 
-- **Resources.** UI strings live in `src/Web/Resources/Ui.resx` (English base) plus one
-  `Ui.<culture>.resx` per language. Components read them through `IStringLocalizer<Ui>` — `@L["key"]`,
-  never a literal. The `.resx` files are generated from `tools/i18n/ui-translations.json`
-  (`pwsh tools/i18n/gen-resx.ps1`), the translator-friendly source of truth.
-- **Culture resolution.** `RequestLocalizationMiddleware` picks the culture from the `.AspNetCore.Culture`
-  cookie first, then the browser's `Accept-Language`, then English.
-- **Switching.** The app-bar language switcher (and the **Settings → Language** section) navigates to
-  the `GET /set-culture` endpoint — a full-reload outside the Blazor circuit, because a circuit cannot
-  change culture live. It writes the cookie and, for a signed-in user, persists the choice to their
-  profile (`UserProfile.Locale`); the reload boots a fresh circuit in the chosen language.
-- **Persistence & login.** The saved profile locale is written back into the culture cookie at sign-in,
-  so a user lands in their language on every device.
-- **Right-to-left.** Arabic (and any future RTL language) sets `<html dir="rtl">` and wraps the layout in
-  MudBlazor's `MudRTLProvider`, mirroring the whole shell.
-- **ICU.** The Web host runs with ICU enabled (`InvariantGlobalization=false`); wire/parse code stays on
-  `CultureInfo.InvariantCulture`, so only per-culture UI formatting is affected — never a backtest or CSV.
+- **Erőforrások.** Az UI karakterláncok az `src/Web/Resources/Ui.resx` (angol alap) plusz egy `Ui.<culture>.resx` nyelvként élnek. Az összetevők az `IStringLocalizer<Ui>` — `@L["key"]` segítségével olvassák őket, soha egy szó. A `.resx` fájlok az `tools/i18n/ui-translations.json`-ből generálódnak (`pwsh tools/i18n/gen-resx.ps1`), a fordító-baráti igazság forrása.
+- **Kultúra feloldás.** Az `RequestLocalizationMiddleware` feloldja a kultúrát az `.AspNetCore.Culture` cookiéből először, majd a böngésző `Accept-Language`-jéből, majd angol.
+- **Váltás.** Az alkalmazás-sáv nyelvváltó (és az **Beállítások → Nyelv** szakasz) navigál a `GET /set-culture` végpontra — teljes újratöltés a Blazor áramkörön kívül, mivel az áramkör nem tudja megváltoztatni az élő kultúrát. Írja a sülit és egy bejelentkezet felhasználó számára megmarad az választás az profiljába (`UserProfile.Locale`); az újratöltés felindít egy friss áramköri a választott nyelvben.
+- **Kitartás és bejelentkezés.** A mentett profil területi beállítása írva vissza a kultúra sütibe a bejelentkezés alatt, így egy felhasználó landol az nyelvén minden eszköz.
+- **Jobbról balra.** Arab (és bármilyen jövőbeli RTL nyelv) beállít `<html dir="rtl">` és összecsukódva a kapcsolat MudBlazor `MudRTLProvider`-ben, tükrözve az egész héj.
+- **ICU.** A Web gazdagép az ICU engedélyezve futtatva (`InvariantGlobalization=false`); drót/elemzés kód marad `CultureInfo.InvariantCulture` alatt, így csak az per-kultúra UI formázás érintett — soha egy backtest vagy CSV.
 
-## The gate — no hard-coded UI text
+## A kapu — nincs kódolt UI szöveg
 
-New user-facing strings **cannot** be merged un-localized in the covered scope:
+Az új felhasználó-felé nézett karakterláncok **nem** lehet összefésült nem-lokalizálva az fedezett hatókörben:
 
-- A build-failing arch-guard test (`NoHardcodedUiTextTests`) scans migrated `.razor` files and fails on
-  any literal, text-bearing attribute (`Label`, `Text`, `Title`, `Placeholder`, `HelperText`,
-  `aria-label`, `alt`) that isn't an `@L["…"]` lookup.
-- A resource-parity test (`ResourceParityTests`) fails the build if any language is missing a key or ships
-  a blank value — every language always has every key.
+- Egy build-hibás arch-őr teszt (`NoHardcodedUiTextTests`) pásztáz áttelepített `.razor` fájlokat és nem teljesít nyers, szöveg-hordozó attribútumok (`Label`, `Text`, `Title`, `Placeholder`, `HelperText`, `aria-label`, `alt`) amely nincs egy `@L["…"]` felhallgatás.
+- Egy erőforrás-paritás teszt (`ResourceParityTests`) nem teljesít az build ha bármilyen nyelv hiányzik egy kulcs vagy szállít egy üres érték — minden nyelv mindig az összes kulcs.
 
-## Adding or changing a string
+## Karakterlánc hozzáadása vagy módosítása
 
-1. Add/edit the key in `tools/i18n/ui-translations.json` for **every** culture.
-2. Regenerate the `.resx`: `pwsh tools/i18n/gen-resx.ps1`.
-3. Reference it in the component with `@L["your.key"]`.
-4. `dotnet test` — the parity and hardcoded-text gates keep you honest.
+1. Hozzáadás/szerkesztés a kulcs `tools/i18n/ui-translations.json`-ben az **mindegyik** kultúra számára.
+2. Újrageneráld az `.resx`-et: `pwsh tools/i18n/gen-resx.ps1`.
+3. Hivatkozza meg az összetevőben `@L["your.key"]`-vel.
+4. `dotnet test` — a paritás és kódolt-szöveg kapu őrségek tisztességes.
 
-## Docs localization
+## Dokumentumok lokalizáció
 
-These docs are localized too. Docusaurus i18n is configured for all 23 locales (`website/i18n/`), with a
-locale dropdown in the navbar and RTL for Arabic. Scaffold a locale's translation files with
-`npm run write-translations -- --locale <code>` and translate under `website/i18n/<code>/`. Per the
-localization mandate, **adding or changing any doc means updating every locale in the same change.**
+Ezek a dokumentumok is lokalizáltak. Az Docusaurus i18n konfigurálva az összes 23 helyre (`website/i18n/`), a helyi legördülő a navbar-ban és RTL arab számára. Az egy helyre fordítás fájljaival állványzzon `npm run write-translations -- --locale <code>` és fordítson alatt `website/i18n/<code>/`. Az lokalizáció meghatalmazás szerint, **bármilyen dokumentum hozzáadása vagy módosítása azt jelenti minden helyre frissítés az ugyanazon az változás alatt.**

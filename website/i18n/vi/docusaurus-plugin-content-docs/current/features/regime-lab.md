@@ -1,35 +1,34 @@
 ---
-description: "Regime Lab — labels a return series into Calm / Normal / Turbulent volatility regimes and reports per-regime performance, plus the Hurst exponent (trend-persistence vs mean-reversion). Deterministic."
+description: "Regime Lab — gắn nhãn chuỗi lợi nhuận vào các regime biến động Calm / Normal / Turbulent và báo cáo hiệu suất theo regime, cộng với Hurst exponent (trend-persistence vs mean-reversion). Tất định."
 ---
 
 # Regime Lab
 
-A single Sharpe ratio hides the truth that most edges are conditional: great in calm, trending markets
-and dead in turbulence (or the reverse). The Regime Lab breaks a strategy's history into volatility
-regimes and shows how it did in each — so you know *when* your edge actually works.
+Một tỷ số Sharpe đơn lẻ ẩn sự thật rằng hầu hết các lợi thế đều có điều kiện: tuyệt vời trong thị trường calm, trending
+và chết trong turbulence (hoặc ngược lại). Regime Lab chia lịch sử chiến lược thành các regime biến động
+và cho thấy nó hoạt động như thế nào trong mỗi regime — vì vậy bạn biết *khi nào* lợi thế của bạn thực sự hoạt động.
 
-Open **cBots → Regime Lab** (`/quant/regimes`).
+Mở **cBots → Regime Lab** (`/quant/regimes`).
 
-## What it does
+## Nó làm gì
 
-Given a return series (or equity curve, oldest first), it:
+Cho một chuỗi lợi nhuận (hoặc đường cong equity, cũ nhất trước), nó:
 
-- computes a **trailing realized volatility** at each point and splits the history into **Calm**,
-  **Normal** and **Turbulent** regimes by the terciles of that volatility;
-- reports **per-regime performance** — observations, mean return, volatility and Sharpe — so you can see
-  where the edge lives;
-- estimates the **Hurst exponent** via rescaled-range (R/S) analysis: above ~0.55 the series is
-  **trending / persistent**, below ~0.45 it is **mean-reverting**, and around 0.5 it is close to a
-  random walk.
+- tính **biến động thực tế trailing** tại mỗi điểm và chia lịch sử thành các regime **Calm**,
+  **Normal** và **Turbulent** bằng các tercile của biến động đó;
+- báo cáo **hiệu suất theo regime** — số quan sát, lợi nhuận trung bình, biến động và Sharpe — vì vậy bạn có thể thấy
+  lợi thế sống ở đâu;
+- ước tính **Hurst exponent** qua phân tích rescaled-range (R/S): trên ~0.55 chuỗi là
+  **trending / persistent**, dưới ~0.45 nó là **mean-reverting**, và quanh 0.5 nó gần như random walk.
 
 ```http
 POST /api/quant/regimes
 { "returns": [...], "window": 10 }   // or { "equity": [...] }
 ```
 
-## Why it is reliable
+## Tại sao nó đáng tin cậy
 
-Pure, deterministic domain code (`Core.Regimes`) with no infrastructure dependency and no external calls
-— unit-tested for regime separation (calm vs turbulent volatility) and for the Hurst direction
-(anti-persistent series score below 0.5, a persistent trend scores above). The same regime signal feeds
-the autonomous agents' reflection loop, so an agent can lean into the regimes where its edge is real.
+Mã miền tất định thuần (`Core.Regimes`) không phụ thuộc hạ tầng và không có lệnh gọi bên ngoài
+— được unit-test cho việc phân tách regime (calm vs turbulent volatility) và cho hướng Hurst
+(chuỗi anti-persistent ghi điểm dưới 0.5, một trend persistent ghi điểm trên). Cùng tín hiệu regime cung cấp năng lượng
+cho vòng phản chiếu của các tác nhân tự trị, vì vậy một tác nhân có thể dựa vào các regime mà lợi thế của nó là thật.

@@ -1,38 +1,36 @@
 ---
-description: "Contrarian Retail Positioning — turns the % of retail traders long into a contrarian bias (fade the crowd when it is lopsided), plus point-in-time signal value objects that guard against look-ahead bias."
+description: "Vị thế Contrarian bán lẻ — chuyển % trader bán lẻ đang long thành thiên kiến contrarian (đánh ngược đám đông khi nó nghiêng hẳn), cộng với các value object tín hiệu point-in-time bảo vệ chống look-ahead bias."
 ---
 
-# Contrarian Retail Positioning
+# Vị thế Contrarian bán lẻ
 
-The retail crowd is one of the few genuinely useful sentiment signals in FX — as a **contrarian**
-indicator. When the great majority of retail traders are long, price has historically tended to fall,
-and vice-versa. This tool turns crowd positioning into an actionable read.
+Đám đông bán lẻ là một trong số ít tín hiệu tâm lý thực sự hữu ích trong FX — như một chỉ báo **contrarian**.
+Khi đa số trader bán lẻ đang long, giá theo lịch sử có xu hướng giảm,
+và ngược lại. Công cụ này chuyển vị thế đám đông thành một đọc có thể hành động.
 
-Open **cBots → Contrarian Positioning** (`/quant/positioning`).
+Mở **cBots → Contrarian Positioning** (`/quant/positioning`).
 
-## What it does
+## Nó làm gì
 
-Enter the **% of retail traders long** (from your broker's sentiment page or a feed such as FXSSI) and
-it returns:
+Nhập **% trader bán lẻ đang long** (từ trang sentiment của broker hoặc nguồn cấp như FXSSI) và
+nó trả về:
 
-- **Contrarian bias** — **Bearish** when ≥ 60% are long (crowd too long), **Bullish** when ≤ 40% are
-  long (crowd too short), **Neutral** in the 40–60% indecision band;
-- **Strength** — how lopsided the crowd is (0 = balanced, 1 = fully one-sided), to weight the signal.
+- **Thiên kiến Contrarian** — **Giảm giá** khi ≥ 60% đang long (đám đông quá long), **Tăng giá** khi ≤ 40% đang
+  long (đám đông quá short), **Trung lập** trong band 40–60% không quyết định;
+- **Độ mạnh** — mức độ đám đông nghiêng hẳn (0 = cân bằng, 1 = hoàn toàn một phía), để weighing tín hiệu.
 
 ```http
 POST /api/quant/positioning
 { "longPercent": 72 }
 ```
 
-## Point-in-time by construction
+## Point-in-time theo cấu trúc
 
-Under the hood the signal layer (`Core.Signals`) models a `PointInTimeSignal` that is **stamped with the
-moment it was knowable** and refuses to be constructed without it. Any backtest or autonomous agent that
-consumes a signal checks `IsKnownAt(decisionTime)` — so future data can never leak into a historical
-decision. Look-ahead bias is the top reproducibility killer in quant finance; the domain model makes it
-structurally impossible.
+Bên dưới, lớp tín hiệu (`Core.Signals`) mô hình hóa một `PointInTimeSignal` được **đóng dấu với
+thời điểm nó có thể biết được** và từ chối được khởi tạo nếu không có nó. Bất kỳ backtest hoặc tác nhân tự trị nào
+tiêu thụ một tín hiệu đều kiểm tra `IsKnownAt(decisionTime)` — vì vậy dữ liệu tương lai không bao giờ rò rỉ vào quyết định lịch sử. Look-ahead bias là kẻ giết khả năng tái tạo hàng đầu trong tài chính định lượng; mô hình miền làm cho nó
+về mặt cấu trúc không thể xảy ra.
 
-## Why it is reliable
+## Tại sao nó đáng tin cậy
 
-Pure, deterministic domain code with no infrastructure dependency — the contrarian thresholds and the
-point-in-time guard are unit-tested, including the 40/60 boundaries and out-of-range rejection.
+Mã miền tất định thuần không phụ thuộc hạ tầng — các ngưỡng contrarian và guard point-in-time được unit-test, bao gồm các ranh giới 40/60 và từ chối ngoài phạm vi.

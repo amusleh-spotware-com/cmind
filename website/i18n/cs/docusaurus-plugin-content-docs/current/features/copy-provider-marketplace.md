@@ -1,43 +1,30 @@
 ---
-description: "Public marketplace — traders browse copy providers by track record, filters (drawdown, win-rate), follow + auto-manage copy profile."
+description: "Procházitelný adresář kopírovacích strategií. Poskytovatel publikuje kopírovací profil jako nabídku s odznakem ověřeného-live (účet strategie obchoduje reálné peníze, ne demo) plus poplatek za výkon."
 ---
 
-# Provider marketplace
+# Tržiště poskytovatelů kopírování (Fáze 4)
 
-Tradovejte nejlepší copy strategisty — seřazeno podle track recordu.
+Procházetelný adresář kopírovacích strategií. Poskytovatel **publikuje** kopírovací profil jako nabídku s **odznakem ověřeného-live** (účet strategie obchoduje reálné peníze, ne demo) plus poplatek za výkon. Sledovatelé procházejí tržištěm, seřazení podle skóre výkonu vypočítaného z dat transparentnosti exekuce.
 
-## Listing
+## Model
 
-Copy-provider chce být veřejný `GET /api/copy/marketplace/providers`:
+- `CopyProviderListing` = agregát: `UserId`, `ProfileId`, zobrazované jméno, popis, poplatek za výkon, `VerifiedLive`, `Published` + `PublishedAt`. Jedna nabídka na profil (unikátní index).
+- **Ověřený-live** odvozen při publikování ze zdrojového `TradingAccount.IsLive` — poskytovatel nemůže self-assert.
+- Statistiky výkonu **nejsou uloženy na nabídce** — projekce read modelu přes transparentnostní log `CopyExecution` (míra vyplnění, průměrná latence, průměrný realizovaný skluz), takže tržiště vždy odráží živou kvalitu exekuce.
 
-1. Opt-in: `PUT /api/copy/profiles/{id}` set `IsPublic: true`
-2. Set metadata: descripton, risk level, target audience
-3. Appear na `/copy-trading/marketplace` — seznam + cards
+## Ranking
 
-Tradera vidí:
-- Equity curve (30d, 90d, YTD)
-- Win rate, Sharpe, max drawdown
-- Fee rate (if charged)
-- Follow button
+`CopyEndpoints.MarketplaceScore(fillRate, avgLatencyMs, avgSlippagePoints, verifiedLive)` → skóre 0–100: míra vyplnění dominuje (×60), nízká latence + nízký skluz přidávají (×20 každé), odznak ověřeného-live přidává malý bonus důvěry. Deterministic + monotónní, takže řazení je stabilní.
 
-## Follow (Subscribe)
+## API
 
-Traders `POST /api/copy/subscribe` — uživatél crates nový `CopyProfile` pointing master, auto-configure recommended settings.
+- `POST /api/copy/profiles/{id}/publish` — publikovat/aktualizovat nabídku profilu (`DisplayName`, `Description`, `PerformanceFeePercent`); ověřený-live nastaven ze zdrojového účtu.
+- `DELETE /api/copy/profiles/{id}/publish` — zrušit publikování.
+- `GET /api/copy/marketplace` — všechny publikované nabídky, seřazené, každá s přehledem výkonu (exekuce, míra vyplnění, průměrná latence, průměrný skluz, skóre) + odznak ověřeného-live.
 
-Master vidí počet subscribers, total AUM (sum of slave equities).
+## Testy
 
-## Rankings & Discovery
+- **Unit** (`CopyProviderListingTests`) — invarianty agregátu: zobrazované jméno povinné; publikování nastaví časové razítko; zrušení publikování skryje; aktualizace nahradí zobrazovaná pole + poplatek + odznak.
+- **Integration** (`CopyMarketplaceTests`, reálné Postgres) — publikovaná nabídka perzistuje s odznakem; jedna nabídka na profil (unifikátní index); ranking skóre preferuje ověřené/na-vysokou-míru-vyplnění poskytovatele.
 
-Public `/api/copy/marketplace/top` — top 10 by Sharpe / win-rate.
-
-Explore — filter by drawdown, symbols, account size requirements.
-
-## Fraud protection
-
-- Veřejný track record je append-only (audit-trail)
-- Drawdown + equity podepřeno live Open API readerů (nemůže fake)
-- Report button — odebrat podezřelého providera
-
-Regulátor compliance: seznam + čas registrace veřejného.
-
-Viz [features/copy-trading.md](copy-trading.md) + [features/copy-performance-fees.md](copy-performance-fees.md).
+Copy hostitel se nedotýká (pouze nabídky + read model), takže copy DST stress sada není ovlivněna.

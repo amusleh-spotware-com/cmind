@@ -1,39 +1,33 @@
 ---
-description: "Strategy Health & Alpha Decay — deterministic decay detection that compares a strategy's recent Sharpe to its earlier record and locates the biggest mean-shift (CUSUM change-point), returning a Healthy / Degrading / Decayed verdict."
+description: "Sức khỏe Chiến lược & Suy thoái Alpha — phát hiện suy thoái tất định so sánh Sharpe gần đây của chiến lược với bản ghi trước đó và xác định điểm dịch chuyển trung bình lớn nhất (CUSUM change-point), trả về phán quyết Khỏe mạnh / Đang suy giảm / Đã suy thoái."
 ---
 
-# Strategy Health & Alpha Decay
+# Sức khỏe Chiến lược & Suy thoái Alpha
 
-Every edge decays — the research is blunt that the half-life of a quant strategy has collapsed from years
-to months, so *adaptation beats discovery*. The Strategy Health monitor tells you, from a strategy's own
-return history, whether the edge is still there.
+Mọi lợi thế đều suy thoái — nghiên cứu đã chỉ rõ rằng thời gian bán rã của một chiến lược định lượng đã thu hẹp từ nhiều năm xuống còn nhiều tháng, vì vậy *thích ứng thắng khám phá*. Màn hình Sức khỏe Chiến lược cho bạn biết, từ chính lịch sử lợi nhuận của chiến lược, liệu lợi thế còn tồn tại hay không.
 
-Open **cBots → Strategy Health** (`/quant/health`).
+Mở **cBots → Strategy Health** (`/quant/health`).
 
-## What it does
+## Nó làm gì
 
-Given a return series (or equity curve, oldest first), it:
+Cho một chuỗi lợi nhuận (hoặc đường cong equity, cũ nhất trước), nó:
 
-- splits the history into an **earlier** and a **recent** half and compares their Sharpe ratios;
-- runs a **CUSUM change-point** scan to locate the observation where the mean most clearly shifted (a
-  regime break), reported only when the deviation is statistically notable;
-- returns a verdict:
+- chia lịch sử thành **nửa trước** và **nửa gần đây** và so sánh tỷ số Sharpe của chúng;
+- chạy quét **CUSUM change-point** để xác định quan sát mà mean dịch chuyển rõ ràng nhất (một regime break), chỉ báo cáo khi độ lệch có ý nghĩa thống kê;
+- trả về một phán quyết:
 
-| Verdict | Meaning |
+| Phán quyết | Ý nghĩa |
 |---|---|
-| **Healthy** | Recent performance is in line with (or better than) the earlier record. |
-| **Degrading** | Recent Sharpe is materially weaker than the earlier record — watch closely. |
-| **Decayed** | The edge has effectively disappeared in the recent window — consider pausing. |
-| **Unknown** | Not enough history to judge. |
+| **Khỏe mạnh** | Hiệu suất gần đây tương xứng (hoặc tốt hơn) với bản ghi trước đó. |
+| **Đang suy giảm** | Sharpe gần đây yếu hơn đáng kể so với bản ghi trước đó — theo dõi sát. |
+| **Đã suy thoái** | Lợi thế đã thực sự biến mất trong cửa sổ gần đây — cân nhắc tạm dừng. |
+| **Không xác định** | Không đủ lịch sử để đánh giá. |
 
 ```http
 POST /api/quant/health
 { "returns": [...] }   // or { "equity": [...] }
 ```
 
-## Why it is reliable
+## Tại sao nó đáng tin cậy
 
-It is pure, deterministic domain code (`Core.Health`) with no infrastructure dependency and no external
-calls — unit-tested for the decayed, degrading, healthy and too-short cases and for change-point
-localization. It is the manual companion to the always-on health checks that back the autonomous agents:
-the same statistics drive the circuit breaker that de-risks a live strategy whose edge is fading.
+Đây là mã miền tất định thuần (`Core.Health`) không phụ thuộc hạ tầng và không có lệnh gọi bên ngoài — được unit-test cho các trường hợp suy thoái, suy giảm, khỏe mạnh và quá ngắn cùng với việc xác định vị trí change-point. Nó là phần bổ sung thủ công cho các kiểm tra sức khỏe luôn bật hỗ trợ các tác nhân tự trị: cùng các thống kê đó cung cấp năng lượng cho circuit breaker giảm rủi ro cho chiến lược đang chạy mà lợi thế đang phai dần.

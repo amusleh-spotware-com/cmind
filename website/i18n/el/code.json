@@ -345,5 +345,233 @@
   "theme.tags.tagsPageTitle": {
     "message": "Tags",
     "description": "The title of the tag list page"
+  },
+  "home.hero.badge": {
+    "message": "Ανοιχτός κώδικας · αυτο-φιλοξενία · white-label"
+  },
+  "home.hero.title1": {
+    "message": "Ολόκληρο το trading desk cTrader σου,"
+  },
+  "home.hero.title2": {
+    "message": "σε μία ήρεμη, σκοτεινή εφαρμογή."
+  },
+  "home.hero.subtitle": {
+    "message": "Το cMind χτίζει, κάνει backtest, τρέχει και αντιγράφει στρατηγικές trading σε έναν στόλο μηχανών — με έναν πυρήνα AI που σιωπηλά παρακολουθεί τον κίνδυνο, ώστε να μην χρειάζεται να ανανεώνεις τα γραφήματα στις 3 το πρωί. Φιλοξένησέ το μόνος σου, βάλτο με το brand σου, και κοιμήσου λίγο καλύτερα."
+  },
+  "home.hero.cta1": {
+    "message": "Ξεκίνα εδώ →"
+  },
+  "home.hero.cta2": {
+    "message": "Τρέξτο σε 5 λεπτά"
+  },
+  "home.hero.note": {
+    "message": "Χωρίς πιστωτική κάρτα, χωρίς εγγραφή, χωρίς \"κλείσε demo\". Απλά"
+  },
+  "home.hero.shotAlt": {
+    "message": "cMind dashboard"
+  },
+  "home.stat.deploy": {
+    "message": "τρόποι ανάπτυξης: Docker, K8s, Azure, AWS"
+  },
+  "home.stat.ai": {
+    "message": "AI λειτουργίες, όχι απλά ένα chat box"
+  },
+  "home.stat.wl": {
+    "message": "white-label — στείλτο με το brand σου"
+  },
+  "home.stat.tests": {
+    "message": "επίπεδα τεστ φυλάνε κάθε αλλαγή"
+  },
+  "home.feat.copy.title": {
+    "message": "Copy trading που αντέχει στην πραγματική ζωή"
+  },
+  "home.feat.copy.body": {
+    "message": "Καθρεφτίζει έναν master λογαριασμό σε πολλούς λογαριασμούς σε brokers και cTrader IDs. Οι συνδέσεις πέφτουν, οι εντολές αναπηδούν, τα tokens περιστρέφονται — το cMind συμφιλιώνει χωρίς διπλές εντολές και κρατά πλήρες audit trail."
+  },
+  "home.feat.copy.link": {
+    "message": "Πώς λειτουργεί →"
+  },
+  "home.feat.ai.title": {
+    "message": "AI που κάνει τις δουλειές, όχι μικροκουβέντα"
+  },
+  "home.feat.ai.body": {
+    "message": "Ιδέα σε απλά Αγγλικά → ένα πραγματικό, μεταγλωττισμένο cBot με βρόχο αυτο-επιδιόρθωσης. Συν προσαρμογή παραμέτρων, post-mortems backtest, και risk guard που μπορεί να σταματήσει αυτόματα ένα ατακτο bot."
+  },
+  "home.feat.ai.link": {
+    "message": "Γνώρισε τον AI πυρήνα →"
+  },
+  "home.feat.build.title": {
+    "message": "Χτίσε & κάνε backtest στον browser"
+  },
+  "home.feat.build.body": {
+    "message": "Ένα Monaco IDE (ναι, αυτό του VS Code), templates C# και Python, και sandboxed dotnet build σε throwaway containers. Παρακολούθησε τις καμπύλες equity να stream-aroυν ζωντανά."
+  },
+  "home.feat.build.link": {
+    "message": "Ξεκίνα να χτίζεις →"
+  },
+  "home.feat.fleet.title": {
+    "message": "Ένας στόλος που κλιμακώνεται & αυτο-θεραπεύεται"
+  },
+  "home.feat.fleet.body": {
+    "message": "Τρέχει και κάνει backtests σε αυτο-ανακαλυπτόμενους nodes. Ένα node πεθαίνει στη μέση της δουλειάς; Το lease του επιστρέφεται και η δουλειά συνεχίζεται. Δεν χρειάζεται pager."
+  },
+  "home.feat.fleet.link": {
+    "message": "Κλιμάκωσε →"
+  },
+  "home.feat.prop.title": {
+    "message": "Προστατευτικά όρια prop-firm ενσωματωμένα"
+  },
+  "home.feat.prop.body": {
+    "message": "Πρότυπο πραγματικών κανόνων challenge — ημερήσια ζημία, max drawdown, στόχοι — με live equity tracking, ώστε τα bots σου να μένουν εντός ορίων."
+  },
+  "home.feat.prop.link": {
+    "message": "Πέρασε το challenge →"
+  },
+  "home.feat.wl.title": {
+    "message": "White-label, από πάνω ως κάτω"
+  },
+  "home.feat.wl.body": {
+    "message": " άλλαξε όνομα, χρώματα, logo και favicon ανά tenant. Οι resellers στέλνουν το cMind ως δικό τους προϊόν και κανείς δεν καταλαβαίνει τη διαφορά."
+  },
+  "home.feat.wl.link": {
+    "message": "Κάντο δικό σου →"
+  },
+  "home.feat.pwa.title": {
+    "message": "Στην τσέπη σου (εγκαταστάσιμο PWA)"
+  },
+  "home.feat.pwa.body": {
+    "message": "Mobile-first, fully responsive, εγκαταστάσιμο στο κινητό σου με bottom-nav και offline shell. Ελέγχξε τα bots σου από το λεωφορείο."
+  },
+  "home.feat.pwa.link": {
+    "message": "Εγκατάστησέ το →"
+  },
+  "home.feat.mcp.title": {
+    "message": "Μιλάει με AI clients (MCP)"
+  },
+  "home.feat.mcp.body": {
+    "message": "Ένας ενσωματωμένος MCP server (HTTP + SSE) εκθέτει tools ώστε το Claude και οι φίλοι του να οδηγούν το cMind για σένα."
+  },
+  "home.feat.mcp.link": {
+    "message": "Σύνδεσέ το →"
+  },
+  "home.feat.sec.title": {
+    "message": "Δικό σου να τρέχει, hardened by default"
+  },
+  "home.feat.sec.body": {
+    "message": "Argon2id, encrypted key ring, per-node signed tokens, rate limiting, και OpenTelemetry out of the box. Τα κλειδιά σου δεν φεύγουν ποτέ από το κουτί σου."
+  },
+  "home.feat.sec.link": {
+    "message": "Φιλοξένησέ το μόνος σου →"
+  },
+  "home.feat.eyebrow": {
+    "message": "Όλα στο κουτί"
+  },
+  "home.feat.title": {
+    "message": "Μία εφαρμογή. Όλη η trading λειτουργία."
+  },
+  "home.feat.lede": {
+    "message": "Από \"έχω μια ιδέα\" σε \"τρέχει σε δώδεκα λογαριασμούς\" — χωρίς να κολλάς έξι εργαλεία και ένα spreadsheet."
+  },
+  "home.show.copy.title": {
+    "message": "Copy trading, χωρίς τον πανικό"
+  },
+  "home.show.copy.text": {
+    "message": "Έλεγχος ανά προορισμό σε sizing, κατεύθυνση, symbols, τύπους εντολών, SL/TP, expiry και ακριβές market-range slippage. Όταν κάτι πάει στραβά, το cMind resync-αρε αντί να διπλασιάζει."
+  },
+  "home.show.ai.title": {
+    "message": "Περιέγραψέ το. Δες το να μεταγλωττίζεται."
+  },
+  "home.show.ai.text": {
+    "message": "Πες στο AI τι θες σε απλά Αγγλικά. Γράφει το cBot, το χτίζει σε sandbox, διαβάζει τα errors και τα διορθώνει — επαναλαμβάνει μέχρι να τρέξει. Εσύ ελέγχεις το diff, όχι το stack trace."
+  },
+  "home.show.fleet.title": {
+    "message": "Ένα cluster που το σκέφτεσαι ελάχιστα"
+  },
+  "home.show.fleet.text": {
+    "message": "Οι agents κάνουν self-register και heartbeat. Ο scheduler διαλέγει το λιγότερο φορτωμένο node. Ένα νεκρό node επιστρέφει τη δουλειά του αυτόματα. Μοιάζει με infrastructure γιατί είναι."
+  },
+  "home.show.mobile.title": {
+    "message": "Τρέχει όμορφα σε τηλέφωνο 360px"
+  },
+  "home.show.mobile.text": {
+    "message": "Η ίδια ισχύς, στην τσέπη. Bottom-nav, card layouts, offline shell, add-to-home-screen. Κάθε επιφάνεια σχεδιασμένη mobile-first, μετά κλιμακώνεται — όχι το αντίθετο."
+  },
+  "home.show.eyebrow": {
+    "message": "Δες το σε δράση"
+  },
+  "home.show.title": {
+    "message": "Πραγματικά screenshots. Πραγματικό dark mode. Πραγματικό προϊόν."
+  },
+  "home.deploy.local": {
+    "message": "Τοπικά / Docker"
+  },
+  "home.deploy.local.hint": {
+    "message": "compose up & go"
+  },
+  "home.deploy.k8s.hint": {
+    "message": "Helm chart"
+  },
+  "home.deploy.azure.hint": {
+    "message": "βήμα-βήμα"
+  },
+  "home.deploy.aws.hint": {
+    "message": "βήμα-βήμα"
+  },
+  "home.deploy.eyebrow": {
+    "message": "Ανάπτυξη παντού"
+  },
+  "home.deploy.title": {
+    "message": "Οι servers σου, οι κανόνες σου."
+  },
+  "home.deploy.lede": {
+    "message": "Φιλικοί προς αρχάριους, copy-paste οδηγοί για κάθε επιλογή. Ξεκίνα στο laptop σου, πτυχώσου σε cluster όταν είσαι έτοιμος."
+  },
+  "home.aud.traders.title": {
+    "message": "Traders"
+  },
+  "home.aud.traders.text": {
+    "message": "Φιλοξένησε μόνος σου όλο το desk σου. Γράψε ένα cBot, κάνε το backtest σε nodes, τρέξτο live, και αντίγραψέ το — όλα σε μία AI-powered console, τα δεδομένα σου δεν φεύγουν ποτέ από το κουτί σου."
+  },
+  "home.aud.brokers.title": {
+    "message": "Brokers"
+  },
+  "home.aud.brokers.text": {
+    "message": "White-label το cMind για τους πελάτες σου. Δώσε τους AI, copy trading και prop-firm challenges με το brand σου, περιόρισε τους λογαριασμούς στο βιβλίο σου, και άνοιξε νέα έσοδα."
+  },
+  "home.aud.providers.title": {
+    "message": "Cloud & VPS providers"
+  },
+  "home.aud.providers.text": {
+    "message": "Πρόσφερε managed cMind hosting. Κέρδισε ένα sticky, compute-hungry workload και μόνισε τη συνδρομή, το metered compute, το white-label και το AI."
+  },
+  "home.aud.eyebrow": {
+    "message": "Για ποιον είναι"
+  },
+  "home.aud.title": {
+    "message": "Φτιαγμένο για ανθρώπους με χρήματα στη γραμμή."
+  },
+  "home.aud.lede": {
+    "message": "Trader, broker, ή hosting provider —"
+  },
+  "home.aud.link": {
+    "message": "βρες τον δρόμο σου →"
+  },
+  "home.cta.title": {
+    "message": "Έτοιμος να γνωρίσεις το νέο σου trading desk;"
+  },
+  "home.cta.text": {
+    "message": "Διάβασε τον φιλικό οδηγό εισαγωγής, και άστο να τρέξει τοπικά πριν κρυώσει ο καφές σου. Είναι ανοιχτός κώδικας και MIT-licensed — ψάξε, σπάσε πράγματα, στείλε PR."
+  },
+  "home.cta.button1": {
+    "message": "Διάβασε τα docs →"
+  },
+  "home.cta.button2": {
+    "message": "Star στο GitHub ★"
+  },
+  "home.meta.title": {
+    "message": "cMind — ολόκληρο το cTrader trading desk σου, σε μία εφαρμογή"
+  },
+  "home.meta.description": {
+    "message": "Πλατφόρμα trading operations ανοιχτού κώδικα, αυτο-φιλοξενίας, white-label για cTrader. Χτίσε, κάνε backtest, τρέξε και αντίγραψε στρατηγικές σε κλίμακα με ενσωματωμένο AI."
   }
 }

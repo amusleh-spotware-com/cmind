@@ -345,5 +345,233 @@
   "theme.tags.tagsPageTitle": {
     "message": "Etiquetas",
     "description": "The title of the tag list page"
+  },
+  "home.hero.badge": {
+    "message": "Open-source · auto-hospedável · white-label"
+  },
+  "home.hero.title1": {
+    "message": "Todo o seu desk de negociação cTrader,"
+  },
+  "home.hero.title2": {
+    "message": "em um app calmo e escuro."
+  },
+  "home.hero.subtitle": {
+    "message": "O cMind cria, testa com backtest, executa e replica estratégias de trading em uma frota de máquinas — com um núcleo de IA que monitora silenciosamente o risco para você não precisar ficar olhando os gráficos às 3h da manhã. Hospede você mesmo, coloque sua marca, e durma um pouco melhor."
+  },
+  "home.hero.cta1": {
+    "message": "Comece agora →"
+  },
+  "home.hero.cta2": {
+    "message": "Rode em 5 minutos"
+  },
+  "home.hero.note": {
+    "message": "Sem cartão de crédito, sem cadastro, sem \"agendar uma demonstração\". Só"
+  },
+  "home.hero.shotAlt": {
+    "message": "Painel cMind"
+  },
+  "home.stat.deploy": {
+    "message": "maneiras de implantá-lo: Docker, K8s, Azure, AWS"
+  },
+  "home.stat.ai": {
+    "message": "Recursos de IA, não só uma caixa de chat"
+  },
+  "home.stat.wl": {
+    "message": "white-label — envie com a sua marca"
+  },
+  "home.stat.tests": {
+    "message": "camadas de teste protegendo cada mudança"
+  },
+  "home.feat.copy.title": {
+    "message": "Copy trading que sobrevive à vida real"
+  },
+  "home.feat.copy.body": {
+    "message": "Espelhe uma conta mestre em várias contas entre corretoras e IDs cTrader. Conexões caem, ordens são recusadas, tokens giram — o cMind concilia sem disparar negociações duplicadas e mantém um registro de auditoria completo."
+  },
+  "home.feat.copy.link": {
+    "message": "Como funciona →"
+  },
+  "home.feat.ai.title": {
+    "message": "IA que faz o trabalho pesado, não conversa fiada"
+  },
+  "home.feat.ai.body": {
+    "message": "Ideia em inglês simples → um cBot real e que compila, com um loop de auto-reparo. Mais ajuste de parâmetros, análises post-mortem de backtests e um guarda de risco que pode parar automaticamente um bot mal comportado."
+  },
+  "home.feat.ai.link": {
+    "message": "Conheça o núcleo de IA →"
+  },
+  "home.feat.build.title": {
+    "message": "Crie e teste no navegador"
+  },
+  "home.feat.build.body": {
+    "message": "Um Monaco IDE (sim, o do VS Code), templates em C# e Python, e build dotnet em sandbox em containers descartáveis. Assista aos gráficos de equity virem em tempo real."
+  },
+  "home.feat.build.link": {
+    "message": "Comece a construir →"
+  },
+  "home.feat.fleet.title": {
+    "message": "Uma frota que escala e se auto-repara"
+  },
+  "home.feat.fleet.body": {
+    "message": "Execuções e backtests distribuídos por nós de auto-descoberta. Um nó morre no meio do trabalho? Sua concessão é reclamada e o trabalho continua. Sem bip de pager."
+  },
+  "home.feat.fleet.link": {
+    "message": "Escalonando →"
+  },
+  "home.feat.prop.title": {
+    "message": "Rails de firma prop firm integrados"
+  },
+  "home.feat.prop.body": {
+    "message": "Modele regras reais de desafio — perda diária, drawdown máximo, metas — com rastreamento de equity em tempo real, para seus bots permanecerem dentro dos limites."
+  },
+  "home.feat.prop.link": {
+    "message": "Passe no desafio →"
+  },
+  "home.feat.wl.title": {
+    "message": "White-label, de cima a baixo"
+  },
+  "home.feat.wl.body": {
+    "message": "Troque o nome, cores, logo e favicon por inquilino. Revendedores enviam o cMind como se fosse produto deles e ninguém desconfia."
+  },
+  "home.feat.wl.link": {
+    "message": "Torne seu →"
+  },
+  "home.feat.pwa.title": {
+    "message": "No seu bolso (PWA instalável)"
+  },
+  "home.feat.pwa.body": {
+    "message": "Mobile-first, totalmente responsivo, instalável no seu celular com navegação inferior e shell offline. Acompanhe seus bots no ônibus."
+  },
+  "home.feat.pwa.link": {
+    "message": "Instale →"
+  },
+  "home.feat.mcp.title": {
+    "message": "Fala com clientes de IA (MCP)"
+  },
+  "home.feat.mcp.body": {
+    "message": "Um servidor MCP embutido (HTTP + SSE) expõe ferramentas para que o Claude e similares possam controlar o cMind para você."
+  },
+  "home.feat.mcp.link": {
+    "message": "Conecte →"
+  },
+  "home.feat.sec.title": {
+    "message": "Seu para rodar, reforçado por padrão"
+  },
+  "home.feat.sec.body": {
+    "message": "Argon2id, um anel de chaves criptografado, tokens assinados por nó, rate limiting e OpenTelemetry de fábrica. Suas chaves nunca saem da sua caixa."
+  },
+  "home.feat.sec.link": {
+    "message": "Auto-hospedue →"
+  },
+  "home.feat.eyebrow": {
+    "message": "Tudo na caixa"
+  },
+  "home.feat.title": {
+    "message": "Um app. Toda a operação de trading."
+  },
+  "home.feat.lede": {
+    "message": "Do \"tenho uma ideia\" ao \"está rodando em doze contas\" — sem colar seis ferramentas e uma planilha."
+  },
+  "home.show.copy.title": {
+    "message": "Copy trading, sem o pânico"
+  },
+  "home.show.copy.text": {
+    "message": "Controle por destino sobre dimensionamento, direção, símbolos, tipos de ordem, SL/TP, expiração e slippage exato de range de mercado. Quando algo dá errado, o cMind ressincroniza em vez de duplicar."
+  },
+  "home.show.ai.title": {
+    "message": "Descreva. Assista compilar."
+  },
+  "home.show.ai.text": {
+    "message": "Diga à IA o que você quer em inglês simples. Ela escreve o cBot, compila em sandbox, lê os erros e se conserta — repetindo até funcionar. Você revê o diff, não o stack trace."
+  },
+  "home.show.fleet.title": {
+    "message": "Um cluster que você mal precisa pensar"
+  },
+  "home.show.fleet.text": {
+    "message": "Agentes se auto-registram e enviam heartbeat. O scheduler escolhe o nó menos carregado. Um nó morto devolve seu trabalho automaticamente. Parece infraestrutura porque é."
+  },
+  "home.show.mobile.title": {
+    "message": "Roda bonito em um celular de 360px"
+  },
+  "home.show.mobile.text": {
+    "message": "Mesma potência, no bolso. Navegação inferior, layouts em cards, shell offline, adicione à tela inicial. Cada superfície é projetada mobile-first, e só então escala — não o contrário."
+  },
+  "home.show.eyebrow": {
+    "message": "Veja em ação"
+  },
+  "home.show.title": {
+    "message": "Capturas de tela reais. Modo escuro real. Produto real."
+  },
+  "home.deploy.local": {
+    "message": "Local / Docker"
+  },
+  "home.deploy.local.hint": {
+    "message": "compose up & go"
+  },
+  "home.deploy.k8s.hint": {
+    "message": "Helm chart"
+  },
+  "home.deploy.azure.hint": {
+    "message": "passo a passo"
+  },
+  "home.deploy.aws.hint": {
+    "message": "passo a passo"
+  },
+  "home.deploy.eyebrow": {
+    "message": "Implante em qualquer lugar"
+  },
+  "home.deploy.title": {
+    "message": "Seus servidores, suas regras."
+  },
+  "home.deploy.lede": {
+    "message": "Guias amigáveis para iniciantes, de copiar e colar, para cada opção. Comece no seu laptop, evolua para um cluster quando estiver pronto."
+  },
+  "home.aud.traders.title": {
+    "message": "Traders"
+  },
+  "home.aud.traders.text": {
+    "message": "Hospede todo o seu desk. Escreva um cBot, teste em backtest em vários nós, rode ao vivo e copie — tudo em um console com IA, seus dados nunca saindo da sua caixa."
+  },
+  "home.aud.brokers.title": {
+    "message": "Corretoras"
+  },
+  "home.aud.brokers.text": {
+    "message": "White-label o cMind para seus clientes. Dê a eles IA, copy trading e desafios de firma prop firm sob sua marca, restrinja contas ao seu livro e abra nova receita."
+  },
+  "home.aud.providers.title": {
+    "message": "Provedores Cloud e VPS"
+  },
+  "home.aud.providers.text": {
+    "message": "Ofereça hospedagem gerenciada de cMind. Garanta uma carga de trabalho fixa e exigente e monetize a assinatura, o compute medido, o white-label e a IA."
+  },
+  "home.aud.eyebrow": {
+    "message": "Para quem é"
+  },
+  "home.aud.title": {
+    "message": "Feito para pessoas com dinheiro em jogo."
+  },
+  "home.aud.lede": {
+    "message": "Trader, corretora ou provedor de hospedagem —"
+  },
+  "home.aud.link": {
+    "message": "encontre seu caminho →"
+  },
+  "home.cta.title": {
+    "message": "Pronto para conhecer seu novo desk de trading?"
+  },
+  "home.cta.text": {
+    "message": "Leia a introdução amigável, depois deixe rodando localmente antes do café esfriar. É open-source e licenciado em MIT — fuce, quebre coisas, mande um PR."
+  },
+  "home.cta.button1": {
+    "message": "Leia a docs →"
+  },
+  "home.cta.button2": {
+    "message": "Star no GitHub ★"
+  },
+  "home.meta.title": {
+    "message": "cMind — todo o seu desk de trading cTrader, em um app"
+  },
+  "home.meta.description": {
+    "message": "Plataforma open-source, auto-hospedável e white-label para operações de trading em cTrader. Crie, teste, execute e copie estratégias em escala com IA integrada."
   }
 }

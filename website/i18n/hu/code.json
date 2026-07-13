@@ -345,5 +345,233 @@
   "theme.tags.tagsPageTitle": {
     "message": "Címkék",
     "description": "The title of the tag list page"
+  },
+  "home.hero.badge": {
+    "message": "Nyílt forráskódú · saját gépen futtatható · white-label"
+  },
+  "home.hero.title1": {
+    "message": "A teljes cTrader kereskedőasztalod,"
+  },
+  "home.hero.title2": {
+    "message": "egy nyugodt, sötét alkalmazásban."
+  },
+  "home.hero.subtitle": {
+    "message": "A cMind buildel, visszatesztel, futtat és másol kereskedési stratégiákat gépek flottáján — MI maggal, amely csendben figyeli a kockázatot, így nem kell 3-kor reggel frissítened a grafikonokat. Futtasd a saját gépeden, márkázd a sajátodként, és alszod jobban."
+  },
+  "home.hero.cta1": {
+    "message": "Kezdj hozzá →"
+  },
+  "home.hero.cta2": {
+    "message": "Futtasd 5 perc alatt"
+  },
+  "home.hero.note": {
+    "message": "Nincs bankkártya, nincs regisztráció, nincs \"időpont egy demóra\". Egyszerűen"
+  },
+  "home.hero.shotAlt": {
+    "message": "cMind dashboard"
+  },
+  "home.stat.deploy": {
+    "message": "telepítési mód: Docker, K8s, Azure, AWS"
+  },
+  "home.stat.ai": {
+    "message": "MI funkciók, nem csak egy chat ablak"
+  },
+  "home.stat.wl": {
+    "message": "white-label — szállítsd a saját márkád alatt"
+  },
+  "home.stat.tests": {
+    "message": "teszt szintek őrzik minden változást"
+  },
+  "home.feat.copy.title": {
+    "message": "Copy kereskedés, amely túlél valós életet"
+  },
+  "home.feat.copy.body": {
+    "message": "Tükrözz egy mester számlát több számlára brókerek és cTrader ID-k között. Kapcsolatok eleshetnek, order visszapattanhat, tokenek forognak — a cMind egyeztet dupla-üzlet nélkül és teljes audit nyomvonalat tart."
+  },
+  "home.feat.copy.link": {
+    "message": "Működésük megtekintése →"
+  },
+  "home.feat.ai.title": {
+    "message": "MI, amely a munkát végzi, nem a kisbeszédet"
+  },
+  "home.feat.ai.body": {
+    "message": "Egyszerű angol ötlet → valódi, forduló cBot önjavító hurkkal. Plusz paraméterhangolás, visszateszt utóelemzés, és kockázatőr, amely automatikusan leállítja a hibásan működő botot."
+  },
+  "home.feat.ai.link": {
+    "message": "Ismerd meg a MI magot →"
+  },
+  "home.feat.build.title": {
+    "message": "Buildelés és visszatesztelés a böngészőben"
+  },
+  "home.feat.build.body": {
+    "message": "Egy Monaco IDE (igen, a VS Code-ban használt), C# és Python sablonok, és sandboxolt dotnet build eldobható konténerekben. Figyeljed, ahogy az egyenleggörbék élőben áramlanak vissza."
+  },
+  "home.feat.build.link": {
+    "message": "Kezdj hozzá →"
+  },
+  "home.feat.fleet.title": {
+    "message": "Egy flotta, amely skálázódik és önállóan helyreáll"
+  },
+  "home.feat.fleet.body": {
+    "message": "Futtatás és visszatesztelés önállóan felderítő node-okon. Meghal egy node munkavégzés közben? A lease visszaszerezhető és a munka folytatódik. Nincs szükség pager-re."
+  },
+  "home.feat.fleet.link": {
+    "message": "Skálázás →"
+  },
+  "home.feat.prop.title": {
+    "message": "Prop-firm korlátok beépítve"
+  },
+  "home.feat.prop.body": {
+    "message": "Valódi challenge szabályok modellezése — napi veszteség, max drawdown, célok — élő egyenlegkövetéssel, hogy a botjaid a vonalakon belül maradjanak."
+  },
+  "home.feat.prop.link": {
+    "message": "Teljesítsd a challenge-t →"
+  },
+  "home.feat.wl.title": {
+    "message": "White-label, tetőtől talpig"
+  },
+  "home.feat.wl.body": {
+    "message": "Cseréld a nevet, színeket, logót és favicon-okat bérlőnként. Viszonteladók cMind-et küldenek saját termékként, és senki sem gyanítja."
+  },
+  "home.feat.wl.link": {
+    "message": "Ted magadévá →"
+  },
+  "home.feat.pwa.title": {
+    "message": "A zsebedben (telepíthető PWA)"
+  },
+  "home.feat.pwa.body": {
+    "message": "Mobile-first, teljesen reszponzív, telepíthető a telefonodra alsó navigációval és offline héjjal. Ellenőrizd a botjaidat a buszról."
+  },
+  "home.feat.pwa.link": {
+    "message": "Telepítsd →"
+  },
+  "home.feat.mcp.title": {
+    "message": "Beszél az MI kliensekhez (MCP)"
+  },
+  "home.feat.mcp.body": {
+    "message": "A beépített MCP szerver (HTTP + SSE) eszközöket tesz elérhetővé, hogy Claude és társai irányíthassák a cMind-et."
+  },
+  "home.feat.mcp.link": {
+    "message": "Kapcsold össze →"
+  },
+  "home.feat.sec.title": {
+    "message": "A tiéd, hogy futtasd, megerősítve alapértelmezetten"
+  },
+  "home.feat.sec.body": {
+    "message": "Argon2id, titkosított kulcstartó, per-node aláírt tokenek, rátalimítás, és OpenTelemetry alapból. A kulcsaid soha nem hagyják el a gépedet."
+  },
+  "home.feat.sec.link": {
+    "message": "Saját hosztolás →"
+  },
+  "home.feat.eyebrow": {
+    "message": "Minden a dobozban"
+  },
+  "home.feat.title": {
+    "message": "Egy alkalmazás. A teljes kereskedési művelet."
+  },
+  "home.feat.lede": {
+    "message": "Az \"van egy ötletem\"-től a \"tizenkét számlán működik\"-ig — hat eszköz és egy táblázat összeragasztása nélkül."
+  },
+  "home.show.copy.title": {
+    "message": "Copy kereskedés pánik nélkül"
+  },
+  "home.show.copy.text": {
+    "message": "Célonkénti vezérlés a méretezés, irány, szimbólumok, order típusok, SL/TP, lejárat és pontos piaci tartomány csúszás felett. Amikor valami félrecsúszik, a cMind szinkronizál ahelyett, hogy duplikálna."
+  },
+  "home.show.ai.title": {
+    "message": "Írd le. Figyeled, ahogy lefordul."
+  },
+  "home.show.ai.text": {
+    "message": "Mondd el a MI-nak, mit akarsz egyszerű angolban. Megírja a cBot-ot, buildeli egy sandbox-ban, kiolvassa a hibákat, és kijavítja magát — addig ismétli, amíg fut. Te a diff-et nézed, nem a stack trace-t."
+  },
+  "home.show.fleet.title": {
+    "message": "Egy klaszter, amelyen szinte nem kell gondolkodnod"
+  },
+  "home.show.fleet.text": {
+    "message": "Az ügynökök önregisztrálnak és szívverés-jelet küldenek. Az ütemező a legkevésbé terhelt node-ot választja. Egy halott node automatikusan visszaadja a munkáját. Infrastruktúrának érzi magát, mert az is."
+  },
+  "home.show.mobile.title": {
+    "message": "Gyönyörűen fut egy 360px-es telefonon"
+  },
+  "home.show.mobile.text": {
+    "message": "Ugyanaz az erő, zseb méretben. Alsó navigáció, kártya elrendezések, offline héj, hozzáadás a főképernyőhöz. Minden felület mobile-first-re tervezve, aztán skálázódik — nem fordítva."
+  },
+  "home.show.eyebrow": {
+    "message": "Nézd meg működés közben"
+  },
+  "home.show.title": {
+    "message": "Valódi képernyőképek. Valódi sötét mód. Valódi termék."
+  },
+  "home.deploy.local": {
+    "message": "Local / Docker"
+  },
+  "home.deploy.local.hint": {
+    "message": "compose up & go"
+  },
+  "home.deploy.k8s.hint": {
+    "message": "Helm chart"
+  },
+  "home.deploy.azure.hint": {
+    "message": "lépésről lépésre"
+  },
+  "home.deploy.aws.hint": {
+    "message": "lépésről lépésre"
+  },
+  "home.deploy.eyebrow": {
+    "message": "Telepítsd bárhová"
+  },
+  "home.deploy.title": {
+    "message": "A szervereid, a szabályaid."
+  },
+  "home.deploy.lede": {
+    "message": "Kezdőbarát, másol-beilleszt útmutatók minden opcióhoz. Kezdd a laptopodon, válts klaszterre, amikor kész vagy."
+  },
+  "home.aud.traders.title": {
+    "message": "Kereskedők"
+  },
+  "home.aud.traders.text": {
+    "message": "Saját gépeden futtasd a teljes kereskedőasztalodat. Írj egy cBot-ot, teszteldd vissza node-okon, futtasd élesben, és másold — mind egy MI-vezérelt konzolban, az adataid soha nem hagyják el a gépedet."
+  },
+  "home.aud.brokers.title": {
+    "message": "Brókerek"
+  },
+  "home.aud.brokers.text": {
+    "message": "White-label cMind a kliensednek. Adj nekik MI-t, copy kereskedést és prop-firm challenge-eket a saját márkád alatt, korlátozd a számlákat a saját könyvedre, és nyiss új bevételt."
+  },
+  "home.aud.providers.title": {
+    "message": "Cloud és VPS szolgáltatók"
+  },
+  "home.aud.providers.text": {
+    "message": "Kínálj menedzselt cMind hostingot. Szerezz egy kitartó, számítás-igényes munkaterhelést és monetizál az előfizetést, a mért számítást, a white-label-t és az MI-t."
+  },
+  "home.aud.eyebrow": {
+    "message": "Akinek szól"
+  },
+  "home.aud.title": {
+    "message": "Azoknak építve, akiknek pénzük van a vonalban."
+  },
+  "home.aud.lede": {
+    "message": "Kereskedő, bróker vagy hosting szolgáltató —"
+  },
+  "home.aud.link": {
+    "message": "találd meg az utadat →"
+  },
+  "home.cta.title": {
+    "message": "Készen állsz megismerni az új kereskedőasztalodat?"
+  },
+  "home.cta.text": {
+    "message": "Olvasd el a barátságos bevezetőt, aztán futtasd localisan, mielőtt a kávéd kihűl. Nyílt forráskódú és MIT licencelt — nézz körül, törj el dolgokat, küldj PR-t."
+  },
+  "home.cta.button1": {
+    "message": "Olvasd el a dokumentációt →"
+  },
+  "home.cta.button2": {
+    "message": "Csillagozd a GitHub-on ★"
+  },
+  "home.meta.title": {
+    "message": "cMind — a teljes cTrader kereskedőasztalod egy alkalmazásban"
+  },
+  "home.meta.description": {
+    "message": "Nyílt forráskódú, saját gépen futtatható, white-label kereskedési operációs platform cTrader-hez. Buildelés, visszatesztelés, futtatás és másolás stratégiákat skálán MI-vel beépítve."
   }
 }

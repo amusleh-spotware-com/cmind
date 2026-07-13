@@ -260,7 +260,7 @@
   },
   "theme.docs.sidebar.collapseButtonAriaLabel": {
     "message": "Ciutkan bilah sisi",
-    "description": "The title attribute for collapse button of doc sidebar"
+    "description": "The ARIA label for collapse button of doc sidebar"
   },
   "theme.docs.sidebar.closeSidebarButtonAriaLabel": {
     "message": "Tutup bilah sisi",
@@ -345,5 +345,233 @@
   "theme.tags.tagsPageTitle": {
     "message": "Tag",
     "description": "The title of the tag list page"
+  },
+  "home.hero.badge": {
+    "message": "Open-source · dapat di-host sendiri · white-label"
+  },
+  "home.hero.title1": {
+    "message": "Seluruh meja trading cTrader Anda,"
+  },
+  "home.hero.title2": {
+    "message": "dalam satu aplikasi gelap yang tenang."
+  },
+  "home.hero.subtitle": {
+    "message": "cMind membangun, backtest, menjalankan, dan menyalin strategi trading di seluruh fleet mesin — dengan core AI yang secara diam-diam memantau risiko sehingga Anda tidak perlu menyegarkan grafik jam 3 pagi. Host sendiri, branded sesuai Anda, dan tidur lebih nyenyak."
+  },
+  "home.hero.cta1": {
+    "message": "Mulai sekarang →"
+  },
+  "home.hero.cta2": {
+    "message": "Jalankan dalam 5 menit"
+  },
+  "home.hero.note": {
+    "message": "Tanpa kartu kredit, tanpa daftar, tanpa \"pesan demo\". Hanya"
+  },
+  "home.hero.shotAlt": {
+    "message": "dashboard cMind"
+  },
+  "home.stat.deploy": {
+    "message": "cara deploy: Docker, K8s, Azure, AWS"
+  },
+  "home.stat.ai": {
+    "message": "fitur AI, bukan sekadar kotak chat"
+  },
+  "home.stat.wl": {
+    "message": "white-label — kirim sebagai brand Anda"
+  },
+  "home.stat.tests": {
+    "message": "tier tes yang menjaga setiap perubahan"
+  },
+  "home.feat.copy.title": {
+    "message": "Copy trading yang bertahan di kehidupan nyata"
+  },
+  "home.feat.copy.body": {
+    "message": "Cerminkan akun master ke banyak akun di seluruh broker dan ID cTrader. Koneksi putus, order berputar, token berputar — cMind mendamaikan tanpa menembak trade dua kali dan menyimpan audit trail lengkap."
+  },
+  "home.feat.copy.link": {
+    "message": "Cara kerjanya →"
+  },
+  "home.feat.ai.title": {
+    "message": "AI yang mengerjakan tugas, bukan ngobrol"
+  },
+  "home.feat.ai.body": {
+    "message": "Ide bahasa Inggris biasa → cBot nyata yang dapat dikompilasi dengan loop perbaikan diri. Ditambah penyetelan parameter, post-mortem backtest, dan penjaga risiko yang dapat menghentikan bot yang behaving buruk secara otomatis."
+  },
+  "home.feat.ai.link": {
+    "message": "Temui core AI →"
+  },
+  "home.feat.build.title": {
+    "message": "Build & backtest di browser"
+  },
+  "home.feat.build.body": {
+    "message": "Editor Monaco (ya, yang dari VS Code), template C# dan Python, dan build dotnet sandboxed dalam container sekali pakai. Tonton kurva equity mengalir kembali secara langsung."
+  },
+  "home.feat.build.link": {
+    "message": "Mulai membangun →"
+  },
+  "home.feat.fleet.title": {
+    "message": "Fleet yang scale & self-heal"
+  },
+  "home.feat.fleet.body": {
+    "message": "Jalankan dan backtest tersebar di seluruh node yang auto-discover. Node mati di tengah pekerjaan? Lease-nya diklaim kembali dan pekerjaan berlanjut. Tanpa pager diperlukan."
+  },
+  "home.feat.fleet.link": {
+    "message": "Scale out →"
+  },
+  "home.feat.prop.title": {
+    "message": "Guardrail prop-firm sudah built-in"
+  },
+  "home.feat.prop.body": {
+    "message": "Model aturan challenge nyata — daily loss, max drawdown, target — dengan pelacakan equity langsung, sehingga bot Anda tetap dalam koridor."
+  },
+  "home.feat.prop.link": {
+    "message": "Luluskan challenge →"
+  },
+  "home.feat.wl.title": {
+    "message": "White-label, dari atas ke bawah"
+  },
+  "home.feat.wl.body": {
+    "message": "Tukar nama, warna, logo, dan favicon per tenant. Reseller kirim cMind sebagai produk mereka sendiri dan tidak ada yang curiga."
+  },
+  "home.feat.wl.link": {
+    "message": "Jadilah milik Anda →"
+  },
+  "home.feat.pwa.title": {
+    "message": "Di saku Anda (PWA yang dapat diinstal)"
+  },
+  "home.feat.pwa.body": {
+    "message": "Mobile-first, fully responsive, dapat diinstal di ponsel Anda dengan bottom-nav dan offline shell. Pantau bot Anda dari dalam bus."
+  },
+  "home.feat.pwa.link": {
+    "message": "Instal sekarang →"
+  },
+  "home.feat.mcp.title": {
+    "message": "Berbicara dengan AI client (MCP)"
+  },
+  "home.feat.mcp.body": {
+    "message": "Server MCP bawaan (HTTP + SSE) mengekspos tools sehingga Claude dan teman-temannya dapat menjalankan cMind untuk Anda."
+  },
+  "home.feat.mcp.link": {
+    "message": "Hubungkan →"
+  },
+  "home.feat.sec.title": {
+    "message": "Milik Anda untuk dijalankan, di-hardened secara default"
+  },
+  "home.feat.sec.body": {
+    "message": "Argon2id, encrypted key ring, per-node signed token, rate limiting, dan OpenTelemetry langsung jadi. Key Anda tidak pernah meninggalkan box Anda."
+  },
+  "home.feat.sec.link": {
+    "message": "Self-host →"
+  },
+  "home.feat.eyebrow": {
+    "message": "Segala sesuatu dalam kotak"
+  },
+  "home.feat.title": {
+    "message": "Satu aplikasi. Seluruh operasi trading."
+  },
+  "home.feat.lede": {
+    "message": "Dari \"Saya punya ide\" ke \"itu live di dua belas akun\" — tanpa merekatkan enam tools dan spreadsheet."
+  },
+  "home.show.copy.title": {
+    "message": "Copy trading, tanpa kepanikan"
+  },
+  "home.show.copy.text": {
+    "message": "Kontrol per-destinasi atas sizing, arah, simbol, tipe order, SL/TP, expiry dan slippage market-range yang tepat. Ketika ada yang berputar, cMind resync alih-alih menduplikasi."
+  },
+  "home.show.ai.title": {
+    "message": "Jelaskan. Tonton ia terkompilasi."
+  },
+  "home.show.ai.text": {
+    "message": "Bilang AI apa yang Anda mau dalam bahasa Inggris. Ia menulis cBot, build di sandbox, baca error, dan perbaiki sendiri — loop sampai jalan. Anda review diffnya, bukan stack tracenya."
+  },
+  "home.show.fleet.title": {
+    "message": "Cluster yang hampir tidak perlu dipikirkan"
+  },
+  "home.show.fleet.text": {
+    "message": "Agent register sendiri dan heartbeat. Scheduler pilih node dengan beban paling ringan. Node mati memberikan pekerjaannya kembali secara otomatis. Terasa seperti infrastructure karena memang itu infrastrukturnya."
+  },
+  "home.show.mobile.title": {
+    "message": "Berjalan dengan indah di ponsel 360px"
+  },
+  "home.show.mobile.text": {
+    "message": "Kekuatan yang sama, ukuran saku. Bottom-nav, card layout, offline shell, add-to-home-screen. Setiap permukaan didesain mobile-first dulu, baru di-scale up — bukan sebaliknya."
+  },
+  "home.show.eyebrow": {
+    "message": "Lihat dalam aksi"
+  },
+  "home.show.title": {
+    "message": "Screenshot nyata. Dark mode nyata. Produk nyata."
+  },
+  "home.deploy.local": {
+    "message": "Lokal / Docker"
+  },
+  "home.deploy.local.hint": {
+    "message": "compose up & go"
+  },
+  "home.deploy.k8s.hint": {
+    "message": "Helm chart"
+  },
+  "home.deploy.azure.hint": {
+    "message": "langkah-demi-langkah"
+  },
+  "home.deploy.aws.hint": {
+    "message": "langkah-demi-langkah"
+  },
+  "home.deploy.eyebrow": {
+    "message": "Deploy di mana saja"
+  },
+  "home.deploy.title": {
+    "message": "Server Anda, aturan Anda."
+  },
+  "home.deploy.lede": {
+    "message": "Panduan yang ramah pemula, copy-paste untuk setiap opsi. Mulai di laptop Anda, naik level ke cluster saat Anda siap."
+  },
+  "home.aud.traders.title": {
+    "message": "Traders"
+  },
+  "home.aud.traders.text": {
+    "message": "Host sendiri seluruh meja Anda. Tulis cBot, backtest di seluruh node, jalankan secara live, dan copy — semuanya dalam satu console AI-powered, data Anda tidak pernah meninggalkan box Anda."
+  },
+  "home.aud.brokers.title": {
+    "message": "Brokers"
+  },
+  "home.aud.brokers.text": {
+    "message": "White-label cMind untuk klien Anda. Beri mereka AI, copy trading, dan prop-firm challenge di bawah brand Anda, batasi akun ke buku Anda, dan buka revenue baru."
+  },
+  "home.aud.providers.title": {
+    "message": "Cloud & VPS providers"
+  },
+  "home.aud.providers.text": {
+    "message": "Tawarkan managed cMind hosting. Dapatkan workload yang lengket dan compute-hungry dan monetisasi subscription, compute meteran, white-label, dan AI."
+  },
+  "home.aud.eyebrow": {
+    "message": "Untuk siapa ini"
+  },
+  "home.aud.title": {
+    "message": "Dibuat untuk orang yang punya uang di atas meja."
+  },
+  "home.aud.lede": {
+    "message": "Trader, broker, atau hosting provider —"
+  },
+  "home.aud.link": {
+    "message": "temukan jalan Anda →"
+  },
+  "home.cta.title": {
+    "message": "Siap mengenal meja trading baru Anda?"
+  },
+  "home.cta.text": {
+    "message": "Baca intro yang ramah, lalu jalankan secara lokal sebelum kopi Anda dingin. Ini open-source dan dilisensikan MIT — selami, rusakin, kirim PR."
+  },
+  "home.cta.button1": {
+    "message": "Baca dokumentasi →"
+  },
+  "home.cta.button2": {
+    "message": "Bintang di GitHub ★"
+  },
+  "home.meta.title": {
+    "message": "cMind — seluruh meja trading cTrader Anda, dalam satu aplikasi"
+  },
+  "home.meta.description": {
+    "message": "Platform operasi trading open-source, dapat di-host sendiri, white-label untuk cTrader. Bangun, backtest, jalankan dan copy strategi dalam skala besar dengan AI built-in."
   }
 }

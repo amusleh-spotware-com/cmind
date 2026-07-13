@@ -4,11 +4,11 @@
     "description": "Title of the first-visit risk-disclaimer dialog"
   },
   "riskDisclaimer.body": {
-    "message": "Trgovanje z valutami (forex) in pogodbami na razliko (CFD) z vzvodom prinaša visoko stopnjo tveganja in morda ni primerno za vse vlagatelje. Visok finančni vzvod lahko deluje v vašo korist ali proti vam. Izgubite lahko del ali celoten vloženi kapital, zato ne smete vlagati denarja, katerega izgube si ne morete privoščiti. Pretekli rezultati in rezultati povratnega testiranja niso pokazatelj prihodnjih rezultatov. cMind je programska oprema za lastno gostovanje, ki je na voljo „takšna, kot je“, in ne zagotavlja naložbenega, finančnega, pravnega ali davčnega svetovanja. Vse trgovalne odločitve ter morebitni dobiček ali izguba, ki iz njih izhajajo, so sprejete po vaši lastni presoji in so vaša izključna in polna odgovornost.",
-    "description": "Body text of the first-visit risk-disclaimer dialog"
+    "message": "Trgovanje z valutami (forex) in pogodbami na razliko (CFD) z vzvodom prinaša visoko stopnjo tveganja in morda ni primerno za vse vlagatelje. Visok finančni vzvod lahko deluje v vašo korist ali proti vam. Izgubite lahko del ali celoten vloženi kapital, zato ne smete vlagati denarja, katerega izgube si ne morete privoščiti. Pretekli rezultati in rezultati povratnega testiranja niso pokazatelj prihodnjih rezultatov. cMind je programska oprema za lastno gostovanje, ki je na voljo \"takšna, kot je\", in ne zagotavlja naložbenega, finančnega, pravnega ali davčnega svetovanja. Vse trgovalne odločitve ter morebitni dobiček ali izguba, ki iz njih izhajajo, so sprejete po vaši lastni presoji in so vaša izključna in polna odgovornost.",
+    "description": "Body text of the risk-disclaimer dialog"
   },
   "riskDisclaimer.prompt": {
-    "message": "Za nadaljevanje morate potrditi, da razumete in sprejemate ta tveganja. Če jih ne sprejmete, tega spletnega mesta ne morete uporabljati.",
+    "message": "Za nadaljevanje morate potrditi, da razumete in sprejemate ta tveganja. Če jih ne sprejemate, tega spletnega mesta ne morete uporabljati.",
     "description": "Instruction line above the accept / decline buttons"
   },
   "riskDisclaimer.decline": {
@@ -256,7 +256,7 @@
   },
   "theme.docs.sidebar.collapseButtonAriaLabel": {
     "message": "Skrči stransko vrstico",
-    "description": "The title attribute for collapse button of doc sidebar"
+    "description": "The ARIA label for collapse button of doc sidebar"
   },
   "theme.docs.sidebar.navAriaLabel": {
     "message": "Stranska vrstica dokumentacije",
@@ -345,5 +345,233 @@
   "theme.tags.tagsPageTitle": {
     "message": "Oznake",
     "description": "The title of the tag list page"
+  },
+  "home.hero.badge": {
+    "message": "Odprtokodno · za lastno gostovanje · white-label"
+  },
+  "home.hero.title1": {
+    "message": "Celotna vaša trgovalna konzola cTrader,"
+  },
+  "home.hero.title2": {
+    "message": "v eni mirni temni aplikaciji."
+  },
+  "home.hero.subtitle": {
+    "message": "cMind gradi, testira na zgodovinskih podatkih, izvaja in kopira trgovalne strategije prek celotne flote strojev — z jedrom umetne inteligence, ki tiho spremlja tveganja, tako da vam ob 3. uri zjutraj ni treba osveževati grafikonov.Gostujte ga sami, ga poimenujte po svoji blagovni znamki in spite malce bolj mirno."
+  },
+  "home.hero.cta1": {
+    "message": "Začnite →"
+  },
+  "home.hero.cta2": {
+    "message": "Zaženite v 5 minutah"
+  },
+  "home.hero.note": {
+    "message": "Brez kreditne kartice, brez prijave, brez \"rezervirajte predstavitev\". Samo"
+  },
+  "home.hero.shotAlt": {
+    "message": "cMind nadzorna plošča"
+  },
+  "home.stat.deploy": {
+    "message": "načinov namestitve: Docker, K8s, Azure, AWS"
+  },
+  "home.stat.ai": {
+    "message": "funkcij umetne inteligence, ne le klepetalnik"
+  },
+  "home.stat.wl": {
+    "message": "white-label — izdajte ga kot svojo znamko"
+  },
+  "home.stat.tests": {
+    "message": "testne ravni, ki varujejo vsako spremembo"
+  },
+  "home.feat.copy.title": {
+    "message": "Kopiraj trgovanje, ki preživi resnično življenje"
+  },
+  "home.feat.copy.body": {
+    "message": "Zrcali glavni račun na številne račune pri različnih brokerjih in cTrader ID-jih. Povezave padejo, nalogi se odbijeta, žetoni se vrtejo — cMind usklajuje brez dvojnega sprožanja poslov in vodi celoten revizijski sled."
+  },
+  "home.feat.copy.link": {
+    "message": "Kako deluje →"
+  },
+  "home.feat.ai.title": {
+    "message": "Umetna inteligenca, ki opravlja delo, ne klebeta"
+  },
+  "home.feat.ai.body": {
+    "message": "Ideja v preprostem angleškem jeziku → pravi, prevajajoči se cBot s zanko za samopopravljanje. Poleg tega nastavljanje parametrov, pop-mortemi povratnega testiranja in varovalka tveganj, ki lahko samodejno ustavi napačno delujočega bota."
+  },
+  "home.feat.ai.link": {
+    "message": "Spoznajte jedro umetne inteligence →"
+  },
+  "home.feat.build.title": {
+    "message": "Gradite in testirajte v brskalniku"
+  },
+  "home.feat.build.body": {
+    "message": "Monaco IDE (da, tisti iz VS Code), predloge za C# in Python ter sandboxes gradnja dotnet v enkratnih vsebnikih. Opazujte, kako se krivulje dobička pretakajo v živo."
+  },
+  "home.feat.build.link": {
+    "message": "Začnite graditi →"
+  },
+  "home.feat.fleet.title": {
+    "message": "Flota, ki se prilagaja in samozdravi"
+  },
+  "home.feat.fleet.body": {
+    "message": "Izvajanje in povratno testiranje sta razporejena prek samoodkrivajočih vozlišč. Vozlišče crkne sredi opravila? Njegova концесиja se prevzame in delo se nadaljuje. Brez klicnika ni potreben."
+  },
+  "home.feat.fleet.link": {
+    "message": "Razširite →"
+  },
+  "home.feat.prop.title": {
+    "message": "Varovalke za prop-firm vgrajene"
+  },
+  "home.feat.prop.body": {
+    "message": "Modelirajte resnična pravila izziva — dnevna izguba, največja vlečenja, cilji — s sledenjem v realnem času, tako da vaši boti ostanejo znotraj meja."
+  },
+  "home.feat.prop.link": {
+    "message": "Opravite izziv →"
+  },
+  "home.feat.wl.title": {
+    "message": "White-label, od zgoraj navzdol"
+  },
+  "home.feat.wl.body": {
+    "message": "Zamenjajte ime, barve, logotip in ikono za vsakega najemnika. Ponudniki pošiljajo cMind kot svoj izdelek in nihče ne bo izvedel."
+  },
+  "home.feat.wl.link": {
+    "message": "Naredite ga svojega →"
+  },
+  "home.feat.pwa.title": {
+    "message": "V žepu (namestljiva PWA)"
+  },
+  "home.feat.pwa.body": {
+    "message": "Najprej mobilna naprava, v celoti odzivna, namestljiva na telefon z navigacijo na dnu in spletno lupino brez povezave. Preverite svoje bot-e z avtobusa."
+  },
+  "home.feat.pwa.link": {
+    "message": "Namestite jo →"
+  },
+  "home.feat.mcp.title": {
+    "message": "Komunicira z odjemalci umetne inteligence (MCP)"
+  },
+  "home.feat.mcp.body": {
+    "message": "Vgrajeni MCP strežnik (HTTP + SSE) razkriva orodja, tako da lahko Claude in drugi upravljajo cMind za vas."
+  },
+  "home.feat.mcp.link": {
+    "message": "Povežite ga →"
+  },
+  "home.feat.sec.title": {
+    "message": "Za vaš pogon, ojačano privzeto"
+  },
+  "home.feat.sec.body": {
+    "message": "Argon2id, šifrirani ključavnica, podpisani žetoni na vozlišče, omejevanje hitrosti in OpenTelemetry kar takoj. Vaši ključi nikoli ne zapustijo vaše škatle."
+  },
+  "home.feat.sec.link": {
+    "message": "Gostujte sami →"
+  },
+  "home.feat.eyebrow": {
+    "message": "Vse v škatli"
+  },
+  "home.feat.title": {
+    "message": "Ena aplikacija. Celotna trgovalna operacija."
+  },
+  "home.feat.lede": {
+    "message": "Od \"imam idejo\" do \"živi na dvanajst računih\" — brez lepljenja skupaj šestih orodij in preglednice."
+  },
+  "home.show.copy.title": {
+    "message": "Kopiraj trgovanje, brez panike"
+  },
+  "home.show.copy.text": {
+    "message": "Nadzor velikosti, smeri, simbolov, vrst naročil, SL/TP, potek in natančen obseg tržnega slipa na cilj. Ko kaj gre narobe, se cMind sinhronizira, namesto da podvaja."
+  },
+  "home.show.ai.title": {
+    "message": "Opišite ga. Glejte, kako se prevede."
+  },
+  "home.show.ai.text": {
+    "message": "Povejte umetni inteligenci, kaj želite, v preprostem angleškem jeziku. Napiše cBot, ga zgradi v peskovniku, prebere napake in popravi sebe — ponavlja, dokler ne zažene. Pregledate razlike, ne sledi sklada."
+  },
+  "home.show.fleet.title": {
+    "message": "Grupa, o kateri skoraj ni treba razmišljati"
+  },
+  "home.show.fleet.text": {
+    "message": "Agenti se samoregistrirajo in pošiljajo srčne utripe. Načrtovalec izbere najmanj obremenjeno vozlišče. Mrtvo vozlišče samodejno vrne svoje delo. Deluje kot infrastruktura, ker to je."
+  },
+  "home.show.mobile.title": {
+    "message": "Lepo deluje na telefonu s 360px"
+  },
+  "home.show.mobile.text": {
+    "message": "Enaka moč, majhna velikost. Navigacija na dnu, postavitev kartic, spletna lupina, dodaj na domači zaslon. Vsaka površina je zasnovana najprej za mobilne naprave, nato pa se razširi — ne obratno."
+  },
+  "home.show.eyebrow": {
+    "message": "Oglejte si ga v akciji"
+  },
+  "home.show.title": {
+    "message": "Resnični posnetki zaslona. Resničen temni način. Resničen izdelek."
+  },
+  "home.deploy.local": {
+    "message": "Lokalno / Docker"
+  },
+  "home.deploy.local.hint": {
+    "message": "compose up & go"
+  },
+  "home.deploy.k8s.hint": {
+    "message": "Helm grafikon"
+  },
+  "home.deploy.azure.hint": {
+    "message": "korak za korakom"
+  },
+  "home.deploy.aws.hint": {
+    "message": "korak za korakom"
+  },
+  "home.deploy.eyebrow": {
+    "message": "Namestite kjer koli"
+  },
+  "home.deploy.title": {
+    "message": "Vaši strežniki, vaša pravila."
+  },
+  "home.deploy.lede": {
+    "message": "Priročniki za vsakogar, prijazni za začetnike in enostavni za kopiranje. Začnite na prenosniku, nadaljujte s gručo, ko ste pripravljeni."
+  },
+  "home.aud.traders.title": {
+    "message": "Trgovci"
+  },
+  "home.aud.traders.text": {
+    "message": "Gostujte celotno konzolo sami. Napišite cBot, testirajte ga na vozliščih, izvajajte ga v živo in ga kopirajte — vse v eni konzoli z umetno inteligenco, vaši podatki nikoli ne zapustijo vaše škatle."
+  },
+  "home.aud.brokers.title": {
+    "message": "Brokerji"
+  },
+  "home.aud.brokers.text": {
+    "message": "White-label cMind za svoje stranke. Zagotovite jim umetno inteligenco, kopirajte trgovanje in izzive prop-firm pod svojo blagovno znamko, omejite račune na svojo knjigo in odprite nove prihodke."
+  },
+  "home.aud.providers.title": {
+    "message": "Ponudniki oblaka in VPS"
+  },
+  "home.aud.providers.text": {
+    "message": "Ponudite upravljeno gostovanje cMind. Pridobite se oprijemljivo, računsko zahtevno obremenitev in zaslužite z naročnino, merjenim računanjem, white-label in umetno inteligenco."
+  },
+  "home.aud.eyebrow": {
+    "message": "Za koga je"
+  },
+  "home.aud.title": {
+    "message": "Zgrajeno za ljudi z denarjem na kocki."
+  },
+  "home.aud.lede": {
+    "message": "Trgovec, broker ali ponudnik gostovanja —"
+  },
+  "home.aud.link": {
+    "message": "poišlite svojo pot →"
+  },
+  "home.cta.title": {
+    "message": "Pripravljeni spoznati svojo novo trgovalno konzolo?"
+  },
+  "home.cta.text": {
+    "message": "Preberite prijazni uvod, nato pa jo zaženite lokalno, preden se vam kava ohladi. Odprtokodna je in licencirana z MIT — raziskujte, uničujte, pošljite PR."
+  },
+  "home.cta.button1": {
+    "message": "Preberite dokumentacijo →"
+  },
+  "home.cta.button2": {
+    "message": "Zvezdica na GitHubu ★"
+  },
+  "home.meta.title": {
+    "message": "cMind — vaša celotna cTrader trgovalna konzola, v eni aplikaciji"
+  },
+  "home.meta.description": {
+    "message": "Odprtokodna, za lastno gostovanje, white-label platforma za trgovalne operacije za cTrader. Gradite, testirajte, izvajajte in kopirajte strategije v velkem obsegu z vgrajeno umetno inteligenco."
   }
 }

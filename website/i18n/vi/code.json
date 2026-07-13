@@ -223,7 +223,7 @@
     "description": "The label used in blog post item excerpts to link to full blog posts"
   },
   "theme.blog.post.readMoreLabel": {
-    "message": "Đọc thêm về {title}",
+    "message": "�ọc thêm về {title}",
     "description": "The ARIA label for the link to full blog posts from excerpts"
   },
   "theme.blog.post.readingTime.plurals": {
@@ -345,5 +345,233 @@
   "theme.tags.tagsPageTitle": {
     "message": "Thẻ",
     "description": "The title of the tag list page"
+  },
+  "home.hero.badge": {
+    "message": "Nguồn mở · tự lưu trữ · white-label"
+  },
+  "home.hero.title1": {
+    "message": "Toàn bộ bàn giao dịch cTrader của bạn,"
+  },
+  "home.hero.title2": {
+    "message": "gói gọn trong một ứng dụng tối yên bình."
+  },
+  "home.hero.subtitle": {
+    "message": "cMind xây dựng, kiểm thử ngược, chạy và sao chép các chiến lược giao dịch trên một nhóm máy — với lõi AI âm thầm theo dõi rủi ro để bạn không phải liên tục kiểm tra biểu đồ lúc 3 giờ sáng. Tự lưu trữ nó, đặt thương hiệu của riêng bạn, và yên tâm hơn."
+  },
+  "home.hero.cta1": {
+    "message": "Bắt đầu ngay →"
+  },
+  "home.hero.cta2": {
+    "message": "Chạy trong 5 phút"
+  },
+  "home.hero.note": {
+    "message": "Không thẻ tín dụng, không đăng ký, không \"đặt demo\". Chỉ cần"
+  },
+  "home.hero.shotAlt": {
+    "message": "Bảng điều khiển cMind"
+  },
+  "home.stat.deploy": {
+    "message": "cách triển khai: Docker, K8s, Azure, AWS"
+  },
+  "home.stat.ai": {
+    "message": "Tính năng AI, không chỉ là hộp chat"
+  },
+  "home.stat.wl": {
+    "message": "white-label — phát hành dưới thương hiệu của bạn"
+  },
+  "home.stat.tests": {
+    "message": "các tầng kiểm thử bảo vệ mọi thay đổi"
+  },
+  "home.feat.copy.title": {
+    "message": "Sao chép giao dịch vượt qua thực tế"
+  },
+  "home.feat.copy.body": {
+    "message": "Phản chiếu tài khoản master sang nhiều tài khoản trên các broker và cTrader ID khác nhau. Kết nối rớt, lệnh bị trả lại, token xoay vòng — cMind tự động đối soát mà không bắn trùng lệnh và giữ đầy đủ nhật ký kiểm toán."
+  },
+  "home.feat.copy.link": {
+    "message": "Xem cách hoạt động →"
+  },
+  "home.feat.ai.title": {
+    "message": "AI làm việc, không nói chuyện"
+  },
+  "home.feat.ai.body": {
+    "message": "Ý tưởng bằng tiếng Anh thông thường → một cBot thực sự, có thể biên dịch, kèm vòng tự sửa. Cộng thêm tinh chỉnh tham số, phân tích sau backtest, và guard rủi ro có thể tự động dừng bot đang hành động sai."
+  },
+  "home.feat.ai.link": {
+    "message": "Gặp lõi AI →"
+  },
+  "home.feat.build.title": {
+    "message": "Xây dựng & kiểm thử ngược trong trình duyệt"
+  },
+  "home.feat.build.body": {
+    "message": "Monaco IDE (đúng vậy, phiên bản VS Code đó), template C# và Python, và build dotnet sandbox trong container dùng một lần. Xem biểu đồ equity stream về trực tiếp."
+  },
+  "home.feat.build.link": {
+    "message": "Bắt đầu xây dựng →"
+  },
+  "home.feat.fleet.title": {
+    "message": "Nhóm tự mở rộng và tự phục hồi"
+  },
+  "home.feat.fleet.body": {
+    "message": "Chạy và kiểm thử ngược phân tán trên các node tự khám phá. Node chết giữa chừng? Lease của nó được thu hồi và công việc tiếp tục. Không cần pager."
+  },
+  "home.feat.fleet.link": {
+    "message": "Mở rộng quy mô →"
+  },
+  "home.feat.prop.title": {
+    "message": "Rào cản prop-firm được tích hợp sẵn"
+  },
+  "home.feat.prop.body": {
+    "message": "Mô hình hóa các quy tắc thử thách thực tế — tổn thất hàng ngày, drawdown tối đa, mục tiêu — với theo dõi equity trực tiếp, để bot của bạn không vi phạm giới hạn."
+  },
+  "home.feat.prop.link": {
+    "message": "Vượt qua thử thách →"
+  },
+  "home.feat.wl.title": {
+    "message": "White-label từ trên xuống dưới"
+  },
+  "home.feat.wl.body": {
+    "message": "Thay đổi tên, màu sắc, logo và favicon theo từng tenant. Các reseller phát hành cMind như sản phẩm riêng và không ai biết sự khác biệt."
+  },
+  "home.feat.wl.link": {
+    "message": "Làm cho nó thuộc về bạn →"
+  },
+  "home.feat.pwa.title": {
+    "message": "Trong túi bạn (PWA có thể cài đặt)"
+  },
+  "home.feat.pwa.body": {
+    "message": "Mobile-first, fully responsive, cài đặt trên điện thoại với bottom-nav và offline shell. Theo dõi bot từ xe buýt."
+  },
+  "home.feat.pwa.link": {
+    "message": "Cài đặt →"
+  },
+  "home.feat.mcp.title": {
+    "message": "Kết nối với AI clients (MCP)"
+  },
+  "home.feat.mcp.body": {
+    "message": "MCP server tích hợp sẵn (HTTP + SSE) exposes các tool để Claude và các AI khác có thể điều khiển cMind cho bạn."
+  },
+  "home.feat.mcp.link": {
+    "message": "Kết nối ngay →"
+  },
+  "home.feat.sec.title": {
+    "message": "Của bạn để chạy, được tăng cường mặc định"
+  },
+  "home.feat.sec.body": {
+    "message": "Argon2id, ring khóa được mã hóa, token được ký riêng theo node, giới hạn tốc độ, và OpenTelemetry có sẵn. Khóa của bạn không bao giờ rời khỏi máy của bạn."
+  },
+  "home.feat.sec.link": {
+    "message": "Tự lưu trữ →"
+  },
+  "home.feat.eyebrow": {
+    "message": "Mọi thứ trong hộp"
+  },
+  "home.feat.title": {
+    "message": "Một ứng dụng. Toàn bộ hoạt động giao dịch."
+  },
+  "home.feat.lede": {
+    "message": "Từ \"tôi có ý tưởng\" đến \"nó đang chạy trên mười hai tài khoản\" — không cần dán kết nối sáu công cụ và một bảng tính."
+  },
+  "home.show.copy.title": {
+    "message": "Sao chép giao dịch, bớt hoảng loạn"
+  },
+  "home.show.copy.text": {
+    "message": "Kiểm soát theo từng destination về sizing, hướng, symbols, loại lệnh, SL/TP, expiry và slippage chính xác theo thị trường. Khi có sự cố, cMind resync thay vì trùng lặp."
+  },
+  "home.show.ai.title": {
+    "message": "Mô tả nó. Xem nó biên dịch."
+  },
+  "home.show.ai.text": {
+    "message": "Nói với AI what bạn muốn bằng tiếng Anh thông thường. Nó viết cBot, build trong sandbox, đọc các lỗi và tự sửa — lặp cho đến khi chạy được. Bạn xem diff, không phải stack trace."
+  },
+  "home.show.fleet.title": {
+    "message": "Một cụm mà bạn hầu như không cần nghĩ đến"
+  },
+  "home.show.fleet.text": {
+    "message": "Các agent tự đăng ký và heartbeat. Scheduler chọn node có tải thấp nhất. Node chết thì công việc của nó được trả lại tự động. Nó cảm giác như infrastructure bởi vì nó chính là infrastructure."
+  },
+  "home.show.mobile.title": {
+    "message": "Chạy tuyệt đẹp trên điện thoại 360px"
+  },
+  "home.show.mobile.text": {
+    "message": "Cùng sức mạnh, nhỏ gọn bỏ túi. Bottom-nav, bố cục card, offline shell, add-to-home-screen. Mọi bề mặt được thiết kế mobile-first trước, sau đó mở rộng — không phải theo hướng ngược lại."
+  },
+  "home.show.eyebrow": {
+    "message": "Xem nó hoạt động"
+  },
+  "home.show.title": {
+    "message": "Ảnh chụp thật. Dark mode thật. Sản phẩm thật."
+  },
+  "home.deploy.local": {
+    "message": "Local / Docker"
+  },
+  "home.deploy.local.hint": {
+    "message": "compose up & go"
+  },
+  "home.deploy.k8s.hint": {
+    "message": "Helm chart"
+  },
+  "home.deploy.azure.hint": {
+    "message": "từng bước"
+  },
+  "home.deploy.aws.hint": {
+    "message": "từng bước"
+  },
+  "home.deploy.eyebrow": {
+    "message": "Triển khai bất cứ đâu"
+  },
+  "home.deploy.title": {
+    "message": "Server của bạn, quy tắc của bạn."
+  },
+  "home.deploy.lede": {
+    "message": "Hướng dẫn thân thiện cho người mới, copy-paste cho mọi lựa chọn. Bắt đầu trên laptop, nâng cấp lên cụm khi bạn sẵn sàng."
+  },
+  "home.aud.traders.title": {
+    "message": "Nhà giao dịch"
+  },
+  "home.aud.traders.text": {
+    "message": "Tự lưu trữ toàn bộ bàn của bạn. Viết cBot, kiểm thử ngược trên các node, chạy trực tiếp và sao chép — tất cả trong một console AI, dữ liệu của bạn không rời khỏi máy bạn."
+  },
+  "home.aud.brokers.title": {
+    "message": "Broker"
+  },
+  "home.aud.brokers.text": {
+    "message": "White-label cMind cho khách hàng của bạn. Cung cấp AI, sao chép giao dịch và thử thách prop-firm dưới thương hiệu của bạn, giới hạn tài khoản vào sổ của bạn, và mở ra nguồn doanh thu mới."
+  },
+  "home.aud.providers.title": {
+    "message": "Cloud & VPS providers"
+  },
+  "home.aud.providers.text": {
+    "message": "Cung cấp hosting cMind được quản lý. Thu hút workload gắn bó, tiêu tốn nhiều compute và kiếm tiền từ subscription, compute tính theo Usage, white-label và AI."
+  },
+  "home.aud.eyebrow": {
+    "message": "Dành cho ai"
+  },
+  "home.aud.title": {
+    "message": "Được xây dựng cho những người có tiền đang liên quan."
+  },
+  "home.aud.lede": {
+    "message": "Nhà giao dịch, broker, hay hosting provider —"
+  },
+  "home.aud.link": {
+    "message": "tìm con đường của bạn →"
+  },
+  "home.cta.title": {
+    "message": "Sẵn sàng gặp bàn giao dịch mới của bạn?"
+  },
+  "home.cta.text": {
+    "message": "Đọc phần giới thiệu thân thiện, sau đó chạy nó local trước khi cà phê của bạn nguội. Nó là nguồn mở và được cấp phép MIT — khám phá, phá vỡ, gửi PR."
+  },
+  "home.cta.button1": {
+    "message": "Đọc tài liệu →"
+  },
+  "home.cta.button2": {
+    "message": "Star trên GitHub ★"
+  },
+  "home.meta.title": {
+    "message": "cMind — toàn bộ bàn giao dịch cTrader của bạn, trong một ứng dụng"
+  },
+  "home.meta.description": {
+    "message": "Nền tảng hoạt động giao dịch nguồn mở, tự lưu trữ, white-label cho cTrader. Xây dựng, kiểm thử ngược, chạy và sao chép chiến lược ở quy mô với AI tích hợp."
   }
 }

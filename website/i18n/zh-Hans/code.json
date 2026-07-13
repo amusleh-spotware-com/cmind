@@ -345,5 +345,233 @@
   "theme.tags.tagsPageTitle": {
     "message": "标签",
     "description": "The title of the tag list page"
+  },
+  "home.hero.badge": {
+    "message": "开源 · 可自托管 · 可白标"
+  },
+  "home.hero.title1": {
+    "message": "您的整个 cTrader 交易台，"
+  },
+  "home.hero.title2": {
+    "message": "尽在一个沉稳深色应用之中。"
+  },
+  "home.hero.subtitle": {
+    "message": "cMind 可在多台机器上构建、回测、运行和复制交易策略 —— 搭配默默盯盘的风险 AI，让您无需凌晨三点盯着图表也能安心。自行托管，做成您的品牌，安睡无忧。"
+  },
+  "home.hero.cta1": {
+    "message": "开始使用 →"
+  },
+  "home.hero.cta2": {
+    "message": "5 分钟运行起来"
+  },
+  "home.hero.note": {
+    "message": "无需信用卡、无需注册、无需“预约演示”。仅需"
+  },
+  "home.hero.shotAlt": {
+    "message": "cMind 仪表盘"
+  },
+  "home.stat.deploy": {
+    "message": "种部署方式：Docker、K8s、Azure、AWS"
+  },
+  "home.stat.ai": {
+    "message": "AI 功能，而非仅仅一个聊天框"
+  },
+  "home.stat.wl": {
+    "message": "白标 —— 以您的品牌发售"
+  },
+  "home.stat.tests": {
+    "message": "每次变更均受三层测试守护"
+  },
+  "home.feat.copy.title": {
+    "message": "经得住真实生活的跟单交易"
+  },
+  "home.feat.copy.body": {
+    "message": "将主账户镜像复制到多个跨券商和 cTrader ID 的账户。连接中断、订单被拒、令牌轮换 —— cMind 自动对账，不会重复开单，并保留完整审计日志。"
+  },
+  "home.feat.copy.link": {
+    "message": "了解运作原理 →"
+  },
+  "home.feat.ai.title": {
+    "message": "干活的 AI，不闲聊"
+  },
+  "home.feat.ai.body": {
+    "message": "用通俗英语描述想法 → 得到一个真正可编译的 cBot，并附带自修复循环。还能调参、回测复盘，以及可自动停止异常交易机器人的风险守卫。"
+  },
+  "home.feat.ai.link": {
+    "message": "认识 AI 核心 →"
+  },
+  "home.feat.build.title": {
+    "message": "在浏览器中构建与回测"
+  },
+  "home.feat.build.body": {
+    "message": "Monaco 编辑器（对，就是 VS Code 用的那个）、C# 和 Python 模板，以及在一次性容器中沙箱化的 dotnet 构建。实时观看权益曲线回传。"
+  },
+  "home.feat.build.link": {
+    "message": "开始构建 →"
+  },
+  "home.feat.fleet.title": {
+    "message": "可弹性扩展、自愈的集群"
+  },
+  "home.feat.fleet.body": {
+    "message": "在自动发现节点间分配运行和回测任务。某节点中途挂掉？其租约被回收，工作继续。不需要值班告警。"
+  },
+  "home.feat.fleet.link": {
+    "message": "弹性扩展 →"
+  },
+  "home.feat.prop.title": {
+    "message": "内置 prop-firm 护栏"
+  },
+  "home.feat.prop.body": {
+    "message": "模拟真实挑战规则 —— 每日亏损、最大回撤、目标 —— 搭配实时权益追踪，确保您的机器人不越线。"
+  },
+  "home.feat.prop.link": {
+    "message": "通过挑战 →"
+  },
+  "home.feat.wl.title": {
+    "message": "从顶到底全白标"
+  },
+  "home.feat.wl.body": {
+    "message": "按租户更换名称、颜色、图标和 favicon。经销商将 cMind 作为自有产品交付，无人知晓底细。"
+  },
+  "home.feat.wl.link": {
+    "message": "打造您的专属版本 →"
+  },
+  "home.feat.pwa.title": {
+    "message": "装进口袋（可安装的 PWA）"
+  },
+  "home.feat.pwa.body": {
+    "message": "移动优先、全面响应式、可安装到手机、底部导航加离线外壳。在公交上也能查看您的机器人状态。"
+  },
+  "home.feat.pwa.link": {
+    "message": "立即安装 →"
+  },
+  "home.feat.mcp.title": {
+    "message": "与 AI 客户端对话（MCP）"
+  },
+  "home.feat.mcp.body": {
+    "message": "内置 MCP 服务器（HTTP + SSE）暴露工具，让 Claude 等 AI 替您驾驶 cMind。"
+  },
+  "home.feat.mcp.link": {
+    "message": "接入 AI →"
+  },
+  "home.feat.sec.title": {
+    "message": "自行运行，默认加固"
+  },
+  "home.feat.sec.body": {
+    "message": "Argon2id、加密密钥环、各节点签名令牌、限流、开箱即用的 OpenTelemetry。您的密钥绝不离开您的服务器。"
+  },
+  "home.feat.sec.link": {
+    "message": "自托管 →"
+  },
+  "home.feat.eyebrow": {
+    "message": "应有尽有"
+  },
+  "home.feat.title": {
+    "message": "一个应用，完整交易运营。"
+  },
+  "home.feat.lede": {
+    "message": "从“我有个想法”到“已在十二个账户上运行”——无需拼凑六个工具加一张电子表格。"
+  },
+  "home.show.copy.title": {
+    "message": "跟单交易，无需惊慌"
+  },
+  "home.show.copy.text": {
+    "message": "每个目标账户独立控制规模、方向、品种、订单类型、SL/TP、到期时间及精确市场价差。当出现问题时，cMind 重新同步而非重复开单。"
+  },
+  "home.show.ai.title": {
+    "message": "描述需求，看它编译。"
+  },
+  "home.show.ai.text": {
+    "message": "用通俗英语告诉 AI 您想要什么。它编写 cBot、在沙箱中构建、读取错误并自我修复 —— 循环至运行成功。您只需审查 diff，无需面对堆栈跟踪。"
+  },
+  "home.show.fleet.title": {
+    "message": "几乎不需要操心的集群"
+  },
+  "home.show.fleet.text": {
+    "message": "代理自动注册并发送心跳。调度器选择负载最低的节点。节点宕机时自动交还工作。基础设施级体验，因为它本来就是。"
+  },
+  "home.show.mobile.title": {
+    "message": "在 360px 手机上完美运行"
+  },
+  "home.show.mobile.text": {
+    "message": "同样强大，精巧随行。底部导航、卡片布局、离线外壳、添加到主屏幕。每处界面均以移动优先设计，再逐步扩展 —— 而非反其道而行。"
+  },
+  "home.show.eyebrow": {
+    "message": "亲睹实际效果"
+  },
+  "home.show.title": {
+    "message": "真实截图。真实深色模式。真实产品。"
+  },
+  "home.deploy.local": {
+    "message": "本地 / Docker"
+  },
+  "home.deploy.local.hint": {
+    "message": "compose 起来就跑"
+  },
+  "home.deploy.k8s.hint": {
+    "message": "Helm chart"
+  },
+  "home.deploy.azure.hint": {
+    "message": "分步指南"
+  },
+  "home.deploy.aws.hint": {
+    "message": "分步指南"
+  },
+  "home.deploy.eyebrow": {
+    "message": "任意位置部署"
+  },
+  "home.deploy.title": {
+    "message": "您的服务器，您做主。"
+  },
+  "home.deploy.lede": {
+    "message": "对每种选项都有新手友好的复制粘贴指南。从笔记本起步，准备好了再升级到集群。"
+  },
+  "home.aud.traders.title": {
+    "message": "交易者"
+  },
+  "home.aud.traders.text": {
+    "message": "自托管完整交易台。编写 cBot、跨节点回测、实盘运行、跟单复制 —— 尽在一个 AI 加持的控制台，数据永不离开您的服务器。"
+  },
+  "home.aud.brokers.title": {
+    "message": "券商"
+  },
+  "home.aud.brokers.text": {
+    "message": "为客户白标 cMind。以您的品牌提供 AI、跟单交易和 prop-firm 挑战，限制账户接入您的报价簿，开启新收入来源。"
+  },
+  "home.aud.providers.title": {
+    "message": "云和 VPS 提供商"
+  },
+  "home.aud.providers.text": {
+    "message": "提供托管 cMind  Hosting服务。以订阅、计量计算、白标和 AI 获得粘性高、算力需求大的 workload 并将其货币化。"
+  },
+  "home.aud.eyebrow": {
+    "message": "适用对象"
+  },
+  "home.aud.title": {
+    "message": "为真金白银冒险的人打造。"
+  },
+  "home.aud.lede": {
+    "message": "无论您是交易者、券商还是托管提供商 ——"
+  },
+  "home.aud.link": {
+    "message": "找到您的路径 →"
+  },
+  "home.cta.title": {
+    "message": "准备好认识您的新交易台了吗？"
+  },
+  "home.cta.text": {
+    "message": "先读友好的入门介绍，然后在咖啡凉之前让它在本地跑起来。它是开源的、MIT 许可的 —— 尽管探索、尽管折腾、尽管提 PR。"
+  },
+  "home.cta.button1": {
+    "message": "阅读文档 →"
+  },
+  "home.cta.button2": {
+    "message": "在 GitHub 上加星 ★"
+  },
+  "home.meta.title": {
+    "message": "cMind — 您的整个 cTrader 交易台，尽在一个应用中"
+  },
+  "home.meta.description": {
+    "message": "面向 cTrader 的开源、可自托管、可白标交易运营平台。内置 AI，大规模构建、回测、运行和复制策略。"
   }
 }

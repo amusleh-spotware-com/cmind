@@ -345,5 +345,233 @@
   "theme.tags.tagsPageTitle": {
     "message": "Tags",
     "description": "The title of the tag list page"
+  },
+  "home.hero.badge": {
+    "message": "โอเพนซอร์ส · โฮสต์เองได้ · ไวท์เลเบล"
+  },
+  "home.hero.title1": {
+    "message": "โต๊ะเทรด cTrader ทั้งหมดของคุณ,"
+  },
+  "home.hero.title2": {
+    "message": "ในแอปสีดำสงบแอปเดียว"
+  },
+  "home.hero.subtitle": {
+    "message": "cMind สร้าง ทดสอบย้อนหลัง รัน และคัดลอกกลยุทธ์การเทรดข้ามเครื่องจำนวนมาก — พร้อม AI core ที่เฝ้าดูความเสี่ยงเงียบๆ ให้คุณไม่ต้องรีเฟรชกราฟตอนตีสาม ติดตั้งเองได้ ใส่แบรนด์ตัวเองได้ แล้วนอนหลับสบายขึ้น"
+  },
+  "home.hero.cta1": {
+    "message": "เริ่มต้นใช้งาน →"
+  },
+  "home.hero.cta2": {
+    "message": "รันได้ใน 5 นาที"
+  },
+  "home.hero.note": {
+    "message": "ไม่ต้องใช้บัตรเครดิต ไม่ต้องสมัคร ไม่ต้อง \"นัดดemo\" แค่"
+  },
+  "home.hero.shotAlt": {
+    "message": "แดชบอร์ด cMind"
+  },
+  "home.stat.deploy": {
+    "message": "วิธีติดตั้ง: Docker, K8s, Azure, AWS"
+  },
+  "home.stat.ai": {
+    "message": "ฟีเจอร์ AI ไม่ใช่แค่กล่องแชท"
+  },
+  "home.stat.wl": {
+    "message": "ไวท์เลเบล — ส่งออกในแบรนด์ของคุณ"
+  },
+  "home.stat.tests": {
+    "message": "ทดสอบครอบทุกการเปลี่ยนแปลง"
+  },
+  "home.feat.copy.title": {
+    "message": "คัดลอกเทรดแบบที่อยู่รอดในโลกจริง"
+  },
+  "home.feat.copy.body": {
+    "message": "mirror บัญชี master ไปยังหลายบัญชีข้ามโบรกเกอร์และ cTrader ID การเชื่อมต่อหลุด คำสั่งถูกปฏิเสธ token หมุนเวียน — cMind ปรับสมดุลโดยไม่ยิงคำสั่งซ้ำ และเก็บ audit trail ครบถ้วน"
+  },
+  "home.feat.copy.link": {
+    "message": "ทำงานอย่างไร →"
+  },
+  "home.feat.ai.title": {
+    "message": "AI ที่ทำงานบ้าน ไม่ใช่แชทเล่นๆ"
+  },
+  "home.feat.ai.body": {
+    "message": "ไอเดียภาษาอังกฤษธรรมดา → cBot ที่คอมไพล์ได้จริง พร้อม loop ซ่อมตัวเอง บวกการปรับพารามิเตอร์ วิเคราะห์ backtest แบบ post-mortem และ risk guard ที่หยุด bot ที่ทำตัวผิดปกติได้อัตโนมัติ"
+  },
+  "home.feat.ai.link": {
+    "message": "พบ AI core →"
+  },
+  "home.feat.build.title": {
+    "message": "สร้างและทดสอบย้อนหลังในเบราว์เซอร์"
+  },
+  "home.feat.build.body": {
+    "message": "Monaco IDE (ใช่ ตัวที่อยู่ใน VS Code นั่นแหละ) พร้อมเทมเพลต C# และ Python และ dotnet build ใน sandbox container ที่ใช้แล้วทิ้ง ดู equity curve ไหลเข้ามาแบบ live ได้เลย"
+  },
+  "home.feat.build.link": {
+    "message": "เริ่มสร้าง →"
+  },
+  "home.feat.fleet.title": {
+    "message": "คลัสเตอร์ที่ขยายและซ่อมตัวเองได้"
+  },
+  "home.feat.fleet.body": {
+    "message": "รันและทดสอบย้อนหลังกระจายไปทั่ว node ที่ค้นพบตัวเองอัตโนมัติ ถ้า node ตายระหว่างงาน lease จะถูกยึดคืนและงานยังทำต่อไป ไม่ต้องตื่นมาดูแล"
+  },
+  "home.feat.fleet.link": {
+    "message": "ขยายระบบ →"
+  },
+  "home.feat.prop.title": {
+    "message": "มี guardrail สำหรับ prop-firm ในตัว"
+  },
+  "home.feat.prop.body": {
+    "message": "จำลองกฎ challenge จริง — daily loss, max drawdown, เป้า — พร้อม equity tracking แบบ real-time ทำให้ bot ของคุณอยู่ในกรอบที่กำหนด"
+  },
+  "home.feat.prop.link": {
+    "message": "ผ่าน challenge →"
+  },
+  "home.feat.wl.title": {
+    "message": "ไวท์เลเบล ตลอดทั้งระบบ"
+  },
+  "home.feat.wl.body": {
+    "message": "เปลี่ยนชื่อ สี โลโก้ และ favicon ต่อ tenant ได้ตามต้องการ ตัวแทนจำหน่ายส่ง cMind ในแบรนด์ของตัวเองโดยไม่มีใครรู้"
+  },
+  "home.feat.wl.link": {
+    "message": "ทำให้เป็นของคุณ →"
+  },
+  "home.feat.pwa.title": {
+    "message": "อยู่ในกระเป๋าคุณ (PWA ติดตั้งได้)"
+  },
+  "home.feat.pwa.body": {
+    "message": "ออกแบบมือถือก่อน รองรับทุกขนาดหน้าจอ ติดตั้งบนมือถือได้เลย พร้อม bottom-nav และ offline shell ตรวจสอบ bot จากบนรถเมลล์ได้สบายๆ"
+  },
+  "home.feat.pwa.link": {
+    "message": "ติดตั้งเลย →"
+  },
+  "home.feat.mcp.title": {
+    "message": "คุยกับ AI client ได้ (MCP)"
+  },
+  "home.feat.mcp.body": {
+    "message": "MCP server ในตัว (HTTP + SSE) เปิดเผย tools ให้ Claude และเพื่อนๆ ขับ cMind ให้คุณได้"
+  },
+  "home.feat.mcp.link": {
+    "message": "เชื่อมต่อเลย →"
+  },
+  "home.feat.sec.title": {
+    "message": "ของคุณเองที่จะรัน ปลอดภัยตั้งแต่ต้น"
+  },
+  "home.feat.sec.body": {
+    "message": "Argon2id, กุญแจเข้ารหัส per-node signed token, rate limiting และ OpenTelemetry ติดตั้งมาพร้อมใช้งาน กุญแจของคุณไม่เคยออกนอก server ของคุณ"
+  },
+  "home.feat.sec.link": {
+    "message": "โฮสต์เอง →"
+  },
+  "home.feat.eyebrow": {
+    "message": "ทุกอย่างในกล่องเดียว"
+  },
+  "home.feat.title": {
+    "message": "แอปเดียว ครอบคลุมทั้ง operation"
+  },
+  "home.feat.lede": {
+    "message": "จาก \"มีไอเดีย\" สู่ \"รันอยู่บนสิบสองบัญชี\" — โดยไม่ต้องต่อยางหกตัวและสเปรดชีต"
+  },
+  "home.show.copy.title": {
+    "message": "คัดลอกเทรด ไม่ต้องตื่นตูม"
+  },
+  "home.show.copy.text": {
+    "message": "ควบคุม sizing, ทิศทาง, symbols, ประเภทคำสั่ง, SL/TP, expiry และ slippage ของ market-range ได้ต่อปลายทาง เมื่อมีอะไรผิดพลาด cMind resyncs แทนที่จะทำซ้ำ"
+  },
+  "home.show.ai.title": {
+    "message": "บอกไอเดีย ดูมันคอมไพล์"
+  },
+  "home.show.ai.text": {
+    "message": "บอก AI ว่าต้องการอะไรเป็นภาษาอังกฤษธรรมดา มันเขียน cBot ให้ build ใน sandbox อ่าน error แล้วแก้ตัวเอง — วนจนรันได้ คุณดู diff ไม่ใช่ stack trace"
+  },
+  "home.show.fleet.title": {
+    "message": "คลัสเตอร์ที่แทบไม่ต้องคิดถึง"
+  },
+  "home.show.fleet.text": {
+    "message": "Agent ลงทะเบียนตัวเองและส่ง heartbeat Scheduler เลือก node ที่โหลดน้อยที่สุด node ตายแล้วมอบงานคืนอัตโนมัติ รู้สึกเหมือน infrastructure เพราะมันคือ infrastructure นั่นแหละ"
+  },
+  "home.show.mobile.title": {
+    "message": "รันสวยบนมือถือ 360px"
+  },
+  "home.show.mobile.text": {
+    "message": "พลังเดียวกัน พกพาสะดวก bottom-nav, card layout, offline shell, add-to-home-screen ทุก surface ออกแบบมือถือก่อน แล้วขยายขึ้น — ไม่ใช่กลับทาง"
+  },
+  "home.show.eyebrow": {
+    "message": "ดูในการทำงานจริง"
+  },
+  "home.show.title": {
+    "message": "สกรีนช็อตจริง โหมดมืดจริง ผลิตภัณฑ์จริง"
+  },
+  "home.deploy.local": {
+    "message": "Local / Docker"
+  },
+  "home.deploy.local.hint": {
+    "message": "compose up & go"
+  },
+  "home.deploy.k8s.hint": {
+    "message": "Helm chart"
+  },
+  "home.deploy.azure.hint": {
+    "message": "ทีละขั้นตอน"
+  },
+  "home.deploy.aws.hint": {
+    "message": "ทีละขั้นตอน"
+  },
+  "home.deploy.eyebrow": {
+    "message": "ติดตั้งได้ทุกที่"
+  },
+  "home.deploy.title": {
+    "message": "server คุณ กฎของคุณ"
+  },
+  "home.deploy.lede": {
+    "message": "คู่มือ copy-paste ทุกตัวเลือก เริ่มจากโน้ตบุ๊ก ขยายสู่คลัสเตอร์เมื่อพร้อม"
+  },
+  "home.aud.traders.title": {
+    "message": "เทรดเดอร์"
+  },
+  "home.aud.traders.text": {
+    "message": "โฮสต์ทุกอย่างด้วยตัวเอง เขียน cBot ทดสอบย้อนหลังข้าม node รันแบบ live แล้วคัดลอก — ทำได้ทั้งหมดใน console ที่ขับเคลื่อนด้วย AI โดยข้อมูลของคุณไม่เคยออกจากกล่องของคุณ"
+  },
+  "home.aud.brokers.title": {
+    "message": "โบรกเกอร์"
+  },
+  "home.aud.brokers.text": {
+    "message": "ไวท์เลเบล cMind ให้ลูกค้า ให้พวกเขาใช้ AI คัดลอกเทรด และ prop-firm challenge ภายใต้แบรนด์ของคุณ จำกัดบัญชีไว้ที่ book ของคุณ แล้วเปิดรายได้ใหม่"
+  },
+  "home.aud.providers.title": {
+    "message": "Cloud & VPS providers"
+  },
+  "home.aud.providers.text": {
+    "message": "เสนอ hosting cMind ที่มีคนดูแล คว้างานที่ต้องใช้ compute ต่อเดือน แล้วหารายได้จาก subscription, compute แบบคิดเมตตามใช้, ไวท์เลเบล และ AI"
+  },
+  "home.aud.eyebrow": {
+    "message": "สำหรับใคร"
+  },
+  "home.aud.title": {
+    "message": "สร้างมาสำหรับคนที่มีเงินเดิมพัน"
+  },
+  "home.aud.lede": {
+    "message": "ไม่ว่าจะเป็นเทรดเดอร์ โบรกเกอร์ หรือผู้ให้บริการ hosting —"
+  },
+  "home.aud.link": {
+    "message": "หาเส้นทางของคุณ →"
+  },
+  "home.cta.title": {
+    "message": "พร้อมพบโต๊ะเทรดใหม่ของคุณหรือยัง?"
+  },
+  "home.cta.text": {
+    "message": "อ่านบทนำที่เข้าใจง่าย แล้วรันในเครื่องก่อนกาแฟเย็น เป็นโอเพนซอร์สและ MIT license — สำรวจ ทำลาย ส่ง PR ได้เลย"
+  },
+  "home.cta.button1": {
+    "message": "อ่านเอกสาร →"
+  },
+  "home.cta.button2": {
+    "message": "ให้ดาวบน GitHub ★"
+  },
+  "home.meta.title": {
+    "message": "cMind — โต๊ะเทรด cTrader ทั้งหมดของคุณ ในแอปเดียว"
+  },
+  "home.meta.description": {
+    "message": "แพลตฟอร์ม operations การเทรด โอเพนซอร์ส โฮสต์เองได้ ไวท์เลเบล สำหรับ cTrader สร้าง ทดสอบย้อนหลับ รัน และคัดลอกกลยุทธ์ในระดับใหญ่ พร้อม AI ในตัว"
   }
 }

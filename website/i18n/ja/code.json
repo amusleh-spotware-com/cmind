@@ -345,5 +345,233 @@
   "theme.tags.tagsPageTitle": {
     "message": "タグ",
     "description": "The title of the tag list page"
+  },
+  "home.hero.badge": {
+    "message": "オープンソース · セルフホスト対応 · ホワイトラベル"
+  },
+  "home.hero.title1": {
+    "message": "あなたの取引デスク全体を、"
+  },
+  "home.hero.title2": {
+    "message": "静かなダークアプリのなかに。"
+  },
+  "home.hero.subtitle": {
+    "message": "cMindは、複数のマシンにまたがる取引戦略の構築・バックテスト・実行・コピーを行い、AIコアがリスクを見守り続けるため、凌晨3時にチャートを更新する必要はありません。セルフホスト、品牌変更自由な環境で、より良い睡眠を手に入れましょう。"
+  },
+  "home.hero.cta1": {
+    "message": "始める →"
+  },
+  "home.hero.cta2": {
+    "message": "5分で起動"
+  },
+  "home.hero.note": {
+    "message": "クレジットカードも、サインアップも、「デモの予約」も不要。只需要"
+  },
+  "home.hero.shotAlt": {
+    "message": "cMindダッシュボード"
+  },
+  "home.stat.deploy": {
+    "message": "デプロイ方法: Docker、K8s、Azure、AWS"
+  },
+  "home.stat.ai": {
+    "message": "AI機能 — チャットボックスするだけじゃない"
+  },
+  "home.stat.wl": {
+    "message": "ホワイトラベル — 自分のブランドとして提供"
+  },
+  "home.stat.tests": {
+    "message": "変更ごとにテストティアがを守る"
+  },
+  "home.feat.copy.title": {
+    "message": "現実の運用に耐えるコピー取引"
+  },
+  "home.feat.copy.body": {
+    "message": "ブローカーやcTrader IDにまたがる複数の口座にマスター口座をコピー。接続切断、注文失敗、トークンローテート — cMindは重複発注なしに和解し、完全な監査証跡を維持します。"
+  },
+  "home.feat.copy.link": {
+    "message": "仕組みを見る →"
+  },
+  "home.feat.ai.title": {
+    "message": "雑用をこなすAI — 雑談はしない"
+  },
+  "home.feat.ai.body": {
+    "message": "平易な英語のリクエストから 실제コンパイル可能なcBotへ自己修復ループ付き。それだけでなく、パラメータ調整、バックテスト事後分析、誤動作ボットを自動停止できるリスクガードも。"
+  },
+  "home.feat.ai.link": {
+    "message": "AIコアに触れる →"
+  },
+  "home.feat.build.title": {
+    "message": "ブラウザで構築・バックテスト"
+  },
+  "home.feat.build.body": {
+    "message": "Monaco IDE（そう、VS Codeと同じもの）、C#とPythonテンプレート、破棄可能コンテナでのサンドボックスdotnetビルド。權益カーブがライブでストリーミングされてくるのを目撃。"
+  },
+  "home.feat.build.link": {
+    "message": "構築を始める →"
+  },
+  "home.feat.fleet.title": {
+    "message": "自動スケール＆自己修復するフリート"
+  },
+  "home.feat.fleet.body": {
+    "message": "自動検出ノードにまたがる実行とバックテスト。ノードがジョブ途中で停止？リースは回収され、作業は継続。ページャー不要。"
+  },
+  "home.feat.fleet.link": {
+    "message": "スケールアウト →"
+  },
+  "home.feat.prop.title": {
+    "message": "プロップファームのガードレールを標準装備"
+  },
+  "home.feat.prop.body": {
+    "message": "毎日の損失、最大ドローダウン、ターゲットなど実際のチャレンジルールをライブ權益追跡で模倣し、ボットをルール内に保ちます。"
+  },
+  "home.feat.prop.link": {
+    "message": "チャレンジを突破する →"
+  },
+  "home.feat.wl.title": {
+    "message": "ホワイトラベル、最初から最後まで"
+  },
+  "home.feat.wl.body": {
+    "message": "テナントごとに名前、色、ロゴ、ファビコンを変更。リセラーはcMindを自社製品として出荷、誰も疑いません。"
+  },
+  "home.feat.wl.link": {
+    "message": "カスタマイズする →"
+  },
+  "home.feat.pwa.title": {
+    "message": "ポケットに入る（インストール可能PWA）"
+  },
+  "home.feat.pwa.body": {
+    "message": "モバイルファースト、完全レスポンシブ、電話番号にインストール可能、ボトムナビとオフラインシェル付き。バスの中からボットの様子を確認。"
+  },
+  "home.feat.pwa.link": {
+    "message": "インストールする →"
+  },
+  "home.feat.mcp.title": {
+    "message": "AIクライアントと通信（MCP）"
+  },
+  "home.feat.mcp.body": {
+    "message": "組み込みMCPサーバー（HTTP + SSE）がツールを公開し、ClaudeなどがcMindを操作できます。"
+  },
+  "home.feat.mcp.link": {
+    "message": "接続する →"
+  },
+  "home.feat.sec.title": {
+    "message": "自分で運用、デフォルトで強化されたセキュリティ"
+  },
+  "home.feat.sec.body": {
+    "message": "Argon2id、暗号化キーリング、ノードごとの署名付きトークン、ストレート制限、ボックスからのOpenTelemetry標準搭載。キーは箱から出ない。"
+  },
+  "home.feat.sec.link": {
+    "message": "セルフホストする →"
+  },
+  "home.feat.eyebrow": {
+    "message": "箱の中のすべて"
+  },
+  "home.feat.title": {
+    "message": "ひとつのアプリ。取引オペレーション全体。"
+  },
+  "home.feat.lede": {
+    "message": "「アイデアがある」から「12個の口座でライブ」まで — 6つのツールとスプレッドシートを接着剤のように組み合わせることなく。"
+  },
+  "home.show.copy.title": {
+    "message": "コピー取引、パニックなし"
+  },
+  "home.show.copy.text": {
+    "message": "サイズ、方向、シンボル、注文タイプ、SL/TP、有効期限、市場レンジスリップ率の完全なる宛先別制御。何か問題が発生したとき、cMindは複製ではなく再同期します。"
+  },
+  "home.show.ai.title": {
+    "message": "描述してください。コンパイルされるのを見守ってください。"
+  },
+  "home.show.ai.text": {
+    "message": "必要なものを平易な英語してください。AIがcBotを書き、サンドボックスでビルドし、エラーを読み、修正を繰り返して実行するまでループします。確認するのは差分だけで、スタックトレースではありません。"
+  },
+  "home.show.fleet.title": {
+    "message": "ほとんど考える必要のないクラスタ"
+  },
+  "home.show.fleet.text": {
+    "message": "エージェントは的自己登録とハートビートを送信。スケジューラは最も負荷の低いノードを選択。死んだノードは作業を自動的に返す。インフラのように感じるるのは、それがインフラだからです。"
+  },
+  "home.show.mobile.title": {
+    "message": "360pxの電話で美しく動作"
+  },
+  "home.show.mobile.text": {
+    "message": "同じパワー、ポケットサイズ。ボトムナビ、カードレイアウト、オフラインシェル、ホーム画面に追加。すべての表面はモバイルファーストで設計され、それから拡大 — 逆ではありません。"
+  },
+  "home.show.eyebrow": {
+    "message": "実際の動作を見る"
+  },
+  "home.show.title": {
+    "message": "実際のスクリーンショット。本物のダークモード。本物の製品。"
+  },
+  "home.deploy.local": {
+    "message": "ローカル / Docker"
+  },
+  "home.deploy.local.hint": {
+    "message": "compose up & go"
+  },
+  "home.deploy.k8s.hint": {
+    "message": "Helm チャート"
+  },
+  "home.deploy.azure.hint": {
+    "message": "ステップバイステップ"
+  },
+  "home.deploy.aws.hint": {
+    "message": "ステップバイステップ"
+  },
+  "home.deploy.eyebrow": {
+    "message": "どこでもデプロイ"
+  },
+  "home.deploy.title": {
+    "message": "あなたのサーバー、あなたのルール。"
+  },
+  "home.deploy.lede": {
+    "message": "すべてのオプションに対する初心者向けのコピペガイド。ノートパソコンで始め、準備ができたらクラスタにグレードアップ。"
+  },
+  "home.aud.traders.title": {
+    "message": "トレーダー"
+  },
+  "home.aud.traders.text": {
+    "message": "デスク全体をセルフホスト。cBotを書き、複数のノードでバックテストし、ライブで実行し、コピー — すべてAI搭載のコンソールで、データは決して手放しません。"
+  },
+  "home.aud.brokers.title": {
+    "message": "ブローカー"
+  },
+  "home.aud.brokers.text": {
+    "message": "クライアント向けにcMindをホワイトラベル。ブランド下でAI、コピー取引、プロップファームチャレンジを提供し、口座を自分の帳簿に制限し、新しい収益を開拓します。"
+  },
+  "home.aud.providers.title": {
+    "message": "クラウド＆VPSプロバイダー"
+  },
+  "home.aud.providers.text": {
+    "message": "管理対象のcMindホスティングを提供。粘着性があり計算集約的なワークロードを獲得し、サブスクリプション、計量コンピューティング、ホワイトラベル、AIの収益化。"
+  },
+  "home.aud.eyebrow": {
+    "message": "誰が対象か"
+  },
+  "home.aud.title": {
+    "message": "実際にお金がかかっている人々のために構築。"
+  },
+  "home.aud.lede": {
+    "message": "トレーダー、ブローカー、またはホスティングプロバイダー —"
+  },
+  "home.aud.link": {
+    "message": "道を見つける →"
+  },
+  "home.cta.title": {
+    "message": "新しい取引デスクに会う準備ができましたか？"
+  },
+  "home.cta.text": {
+    "message": "ガイドを読み終わったら、コーヒーが冷める前にローカルで起動完了。オープンソースでMITライセンス — 探検し、壊し、PRを送信。"
+  },
+  "home.cta.button1": {
+    "message": "ドキュメントを読む →"
+  },
+  "home.cta.button2": {
+    "message": "GitHubでスターを付ける ★"
+  },
+  "home.meta.title": {
+    "message": "cMind — ひとつのアプリであなたのcTrader取引デスク全体"
+  },
+  "home.meta.description": {
+    "message": "cTrader向けオープンソースの 自己ホスト可能、ホワイトラベル対応取引オペレーションプラットフォーム。AI標準搭載でスケールに合わせた戦略の構築・バックテスト・実行・コピーを実現。"
   }
 }

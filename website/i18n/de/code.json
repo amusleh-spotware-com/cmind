@@ -345,5 +345,233 @@
   "theme.tags.tagsPageTitle": {
     "message": "Tags",
     "description": "The title of the tag list page"
+  },
+  "home.hero.badge": {
+    "message": "Open Source · selbst-hostbar · White-Label"
+  },
+  "home.hero.title1": {
+    "message": "Ihr kompletter cTrader-Handelstisch,"
+  },
+  "home.hero.title2": {
+    "message": "in einer ruhigen, dunklen App."
+  },
+  "home.hero.subtitle": {
+    "message": "cMind erstellt, testet, führt aus und kopiert Handelsstrategien auf einer Flotte von Maschinen — mit einem KI-Kern, der still und leise das Risiko überwacht, damit Sie nicht um 3 Uhr morgens die Charts aktualisieren müssen. Hosten Sie es selbst, markieren Sie es als Ihr eigenes und schlafen Sie etwas besser."
+  },
+  "home.hero.cta1": {
+    "message": "Jetzt starten →"
+  },
+  "home.hero.cta2": {
+    "message": "In 5 Minuten loslegen"
+  },
+  "home.hero.note": {
+    "message": "Keine Kreditkarte, keine Anmeldung, kein \"Demo buchen\". Einfach"
+  },
+  "home.hero.shotAlt": {
+    "message": "cMind Dashboard"
+  },
+  "home.stat.deploy": {
+    "message": "Möglichkeiten zum Deployen: Docker, K8s, Azure, AWS"
+  },
+  "home.stat.ai": {
+    "message": "KI-Funktionen, nicht nur ein Chat-Fenster"
+  },
+  "home.stat.wl": {
+    "message": "White-Label — als Ihre Marke ausliefern"
+  },
+  "home.stat.tests": {
+    "message": "Teststufen sichern jede Änderung"
+  },
+  "home.feat.copy.title": {
+    "message": "Copy Trading, das im echten Leben funktioniert"
+  },
+  "home.feat.copy.body": {
+    "message": "Spiegeln Sie ein Master-Konto auf viele Konten über Broker und cTrader-IDs hinweg. Verbindungen fallen aus, Orders prallen ab, Tokens rotieren — cMind gleicht aus, ohne doppelte Trades auszulösen, und führt ein vollständiges Audit-Protokoll."
+  },
+  "home.feat.copy.link": {
+    "message": "So funktioniert es →"
+  },
+  "home.feat.ai.title": {
+    "message": "KI, die Arbeit erledigt, nicht Smalltalk"
+  },
+  "home.feat.ai.body": {
+    "message": "Idee in einfachen Worten → ein echter, kompilierender cBot mit einer Selbstreparatur-Schleife. Plus Parametertuning, Backtest-Nachbesprechungen und ein Risikowächter, der ein Fehlverhalten des Bots automatisch stoppen kann."
+  },
+  "home.feat.ai.link": {
+    "message": "Lernen Sie den KI-Kern kennen →"
+  },
+  "home.feat.build.title": {
+    "message": "Build & Backtest im Browser"
+  },
+  "home.feat.build.body": {
+    "message": "Eine Monaco-IDE (ja, die von VS Code), C#- und Python-Vorlagen sowie ein Sandkasten-dotnet-Build in Einweg-Containern. Beobachten Sie, wie Equity-Kurven live zurückgestreamt werden."
+  },
+  "home.feat.build.link": {
+    "message": "Jetzt bauen →"
+  },
+  "home.feat.fleet.title": {
+    "message": "Eine Flotte, die skaliert und sich selbst repariert"
+  },
+  "home.feat.fleet.body": {
+    "message": "Läuft und Backtests verteilt auf sich selbst erkennende Nodes. Stirbt ein Node mitten in einem Job? Sein Lease wird zurückgefordert und die Arbeit geht weiter. Kein Pager erforderlich."
+  },
+  "home.feat.fleet.link": {
+    "message": "Horizontale Skalierung →"
+  },
+  "home.feat.prop.title": {
+    "message": "Prop-Firm-Grenzen eingebaut"
+  },
+  "home.feat.prop.body": {
+    "message": "Modellieren Sie echte Challenge-Regeln — täglicher Verlust, maximaler Drawdown, Ziele — mit Live-Equity-Tracking, damit Ihre Bots innerhalb der Grenzen bleiben."
+  },
+  "home.feat.prop.link": {
+    "message": "Die Challenge bestehen →"
+  },
+  "home.feat.wl.title": {
+    "message": "White-Label, von oben bis unten"
+  },
+  "home.feat.wl.body": {
+    "message": "Tauschen Sie Name, Farben, Logo und Favicon pro Mandant. Reseller versenden cMind als ihr eigenes Produkt und niemand bemerkt den Unterschied."
+  },
+  "home.feat.wl.link": {
+    "message": "Machen Sie es zu Ihrem →"
+  },
+  "home.feat.pwa.title": {
+    "message": "In Ihrer Tasche (installierbare PWA)"
+  },
+  "home.feat.pwa.body": {
+    "message": "Mobile-first, vollständig responsiv, auf Ihrem Telefon installierbar mit Bottom-Nav und einer Offline-Shell. Behalten Sie Ihre Bots vom Bus aus im Auge."
+  },
+  "home.feat.pwa.link": {
+    "message": "Installieren →"
+  },
+  "home.feat.mcp.title": {
+    "message": "Spricht mit KI-Clients (MCP)"
+  },
+  "home.feat.mcp.body": {
+    "message": "Ein eingebauter MCP-Server (HTTP + SSE) stellt Tools bereit, damit Claude und andere cMind für Sie steuern können."
+  },
+  "home.feat.mcp.link": {
+    "message": "Verdrahten →"
+  },
+  "home.feat.sec.title": {
+    "message": "Ihre Wahl zum Selbsthosten, standardmäßig gehärtet"
+  },
+  "home.feat.sec.body": {
+    "message": "Argon2id, ein verschlüsselter Schlüsselbund, per-Node signierte Tokens, Rate-Limiting und OpenTelemetry serienmäßig. Ihre Schlüssel verlassen niemals Ihre Umgebung."
+  },
+  "home.feat.sec.link": {
+    "message": "Selbst hosten →"
+  },
+  "home.feat.eyebrow": {
+    "message": "Alles in der Box"
+  },
+  "home.feat.title": {
+    "message": "Eine App. Der gesamte Handelsbetrieb."
+  },
+  "home.feat.lede": {
+    "message": "Von „Ich habe eine Idee“ bis „Es läuft auf zwölf Konten“ — ohne sechs Tools und eine Tabellenkalkulation zusammenzukleben."
+  },
+  "home.show.copy.title": {
+    "message": "Copy Trading, ohne die Panik"
+  },
+  "home.show.copy.text": {
+    "message": "Pro-Ziel-Kontrolle über Größe, Richtung, Symbole, Ordertypen, SL/TP, Verfall und genauen Marktbereich-Slippage. Wenn etwas schiefgeht, synchronisiert cMind erneut, anstatt zu duplizieren."
+  },
+  "home.show.ai.title": {
+    "message": "Beschreiben Sie es. Beobachten Sie, wie es kompiliert."
+  },
+  "home.show.ai.text": {
+    "message": "Erzählen Sie der KI in einfachen Worten, was Sie wollen. Sie schreibt den cBot, baut ihn in einer Sandbox, liest die Fehler und korrigiert sich selbst — in einer Schleife, bis er läuft. Sie prüfen den Diff, nicht den Stack-Trace."
+  },
+  "home.show.fleet.title": {
+    "message": "Ein Cluster, an den Sie kaum denken müssen"
+  },
+  "home.show.fleet.text": {
+    "message": "Agents registrieren sich selbst und senden Heartbeats. Der Scheduler wählt den am wenigsten ausgelasteten Node. Ein gestorbener Node gibt seine Arbeit automatisch zurück. Es fühlt sich nach Infrastruktur an, weil es Infrastruktur ist."
+  },
+  "home.show.mobile.title": {
+    "message": "Läuft wunderschön auf einem 360px-Telefon"
+  },
+  "home.show.mobile.text": {
+    "message": "Gleiche Leistung, taschengröße. Bottom-Nav, Karten-Layouts, Offline-Shell, Zum-Home-Bildschirm-hinzufügen. Jede Oberfläche ist Mobile-first konzipiert und skaliert dann nach oben — nicht umgekehrt."
+  },
+  "home.show.eyebrow": {
+    "message": "Sehen Sie es in Aktion"
+  },
+  "home.show.title": {
+    "message": "Echte Screenshots. Echtem Dark Mode. Echtes Produkt."
+  },
+  "home.deploy.local": {
+    "message": "Lokal / Docker"
+  },
+  "home.deploy.local.hint": {
+    "message": "Compose hochfahren & los"
+  },
+  "home.deploy.k8s.hint": {
+    "message": "Helm Chart"
+  },
+  "home.deploy.azure.hint": {
+    "message": "Schritt für Schritt"
+  },
+  "home.deploy.aws.hint": {
+    "message": "Schritt für Schritt"
+  },
+  "home.deploy.eyebrow": {
+    "message": "Überall deployen"
+  },
+  "home.deploy.title": {
+    "message": "Ihre Server, Ihre Regeln."
+  },
+  "home.deploy.lede": {
+    "message": "Anfängerfreundliche, Copy-Paste-Anleitungen für jede Option. Starten Sie auf Ihrem Laptop, steigen Sie auf ein Cluster um, wenn Sie bereit sind."
+  },
+  "home.aud.traders.title": {
+    "message": "Händler"
+  },
+  "home.aud.traders.text": {
+    "message": "Hosten Sie Ihren ganzen Handelstisch selbst. Schreiben Sie einen cBot, testen Sie ihn auf Nodes, führen Sie ihn live aus und kopieren Sie ihn — alles in einer KI-gestützten Konsole, Ihre Daten verlassen niemals Ihre Umgebung."
+  },
+  "home.aud.brokers.title": {
+    "message": "Broker"
+  },
+  "home.aud.brokers.text": {
+    "message": "White-Labeln Sie cMind für Ihre Kunden. Bieten Sie ihnen KI, Copy Trading und Prop-Firm-Challenges unter Ihrer Marke, beschränken Sie Konten auf Ihr Buch und erschließen Sie neue Einnahmequellen."
+  },
+  "home.aud.providers.title": {
+    "message": "Cloud- & VPS-Anbieter"
+  },
+  "home.aud.providers.text": {
+    "message": "Bieten Sie verwaltetes cMind-Hosting an. Gewinnen Sie eine beständige, rechenintensive Arbeitslast und monetarisieren Sie das Abonnement, die nutzungsbasierte Abrechnung, das White-Label und die KI."
+  },
+  "home.aud.eyebrow": {
+    "message": "Für wen es gedacht ist"
+  },
+  "home.aud.title": {
+    "message": "Für Menschen, die Geld auf dem Spiel haben."
+  },
+  "home.aud.lede": {
+    "message": "Händler, Broker oder Hosting-Anbieter —"
+  },
+  "home.aud.link": {
+    "message": "Finden Sie Ihren Weg →"
+  },
+  "home.cta.title": {
+    "message": "Bereit, Ihren neuen Handelstisch kennenzulernen?"
+  },
+  "home.cta.text": {
+    "message": "Lesen Sie die freundliche Einführung und lassen Sie es dann lokal laufen, bevor Ihr Kaffee kalt wird. Es ist Open-Source und MIT-lizenziert — schauen Sie sich um, brechen Sie Dinge, senden Sie einen PR."
+  },
+  "home.cta.button1": {
+    "message": "Dokumentation lesen →"
+  },
+  "home.cta.button2": {
+    "message": "Auf GitHub ★ geben"
+  },
+  "home.meta.title": {
+    "message": "cMind — Ihr kompletter cTrader-Handelstisch in einer App"
+  },
+  "home.meta.description": {
+    "message": "Open-Source-, selbsthostbares, White-Label-Handelsbetriebsplattform für cTrader. Erstellen, testen, führen Sie aus und kopieren Sie Strategien im großen Maßstab mit integrierter KI."
   }
 }

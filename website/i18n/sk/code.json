@@ -4,7 +4,7 @@
     "description": "Title of the first-visit risk-disclaimer dialog"
   },
   "riskDisclaimer.body": {
-    "message": "Obchodovanie s devízami (forex) a rozdielovými zmluvami (CFD) na maržu nesie vysokú mieru rizika a nemusí byť vhodné pre všetkých investorov. Vysoká páka môže pôsobiť vo váš prospech, ale aj proti vám. Môžete prísť o časť alebo o celý investovaný kapitál, a preto by ste nemali investovať peniaze, ktorých stratu si nemôžete dovoliť. Minulá výkonnosť ani výsledky spätného testovania nie sú zárukou budúcich výsledkov. cMind je softvér prevádzkovaný vo vlastnej réžii, poskytovaný „tak, ako je“, a neposkytuje investičné, finančné, právne ani daňové poradenstvo. Všetky obchodné rozhodnutia a z nich vyplývajúce zisky či straty robíte podľa vlastného uváženia a na svoju plnú a výhradnú zodpovednosť.",
+    "message": "Obchodovanie s devízami (forex) a rozdielovými zmluvami (CFD) na maržu nesie vysokú mieru rizika a nemusí byť vhodné pre všetkých investorov. Vysoká páka môže pôsobiť vo váš prospech, ale aj proti vám. Môžete prísť o časť alebo o celý investovaný kapitál, a preto by ste nemali investovať peniaze, ktorých stratu si nemôžete dovoliť. Minulá výkonnosť ani výsledky spätného testovania nie sú zárukou budúcich výsledkov. cMind je softvér prevádzkovaný vo vlastnej réžii, poskytovaný „tak, ako je”, a neposkytuje investičné, finančné, právne ani daňové poradenstvo. Všetky obchodné rozhodnutia a z nich vyplývajúce zisky či straty robíte podľa vlastného uváženia a na svoju plnú a výhradnú zodpovednosť.",
     "description": "Body text of the first-visit risk-disclaimer dialog"
   },
   "riskDisclaimer.prompt": {
@@ -345,5 +345,233 @@
   "theme.tags.tagsPageTitle": {
     "message": "Tags",
     "description": "The title of the tag list page"
+  },
+  "home.hero.badge": {
+    "message": "Open-source · self-hostovateľný · white-label"
+  },
+  "home.hero.title1": {
+    "message": "Celý váš obchodný stôl cTrader,"
+  },
+  "home.hero.title2": {
+    "message": "v jednej pokojnej tmavej aplikácii."
+  },
+  "home.hero.subtitle": {
+    "message": "cMind stavia, spätne testuje, spúšťa a kopíruje obchodné stratégie v celém vozidle — s jadrom AI ticho sledujúcim riziko, takže nemusíte obnovovať grafy o 3. hodine ráno. Hostujte si ho sami, prispôsobte ho svojej značke a spite o niečo lepšie."
+  },
+  "home.hero.cta1": {
+    "message": "Začnite →"
+  },
+  "home.hero.cta2": {
+    "message": "Spustite za 5 minút"
+  },
+  "home.hero.note": {
+    "message": "Bez kreditnej karty, bez registrácie, bez \"objednania demo\". Len"
+  },
+  "home.hero.shotAlt": {
+    "message": "cMind dashboard"
+  },
+  "home.stat.deploy": {
+    "message": "spôsobov nasadenia: Docker, K8s, Azure, AWS"
+  },
+  "home.stat.ai": {
+    "message": "AI funkcie, nie len chatovacie okno"
+  },
+  "home.stat.wl": {
+    "message": "white-label — dodajte to ako svoju značku"
+  },
+  "home.stat.tests": {
+    "message": "testovacie úrovne strážia každú zmenu"
+  },
+  "home.feat.copy.title": {
+    "message": "Kopírovanie obchodov, ktoré prežije skutočný život"
+  },
+  "home.feat.copy.body": {
+    "message": "Zrkadlí hlavný účet na mnohé účty naprieč brokermi a ID cTrader. Spojenia sa prerušia, objednávky sa odrazia, tokeny sa rotujú — cMind zosúlaďuje bez dvojitého vysielania obchodov a vedie úplný audit."
+  },
+  "home.feat.copy.link": {
+    "message": "Ako to funguje →"
+  },
+  "home.feat.ai.title": {
+    "message": "AI, ktorá robí prácu, nie smalltalk"
+  },
+  "home.feat.ai.body": {
+    "message": "Myšlienka v jednoduchej angličtine → skutočný, kompilovaný cBot so slučkou samop opravy. Plus ladenie parametrov, analýza spätného testovania a rizikový strážca, ktorý môže automaticky zastaviť zlý bot."
+  },
+  "home.feat.ai.link": {
+    "message": "Spoznajte jadro AI →"
+  },
+  "home.feat.build.title": {
+    "message": "Stavajte a testujte v prehliadači"
+  },
+  "home.feat.build.body": {
+    "message": "Monaco IDE (áno, to z VS Code), šablóny C# a Python a sandboxed dotnet build v jednorazových kontajneroch. Sledujte, ako sa krivky equity streamujú živo."
+  },
+  "home.feat.build.link": {
+    "message": "Začnite stavať →"
+  },
+  "home.feat.fleet.title": {
+    "message": "Fleet, ktorý sa škáluje a samovýolčuje"
+  },
+  "home.feat.fleet.body": {
+    "message": "Spustenia a spätné testovania sa rozprestierajú naprieč auto-objavujúcimi sa uzlami. Uzol zomrie uprostred úlohy? Jeho lease sa reklamuje a práca pokračuje. Žiadny pager nie je potrebný."
+  },
+  "home.feat.fleet.link": {
+    "message": "Škálovanie →"
+  },
+  "home.feat.prop.title": {
+    "message": "Ochranné koľajnice pre prop-firm zabudované"
+  },
+  "home.feat.prop.body": {
+    "message": "Modelujte skutočné challenge pravidlá — denná strata, maximálny drawdown, ciele — so živým sledovaním equity, aby vaše boty zostali v limitoch."
+  },
+  "home.feat.prop.link": {
+    "message": "Zložte challenge →"
+  },
+  "home.feat.wl.title": {
+    "message": "White-label, zhora až dolu"
+  },
+  "home.feat.wl.body": {
+    "message": "Vymeňte meno, farby, logo a favicon na tenant. Predajcovia dodávajú cMind ako vlastný produkt a nikto nič netuší."
+  },
+  "home.feat.wl.link": {
+    "message": "Prispôsobte si to →"
+  },
+  "home.feat.pwa.title": {
+    "message": "V vašej pocket (inštalovateľná PWA)"
+  },
+  "home.feat.pwa.body": {
+    "message": "Mobile-first, plne responsívna, inštalovateľná na telefóne s spodnou navigáciou a offline shellom. Kontrolujte svoje boty z autobusu."
+  },
+  "home.feat.pwa.link": {
+    "message": "Nainštalujte si ju →"
+  },
+  "home.feat.mcp.title": {
+    "message": "Komunikuje s AI klientmi (MCP)"
+  },
+  "home.feat.mcp.body": {
+    "message": "Vstavaný MCP server (HTTP + SSE) exponuje nástroje, aby Claude a priatelia mohli ovládať cMind za vás."
+  },
+  "home.feat.mcp.link": {
+    "message": "Pripojte to →"
+  },
+  "home.feat.sec.title": {
+    "message": "Vaše na spustenie, štandardne spevnené"
+  },
+  "home.feat.sec.body": {
+    "message": "Argon2id, šifrovaný kľúčenka, per-node podpísané tokeny, rate limiting a OpenTelemetry out of the box. Vaše kľúče nikdy neopustia váš box."
+  },
+  "home.feat.sec.link": {
+    "message": "Self-host →"
+  },
+  "home.feat.eyebrow": {
+    "message": "Všetko v balíku"
+  },
+  "home.feat.title": {
+    "message": "Jedna aplikácia. Cele obchodné operácie."
+  },
+  "home.feat.lede": {
+    "message": "Od \"mám nápad\" k \"je to živé na dvanástich účtoch\" — bez lepenia šiestich nástrojov a tabuľky."
+  },
+  "home.show.copy.title": {
+    "message": "Kopírovanie obchodov, mínus panika"
+  },
+  "home.show.copy.text": {
+    "message": "Per-destination kontrola nad veľkosťou, smerom, symbolmi, typmi objednávok, SL/TP, exspiráciou a presným market-range slippage. Keď sa niečo pokazí, cMind resyncuje namiesto duplikovania."
+  },
+  "home.show.ai.title": {
+    "message": "Opíšte to. Sledujte, ako sa kompiluje."
+  },
+  "home.show.ai.text": {
+    "message": "Povedzte AI, čo chcete v jednoduchej angličtine. Napíše cBot, postaví ho v sandboxe, prečíta chyby a opraví sa — slučkuje, kým beží. Vy kontrolujete diff, nie stack trace."
+  },
+  "home.show.fleet.title": {
+    "message": "Cluster, o ktorom takmer nemusíte premýšľať"
+  },
+  "home.show.fleet.text": {
+    "message": "Agenti sa sami registrujú a posielajú heartbeat. Plánovač si vyberie najmenej zaťažený uzol. Mrtvý uzol vráti svoju prácu automaticky. Pôsobí to ako infraštruktúra, pretože to infraštruktúra je."
+  },
+  "home.show.mobile.title": {
+    "message": "Krásne beží na 360px telefóne"
+  },
+  "home.show.mobile.text": {
+    "message": "Rovnaký výkon, vrecková veľkosť. Spodná navigácia, kartové rozloženie, offline shell, pridaj na domácu obrazovku. Každý povrch je navrhnutý mobile-first, potom sa škáluje hore — nie naopak."
+  },
+  "home.show.eyebrow": {
+    "message": "Pozrite sa na to v akcii"
+  },
+  "home.show.title": {
+    "message": "Skutočné screenshoty. Skutočný tmavý režim. Skutočný produkt."
+  },
+  "home.deploy.local": {
+    "message": "Lokálne / Docker"
+  },
+  "home.deploy.local.hint": {
+    "message": "compose up & go"
+  },
+  "home.deploy.k8s.hint": {
+    "message": "Helm chart"
+  },
+  "home.deploy.azure.hint": {
+    "message": "krok-za-krokom"
+  },
+  "home.deploy.aws.hint": {
+    "message": "krok-za-krokom"
+  },
+  "home.deploy.eyebrow": {
+    "message": "Nasadiť kdekoľvek"
+  },
+  "home.deploy.title": {
+    "message": "Vaše servery, vaše pravidlá."
+  },
+  "home.deploy.lede": {
+    "message": "Začiatočník-friendly, copy-paste príručky pre každú možnosť. Začnite na laptop, povýšte na cluster, keď budete pripravení."
+  },
+  "home.aud.traders.title": {
+    "message": "Obchodníci"
+  },
+  "home.aud.traders.text": {
+    "message": "Hostujte si celý stôl sami. Napíšte cBot, otestujte ho naprieč uzlami, spustite ho živo a kopírujte ho — všetko v jednej AI-powered konzole, vaše dáta nikdy neopustia váš box."
+  },
+  "home.aud.brokers.title": {
+    "message": "Brokeri"
+  },
+  "home.aud.brokers.text": {
+    "message": "White-label cMind pre vašich klientov. Dajte im AI, kopírovanie obchodov a prop-firm challenges pod vašou značkou, obmedzte účty na vašu knihu a otvorte nové príjmy."
+  },
+  "home.aud.providers.title": {
+    "message": "Cloud a VPS poskytovatelia"
+  },
+  "home.aud.providers.text": {
+    "message": "Ponúknite spravované hostovanie cMind. Získajte lepkavú, výpočtovo náročnú pracovnú záťaž a monetizujte predplatné, meraný compute, white-label a AI."
+  },
+  "home.aud.eyebrow": {
+    "message": "Pre koho to je"
+  },
+  "home.aud.title": {
+    "message": "Postavené pre ľudí s peniazmi na stole."
+  },
+  "home.aud.lede": {
+    "message": "Obchodník, broker alebo poskytovateľ hostingu —"
+  },
+  "home.aud.link": {
+    "message": "nájdite svoju cestu →"
+  },
+  "home.cta.title": {
+    "message": "Pripravení spoznať svoj nový obchodný stôl?"
+  },
+  "home.cta.text": {
+    "message": "Prečítajte si prívetivý úvod, potom ho majte spustený lokálne, kým vám káva nevychladne. Je to open-source a MIT-licencované — pozrite sa okolo, láme veci, pošlite PR."
+  },
+  "home.cta.button1": {
+    "message": "Prečítajte si dokumentáciu →"
+  },
+  "home.cta.button2": {
+    "message": "Hviezdička na GitHub ★"
+  },
+  "home.meta.title": {
+    "message": "cMind — celý váš obchodný stôl cTrader v jednej aplikácii"
+  },
+  "home.meta.description": {
+    "message": "Open-source, self-hostovateľná, white-label platforma pre obchodné operácie pre cTrader. Stavajte, testujte, spúšťajte a kopírujte stratégie vo veľkom s zabudovaným AI."
   }
 }

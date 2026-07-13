@@ -4,7 +4,7 @@
     "description": "Title of the first-visit risk-disclaimer dialog"
   },
   "riskDisclaimer.body": {
-    "message": "Perdagangan pertukaran asing (Forex) dan Kontrak untuk Perbezaan (CFD) secara margin membawa tahap risiko yang tinggi dan mungkin tidak sesuai untuk semua pelabur. Leveraj yang tinggi boleh bertindak menentang anda dan juga memihak kepada anda. Anda mungkin mengalami kerugian sebahagian atau keseluruhan modal yang dilaburkan, oleh itu anda tidak seharusnya melabur wang yang anda tidak mampu untuk kehilangannya. Prestasi lampau dan keputusan ujian belakang bukan petunjuk keputusan masa depan. cMind ialah perisian layan diri yang disediakan \"sebagaimana adanya\" dan tidak memberikan nasihat pelaburan, kewangan, undang-undang atau cukai. Semua keputusan dagangan, serta sebarang keuntungan atau kerugian yang terhasil, dibuat mengikut budi bicara anda sendiri dan merupakan tanggungjawab anda sepenuhnya.",
+    "message": "Perdagangan pertukaran asing (Forex) dan Kontrak untuk Perbezaan (CFD) secara margin membawa tahap risiko yang tinggi dan mungkin tidak sesuai untuk semua pelabur. Leveraj yang tinggi boleh bertindak menentang anda dan juga memihak kepada anda. Anda mungkin mengalami kerugian sebahagian atau seluruh modal yang dilaburkan, oleh itu anda tidak seharusnya melabur wang yang anda tidak mampu untuk kehilangannya. Prestasi lampau dan keputusan ujian belakang bukan petunjuk keputusan masa depan. cMind ialah perisian layan diri yang disediakan \"sebagaimana adanya\" dan tidak memberikan nasihat pelaburan, kewangan, undang-undang atau cukai. Semua keputusan dagangan, serta sebarang keuntungan atau kerugian yang terhasil, dibuat mengikut budi bicara anda sendiri dan merupakan tanggungjawab anda sepenuhnya.",
     "description": "Body text of the first-visit risk-disclaimer dialog"
   },
   "riskDisclaimer.prompt": {
@@ -345,5 +345,233 @@
   "theme.tags.tagsPageTitle": {
     "message": "Tags",
     "description": "The title of the tag list page"
+  },
+  "home.hero.badge": {
+    "message": "Sumber terbuka · boleh kendiri sendiri · white-label"
+  },
+  "home.hero.title1": {
+    "message": "Seluruh meja dagangan cTrader anda,"
+  },
+  "home.hero.title2": {
+    "message": "dalam satu aplikasi gelap yang tenang."
+  },
+  "home.hero.subtitle": {
+    "message": "cMind membina, menguji belakang, menjalankan, dan menyalin strategi dagangan merentasi fleet mesin — dengan teras AI yang secara senyap mengawasi risiko supaya anda tidak perlu menyegarkan carta pada pukul 3 pagi. Kendalikan sendiri, benarkan jenama anda sendiri, dan tidur lebih baik."
+  },
+  "home.hero.cta1": {
+    "message": "Mulakan →"
+  },
+  "home.hero.cta2": {
+    "message": "Jalankan dalam 5 minit"
+  },
+  "home.hero.note": {
+    "message": "Tiada kad kredit, tiada pendaftaran, tiada \"ter.book demo\". Hanya"
+  },
+  "home.hero.shotAlt": {
+    "message": "Papan pemuka cMind"
+  },
+  "home.stat.deploy": {
+    "message": "cara untuk-deploy: Docker, K8s, Azure, AWS"
+  },
+  "home.stat.ai": {
+    "message": "ciri AI, bukan sekadar kotak sembang"
+  },
+  "home.stat.wl": {
+    "message": "white-label — hantar dengan jenama anda"
+  },
+  "home.stat.tests": {
+    "message": "tiers ujian menjaga setiap perubahan"
+  },
+  "home.feat.copy.title": {
+    "message": "Copy trading yang bertahan dalam kehidupan sebenar"
+  },
+  "home.feat.copy.body": {
+    "message": "Cerminkan akaun master ke banyak akaun merentasi broker dan ID cTrader. Sambungan putus, pesanan pantul, token berputar — cMind menyelaraskan tanpa mencetuskan dagangan dua kali dan menyimpan jejak audit penuh."
+  },
+  "home.feat.copy.link": {
+    "message": "Bagaimana ia berfungsi →"
+  },
+  "home.feat.ai.title": {
+    "message": "AI yang buat kerja, bukan borak kosong"
+  },
+  "home.feat.ai.body": {
+    "message": "Idea bahasa Inggeris biasa → cBot sebenar yang berubah kepada kod. Semua param ditanggung, keputusan ujian belakang, dan penjaga risiko yang boleh memberhentikan bot yang tidak berkelakuan secara automatik."
+  },
+  "home.feat.ai.link": {
+    "message": "Kenali teras AI →"
+  },
+  "home.feat.build.title": {
+    "message": "Bina & uji belakang dalam pelayar"
+  },
+  "home.feat.build.body": {
+    "message": "Editor Monaco (ya, yang dari VS Code), templat C# dan Python, dan build dotnet di dalam bekas sekali guna. Tonton kurva ekuiti straum secara langsung."
+  },
+  "home.feat.build.link": {
+    "message": "Mula bina →"
+  },
+  "home.feat.fleet.title": {
+    "message": "Fleet yang boleh масштаб & pulih sendiri"
+  },
+  "home.feat.fleet.body": {
+    "message": "Menjalankan dan menguji belakang tersebar merentasi nod yang auto-mengesan. Node mati separuh kerja? pajaknya dipulihkan dan kerja diteruskan. Tiada pager diperlukan."
+  },
+  "home.feat.fleet.link": {
+    "message": " масштаб keluar →"
+  },
+  "home.feat.prop.title": {
+    "message": "Penjaga prop-firm sudah dibina"
+  },
+  "home.feat.prop.body": {
+    "message": "Model peraturan cabaran sebenar — kerugian harian, pengeluaran maksimum, sasaran — dengan perubahan ekuiti langsung, supaya bot anda kekal dalam lingkungan."
+  },
+  "home.feat.prop.link": {
+    "message": "Lulus cabaran →"
+  },
+  "home.feat.wl.title": {
+    "message": "White-label, dari atas ke bawah"
+  },
+  "home.feat.wl.body": {
+    "message": "Tukar nama, warna, logo, dan favicon setiap penyewa. Penjual semula Menghantar cMind sebagai produk sendiri dan tiada siapa yang tahu."
+  },
+  "home.feat.wl.link": {
+    "message": "Jadikannya milik anda →"
+  },
+  "home.feat.pwa.title": {
+    "message": "Dalam pokek anda (PWA yang boleh dipasang)"
+  },
+  "home.feat.pwa.body": {
+    "message": "Mobile-first, responsif penuh, boleh dipasang pada telefon anda dengan navigasi bawah dan shell luar talian. Semak bot anda dari dalam bas."
+  },
+  "home.feat.pwa.link": {
+    "message": "Pasangnya →"
+  },
+  "home.feat.mcp.title": {
+    "message": "Berbual dengan klien AI (MCP)"
+  },
+  "home.feat.mcp.body": {
+    "message": "Pelayan MCP terbina dalam (HTTP + SSE) mendedahkan alat supaya Claude dan rakan-rakannya boleh mengendali cMind untuk anda."
+  },
+  "home.feat.mcp.link": {
+    "message": "Sambungkan →"
+  },
+  "home.feat.sec.title": {
+    "message": "Milik anda untuk jalankan, dikeraskan secara lalai"
+  },
+  "home.feat.sec.body": {
+    "message": "Argon2id, cincin kunci yang disulitkan, token bertanda setiap nod, had kadar, dan OpenTelemetry sedia ada. Kekunci anda tidak pernah meninggalkan kotak anda."
+  },
+  "home.feat.sec.link": {
+    "message": "Kendalikan sendiri →"
+  },
+  "home.feat.eyebrow": {
+    "message": "Semua dalam kotak"
+  },
+  "home.feat.title": {
+    "message": "Satu aplikasi. Seluruh operasi dagangan."
+  },
+  "home.feat.lede": {
+    "message": "Dari \"ada idea\" ke \"ia hidup pada dua belas akaun\" — tanpa menyisipkan enam alat dan hamparan."
+  },
+  "home.show.copy.title": {
+    "message": "Copy trading, tanpa panik"
+  },
+  "home.show.copy.text": {
+    "message": "Kawalan setiap-destinasi ke atas saiz, arah, simbol, jenis pesanan, SL/TP, tamat tempoh dan slippage julat pasaran yang tepat. Bila sesuatu tak kena, cMind menyelaras semula вместо daripada menduplikasi."
+  },
+  "home.show.ai.title": {
+    "message": "Terangkan. Tonton ia berubah kepada kod."
+  },
+  "home.show.ai.text": {
+    "message": "Beritahu AI apa yang anda mahu dalam bahasa Inggeris biasa. Ia menulis cBot, membinanya dalam sandbox, membaca ralat, dan membaiki dirinya sendiri — berulang sehingga ia berjalan. Anda menyemak perbezaan, bukan stack trace."
+  },
+  "home.show.fleet.title": {
+    "message": "Kluster yang hampir tak perlu difikirkan"
+  },
+  "home.show.fleet.text": {
+    "message": "Ejан saling daftar dan menghantar heartbeat. Penjadual memilih nod yang paling sedikit beban. Node mati menyerahkan kerja secara automatik. Ia berasa seperti infrastruktur потому что ia memang infrastruktur."
+  },
+  "home.show.mobile.title": {
+    "message": "Berjalan dengan cantik pada telefon 360px"
+  },
+  "home.show.mobile.text": {
+    "message": "Kuasa yang sama, saiz poket. Navigasi bawah, susun atur kad, shell luar talian, tambah-ke-skrin-rumah. Setiap permukaan direka mobile-first, затем масштаб ke atas — bukan cara lain."
+  },
+  "home.show.eyebrow": {
+    "message": "Lihat ia berfungsi"
+  },
+  "home.show.title": {
+    "message": "Screenshot sebenar. Mod gelap sebenar. Produk sebenar."
+  },
+  "home.deploy.local": {
+    "message": "Tempatan / Docker"
+  },
+  "home.deploy.local.hint": {
+    "message": "compose up & go"
+  },
+  "home.deploy.k8s.hint": {
+    "message": "Carta Helm"
+  },
+  "home.deploy.azure.hint": {
+    "message": "langkah demi langkah"
+  },
+  "home.deploy.aws.hint": {
+    "message": "langkah demi langkah"
+  },
+  "home.deploy.eyebrow": {
+    "message": "Deploy di mana-mana"
+  },
+  "home.deploy.title": {
+    "message": "Pelayan anda, peraturan anda."
+  },
+  "home.deploy.lede": {
+    "message": "Panduan mesra pemula, copy-paste untuk setiap pilihan. Mulakan pada laptop anda, naik ke kluster bila anda sudah sedia."
+  },
+  "home.aud.traders.title": {
+    "message": "Peniaga"
+  },
+  "home.aud.traders.text": {
+    "message": "Kendalikan seluruh meja sendiri. Tulis cBot, ujikannya merentasi nod, jalankannya secara langsung, dan salin — semua dalam satu konsol bermuatan AI, data anda tidak pernah meninggalkan kotak anda."
+  },
+  "home.aud.brokers.title": {
+    "message": "Broker"
+  },
+  "home.aud.brokers.text": {
+    "message": "White-label cMind untuk klien anda. Beri mereka AI, copy trading, dan cabaran prop-firm bawah jenama anda, hadkan akaun kepada buku anda, dan buka hasil baharu."
+  },
+  "home.aud.providers.title": {
+    "message": "Penyedia Cloud & VPS"
+  },
+  "home.aud.providers.text": {
+    "message": "Tawarkan pengehosan cMind yang diuruskan. Dapatkan beban kerja yang melekat dan intensif secara komputasi dan monetisasi langganan, komputasi yang diukur, white-label, dan AI."
+  },
+  "home.aud.eyebrow": {
+    "message": "Siapa untuknya"
+  },
+  "home.aud.title": {
+    "message": "Dibina untuk orang yang ada wang di atas talian."
+  },
+  "home.aud.lede": {
+    "message": "Sama ada peniaga, broker, atau penyedia pengehosan —"
+  },
+  "home.aud.link": {
+    "message": "cari jalan anda →"
+  },
+  "home.cta.title": {
+    "message": "Bersedia untuk bertemu meja dagangan baharu anda?"
+  },
+  "home.cta.text": {
+    "message": "Baca intro yang mesra, kemudian jalankannya secara tempatan sebelum kopi anda sejuk. Ia sumber terbuka dan berlesen MIT — selami, rosakkan, hantar PR."
+  },
+  "home.cta.button1": {
+    "message": "Baca dokumen →"
+  },
+  "home.cta.button2": {
+    "message": "Bintang di GitHub ★"
+  },
+  "home.meta.title": {
+    "message": "cMind — seluruh meja dagangan cTrader anda, dalam satu aplikasi"
+  },
+  "home.meta.description": {
+    "message": "Platform operasi dagangan sumber terbuka, boleh kendiri sendiri, white-label untuk cTrader. Bina, uji belakang, jalankan dan salin strategi pada skala dengan AI terbina."
   }
 }

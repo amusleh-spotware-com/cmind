@@ -345,5 +345,233 @@
   "theme.tags.tagsPageTitle": {
     "message": "태그",
     "description": "The title of the tag list page"
+  },
+  "home.hero.badge": {
+    "message": "오픈소스 · 자체 호스팅 가능 · 화이트레이블"
+  },
+  "home.hero.title1": {
+    "message": "당신의 모든 cTrader 거래 데스크,"
+  },
+  "home.hero.title2": {
+    "message": "하나의 차분한 다크 앱으로."
+  },
+  "home.hero.subtitle": {
+    "message": "cMind는 다수의 머신에 걸쳐 트레이딩 전략을 구축, 백테스트, 실행, 복사합니다 —凌晨 3시에 차트를 새로 고칠 필요 없이 리스크를 조용히 감시하는 AI 코어가 함께합니다. 자체 호스팅하고, 나만의 브랜드로 만들어 편안한 밤을 보내세요."
+  },
+  "home.hero.cta1": {
+    "message": "시작하기 →"
+  },
+  "home.hero.cta2": {
+    "message": "5분 만에 실행하기"
+  },
+  "home.hero.note": {
+    "message": "신용카드, 가입, \"데모 예약\" 없음. 그저"
+  },
+  "home.hero.shotAlt": {
+    "message": "cMind 대시보드"
+  },
+  "home.stat.deploy": {
+    "message": "배포 방식: Docker, K8s, Azure, AWS"
+  },
+  "home.stat.ai": {
+    "message": "AI 기능 — 채팅 박스가 아닙니다"
+  },
+  "home.stat.wl": {
+    "message": "화이트레이블 — 내 브랜드로 출시"
+  },
+  "home.stat.tests": {
+    "message": "모든 변경을 지키는 테스트 계층"
+  },
+  "home.feat.copy.title": {
+    "message": "현실에서도 버티는 복사 트레이딩"
+  },
+  "home.feat.copy.body": {
+    "message": "브로커와 cTrader ID에 걸쳐 마스터 계정을 여러 계정에 미러링합니다. 연결이 끊어지고, 주문이 거절되고, 토큰이 순환해도 — cMind는 이중 거래 없이 조정하며 완벽한 감사 추적을 유지합니다."
+  },
+  "home.feat.copy.link": {
+    "message": "작동 방식 보기 →"
+  },
+  "home.feat.ai.title": {
+    "message": "杂事는 AI가,-small talk는 아닙니다"
+  },
+  "home.feat.ai.body": {
+    "message": "평문 아이디어 → 실제 컴파일되는 cBot과 셀프 수리 루프. 파라미터 튜닝, 백테스트 사후 분석, 그리고 잘못된 봇을 자동으로 중지할 수 있는 리스크 가드까지."
+  },
+  "home.feat.ai.link": {
+    "message": "AI 코어 만나기 →"
+  },
+  "home.feat.build.title": {
+    "message": "브라우저에서 빌드 & 백테스트"
+  },
+  "home.feat.build.body": {
+    "message": "Monaco 에디터(VS Code의 그것), C# 및 Python 템플릿, 일회성 컨테이너의 샌드박스 dotnet 빌드. 에쿼티 커브가 실시간으로 스트리밍됩니다."
+  },
+  "home.feat.build.link": {
+    "message": "빌드 시작하기 →"
+  },
+  "home.feat.fleet.title": {
+    "message": "스케일링 & 셀프 힐링하는 플릿"
+  },
+  "home.feat.fleet.body": {
+    "message": "자동 탐색 노드에 걸쳐 실행과 백테스트가 분산됩니다. 노드가 작업 중에 죽으면? 리스가 회수되고 작업이 계속됩니다. 페이지저 필요 없음."
+  },
+  "home.feat.fleet.link": {
+    "message": "스케일 아웃 →"
+  },
+  "home.feat.prop.title": {
+    "message": "기본 탑재된 프롭펌 가이드레일"
+  },
+  "home.feat.prop.body": {
+    "message": "일일 손실, 최대 드로우다운, 목표 등 실제 챌린지 규칙을 모델링하며, 라이브 에쿼티 추적으로 봇이 한계 안에 머무릅니다."
+  },
+  "home.feat.prop.link": {
+    "message": "챌린지 통과하기 →"
+  },
+  "home.feat.wl.title": {
+    "message": "완전한 화이트레이블"
+  },
+  "home.feat.wl.body": {
+    "message": "테넌트별로 이름, 색상, 로고, 파비콘을 교체합니다. 리셀러가 cMind를 자사 제품으로出货하고 아무도 모릅니다."
+  },
+  "home.feat.wl.link": {
+    "message": "나만의 것으로 만들기 →"
+  },
+  "home.feat.pwa.title": {
+    "message": "주머니에 넣으세요 (설치형 PWA)"
+  },
+  "home.feat.pwa.body": {
+    "message": "모바일 우선, 완전 반응형, 전화기에 설치 가능 — 하단 네비게이션과 오프라인 셸 포함. 버스에서 봇 상태 확인하세요."
+  },
+  "home.feat.pwa.link": {
+    "message": "설치하기 →"
+  },
+  "home.feat.mcp.title": {
+    "message": "AI 클라이언트와 대화 (MCP)"
+  },
+  "home.feat.mcp.body": {
+    "message": "내장 MCP 서버(HTTP + SSE)가 Claude 등이 cMind를 제어할 수 있는 도구를 노출합니다."
+  },
+  "home.feat.mcp.link": {
+    "message": "연결하기 →"
+  },
+  "home.feat.sec.title": {
+    "message": "내가 실행하고, 기본으로 강화된 보안"
+  },
+  "home.feat.sec.body": {
+    "message": "Argon2id, 암호화된 키링, 노드별 서명 토큰, rate limiting, 기본 제공 OpenTelemetry. 키는 내 박스에서 절대 벗어나지 않습니다."
+  },
+  "home.feat.sec.link": {
+    "message": "자체 호스팅 →"
+  },
+  "home.feat.eyebrow": {
+    "message": "박스 안의 모든 것"
+  },
+  "home.feat.title": {
+    "message": "하나의 앱. 전체 거래 운영."
+  },
+  "home.feat.lede": {
+    "message": "\"아이디어가 있다\"에서 \"열두 계좌에서 실행 중\"까지 — 여섯 개의 도구와 스프레드시트를 붙이기 없이."
+  },
+  "home.show.copy.title": {
+    "message": "패닉 없는 복사 트레이딩"
+  },
+  "home.show.copy.text": {
+    "message": "사이징, 방향, 심볼, 주문 유형, SL/TP, 만료 및 정확한 시장 범위 슬리피지에 대한 목적지별 제어. 문제가 생기면 cMind가 재동기화하여 중복 없이 처리합니다."
+  },
+  "home.show.ai.title": {
+    "message": "설명하고, 컴파일되는 것을 지켜보세요."
+  },
+  "home.show.ai.text": {
+    "message": "원하는 것을 영어로 말하세요. AI가 cBot을 작성하고, 샌드박스에서 빌드하고, 오류를 읽고, 스스로 수정합니다 — 실행될 때까지 반복. 스택 트레이스가 아니라 차이를 검토합니다."
+  },
+  "home.show.fleet.title": {
+    "message": "거의 신경 쓰지 않아도 되는 클러스터"
+  },
+  "home.show.fleet.text": {
+    "message": "에이전트가 자체 등록하고 하트비트를 보냅니다. 스케줄러가 가장 부담 없는 노드를 선택합니다. 죽은 노드는 작업을 자동으로 돌려줍니다. 인프라처럼 느껴지는 게 인프라이기 때문입니다."
+  },
+  "home.show.mobile.title": {
+    "message": "360px 폰에서도 아름답게 실행"
+  },
+  "home.show.mobile.text": {
+    "message": "동일한パワー, 주머니 사이즈. 하단 네비게이션, 카드 레이아웃, 오프라인 셸, 홈 화면 추가. 모든 표면이 모바일 우선으로 설계된 후 확대됩니다 — 그 반대는 아닙니다."
+  },
+  "home.show.eyebrow": {
+    "message": "실제 동작 보기"
+  },
+  "home.show.title": {
+    "message": "실제 스크린샷. 실제 다크 모드. 실제 제품."
+  },
+  "home.deploy.local": {
+    "message": "로컬 / Docker"
+  },
+  "home.deploy.local.hint": {
+    "message": "compose up & go"
+  },
+  "home.deploy.k8s.hint": {
+    "message": "Helm 차트"
+  },
+  "home.deploy.azure.hint": {
+    "message": "단계별 가이드"
+  },
+  "home.deploy.aws.hint": {
+    "message": "단계별 가이드"
+  },
+  "home.deploy.eyebrow": {
+    "message": "어디든 배포"
+  },
+  "home.deploy.title": {
+    "message": "내 서버, 내 규칙."
+  },
+  "home.deploy.lede": {
+    "message": "모든 옵션에 대한 초보자 친화적인 복사-붙여넣기 가이드. 노트북에서 시작하고, 준비되면 클러스터로 확장하세요."
+  },
+  "home.aud.traders.title": {
+    "message": "트레이더"
+  },
+  "home.aud.traders.text": {
+    "message": "전체 데스크를 자체 호스팅하세요. cBot을 작성하고, 노드에서 백테스트하고, 라이브로 실행하고, 복사합니다 — 모든 것을 AI 기반 콘솔에서, 데이터가 내 박스를 떠나지 않은 채로."
+  },
+  "home.aud.brokers.title": {
+    "message": "브로커"
+  },
+  "home.aud.brokers.text": {
+    "message": "클라이언트를 위해 cMind를 화이트레이블하세요. 내 브랜드 아래 AI, 복사 트레이딩, 프롭펌 챌린지를 제공하고, 계정을 내 책으로 제한하며, 새로운 수익을 여세요."
+  },
+  "home.aud.providers.title": {
+    "message": "클라우드 & VPS 제공자"
+  },
+  "home.aud.providers.text": {
+    "message": "관리형 cMind 호스팅을 제공하세요. 찐 stick하고 계산 집약적인 워크로드를 유치하고, 구독, 측정 컴퓨팅, 화이트레이블, AI로 수익화하세요."
+  },
+  "home.aud.eyebrow": {
+    "message": "누구를 위한 것인가"
+  },
+  "home.aud.title": {
+    "message": "진짜 돈이 걸린 사람들을 위해 만들어졌습니다."
+  },
+  "home.aud.lede": {
+    "message": "트레이더이든, 브로커이든, 호스팅 제공자이든 —"
+  },
+  "home.aud.link": {
+    "message": "내 길 찾기 →"
+  },
+  "home.cta.title": {
+    "message": "새 거래 데스크를 만나볼 준비가 되셨나요?"
+  },
+  "home.cta.text": {
+    "message": "친근한 소개를 읽고, 커피가 식기 전에 로컬에서 실행해 보세요. 오픈소스이고 MIT 라이선스입니다 — 살펴보고, 부수고, PR을 보내세요."
+  },
+  "home.cta.button1": {
+    "message": "문서 읽기 →"
+  },
+  "home.cta.button2": {
+    "message": "GitHub에 별주기 ★"
+  },
+  "home.meta.title": {
+    "message": "cMind — 하나의 앱으로 당신의 모든 cTrader 거래 데스크"
+  },
+  "home.meta.description": {
+    "message": "cTrader를 위한 오픈소스, 자체 호스팅 가능, 화이트레이블 거래 운영 플랫폼. AI를 내장하고 대규모로 전략을 구축, 백테스트, 실행, 복사하세요."
   }
 }

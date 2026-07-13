@@ -345,5 +345,233 @@
   "theme.tags.tagsPageTitle": {
     "message": "Etiketler",
     "description": "The title of the tag list page"
+  },
+  "home.hero.badge": {
+    "message": "Açık kaynak · kendi barındırabileceğiniz · beyaz etiket"
+  },
+  "home.hero.title1": {
+    "message": "Tüm cTrader işlem masanız,"
+  },
+  "home.hero.title2": {
+    "message": "tek bir sakin karanlık uygulamada."
+  },
+  "home.hero.subtitle": {
+    "message": "cMind, bir makine filosu genelinde işlem stratejileri oluşturur, geriye dönük test eder, çalıştırır ve kopyalar — 3 sabahında grafiklerinizi yenilemek zorunda kalmayasınız diye riski izleyen bir AI çekirdeğiyle birlikte. Kendi kendine barındırın, kendi markanızla sunun ve biraz daha rahat uyuyun."
+  },
+  "home.hero.cta1": {
+    "message": "Başlayın →"
+  },
+  "home.hero.cta2": {
+    "message": "5 dakikada çalıştırın"
+  },
+  "home.hero.note": {
+    "message": "Kredi kartı yok, kayıt yok, \"demo ayırtın\" yok. Sadece"
+  },
+  "home.hero.shotAlt": {
+    "message": "cMind kontrol panosu"
+  },
+  "home.stat.deploy": {
+    "message": "dağıtım yolu: Docker, K8s, Azure, AWS"
+  },
+  "home.stat.ai": {
+    "message": "AI özellikleri, sadece bir sohbet kutusu değil"
+  },
+  "home.stat.wl": {
+    "message": "beyaz etiket — kendi markanız olarak sunun"
+  },
+  "home.stat.tests": {
+    "message": "her değişikliği koruyan test katmanları"
+  },
+  "home.feat.copy.title": {
+    "message": "Gerçek hayatta hayatta kalan copy trading"
+  },
+  "home.feat.copy.body": {
+    "message": "Bir ana hesabı brokerlar ve cTrader ID'leri genelinde birçok hesaba yansıtın. Bağlantılar kopar, emirler sekerr, jetonlar döner — cMind, işlemleri çift tetiklemeden uzlaştırır ve tam bir denetim izi tutar."
+  },
+  "home.feat.copy.link": {
+    "message": "Nasıl çalıştığını görün →"
+  },
+  "home.feat.ai.title": {
+    "message": "Muhabbet değil, iş yapan AI"
+  },
+  "home.feat.ai.body": {
+    "message": "Düz İngilizce fikir → gerçek, derlenen bir cBot ve kendi kendini onarma döngüsü. Artı parametre ayarlama, geriye dönük test otopsileri ve yanlış davranan bir botu otomatik durdurabilen bir risk koruması."
+  },
+  "home.feat.ai.link": {
+    "message": "AI çekirdeğiyle tanışın →"
+  },
+  "home.feat.build.title": {
+    "message": "Tarayıcıda oluşturun ve geriye dönük test edin"
+  },
+  "home.feat.build.body": {
+    "message": "Bir Monaco IDE (evet, VS Code'unki), C# ve Python şablonları ve tek kullanımlık容器larda sandıklanmış dotnet build. Öz sermaye eğrilerinin canlı olarak aktığını izleyin."
+  },
+  "home.feat.build.link": {
+    "message": "Oluşturmaya başlayın →"
+  },
+  "home.feat.fleet.title": {
+    "message": "Ölçeklenen ve kendi kendini iyileştiren bir filo"
+  },
+  "home.feat.fleet.body": {
+    "message": "Otomatik keşfeden düğümler genelinde çalıştırma ve geriye dönük testler. Bir düğüm iş ortasında ölürse, kirası geri alınır ve iş devam eder. Çağrı cihazı gerekmez."
+  },
+  "home.feat.fleet.link": {
+    "message": "Ölçeklendirin →"
+  },
+  "home.feat.prop.title": {
+    "message": "Dahili prop-firm korumaları"
+  },
+  "home.feat.prop.body": {
+    "message": "Günlük kayıp, maksimum çekilme, hedefler gibi gerçek meydan okuma kurallarını — canlı öz sermaye takibiyle — modellen, böylece botlarınız sınırların içinde kalsın."
+  },
+  "home.feat.prop.link": {
+    "message": "Meydan okumayı geçin →"
+  },
+  "home.feat.wl.title": {
+    "message": "Alttan üste beyaz etiket"
+  },
+  "home.feat.wl.body": {
+    "message": "Kiracı başına adı, renkleri, logosu ve favicon'u değiştirin. Bayiler cMind'i kendi ürünleri olarak sunar ve kimse farkına varmaz."
+  },
+  "home.feat.wl.link": {
+    "message": "Sizin yapın →"
+  },
+  "home.feat.pwa.title": {
+    "message": "Cebinizde (kurulabilir PWA)"
+  },
+  "home.feat.pwa.body": {
+    "message": "Mobil öncelikli, tamamen duyarlı, telefonunuza alt navigasyon ve çevrimdışı kabukla kurulabilir. Botlarınızı otobüsten kontrol edin."
+  },
+  "home.feat.pwa.link": {
+    "message": "Kurun →"
+  },
+  "home.feat.mcp.title": {
+    "message": "AI istemcileriyle konuşuyor (MCP)"
+  },
+  "home.feat.mcp.body": {
+    "message": "Yerleşik bir MCP sunucusu (HTTP + SSE), Claude ve benzerlerinin sizin için cMind'i çalıştırması için araçları ortaya çıkarır."
+  },
+  "home.feat.mcp.link": {
+    "message": "Bağlayın →"
+  },
+  "home.feat.sec.title": {
+    "message": "Çalıştırmak sizin, varsayılan olarak sertleştirilmiş"
+  },
+  "home.feat.sec.body": {
+    "message": "Kutudan Argon2id, şifreli bir anahtar halkası, düğüm başına imzalı jetonlar, oran sınırlama ve OpenTelemetry. Anahtarlarınız kutunuzdan asla ayrılmaz."
+  },
+  "home.feat.sec.link": {
+    "message": "Kendi kendine barındırın →"
+  },
+  "home.feat.eyebrow": {
+    "message": "Kutuda her şey"
+  },
+  "home.feat.title": {
+    "message": "Tek uygulama. Tüm işlem operasyonu."
+  },
+  "home.feat.lede": {
+    "message": "\"Fikrim var\"dan \"on iki hesapta canlı\"ya — altı araç ve bir电子 tablo birbirine yapıştırmadan."
+  },
+  "home.show.copy.title": {
+    "message": "Paniksiz copy trading"
+  },
+  "home.show.copy.text": {
+    "message": "Boyutlandırma, yön, semboller, emir türleri, SL/TP, sona erme ve tam piyasa aralığı kayması üzerinde hedef başına kontrol. Bir şeyler yanlış gittiğinde, cMind çoğaltmak yerine yeniden senkronize eder."
+  },
+  "home.show.ai.title": {
+    "message": "Anlatın. Derlendiğini izleyin."
+  },
+  "home.show.ai.text": {
+    "message": "AI'ye ne istediğinizi düz İngilizce söyleyin. cBot'u yazar, bir sandıkta derler, hataları okur ve kendi kendini düzeltir — çalışana kadar döngü yapar. Yığın izini değil, farkı incelersiniz."
+  },
+  "home.show.fleet.title": {
+    "message": "Üzerinde neredeyse düşünmeniz gerekmeyen bir küme"
+  },
+  "home.show.fleet.text": {
+    "message": "Aracılar kendilerini kaydeder ve heartbeat gönderir. Zamanlayıcı en az yüklenmiş düğümü seçer. Ölü bir düğüm işini otomatik olarak geri verir. Altyapı gibi hissettiriyor çünkü altyapı."
+  },
+  "home.show.mobile.title": {
+    "message": "360px telefonda güzel çalışır"
+  },
+  "home.show.mobile.text": {
+    "message": "Aynı güç, ceplerde. Alt navigasyon, kart düzenleri, çevrimdışı kabuk, ana ekrana ekle. Her yüzey önce mobil için tasarlandı, sonra ölçeklendi — tersi değil."
+  },
+  "home.show.eyebrow": {
+    "message": "İş başında görün"
+  },
+  "home.show.title": {
+    "message": "Gerçek ekran görüntüleri. Gerçek karanlık mod. Gerçek ürün."
+  },
+  "home.deploy.local": {
+    "message": "Yerel / Docker"
+  },
+  "home.deploy.local.hint": {
+    "message": "compose up & go"
+  },
+  "home.deploy.k8s.hint": {
+    "message": "Helm grafiği"
+  },
+  "home.deploy.azure.hint": {
+    "message": "adım adım"
+  },
+  "home.deploy.aws.hint": {
+    "message": "adım adım"
+  },
+  "home.deploy.eyebrow": {
+    "message": "Her yere dağıtın"
+  },
+  "home.deploy.title": {
+    "message": "Sunucularınız, kurallarınız."
+  },
+  "home.deploy.lede": {
+    "message": "Her seçenek için yeni başlayanlara uygun, kopyala-yapıştır kılavuzlar. Dizüstü bilgisayarınızda başlayın, hazır olduğunuzda bir kümeye geçin."
+  },
+  "home.aud.traders.title": {
+    "message": "Tüccarlar"
+  },
+  "home.aud.traders.text": {
+    "message": "Tüm masanızı kendi kendinize barındırın. Bir cBot yazın, düğümler genelinde geriye dönük test edin, canlı çalıştırın ve kopyalayın — tümü tek bir AI destekli konsolda, verileriniz kutunuzu asla terk etmez."
+  },
+  "home.aud.brokers.title": {
+    "message": "Brokerlar"
+  },
+  "home.aud.brokers.text": {
+    "message": "Müşterileriniz için cMind'i beyaz etiketleyin. Onlara markanız altında AI, copy trading ve prop-firm meydan okumaları verin, hesapları kitabınıza kısıtlayın ve yeni gelir elde edin."
+  },
+  "home.aud.providers.title": {
+    "message": "Bulut ve VPS sağlayıcıları"
+  },
+  "home.aud.providers.text": {
+    "message": "Yönetilen cMind barındırma hizmeti sunun. Yapışkan, hesaplama aç bir iş yükü edinin ve abonelikten, ölçülü hesaplamadan, beyaz etiket ve AI'dan para kazanın."
+  },
+  "home.aud.eyebrow": {
+    "message": "Kimin için"
+  },
+  "home.aud.title": {
+    "message": " parada gözü olan insanlar için inşa edildi."
+  },
+  "home.aud.lede": {
+    "message": "Tüccar, broker veya barındırma sağlayıcısı —"
+  },
+  "home.aud.link": {
+    "message": "yolunuzu bulun →"
+  },
+  "home.cta.title": {
+    "message": "Yeni işlem masanızla tanışmaya hazır mısınız?"
+  },
+  "home.cta.text": {
+    "message": "Dostane tanıtımı okuyun, ardından kahveniz soğumadan önce yerel olarak çalışır durumda olsun. Açık kaynak ve MIT lisanslı — kurcalayın, şeyleri kırın, PR gönderin."
+  },
+  "home.cta.button1": {
+    "message": "Dökümanları okuyun →"
+  },
+  "home.cta.button2": {
+    "message": "GitHub'da yıldız verin ★"
+  },
+  "home.meta.title": {
+    "message": "cMind — tüm cTrader işlem masanız, tek bir uygulamada"
+  },
+  "home.meta.description": {
+    "message": "cTrader için açık kaynak, kendi kendine barındırılabilen, beyaz etiket işlem operasyonları platformu. Ölçekte stratejiler oluşturun, geriye dönük test edin, çalıştırın ve kopyalayın, dahili AI ile."
   }
 }

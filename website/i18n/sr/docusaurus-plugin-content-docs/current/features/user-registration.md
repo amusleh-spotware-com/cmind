@@ -1,77 +1,77 @@
 ---
-description: "Secure, white-label-gated samousluzna registracija korisnika — on-app stranica za sign-up i server-to-server provisioning API, sa konfigurabilnim korisnickim atributima, admin-approval ili email-verification gating, i zastitom od zloupotrebe. Onemoguceno po podrazumevanju."
+description: "Сигурна, white-label-контролисана self-service регистрација корисника — on-app страница за sign-up и server-to-server provisioning API, са конфигурибилним корисничким атрибутима, admin-одобрење или email-verification контролом и заштитом од злоупотребе. Онемогућена по подразумевању."
 ---
 
-# Registracija korisnika
+# Регистрација корисника
 
-Podrazumevano **vlasnik/admin rucno dodaje korisnike** (Users stranica → *New User*). For white-label deployments
-that need to onboard users at scale — ili integrisu aplikaciju sa drugim servisom — cMind also ships a
-**secure, self-service registration** path. Ona je **onemogucena po podrazumevanju**: stock deployment ostaje nepromenjen
-i stranica i API vracaju 404 sve dok deployment ne izabere da ukljuci.
+По подразумевању **власник/админ ручно додаје кориснике** (страница Users → *New User*). За white-label deployment-ове
+којима треба да скалирају онбоардинг корисника — или интегришу апликацију са другим сервисом — cMind такође испоручује
+**сигурну, self-service регистрациону путању**. Она је **онемогућена по подразумевању**: stock deployment остаје непромењен
+и страница и API враћају 404 све док deployment не изабере да укључи.
 
-There are two entry points sharing one domain flow:
+Постоје две улазне тачке које деле један домен ток:
 
-1. **On-app page** (`/register`) — a branded, mobile-first sign-up page in the same shell as `/login`.
-2. **Provisioning API** (`POST /api/provision`) — a server-to-server endpoint for an integrating service to
-   create accounts, authenticated by a per-deployment provisioning secret.
+1. **On-app страница** (`/register`) — брендирана, mobile-first sign-up страница у истој љусци kao и `/login`.
+2. **Provisioning API** (`POST /api/provision`) — server-to-server ендпоинт за интегришући сервис да
+   креира налоге, аутентикован per-deployment provisioning secret-ом.
 
-## What gets recorded — data minimization
+## Шта се евидентира — минимизација података
 
-cMind is trading **tooling**: it builds/runs/backtests cBots and mirrors trades over each user's *own*
-cTrader Open API credentials. It **does not open trading accounts or custody client money**, so KYC/AML
-identity verification is the **broker's** obligation, not this platform's. The registration form therefore
-records **only an email by default** — the minimum needed to provide the service (GDPR Art. 5(1)(c) data
-minimization; lawful basis = contract). cMind deliberately ships **no** national-ID / date-of-birth /
-address fields.
+cMind је **алат за трговање**: изграђује/покреће/backtest-ује cBot-ове и огледа трговине преко сваког корисниковог *сопственог*
+cTrader Open API креденцијала. Он **не отвара трговачке налоге нити чува новац клијената**, тако да су KYC/AML
+верификација идентитета **обaveза брокера**, не ове платформе. Регистрациони формулар стога
+евидентира **само email по подразумевању** — минимум потребан за пружање сервиса (GDPR Art. 5(1)(c) data
+минимизација; законска основа = уговор). cMind намерно испоручује **без** националног-ID / датума рођења /
+пољa за адресу.
 
-Every other attribute is **opt-in per deployment** via `App:Registration:Attributes`, each independently
+Сваки други атрибут је **opt-in per deployment** преко `App:Registration:Attributes`, сваки независно
 `Off` / `Optional` / `Required`:
 
-| Attribute | Notes |
+| Атрибут | Напомене |
 |---|---|
-| `FullName`, `DisplayName`, `Company` | Free text, length-bounded. |
-| `Country` | ISO 3166-1 alpha-2, validated against a fixed code set. |
-| `Phone` | E.164 format (`+14155552671`). |
-| `Locale` | BCP-47 shape (`en-US`), normalized. |
-| `MarketingOptIn` | Separate, **unticked** checkbox — never bundled with the mandatory consent (CAN-SPAM). |
-| `AgeConfirmation` | A checkbox only; **no** date of birth is stored. |
+| `FullName`, `DisplayName`, `Company` | Слободан текст, ограничене дужине. |
+| `Country` | ISO 3166-1 alpha-2, валидирано против фиксног скупа кодова. |
+| `Phone` | E.164 формат (`+14155552671`). |
+| `Locale` | BCP-47 облик (`en-US`), нормализован. |
+| `MarketingOptIn` | Одвојена, **непотврђена** кућица — никада не спајати са обавезном сагласношћу (CAN-SPAM). |
+| `AgeConfirmation` | Само кућица; **не** чува се датум рођења. |
 
-Attributes live in the `UserProfile` value object owned by the `AppUser` aggregate, validated at
-construction. **GDPR erasure** (`AppUser.Anonymize()`) scrubs the profile and any verification tokens.
+Атрибути живи у `UserProfile` value object-у који поседује `AppUser` aggregate, валидиран при
+конструкцији. **GDPR брисање** (`AppUser.Anonymize()`) чисти профил и било které верификационе токене.
 
-**Consent.** When `RequireTermsAcceptance` is on, the user must accept the published legal documents
-(Terms, Privacy, Risk Disclosure). Acceptance is recorded through the existing `ConsentRecord` aggregate —
-version-stamped, timestamped, with originating IP — the same store used elsewhere for MiFID/ESMA-grade
-record-keeping.
+**Сагласност.** Када je `RequireTermsAcceptance` укључен, корисник мора прихватити објављене правне документе
+(Terms, Privacy, Risk Disclosure). Прихватање се евидентира кроз постојећи `ConsentRecord` aggregate —
+верзионирано, временски означено, ca originating IP — иста складишна која се користи другде за MiFID/ESMA-grade
+вођење евиденције.
 
-## Gating modes
+## Режими контроле
 
-A self-registered account cannot sign in until it clears its gate (`App:Registration:Mode`):
+ Самрегистровани налог не може да се пријави док не прође своју контролу (`App:Registration:Mode`):
 
-- **`AdminApproval`** (default) — the account is queued; an owner/admin approves it on the **Users** page
-  (*Pending approval* section). Needs no mail infrastructure.
-- **`EmailVerification`** — a single-use, expiring verification link is emailed; the account activates when
-  the link is opened. Requires an email transport (`App:Email`). **If no transport is configured, this mode
-  automatically downgrades to `AdminApproval`** at startup, so enabling registration never silently breaks.
-- **`Open`** — the account is active immediately (trusted/dev only).
+- **`AdminApproval`** (подразумевано) — налог се ставља у ред; власник/админ га одобрава на страници **Users**
+  (*Pending approval* секција). Не треба mail инфраструктура.
+- **`EmailVerification`** — једнократни, истекући верификациони линк се шаље email-ом; налог се активира када
+  се линк отвори. Потребан je email transport (`App:Email`). **Ако транспорт није конфигурисан, овај режим
+  аутоматски downgrades на `AdminApproval`** при покретању, тако да омогућавање регистрације никада не квари тихо.
+- **`Open`** — налог је активан одмах (поверено/dev само).
 
-Self-registered users are always created as **`User`** (or `Viewer` if configured) — the domain
-**hard-refuses** minting an Owner/Admin through self-registration.
+ Самрегистровани корисници се увек креирају kao **`User`** (или `Viewer` ako је конфигурисано) — домен
+**одбија** ковање Owner/Admin кроз самрегистрацију.
 
-## Security & anti-abuse
+## Безбедност и заштита од злоупотребе
 
-- **Anti-enumeration.** A duplicate email yields the **same** neutral `202 Accepted` as a fresh sign-up and
-  creates nothing — the app never discloses whether an address already has an account.
-- **Rate limiting.** The public endpoints are throttled per IP (harder than the auth limiter).
-- **Password policy.** Minimum length enforced; passwords are hashed (Argon2 via `IPasswordHasher`);
-  verification tokens are stored only as SHA-256 hashes and are single-use + expiring.
-- **Email hygiene.** Optional allow-list of email domains and a disposable-provider block-list.
-- **CAPTCHA (optional).** reCAPTCHA / hCaptcha / Turnstile via their shared verify contract.
-- **Login gate.** A pending account is refused at login with a neutral response.
+- **Anti-enumeration.** Дупликат email даје **исти** неутралан `202 Accepted` kao свеж sign-up и
+  не креира ништа — апликација никада не открива да ли адреса већ има налог.
+- **Rate limiting.** Јавни ендпоинти су throttle-овани per IP (строже од auth limitера).
+- **Политика лозинке.** Минимална дужина спроведена; лозинке су хеширане (Argon2 преко `IPasswordHasher`);
+  верификациони токени се чувају само kao SHA-256 hash-ови и једнократни су + истекући.
+- **Email хигиjена.** Опциони allow-лист email домена и block-листа за disposal провајдере.
+- **CAPTCHA (опционо).** reCAPTCHA / hCaptcha / Turnstile преко њиховог дељеног verify уговора.
+- **Login gate.** Налог на чекању се одбија при пријави са неутралним одговором.
 
-## Provisioning API (integration)
+## Provisioning API (интеграција)
 
-With `App:Registration:Api:Enabled` and a `Secret` set, another service can create users:
+Са `App:Registration:Api:Enabled` и постављеним `Secret`, други сервис може креирати кориснике:
 
 ```
 POST /api/provision
@@ -79,22 +79,22 @@ X-Provision-Secret: <the configured secret>
 { "email": "user@example.com", "password": "…", "role": 2 }
 ```
 
-The secret is compared in constant time. Provisioned accounts are created **active** (or invited with
-`MustChangePassword`) depending on `Api.ActivateImmediately` / `Api.InviteMustChangePassword`.
+Тајна се упоређује у константном времену. Provisioned налози се креирају **активни** (или позвани са
+`MustChangePassword`) зависно од `Api.ActivateImmediately` / `Api.InviteMustChangePassword`.
 
-## Enabling it
+## Омогућавање
 
-Registration requires **both** the feature flag and the master switch:
+Регистрација захтева **и** feature flag и master прекидач:
 
 ```jsonc
 "App": {
   "Features": { "Registration": true },
   "Registration": {
     "Enabled": true,
-    "Mode": "AdminApproval",           // or EmailVerification / Open
-    "DefaultRole": "User",             // never Owner/Admin
+    "Mode": "AdminApproval",           // или EmailVerification / Open
+    "DefaultRole": "User",             // никада Owner/Admin
     "RequireTermsAcceptance": true,
-    "AllowedEmailDomains": [],          // empty = any
+    "AllowedEmailDomains": [],          // празно = било koji
     "BlockDisposableEmail": true,
     "Attributes": { "FullName": "Optional", "Country": "Off" },
     "Api": { "Enabled": false, "Secret": "" }
@@ -102,15 +102,15 @@ Registration requires **both** the feature flag and the master switch:
 }
 ```
 
-The `App:Email` section (SMTP `Host`, `Port`, `UseStartTls`, `Username`, `Password`, `FromAddress`,
-`FromName`) configures the transport used by `EmailVerification` mode; leave `Host` unset to run with no
-mail (the no-op sender). See [feature toggles](./feature-toggles.md) and [white-label](./white-label.md) for
-how deployments turn features on and rebrand. When registration is enabled, the login page shows a **Create
-account** link.
+Секција `App:Email` (SMTP `Host`, `Port`, `UseStartTls`, `Username`, `Password`, `FromAddress`,
+`FromName`) конфигурише транспорт koji користи `EmailVerification` режим; остави `Host` неподешен да ради без
+mail-а (no-op sender). Види [feature toggles](./feature-toggles.md) и [white-label](./white-label.md) за
+начин укључивања функција и rebranding-а. Када je регистрација омогућена, страница за пријаву приказуje link **Креирај
+налог**.
 
-## Tested
+## Тестирано
 
-Unit (profile validation, `SelfRegister` role guard, activation transitions, single-use tokens, erasure),
-integration (disabled-by-default 404, approval flow, email-verification downgrade, anti-enumeration, abuse
-guards, required attributes, provisioning + bad secret), and E2E (default-off login has no sign-up link; the
-`/register` page renders its branded closed state).
+Unit (валидација профила, `SelfRegister` role guard, активационе транзиције, једнократни токени, брисање),
+integration (disabled-by-default 404, approval ток, email-verification downgrade, anti-enumeration, заштита од злоупотребе,
+обавезни атрибути, provisioning + лоша тајна), и E2E (подразумевано-искljučena пријава нема sign-up линк; `/register`
+страница рендерује своје брендирано затворено стање).

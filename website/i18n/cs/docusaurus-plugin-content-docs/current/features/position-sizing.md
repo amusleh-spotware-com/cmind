@@ -1,45 +1,36 @@
 ---
-description: "Institutional position sizing pro retail — volatility targeting a fractional-Kelly expozice pro jednu strategii, plus inverse-volatility risk-parity alokace s korelační maticí napříč knihou strategií."
+description: "Institucionální position sizing pro retail — volatility targeting a fractional-Kelly expozice pro jednu strategii, plus inverse-volatility risk-parity alokace s korelační maticí napříč knihou strategií."
 ---
 
 # Position Sizing & Portfolio
 
-"How big should this trade be?" je otázka která rozhoduje zda edge kompenzuje nebo vybuchne.
-Institutiony na ni odpovídají **volatility targeting** a **Kelly criterion**, a staví knihu s
-**risk parity** spíše než rovnými dolary. cMind přináší oboje na retail — deterministická matematika na a
-strategy's return series, s plain-English doporučením.
+"Jak velký by měl být tento obchod?" je otázka, která rozhoduje, zda výhoda složí nebo vybuchne.
+Instituce na ni odpovídají **volatility targeting** a **Kellyho kritériem**, a staví knihu s **risk parity** spíše než s rovnými dolary. cMind přináší oboje na retail — deterministickou matematiku na řadě výnosů strategie, s doporučením v plain-English.
 
 Otevřete **cBots → Position Sizing** (`/quant/sizing`).
 
-## Single-strategy sizing
+## Position sizing pro jednu strategii
 
-Given a strategy's returns (or equity curve), a target annual volatility, a Kelly fraction and a
-leverage cap, sizer reportuje:
+Vzhledem k výnosům strategie (nebo křivce equity), cílové roční volatilitě, Kellyho frakci a limitu páky, sizer hlásí:
 
-- **Realized annual volatility** — strategy's own volatility, annualizovaná druhou odmocninou času
-  rule.
-- **Volatility-target sizing** — expozice která činí realized volatility meet your target
-  (`target ÷ realized vol`), capped at your leverage limit. Nižší-vol strategie earns more size.
-- **Full Kelly** — growth-optimal fraction `f* = μ / σ²` (mean over variance of the returns).
-- **Fractional Kelly** — `f*` scaled by your Kelly fraction. Half-Kelly (0.5) je běžná bezpečná volba;
-  full Kelly je famously too aggressive for real, uncertain edges.
-- **Recommended exposure** — **menší** (bezpečnější) z volatility-target a fractional-Kelly
-  sizing, capped. Strategie s žádným pozitivním edge (full Kelly ≤ 0) je sized to **zero**.
+- **Realizovaná roční volatilita** — vlastní volatilita strategie, anualizovaná pravidlem druhé odmocniny času.
+- **Volatility-target sizing** — expozice, která činí realizovanou volatilitu rovnou vašemu cíli (`cíl ÷ realizovaná vol`), omezená vaším limitem páky. Strategie s nižší volatilitou získávají větší velikost.
+- **Plný Kelly** — růstově optimální frakce `f* = μ / σ²` (průměr nad rozptylem výnosů).
+- **Frakční Kelly** — `f*` škálovaný vaší Kellyho frakcí. Half-Kelly (0,5) je běžná bezpečná volba; plný Kelly je proslule příliš agresivní pro skutečné, nejisté výhody.
+- **Doporučená expozice** — **menší** (bezpečnější) z volatility-target a fractional-Kelly sizingů, omezená. Strategie bez pozitivní výhody (plný Kelly ≤ 0) je sizingována na **nulu**.
 
 ```http
 POST /api/quant/sizing
 { "returns": [...], "targetVolatility": 0.10, "kellyFraction": 0.5, "leverageCap": 3 }
 ```
 
-## Portfolio allocation
+## Alokace portfolia
 
-Dejte mu dvě nebo více strategií (aligned return series) a postaví knihu **inverse-volatility
-risk parity** — každá strategie weighted by `1 / volatility`, normalized — takže risk, ne dolary, je sdílen
-evenly. Vrací také:
+Dejte mu dvě nebo více strategií (zarovnané řady výnosů) a postaví knihu **inverse-volatility risk parity** — každá strategie vážená `1 / volatilita`, normalizovaná — takže riziko, ne dolary, je rovnoměrně sdíleno. Vrací také:
 
-- **korelační matici** across your strategies (zjistěte které jsou tajně stejná sázka);
-- **projektovanou portfolio volatility** při těchto vahách, from the sample covariance;
-- **leverage** factor that scales the whole book toward your target volatility (capped).
+- **korelační matici** napříč vašimi strategiemi (odhalte ty, které jsou tajně stejnou sázkou);
+- **projektovanou volatilitu portfolia** při těchto vahách, ze vzorkové kovariance;
+- **pákový** faktor, který škáluje celou knihu směrem k vaší cílové volatilitě (omezený).
 
 ```http
 POST /api/quant/portfolio
@@ -48,7 +39,4 @@ POST /api/quant/portfolio
 
 ## Proč je to spolehlivé
 
-Všechno je pure, deterministic domain code (`Core.Portfolio`) s žádnou infrastrukturou závislostí a žádnými
-externími voláními — unit-tested for vol-target scaling, Kelly formula, equal-risk property of
-inverse-volatility weights, and the correlation matrix. Advisory by default: čísla jsou a
-recommendation, never an automatic order.
+Všechno je čistý, deterministický doménový kód (`Core.Portfolio`) bez závislosti na infrastruktuře a bez externích volání — unit testováno pro vol-target škálování, Kellyho formuli, vlastnost stejného rizika inverse-volatility vah a korelační matici. Advisory defaultně: čísla jsou doporučením, nikdy automatickým příkazem.

@@ -1,39 +1,33 @@
 ---
-description: "Strategy Health & Alpha Decay — deterministická detekce rozpadu, která porovnává Sharpe strategie z poslední doby s jejím dřívějším záznamem a lokalizuje největší posun střední hodnoty (CUSUM change-point), vrací verdikt Healthy / Degrading / Decayed."
+description: "Strategy Health & Alpha Decay — deterministická detekce rozpadu, která porovnává nedávný Sharpe strategie s jejím dřívějším záznamem a lokalizuje největší posun střední hodnoty (CUSUM change-point), vrací verdikt Healthy / Degrading / Decayed."
 ---
 
 # Strategy Health & Alpha Decay
 
-Každá edge se rozpadá — výzkum je upřímný že half-life kvantitativní strategie se zhroutila z let
-na měsíce, takže *adaptace poráží objev*. Strategy Health monitor vám říká, z vlastní historie returns strategie,
-zda edge stále je.
+Každá výhoda se rozpadá — výzkum je nekompromisní, že poločas kvantitativní strategie se zhroutil z let na měsíce, takže *adaptace poráží objev*. Monitor Strategy Health vám říká, z vlastní historie výnosů strategie, zda výhoda stále je.
 
 Otevřete **cBots → Strategy Health** (`/quant/health`).
 
-## Co dělá
+## Co to dělá
 
-Given a return series (or equity curve, oldest first), it:
+Vzhledem k řadě výnosů (nebo křivce vlastního kapitálu, od nejstaršího), počítá:
 
-- rozdělí historii na **dřívější** a **nedávnou** polovinu a porovná jejich Sharpe ratios;
-- provede **CUSUM change-point** scan pro lokalizaci pozorování kde se střední hodnota nejjasněji posunula (a
-  regime break), reported only when the deviation is statistically notable;
+- rozdělí historii na **dřívější** a **nedávnou** polovinu a porovná jejich Sharpe ratio;
+- provede **CUSUM change-point** sken pro lokalizaci pozorování, kde se střední hodnota nejjasněji posunula (režimový přelom), hlášeno pouze když je odchylka statisticky pozoruhodná;
 - vrací verdikt:
 
 | Verdikt | Význam |
 |---|---|
-| **Healthy** | Recent performance is in line with (or better than) the earlier record. |
-| **Degrading** | Recent Sharpe is materially weaker than the earlier record — watch closely. |
-| **Decayed** | The edge has effectively disappeared in the recent window — consider pausing. |
-| **Unknown** | Not enough history to judge. |
+| **Healthy** | Nedávná výkonnost je v souladu s (nebo lepší než) dřívějším záznamem. |
+| **Degrading** | Nedávný Sharpe je podstatně slabší než dřívější záznam — sledujte bedlivě. |
+| **Decayed** | Výhoda v podstatě zmizela v nedávném okně — zvažte pozastavení. |
+| **Unknown** | Nedostatek historie k posouzení. |
 
 ```http
 POST /api/quant/health
-{ "returns": [...] }   // or { "equity": [...] }
+{ "returns": [...] }   // nebo { "equity": [...] }
 ```
 
 ## Proč je to spolehlivé
 
-Je to pure, deterministic domain code (`Core.Health`) s žádnou infrastrukturou závislostí a žádnými externími
-voláními — unit-tested for decayed, degrading, healthy and too-short cases and for change-point
-localization. Je to manuální companion k always-on health checks that back the autonomous agents:
-stejné statistiky pohánějí circuit breaker that de-risks a live strategy whose edge is fading.
+Je to čistý, deterministický doménový kód (`Core.Health`) bez závislosti na infrastruktuře a bez externích volání — unit testován pro případy decayed, degrading, healthy a příliš krátké a pro lokalizaci change-point. Je to manuální doplněk k vždy zapnutým health checkům, které podporují autonomní agenty: stejné statistiky pohánějí jistič, který snižuje riziko živé strategie, jejíž výhoda mizí.

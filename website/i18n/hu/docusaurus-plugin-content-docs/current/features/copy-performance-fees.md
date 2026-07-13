@@ -1,48 +1,51 @@
 ---
-title: Masolasi teljesitmenydijak
-description: "Terhelj dijat a masolasi szolgaltatasert - magas vizjel stilusan, a masolt hozam egy reszet kovetelve, csak nyereseg felett."
+title: Másolási teljesítménydíjak
+description: "Pénzkezelő teljesítménydíjak high-water-mark alapon, a standard másolási trading modell (cTrader Copy, Darwinex, ZuluTrade profit-share): a szolgáltató egy százalékot számít fel az új profitból a követő csúcs equity-je felett."
 ---
 
-# Masolasi teljesitmenydijak
+# Másolási teljesítménydíjak (4. fázis)
 
-Terhelj díjat a másolási szolgáltatásért - magas vízjel stílusban, a másolt hozam egy részét követelve, csak nyereség felett.
+Pénzkezelő **teljesítménydíjak high-water-mark alapon**, a standard másolási kereskedési modell (cTrader Copy, Darwinex, ZuluTrade profit-share): a szolgáltató egy százalékot számít fel *új* profitból a követő equity csúcsa felett — soha a nyitó egyenlegen, és soha nem kétszer ugyanazért a már visszaszerzett földért. **Opcionális** az `App:Copy:FeesEnabled` révén (alapértelmezés ki).
 
-## hogyan mukodik
+## A modell (high-water-mark)
 
-A szolgáltató beállít egy **high-water mark** (HWM) stratégiát:
-- **Belépési díj** (opcionális) - egyszeri díj a masolás indításakor
-- **Teljesítménydíj** - % a másolt nyereségből, csak a HWM felett
-- **HWM** - a legmagasabb elért érték; a díj csak az új csúcs felett kerül felszámításra
+Per cél (követő számla), minden elszámolásnál:
 
-## Példa
+1. **Első elszámolás** seed-eli a high-water-mark-ot (HWM) az aktuális equity-re → nincs díj (a követő soha nem számlázódik a letétjére).
+2. **Új csúcs** (equity > HWM): `fee = performanceFeePercent × (equity − HWM)`, majd `HWM ← equity`.
+3. **A csúcson vagy alatta**: nincs díj, HWM változatlan — a követőnek először vissza kell térnie a régi csúcs fölé, így soha nem számítjuk fel kétszer ugyanazért a nyereségért.
+
+A díj aritmetika egy domain invariáns a `CopyDestination.SettleFee(equity)`-n — az aggregátum birtokolja; az elszámolási szolgáltatás csak a pollolt equity-t szállítja és rögzíti a visszaadott összeget. A `PerformanceFee` egy 50%-ban capped value object, így egy rossz konfiguráció nem terhelheti el a követő teljes nyereségét.
+
+## Hogyan számol el
 
 ```
-Szolgáltató HWM: $10,000
-Jelenlegi egyenleg: $11,000
-Nyereség a HWM felett: $1,000
-Teljesítménydíj: 20%
-Fizetendő díj: $200
+CopyFeeSettlementService (BackgroundService, only when FeesEnabled)
+   │  every App:Copy:FeeSettlementInterval
+   ├─ load running profiles with a fee-configured destination
+   ├─ ICopyEquityReader.ReadEquityAsync(ctid)   ← OpenApiCopyEquityReader opens a session,
+   │                                               computes balance + floating P&L (PropFirmEquityCalculator)
+   ├─ destination.SettleFee(equity)             ← HWM logic on the aggregate
+   └─ persist advanced HWM + append CopyFeeAccrual (only on a new high)
 ```
 
-## Beallitas
+- `ICopyEquityReader` egy Core absztrakció; a live implementáció (`OpenApiCopyEquityReader`) az egyetlen infra darab — így az elszámolás + HWM logika tesztelhető fake reader-rel, nincs live broker.
+- `CopyFeeAccrual` egy append-only log (HWM-before, equity, fee %, fee amount, settled-at) — egy fact log a díj report-hoz és számlázáshoz, nem aggregátum.
 
-1. **Beallitasok → Masolasi dijak**
-2. Allitsd be a **Belépési díjat** (vagy 0)
-3. Allitsd be a **Teljesítménydíjat** (%)
-4. Allitsd be a **HWM Reset feltételeket** (opcionális)
-5. Mentsd a beállításokat
+## Konfiguráció & API
 
-## API
+| `App:Copy` beállítás | Alapértelmezés | Hatás |
+|--------------------|---------|--------|
+| `FeesEnabled` | `false` | Futtatja az elszámolási szolgáltatást. |
+| `FeeSettlementInterval` | `1h` | Milyen gyakran poll-ol equity-t és számol el díjat. |
 
-```http
-GET  /api/copy/fees
-PUT  /api/copy/fees
-POST /api/copy/fees/accrue
-GET  /api/copy/fees/history
-```
+Per-destination: `PerformanceFeePercent` (0–50) be van állítva a destination-en (add/edit destination request).
 
-## Kapcsolodo
+- `GET /api/copy/profiles/{id}/fees` — a profil díj accrual-jei + összes felszámítva.
 
-- **[Copy Trading](./copy-trading.md)**
-- **[Copy Notifications](./copy-notifications.md)**
-- **[AI Copy Recommender](./ai-copy-recommender.md)**
+## Tesztek
+
+- **Egység** (`CopyPerformanceFeeTests`) — a HWM invariáns: első elszámolás seed-el + nem számít díjat; egy új csúcs csak a csúcs feletti nyereséget számítja; a csúcson/alatta nem számít díjat és a csúcs soha nem megy vissza; egy drawdown után csak a régi csúcs feletti helyreállás van felszámítva; 0% soha nem számít; a VO elutasítja a tartományon kívüli százalékokat.
+- **Integráció** (`CopyFeeSettlementTests`, valódi Postgres, fake equity reader) — seed→10k (nincs díj, mark advances), 12k (400-at számít, mark előre), 11k (nincs díj, mark held); accrual perzisztálva a megfelelő owner/amount-tal.
+
+A copy host érintetlen a díjak által (az elszámolás egy külön DB munka), így a copy DST stress suite érintetlen (23/23).

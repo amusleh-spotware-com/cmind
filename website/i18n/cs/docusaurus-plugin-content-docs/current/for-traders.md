@@ -1,7 +1,7 @@
 ---
 slug: /for-traders
-title: cMind for cTrader traders
-description: Why a cTrader trader should self-host cMind — own your stack and data, author, backtest, run and monitor cBots in one AI-powered console, on your laptop, VPS or phone.
+title: cMind pro cTrader tradery
+description: Proč by měl cTrader trader self-hostovat cMind — vlastněte svůj stack a data, autorujte, backtestujte, spouštějte a monitorujte cBots v jedné AI-powered konzoli, na notebooku, VPS nebo telefonu.
 keywords:
   - cTrader
   - algorithmic trading
@@ -12,68 +12,54 @@ keywords:
 sidebar_position: 5
 ---
 
-# cMind for cTrader traders 📈
+# cMind pro cTrader tradery
 
-You already trade on cTrader. You already juggle a code editor, a backtester, a VPS, and three
-browser tabs. **cMind collapses all of that into one dark, keyboard-friendly console you run
-yourself** — and it's open source, so nothing about your edge, your strategies, or your credentials
-ever leaves your box.
+Již obchodujete na cTrader. Již manuálně přepínáte mezi editorem kódu, backtesterem, VPS a třemi záložkami prohlížeče. **cMind to vše shrnuje do jedné tmavé, klávesnici-přívětivé konzole, kterou si sami provozujete** — a je open source, takže nic z vaší výhody, vašich strategií nebo vašich pověření nikdy neopustí váš počítač.
 
 :::tip TL;DR
-Self-host cMind on a laptop, a cheap VPS, or a home server. Author, backtest, run, and monitor cBots
-in one place, with an AI core doing the chores. → [Run it in 5 minutes](./deployment/local.md)
+Self-hostujte cMind na notebooku, levném VPS nebo domácím serveru. Autorujte, backtestujte, spouštějte a monitorujte cBots na jednom místě, s AI jádrem dělajícím práci. → [Spusťte to za 5 minut](./deployment/local.md)
 :::
 
-## Why self-host instead of a hosted service?
+## Proč self-hostovat místo hostované služby?
 
-- **Own your stack and your data.** Your cBots, credentials, tokens, and equity history live on
-  **your** infrastructure — no third party, no lock-in, no "we're sunsetting this product" email.
-- **It's genuinely yours to change.** C# 14 / .NET 10, strict DDD, EF Core + PostgreSQL, an MCP
-  server — all open source and hackable. Fork it, extend it, send a PR.
-- **No per-feature paywall.** Bring your own AI key for any provider; every AI feature is on.
+- **Vlastněte svůj stack a svá data.** Vaše cBots, pověření, tokeny a historie equity žijí na **vaší** infrastruktuře — žádná třetí strana, žádné lock-in, žádný email "tento produkt ukončujeme".
+- **Je to skutečně vaše k změně.** C# 14 / .NET 10, strict DDD, EF Core + PostgreSQL, MCP server — vše open source a hackable. Forkněte to, rozšiřte to, pošlete PR.
+- **Žádný paywall per-funkce.** Přineste si vlastní AI klíč pro jakéhokoliv poskytovatele; každá AI funkce je zapnutá.
 
-Prefer not to run servers yourself? A hosting company can run a managed cMind for you —
-see [For cloud & VPS providers](./for-cloud-providers.md).
+Neché se vám nelíbí provozovat servery samy? Hostingová společnost může pro vás provozovat spravovaného cMind — viz [Pro cloud & VPS poskytovatele](./for-cloud-providers.md).
 
-## One console, no tab-juggling
+## Jedna konzole, žádné přepínání záložek
 
-- **Author** in a real Monaco IDE (the VS Code editor), with C# **and** Python templates and
-  sandboxed `dotnet build` in throwaway containers. → [Build & backtest](./features/build-and-backtest.md)
-- **Backtest** across a fleet of nodes and watch equity curves stream back live.
-- **Run** strategies live and **monitor** them from one dashboard. → [Dashboard](./features/dashboard.md)
-- **Copy** a master account onto many accounts across brokers and cTrader IDs, with reconciliation
-  that survives dropped connections and rotating tokens. → [Copy trading](./features/copy-trading.md)
+- **Autorujte** v skutečném Monaco IDE (editor VS Code), s šablonami **C#** i **Python** a sandboxovaným `dotnet build` v jednorázových kontejnerech. → [Sestavení a backtest](./features/build-and-backtest.md)
+- **Backtestujte** napříč flotilou uzlů a sledujte equity křivky streamovat zpět živě.
+- **Spouštějte** strategie live a **monitorujte** je z jednoho dashboardu. → [Dashboard](./features/dashboard.md)
+- **Kopírujte** master účet na mnoho účtů napříč brokery a cTrader ID, s rekonciliací, která přežije přerušená spojení a rotující tokeny. → [Kopírování obchodů](./features/copy-trading.md)
 
-## AI that does chores, not small talk
+## AI, která dělá práci, ne small talk
 
-Bring your own API key (any supported provider — cloud or a local model) and get plain-English → a
-real compiling cBot with a self-repair loop, parameter tuning, backtest post-mortems, and a risk
-guard that can auto-stop a misbehaving bot. → [Meet the AI core](./features/ai.md)
+Přineste si vlastní API klíč (jakéhokoliv podporovaného poskytovatele — cloud nebo lokální model) a získejte plain-English → skutečný kompilující se cBot se smyčkou samoopravy, laděním parametrů, post-mortemy backtestů a rizikovým strážcem, který umí automaticky zastavit neposlušného bota. → [Poznámte AI jádro](./features/ai.md)
 
-## Institutional-grade tooling, for one
+## Institucionální nástroje, pro jednoho
 
-The same rigor a desk pays for, on your own box:
+Stejná přísnost, kterou si desk pays for, na vašem vlastním počítači:
 
 - [Backtest integrity](./features/backtest-integrity.md) · [Position sizing](./features/position-sizing.md)
 - [Strategy health](./features/strategy-health.md) · [Regime lab](./features/regime-lab.md)
 - [Execution TCA](./features/execution-tca.md) · [Trading journal](./features/trading-journal.md)
-- [Agent Studio](./features/agent-studio.md) · [Contrarian positioning](./features/contrarian-positioning.md)
+- [Agent Studio](./features/agent-studio.md) · [Kontrariánské pozicování](./features/contrarian-positioning.md)
 
-## Runs where you do
+## Běží tam, kde vy
 
-Start on your laptop with `docker compose up`, graduate to a cheap VPS or a home server when you're
-ready, and check on your bots from your phone — cMind is an installable, mobile-first
-[PWA](./features/pwa.md). → [Run it locally](./deployment/local.md)
+Začněte na notebooku s `docker compose up`, přejděte na levné VPS nebo domácí server, až budete připraveni, a kontrolujte své boty z telefonu — cMind je instalovatelná, mobilně prioritní [PWA](./features/pwa.md). → [Spusťte to lokálně](./deployment/local.md)
 
-Want your AI client to drive it? There's a built-in [MCP server](./features/mcp.md).
+Chcete, aby to váš AI klient řídil? Existuje vestavěný [MCP server](./features/mcp.md).
 
-## Help make it better
+## Pomozte to zlepšit
 
-cMind is open source and MIT-licensed — the roadmap is community-shaped:
+cMind je open source a MIT-licencovaný — roadmap je tvarován komunitou:
 
-- File issues and feature requests, and vote on what matters.
-- Add cBot templates, AI provider adapters, or UI translations.
-- Send PRs — three test tiers (unit + integration + E2E) and strict DDD keep the bar high, and the
-  [Contributing guide](./contributing.md) walks you through it.
+- Nahlasujte issues a požadavky na funkce a hlasujte o tom, na čem záleží.
+- Přidejte šablony cBot, adaptéry poskytovatele AI nebo UI překlady.
+- Pošlete PR — tři testovací úrovně (unit + integration + E2E) a strict DDD udržují laťku vysoko a [Contributing guide](./contributing.md) vás provede.
 
-Ready? → [Přečtěte si intro](./intro.md) then [run it locally](./deployment/local.md).
+Připraveni? → [Přečtěte si úvod](./intro.md) pak [spusťte to lokálně](./deployment/local.md).

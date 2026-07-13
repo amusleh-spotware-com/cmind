@@ -1,30 +1,28 @@
 ---
-description: "Trader journal — annotate trades, capture decision logic, review outcomes, build playbook."
+description: "Trading Journal & Coach — analyzuje vaše vlastní běhy a backtesty na behaviorální úniky (přeinvestování, opakovaná selhání, ztrátový bias) a radí vám ohledně strategie, kterou již máte. Deterministické, s volitelnou AI narací."
 ---
 
-# Trading Journal
+# Trading Journal & Coach
 
-Nejlepší tradeři si píší journal. Capture "why I entered", "what I expected", "did I follow plan?" — offline learning.
+Nejnovější skutečně užitečná kategorie AI pro obchodování není predikovat trh — je to analyzovat *vaše vlastní* chování. Trading Journal přeměňuje vaši historii běhů a backtestů v upřímnou zpětnou vazbu, abyste mohli zlepšit strategii, kterou již máte.
 
-## Entry
+Otevřete **AI → Trading Journal** (`/journal`).
 
-Trader může annotate closed trade na run detail page:
+## Co to odhaluje
 
-- What was the setup?
-- Market conditions
-- Risk/reward expectancy
-- Outcome vs plan
+Z vašich instancí (běhů a backtestů) počítá deterministicky:
 
-Open POST /api/journal → store annotation.
+- **Počty výher / ztrát / selhání a win rate** napříč vašimi backtesty;
+- **Behaviorální poznatky** — úniky, které tiše stojí retail tradery:
+  - **Přeinvestování** — většina vaší aktivity je v jednom symbolu;
+  - **Opakovaná selhání** — vysoký podíl běhů selhal při sestavení nebo konfiguraci;
+  - **Ztrátový bias** — více ztrátových než výherních backtestů (s nabádáním spustit Integrity Lab a zkontrolovat, zda je výhoda skutečná);
+  - zdravý výsledek, když nic z výše uvedeného neplatí.
 
-## Review
+```http
+GET /api/journal
+```
 
-GET /api/journal?symbol=EURUSD&tags=trend — search past trades, spot patterns.
+## Proč je to spolehlivé
 
-Export → spreadsheet → offline analysis.
-
-Gated na User+ role. No compliance-level requirement (personal learning tool).
-
-Journal entries append-only (never deleted, GDPR erase só anonymizes).
-
-Viz run detail page.
+Behaviorální analýza je čistý, deterministický doménový kód (`Core.Journal`) bez závislosti na infrastruktuře — unit testován pro přeinvestování, opakovaná selhání, ztrátový bias, vyvážený případ a prázdný účet. Fakta přicházejí první; AI kouč (Portfolio Digest) je volitelná narativní vrstva nahoře, závislá na Anthropic API klíči, takže journal funguje plně i bez nakonfigurované AI.

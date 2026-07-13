@@ -1,42 +1,64 @@
 ---
-title: Kopyalama Ticareti Performans Ücretleri
-description: Kopya sağlayıcıları için geçişli ücretler — kar paylarını ödeyici, temizlik, vergisi.
-sidebar_position: 30
+description: "Bir yüksek-su-işareti üzerinde para-yöneticisi performans ücretleri, standart kopya-işlem modeli (cTrader Copy, Darwinex, ZuluTrade kâr-payı): bir sağlayıcı…"
 ---
 
-# Performans Ücretleri
+# Kopya performans ücretleri (Faz 4)
 
-Kopya profili kârlı olduğunda otomatik ücret desteği — sağlayıcılar kâr paylarını kazanırlar.
+Bir yüksek-su-işareti üzerinde **para-yöneticisi performans ücretleri**, standart kopya-işlem modeli
+(cTrader Copy, Darwinex, ZuluTrade kâr-payı): bir sağlayıcı, her takipçinin zirve özkaynağının üzerindeki
+*yeni* kârın bir yüzdesini alır — asla açılış bakiyesi üzerinden ve asla zaten geri kazanılmış zemin için
+iki kez. `App:Copy:FeesEnabled` ile **isteğe bağlı** (varsayılan kapalı).
 
-## Yapılandırma
+## Model (yüksek-su-işareti)
 
-Profil oluşturma sırasında:
+Hedef (takipçi hesabı) başına, her yerleşimde:
 
-```json
-{
-  "performanceFeePercent": 20,  // 20% of profit
-  "highWaterMark": true,         // only on new highs
-  "minimumProfitToCharge": 100   // don't charge on small gains
-}
+1. **İlk yerleşim** yüksek-su-işaretini (HWM) mevcut özkaynakta tohumlar → ücret yok (bir takipçi asla
+   mevduatı üzerinden faturalandırılmaz).
+2. **Yeni zirve** (özkaynak > HWM): `ücret = performanceFeePercent × (özkaynak − HWM)`, sonra `HWM ← özkaynak`.
+3. **Zirvede veya altında**: ücret yok, HWM değişmez — takipçi önce eski zirveyi geçmek zorundadır, böylece
+   aynı kazançlar için asla iki kez ücretlendirilmez.
+
+Ücret aritmetiği `CopyDestination.SettleFee(equity)` üzerinde bir alan değişmezidir — toplam ona sahiptir;
+yerleşim servisi yalnızca yoklanan özkaynağı sağlar ve döndürülen tutarı kaydeder. `PerformanceFee`, bir
+yanlış yapılandırmanın bir takipçinin tüm kazancını ücret olarak alamaması için %50 ile sınırlanmış bir
+değer nesnesidir.
+
+## Nasıl yerleşir
+
+```
+CopyFeeSettlementService (BackgroundService, yalnızca FeesEnabled iken)
+   │  her App:Copy:FeeSettlementInterval
+   ├─ ücret-yapılandırılmış hedefi olan çalışan profilleri yükle
+   ├─ ICopyEquityReader.ReadEquityAsync(ctid)   ← OpenApiCopyEquityReader bir oturum açar,
+   │                                               bakiye + dalgalı K&Z hesaplar (PropFirmEquityCalculator)
+   ├─ destination.SettleFee(equity)             ← toplam üzerindeki HWM mantığı
+   └─ ilerleyen HWM'yi kalıcılaştır + CopyFeeAccrual ekle (yalnızca yeni zirvede)
 ```
 
-## Hesaplaması
+- `ICopyEquityReader` bir Core soyutlamasıdır; canlı uygulama (`OpenApiCopyEquityReader`) tek altyapı
+  parçasıdır — böylece yerleşim + HWM mantığı testlerde sahte bir okuyucuyla, canlı broker olmadan yürütülür.
+- `CopyFeeAccrual`, yalnızca-ekleme günlüğüdür (HWM-öncesi, özkaynak, ücret %, ücret tutarı, yerleşilme
+  zamanı) — ücret raporu ve faturalama için bir gerçek günlüğü, toplam değil.
 
-```
-Profit = Close Balance - Entry Balance
-Fee = Profit × FeePercent
-Trader Gets = Profit - Fee
-```
+## Yapılandırma ve API
 
-Örnek:
-- Giriş Bakiyesi: $10,000
-- Çıkış Bakiyesi: $11,000
-- Kar: $1,000
-- Ücret (%20): $200
-- Tüccar alır: $800
+| `App:Copy` ayarı | Varsayılan | Etki |
+|--------------------|---------|--------|
+| `FeesEnabled` | `false` | Yerleşim servisini çalıştır. |
+| `FeeSettlementInterval` | `1h` | Özkaynağın ne sıklıkta yoklandığı ve ücretlerin yerleştiği. |
 
-## Temizlik
+Hedef başına: `PerformanceFeePercent` (0–50) hedefte ayarlanır (hedef ekleme/düzenleme isteği).
 
-Sağlayıcılar aylık temizlik raporu elde ederler — kazanmış ücretler.
+- `GET /api/copy/profiles/{id}/fees` — profilin ücret tahakkukları + toplam alınan.
 
-Daha fazla: [Copy Provider Marketplace →](./copy-provider-marketplace.md)
+## Testler
+
+- **Birim** (`CopyPerformanceFeeTests`) — HWM değişmezi: ilk yerleşim tohumlar + hiçbir şey almaz; yeni bir
+  zirve yalnızca zirvenin üzerindeki kazancı alır; zirvede/altında hiçbir şey almaz ve zirve asla gerilemez;
+  bir düşüşten sonra yalnızca eski zirveyi geçen kurtarma alınır; %0 asla almaz; VO aralık-dışı yüzdeleri reddeder.
+- **Entegrasyon** (`CopyFeeSettlementTests`, gerçek Postgres, sahte özkaynak okuyucu) — tohum→10k (ücret yok,
+  tohumlanmış işaretle), 12k (400 alır, işaret ilerler), 11k (ücret yok, işaret tutulur); tahakkuk doğru
+  sahip/tutarla kalıcılaştırılır.
+
+Kopya host'u ücretlerden etkilenmez (yerleşim ayrı bir DB işidir), böylece kopya DST stres paketi etkilenmez (23/23).

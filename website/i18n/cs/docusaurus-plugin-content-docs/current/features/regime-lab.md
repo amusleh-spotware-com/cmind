@@ -1,25 +1,26 @@
 ---
-description: "Regime detection — trend vs range, momentum vs mean-reversion market environment. Live + backtest overlay."
+description: "Regime Lab — označí řadu výnosů jako klidné / normální / turbulentní volatilní režimy a hlásí výkonnost v každém režimu, plus Hurstův exponent (trendu vs mean-reversion). Deterministické."
 ---
 
 # Regime Lab
 
-Market mode (trend, range, spike, crash?) shapes strategy. Regime Lab detects live.
+Jeden Sharpe ratio skrývá pravdu, že většina výhod je podmíněná: skvělá v klidných, trendujících trzích a mrtvá v turbulenci (nebo naopak). Regime Lab rozbije historii strategie na volatilní režimy a ukazuje, jak si vedla v každém z nich — takže víte, *kdy* vaše výhoda skutečně funguje.
 
-## Módy
+Otevřete **cBots → Regime Lab** (`/quant/regimes`).
 
-- **Trending** — strong directional bias (ADX > 25)
-- **Range-bound** — choppy, price respects levels (BB squeeze)
-- **Spike** — extreme volatility (ATR spike)
-- **Crash** — panic selling
+## Co to dělá
 
-Computed from OHLC + technical indicators over window.
+Vzhledem k řadě výnosů (nebo křivce vlastního kapitálu, od nejstaršího), počítá:
 
-## API
+- **klouzavou realizovanou volatilitu** v každém bodě a rozděluje historii na režimy **Klidný**, **Normální** a **Turbulentní** podle tercilů této volatility;
+- **výkonnost v každém režimu** — pozorování, průměrný výnos, volatilita a Sharpe — takže vidíte, kde výhoda žije;
+- odhaduje **Hurstův exponent** pomocí analýzy reskalovaného rozsahu (R/S): nad ~0,55 je řada **trendující / perzistentní**, pod ~0,45 je **mean-revertující** a kolem 0,5 je blízko náhodnému procházení.
 
-GET /api/quant/regime — current market regime + confidence
-GET /api/quant/regime/history — time-series by symbol
+```http
+POST /api/quant/regimes
+{ "returns": [...], "window": 10 }   // nebo { "equity": [...] }
+```
 
-Backtest report overlay — see when strategy was in its best regime.
+## Proč je to spolehlivé
 
-Gated na Backtesting feature.
+Čistý, deterministický doménový kód (`Core.Regimes`) bez závislosti na infrastruktuře a bez externích volání — unit testován pro separaci režimů (klidná vs turbulentní volatilita) a pro směr Hurstova exponentu (anti-perzistentní řada skóruje pod 0,5, perzistentní trend skóruje nad). Stejný režimový signál napájí reflexní smyčku autonomních agentů, takže agent se může opřít o režimy, kde je jeho výhoda skutečná.

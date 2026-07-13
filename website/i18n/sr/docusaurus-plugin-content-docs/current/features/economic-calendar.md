@@ -1,194 +1,192 @@
 # Ekonomski kalendar
 
-cMind isporucuje **svoj** ekonomski kalendar — raspored release-ova, aktuelne vrednosti, prognoze, revizije and a
-data-driven impact model — pribavljen iz **primarnih izvora** (central banks and national
-statistical agencies), sa **nula zavisnoscu** od ForexFactory, FXStreet, Investing.com or any
-aggregator. Tacan je u vremenu, keeps ≥10 years of history, and is wired into trading, the
-public API, MCP, cBots, AI, alerts and backtests. To je dekuplovani modul: it can be disabled with
-zero effect on the trading core.
+cMind испоручуje **сопствени** економски календар — распоред објава, актуелне вредности, прогнозе, ревизиjе и a
+data-driven модел утицаја — прибављен из **примарних извора** (централне банке и националне
+статистичке агенције), са **нулном зависношћу** од ForexFactory, FXStreet, Investing.com или било ког
+агрегатора. Тачан je у времену, чува ≥10 година историjе, и повезан je у трговање, јавни API, MCP, cBots, AI, упозорења и
+backtest-ове. То je декпловани модул: може се онемогућити без утицаја на трговачко језгро.
 
-> **Status.** The domain core (impact model, country→symbol mapping, news-window policy, point-in-time
-> revision chains, two-tier gating) **and** persistence (the `calendar` Postgres schema, the append-only
-> read/write side, the FRED connector and the config-gated ingestion worker) are implemented and tested
-> (unit + Testcontainers integration). The JWT REST API, the MCP tools and the UI land in the subsequent
-> rollout phases described below.
+> **Статус.** Domain језгро (модел утицаја, мапирање земља→симбол, политика news-window-а, point-in-time
+> ланци ревизија, two-tier контрола) **и** перзистенција (PostgreSQL `calendar` шема, append-only
+> read/write страна, FRED конектор и config-gated ingestion worker) су имплементирани и тестирани
+> (unit + Testcontainers integration). JWT REST API, MCP алати и UI слећу у наредним
+> rollout фазама описним испод.
 
-## Sta ga cini drugacijim
+## Шта га чини другачијим
 
-The recurring complaints against the leading calendars became our design constraints:
+Поновљене жалбе на водеће календаре постале су наша конструкцијска ограничења:
 
-- **No silent impact-rating changes.** Our impact rating is **deterministic, versioned and
-  auditable**. Every change is a recorded revision with a timestamp — never a silent overwrite. A
-  user can see exactly *why* an event is High.
-- **One UTC anchor per event.** Every event is anchored to a single UTC instant from the primary
-  source's official schedule; the source's own timezone is stored, and per-user rendering uses an
-  explicit IANA timezone with DST handled by the zone database — never a manual ±1h toggle.
-- **Full revision chains, everywhere.** The original value and every revision are first-class, exposed
-  identically through the API, MCP and cBot surfaces.
-- **≥10 years of history, no wall.** Unrestricted browsing range; no 60-day cap, no registration gate.
-- **Point-in-time by construction.** Every fact carries `KnownAt` (when *we* learned it) and
-  `EffectiveAt` (the event instant). "As the calendar looked at time T" is a first-class query, so a
-  backtested news rule behaves exactly like live — no look-ahead from using revised values in history.
+- **Без тихих промена rating-а утицаја.** Наш rating утицаја je **детерминистички, верзиониран и
+  аудитабилан**. Свака промена je забележена ревизија са временском ознаком — никада тихо преписивање. Корисник
+  може тачно да види *зашто* je догађај High.
+- **Једна UTC референца по догађају.** Сваки догађај je усидрен на један UTC тренутак из званичног распореда
+  примарног извора; сопствена временска зона извора се чува, и per-user рендеровање користи експлицитну IANA временску зону са
+  DST рукованим од стране zone базе података — никада ручни ±1h прекидач.
+- **Потпуни ланци ревизија, свуда.** Оригинална вредност и свака ревизија су првокласни, изложени
+  идентично кроз API, MCP и cBot површине.
+- **≥10 година историjе, без зида.** Неограничен опсег прегледања; нема 60-дневног cap-а, нема registration gate-а.
+- **Point-in-time по конструкцији.** Свака чињеница носи `KnownAt` (када *смо* сазнали) и
+  `EffectiveAt` (тренутак догађаја). "Као што je календар изгледао у тренутку T" je првокласни упит, тако да a
+  backtest-овано правило вести понаша се тачно као живо — без look-ahead-а од коришћења ревидираних вредности у историjи.
 
-## The impact model
+## Модел утицаја
 
-The impact score is a pure, deterministic function in `[0, 100]`, banded to Low / Medium / High /
-Critical. Its inputs are only data known at scoring time (no future leak):
+Score утицаја je чиста, детерминистичка функција у `[0, 100]`, груписана у Low / Medium / High /
+Critical. Њени инпути су само подаци познати у тренутку scoring-а (без future leak-а):
 
-- **Series prior** — a baseline weight per indicator class (a rate decision outweighs CPI, which
-  outweighs a minor survey).
-- **Realized-volatility footprint** — the median absolute return of the primary affected symbols in
-  the window after this series' *past* releases: "this release historically moves price this much."
-- **Surprise sensitivity** — how strongly the absolute surprise (a z-score) has historically
-  correlated with the post-release move.
+- **Series prior** — основна тежина по класи индикатора (одлука о стопи превазилази CPI, која
+  превазилази малу анкету).
+- **Realized-volatility footprint** — медијана апсолутног приноса примарно погођених симбола у
+  прозору након *прошлих* објава серија: "ова објава историјски помера цену оволико."
+- **Surprise sensitivity** — колико снажно je апсолутно изненађење (z-score) историјски
+  корелирало са post-release померајем.
 
-The score blends these with fixed weights and stamps an `ImpactModelVersion`. Recompute is an
-explicit, logged operation that produces a **new revision** — never a mutate — so the score is always
-reproducible from its inputs.
+Score их меша са фиксним тежинама и жигоса `ImpactModelVersion`. Рекомпутовање je
+експлицитна, логована операција која производи **нову ревизију** — никада мутација — тако да score увек
+остаје репродуктибилан из својих инпута.
 
-## Country → currency → symbol mapping
+## Мапирање Земља → валута → симбол
 
-The single most-cited algo integration papercut is solved once, as a pure function: a country maps to
-its currency (every euro-area member fans in to EUR), and a currency maps to the watchlist symbols
-quoting it on either leg. So **EURUSD is affected by both EU and US events**; XAUUSD is USD-exposed;
-US500 maps to USD. This drives the news filter, the affected-symbols resolution and the blackout math.
+Најчешће цитирани algo integration papercut je решен једном, као чиста функција: земља се мапира на
+своју валуту (сваки euro-area члан се fans in у EUR), и валута се мапира на watchlist симболе
+котиране на било којој нози. Тако да **EURUSD je погођен и EU и US догађајима**; XAUUSD je USD-изложен;
+US500 се мапира на USD. Ово покреће news filter, резолуцију погођених симбола и blackout математику.
 
-## News-window policy
+## Политика News-window-а
 
-A `NewsWindowRule` is `{ minImpact, beforeMinutes, afterMinutes, currencies?, series? }`. A single,
-shared, pure implementation answers "is instant T inside a blackout for symbol S?" — used by the cBot
-news filter, the copy-trade pause and the AI risk guard, so they can never diverge. On uncertainty the
-blackout answer defaults to the configured conservative value (fail-closed by default) so a data gap
-never silently green-lights trading through a high-impact release.
+`NewsWindowRule` je `{ minImpact, beforeMinutes, afterMinutes, currencies?, series? }`. Једна,
+дељена, чиста имплементација одговара "je ли тренутак T унутар блокирања за симбол S?" — користи се од стране cBot
+news filter-а, copy-trade паузе и AI risk guard-а, тако да никада не могу да разиђу. При неизвесности,
+blackout одговор подразумева конфигурисана конзервативна вредност (fail-closed по подразумеваном) тако да празнина података
+никада не омогућава трговање кроз високо-утицајну објаву.
 
-## Point-in-time & revisions
+## Point-in-time и ревизије
 
-Actuals, forecasts and impact scores are **append-only**. Each event owns an ordered chain of
-revisions, monotonic in `KnownAt`:
+Actuals, forecasts и scores утицаја су **append-only**. Сваки догађај има уређени ланац
+ревизија, монотоних по `KnownAt`:
 
-- `Scheduled` — the event was first scheduled (prior impact, no actual).
-- `Released` — the first printed actual arrived.
-- `Revised` — a later revised value arrived.
-- `Rescheduled` — the source moved the release instant (auditable, alertable).
-- `Rescored` — the impact score was recomputed under a new model version.
+- `Scheduled` — догађај je први пут заказан (претходни утицај, без actual).
+- `Released` — стигла прва одштампана actual вредност.
+- `Revised` — стигла каснија ревидирана вредност.
+- `Rescheduled` — извор померио тренутак објаве (аудитабилан, упозорив).
+- `Rescored` — score утицаја je рекомпутован под новом верзијом модела.
 
-Querying `as of` a past instant returns exactly the revision known then — the guarantee that kills
-look-ahead in backtested news rules.
+Упит `as of` прошли тренутак враћа тачно ревизију познату тада — гаранција која убија
+look-ahead у backtest-ованим правилима вести.
 
-## Forecast / consensus
+## Прогноза / консензус
 
-The survey median of economists is **not** freely published by primary sources — it is the
-aggregators' proprietary value-add, and we do not fabricate it. The event schema carries a nullable
-`Forecast`; a deployment may wire a licensed consensus feed through the optional `IForecastProvider`
-port (bring-your-own key, off by default). Previous values and revisions always come from the official
-source.
+Медијана анкете економиста **није** слободно објављена од стране примарних извора — то je
+proprietary вредност агрегатора, и ми je нећемо фабриковати. Schema догађаја носи nullable
+`Forecast`; deployment може повезати лиценцирани consensus feed кроз опциони `IForecastProvider`
+port (bring-your-own key, искључен по подразумеваном). Претходне вредности и ревизије увек долазе од званичног
+извора.
 
-## Data sources
+## Извори података
 
-Two decoupled layers, all primary — never an aggregator:
+Два декплована слоја, сви примарни — никада агрегатор:
 
-- **Schedule / timing:** FRED release calendar; national statistical agencies (BLS, BEA, Census,
-  Eurostat, ONS, Destatis, INSEE, e-Stat, ABS, StatCan); central-bank meeting calendars (Fed, ECB,
+- **Распоред / временiranje:** FRED release календар; националне статистичке агенције (BLS, BEA, Census,
+  Eurostat, ONS, Destatis, INSEE, e-Stat, ABS, StatCan); календари централних банака (Fed, ECB,
   BoE, BoJ, RBA, BoC, SNB, RBNZ).
-- **Actual values:** FRED (with vintage dates for revisions and point-in-time), plus BLS, BEA, Census,
-  ECB SDW, Eurostat and OECD SDMX APIs.
+- **Стварне вредности:** FRED (са vintage датумима за ревизије и point-in-time), плус BLS, BEA, Census,
+  ECB SDW, Eurostat и OECD SDMX API-ови.
 
-A dead source degrades coverage for **that source only**; the calendar keeps serving everything else
-and surfaces the gap as a freshness metric.
+Мртав извор деградира покривеност **само за тај извор**; календар наставља да сервира све остало
+и површину празнине kao freshness metric.
 
-## Rate limiting & the backup plan
+## Rate limiting и план резервне копије
 
-External providers publish rate limits (FRED allows ~120 requests/minute). The calendar is built so it
-**never trips a provider's limit**, and so that being throttled or cut off never degrades reads:
+Екстерни провајдери објављују rate limits-ове (FRED дозвољава ~120 захтева/minute). Календар je изграђен тако да
+**никада не активира limit провајдера**, и тако да будући throttle-ован или одсечен никада не деградира читања:
 
-- **Proactive throttling.** Every source's HTTP client goes through a shared, thread-safe rate gate
-  that spaces outbound requests to a configured budget (`App:Calendar:FredRequestsPerMinute`, default
-  100 — deliberately under the provider ceiling). Requests are queued and paced, never bursted.
-- **Honour `429 Retry-After`.** If a provider ever returns `429 Too Many Requests`, the gate backs the
-  whole source off by the server-requested cooldown (or `App:Calendar:RateLimitBackoff`, default 60s)
-  before the next call — no tight retry loop.
-- **Standard resilience.** Each source client also inherits the app-wide resilience handler (retry with
-  backoff + jitter, circuit breaker, timeouts), so transient blips are absorbed and a persistently
-  failing source is parked (its coverage goes stale) without affecting the others.
-- **The backup plan — the durable read-through cache.** Reads are **never** served by calling a
-  provider. Once a range is fetched it is persisted append-only to Postgres and served from there
-  forever after (see §"On-demand load"). So even when a source is rate-limited or down, the calendar
-  keeps answering from cached, point-in-time-correct data; the missing span simply stays uncovered and
-  is retried on the next ingestion cycle. Blackout answers additionally fail to the conservative
-  default under uncertainty, so a data gap never green-lights trading through a release.
-- **Cheap polling.** Conditional fetch (ETag / If-Modified-Since / source vintage cursors) and the
-  "fetch a span once, never again" cache keep the actual request volume far below any limit in normal
-  operation — the rate gate is a safety net, not the common path.
+- **Проактивно throttle-овање.** Сваки HTTP клијент извора пролази кроз дељену, thread-safe rate gate
+  која распоређује outbound захтеве према конфигурисаном буџету (`App:Calendar:FredRequestsPerMinute`, подразумевано
+  100 — намерно испод плафон провајдера). Захтеви се стављају у ред и pace-ују, никада не burst-ују.
+- **Поштуј `429 Retry-After`.** Ако провајдер икада врати `429 Too Many Requests`, gate одмара
+  цео извор за server-requested cooldown (или `App:Calendar:RateLimitBackoff`, подразумевано 60s)
+  пре следећег позива — нема уског retry loop-а.
+- **Стандардна отпорност.** Сваки source клијент такође наслеђује app-wide resilience handler (retry са
+  backoff + jitter, circuit breaker, timeout-ови), тако да се транзијентни blip-ови апсорбују и перзистентно
+  неуспешан извор се паркира (његова покривеност постаје stale) без утицаја на остале.
+- **План резервне копије — траjни read-through cache.** Читања се **никада** не сервирају позивањем
+  провајдера. Једном када се опсег добави, перзистује се append-only у Postgres и сервира одатле
+  заувек (види §"On-demand load"). Тако да чак и када је извор rate-limited или пао, календар
+  наставља да одговара из кешираних, point-in-time-коректних података; недостајући span једноставно остаје непокривен и
+  ретрија се у следећем ingestion циклусу. Blackout одговорима се додатно fail-ује на конзервативни
+  подразумевани при неизвесности, тако да празнина података никада не омогућава трговање кроз објаву.
+- **Ефтино poll-овање.** Conditional fetch (ETag / If-Modified-Since / source vintage cursor-ови) и
+  "fetch a span once, never again" cache држе стварни волумен захтева далеко испод било ког лимита у нормалној
+  операцији — rate gate je safety net, не заједничка путања.
 
-## Enable / disable
+## Омогући / онемогући
 
-Two independent tiers, exactly like other cMind features:
+Два независна tier-а, тачно kao друге cMind функције:
 
-- **Tier 1 — runtime feature toggle** (`Feature.EconomicCalendar`) flipped from the Features admin UI;
-  no redeploy, takes effect live.
-- **Tier 2 — white-label hard gate** (`App:Branding:EnableEconomicCalendar`, default `true`). A
-  reseller sets it `false` to remove the feature entirely; an operator then cannot re-enable it.
+- **Tier 1 — runtime feature toggle** (`Feature.EconomicCalendar`) преврнут из Features admin UI;
+  без redeploy-а, ступа на снагу live.
+- **Tier 2 — white-label хард gate** (`App:Branding:EnableEconomicCalendar`, подразумевано `true`). А
+  reseller постави `false` да уклони функцију потпуно; оператер тада не може да je поново омогући.
 
-Effective state is `Branding.EnableEconomicCalendar && FeatureToggle.EconomicCalendar`. When disabled,
-the nav entry is hidden and `/economic-calendar`, `/api/calendar/**` and the MCP calendar tools return
-a clean feature-disabled `404` — never a `500`. Persisted history is retained on a runtime toggle-off
-so re-enabling is instant.
+Ефективно стање je `Branding.EnableEconomicCalendar && FeatureToggle.EconomicCalendar`. Када je онемогућено,
+nav entry се сакрива и `/economic-calendar`, `/api/calendar/**` и MCP calendar алати враћају
+чист feature-disabled `404` — никада `500`. Перзистована историja се задржава при runtime toggle-off
+тако да је реомогућавање тренутно.
 
-## Rollout phases
+## Rollout фазе
 
-- **P0 — domain core** *(implemented)*: aggregates, value objects, ports, impact model,
-  country→symbol mapping, news-window policy, two-tier gating, full unit suite.
-- **P1 — persistence + one source** *(implemented)*: EF `calendar` schema (own tables, append-only,
-  hot indexes), the read-through `IEconomicCalendar` reader with point-in-time `asOf`, the idempotent
-  append-only write service, the FRED connector behind a resilient typed client, and the config-gated
-  ingestion worker; Testcontainers integration tests (persistence, PIT, idempotency, blackout).
-- **P2 — public JWT REST API + Web UI** *(implemented)*: the versioned, JWT-secured `/api/calendar/v1`
-  API — client issuance, token exchange, and the core read endpoints (events, history, series,
-  surprises, next, blackout, affected-symbols, health) with scope enforcement and two-tier gating,
-  integration-tested. Plus the mobile-first **`/economic-calendar` page** — a gated, fully-localized
-  (23 languages) agenda of upcoming releases as phone-friendly cards with colour-banded impact chips
-  and a MudBlazor **filter dialog** (currencies + minimum impact + a **From-date** picker to jump to
-  **any** past date across the full history — no 60-day cap, no wall); nav entry, smoke/mobile/a11y/E2E
-  tested. A **per-indicator series history page** (`/economic-calendar/series/{code}`, linked from each
-  event) lists a series' full print history. The surprise charts + infinite-scroll browser follow.
-- **P3 — more sources & warm-up** *(started)*: a **core-series catalog** (CPI, Core CPI, NFP,
-  unemployment, GDP, PCE, Fed funds, retail sales → their FRED ids) is seeded automatically on startup,
-  and a one-time, idempotent, year-chunked **proactive backfill** pulls their ≥10-year history so the
-  common case is warm without waiting for a user miss. **Ingestion is on by default**
-  (`App:Calendar:IngestionEnabled`, default `true`): the **central-bank schedule source** needs **no API
-  key**, so the FOMC / ECB / BoE decision calendar populates out of the box — the backfill seeds those
-  meeting dates across **both recent history and the forward horizon**, so browsing *last month* (or any
-  past window) shows the meetings even before any FRED/BLS key is configured; the value series fill in
-  once their keys are set. The workers honour the calendar's two-tier gate — a white-label deployment or
-  the owner disabling the economic-calendar feature stops ingestion, and `App:Calendar:IngestionEnabled=false`
-  turns it off explicitly. **Per-source freshness** is now real too: the worker records each source's last
-  successful poll, consecutive-failure count and a tripped-circuit flag (persisted in app settings,
-  cross-process), and the `/health` endpoint + `calendar_health` MCP tool report a truthful `stale`
-  verdict per source. **BLS** (a 2nd value source) and the **central-bank schedule source** (FOMC / ECB /
-  BoE decision dates, backfilled across history and synced forward into a horizon window by the worker)
-  are in. Still to come: BEA/Census/ECB-SDW/Eurostat/OECD value sources and the reconciliation pass.
-- **P4 — deep integration**: **MCP tools** *(implemented — full read-API parity: `calendar_events`,
+- **P0 — domain jeзгро** *(имплементирано)*: aggregates, value objects, ports, модел утицаја,
+  мапирање земља→симбол, политика news-window-а, two-tier контрола, пуни unit suite.
+- **P1 — перзистенција + један извор** *(имплементирано)*: EF `calendar` шема (сопствене табеле, append-only,
+  hot indexes), read-through `IEconomicCalendar` reader ca point-in-time `asOf`, идемпотентни
+  append-only write сервис, FRED конектор иза отпорног типизираног клијента, и config-gated
+  ingestion worker; Testcontainers integration тестови (перзистенција, PIT, идемпотенција, blackout).
+- **P2 — јавни JWT REST API + Web UI** *(имплементирано)*: верзионирани, JWT-обезбеђени `/api/calendar/v1`
+  API — издавање клијента, размена токена, и основни read ендпоинти (events, history, series,
+  surprises, next, blackout, affected-symbols, health) ca scope enforcement и two-tier контролом,
+  integration-tested. Плус mobile-first **`/economic-calendar` страница** — gated, потпуно локализован
+  (23 jeзика) agenda предстојећих објава kao phone-friendly картице ca colour-banded impact chips
+  и MudBlazor **filter дијалог** (валуте + минимални утицај + **From-date** бирач да прескочи на
+  **било koji** прошли датум преко пуне историjе — нема 60-дневног cap-а, нема зида); nav entry, smoke/mobile/a11y/E2E
+  тестирано. **Per-indicator series history страница** (`/economic-calendar/series/{code}`, повезана ca сваког
+  догађаја) наводи пуну историjу штампања серија. Surprise графикони + infinite-scroll browser следе.
+- **P3 — више извора и загревање** *(започето)*: **core-series каталог** (CPI, Core CPI, NFP,
+  незапосленост, GDP, PCE, Fed funds, малопродаja → њихови FRED id-ови) се семљи аутоматски при покретању,
+  и једнократно, идемпотентно, year-chunked **проактивно попуњавање** повлачи њихову ≥10-годишњу историju тако да
+  уобичајен случај je загреан без чекања да корисник пропусти. **Ingestion je укључен по подразумевању**
+  (`App:Calendar:IngestionEnabled`, подразумевано `true`): **central-bank schedule извор** треба **без API
+  кључа**, тако да се FOMC / ECB / BoE календар одлука попуњава out of the box — попуњавање семљи те
+  састанак датуме преко **и недавне историjе и будућег хоризонта**, тако да прегледање *прошлог месеца* (или било ког
+  прошлог прозора) показује састанке чак и пре него што je било koji FRED/BLS кључ конфигурисан; серија вредности се попуњава
+  једном када се њихови кључevi поставе. Workers частвају two-tier gate календара — white-label deployment или
+  власник koji онемогућава economic-calendar функцију зауставља ingestion, и `App:Calendar:IngestionEnabled=false`
+  га експлицитно искључуje. **Per-source freshness** je сада реално: worker бележи последње успешно poll-овање сваког извора,
+  број узастопних неуспеха и tripped-circuit заставица (перзистовано у app settings, cross-process), и
+  `/health` ендпоинт + `calendar_health` MCP алат пријављују истинит `stale` verdict по извору. **BLS**
+  (2nd извор вредности) и **central-bank schedule извор** (FOMC / ECB / BoE датуми одлука, попуњени преко историjе и
+  синхронизовани унапред у хоризонт window од стране worker-а) су у. Још увек предстоji: BEA/Census/ECB-SDW/Eurostat/OECD извори вредности и
+  реконцилиова pass.
+- **P4 — дубoka интеграција**: **MCP алати** *(имплементирано — пуна read-API паралелност: `calendar_events`,
   `calendar_event`, `calendar_history`, `calendar_series`, `calendar_surprises`, `calendar_next`,
-  `calendar_blackout`, `calendar_affected_symbols`, `calendar_health`, gated on the feature)* and the
-  **alerts `EconomicEvent` trigger** *(implemented — an `AlertRule` that fires N minutes ahead of an
-  upcoming release at/above a chosen impact, optionally narrowed to currencies; evaluated by the
-  existing alert worker with no AI, de-duplicated per release; created via
-  `POST /api/alerts/rules/economic-event`)*. The prop-guard news-blackout gate **and the
-  copy-trade blackout pause** are in (§5.1 — an opt-in `App:Copy:NewsPauseEnabled`, default off: a source
-  open whose symbol sits in a Critical-impact blackout is skipped, byte-identical hot path when off). The
-  **backtest event overlay** is in — `GET /api/calendar/v1/for-symbol` and the
-  `calendar_events_for_symbol` MCP tool return the point-in-time-correct events affecting a symbol in a
-  window, and the **instance/backtest report page** renders the high-impact releases that fell inside the
-  backtest window beneath the equity curve (so an author sees which trades landed on NFP), gated and
-  localized. The whole plan is now implemented.
-- **P5 — extras**: surprise analytics, iCal/CSV export, keyword search, pluggable consensus.
+  `calendar_blackout`, `calendar_affected_symbols`, `calendar_health`, gated on the feature)* и
+  **alerts `EconomicEvent` trigger** *(имплементирано — `AlertRule` koji пали N минута пре
+  предстојеће објаве at/above изабраног утицаја, опционо сужено на валуте; процењено од стране
+  постојећег alert worker-а без AI, де-дупликовано per објава; креирано преко
+  `POST /api/alerts/rules/economic-event`)*. Prop-guard news-blackout gate **и
+  copy-trade blackout пауза** су у (§5.1 — opt-in `App:Copy:NewsPauseEnabled`, подразумевано искljučeno: a source
+  open чији симбол седи у Critical-impact блокирању се прескаче, byte-identical hot path када је искljučeno). **Backtest event overlay** je у — `GET /api/calendar/v1/for-symbol` и
+  `calendar_events_for_symbol` MCP алат враћају point-in-time-коректне догађаје koji утичу на симбол у прозору,
+  и **instance/backtest извештај страница** рендерује високо-утицајне објаве koje су пале унутар
+  backtest прозора испод equity криве (тако да аутор види које трговине су слетеле на NFP), gated и
+  локализовано. Цео план je сада имплементиран.
+- **P5 — додаци**: surprise analytics, iCal/CSV export, претраживање кључних речи, plugin consensus.
 
-See the [cBot & REST API reference](calendar-cbot-api.md) for the integration surface.
+Види [cBot & REST API референца](calendar-cbot-api.md) за интеграциону површину.
 
-## Data source is required (feature is hidden without one)
+## Извор података је потребан (функција је сакривена без њега)
 
-The calendar surfaces actual/forecast/previous values only from a configured value source (FRED or
-BLS). Without `App:Calendar:FredApiKey` or `App:Calendar:BlsApiKey` the feature is **hidden** from
-navigation; if it is force-enabled (white-label/owner) without a key, the page shows an actionable
-"configure a data source" notice instead of empty values, and the filter action stays hidden until a
-source is set. Event rows show the series **name** (from the catalog), not the raw series code.
+Календар површинује actual/forecast/previous вредности само из конфигурисаног извора вредности (FRED или
+BLS). Без `App:Calendar:FredApiKey` или `App:Calendar:BlsApiKey` функција je **сакривена** од
+навигације; ako се форсира омогући (white-label/власник) без кључа, страница приказуje actionable
+"configure a data source" обавештење уместо празних вредности, и filter акција остаје сакривена док
+извор не буде постављен. Редови догађаја приказују **назив** серија (из каталога), не raw серијски код.

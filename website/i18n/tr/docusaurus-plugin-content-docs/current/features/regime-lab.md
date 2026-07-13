@@ -1,35 +1,35 @@
 ---
-title: Rejim Laboratuvarı
-description: Pazar rejimi analizi — trend/aralık/oynaklık, statüler, uyum stratejisi.
-sidebar_position: 18
+description: "Rejim Laboratuvarı — bir getiri serisini Sakin / Normal / Çalkantılı volatilite rejimlerine etiketler ve rejim başına performansı raporlar, artı Hurst üssü (trend-kalıcılığı vs ortalamaya-dönüş). Deterministik."
 ---
 
 # Rejim Laboratuvarı
 
-Pazar rejimi analytics — trend, aralık, oynaklık — stratejilere uyarlanır.
+Tek bir Sharpe oranı, çoğu avantajın koşullu olduğu gerçeğini gizler: sakin, trend piyasalarında harika ve
+çalkantıda ölü (veya tersi). Rejim Laboratuvarı, bir stratejinin geçmişini volatilite rejimlerine böler ve
+her birinde nasıl performans gösterdiğini gösterir — böylece avantajınızın gerçekte *ne zaman* işe
+yaradığını bilirsiniz.
 
-## Rejim Türleri
+**cBots → Regime Lab** (`/quant/regimes`) sayfasını açın.
 
-- **Trend**: Güçlü yönsel (>60% ROC)
-- **Aralık**: Özgür sınırları (ticaret aralıkları)
-- **Oynaklık**: Yüksek ATR (volatilite)
-- **Yassı**: Belirsiz (ATR < 0.5)
+## Ne yapar
 
-## Tespit
+Bir getiri serisi (veya özkaynak eğrisi, en eski önce) verildiğinde:
 
-Makine öğrenmesi:
+- her noktada bir **izleyen gerçekleşen volatilite** hesaplar ve geçmişi, o volatilitenin tersillerine göre
+  **Sakin**, **Normal** ve **Çalkantılı** rejimlere böler;
+- **rejim başına performans** raporlar — gözlemler, ortalama getiri, volatilite ve Sharpe — böylece
+  avantajın nerede yaşadığını görebilirsiniz;
+- yeniden-ölçeklenmiş-aralık (R/S) analizi aracılığıyla **Hurst üssünü** tahmin eder: ~0.55'in üzerinde seri
+  **trend / kalıcı**, ~0.45'in altında **ortalamaya-dönen** ve 0.5 civarında rastgele bir yürüyüşe yakındır.
 
-- RSI, MACD, Bollinger Bands
-- Oynaklık (ATR, Parkinson)
-- Korelasyona (çiftler)
+```http
+POST /api/quant/regimes
+{ "returns": [...], "window": 10 }   // veya { "equity": [...] }
+```
 
-## Uyarlanır Stratejisi
+## Neden güvenilir
 
-Örnek:
-- Trend: Fakat stratejileri
-- Aralık: Orta oyunlar
-- Oynaklık: Geniş duruşlar
-
-cBot yürütme sırasında rejim kontrol eder.
-
-Daha fazla: [Ekonomik Takvim →](./economic-calendar.md)
+Altyapı bağımlılığı ve dış çağrısı olmayan saf, deterministik alan kodu (`Core.Regimes`) — rejim ayrımı
+(sakin vs çalkantılı volatilite) ve Hurst yönü (anti-kalıcı seri 0.5'in altında puan alır, kalıcı bir trend
+üstünde puan alır) için birim testlidir. Aynı rejim sinyali, otonom ajanların yansıma döngüsünü besler,
+böylece bir ajan avantajının gerçek olduğu rejimlere yaslanabilir.

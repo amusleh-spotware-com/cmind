@@ -1,21 +1,21 @@
 ---
-description: "Reseller rebrand app — ime proizvoda, logo, favicon, boje, custom CSS — preko deployment konfiguracije, bez promene koda. Svaka branding vrednost podrazumeva stock."
+description: "Reseller пребрендирање апликације — назив производа, лого, favicon, боје, custom CSS — преко deployment конфигурације, без промене кода. Свака branding вредност подразумева stock..."
 ---
 
-# White-label branding
+# White-label брендирање
 
-Reseller rebrand app — ime proizvoda, logo, favicon, boje, custom CSS — preko deployment konfiguracije, bez promene koda. Svaka branding vrednost **podrazumeva stock identitet**: nekonfigurisan deployment izgleda isto kao pre; reseller override only what need.
+Reseller пребрендирање апликације — назив производа, лого, favicon, боје, custom CSS — преко deployment конфигурације, без промене кода. Свака branding вредност **подразумева stock identity**: неконфигурисан deployment изгледа исто kao и пре; reseller превазилази само оно што треба.
 
-## Model
+## Модел
 
-- `Core.Options.BrandingOptions` — bound from `App:Branding`. String-based (config edge); each colour validated when theme built.
-- `Core.Branding.HexColor` — value object for CSS hex colour (`#RGB` / `#RRGGBB`), immutable, self-validating.
-  Invalid colour throws `DomainException` (`domain.branding.color_invalid`) when theme built — misconfigured deployment fail fast at startup, not render broken palette.
-- `Web.Components.Theme.Build(BrandingOptions)` — produce MudBlazor theme from branding. Only branded palette entries come from config; typography, layout, neutral surface tones stay fixed so product keep coherent look across resellers.
-- `Web.Branding.IBrandingThemeProvider` — singleton, build theme once, rebuild on options change.
-  Injected by `MainLayout`/`EmptyLayout` for `MudThemeProvider`, by app bar for product name/logo. `App.razor` read `IOptionsMonitor<AppOptions>` direct for page `<head>` (title, description, favicon, theme-colour, custom CSS).
+- `Core.Options.BrandingOptions` — везан из `App:Branding`. Стринг-базиран (config edge); свака боја валидирана када се тема гради.
+- `Core.Branding.HexColor` — value object за CSS hex боју (`#RGB` / `#RRGGBB`), immutable, self-валидирајући.
+  Неважећа боја баца `DomainException` (`domain.branding.color_invalid`) када се тема гради — погрешно конфигурисан deployment не успе fast при покретању, не рендерује покварену палетау.
+- `Web.Components.Theme.Build(BrandingOptions)` — производи MudBlazor тему из branding-а. Само брендиране ставке палете долазе из config-а; типографиjа, layout, неутрални површински тонови остају фиксни тако да производ задржава кохерентан изглед преко reseller-а.
+- `Web.Branding.IBrandingThemeProvider` — singleton, гради тему једном, ребилдује на промене опција.
+  Убризгава се од стране `MainLayout`/`EmptyLayout` за `MudThemeProvider`, од стране app bar-а за назив производа/лого. `App.razor` чита `IOptionsMonitor<AppOptions>` директно за page `<head>` (title, description, favicon, theme-colour, custom CSS).
 
-## Configuration
+## Конфигурација
 
 ```json
 {
@@ -42,43 +42,42 @@ Reseller rebrand app — ime proizvoda, logo, favicon, boje, custom CSS — prek
 }
 ```
 
-Environment-variable form: `App__Branding__ProductName=AcmeFX`, `App__Branding__PrimaryColor=%232D7FF9`.
+Форма променljиве окружења: `App__Branding__ProductName=AcmeFX`, `App__Branding__PrimaryColor=%232D7FF9`.
 
-| Key | Effect | Default |
-|-----|--------|---------|
-| `ProductName` | App-bar text + page `<title>` | `cMind` |
-| `LogoUrl` | App-bar logo image; when empty, product name text shows | *(empty)* |
+| Кључ | Ефекат | Подразумевано |
+|-----|--------|---|
+| `ProductName` | App-bar текст + page `<title>` | `cMind` |
+| `LogoUrl` | App-bar лого слика; када je празно, приказуje се текст назива производа | *(empty)* |
 | `FaviconUrl` | `<link rel="icon">` | `favicon.svg` |
 | `Description` | `<meta name="description">` | stock description |
-| `PrimaryColor` / `SecondaryColor` | accent, drawer icon, buttons | `#26C281` / `#1FB97A` |
-| `AppBarColor` / `BackgroundColor` / `SurfaceColor` | chrome + surfaces; `AppBarColor` drives `<meta theme-color>` + PWA manifest `theme_color`, `BackgroundColor` the manifest `background_color` | dark palette |
-| `SuccessColor` / `ErrorColor` / `WarningColor` / `InfoColor` | status colours | stock |
-| `CustomCss` | injected `<style>` in `<head>` (deployment-trusted) | *(empty)* |
-| `ShowSiteLink` | show the "Powered by cMind" credit link on the dashboard | `true` |
-| `RequireMfa` | require every user to set up two-factor authentication before using the app | `false` |
-| `NodesUi` | how much of the Nodes surface ships: `Full` (list + manual add/delete), `Monitor` (read-only list, no add/delete), `Hidden` (no nav, no page, no manual API) | `Full` |
-| `RestrictNodesToOwner` | when `true`, only the owner may see/manage nodes; otherwise the whole admin-or-above staff surface can. Normal users never see nodes either way | `false` |
+| `PrimaryColor` / `SecondaryColor` | accent, икона фиоца, дугмад | `#26C281` / `#1FB97A` |
+| `AppBarColor` / `BackgroundColor` / `SurfaceColor` | chrome + површине; `AppBarColor` управља `<meta theme-color>` + PWA manifest `theme_color`, `BackgroundColor` manifest `background_color` | тамна палета |
+| `SuccessColor` / `ErrorColor` / `WarningColor` / `InfoColor` | status боје | stock |
+| `CustomCss` | убризгнути `<style>` у `<head>` (deployment-trusted) | *(empty)* |
+| `ShowSiteLink` | прикажи "Powered by cMind" credit линк на командној табли | `true` |
+| `RequireMfa` | захтевај од сваког корисника да подеси two-factor authentication пре коришћења апликације | `false` |
+| `NodesUi` | колико од Nodes површине се испоручује: `Full` (листа + ручно add/delete), `Monitor` (read-only листа, без add/delete), `Hidden` (без nav, без странице, без ручног API-ja) | `Full` |
+| `RestrictNodesToOwner` | када je `true`, само власник може да види/управља чворовима; у супротном цела admin-or-above staff површина може. Нормални корисници никада не виде чворове ни у једном случају | `false` |
 
-Assets referenced by `LogoUrl`/`FaviconUrl` served from Web app `wwwroot` (e.g. mount `wwwroot/branding/` folder) or any absolute URL.
+Asset-ови референцирани од `LogoUrl`/`FaviconUrl` се сервирају из Web апликације `wwwroot` (нпр. mount `wwwroot/branding/` директоријум) или било koji апсолутни URL.
 
-`App:Branding` validated at startup (`BrandingOptionsValidator`, run via `ValidateOnStart`): every colour must be valid hex, `CustomCss` must not contain `<`/`>` (cannot break out of `<style>` tag). Misconfigured deployment fail to boot with clear message, not render broken page.
+`App:Branding` валидира се при покретању (`BrandingOptionsValidator`, покренут преко `ValidateOnStart`): свака боја мора бити важећи hex, `CustomCss` не сме садржати `<`/`>` (не може да изађе из `<style>` тага). Погрешно конфигурисан deployment не успева да се покрене са јасном поруком, не рендерује покварену страницу.
 
-## Powered-by link
+## Powered-by линк
 
-The dashboard renders a small **"Powered by cMind"** credit link that points to the project's
-documentation site. It is controlled by `App:Branding:ShowSiteLink` and is **`true` by default** — an
-unconfigured deployment shows it. A reseller running a fully white-labeled instance sets
-`App__Branding__ShowSiteLink=false` to remove it entirely.
+Командна tabla рендерује мали **"Powered by cMind"** credit линк koji показује на документациони сајт пројекта.
+Контролисан je ca `App:Branding:ShowSiteLink` и je **`true` по подразумевању** — неконфигурисан
+deployment га приказуje. Reseller koji покреће потпуно white-labeled инстанцу поставља
+`App__Branding__ShowSiteLink=false` да га уклони потпуно.
 
-The link is emitted by the dashboard component and reads the flag through `IBrandingThemeProvider` /
-`BrandingOptions`, so toggling it is a config-only change (no rebuild). See
-[White-label for business](../white-label-for-business.md#the-powered-by-cmind-link) for the
-business-facing summary.
+Линк емитује командна tabla компонента и чита заставицу преко `IBrandingThemeProvider` /
+`BrandingOptions`, тако да пребацивање je config-only промена (без ребилда). Види
+[White-label for business](../white-label-for-business.md#the-powered-by-cmind-link) за бизнис-оријентисани преглед.
 
-## Broker allowlist
+## Листа дозвољених брокера
 
-A white-label deployment can restrict which brokers' trading accounts its users may add — so a broker
-running cMind for its own clients only ever serves its own book. Configured under `App:Accounts`:
+White-label deployment може ограничити koji брокерови трговачки налози његови корисници могу да додају — тако да брокер
+који покреће cMind за своје сопствене клијенте увек служи само своју књигу. Конфигурисано под `App:Accounts`:
 
 ```json
 {
@@ -90,59 +89,59 @@ running cMind for its own clients only ever serves its own book. Configured unde
 }
 ```
 
-Environment-variable form: `App__Accounts__AllowedBrokers__0=Pepperstone`.
+Форма променljиве окружења: `App__Accounts__AllowedBrokers__0=Pepperstone`.
 
-**Behaviour:**
+**Понашање:**
 
-- **Empty list (default) ⇒ unrestricted.** Every broker is allowed and **no verification runs** — a
-  stock deployment is completely unchanged.
-- **Non-empty ⇒ restricted.** cMind checks every account a user tries to add against the list
+- **Празна листа (подразумевано) ⇒ неограничено.** Сваки брокер је дозвољен и **не покреће се верификација** —
+  stock deployment je потпуно непромењен.
+- **Непразна ⇒ ограничено.** cMind проверава сваки налог koji корисник покушава да дода против листе
   (case-insensitive):
-  - **Open API (OAuth) link** — the broker name is reported authoritatively by the cTrader Open API, so
-    a disallowed account is simply **skipped** (allowed accounts in the same grant still link); the
-    authorization page tells the user which brokers were skipped.
-  - **Manual cID (username / password)** — the user-typed broker is **not** trusted. cMind **verifies**
-    the account's real broker by running the shipped broker-probe cBot through the cTrader CLI (reading
-    `Account.BrokerName`) and persists that verified name. A disallowed broker is rejected with a
-    notification; a verification failure (bad credentials, no node, timeout) is surfaced too, and the
-    account is not added.
+  - **Open API (OAuth) линк** — назив брокера се пријављује ауторитативно од стране cTrader Open API, тако да
+    недозвољени налог се једноставно **прескаче** (дозвољени налози у истом grant-у се и даље повезују);
+    ауторизациона страница говори кориснику koji брокери су прескочени.
+  - **Мануелни cID (username / password)** — корисников куцани брокер **није** поуздан. cMind **верификује**
+    стварног брокера налога покретањем испоручених broker-probe cBot-а кроз cTrader CLI (читање
+    `Account.BrokerName`) и перзистује то верификовано име. Недозвољени брокер се одбија са
+    обавештењем; неуспех верификације (лоши креденцијали, нема чвора, timeout) се такође површинује, и налог
+    се не додаје.
 
-**Model:**
+**Модел:**
 
-- `Core.Options.AccountsOptions` — bound from `App:Accounts` (`AllowedBrokers`, `BrokerProbeTimeout`,
+- `Core.Options.AccountsOptions` — везан из `App:Accounts` (`AllowedBrokers`, `BrokerProbeTimeout`,
   `BrokerProbeAlgoPath`).
 - `Core.Accounts.BrokerName` — value object (trimmed, case-insensitive equality).
-- `Core.Accounts.BrokerAllowlist` — `IsRestricted` / `Allows(broker)`; empty = allow all. Enforced as an
-  invariant inside `CTraderIdAccount.AddTradingAccount` / `LinkOpenApiAccount`
+- `Core.Accounts.BrokerAllowlist` — `IsRestricted` / `Allows(broker)`; празно = дозволи све. Наметнуто kao
+  инваријанта унутра `CTraderIdAccount.AddTradingAccount` / `LinkOpenApiAccount`
   (`domain.account.broker_not_allowed`).
-- `Core.Accounts.IBrokerVerifier` → `Web.Accounts.BrokerVerifier` — runs the probe container on the web
-  host (which has the Docker socket), tails logs, and parses the broker via
-  `Core.Accounts.BrokerProbeOutput`. Only invoked when the allowlist is restricted.
+- `Core.Accounts.IBrokerVerifier` → `Web.Accounts.BrokerVerifier` — покреће probe контејнер на web
+  хост-у (који има Docker socket), tail-ује логове и парсира брокера преко
+  `Core.Accounts.BrokerProbeOutput`.позива се само када је allowlist ограничен.
 
-**Broker-probe cBot:** a prebuilt `broker-probe.algo` ships with the Web app (`src/Web/BrokerProbe/`,
-copied to the output as `broker-probe/broker-probe.algo`), so the default
-`App:Accounts:BrokerProbeAlgoPath` resolves out of the box — a relative path is resolved against the app
-base directory, an absolute path is used as given. The source lives in `tools/broker-probe/`. When the
-algo is absent, manual-cID verification fails closed — accounts under a restricted allowlist can still be
-linked via the Open API path, which needs no probe.
+**Broker-probe cBot:** преизграђени `broker-probe.algo` испоручује се са Web апликацијом (`src/Web/BrokerProbe/`,
+копиран у излаз kao `broker-probe/broker-probe.algo`), тако да подразумевани
+`App:Accounts:BrokerProbeAlgoPath` ресолвира out of the box — релативна путања се разрешава према app
+base директоријуму, апсолутна путања се користи kao дата. Извор живи у `tools/broker-probe/`. Када
+алго не постоји, мануелна-cID верификација не успева closed — налози под ограниченим allowlist-ом се и даље могу
+повезати преко Open API путање, којој не треба probe.
 
-## Broker allowlist — tests
+## Листа дозвољених брокера — тестови
 
 - **Unit** — `UnitTests/Accounts/`: `BrokerName`/`BrokerAllowlist` value objects, `BrokerProbeOutput`
-  parser, and the `CTraderIdAccount` allowlist invariant.
-- **Integration** — `IntegrationTests/BrokerAllowlistTests.cs`: manual-cID endpoint with a fake verifier
-  (unrestricted / verified / disallowed / verification-failed) + Open API linker skipping disallowed
-  accounts. `BrokerVerifierLiveTests.cs` runs the **real** probe when cID creds + the algo are provided
-  (skips cleanly otherwise).
-- **E2E** — `E2ETests/BrokerAllowlistTests.cs`: a restricted deployment rejects a manual add through the
-  real UI and shows the "couldn't verify" notification (no account row added).
+  parser, и `CTraderIdAccount` allowlist инваријанта.
+- **Integration** — `IntegrationTests/BrokerAllowlistTests.cs`: мануелни-cID ендпоинт са лажним верификатором
+  (неограничен / верификован / недозвољен / верификација-неуспела) + Open API линкер koji прескаче недозвољене
+  налоге. `BrokerVerifierLiveTests.cs` покреће **правег** probe када су cID креденцијали + алго дати
+  (чисто прескаче у супротном).
+- **E2E** — `E2ETests/BrokerAllowlistTests.cs`: ограничен deployment одбија мануелно додавање кроз
+  прави UI и приказује обавештење "couldn't verify" (није додат ред налога).
 
-## Nodes UI visibility
+## Видљивост Nodes UI-ја
 
-Nodes are infrastructure most tenants never manage by hand — cTrader CLI agents
-[self-register and heartbeat](../operations/node-discovery.md), so a white-label deployment can hide the
-manual controls, or the Nodes surface entirely, and still run a healthy cluster through auto-discovery.
-Two config-only branding keys govern this:
+Чворови су инфраструктура коју већина закупаца никада не управља ручно — cTrader CLI агенти се
+[аутоматски региструју и heartbeat-ују](../operations/node-discovery.md), тако да white-label deployment може сакрити
+ручне контроле, или Nodes површину потпуно, и и даље покретати здрав cluster кроз ауто-откриће.
+Два config-only branding кључa управљају овим:
 
 ```json
 {
@@ -155,55 +154,55 @@ Two config-only branding keys govern this:
 }
 ```
 
-Environment-variable form: `App__Branding__NodesUi=Hidden`, `App__Branding__RestrictNodesToOwner=true`.
+Форма променljиве окружења: `App__Branding__NodesUi=Hidden`, `App__Branding__RestrictNodesToOwner=true`.
 
-**`NodesUi` — three modes:**
+**`NodesUi` — три режима:**
 
-- **`Full` (default)** — the stock product: the node list plus the manual **New Node** and **Delete**
-  controls. `POST`/`DELETE /api/nodes` work.
-- **`Monitor`** — a read-only surface: the list and live stats stay, but manual add and delete are
-  removed. Nodes only ever appear through auto-discovery. `POST`/`DELETE /api/nodes` return **404**.
-- **`Hidden`** — the Nodes nav link and page are gone entirely and the page route redirects to the
-  dashboard; the manual add/delete API is off. The cluster is auto-discovery only.
+- **`Full` (подразумевано)** — stock производ: листа чворова плус ручне **New Node** и **Delete**
+  контроле. `POST`/`DELETE /api/nodes` раде.
+- **`Monitor`** — read-only површина: листа и live статистика остају, али се уклањају ручно додавање и брисање.
+  Чворови се појављују само кроз аутоматско откриће. `POST`/`DELETE /api/nodes` враћају **404**.
+- **`Hidden`** — Nodes nav линк и страница су потпуно нестали и рута странице преусмерава на командну
+  таблу; ручни add/delete API je искljučen. Cluster je само аутоматско откриће.
 
-**`RestrictNodesToOwner`** floors who may see and manage nodes. Default `false` keeps the standard
-**admin-or-above** staff surface (`AdminOrAbove`); set `true` to make it **owner-only** (`Owner`). Either
-way **normal users never see nodes** — this only chooses between owner-only and the wider staff surface.
+**`RestrictNodesToOwner`** одређује ко може да види и управља чворовима. Подразумевано `false` чува стандардну
+**admin-or-above** staff површину (`AdminOrAbove`); постави `true` да буде **само власник** (`Owner`). У оба
+случаја **нормални корисници никада не виде чворове** — ово само бира између власника само и шире staff површине.
 
-Node **auto-discovery is unaffected by both keys**: the anonymous `POST /api/nodes/register` self-register
-+ heartbeat endpoint always works, so a `Hidden`/`Monitor` deployment still grows its cluster
-automatically.
+Аутоматско откриће чворова **није погођено оба кључa**: анонимни `POST /api/nodes/register` self-register
++ heartbeat ендпоинт увек ради, тако да `Hidden`/`Monitor` deployment и даље расте свој cluster
+аутоматски.
 
-**Model:**
+**Модел:**
 
 - `Core.Nodes.NodesUiMode` — `Full` / `Monitor` / `Hidden`.
-- `Core.Nodes.NodesUiAccess` — the single source of truth composing the mode + owner-restriction:
+- `Core.Nodes.NodesUiAccess` — јединствени извор истине koji саставља режим + owner-restriction:
   `IsPageVisible`, `AllowsManualManagement`, `RequiredPolicy(restrictToOwner)`. Nav
-  (`NavMenu.razor`), the page (`Pages/Nodes.razor`) and the endpoints (`NodeEndpoints`) all read it so
-  the UI and API can never disagree.
-- `Core.Options.BrandingOptions.NodesUi` / `.RestrictNodesToOwner` — bound from `App:Branding`.
+  (`NavMenu.razor`), страница (`Pages/Nodes.razor`) и ендпоинти (`NodeEndpoints`) сви га читају тако да
+  UI и API никада не могу да се не слажу.
+- `Core.Options.BrandingOptions.NodesUi` / `.RestrictNodesToOwner` — везани из `App:Branding`.
 
-## Nodes UI visibility — tests
+## Видљивост Nodes UI-ја — тестови
 
-- **Unit** — `UnitTests/Nodes/NodesUiAccessTests.cs`: page-visibility, manual-management and
-  required-policy resolution across every mode + default branding.
-- **Integration** — `IntegrationTests/NodeUiGatingTests.cs`: over real HTTP + Postgres — `Full` allows a
-  manual add, `Monitor`/`Hidden` 404 add and delete, and `RestrictNodesToOwner` forbids an admin while the
-  owner still reads the list.
-- **E2E** — `E2ETests/NodesUiTests.cs` (default `Full`: nav link + page + New Node button render) and
-  `E2ETests/NodesHiddenTests.cs` (`Hidden`: nav link gone, `/nodes` redirects).
+- **Unit** — `UnitTests/Nodes/NodesUiAccessTests.cs`: page-visibility, manual-management и
+  required-policy резолуција преко сваког режима + подразумевани branding.
+- **Integration** — `IntegrationTests/NodeUiGatingTests.cs`: преко правог HTTP + Postgres — `Full` дозвољава
+  ручно додавање, `Monitor`/`Hidden` 404 add и delete, и `RestrictNodesToOwner` забрањује админа док
+  власник и даље чита листу.
+- **E2E** — `E2ETests/NodesUiTests.cs` (подразумевано `Full`: nav линк + страница + New Node дугме рендерују) и
+  `E2ETests/NodesHiddenTests.cs` (`Hidden`: nav линк нестаје, `/nodes` преусмерава).
 
-## Design tokens (CSS variables)
+## Design tokens (CSS променljиве)
 
-Branding also reaches the app's **own** stylesheet + custom components, not just MudBlazor. `Web.Branding.BrandingCss.BuildRootVariables(BrandingOptions)` emits the branded palette as CSS custom properties on `:root` (`--app-primary`, `--app-primary-hover`, `--app-surface`, `--app-appbar`, `--app-success`/`--app-error`/`--app-warning`/`--app-info`, …), injected in `App.razor` right after `site.css`. `site.css` and every component read `var(--app-*)` — **no hard-coded colours** — so a reseller's palette flows everywhere (login hero, bottom nav, help tips, offline page) for free. Neutral surface tones default in `site.css :root`; `CustomCss` (injected last) can override any token. See [ui-guidelines.md](../ui-guidelines.md) §2.
+Брендирање такође досеже до **сопственог** stylesheet-а апликације + прилагођених компонената, не само MudBlazor. `Web.Branding.BrandingCss.BuildRootVariables(BrandingOptions)` емитује брендирану палетау kao CSS custom properties на `:root` (`--app-primary`, `--app-primary-hover`, `--app-surface`, `--app-appbar`, `--app-success`/`--app-error`/`--app-warning`/`--app-info`, …), убризгано у `App.razor` одмах након `site.css`. `site.css` и свака компонента чита `var(--app-*)` — **без хард-кодираних боја** — тако да reseller-ова палета протиче свуда (login hero, bottom nav, help tips, offline страница) бесплатно. Неутрални површински тонови подразумевају у `site.css :root`; `CustomCss` (убризгнут последњи) може да превазиђе било koji токен. Види [ui-guidelines.md](../ui-guidelines.md) §2.
 
-## Branded PWA
+## Брендирани PWA
 
-The installable app is branded too — the manifest endpoint (`/manifest.webmanifest`) is built from `BrandingOptions` (`ProductName` → `name`/`short_name`, `Description`, `AppBarColor`/`BackgroundColor` → theme/background). See [pwa.md](pwa.md).
+Инсталабилна апликација je takođe брендирана — manifest ендпоинт (`/manifest.webmanifest`) je изграђен из `BrandingOptions` (`ProductName` → `name`/`short_name`, `Description`, `AppBarColor`/`BackgroundColor` → theme/background). Види [pwa.md](pwa.md).
 
-## Tests
+## Тестови
 
-- **Unit** — `UnitTests/Branding/HexColorTests.cs`: valid/invalid hex validation.
-- **Integration** — `IntegrationTests/ThemeBuildTests.cs`: colours map into palette, invalid colour throws;
-  `IntegrationTests/BrandingHttpTests.cs`: custom `ProductName`/description/theme-colour render in served page `<head>` (WebApplicationFactory + Postgres), defaults keep stock name.
-- **E2E** — `E2ETests/BrandingTests.cs`: branded product name renders in app bar in real browser.
+- **Unit** — `UnitTests/Branding/HexColorTests.cs`: валидација важећег/неважећег hex-а.
+- **Integration** — `IntegrationTests/ThemeBuildTests.cs`: боје мапиране у палетау, неважећа боја баца;
+  `IntegrationTests/BrandingHttpTests.cs`: прилагођени `ProductName`/description/theme-colour рендерују се у сервираном page `<head>` (WebApplicationFactory + Postgres), подразумевани чувају stock назив.
+- **E2E** — `E2ETests/BrandingTests.cs`: брендиран назив производа рендерује се у app bar у правом прегледачу.

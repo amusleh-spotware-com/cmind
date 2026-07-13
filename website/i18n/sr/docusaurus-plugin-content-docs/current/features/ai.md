@@ -1,181 +1,181 @@
 ---
-description: "cMind AI je провајдер-агностик — Anthropic, OpenAI, Azure OpenAI, Google Gemini, i bilo koju OpenAI-kompatibilnu krajnju tacku ukljucujuci lokalne modele (Ollama, LM Studio, vLLM). Izaberite provajdera, model i krajnju tacku; svaka AI funkcija radi nepromijenjena."
+description: "cMind AI је провајдер-агностик — Anthropic, OpenAI, Azure OpenAI, Google Gemini, и било која OpenAI-компатибилна крајња тачка укључујући локалне моделе (Ollama, LM Studio, vLLM). Изаберите провајдера, модел и крајњу тачку; свака AI функција ради непромењено."
 ---
 
-# AI funkcije
+# AI функције
 
-AI sloj cMind-a je **провајдер-агностик**. Svaka funkcija govori sa jednom провајдер-неутралном спојницом
-(`IAiClient.CompleteAsync`); **рутирајући клијент** рјешава активне креденцијале провајдера and dispatches
-to the matching wire adapter. Ви бирате провајдера + модел + крајњу тачку (and, if the provider needs it,
-a key); свака постојећа функција ради непромијењено with the same gating, encryption, resilience, and
-degradation.
+AI слој cMind-а је **провајдер-агностик**. Свака функција говори са једном провајдер-неутралном спојницом
+(`IAiClient.CompleteAsync`); **рутирајући клијент** решава активне креденцијале провајдера и шаље
+на одговарајући wire адаптер. Ви бирате провајдера + модел + крајњу тачку (и, ако провајдер треба,
+кључ); свака постојећа функција ради непромењено са истом контролом приступа, шифровањем, отпорношћу и
+деградацијом.
 
-**Батерије укључене:** **уграђени локални LLM се испоручује са апликацијом и укључен је по подразумијевању**
-(Microsoft.ML.OnnxRuntimeGenAI, e.g. Phi-3-mini) — so every deployment has working AI **with no API key
-and no external service**. White-label deployment може да га уклони and restrict which providers users may
-add. Поред уграђеног, повежите било ког екстерног провајдера.
+**Батерије укључене:** **уграђени локални LLM се испоручује са апликацијом и укључен је по подразумевању**
+(Microsoft.ML.OnnxRuntimeGenAI, нпр. Phi-3-mini) — тако да сваки deployment има радни AI **без API кључа
+и без екстерног сервиса**. White-label deployment може да га уклони и ограничи које провајдере корисници могу
+да додају. Поред уграђеног, повежите било ког екстерног провајдера.
 
 Подржани провајдери:
 
-- **Уграђени локални AI** (`BuiltInOnnx`) — in-process ONNX GenAI модел, без кључа, испоручен + укључен по подразумијевању.
+- **Уграђени локални AI** (`BuiltInOnnx`) — in-process ONNX GenAI модел, без кључа, испоручен + укључен по подразумевању.
 - **Anthropic** (Claude — Messages API)
-- **OpenAI** and **Azure OpenAI** (Chat Completions)
+- **OpenAI** и **Azure OpenAI** (Chat Completions)
 - **Google Gemini** (`generateContent`)
-- ****Било koja OpenAI-компатибилна крајња тачка****, укључујући **локалне моделе** (Ollama, LM Studio, vLLM,
-  llama.cpp `server`, LocalAI) and OpenAI-compatible clouds (OpenRouter, Groq, Together, Mistral,
-  DeepSeek) — све преко једног OpenAI-компатибилног адаптера, differing only by base URL + model + key.
+- **Било која OpenAI-компатибилна крајња тачка**, укључујући **локалне моделе** (Ollama, LM Studio, vLLM,
+  llama.cpp `server`, LocalAI) и OpenAI-компатибилне cloud-ове (OpenRouter, Groq, Together, Mistral,
+  DeepSeek) — све преко једног OpenAI-компатибилног адаптера, различито само по base URL + модел + кључ.
 
-Тачно **један** провајдер је активан у исто вријеме. Креденцијали се чувају **шифровано**
+Тачно **један** провајдер је активан у исто време. Креденцијали се чувају **шифровано**
 (`AiProviderCredential` aggregate + `IAiProviderStore` + `ISecretProtector`, `EncryptionPurposes.AiApiKey`);
-локална крајња тачка треба **без кључа**. Када **нема** активног провајдера, every feature returns the disabled
-result и остатак апликације ради непромијењено (кључ није потребан за изградбу, тестирање или покретање платформе).
+локална крајња тачка треба **без кључа**. Када **нема** активног провајдера, свака функција враћа онемогућен
+result и остатак апликације ради непромењено (кључ није потребан за изградњу, тестирање или покретање платформе).
 
-**Повратна компатибилност:** постојећи `App:Ai:ApiKey` legacy deployment-а (or the old encrypted `ai.api_key`
-setting) се аутоматски поштује kao подразумијевани активни **Anthropic** провајдер — није потребна никаква акција.
+**Повратна компатибилност:** постојећи `App:Ai:ApiKey` legacy deployment-а (или стари шифровани `ai.api_key`
+подешавање) се аутоматски поштује kao подразумевани активан **Anthropic** провајдер — није потребна никаква акција.
 
-AI неконфигурисан → AI странице затамње акције and приказују banner плус једнократни позив да додате провајдера in
-**Settings → AI** (`AiFeatureNotice`). Status at `GET /api/ai/status` (`{ enabled, kind, model }`);
-providers managed (owner-only) via `GET/PUT /api/ai/providers`, `POST /api/ai/providers/{id}/activate`,
-`DELETE /api/ai/providers/{id}`, and a `POST /api/ai/providers/test` connectivity ping.
+AI неконфигурисан → AI странице затамње акције и приказују банер плус једнократни позив да додате провајдера у
+**Settings → AI** (`AiFeatureNotice`). Статус на `GET /api/ai/status` (`{ enabled, kind, model }`);
+провајдери се управљају (owner-only) преко `GET/PUT /api/ai/providers`, `POST /api/ai/providers/{id}/activate`,
+`DELETE /api/ai/providers/{id}`, и `POST /api/ai/providers/test` connectivity ping.
 
-## Deployment default vs a user's own provider
+## Deployment подразумевано vs сопствени провајдер корисника
 
-AI credentials have two scopes:
+AI креденцијали има два scope-а:
 
-- **Deployment default (owner-managed).** The owner configures a provider (or ships one via
-  `App:Ai:Providers[]` / the legacy `App:Ai:ApiKey`). It becomes the **shared default for every user** —
-  so a broker or hosting provider can fund AI for all their users with **no per-user setup and no
-  per-user limit**. Managed via the owner-only `/api/ai/providers` routes above.
-- **A user's own provider (self-service).** Any signed-in user may add their own provider under
+- **Deployment подразумевано (owner-managed).** Власник конфигурише провајдера (или испоручује преко
+  `App:Ai:Providers[]` / legacy `App:Ai:ApiKey`). Он постаје **дељени подразумевани за сваког корисника** —
+  тако да брокер или hosting провајдер може да финансира AI за све своје кориснике **без per-user подешавања и без
+  per-user лимита**. Управља се преко owner-only `/api/ai/providers` рута горе.
+- **Сопствени провајдер корисника (self-service).** Било koji пријављени корисник може да дода сопственог провајдера преко
   `GET/PUT /api/ai/my-providers`, `POST /api/ai/my-providers/{id}/activate`,
-  `DELETE /api/ai/my-providers/{id}`. When present, their **own active provider overrides the deployment
-  default for their own AI features**; removing it falls back to the default.
+  `DELETE /api/ai/my-providers/{id}`. Када постоји, **сопствени активан провајдер превазилази deployment
+  подразумевани за њихове сопствене AI функције**; уклањање враћа на подразумевани.
 
-**Resolution order** (in `AiProviderStore`, per request user): the user's own active credential → the
-deployment default → the legacy config key → none (AI disabled). Exactly one credential is active
-**per scope** (a partial unique index per `OwnerUserId`), and each scope is resolved independently, so a
-user activating their own key never disturbs the shared default. Background/non-Web contexts (no request
-user) always resolve the deployment default.
+**Редослед резолуције** (у `AiProviderStore`, по request кориснику): сопствена активна креденцијала корисника → deployment
+подразумевано → legacy config кључ → ништа (AI онемогућен). Тачно једна креденцијала је активна
+**по scope** (парцијални unique index по `OwnerUserId`), и сваки scope се разрешава независно, тако да активирање
+сопственог кључа никада не дира дељени подразумевани. Background/non-Web контексти (без request корисника) увек
+разрешавају deployment подразумевани.
 
-## Provider capability matrix
+## Матрица могућности провајдера
 
-Capabilities default per provider and are owner-overridable. When a capability is off the feature
-**degrades, never throws**: web search is silently dropped; vision returns a typed
-capability-unsupported failure.
+Могућности су подразумеване по провајдеру и могу се превазићи од стране власника. Када је могућност искључена, функција
+**деградира, никада не избацује**: web претраживање се тихо одбацује; vision враћа типизиран
+capability-unsupported неуспех.
 
-| Provider | Kind | Default base URL | Key required | Web search | Vision | Notes |
+| Провајдер | Врста | Подразумевани base URL | Кључ потребан | Web претрага | Vision | Напомене |
 |---|---|---|---|---|---|---|
-| Built-in local AI | `BuiltInOnnx` | n/a (in-process) | no | ✖ | ✖ | shipped ONNX GenAI model, default-on |
-| Anthropic | `Anthropic` | `https://api.anthropic.com/` | yes | ✅ | ✅ | Messages API, `web_search` tool |
-| OpenAI | `OpenAiCompatible` | `https://api.openai.com/v1/` | yes | opt-in | opt-in | Chat Completions |
-| Azure OpenAI | `AzureOpenAi` | `https://<resource>.openai.azure.com/` | yes | ✅ | ✅ | deployment path + `api-version` |
-| Google Gemini | `Gemini` | `https://generativelanguage.googleapis.com/` | yes | ✅ | ✅ | `generateContent`, `google_search` grounding |
-| Ollama (local) | `OpenAiCompatible` | `http://localhost:11434/v1/` | no | ✖ | model-dependent | via OpenAI-compatible adapter |
-| LM Studio (local) | `OpenAiCompatible` | `http://localhost:1234/v1/` | no | model-dependent | model-dependent | via OpenAI-compatible adapter |
-| vLLM / llama.cpp / LocalAI | `OpenAiCompatible` | your served URL | no | ✖ | model-dependent | via OpenAI-compatible adapter |
-| OpenRouter / Groq / Together / Mistral / DeepSeek | `OpenAiCompatible` | provider URL | yes | ✖ | model-dependent | via OpenAI-compatible adapter |
+| Уграђени локални AI | `BuiltInOnnx` | н/а (in-process) | не | ✖ | ✖ | испоручени ONNX GenAI модел, подразумевано укључен |
+| Anthropic | `Anthropic` | `https://api.anthropic.com/` | да | ✅ | ✅ | Messages API, `web_search` алат |
+| OpenAI | `OpenAiCompatible` | `https://api.openai.com/v1/` | да | opt-in | opt-in | Chat Completions |
+| Azure OpenAI | `AzureOpenAi` | `https://<resource>.openai.azure.com/` | да | ✅ | ✅ | deployment path + `api-version` |
+| Google Gemini | `Gemini` | `https://generativelanguage.googleapis.com/` | да | ✅ | ✅ | `generateContent`, `google_search` grounding |
+| Ollama (локални) | `OpenAiCompatible` | `http://localhost:11434/v1/` | не | ✖ | model-dependent | преко OpenAI-компатибилног адаптера |
+| LM Studio (локални) | `OpenAiCompatible` | `http://localhost:1234/v1/` | не | model-dependent | model-dependent | преко OpenAI-компатибилног адаптера |
+| vLLM / llama.cpp / LocalAI | `OpenAiCompatible` | your served URL | не | ✖ | model-dependent | преко OpenAI-компатибилног адаптера |
+| OpenRouter / Groq / Together / Mistral / DeepSeek | `OpenAiCompatible` | provider URL | да | ✖ | model-dependent | преко OpenAI-компатибилног адаптера |
 
-Full per-provider setup guides (keys, URLs, model ids, UI steps): see
+Пуни водичи за подешавање по провајдеру (кључevi, URL-ови, model id-ови, UI кораци): види
 [AI providers — setup catalog](../deployment/ai-providers.md).
 
-## Built-in local AI (shipped, default-on)
+## Уграђени локални AI (испоручен, подразумевано укључен)
 
-cMind ships a **real local LLM that runs in-process** via
-[Microsoft.ML.OnnxRuntimeGenAI](https://onnxruntime.ai/docs/genai/) (a compact instruct model such as
-Phi-3-mini). It needs **no API key and no external service**, and on first startup — when no provider is
-configured and the white-label gate allows it — it is **seeded and activated automatically**, so every
-deployment has working AI out of the box.
+cMind испоручује **праве локални LLM који ради in-process** преко
+[Microsoft.ML.OnnxRuntimeGenAI](https://onnxruntime.ai/docs/genai/) (компактан instruct модел kao што je
+Phi-3-mini). Треба му **без API кључа и без екстерног сервиса**, и при првом покретању — када провајдер није
+конфигурисан и white-label gate дозвољава — **семљи се и активира аутоматски**, тако да сваки
+deployment има радни AI од првог тренутка.
 
-- The model directory (`genai_config.json` + tokenizer + weights) is configured by
-  `App:Ai:BuiltIn:ModelPath` (default `models/onnx`, relative to the app base directory). When the model
-  files are absent the provider **degrades to a typed failure with an install hint** — it never throws,
-  and the rest of the app is unaffected.
-- It powers every text AI feature. Being a compact model, it is text-only (no server-side web search or
-  vision) and generation is serialised (one model instance, reused after a lazy load).
-- Acquire/bundle the model: see [AI providers → built-in](../deployment/ai-providers.md#built-in-local-ai-onnx-shipped).
+- Директоријум модела (`genai_config.json` + tokenizer + weights) се конфигурише са
+  `App:Ai:BuiltIn:ModelPath` (подразумевано `models/onnx`, релативно према app base директоријуму). Када model
+  фајлови недостају, провајдер **деградира до типизираног неуспеха са инсталационим наговештајем** — никада не избацује,
+  и остатак апликације је нетакнут.
+- Покреће сваку text AI функцију. Будући компактан модел, само је text-only (без server-side web претраге или
+  vision) и генерација је сериализована (једна model инстанца, поново коришћена након lazy load-а).
+- Прибави/свучи модел: види [AI providers → built-in](../deployment/ai-providers.md#built-in-local-ai-onnx-shipped).
 
-## White-label controls
+## White-label контроле
 
-A white-label deployment restricts AI via `App:Branding` (enforced server-side on every provider upsert):
+White-label deployment ограничава AI преко `App:Branding` (enforced server-side на сваком provider upsert):
 
-- `AllowBuiltInAi` (default `true`) — set `false` to **remove the built-in model** entirely.
-- `AllowLocalProviders` (default `true`) — set `false` to forbid local/self-hosted endpoints (loopback /
-  private OpenAI-compatible, e.g. Ollama/LM Studio/vLLM).
-- `AllowedAiProviderKinds` (default empty = all) — list only the kinds the deployment sanctions (e.g.
-  `["Anthropic","OpenAiCompatible"]`) to lock down which providers users may add.
+- `AllowBuiltInAi` (подразумевано `true`) — постави `false` да **у потпуности уклони уграђени модел**.
+- `AllowLocalProviders` (подразумевано `true`) — постави `false` да забрани локалне/self-hosted ендпоинте (loopback /
+  приватни OpenAI-компатибилни, нпр. Ollama/LM Studio/vLLM).
+- `AllowedAiProviderKinds` (подразумевано празно = све) — наведи само врсте које deployment одобрава (нпр.
+  `["Anthropic","OpenAiCompatible"]`) да закљуцаш које провајдере корисници могу да додају.
 
-## Extending: future built-in models
+## Проширивање: будући уграђени модели
 
-The AI layer is **adapter-based and built to grow**. Each provider is an `IAiProvider` selected by
-`AiProviderKind`; the feature-facing seam (`IAiClient`/`AiFeatureService`) never changes. Adding a new
-built-in model runtime later (another ONNX model, a different in-process engine, GGUF/llama.cpp
-in-proc, etc.) is a localized change: add an `AiProviderKind`, implement one `IAiProvider` adapter,
-register it, and (optionally) wire default seeding + a dialog option — no feature, endpoint, or MCP tool
-changes. The built-in ONNX provider is the reference implementation of this pattern.
+AI слој је **адаптер-базиран и изграђен за раст**. Сваки провајдер је `IAiProvider` селектован од стране
+`AiProviderKind`; feature-facing seam (`IAiClient`/`AiFeatureService`) се никада не мења. Додавање новог
+уграђеног model runtime-а касније (други ONNX модел, други in-process engine, GGUF/llama.cpp
+in-proc, итд.) је локализована промена: додај `AiProviderKind`, имплементирај један `IAiProvider` адаптер,
+региструј га, и (опционо) повежи подразумевано семљивање + опцију дијалога — без промена функције, ендпоинта или MCP алата.
+Уграђени ONNX провајдер је референтна имплементација овог обрасца.
 
-## Capabilities
+## Могућности
 
-- **Build cBot** — plain-English prompt → runnable cBot via **generate → build → AI-fix** self-repair loop (`build-strategy`), at `/ai/build`.
-- **Parameter optimization** — closed loop: AI proposes param sets, each persisted + backtested across nodes (`optimize-run` / `optimize-params`).
-- **Autonomous portfolio agent** — mandate-driven proposals with full decision journal (`AgentMandate` → `AgentProposal`).
-- **Acting risk guard** — `AiRiskGuard` background service assesses running bots, can **auto-stop** on critical risk (opt-in).
-- **Prop-firm exposure guardian** — drawdown/exposure limits with auto-flatten.
-- **Market alerts** — `AlertRule` engine with AI sentiment (web-search grounded where the provider supports it).
-- **Analysis** — cBot review, backtest analysis, post-mortems, market sentiment, chart-vision design, marketplace curation.
+- **Изгради cBot** — plain-English prompt → покретачки cBot преко **generate → build → AI-fix** self-repair петље (`build-strategy`), на `/ai/build`.
+- **Оптимизација параметара** — затворена петља: AI предлаже param set-ове, сваки перзистovan + backtested преко чворова (`optimize-run` / `optimize-params`).
+- **Аутономни portfolio агент** — mandate-driven предлози са пуним decision journal-ом (`AgentMandate` → `AgentProposal`).
+- **Acting risk guard** — `AiRiskGuard` background сервис процењује активне ботове, може **аутоматски зауставити** на критичан ризик (opt-in).
+- **Prop-firm exposure guardian** — drawdown/exposure лимити са аутоматским изравнавањем.
+- **Market alerts** — `AlertRule` engine са AI sentiment-ом (web-search grounded тамо где провајдер подржава).
+- **Анализа** — cBot рецензија, backtest анализа, post-mortems, market sentiment, chart-vision дизајн, marketplace curation.
 
-## Surfaces
+## Површине
 
-- Web endpoints under `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …).
-- MCP tools (`AiTools`) for AI clients — see [mcp.md](mcp.md). Избор провајдера је транспарентан MCP клијентима.
-- **AI** nav group — one Blazor **page per feature**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), plus Portfolio Agent, Alerts, MCP Keys. Pages share `AiFeaturePageBase` + `AiOutputPanel`; each shows `AiFeatureNotice` when no provider is configured.
-- **Settings → AI** (`/settings/ai`, owner-only) — provider list with an **Add / edit provider dialog** (kind, base URL with per-kind hints incl. an Ollama/LM Studio localhost preset, model, optional key, capability toggles, "set active") and a **Test connection** button.
+- Web ендпоинти под `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …).
+- MCP алати (`AiTools`) за AI клијенте — види [mcp.md](mcp.md). Избор провајдера је транспарентан MCP клијентима.
+- **AI** навигациона група — једна Blazor **страница по функцији**: Изгради cBot (`/ai/build`), Рецензија (`/ai/review`), Дебата (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Оптимизуј (`/ai/optimize`), плус Portfolio Agent, Alerts, MCP Keys. Странице деле `AiFeaturePageBase` + `AiOutputPanel`; свака приказује `AiFeatureNotice` када провајдер није конфигурисан.
+- **Settings → AI** (`/settings/ai`, owner-only) — листа провајдера са **Add / edit provider дијалогом** (врста, base URL са per-kind наговештајима укључујући Ollama/LM Studio localhost preset, модел, опциони кључ, capability toggle-ови, "set active") и **Test connection** дугметом.
 
-## Configuration
+## Конфигурација
 
-`App:Ai` supports both the legacy single key and multi-provider seeding:
+`App:Ai` подржава и legacy један кључ и multi-provider семљивање:
 
-- Legacy: `ApiKey`, `Model` (default `claude-opus-4-8`), `BaseUrl`, `MaxTokens` — still honoured as the
-  default Anthropic provider.
-- Multi-provider: `ActiveProvider` (kind) and `Providers[]` (`{ Kind, BaseUrl, Model, ApiKey?,
-  MaxTokens?, Capabilities? }`) — imported into the store on startup if no credentials exist yet, so an
-  ops team can ship a configured (incl. local-LLM) deployment purely via appsettings/env.
+- Legacy: `ApiKey`, `Model` (подразумевано `claude-opus-4-8`), `BaseUrl`, `MaxTokens` — и даље се поштује као
+  подразумевани Anthropic провајдер.
+- Multi-provider: `ActiveProvider` (врста) и `Providers[]` (`{ Kind, BaseUrl, Model, ApiKey?,
+  MaxTokens?, Capabilities? }`) — увезено у store при покретању ако креденцијали еще не постоје, тако да
+  ops тим може да испоручи конфигурисан (укључујући локални-LLM) deployment чисто преко appsettings/env.
 
-`RiskGuardEnabled`, `RiskGuardAutoStop`, `RiskGuardInterval` unchanged. For tests/dev, a config key
-lives in the unified [dev-credentials file](../testing/dev-credentials.md) under `Ai`.
+`RiskGuardEnabled`, `RiskGuardAutoStop`, `RiskGuardInterval` непромењени. За тестове/dev, config кључ
+живи у унификованој [dev-credentials file](../testing/dev-credentials.md) под `Ai`.
 
-## Reliability
+## Поузданост
 
-The provider is treated as unreliable — nothing it does can take the app down. This holds identically
-for cloud and local endpoints (a dead Ollama retries then degrades exactly like a throttled Anthropic):
+Провајдер се третира као непоуздан — ништа што он ради не може да обори апликацију. Ово важи идентично
+за cloud и локалне ендпоинте (мртав Ollama ретрија онда деградира тачно као throttle-ован Anthropic):
 
-- **Graceful degradation.** Every failure mode (no provider, HTTP 4xx/5xx/429, timeout, malformed body,
-  empty content, unsupported capability) returns a typed `AiResult.Fail(reason)` — the client never
-  throws into a page, MCP tool, or hosted service.
-- **Resilience pipeline.** `AddAiHttpClient` gives the one shared AI `HttpClient` a bounded retry on
-  transient 5xx / network failures (exponential backoff + jitter) plus generous per-attempt and total
-  timeouts (`AiHttp`), reused by every adapter.
+- **Graceful деградација.** Сваки mód неуспеха (без провајдера, HTTP 4xx/5xx/429, timeout, malformed body,
+  празан садржај, неподржана могућност) враћа типизиран `AiResult.Fail(reason)` — клијент никада
+  не избацује у страницу, MCP алат или hosted сервис.
+- **Resilience pipeline.** `AddAiHttpClient` даје једном дељеном AI `HttpClient`-у ограничени retry на
+  транзијентним 5xx / network неуспесима (exponential backoff + jitter) плус великодушни per-attempt и укупни
+  timeout-ови (`AiHttp`), поново коришћени од стране сваког адаптера.
 
-## Testing with the fake local LLM
+## Тестирање са лажним локалним LLM
 
-The AI layer is proven end-to-end **without any external dependency** by `FakeLocalLlmServer` — a tiny
-in-process **OpenAI-compatible** endpoint returning a deterministic canned reply, wire-identical to
-Ollama/LM Studio/vLLM. It backs:
+AI слој се доказује end-to-end **без било које екстерне зависности** од стране `FakeLocalLlmServer` — ситан
+in-process **OpenAI-компатибилни** ендпоинт који враћа детерминистички canned reply, wire-identical to
+Ollama/LM Studio/vLLM. Он подржава:
 
-- **Unit** — per-adapter request-translation + response-parse tests, routing/capability degradation.
-- **Integration** — the OpenAI-compatible adapter end-to-end, the parametrized resilience theory across
-  every adapter, and the **MCP AI tools**.
-- **E2E** — the `AiLocalFixture` boots the app pointed at the fake server (or a **real** provider when
-  the developer sets `AI_E2E_BASEURL` (+ optional `AI_E2E_API_KEY` / `AI_E2E_KIND` / `AI_E2E_MODEL`) —
-  real creds win) and drives every AI feature through the real UI. Adding or changing any AI feature
-  **requires** an E2E test through this fixture (see the repo test mandate). An opt-in lane
-  (`AI_LOCAL_LLM=1`) runs one real completion through an **Ollama** Testcontainer.
+- **Unit** — per-adapter request-translation + response-parse тестови, рутирање/capability деградација.
+- **Integration** — OpenAI-компатибилни адаптер end-to-end, параметризована resilience теорија преко
+  сваког адаптера, и **MCP AI алати**.
+- **E2E** — `AiLocalFixture` покреће апликацију усмерену на лажни сервер (или **правег** провајдера када
+  developer постави `AI_E2E_BASEURL` (+ опциоо `AI_E2E_API_KEY` / `AI_E2E_KIND` / `AI_E2E_MODEL`) —
+  прави креденцијали побеђују) и вози сваку AI функцију кроз реални UI. Додавање или мењање било које AI функције
+  **захтева** E2E тест кроз ову fixture (види repo test mandate). Opt-in lane
+  (`AI_LOCAL_LLM=1`) покреће једно право completion преко **Ollama** Testcontainer-а.
 
-## Built-in local AI — zero-setup by default
+## Уграђени локални AI — нulla-setup по подразумевању
 
-The built-in ONNX local LLM works out of the box: when its model directory is absent and
-`App:Ai:BuiltIn:AutoDownload` is `true` (the default), the app downloads the model once in the
-background from `App:Ai:BuiltIn:DownloadBaseUrl`. While the download runs, AI calls (and **Test
-connection** in Settings → AI) return a clear "model is downloading (first-time setup)" message
-rather than a hard failure. Air-gapped/metered deployments set `AutoDownload=false` and
-pre-provision the model directory (`App:Ai:BuiltIn:ModelPath`). The white-label
-`App:Branding:AllowBuiltInAi` gate still applies.
+Уграђени ONNX локални LLM ради out of the box: када његов директоријум модела недостаје и
+`App:Ai:BuiltIn:AutoDownload` је `true` (подразумевано), апликација преузима модел једном у
+позадини са `App:Ai:BuiltIn:DownloadBaseUrl`. Док се преузимање извршава, AI позиви (и **Test
+connection** у Settings → AI) враћају јасну поруку "model is downloading (first-time setup)"
+уместо хард неуспеха. Air-gapped/metered deployments постављају `AutoDownload=false` и
+пре-обезбеђују директоријум модела (`App:Ai:BuiltIn:ModelPath`). White-label
+`App:Branding:AllowBuiltInAi` gate се и даље примењује.

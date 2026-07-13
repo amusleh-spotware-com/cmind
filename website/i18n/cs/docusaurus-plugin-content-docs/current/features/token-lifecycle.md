@@ -1,82 +1,43 @@
 ---
-description: "cTrader's Open API allows one valid access token per cTrader ID (cID) at a time. The moment a new token is issued — a scheduled refresh, or a…"
+description: "Open API cTrader umožňuje jeden platný přístupový token na cTrader ID (cID) najednou. V okamžiku, kdy je vydán nový token — plánovaná obnovení nebo znovuautorizace — je předchozí token zneplatněn."
 ---
 
-# Open API token lifecycle
+# Životní cyklus Open API tokenu
 
-cTrader's Open API allows **one valid access token per cTrader ID (cID) at a time**. The moment
-a new token is issued — a scheduled refresh, or a re-authorization when the user links another
-account on the same cID — the previous access token is invalidated. A copy engine running on a
-remote node is holding that now-dead token, so the new token must reach it without dropping the
-live connection.
+Open API cTrader umožňuje **jeden platný přístupový token na cTrader ID (cID) najednou**. V okamžiku, kdy je vydán nový token — plánovaná obnova nebo znovuautorizace, když uživatel propojí další účet na stejném cID — je předchozí přístupový token zneplatněn. Copy engine běžící na vzdáleném uzlu drží ten nyní mrtvý token, takže nový token k němu musí dorazit bez přerušení živého spojení.
 
 ## Model
 
-- **`OpenApiAuthorization`** is the aggregate that holds a cID's encrypted access + refresh
-  tokens. A unique index on `(UserId, CtidUserId)` enforces **exactly one authorization per cID
-  per user**.
-- **`TokenVersion`** — a monotonic counter bumped every time the token rotates (`Refresh()`,
-  which also covers the re-auth path when another account is linked on the same cID). It is the
-  version marker for the single-valid-token rule and is what a running host uses to detect a
-  change even if two token strings happen to collide.
-- Tokens are encrypted at rest via `ISecretProtector` (`EncryptionPurposes.OpenApiAccessToken` /
-  `OpenApiRefreshToken`). They are never logged or stored in plaintext.
+- **`OpenApiAuthorization`** je agregát, který drží šifrované access + refresh tokeny cID. Unikátní index na `(UserId, CtidUserId)` vynucuje **přesně jednu autorizaci na cID na uživatele**.
+- **`TokenVersion`** — monotónní čítač zvýšený při každé rotaci tokenu (`Refresh()`, což také pokrývá cestu znovu-autentifikace, když je na stejném cID propojen další účet). Je to verzační marker pro pravidlo jednoho platného tokenu a to, co běžící hostitel používá k detekci změny, i kdyby dva řetězce tokenů náhodou kolidovaly.
+- Tokeny jsou šifrovány v klidu přes `ISecretProtector` (`EncryptionPurposes.OpenApiAccessToken` / `OpenApiRefreshToken`). Nikdy nejsou logovány ani ukládány v plaintextu.
 
-## Propagation (graceful in-place swap)
+## Šíření (graceful in-place swap)
 
-1. A token rotates → the new token + bumped `TokenVersion` are persisted.
-2. The `CopyEngineSupervisor` on the hosting node re-reads the plan each reconcile cycle and
-   computes a **token signature** (access tokens + versions). A change means a rotation.
-3. Místo toho of tearing down the host and restarting (which would drop the master's execution
-   stream), the supervisor **pushes the new token to the running host**.
-4. The host re-authenticates the affected account **on the existing socket**
-   (`ProtoOAAccountAuthReq` again) via `SwapAccessTokenAsync`, then does a light reconcile. The
-   old token dies; the copy stream never stops.
+1. Token se otočí → nový token + zvýšená `TokenVersion` jsou persistovány.
+2. `CopyEngineSupervisor` na hostitelském uzlu znovu čte plán každý reconciliační cyklus a počítá **token signature** (přístupové tokeny + verze). Změna znamená rotaci.
+3. Místo rozebrání hostitele a restartu (což by zahodilo execution stream mastera), supervisor **pushuje nový token do běžícího hostitele**.
+4. Hostitel znovu autentifikuje dotčený účet **na existujícím socketu** (`ProtoOAAccountAuthReq` znovu) přes `SwapAccessTokenAsync`, pak provede lehkou rekonciliaci. Starý token zemře; copy stream se nikdy nezastaví.
 
-This is what makes the cross-cID case safe: a user adding a second account from the same cID
-mid-run invalidates the old token, and the running copy profile keeps going on the new one.
+To je to, co dělá cross-cID případ bezpečným: uživatel přidávající druhý účet ze stejného cID uprostřed běhu invaliduje starý token a běžící copy profil pokračuje na novém.
 
-## Refresh
+## Obnova
 
-`OpenApiTokenRefreshService` (background) proactively refreshes authorizations before expiry;
-`OpenApiAuthorization.IsExpiring(threshold, now)` gates it. cTrader rotates the **refresh** token
-on every refresh, so the new refresh token is persisted immediately; a read-only cache that can't
-persist would self-invalidate (relevant to the in-cluster test Job, which mounts a writable copy
-of the secret).
+`OpenApiTokenRefreshService` (background) proaktivně obnovuje autorizace před vypršením; `OpenApiAuthorization.IsExpiring(threshold, now)` to řídí. cTrader rotuje **refresh** token při každé obnově, takže nový refresh token je okamžitě persistován; cache pouze pro čtení, která nemůže persistovat, by se invalidovala (relevantní pro in-cluster test Job, který mountuje zapisovatelnou kopii secret).
 
-### Failure escalation
+### Eskalace selhání
 
-A failed refresh is not silent. `OpenApiAuthorization.MarkRefreshFailed(reason, now, criticalWindow)`
-records `RefreshFailedAt`, increments `ConsecutiveRefreshFailures`, and always raises
-`AccessTokenRefreshFailed` (warning). When the token is now within `App:OpenApi:TokenRefreshCriticalWindow`
-(default 6h) of expiry and refresh is still failing, it escalates **once** with an
-`AccessTokenRefreshCritical` domain event + `Critical` log so the owner can re-authorize before
-copy/prop-firm operations lose the token. The failure counter and escalation latch reset on the next
-successful `Refresh`. The service keeps retrying every `TokenRefreshInterval`, so a provider/maintenance
-outage self-heals when the refresh endpoint returns.
+Selhaná obnova není tichá. `OpenApiAuthorization.MarkRefreshFailed(reason, now, criticalWindow)` zaznamenává `RefreshFailedAt`, zvyšuje `ConsecutiveRefreshFailures` a vždy vyvolává `AccessTokenRefreshFailed` (warning). Když je token nyní do `App:OpenApi:TokenRefreshCriticalWindow` (default 6h) od vypršení a obnova stále selhává, eskaluje **jednou** s doménovou událostí `AccessTokenRefreshCritical` + `Critical` log, aby owner mohl znovu autorizovat předtím, než copy/prop-firm operace token ztratí. Čítač selhání a eskalační západka se resetují při dalším úspěšném `Refresh`. Služba pokračuje v opakování každých `TokenRefreshInterval`, takže výpadek poskytovatele/maintenance se self-healuje, když se refresh endpoint vrátí.
 
-## Invalidation alert & auto-recovery (M1)
+## Alert na invalidaci & auto-recovery (M1)
 
-A partial/again-authorization on a cID invalidates the token a running copy host still holds. When a
-trading call rejects with `OpenApiErrorKind.TokenInvalid`, the host raises a distinct
-**`CopyTokenInvalidated`** alert (log 1078) — not a generic failure — so the notification channel knows a
-token needs attention. Recovery is automatic: the supervisor re-reads the authorization each cycle and,
-when the refreshed token changes the token signature, pushes it into the running host for an **in-place
-swap** — copying resumes with no manual re-add. A `NotLinkable` profile (token/auth temporarily
-unresolvable) is likewise re-evaluated every supervisor cycle and hosted the moment its plan builds again.
+Částečná/znovu-autorizace na cID invaliduje token, který běžící copy hostitel stále drží. Když obchodní volání odmítne s `OpenApiErrorKind.TokenInvalid`, hostitel vyvolá distinct **`CopyTokenInvalidated`** alert (log 1078) — ne generické selhání — takže kanál notifikací ví, že token potřebuje pozornost. Recovery je automatická: supervisor znovu čte autorizaci každý cyklus a, když obnovený token změní token signature, pushuje ho do běžícího hostitele pro **in-place swap** — kopírování pokračuje bez manuálního znovupřidání. `NotLinkable` profil (token/auth dočasně nerozpsaný) je stejně znovu vyhodnocován každý supervisor cyklus a hostován v momentě, kdy se jeho plán znovu sestaví.
 
-## Host liveness watchdog (M2)
+## Watchdog živosti hostitele (M2)
 
-The supervisor watches each hosted profile's run task. If a host exits or faults while its profile is
-still assigned to this node, the watchdog cancels and **restarts** it next cycle (log
-`CopyHostRestarted`), so a wedged host self-heals instead of needing a manual restart — and one profile's
-failure never stalls the others (per-profile isolation).
+Supervisor sleduje run task každého hostovaného profilu. Pokud hostitel skončí nebo selže, zatímco jeho profil je stále přiřazen k tomuto uzlu, watchdog zruší a **restartuje** ho příští cyklus (log `CopyHostRestarted`), takže zaseknutý hostitel se self-healuje místo potřeby manuálního restartu — a selhání jednoho profilu nikdy nezastaví ostatní (izolace per-profil).
 
-## Tests
+## Testy
 
-- **Unit** — `TokenVersion` bumps on `Refresh`; host performs an in-place swap without restart;
-  cross-cID invalidation swaps source and destination tokens; **an invalidated destination token raises
-  `CopyTokenInvalidated` and auto-recovers on the next token push** (M1); the watchdog `IsHostDead`
-  decision restarts a completed/faulted host and leaves a reassigned profile alone (M2).
-- **Integration** — `TokenVersion` persists + increments through EF on real Postgres; the token
-  signature changes on a version bump even if the string is unchanged.
+- **Unit** — `TokenVersion` se zvýší na `Refresh`; hostitel provede in-place swap bez restartu; cross-cID invalidace vymění source a destination tokeny; **invalidovaný destination token vyvolá `CopyTokenInvalidated` a auto-recoveruje na další token push** (M1); watchdog rozhodnutí `IsHostDead` restartuje dokončený/selhavší hostitel a nechá reassignovaný profil být (M2).
+- **Integration** — `TokenVersion` persistuje + inkrementuje přes EF na skutečném Postgres; token signature se změní při version bump, i když string zůstane nezměněn.

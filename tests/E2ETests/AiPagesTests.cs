@@ -18,7 +18,9 @@ public sealed class AiPagesTests(AppFixture app)
 
     public static IEnumerable<object[]> NoticeRoutes() => new[]
     {
-        "/ai/build", "/agent", "/alerts", "/mcp",
+        // /mcp is intentionally absent: MCP key creation is AI-independent, so the page must NOT
+        // carry the AI-not-configured notice (asserted by Mcp_page_has_no_ai_notice).
+        "/ai/build", "/agent", "/alerts", "/agent-studio",
     }.Select(r => new object[] { r });
 
     [Theory]
@@ -69,6 +71,57 @@ public sealed class AiPagesTests(AppFixture app)
         text.Should().NotContainEquivalentOf("Anthropic");
 
         await page.Locator("button:has-text('Later')").First.ClickAsync(new() { Timeout = 8000 });
+    }
+
+    // E-03: MCP keys are AI-independent — the page must not show the AI-not-configured notice, and a key
+    // can be created with no AI provider present.
+    [Fact]
+    public async Task Mcp_page_has_no_ai_notice()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/mcp", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+
+        await Assertions.Expect(page.Locator("h5, .mud-typography-h5").First).ToBeVisibleAsync();
+        (await page.Locator("[data-testid=ai-not-configured]").IsVisibleAsync())
+            .Should().BeFalse("MCP keys page must not show the AI-not-configured notice");
+        (await page.Locator(".mud-dialog").IsVisibleAsync())
+            .Should().BeFalse("no blocking AI dialog on /mcp when AI is unconfigured");
+    }
+
+    // E-04: /agent-studio must gate the Start control when no AI provider is configured — the notice shows
+    // and every per-row Start button is disabled so an agent can never be "started" into a silent no-op.
+    [Fact]
+    public async Task Agent_studio_gates_start_when_ai_absent()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/agent-studio", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+
+        var notice = page.Locator("[data-testid=ai-not-configured]").First;
+        await notice.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 8000 });
+
+        // Create an agent so a Start control renders, then assert it is disabled with AI absent.
+        await page.Locator("[data-testid=agent-new]").ClickAsync();
+        await page.GetByLabel("Agent name").FillAsync($"gate-{Guid.NewGuid():N}");
+        await page.Locator("[data-testid=agent-create-submit]").ClickAsync();
+
+        var start = page.Locator("[data-testid=agent-start]").First;
+        await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 8000 });
+        await Assertions.Expect(start).ToBeDisabledAsync(new() { Timeout = 8000 });
+    }
+
+    // E-09: /agent must not offer a create action that silently produces a mandate that never runs — the
+    // Create mandate button is disabled while no AI provider is configured.
+    [Fact]
+    public async Task Agent_create_mandate_disabled_when_ai_absent()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/agent", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+
+        var notice = page.Locator("[data-testid=ai-not-configured]").First;
+        await notice.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 8000 });
+
+        await Assertions.Expect(page.Locator("[data-testid=agent-create-mandate]"))
+            .ToBeDisabledAsync(new() { Timeout = 8000 });
     }
 
     [Fact]

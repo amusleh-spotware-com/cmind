@@ -7,15 +7,16 @@ using Xunit.Abstractions;
 namespace E2ETests;
 
 // Regression for the real production failure: with the Authoring feature disabled, /api/cbots returns 404.
-// The Agent and Assistant pages load /api/cbots on init, so an unguarded call threw into the ErrorBoundary
-// ("Something went wrong on this page.") — which the empty-DB smoke tests never hit because they run with
-// every feature enabled. This disables Authoring, asserts the pages still render, and restores it.
+// The Agent and Agent Studio pages load cBots/accounts on init, so an unguarded call threw into the
+// ErrorBoundary ("Something went wrong on this page.") — which the empty-DB smoke tests never hit because
+// they run with every feature enabled. This disables Authoring, asserts the pages still render, and
+// restores it. (Replaces the deleted /assistant route, which returned 404 and made this test trivial.)
 [Collection(AppCollection.Name)]
 public sealed class AiPagesWithDataTests(AppFixture app, ITestOutputHelper output)
 {
     [Theory]
     [InlineData("/agent")]
-    [InlineData("/assistant")]
+    [InlineData("/agent-studio")]
     public async Task Page_renders_when_authoring_feature_disabled(string route)
     {
         var page = await app.NewAuthedPageAsync();

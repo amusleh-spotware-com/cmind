@@ -4,6 +4,7 @@
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
+@inject IStringLocalizer<Ui> L
 
 <PageTitle>Portfolio Agent</PageTitle>
 
@@ -13,7 +14,7 @@
     <b>Suggest</b>/<b>Approve</b> mode you approve each proposal; in <b>Auto</b> mode it backtests automatically.
 </MudText>
 
-<AiFeatureNotice />
+<AiFeatureNotice EnabledChanged="OnAiStatus" />
 
 <MudGrid>
     <MudItem xs="12" md="5">
@@ -43,10 +44,13 @@
                 <MudSelectItem Value="@("Auto")">Auto (backtest automatically)</MudSelectItem>
             </MudSelect>
             <MudSwitch @bind-Value="_enabled" Label="Enabled" Color="Color.Primary" Class="mt-2" />
-            <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
-                       StartIcon="@Icons.Material.Filled.Add" OnClick="CreateMandate" Disabled="_busy">
-                Create mandate
-            </MudButton>
+            <MudTooltip Text="@(_aiEnabled ? "" : L["agent.aiRequired"])" Disabled="_aiEnabled">
+                <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.Add" OnClick="CreateMandate"
+                           Disabled="@(_busy || !_aiEnabled)" data-testid="agent-create-mandate">
+                    Create mandate
+                </MudButton>
+            </MudTooltip>
         </MudPaper>
     </MudItem>
 
@@ -59,27 +63,22 @@
             }
             else
             {
-                <MudSimpleTable Dense="true" Hover="true">
-                    <thead>
-                        <tr><th>Name</th><th>cBot</th><th>Autonomy</th><th>Enabled</th><th>Last run</th><th></th></tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var m in _mandates)
-                        {
-                            <tr>
-                                <td>@m.name</td>
-                                <td>@m.cbotName</td>
-                                <td>@m.autonomy</td>
-                                <td>@(((bool)m.enabled) ? "Yes" : "No")</td>
-                                <td>@FormatDate(m.lastRunAt)</td>
-                                <td>
-                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
-                                                   OnClick="@(() => DeleteMandate((Guid)m.id))" />
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </MudSimpleTable>
+                <MudTable Items="_mandates" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
+                    <HeaderContent>
+                        <MudTh>Name</MudTh><MudTh>cBot</MudTh><MudTh>Autonomy</MudTh><MudTh>Enabled</MudTh><MudTh>Last run</MudTh><MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Name">@context.name</MudTd>
+                        <MudTd DataLabel="cBot">@context.cbotName</MudTd>
+                        <MudTd DataLabel="Autonomy">@context.autonomy</MudTd>
+                        <MudTd DataLabel="Enabled">@(((bool)context.enabled) ? "Yes" : "No")</MudTd>
+                        <MudTd DataLabel="Last run">@FormatDate(context.lastRunAt)</MudTd>
+                        <MudTd DataLabel="">
+                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
+                                           OnClick="@(() => DeleteMandate((Guid)context.id))" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
             }
         </MudPaper>
     </MudItem>
@@ -96,30 +95,25 @@
     }
     else
     {
-        <MudSimpleTable Dense="true" Hover="true">
-            <thead>
-                <tr><th>When</th><th>Mandate</th><th>Proposal</th><th>Reasoning</th><th>Status</th><th></th></tr>
-            </thead>
-            <tbody>
-                @foreach (var p in _proposals)
-                {
-                    <tr>
-                        <td>@FormatDate(p.createdAt)</td>
-                        <td>@p.mandateName</td>
-                        <td>@p.proposedName</td>
-                        <td style="max-width:360px; white-space:pre-wrap;">@p.reasoning</td>
-                        <td>@p.status @(p.failureReason is null ? "" : $"({p.failureReason})")</td>
-                        <td>
-                            @if ((string)p.status == "Pending")
-                            {
-                                <MudButton Size="Size.Small" Color="Color.Success" OnClick="@(() => Approve((Guid)p.id))" Disabled="_busy">Approve</MudButton>
-                                <MudButton Size="Size.Small" Color="Color.Error" OnClick="@(() => Reject((Guid)p.id))" Disabled="_busy">Reject</MudButton>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </MudSimpleTable>
+        <MudTable Items="_proposals" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>When</MudTh><MudTh>Mandate</MudTh><MudTh>Proposal</MudTh><MudTh>Reasoning</MudTh><MudTh>Status</MudTh><MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="When">@FormatDate(context.createdAt)</MudTd>
+                <MudTd DataLabel="Mandate">@context.mandateName</MudTd>
+                <MudTd DataLabel="Proposal">@context.proposedName</MudTd>
+                <MudTd DataLabel="Reasoning" Style="max-width:360px; white-space:pre-wrap;">@context.reasoning</MudTd>
+                <MudTd DataLabel="Status">@context.status @(context.failureReason is null ? "" : $"({context.failureReason})")</MudTd>
+                <MudTd DataLabel="">
+                    @if ((string)context.status == "Pending")
+                    {
+                        <MudButton Size="Size.Small" Color="Color.Success" OnClick="@(() => Approve((Guid)context.id))" Disabled="_busy">Approve</MudButton>
+                        <MudButton Size="Size.Small" Color="Color.Error" OnClick="@(() => Reject((Guid)context.id))" Disabled="_busy">Reject</MudButton>
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
     }
 </MudPaper>
 
@@ -128,7 +122,13 @@
     private Guid? _cbotId, _accountId;
     private string _name = "", _objective = "", _symbol = "EURUSD", _timeframe = "h1", _autonomy = "Suggest";
     private decimal _risk = 1.0M, _drawdown = 20.0M;
-    private bool _enabled = true, _busy;
+    private bool _enabled = true, _busy, _aiEnabled;
+
+    private void OnAiStatus(bool enabled)
+    {
+        _aiEnabled = enabled;
+        StateHasChanged();
+    }
 
     protected override async Task OnInitializedAsync()
     {

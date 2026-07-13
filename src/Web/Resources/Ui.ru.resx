@@ -115,6 +115,7 @@
   <data name="calendar.series.title" xml:space="preserve"><value>История показателя</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>События календаря во время этого бэктеста</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>Функции ИИ отключены, пока в Настройки → ИИ не настроен поставщик ИИ.</value></data>
+  <data name="agent.aiRequired" xml:space="preserve"><value>Чтобы запустить это, настройте поставщика ИИ в Настройках → ИИ.</value></data>
   <data name="ai.notice.configure" xml:space="preserve"><value>Настроить ИИ</value></data>
   <data name="ai.notice.title" xml:space="preserve"><value>ИИ не настроен</value></data>
   <data name="ai.notice.body" xml:space="preserve"><value>Настройте поставщика ИИ в Настройки → ИИ, чтобы использовать функции ИИ — встроенную модель, локальную LLM или облачного поставщика.</value></data>

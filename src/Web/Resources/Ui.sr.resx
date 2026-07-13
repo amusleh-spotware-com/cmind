@@ -115,6 +115,7 @@
   <data name="calendar.series.title" xml:space="preserve"><value>Istorija indikatora</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Događaji kalendara tokom ovog bektesta</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>Функције AI-ја су искључене док у Подешавања → AI не подесите добављача AI-ја.</value></data>
+  <data name="agent.aiRequired" xml:space="preserve"><value>Podesite AI dobavljača u Podešavanja → AI da biste ovo pokrenuli.</value></data>
   <data name="ai.notice.configure" xml:space="preserve"><value>Подеси AI</value></data>
   <data name="ai.notice.title" xml:space="preserve"><value>AI није конфигурисан</value></data>
   <data name="ai.notice.body" xml:space="preserve"><value>Подесите добављача AI-ја у Подешавања → AI да бисте користили AI функције — уграђени модел, локални LLM или добављача у облаку.</value></data>

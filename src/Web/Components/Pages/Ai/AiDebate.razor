@@ -9,7 +9,7 @@
     <HelpTip Text="A bull, a bear, and a risk officer argue your cBot before you deploy it, then hand down a verdict." />
 </MudStack>
 
-<AiFeatureNotice EnabledChanged="OnAiStatus" />
+<AiFeatureNotice EnabledChanged="OnAiStatus" PromptOnLoad="true" />
 
 <MudPaper Class="pa-4" Elevation="1">
     <MudTextField @bind-Value="_source" Label="cBot source" Lines="10"

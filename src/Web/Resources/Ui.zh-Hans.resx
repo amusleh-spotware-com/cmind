@@ -115,6 +115,7 @@
   <data name="calendar.series.title" xml:space="preserve"><value>指标历史</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>此回测期间的日历事件</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>在“设置 → AI”中配置 AI 提供商之前，AI 功能处于关闭状态。</value></data>
+  <data name="agent.aiRequired" xml:space="preserve"><value>请在设置 → AI 中配置 AI 提供商以运行此项。</value></data>
   <data name="ai.notice.configure" xml:space="preserve"><value>配置 AI</value></data>
   <data name="ai.notice.title" xml:space="preserve"><value>AI 未配置</value></data>
   <data name="ai.notice.body" xml:space="preserve"><value>在“设置 → AI”中配置 AI 提供商即可使用 AI 功能——内置模型、本地 LLM 或云提供商。</value></data>

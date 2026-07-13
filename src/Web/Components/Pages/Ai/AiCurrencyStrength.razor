@@ -25,7 +25,7 @@
     }
 </MudStack>
 
-<AiFeatureNotice EnabledChanged="OnAiStatus" />
+<AiFeatureNotice EnabledChanged="OnAiStatus" PromptOnLoad="true" />
 
 <MudStack Row="true" Wrap="Wrap.Wrap" AlignItems="AlignItems.Center" Class="mb-3" Spacing="2">
     <MudChipSet T="string" SelectedValue="@_horizon" SelectedValueChanged="OnHorizonChanged"

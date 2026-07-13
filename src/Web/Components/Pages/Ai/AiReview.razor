@@ -9,7 +9,7 @@
     <HelpTip Text="Paste a cBot's source and the AI reviews it for bugs, risky trading logic, and missing safeguards before you run it." />
 </MudStack>
 
-<AiFeatureNotice EnabledChanged="OnAiStatus" />
+<AiFeatureNotice EnabledChanged="OnAiStatus" PromptOnLoad="true" />
 
 <MudPaper Class="pa-4" Elevation="1">
     <MudTextField @bind-Value="_source" Label="cBot source" Lines="10"

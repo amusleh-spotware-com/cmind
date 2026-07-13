@@ -168,10 +168,25 @@ public class AppFixture : IAsyncLifetime
         return await _playwright!.Chromium.LaunchAsync(new() { Headless = true });
     }
 
+    private static readonly Lock InstallGate = new();
+    private static readonly HashSet<string> InstalledTargets = [];
+
+    // Playwright's `install` shells out to a Node CLI (seconds). Every collection fixture boots its own
+    // app, so without memoization this ran once per collection (~9×) even though the browser only needs
+    // installing once per test-run process. Install each target at most once; the lock serializes the
+    // first-time install so parallel collections don't race the same files.
     private static void Install(string target)
     {
-        var exit = Microsoft.Playwright.Program.Main(["install", target]);
-        if (exit != 0) throw new InvalidOperationException($"Playwright install '{target}' failed with exit code {exit}.");
+        lock (InstallGate)
+        {
+            if (!InstalledTargets.Add(target)) return;
+            var exit = Microsoft.Playwright.Program.Main(["install", target]);
+            if (exit != 0)
+            {
+                InstalledTargets.Remove(target);
+                throw new InvalidOperationException($"Playwright install '{target}' failed with exit code {exit}.");
+            }
+        }
     }
 
     // Applies the generous timeouts to a context so every navigation/action/expect on it survives

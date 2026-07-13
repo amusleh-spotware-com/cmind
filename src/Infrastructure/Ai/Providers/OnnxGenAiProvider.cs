@@ -78,8 +78,13 @@ public sealed class OnnxGenAiProvider(
 
             var prompt = BuildPrompt(request.System, request.User);
             using var sequences = _tokenizer!.Encode(prompt);
+            // ONNX GenAI "max_length" is the TOTAL sequence budget (prompt + generated tokens), NOT the
+            // number of tokens to generate. Setting it to just the output budget throws
+            // "input sequence_length (N) is >= max_length (M)" whenever the prompt is longer than the
+            // budget (e.g. the multi-line currency-strength prompt). Size it as prompt + output budget.
+            var promptTokens = sequences[0].Length;
             using var generatorParams = new GeneratorParams(_model!);
-            generatorParams.SetSearchOption("max_length", maxTokens);
+            generatorParams.SetSearchOption("max_length", promptTokens + maxTokens);
             generatorParams.SetInputSequences(sequences);
 
             using var generator = new Generator(_model!, generatorParams);

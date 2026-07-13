@@ -15,10 +15,11 @@ public sealed class QuantPositioningTests(AppFixture app)
         await page.GotoAsync("/quant/positioning");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        await page.ClickAsync("[data-testid=positioning-read]");
-
         // Default 50% long → balanced → Neutral. Proves the UI → endpoint → domain path is wired.
-        await Assertions.Expect(page.Locator("[data-testid=positioning-bias]")).ToBeVisibleAsync(Slow);
-        await Assertions.Expect(page.Locator("[data-testid=positioning-bias]")).ToContainTextAsync("Neutral");
+        var bias = page.Locator("[data-testid=positioning-bias]");
+        await page.ClickUntilVisibleAsync("[data-testid=positioning-read]", bias);
+
+        await Assertions.Expect(bias).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(bias).ToContainTextAsync("Neutral");
     }
 }

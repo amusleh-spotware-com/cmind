@@ -15,9 +15,10 @@ public sealed class QuantExecutionTests(AppFixture app)
         await page.GotoAsync("/quant/execution");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        await page.ClickAsync("[data-testid=execution-build]");
+        var schedule = page.Locator("[data-testid=execution-result]");
+        await page.ClickUntilVisibleAsync("[data-testid=execution-build]", schedule);
 
-        await Assertions.Expect(page.Locator("[data-testid=execution-result]")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(schedule).ToBeVisibleAsync(Slow);
     }
 
     [Fact]

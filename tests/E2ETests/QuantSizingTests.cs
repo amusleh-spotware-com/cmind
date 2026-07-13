@@ -22,10 +22,11 @@ public sealed class QuantSizingTests(AppFixture app)
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
         await page.GetByLabel("Returns or equity curve").FillAsync(series);
-        await page.ClickAsync("[data-testid=sizing-calculate]");
+        var recommendation = page.Locator("[data-testid=sizing-recommendation]");
+        await page.ClickUntilVisibleAsync("[data-testid=sizing-calculate]", recommendation);
 
-        await Assertions.Expect(page.Locator("[data-testid=sizing-recommendation]")).ToBeVisibleAsync(Slow);
-        await Assertions.Expect(page.Locator("[data-testid=sizing-recommendation]")).ToContainTextAsync("×");
+        await Assertions.Expect(recommendation).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(recommendation).ToContainTextAsync("×");
     }
 
     [Fact]
@@ -41,9 +42,10 @@ public sealed class QuantSizingTests(AppFixture app)
 
         await page.GetByLabel("Returns or equity curve").FillAsync(equity);
         await page.GetByText("Equity / balance curve").ClickAsync();
-        await page.ClickAsync("[data-testid=sizing-calculate]");
+        var recommendation = page.Locator("[data-testid=sizing-recommendation]");
+        await page.ClickUntilVisibleAsync("[data-testid=sizing-calculate]", recommendation);
 
-        await Assertions.Expect(page.Locator("[data-testid=sizing-recommendation]")).ToBeVisibleAsync(Slow);
-        await Assertions.Expect(page.Locator("[data-testid=sizing-recommendation]")).ToContainTextAsync("×");
+        await Assertions.Expect(recommendation).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(recommendation).ToContainTextAsync("×");
     }
 }

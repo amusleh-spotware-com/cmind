@@ -24,6 +24,15 @@ public class AppFixture : IAsyncLifetime
     private const int NavigationTimeoutMs = 90_000;
     private const float ExpectTimeoutMs = 20_000f;
 
+    // The whole (shared) collection ran against ONE app process, and every page a test opened left its
+    // browser context — and its live Blazor Server SignalR circuit — alive until the collection finished.
+    // Over a few hundred sequential tests those hundreds of leaked circuits starved the single app, so the
+    // tests that happen to run last (the /quant/* pages, late in the alphabet) timed out waiting for a
+    // slow-but-correct render. Bound the live contexts: keep only the most recent few and dispose the rest
+    // as new pages are opened (safe — the collection runs sequentially, so older contexts belong to tests
+    // that have already finished).
+    private const int MaxLiveContexts = 6;
+
     [ModuleInitializer]
     internal static void ConfigurePlaywrightDefaults() => Assertions.SetDefaultExpectTimeout(ExpectTimeoutMs);
 
@@ -198,6 +207,20 @@ public class AppFixture : IAsyncLifetime
         _contexts.Add(context);
     }
 
+    // Dispose the oldest tracked contexts (and their circuits) once we exceed the cap, keeping only the
+    // most recent few alive. Called as each new page is opened so resource use stays bounded across a long
+    // sequential collection instead of growing to hundreds of live circuits.
+    private async Task EvictStaleContextsAsync()
+    {
+        while (_contexts.Count > MaxLiveContexts)
+        {
+            var oldest = _contexts[0];
+            _contexts.RemoveAt(0);
+            try { await oldest.DisposeAsync(); }
+            catch { /* best effort — a context from a finished test */ }
+        }
+    }
+
     private async Task<string> LogInAndCaptureStateAsync()
     {
         var context = await Browser.NewContextAsync(new() { BaseURL = BaseUrl });
@@ -218,6 +241,7 @@ public class AppFixture : IAsyncLifetime
     {
         var context = await Browser.NewContextAsync(new() { BaseURL = BaseUrl, StorageState = StorageState });
         Track(context);
+        await EvictStaleContextsAsync();
         return await context.NewPageAsync();
     }
 
@@ -230,6 +254,7 @@ public class AppFixture : IAsyncLifetime
         options.StorageState = StorageState;
         var context = await Browser.NewContextAsync(options);
         Track(context);
+        await EvictStaleContextsAsync();
         return await context.NewPageAsync();
     }
 
@@ -238,6 +263,7 @@ public class AppFixture : IAsyncLifetime
     {
         var context = await Browser.NewContextAsync(new() { BaseURL = BaseUrl });
         Track(context);
+        await EvictStaleContextsAsync();
         return await context.NewPageAsync();
     }
 
@@ -248,6 +274,7 @@ public class AppFixture : IAsyncLifetime
         options.BaseURL = BaseUrl;
         var context = await Browser.NewContextAsync(options);
         Track(context);
+        await EvictStaleContextsAsync();
         return await context.NewPageAsync();
     }
 

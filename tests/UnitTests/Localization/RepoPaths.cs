@@ -11,6 +11,7 @@ internal static class RepoPaths
 
     public static string WebResources => Path.Combine(Root, "src", "Web", "Resources");
     public static string WebComponents => Path.Combine(Root, "src", "Web", "Components");
+    public static string LocalizationTestDir => Path.Combine(Root, "tests", "UnitTests", "Localization");
 
     private static string FindRoot()
     {

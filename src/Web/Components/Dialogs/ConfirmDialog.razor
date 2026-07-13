@@ -1,0 +1,29 @@
+@* Reusable confirmation dialog for destructive actions (delete/erase/kill). Callers pass already-
+   localized strings; open via DialogService and check result.Canceled. Returns bool? (true = confirmed).
+   This is the single approved path for destructive confirms — DestructiveActionConfirmTests enforces it. *@
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" data-testid="confirm-title">@Title</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" data-testid="confirm-message">@Message</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" data-testid="confirm-cancel">@CancelText</MudButton>
+        <MudButton Color="@ConfirmColor" Variant="Variant.Filled" OnClick="Confirm" data-testid="confirm-accept">@ConfirmText</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Message { get; set; } = "";
+    [Parameter] public string ConfirmText { get; set; } = "";
+    [Parameter] public string CancelText { get; set; } = "";
+    [Parameter] public Color ConfirmColor { get; set; } = Color.Error;
+
+    private void Confirm() => Dialog.Close(DialogResult.Ok(true));
+    private void Cancel() => Dialog.Cancel();
+}

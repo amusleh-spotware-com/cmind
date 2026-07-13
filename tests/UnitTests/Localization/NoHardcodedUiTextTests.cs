@@ -36,6 +36,47 @@ public partial class NoHardcodedUiTextTests
             $"'{relativePath}' must use @L[\"key\"] for every user-facing string — found: {string.Join(" | ", violations)}");
     }
 
+    // CENSUS RATCHET (replaces the opt-in enrollment flaw that let ~65 pages ship un-localized while the
+    // gate watched 5). Scans EVERY component surface from source and asserts the set of files still
+    // carrying hard-coded text is a SUBSET of the checked-in baseline — so a NEW un-localized page fails
+    // the build immediately, and the baseline can only shrink as pages are localized. When the baseline
+    // reaches empty, delete it and this ratchet becomes "zero hard-coded text anywhere".
+    [Fact]
+    public void No_new_unlocalized_component_beyond_the_shrinking_baseline()
+    {
+        var root = RepoPaths.WebComponents;
+        var violators = Directory.EnumerateFiles(root, "*.razor", SearchOption.AllDirectories)
+            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                     && !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .Where(f => ScanForHardcodedText(File.ReadAllText(f)).Count > 0)
+            .Select(f => Path.GetRelativePath(root, f).Replace('\\', '/'))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var baseline = LoadPendingLocalizationBaseline();
+
+        var newlyUnlocalized = violators.Except(baseline, StringComparer.OrdinalIgnoreCase).Order().ToArray();
+        newlyUnlocalized.Should().BeEmpty(
+            "these components carry hard-coded user-facing text and are NOT in the localization baseline — "
+            + "localize them (@L[\"key\"] + all locales) in this change:\n  {0}",
+            string.Join("\n  ", newlyUnlocalized));
+
+        var staleBaseline = baseline.Except(violators, StringComparer.OrdinalIgnoreCase).Order().ToArray();
+        staleBaseline.Should().BeEmpty(
+            "these files are localized now — remove them from pending-localization.txt so the ratchet keeps "
+            + "shrinking:\n  {0}",
+            string.Join("\n  ", staleBaseline));
+    }
+
+    private static HashSet<string> LoadPendingLocalizationBaseline()
+    {
+        var path = Path.Combine(RepoPaths.LocalizationTestDir, "pending-localization.txt");
+        if (!File.Exists(path)) return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        return File.ReadAllLines(path)
+            .Select(l => l.Trim())
+            .Where(l => l.Length > 0 && !l.StartsWith('#'))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
     [Fact]
     public void Scanner_flags_a_hardcoded_text_node()
         => ScanForHardcodedText("<MudText>Hello world</MudText>").Should().ContainSingle();

@@ -44,6 +44,12 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents(o => o.DetailedErrors = builder.Environment.IsDevelopment());
 builder.Services.AddMudServices();
 
+// Global mapping of domain/persistence failures on /api routes to RFC7807 ProblemDetails with the
+// correct status (DomainException → 400, unique-violation → 409) instead of a raw 500. See
+// Web.Security.DomainExceptionHandler.
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<Web.Security.DomainExceptionHandler>();
+
 // Localization: resources live in src/Web/Resources (Ui.resx + one Ui.<culture>.resx per language).
 // The request-culture pipeline (below) picks the culture from the cookie the switcher/login writes,
 // then the browser's Accept-Language on a first visit, falling back to English.
@@ -163,9 +169,11 @@ app.MapHostHealthEndpoints();
 app.MapGet(HealthEndpoints.Version, () => Results.Ok(new NodeAgentInfoResponse(VersionInfo.Product, NodeAgentProtocol.Version)))
     .AllowAnonymous();
 
+// Runs in every environment so the /api ProblemDetails contract (DomainExceptionHandler) is honored
+// in tests too; non-/api failures fall through to the /error page.
+app.UseExceptionHandler(new ExceptionHandlerOptions { ExceptionHandlingPath = "/error" });
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/error");
     app.UseHsts();
 }
 

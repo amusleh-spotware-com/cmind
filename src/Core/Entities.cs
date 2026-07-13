@@ -68,11 +68,14 @@ public abstract class AppUser : AuditedEntity<UserId>
 
     // Optional white-label attributes. Coalesced so a null materialization (all columns null) still reads
     // as the empty profile rather than a null reference.
+    // Each user owns its OWN empty profile instance (not the shared UserProfile.Empty singleton): EF Core
+    // owned dependents cannot be shared between principals, so seeding several users at once with the same
+    // Empty reference makes EF drop all but the first user's profile columns (NULL -> 23502 not-null).
     public UserProfile Profile
     {
         get => field ?? UserProfile.Empty;
         private set;
-    } = UserProfile.Empty;
+    } = new();
 
     public IReadOnlyList<EmailVerificationToken> EmailVerificationTokens => _emailVerificationTokens;
 

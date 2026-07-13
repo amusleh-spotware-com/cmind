@@ -3,8 +3,9 @@ using Xunit;
 
 namespace E2ETests;
 
-// Navigating to settings and changing them: saving an Anthropic API key on /settings/ai flips the page to
-// the "Enabled" state (a real settings round-trip through the encrypted AppSetting store). Feature-toggle
+// Navigating to settings and changing them: adding a provider on /settings/ai enables AI (a real
+// round-trip through the encrypted provider store), and deleting it disables AI again. The single-key
+// flow was replaced by the multi-provider UI (Add provider dialog + provider cards). Feature-toggle
 // settings are covered by FeatureToggleTests.
 [Collection(AppCollection.Name)]
 public sealed class SettingsTests(AppFixture app)
@@ -12,20 +13,25 @@ public sealed class SettingsTests(AppFixture app)
     private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 15000 };
 
     [Fact]
-    public async Task Ai_settings_save_key_enables_ai_then_clear_disables()
+    public async Task Ai_settings_add_provider_enables_ai_then_delete_disables()
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/settings/ai");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        // Save a key -> the page shows the Enabled chip.
-        await page.GetByLabel("Anthropic API key").FillAsync("sk-ant-e2e-dummy-key-0123456789");
-        await ClickUntilAsync(page, "[data-testid=ai-key-save]", "[data-testid=ai-enabled-chip]");
-        await Assertions.Expect(page.Locator("[data-testid=ai-enabled-chip]")).ToBeVisibleAsync(Slow);
+        // No provider yet → AI disabled.
+        await Assertions.Expect(page.Locator("[data-testid=ai-no-providers]")).ToBeVisibleAsync(Slow);
 
-        // Clear it -> back to "Not configured".
-        await ClickUntilAsync(page, "[data-testid=ai-key-clear]", "[data-testid=ai-disabled-chip]");
-        await Assertions.Expect(page.Locator("[data-testid=ai-disabled-chip]")).ToBeVisibleAsync(Slow);
+        // Add an Anthropic provider (kind 0 is the default) with a dummy key → a provider card appears.
+        await page.Locator("[data-testid=ai-add-provider]").First.ClickAsync();
+        await page.Locator("[data-testid=ai-dlg-key]").WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 15000 });
+        await page.FillAsync("[data-testid=ai-dlg-key]", "sk-ant-e2e-dummy-key-0123456789");
+        await ClickUntilAsync(page, "[data-testid=ai-dlg-save]", "[data-testid=ai-provider-card]");
+        await Assertions.Expect(page.Locator("[data-testid=ai-provider-card]").First).ToBeVisibleAsync(Slow);
+
+        // Delete it → back to the "no provider / AI disabled" state.
+        await ClickUntilAsync(page, "[data-testid=ai-delete-provider]", "[data-testid=ai-no-providers]");
+        await Assertions.Expect(page.Locator("[data-testid=ai-no-providers]")).ToBeVisibleAsync(Slow);
     }
 
     // Clicks a control (retrying across circuit reconnects) until the expected element appears.

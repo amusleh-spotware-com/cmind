@@ -48,7 +48,9 @@ public sealed class SettingsDialogTests(AppFixture app)
         await dialog.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
 
         await page.Locator("[data-testid=settings-section-ai]").ClickAsync();
-        await page.GetByLabel("Anthropic API key").WaitForAsync(new() { Timeout = 8000 });
+        // Multi-provider AI: the section shows the provider list / add-provider control, not a single key field.
+        await page.Locator("[data-testid=ai-add-provider], [data-testid=ai-no-providers]").First
+            .WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 8000 });
 
         await page.Locator("[data-testid=settings-section-openapi]").ClickAsync();
         await page.GetByText("Open API application", new() { Exact = false }).First

@@ -28,20 +28,18 @@ public sealed class OpenApiTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
 
-        // 1. No app yet: the authorize entrypoint redirects to the setup page, not to cTrader.
-        await page.GotoAsync("/api/openapi/authorize");
-        await Assertions.Expect(page).ToHaveURLAsync(new System.Text.RegularExpressions.Regex("/settings/openapi$"));
-        await Assertions.Expect(page.GetByText("No Open API application configured")).ToBeVisibleAsync(Slow);
-
-        // 2. Configure the single application through the dialog (not an inline page section).
-        var dialog = await OpenDialogAsync(page, "Add Application");
+        // Shared-app model: the owner configures ONE deployment-wide Open API application through the
+        // dialog; every user then authorizes through it. (The old per-user "Add Application" flow was
+        // replaced by "Add Shared Application".)
+        await page.GotoAsync("/settings/openapi", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        var dialog = await OpenDialogAsync(page, "Add Shared Application");
         var inputs = dialog.Locator("input");
         await inputs.Nth(0).FillAsync($"E2E-OpenApi-{Suffix}");
         await inputs.Nth(1).FillAsync($"client-{Suffix}");
         await inputs.Nth(2).FillAsync($"secret-{Suffix}");
         await SubmitAsync(dialog, "Save");
 
-        await Assertions.Expect(page.GetByText("Configured")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.GetByText("Configured").First).ToBeVisibleAsync(Slow);
         await Assertions.Expect(page.GetByText($"client-{Suffix}")).ToBeVisibleAsync(Slow);
 
         // 3. Authorize now issues a 302 to cTrader with client_id + state, and sets the state cookie.

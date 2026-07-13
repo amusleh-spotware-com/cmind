@@ -8,6 +8,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Update="axe.min.js" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Cap collection parallelism: each E2E collection boots its own app process + Postgres container;
+         at full core-count parallelism a dev machine/CI runner saturates Docker and apps time out. -->
+    <None Update="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />

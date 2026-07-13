@@ -179,6 +179,21 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
       (including failed/terminal, missing, or gated-off) must render — guard every non-200 fetch and wrap
       background streams (SignalR log tails) in try/catch. A row's view/eye control is E2E-driven for a
       terminal entity. → `src/Web/CLAUDE.md`.
+12. **Census gates, never opt-in enrollment lists.** *This mandate exists because 71 shipped bugs proved the
+    others are unenforceable without it.* Every gate that enforces an "every X" rule (localize every string,
+    every page mobile-safe, every route smoke-tested, every destructive action confirmed, every API-domain
+    error mapped) MUST discover **all** X from source/config and fail on any non-conforming instance. An
+    **opt-in** gate — one that checks only a hand-maintained list of enrolled files/routes — is forbidden:
+    it silently exempts everything added later, which is exactly how ~78 pages shipped un-localized while a
+    5-file gate stayed green. Use **opt-out** instead: scan everything, allow a checked-in exclusion set with
+    a written reason per entry, and the exclusion set may **only shrink** (a ratchet). Model to copy:
+    `RouteCoverageTests` (scans every `@page`). The machine-enforced gates are the real mandate; the prose
+    above is only their documentation. When you add a rule, add its census gate in the same change — a rule
+    with no census gate is a suggestion, and suggestions lose under delivery pressure. Current census gates:
+    `RouteCoverageTests`, `NoHardcodedUiTextTests` (ratchet vs `pending-localization.txt`),
+    `NoWallClockInRazorTests`, `ResourceParityTests`, `WhiteLabelCatalogParityTests`, `ArchitectureGuardTests`,
+    `DestructiveActionConfirmTests`, `DomainExceptionMappingTests`, `GatingParityTests`, `RouteExistenceTests`.
+    → `plans/audit-root-cause-and-gate-hardening.md`.
 
 ## Modern C# — MANDATORY (target C# 14 / .NET 10, `LangVersion=latest`)
 

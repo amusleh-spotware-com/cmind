@@ -98,3 +98,9 @@ Ao lado dos logs, o motor emite **métricas OpenTelemetry** em medidor `cMind.Co
 - **Ao vivo** — contas demo cTrader real; veja [testing/live-copy-trading.md](../testing/live-copy-trading.md).
 
 Veja [dev-credentials.md](../testing/dev-credentials.md) para arquivo de credenciais único ao vivo + tiers E2E leem.
+
+## Controles de perfil e gerenciamento de destino
+
+Iniciar/parar são botões de ícone em cada linha de perfil (desabilitados quando a ação não se aplica). Contas de origem e
+destino são mostradas pelo **número da conta**, nunca um id interno. Clicar em um perfil
+abre um **diálogo** para gerenciar suas contas de destino (adicionar/remover com configurações completas por destino).

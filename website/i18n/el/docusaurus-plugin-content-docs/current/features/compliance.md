@@ -1,62 +1,57 @@
 ---
-description: "Retail FX/CFD/crypto brokerage carry legal + record-keeping duties. Module implement four industry-standard pillars: risk-disclosure consent…"
+description: "Τα Retail FX/CFD/crypto brokerage φέρουν νομικές και τηρητέες υποχρεώσεις τήρησης αρχείων. Το module υλοποιεί τέσσερις βιομηχανικά τυπικούς πυλώνες: συγκατάθεση αποκάλυψης κινδύνου, αμετάβλητο αρχείο ελέγχου, τήρηση αρχείων στο στυλ MiFID/ESMA, δικαιώματα δεδομένων GDPR…"
 ---
 
-# Legal & compliance
+# Νομική συμμόρφωση
 
-Τα Retail FX/CFD/crypto brokerage έχουν legal + record-keeping duties. Το Module υλοποιεί τέσσερις industry-standard pillars: **risk-disclosure consent**, **tamper-evident audit trail**, **MiFID/ESMA-style record-keeping**, **GDPR data rights**. Όλα gated από `Compliance` feature flag.
+Τα Retail FX/CFD/crypto brokerage φέρουν νομικές και τηρητέες υποχρεώσεις τήρησης αρχείων. Το module υλοποιεί τέσσερις βιομηχανικά τυπικούς πυλώνες: **συγκατάθεση αποκάλυψης κινδύνου**, **αμετάβλητο αρχείο ελέγχου (tamper-evident audit trail)**, **τηρητέα αρχεία στο στυλ MiFID/ESMA**, **δικαιώματα δεδομένων GDPR**. Ολα ελέγχονται από το feature flag `Compliance`.
 
-## 1. Versioned legal documents + consent
+## 1. Νομικά έγγραφα με εκδόσεις + συγκατάθεση
 
-- `LegalDocument` (aggregate) — versioned Terms of Service, CFD **Risk Disclosure**, ή Privacy Policy.
-  Η Version drafted, τότε **published**; published versions **immutable** (edit throws), ώστε exact text που ο user
-  συμφώνησε πάντα recoverable. Active document για type = highest published version.
-- `ConsentRecord` (aggregate) — immutable record ότι ο user δέχθηκε specific document version σε χρόνο, με originating IP.
-- **Enforcement:** `RouteGroupBuilder/RouteHandlerBuilder.RequireConsent(type)` blocks action με `403`
-  όταν published document του type υπάρχει και ο user δεν έχει συμφωνήσει στο active version. Applied σε
-  **copy-profile creation** (`RiskDisclosure`). Τίποτα published → actions allowed — τίποτα να συμφωνήσει ακόμα — ώστε enable module δεν blocks τίποτα retroactively έως published disclosure.
+- `LegalDocument` (aggregate) — Ενια Service Terms με εκδόσεις, CFD **Risk Disclosure**, ή Privacy Policy.
+  Το draft συντάσσεται και μετά **δημοσιεύεται**; οι δημοσιευμένες εκδόσεις είναι **αμετάβλητες** (edit πετάει εξαίρεση), ώστε το ακριβές κείμενο που συμφώνησε ο χρήστης να είναι πάντα ανακτήσιμο. Το ενεργό έγγραφο για έναν τύπο είναι η υψηλότερη δημοσιευμένη έκδοσή του.
+- `ConsentRecord` (aggregate) — αμετάβλητη εγγραφή ότι ο χρήστης αποδέχθηκε συγκεκριμένη έκδοση εγγράφου σε μια χρονική στιγμή, με την προέλευση IP.
+- **Επιβολή:** `RouteGroupBuilder/RouteHandlerBuilder.RequireConsent(type)` αποκλείει την ενέργεια με `403`
+  όταν υπάρχει δημοσιευμένο έγγραφο αυτού του τύπου και ο χρήστης δεν έχει συναινέσει στην ενεργή έκδοσή του. Εφαρμόζεται στη
+  **δημιουργία copy-profile** (`RiskDisclosure`). Αν δεν υπάρχει τίποτα δημοσιευμένο → οι ενέργειες επιτρέπονται — δεν υπάρχει τίποτα να συναινέσει κανείς ακόμα — ώστε η ενεργοποίηση του module να μην αποκλείει τίποτα αναδρομικά μέχρι να δημοσιευθεί πραγματικά η αποκάλυψη κινδύνου.
 
-## 2. Tamper-evident audit trail
+## 2. Αμετάβλητο αρχείο ελέγχου (tamper-evident audit trail)
 
-Τα `AuditLog` entries hash-chained: κάθε row αποθηκεύει `PrevHash` και `Hash = SHA-256(prev | canonical fields)`.
-Το `AuditChainInterceptor` εφαρμόζει chain transparently κατά `SaveChanges`, ώστε υπάρχοντα audit call sites unchanged.
-`IAuditTrailVerifier.VerifyAsync` re-walks chain, reports πρώτη row της οποίας stored hash ή back-link δεν
-ταιριάζει — detects οποιαδήποτε edit ή deletion του past record. Owner endpoint: `GET /api/compliance/audit/verify`.
+Οι εγγραφές `AuditLog` είναι συνδεδεμένες με hash: κάθε γραμμή αποθηκεύει `PrevHash` και `Hash = SHA-256(prev | canonical fields)`.
+Το `AuditChainInterceptor` εφαρμόζει την αλυσίδα διαφανώς κατά το `SaveChanges`, ώστε τα υπάρχοντα σημεία κλήσης ελέγχου να παραμένουν αμετάβλητα.
+Το `IAuditTrailVerifier.VerifyAsync` επαναδιατρέχει την αλυσίδα και αναφέρει την πρώτη γραμμή της οποίας το αποθηκευμένο hash ή back-link δεν αντιστοιχεί πια — εντοπίζει οποιαδήποτε επεξεργασία ή διαγραφή παλαιότερης εγγραφής. Endpoint ιδιοκτήτη: `GET /api/compliance/audit/verify`.
 
-## 3. Record-keeping (MiFID II / ESMA RTS)
+## 3. Τήρηση αρχείων (MiFID II / ESMA RTS)
 
-Το Record-keeping ικανοποιείται από **immutable, hash-chained audit log** plus **retained consent records** και
-soft-deleted (ποτέ hard-deleted) domain records. UTC timestamps από injected `TimeProvider`. Consent
-records κρατούν document version + IP; published legal documents ποτέ δεν mutated. Retention = όχι purging αυτών
-tables (append-only / soft-delete).
+Η τήρηση αρχείων ικανοποιείται από το **αμετάβλητο, κατακερματισμένο αρχείο ελέγχου** συν τα **διατηρημένα αρχεία συγκατάθεσης** και
+τα soft-deleted (ποτέ hard-deleted) domain records. Τα UTC timestamps προέρχονται από το injected `TimeProvider`. Τα αρχεία συγκατάθεσης κρατούν την έκδοση εγγράφου + IP; τα δημοσιευμένα νομικά έγγραφα δεν μεταλλάσσονται ποτέ. Διατήρηση = μη διαγραφή αυτών των πινάκων (append-only / soft-delete).
 
-## 4. GDPR data rights
+## 4. Δικαιώματα δεδομένων GDPR
 
-- `GET /api/compliance/export` — machine-readable export του caller's data (profile, consents, copy profiles, prop-firm challenges).
-- `POST /api/compliance/erase` — right to erasure: `AppUser.Anonymize()` καθαρίζει PII (email, MFA) και row
-  soft-deleted, keeping referential/audit history coherent.
+- `GET /api/compliance/export` — μηχαναγνώσιμη εξαγωγή των δεδομένων του καλούντος (προφίλ, συγκαταθέσεις, copy profiles, prop-firm challenges).
+- `POST /api/compliance/erase` — δικαίωμα διαγραφής: `AppUser.Anonymize()` καθαρίζει τα PII (email, MFA) και η γραμμή
+  γίνεται soft-delete, διατηρώντας τη συνοχή του ιστορικού αναφορών/ελέγχου.
 
-## API summary
+## Σύνοψη API
 
-| Method | Route | Role | Purpose |
+| Μέθοδος | Διαδρομή | Ρόλος | Σκοπός |
 |--------|-------|------|---------|
-| GET | `/api/compliance/documents/active` | User+ | active published documents |
-| GET | `/api/compliance/consent/status` | User+ | ποιες συγκαταθέσεις είναι outstanding |
-| POST | `/api/compliance/consent` | User+ | δεχτείτε το active version ενός document |
-| GET | `/api/compliance/export` | User+ | GDPR data export |
-| POST | `/api/compliance/erase` | User+ | GDPR erasure του δικού σας account |
-| POST | `/api/compliance/documents` | Owner | draft ένα document |
-| POST | `/api/compliance/documents/{id}/publish` | Owner | publish ένα version |
-| GET | `/api/compliance/audit/verify` | Owner | verify το audit hash chain |
+| GET | `/api/compliance/documents/active` | User+ | ενεργά δημοσιευμένα έγγραφα |
+| GET | `/api/compliance/consent/status` | User+ | ποιες συγκαταθέσεις εκκρεμούν |
+| POST | `/api/compliance/consent` | User+ | αποδοχή της ενεργής έκδοσης ενός εγγράφου |
+| GET | `/api/compliance/export` | User+ | εξαγωγή δεδομένων GDPR |
+| POST | `/api/compliance/erase` | User+ | διαγραφή GDPR του δικού σας λογαριασμού |
+| POST | `/api/compliance/documents` | Owner | σύνταξη ενός εγγράφου |
+| POST | `/api/compliance/documents/{id}/publish` | Owner | δημοσίευση μιας έκδοσης |
+| GET | `/api/compliance/audit/verify` | Owner | επαλήθευση της αλυσίδας hash του ελέγχου |
 
-UI: `/settings/legal` (nav *Settings → Legal & Privacy*, gated από `Compliance`) εμφανίζει outstanding agreements με accept buttons + GDPR export/erase actions.
+UI: `/settings/legal` (πλοήγηση *Settings → Legal & Privacy*, gated από `Compliance`) εμφανίζει εκκρεμή συμφωνητικά με κουμπιά αποδοχής + ενέργειες εξαγωγής/διαγραφής GDPR.
 
-## Tests
+## Δοκιμές
 
-- **Unit** — `UnitTests/Compliance/LegalDocumentTests.cs` (draft/publish/immutability, consent capture),
-  `AuditChainTests.cs` (hash links, tamper detection, content sensitivity).
-- **Integration** — `IntegrationTests/CompliancePersistenceTests.cs` (active-version + consent queries σε real
-  Postgres), `AuditChainIntegrityTests.cs` (chain verifies intact, τότε detects SQL-level tamper),
-  `ComplianceFlowTests.cs` (WebApplicationFactory, isolated DB: consent gate blocks copy creation έως risk
-  disclosure δεχθεί; GDPR export; audit verify).
-- **E2E** — `E2ETests/ComplianceTests.cs`: Legal & Privacy page renders και GDPR export επιστρέφει το data του user σε real browser.
+- **Unit** — `UnitTests/Compliance/LegalDocumentTests.cs` (draft/publish/immutability, capture συγκατάθεσης),
+  `AuditChainTests.cs` (hash links, εντοπισμός παραποίησης, ευαισθησία περιεχομένου).
+- **Integration** — `IntegrationTests/CompliancePersistenceTests.cs` (queries ενεργής έκδοσης + συγκατάθεσης σε πραγματικό
+  Postgres), `AuditChainIntegrityTests.cs` (η αλυσίδα επαληθεύεται άθικτη, τότε εντοπίζει SQL-level παραποίηση),
+  `ComplianceFlowTests.cs` (WebApplicationFactory, απομονωμένη DB: η πύλη συγκατάθεσης αποκλείει τη δημιουργία copy μέχρι να γίνει αποδεκτή η αποκάλυψη κινδύνου· εξαγωγή GDPR· επαλήθευση ελέγχου).
+- **E2E** — `E2ETests/ComplianceTests.cs`: Η σελίδα Legal & Privacy αποδίδεται και η εξαγωγή GDPR επιστρέφει τα δεδομένα του χρήστη σε πραγματικό browser.

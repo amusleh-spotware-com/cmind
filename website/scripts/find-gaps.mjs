@@ -60,9 +60,10 @@ for (const locale of LOCALES) {
     if (!existsSync(t)) { need.push(r); continue; }
     const raw = readFileSync(t, 'utf8');
     const tb = body(raw);
-    // Gap = empty, still English, or too few non-empty lines vs source (stub/placeholder). Line count
-    // is script-agnostic, so it flags CJK stubs without false-flagging real compact translations.
-    const isGap = tb.length === 0 || tb === srcBody.get(r) || lineCount(raw) < srcLines.get(r) * 0.6;
+    // Gap = empty, still English, or a stub whose body is a small fraction of the source's character
+    // length. Char length (not line count) is robust: reflowed/CJK translations keep comparable length,
+    // while a placeholder stub is ~10% of the source. 0.35 catches stubs without flagging real work.
+    const isGap = tb.length === 0 || tb === srcBody.get(r) || tb.length < srcBody.get(r).length * 0.35;
     if (isGap) {
       need.push(r);
       if (PRUNE) { rmSync(t); pruned++; } // remove stub/English copy so it is cleanly re-created

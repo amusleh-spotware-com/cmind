@@ -17,8 +17,8 @@ Dado uma serie de retornos (ou curva de equity/balanco) e o numero de conjuntos 
 neles, o analisador reporta:
 
 - **Sharpe ratio** — por periodo e anualizado (raiz-quadrada-do-tempo).
-- **Probabilistic Sharpe Ratio (PSR)** — a confianca de que o *verdadeiro* Sharpe bate o benchmark,
-  accounting for track-record length, skewness e kurtosis (Bailey & Lopez de Prado, 2012). Um registro curto ou
+- **Probabilistic Sharpe Ratio (PSR)** — a confiança de que o *verdadeiro* Sharpe bate o benchmark,
+  levando em consideração duração do histórico, skewness e kurtosis (Bailey & López de Prado, 2012). Um registro curto ou
   de cauda grossa o diminui.
 - **Deflated Sharpe Ratio (DSR)** — PSR medido contra um **benchmark deflacionado**: o Sharpe que voce esperaria do
   *melhor de N trials aleatorios* sob o null (o False Strategy Theorem). Quanto mais
@@ -41,12 +41,12 @@ Cada resultado carrega uma justificativa em portugues simples para que o "por qu
 
 Alimentar uma contagem de trials e bom; alimentar a **serie real out-of-sample de cada configuracao que
 voce tentou** e melhor. Cole no **grid de trials** opcional (uma serie por linha) e cMind executa
-**Combinatorial Symmetric Cross-Validation** (Bailey, Borwein, Lopez de Prado & Zhu, 2015): ele divide
+**Combinatorial Symmetric Cross-Validation** (Bailey, Borwein, López de Prado & Zhu, 2015): ele divide
 as observacoes em grupos, e para cada forma de escolher metade como in-sample ele escolhe a melhor
 configuracao in-sample e verifica se aquele vencedor cai no fundo da metade **out-of-sample**.
 A **Probabilidade de Overfitting de Backtest (PBO)** e a fracao de divisoes onde o vencedor falhou em
 generalizar. Um PBO perto de 0 significa a melhor configuracao e genuinamente a melhor; um PBO de 0.5 ou mais significa seu
-processo de selecao esta escolhendo ruido — o veredicto se torna **Overfit** independent do quao bom o vencedor parecia.
+processo de seleção está escolhendo ruído — o veredicto se torna **Overfit** independentemente do quão bom o vencedor parecia.
 
 ```http
 POST /api/quant/pbo
@@ -59,7 +59,7 @@ automaticamente.
 ## Trials — o numero que importa
 
 `Trials` e **quantos conjuntos de parametros voce testou** antes de escolher este. Testar uma estrategia e
-testar dez mil e manter a melhor sao coisas enormemente diferentes: o segundo manufacture um
+testar dez mil e manter a melhor são coisas enormemente diferentes: o segundo manufatura um
 alto Sharpe in-sample por acaso. Alimentar a contagem honesta de trials e o ponto inteiro — isso eleva a
 deflacao e pode mover um "otimo" backtest para **Overfit**. Quando o otimizador nativo do cTrader Console
 landar, cMind o alimentara com o tamanho real do grid do sweep automaticamente.

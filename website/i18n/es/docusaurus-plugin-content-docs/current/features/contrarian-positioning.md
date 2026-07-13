@@ -1,23 +1,19 @@
 ---
-description: "Posicionamiento Contrarian de Retail — convierte el % de operadores retail largos en sesgo contrarian (desvanece la multitud cuando está sesgada), más objetos de valor de señal en el tiempo que guardan contra sesgo de anticipación."
+description: "Posicionamiento retail contrarian — convierte el % de traders retail que están largos en un sesgo contrarian (fader al rebaño cuando está desequilibrado), más objetos de valor de señal en un momento dado que protegen contra el sesgo de anticipación."
 ---
 
-# Posicionamiento Contrarian de Retail
+# Posicionamiento retail contrarian
 
-La multitud retail es una de las pocas señales de sentimiento genuinamente útiles en FX — como una indicador
-**contrarian**. Cuando la gran mayoría de operadores retail están largos, el precio históricamente ha tendido a caer,
-y viceversa. Esta herramienta convierte posicionamiento de multitud en una lectura accionable.
+La multitud retail es una de las pocas señales de sentimiento genuinamente útiles en FX — como indicador **contrarian**. Cuando la gran mayoría de traders retail están largos, históricamente el precio ha tendido a caer, y viceversa. Esta herramienta convierte el posicionamiento de la multitud en una lectura accionable.
 
-Abre **cBots → Posicionamiento Contrarian** (`/quant/positioning`).
+Abre **cBots → Contrarian Positioning** (`/quant/positioning`).
 
 ## Qué hace
 
-Ingresa el **% de operadores retail largos** (desde página de sentimiento de tu broker o un feed como FXSSI) y
-devuelve:
+Ingresa el **% de traders retail que están largos** (desde la página de sentimiento de tu broker o un feed como FXSSI) y devuelve:
 
-- **Sesgo contrarian** — **Bajista** cuando ≥ 60% están largos (multitud demasiado larga), **Alcista** cuando ≤ 40% están
-  largos (multitud demasiado corta), **Neutral** en banda de indecisión 40–60%;
-- **Fortaleza** — cuán sesgada está la multitud (0 = balanceada, 1 = completamente de un lado), para pesar la señal.
+- **Sesgo contrarian** — **Bearish** cuando ≥ 60% están largos (multitud demasiado larga), **Bullish** cuando ≤ 40% están largos (multitud demasiado corta), **Neutral** en la banda de indecisión 40–60%;
+- **Intensidad** — cuán desequilibrada está la multitud (0 = equilibrada, 1 = completamente en un lado), para ponderar la señal.
 
 ```http
 POST /api/quant/positioning
@@ -26,13 +22,8 @@ POST /api/quant/positioning
 
 ## Punto en el tiempo por construcción
 
-Bajo el capó la capa de señal (`Core.Signals`) modela un `PointInTimeSignal` que es **marcado con el
-momento en que fue conocible** y se niega a ser construido sin él. Cualquier backtest o agente autónomo que
-consume una señal verifica `IsKnownAt(decisionTime)` — por lo que datos futuros nunca pueden filtrarse en
-decisión histórica. El sesgo de anticipación es el asesino superior de reproducibilidad en finanzas cuant; el modelo
-de dominio lo hace estructuralmente imposible.
+Bajo el capó, la capa de señal (`Core.Signals`) modela un `PointInTimeSignal` que tiene **marca de tiempo del momento en que era cognoscible** y se niega a construirse sin ella. Cualquier backtest o agente autónomo que consuma una señal verifica `IsKnownAt(decisionTime)` — por lo que los datos futuros nunca pueden filtrarse en una decisión histórica. El sesgo de anticipación es el mayor asesino de reproducibilidad en finanzas cuantitativas; el modelo de dominio lo hace estructuralmente imposible.
 
-## Por qué es confiable
+## Por qué es fiable
 
-Código de dominio puro, determinístico con ninguna dependencia de infraestructura — los umbrales contrarian y la
-guardia de punto en el tiempo se unit-prueban, incluyendo límites 40/60 y rechazo fuera de rango.
+Código de dominio puro y determinista sin dependencia de infraestructura — los umbrales contrarian y la guarda de punto en el tiempo son unit-test, incluyendo los límites 40/60 y el rechazo fuera de rango.

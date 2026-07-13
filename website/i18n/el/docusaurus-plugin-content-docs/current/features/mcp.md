@@ -1,22 +1,22 @@
 ---
-description: "cMind ship Model Context Protocol (MCP) server as separate process/Deployment — scale + redeploy independent of Web app. Expose cBot, instance, AI tools…"
+description: "Το cMind αποστέλλει Model Context Protocol (MCP) server ως ξεχωριστή διεργασία/Deployment — κλιμάκωση και επαναφορά ανεξάρτητα από την Web εφαρμογή. Εκθέτει cBot, instance, εργαλεία AI σε MCP clients (π.χ. AI assistants) μέσω HTTP + SSE transport."
 ---
 
 # MCP server
 
-Το cMind έχει Model Context Protocol (MCP) server ως **separate process/Deployment** — scale + redeploy independent του Web app. Εκθέστε cBot, instance, AI tools στο MCP clients (π.χ. AI assistants) πάνω HTTP + SSE transport.
+Το cMind αποστέλλει Model Context Protocol (MCP) server ως **ξεχωριστή διεργασία/Deployment** — κλιμάκωση και επαναφορά ανεξάρτητα από την Web εφαρμογή. Εκθέτει cBot, instance, εργαλεία AI σε MCP clients (π.χ. AI assistants) μέσω HTTP + SSE transport.
 
 ## Auth
 
-- Per-user API keys `mcpk_<hex>`, SHA-256 hashed, prefix-indexed (`McpKeyAuthHandler`). Διαχειριστείτε από **Mcp** page (`McpApiKey` aggregate).
-- Stateless HTTP transport με `AddHttpContextAccessor` — tool calls τρέχουν ως authed user.
+- API keys ανά χρήστη `mcpk_<hex>`, κατακερματισμένα με SHA-256, ευρετηριασμένα κατά πρόθεμα (`McpKeyAuthHandler`). Διαχειριστείτε από τη σελίδα **Mcp** (`McpApiKey` aggregate).
+- Stateless HTTP transport με `AddHttpContextAccessor` — οι κλήσεις εργαλείων εκτελούνται ως ο authed χρήστης.
 
-## Tools
+## Εργαλεία
 
-- `CBotTools` — author / build cBots.
-- `InstanceTools` — run / backtest / inspect instances.
-- `AiTools` — generate, review, sentiment, analyze-backtest, copy tools.
+- `CBotTools` — συγγραφή / build cBots.
+- `InstanceTools` — εκτέλεση / backtest / επιθεώρηση instances.
+- `AiTools` — δημιουργία, ανασκόπηση, sentiment, analyze-backtest, εργαλεία copy.
 
 ## Ops
 
-Εκθέστε `/version`; health endpoints (`/health`, `/alive`) mapped όλα environments για K8s/cloud probes. Structured Serilog JSON + OpenTelemetry, ίδιο ως Web app.
+Εκθέτει `/version`; health endpoints (`/health`, `/alive`) αντιστοιχίζονται σε όλα τα περιβάλλοντα για K8s/cloud probes. Structured Serilog JSON + OpenTelemetry, ίδια με την Web εφαρμογή.

@@ -1,28 +1,28 @@
 ---
-description: "Trading Journal & Coach — analiza tus propias ejecuciones y backtests para fugas conductuales (sobre-concentración, fallos repetidos, sesgo perdedor) y te entrena en la estrategia que ya tienes. Determinista, con narrativa de IA opcional."
+description: "Diario de trading y coach — analiza tus propias ejecuciones y backtests en busca de fugas de comportamiento (sobreconcentración, fallos repetidos, sesgo perdedor) y te coach sobre la estrategia que ya tienes. Determininista, con narrativa de IA opcional."
 ---
 
-# Trading Journal & Coach
+# Diario de trading y coach
 
-La categoría más nueva genuinamente útil de IA-para-operaciones no es prediciendo el mercado — es analizando *tu propio* comportamiento. El Trading Journal convierte tu historial de ejecuciones y backtests en retroalimentación honesta para que puedas mejorar la estrategia que ya tienes.
+La categoría más nueva y genuinamente útil de IA para trading no es predecir el mercado — es analizar *tu propio* comportamiento. El diario de trading convierte tu historial de ejecuciones y backtests en comentarios honestos para que puedas mejorar la estrategia que ya tienes.
 
-Abre **IA → Trading Journal** (`/journal`).
+Abre **AI → Trading Journal** (`/journal`).
 
-## Qué superficializa
+## Qué revela
 
-Desde tus instancias (ejecuciones y backtests) lo calcula, determinísticamente:
+Desde tus instancias (ejecuciones y backtests) calcula, de forma determinista:
 
-- **Conteos ganador / perdedor / fallo y tasa de ganancia** en todos tus backtests;
-- **Perspectivas conductuales** — las fugas que silenciosamente cuestan a los operadores minoristas:
-  - **Sobre-concentración** — la mayoría de tu actividad está en un símbolo;
-  - **Fallos repetidos** — un alto porcentaje de ejecuciones no lograron construir o configurar;
-  - **Sesgo perdedor** — más backtests perdedores que ganadores (con un codazo para ejecutar el Integrity Lab y verificar que el borde es real);
-  - un certificado de buena salud cuando ninguno de lo anterior aplica.
+- **Recuentos de ganancia / pérdida / fallo y tasa de acierto** en todos tus backtests;
+- **Perspectivas de comportamiento** — las fugas que silenciosamente cuestan dinero a los traders retail:
+  - **Sobreconcentración** — la mayor parte de tu actividad está en un solo símbolo;
+  - **Fallos repetidos** — una alta proporción de ejecuciones no lograron compilar o configurarse;
+  - **Sesgo perdedor** — más backtests perdedores que ganadores (con una sugerencia de ejecutar el Laboratorio de Integridad y verificar que el edge es real);
+  - un certificado de buena salud cuando no aplica ninguno de los anteriores.
 
 ```http
 GET /api/journal
 ```
 
-## Por qué es confiable
+## Por qué es fiable
 
-El análisis conductual es código de dominio puro y determinista (`Core.Journal`) sin dependencia de infraestructura — probado por unidad para sobre-concentración, fallos repetidos, sesgo perdedor, el caso equilibrado y la cuenta vacía. Los hechos vienen primero; el entrenador de IA (Portfolio Digest) es una capa narrativa opcional en la parte superior, gated en la clave de la API Anthropic, por lo que el diario funciona completamente sin IA configurada.
+El análisis de comportamiento es código de dominio puro y determinista (`Core.Journal`) sin dependencia de infraestructura — unit-test para sobreconcentración, fallos repetidos, sesgo perdedor, el caso equilibrado y la cuenta vacía. Los datos van primero; el coach de IA (Portfolio Digest) es una capa narrativa opcional encima, condicionada a la clave de API de Anthropic, por lo que el diario funciona completamente sin IA configurada.

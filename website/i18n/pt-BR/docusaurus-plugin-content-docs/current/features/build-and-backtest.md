@@ -37,3 +37,10 @@ Backtests precisam de `--data-mode` (padrao `m1`), datas como `dd/MM/yyyy HH:mm`
 
 Capacidade de execucao escala adicionando agentes de nos (auto-registro + heartbeat). Veja
 [descoberta de nos](../operations/node-discovery.md) e [escala](../deployment/scaling.md).
+
+## Uma conta de trading e necessaria
+
+Executar ou fazer backtest de um cBot precisa de uma conta de trading cTrader para conectar. Ate que voce adicione uma em
+**Contas de trading**, os botoes **Executar Novo cBot** / **Fazer Backtest de Novo cBot** estao desabilitados (com um
+tooltip) e a pagina mostra um aviso linkando para configuracao de conta — voce nao encontra mais um
+erro `stream connect failed` bruto de um bot sem conta.

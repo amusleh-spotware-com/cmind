@@ -79,3 +79,10 @@ Enviado: o ciclo de vida completo do agente, o gate de seguranca deterministico,
 gate de aprovacao humano-no-loop, o livro de auditoria, e a **integracao live com cTrader Open API** — a
 store de estado da conta (le saldo real, posicoes e exposicao aberta em lotes) e o executor de ordens (coloca ordens de mercado reais, lotes→volume via tamanho de lote do simbolo), ambos resolvendo credenciais OAuth de cada conta gerenciada e degradando suavemente quando uma conta nao esta vinculada. **Requer a chave da API Anthropic** para o modelo gerar ordens (ate entao o motor segura); ainda por vir sao metas de debate multi-agente e memoria/reflexao em camadas. O runtime e desligado a menos que `App:Ai:AgentRuntimeEnabled` esteja definido, entao trading live
 acontece apenas em um opt-in explicito e totalmente consentido.
+
+## Contas gerenciadas e edicao
+
+Ao criar um agente, voce escolhe a(s) conta(s) de trading que ele gerencia (necessario antes de poder iniciar).
+Todo agente pode ser **editado** depois (nome, temperamento, autonomia e contas gerenciadas) pelo icone de lapis
+na linha da tabela de agentes. Controles de ciclo de vida (details, edit, start, stop, kill) sao botoes de icone,
+cada um desabilitado em estados onde a acao nao se aplica.

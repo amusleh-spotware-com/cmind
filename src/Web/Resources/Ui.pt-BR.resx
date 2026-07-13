@@ -113,6 +113,8 @@
   <data name="whitelabel.cat.openApi" xml:space="preserve"><value>Open API</value></data>
   <data name="whitelabel.cat.propFirm" xml:space="preserve"><value>Prop firm</value></data>
   <data name="calendar.series.title" xml:space="preserve"><value>Histórico do indicador</value></data>
+  <data name="calendar.series.loading" xml:space="preserve"><value>Carregando histórico do indicador…</value></data>
+  <data name="calendar.series.empty" xml:space="preserve"><value>Ainda não há histórico para esta série. Depois que uma fonte de dados for configurada e os dados forem importados, as publicações aparecerão aqui.</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Eventos do calendário durante este backtest</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>Os recursos de IA estão desativados até que um provedor de IA seja configurado em Configurações → IA.</value></data>
   <data name="common.delete" xml:space="preserve"><value>Delete</value></data>

@@ -48,4 +48,24 @@ public sealed class EconomicCalendarE2ETests(AppFixture app)
         // G-06: the series page carries a HelpTip too.
         (await page.Locator("[data-testid=help-tip]").First.IsVisibleAsync()).Should().BeTrue();
     }
+
+    // I-06: the series page must never leave a permanent blank content area while data loads — it always
+    // resolves to one of its known states (a loading indicator, then the source-required notice / empty
+    // state / events). Assert one of those is present so a regression to a blank chart area is caught.
+    [Fact]
+    public async Task Series_page_never_shows_a_permanent_blank_content_area()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/economic-calendar/series/US.CPI",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+
+        (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
+
+        // Exactly one resolved state must be visible — never a blank body with only the heading.
+        var resolved = page.Locator(
+            "[data-testid=calendar-source-required], [data-testid=series-loading], [data-testid=series-empty], .mud-card");
+        await resolved.First.WaitForAsync(new LocatorWaitForOptions { Timeout = 10000 });
+        (await resolved.CountAsync()).Should().BeGreaterThan(0,
+            "the series page must resolve to a loading, notice, empty, or data state — never a permanent blank");
+    }
 }

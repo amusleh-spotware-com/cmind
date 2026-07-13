@@ -30,11 +30,12 @@ else if (!_hasSource)
 }
 else if (_loading)
 {
-    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" data-testid="series-loading" />
+    <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary" data-testid="series-loading-text">@L["calendar.series.loading"]</MudText>
 }
 else if (_events.Count == 0)
 {
-    <MudAlert Severity="Severity.Normal">@L["calendar.empty"]</MudAlert>
+    <MudAlert Severity="Severity.Normal" data-testid="series-empty">@L["calendar.series.empty"]</MudAlert>
 }
 else
 {

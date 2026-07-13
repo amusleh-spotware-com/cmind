@@ -113,6 +113,8 @@
   <data name="whitelabel.cat.openApi" xml:space="preserve"><value>Open API</value></data>
   <data name="whitelabel.cat.propFirm" xml:space="preserve"><value>Prop firm</value></data>
   <data name="calendar.series.title" xml:space="preserve"><value>Indicator history</value></data>
+  <data name="calendar.series.loading" xml:space="preserve"><value>Loading indicator history…</value></data>
+  <data name="calendar.series.empty" xml:space="preserve"><value>No history yet for this series. Once a data source is configured and data is ingested, releases will appear here.</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Calendar events during this backtest</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>AI features are turned off until an AI provider is set up in Settings → AI.</value></data>
   <data name="common.delete" xml:space="preserve"><value>Delete</value></data>

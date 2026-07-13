@@ -66,3 +66,17 @@ jobs:
       - uses: actions/checkout@v7
       - name: Boot the one-command compose stack and probe /alive
         run: bash scripts/compose-smoke.sh
+
+  iac-validate:
+    name: Cloud IaC validate (Terraform + Bicep)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v3
+      - name: Terraform validate (AWS)
+        run: |
+          terraform -chdir=deploy/aws init -backend=false -input=false
+          terraform -chdir=deploy/aws validate
+      - name: Bicep build (Azure)
+        run: |
+          az bicep build --file deploy/azure/main.bicep --stdout > /dev/null

@@ -113,10 +113,15 @@
   <data name="whitelabel.cat.openApi" xml:space="preserve"><value>Open API</value></data>
   <data name="whitelabel.cat.propFirm" xml:space="preserve"><value>Prop firm</value></data>
   <data name="calendar.series.title" xml:space="preserve"><value>Historia wskaźnika</value></data>
-  <data name="calendar.series.loading" xml:space="preserve"><value>Ładowanie historii wskaźnika…</value></data>
-  <data name="calendar.series.empty" xml:space="preserve"><value>Brak jeszcze historii dla tej serii. Po skonfigurowaniu źródła danych i pobraniu danych publikacje pojawią się tutaj.</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Wydarzenia kalendarza podczas tego backtestu</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>Funkcje AI są wyłączone, dopóki w Ustawienia → AI nie skonfigurujesz dostawcy AI.</value></data>
+  <data name="ai.notice.configure" xml:space="preserve"><value>Skonfiguruj AI</value></data>
+  <data name="ai.notice.title" xml:space="preserve"><value>AI nie skonfigurowano</value></data>
+  <data name="ai.notice.body" xml:space="preserve"><value>Skonfiguruj dostawcę AI w Ustawienia → AI, aby korzystać z funkcji AI — wbudowany model, lokalny LLM lub dostawcę w chmurze.</value></data>
+  <data name="ai.notice.openSettings" xml:space="preserve"><value>Otwórz ustawienia AI</value></data>
+  <data name="ai.notice.later" xml:space="preserve"><value>Później</value></data>
+  <data name="calendar.series.loading" xml:space="preserve"><value>Ładowanie historii wskaźnika…</value></data>
+  <data name="calendar.series.empty" xml:space="preserve"><value>Brak jeszcze historii dla tej serii. Po skonfigurowaniu źródła danych i pobraniu danych publikacje pojawią się tutaj.</value></data>
   <data name="common.delete" xml:space="preserve"><value>Delete</value></data>
   <data name="journal.note.new" xml:space="preserve"><value>New note</value></data>
   <data name="journal.note.edit" xml:space="preserve"><value>Edit note</value></data>
@@ -142,11 +147,6 @@
   <data name="instance.notFound" xml:space="preserve"><value>This instance no longer exists — it may have been deleted or never started.</value></data>
   <data name="instance.back" xml:space="preserve"><value>Back to runs</value></data>
   <data name="agent.aiRequired" xml:space="preserve"><value>Skonfiguruj dostawcę AI w Ustawienia → AI, aby to uruchomić.</value></data>
-  <data name="ai.notice.configure" xml:space="preserve"><value>Skonfiguruj AI</value></data>
-  <data name="ai.notice.title" xml:space="preserve"><value>AI nie skonfigurowano</value></data>
-  <data name="ai.notice.body" xml:space="preserve"><value>Skonfiguruj dostawcę AI w Ustawienia → AI, aby korzystać z funkcji AI — wbudowany model, lokalny LLM lub dostawcę w chmurze.</value></data>
-  <data name="ai.notice.openSettings" xml:space="preserve"><value>Otwórz ustawienia AI</value></data>
-  <data name="ai.notice.later" xml:space="preserve"><value>Później</value></data>
   <data name="cs.refresh.ownerOnly" xml:space="preserve"><value>Only the deployment owner can refresh the currency-strength snapshot.</value></data>
   <data name="calendar.help" xml:space="preserve"><value>Upcoming high-impact economic releases (CPI, NFP, rate decisions). Configure a FRED/BLS data source in Settings -&gt; Deployment to populate the calendar.</value></data>
   <data name="calendar.series.help" xml:space="preserve"><value>Full release history for this economic series - actual vs forecast vs previous. Configure a FRED/BLS data source in Settings -&gt; Deployment to populate it.</value></data>

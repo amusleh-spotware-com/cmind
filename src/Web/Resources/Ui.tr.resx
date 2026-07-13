@@ -113,10 +113,15 @@
   <data name="whitelabel.cat.openApi" xml:space="preserve"><value>Open API</value></data>
   <data name="whitelabel.cat.propFirm" xml:space="preserve"><value>Prop firm</value></data>
   <data name="calendar.series.title" xml:space="preserve"><value>Gösterge geçmişi</value></data>
-  <data name="calendar.series.loading" xml:space="preserve"><value>Gösterge geçmişi yükleniyor…</value></data>
-  <data name="calendar.series.empty" xml:space="preserve"><value>Bu seri için henüz geçmiş yok. Bir veri kaynağı yapılandırılıp veriler alındığında, yayınlar burada görünecek.</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Bu geri testi sırasındaki takvim olayları</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>Ayarlar → Yapay Zeka bölümünde bir yapay zeka sağlayıcısı yapılandırılana kadar yapay zeka özellikleri kapalıdır.</value></data>
+  <data name="ai.notice.configure" xml:space="preserve"><value>Yapay zekayı ayarla</value></data>
+  <data name="ai.notice.title" xml:space="preserve"><value>Yapay zeka yapılandırılmadı</value></data>
+  <data name="ai.notice.body" xml:space="preserve"><value>Yapay zeka özelliklerini kullanmak için Ayarlar → Yapay Zeka bölümünde bir sağlayıcı yapılandırın — yerleşik model, yerel LLM veya bulut sağlayıcısı.</value></data>
+  <data name="ai.notice.openSettings" xml:space="preserve"><value>Yapay zeka ayarlarını aç</value></data>
+  <data name="ai.notice.later" xml:space="preserve"><value>Daha sonra</value></data>
+  <data name="calendar.series.loading" xml:space="preserve"><value>Gösterge geçmişi yükleniyor…</value></data>
+  <data name="calendar.series.empty" xml:space="preserve"><value>Bu seri için henüz geçmiş yok. Bir veri kaynağı yapılandırılıp veriler alındığında, yayınlar burada görünecek.</value></data>
   <data name="common.delete" xml:space="preserve"><value>Delete</value></data>
   <data name="journal.note.new" xml:space="preserve"><value>New note</value></data>
   <data name="journal.note.edit" xml:space="preserve"><value>Edit note</value></data>
@@ -142,11 +147,6 @@
   <data name="instance.notFound" xml:space="preserve"><value>This instance no longer exists — it may have been deleted or never started.</value></data>
   <data name="instance.back" xml:space="preserve"><value>Back to runs</value></data>
   <data name="agent.aiRequired" xml:space="preserve"><value>Bunu çalıştırmak için Ayarlar → YZ bölümünde bir YZ sağlayıcısı yapılandırın.</value></data>
-  <data name="ai.notice.configure" xml:space="preserve"><value>Yapay zekayı ayarla</value></data>
-  <data name="ai.notice.title" xml:space="preserve"><value>Yapay zeka yapılandırılmadı</value></data>
-  <data name="ai.notice.body" xml:space="preserve"><value>Yapay zeka özelliklerini kullanmak için Ayarlar → Yapay Zeka bölümünde bir sağlayıcı yapılandırın — yerleşik model, yerel LLM veya bulut sağlayıcısı.</value></data>
-  <data name="ai.notice.openSettings" xml:space="preserve"><value>Yapay zeka ayarlarını aç</value></data>
-  <data name="ai.notice.later" xml:space="preserve"><value>Daha sonra</value></data>
   <data name="cs.refresh.ownerOnly" xml:space="preserve"><value>Only the deployment owner can refresh the currency-strength snapshot.</value></data>
   <data name="calendar.help" xml:space="preserve"><value>Upcoming high-impact economic releases (CPI, NFP, rate decisions). Configure a FRED/BLS data source in Settings -&gt; Deployment to populate the calendar.</value></data>
   <data name="calendar.series.help" xml:space="preserve"><value>Full release history for this economic series - actual vs forecast vs previous. Configure a FRED/BLS data source in Settings -&gt; Deployment to populate it.</value></data>

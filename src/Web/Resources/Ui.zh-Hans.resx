@@ -113,10 +113,15 @@
   <data name="whitelabel.cat.openApi" xml:space="preserve"><value>Open API</value></data>
   <data name="whitelabel.cat.propFirm" xml:space="preserve"><value>Prop firm</value></data>
   <data name="calendar.series.title" xml:space="preserve"><value>指标历史</value></data>
-  <data name="calendar.series.loading" xml:space="preserve"><value>正在加载指标历史…</value></data>
-  <data name="calendar.series.empty" xml:space="preserve"><value>此系列暂无历史记录。配置数据源并导入数据后，发布将显示在此处。</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>此回测期间的日历事件</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>在“设置 → AI”中配置 AI 提供商之前，AI 功能处于关闭状态。</value></data>
+  <data name="ai.notice.configure" xml:space="preserve"><value>配置 AI</value></data>
+  <data name="ai.notice.title" xml:space="preserve"><value>AI 未配置</value></data>
+  <data name="ai.notice.body" xml:space="preserve"><value>在“设置 → AI”中配置 AI 提供商即可使用 AI 功能——内置模型、本地 LLM 或云提供商。</value></data>
+  <data name="ai.notice.openSettings" xml:space="preserve"><value>打开 AI 设置</value></data>
+  <data name="ai.notice.later" xml:space="preserve"><value>稍后</value></data>
+  <data name="calendar.series.loading" xml:space="preserve"><value>正在加载指标历史…</value></data>
+  <data name="calendar.series.empty" xml:space="preserve"><value>此系列暂无历史记录。配置数据源并导入数据后，发布将显示在此处。</value></data>
   <data name="common.delete" xml:space="preserve"><value>Delete</value></data>
   <data name="journal.note.new" xml:space="preserve"><value>New note</value></data>
   <data name="journal.note.edit" xml:space="preserve"><value>Edit note</value></data>
@@ -142,11 +147,6 @@
   <data name="instance.notFound" xml:space="preserve"><value>This instance no longer exists — it may have been deleted or never started.</value></data>
   <data name="instance.back" xml:space="preserve"><value>Back to runs</value></data>
   <data name="agent.aiRequired" xml:space="preserve"><value>请在设置 → AI 中配置 AI 提供商以运行此项。</value></data>
-  <data name="ai.notice.configure" xml:space="preserve"><value>配置 AI</value></data>
-  <data name="ai.notice.title" xml:space="preserve"><value>AI 未配置</value></data>
-  <data name="ai.notice.body" xml:space="preserve"><value>在“设置 → AI”中配置 AI 提供商即可使用 AI 功能——内置模型、本地 LLM 或云提供商。</value></data>
-  <data name="ai.notice.openSettings" xml:space="preserve"><value>打开 AI 设置</value></data>
-  <data name="ai.notice.later" xml:space="preserve"><value>稍后</value></data>
   <data name="cs.refresh.ownerOnly" xml:space="preserve"><value>Only the deployment owner can refresh the currency-strength snapshot.</value></data>
   <data name="calendar.help" xml:space="preserve"><value>Upcoming high-impact economic releases (CPI, NFP, rate decisions). Configure a FRED/BLS data source in Settings -&gt; Deployment to populate the calendar.</value></data>
   <data name="calendar.series.help" xml:space="preserve"><value>Full release history for this economic series - actual vs forecast vs previous. Configure a FRED/BLS data source in Settings -&gt; Deployment to populate it.</value></data>

@@ -113,10 +113,15 @@
   <data name="whitelabel.cat.openApi" xml:space="preserve"><value>Open API</value></data>
   <data name="whitelabel.cat.propFirm" xml:space="preserve"><value>Prop firm</value></data>
   <data name="calendar.series.title" xml:space="preserve"><value>História ukazovateľa</value></data>
-  <data name="calendar.series.loading" xml:space="preserve"><value>Načítava sa história indikátora…</value></data>
-  <data name="calendar.series.empty" xml:space="preserve"><value>Pre túto sériu zatiaľ nie je žiadna história. Po nastavení zdroja údajov a načítaní údajov sa tu zobrazia zverejnenia.</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Udalosti kalendára počas tohto backtestu</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>Funkcie AI sú vypnuté, kým v Nastavenia → AI nenastavíte poskytovateľa AI.</value></data>
+  <data name="ai.notice.configure" xml:space="preserve"><value>Nastaviť AI</value></data>
+  <data name="ai.notice.title" xml:space="preserve"><value>AI nie je nakonfigurované</value></data>
+  <data name="ai.notice.body" xml:space="preserve"><value>Nastavte poskytovateľa AI v Nastavenia → AI, aby ste mohli používať funkcie AI — vstavaný model, lokálny LLM alebo cloudového poskytovateľa.</value></data>
+  <data name="ai.notice.openSettings" xml:space="preserve"><value>Otvoriť nastavenia AI</value></data>
+  <data name="ai.notice.later" xml:space="preserve"><value>Neskôr</value></data>
+  <data name="calendar.series.loading" xml:space="preserve"><value>Načítava sa história indikátora…</value></data>
+  <data name="calendar.series.empty" xml:space="preserve"><value>Pre túto sériu zatiaľ nie je žiadna história. Po nastavení zdroja údajov a načítaní údajov sa tu zobrazia zverejnenia.</value></data>
   <data name="common.delete" xml:space="preserve"><value>Delete</value></data>
   <data name="journal.note.new" xml:space="preserve"><value>New note</value></data>
   <data name="journal.note.edit" xml:space="preserve"><value>Edit note</value></data>
@@ -142,11 +147,6 @@
   <data name="instance.notFound" xml:space="preserve"><value>This instance no longer exists — it may have been deleted or never started.</value></data>
   <data name="instance.back" xml:space="preserve"><value>Back to runs</value></data>
   <data name="agent.aiRequired" xml:space="preserve"><value>Ak to chcete spustiť, nastavte v Nastavenia → AI poskytovateľa AI.</value></data>
-  <data name="ai.notice.configure" xml:space="preserve"><value>Nastaviť AI</value></data>
-  <data name="ai.notice.title" xml:space="preserve"><value>AI nie je nakonfigurované</value></data>
-  <data name="ai.notice.body" xml:space="preserve"><value>Nastavte poskytovateľa AI v Nastavenia → AI, aby ste mohli používať funkcie AI — vstavaný model, lokálny LLM alebo cloudového poskytovateľa.</value></data>
-  <data name="ai.notice.openSettings" xml:space="preserve"><value>Otvoriť nastavenia AI</value></data>
-  <data name="ai.notice.later" xml:space="preserve"><value>Neskôr</value></data>
   <data name="cs.refresh.ownerOnly" xml:space="preserve"><value>Only the deployment owner can refresh the currency-strength snapshot.</value></data>
   <data name="calendar.help" xml:space="preserve"><value>Upcoming high-impact economic releases (CPI, NFP, rate decisions). Configure a FRED/BLS data source in Settings -&gt; Deployment to populate the calendar.</value></data>
   <data name="calendar.series.help" xml:space="preserve"><value>Full release history for this economic series - actual vs forecast vs previous. Configure a FRED/BLS data source in Settings -&gt; Deployment to populate it.</value></data>

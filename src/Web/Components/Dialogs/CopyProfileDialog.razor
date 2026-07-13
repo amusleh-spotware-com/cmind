@@ -1,0 +1,255 @@
+@* Copy-profile detail as a dialog: manage the destination (slave) accounts of a profile — list, remove,
+   and add with the full copy settings. Account identity is shown as the human account number, never the
+   internal GUID. Opened from the Copy Trading page when a profile row is clicked. *@
+@using System.Net.Http.Json
+@using Core.Domain
+@using Web.Json
+@inject HttpClient Http
+@inject ISnackbar Snack
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Destinations — @Name</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_detail is null)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+        }
+        else
+        {
+            <MudTable Items="@(((IEnumerable<dynamic>)_detail.destinations))" Dense="true" Class="mb-3" Breakpoint="Breakpoint.Sm"
+                      data-testid="copy-destinations">
+                <HeaderContent>
+                    <MudTh>Account</MudTh><MudTh>Mode</MudTh><MudTh>Param</MudTh><MudTh>Reverse</MudTh><MudTh>Direction</MudTh><MudTh>Partial</MudTh><MudTh>Pending</MudTh><MudTh>Trailing</MudTh><MudTh /></HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Account">@AccountNumber((Guid)context.destinationAccountId)</MudTd>
+                    <MudTd DataLabel="Mode">@context.mode</MudTd>
+                    <MudTd DataLabel="Param">@context.riskParameter</MudTd>
+                    <MudTd DataLabel="Reverse">@context.reverse</MudTd>
+                    <MudTd DataLabel="Direction">@context.direction</MudTd>
+                    <MudTd DataLabel="Partial">@context.mirrorPartialClose</MudTd>
+                    <MudTd DataLabel="Pending">@context.copyPendingOrders</MudTd>
+                    <MudTd DataLabel="Trailing">@context.copyTrailingStop</MudTd>
+                    <MudTd DataLabel=""><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                          aria-label="Remove destination" OnClick="@(() => RemoveDestination((Guid)context.id))" /></MudTd>
+                </RowTemplate>
+            </MudTable>
+
+            <MudText Typo="Typo.subtitle2">Add destination</MudText>
+            <MudGrid>
+                <MudItem xs="6" md="3">
+                    <MudSelect T="long" MultiSelection="true" @bind-SelectedValues="_destAccounts"
+                               Label="Destination (slave) accounts"
+                               MultiSelectionTextFunc="@(v => $"{v?.Count ?? 0} account(s)")">
+                        @foreach (var a in Accounts)
+                        {
+                            <MudSelectItem T="long" Value="@a.Number">@a.Number</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="6" md="3">
+                    <MudSelect T="MoneyManagementMode" @bind-Value="_mode" Label="Money management">
+                        @foreach (var m in Enum.GetValues<MoneyManagementMode>())
+                        {
+                            <MudSelectItem T="MoneyManagementMode" Value="@m">@m</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="6" md="2"><MudNumericField T="double" @bind-Value="_param" Label="Parameter" /></MudItem>
+                <MudItem xs="6" md="2"><MudNumericField T="double" @bind-Value="_slippage" Label="Slippage (pips)" /></MudItem>
+                <MudItem xs="6" md="2">
+                    <MudSelect T="CopyDirectionFilter" @bind-Value="_direction" Label="Direction">
+                        @foreach (var d in Enum.GetValues<CopyDirectionFilter>())
+                        {
+                            <MudSelectItem T="CopyDirectionFilter" Value="@d">@d</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="6" md="2"><MudNumericField T="double" @bind-Value="_minLot" Label="Min lot" /></MudItem>
+                <MudItem xs="6" md="2"><MudNumericField T="double" @bind-Value="_maxLot" Label="Max lot" /></MudItem>
+                <MudItem xs="6" md="2"><MudNumericField T="int" @bind-Value="_maxDelay" Label="Max delay (s)" /></MudItem>
+                <MudItem xs="6" md="2"><MudNumericField T="double" @bind-Value="_maxDrawdown" Label="Max drawdown %" /></MudItem>
+                <MudItem xs="6" md="2"><MudNumericField T="double" @bind-Value="_dailyLoss" Label="Daily loss cap" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_reverse" Label="Reverse" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_forceMin" Label="Force min lot" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyStopLoss" Label="Copy SL" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyTakeProfit" Label="Copy TP" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_mirrorPartialClose" Label="Partial close" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_mirrorScaleIn" Label="Scale-in" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyPending" Label="Pending orders" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyTrailing" Label="Trailing stop" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyPendingExpiry" Label="Copy expiry" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyMasterSlippage" Label="Copy slippage" Color="Color.Primary" /></MudItem>
+                <MudItem xs="12"><MudText Typo="Typo.caption">Copy order types</MudText></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyMarket" Label="Market" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyMarketRange" Label="Market range" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyLimit" Label="Limit" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyStop" Label="Stop" Color="Color.Primary" /></MudItem>
+                <MudItem xs="6" md="2"><MudSwitch T="bool" @bind-Value="_copyStopLimit" Label="Stop limit" Color="Color.Primary" /></MudItem>
+                <MudItem xs="12" md="6"><MudTextField @bind-Value="_symbolMapText" Label="Symbol map (SRC=DST, comma separated)" /></MudItem>
+                <MudItem xs="6" md="3">
+                    <MudSelect T="SymbolFilterMode" @bind-Value="_filterMode" Label="Symbol filter">
+                        @foreach (var f in Enum.GetValues<SymbolFilterMode>())
+                        {
+                            <MudSelectItem T="SymbolFilterMode" Value="@f">@f</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="6" md="3"><MudTextField @bind-Value="_filterText" Label="Filter symbols (comma separated)" /></MudItem>
+                <MudItem xs="12">
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="SuggestSymbols">Suggest broker symbols</MudButton>
+                    @foreach (var s in _suggested)
+                    {
+                        <MudChip T="string" Size="Size.Small">@s</MudChip>
+                    }
+                </MudItem>
+            </MudGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddDestination" data-testid="copy-add-destination">Add destination</MudButton>
+        <MudButton OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+    [Parameter] public Guid ProfileId { get; set; }
+    [Parameter] public string Name { get; set; } = "";
+    [Parameter] public IReadOnlyList<AccountRef> Accounts { get; set; } = [];
+
+    private dynamic? _detail;
+
+    private IEnumerable<long> _destAccounts = new HashSet<long>();
+    private MoneyManagementMode _mode = MoneyManagementMode.LotMultiplier;
+    private double _param = 1;
+    private double _slippage;
+    private CopyDirectionFilter _direction = CopyDirectionFilter.Both;
+    private double _minLot;
+    private double _maxLot;
+    private int _maxDelay;
+    private double _maxDrawdown;
+    private double _dailyLoss;
+    private bool _reverse;
+    private bool _forceMin;
+    private bool _copyStopLoss = true;
+    private bool _copyTakeProfit = true;
+    private bool _mirrorPartialClose = true;
+    private bool _mirrorScaleIn;
+    private bool _copyPending;
+    private bool _copyTrailing;
+    private bool _copyPendingExpiry = true;
+    private bool _copyMasterSlippage = true;
+    private bool _copyMarket = true;
+    private bool _copyMarketRange = true;
+    private bool _copyLimit = true;
+    private bool _copyStop = true;
+    private bool _copyStopLimit = true;
+    private string _symbolMapText = "";
+    private string _filterText = "";
+    private SymbolFilterMode _filterMode = SymbolFilterMode.None;
+    private string[] _suggested = [];
+
+    protected override Task OnInitializedAsync() => Load();
+
+    private async Task Load() => _detail = await Http.GetDynamicAsync($"/api/copy/profiles/{ProfileId}");
+
+    private string AccountNumber(Guid id)
+    {
+        foreach (var a in Accounts)
+            if (a.Id == id) return a.Number.ToString(System.Globalization.CultureInfo.CurrentCulture);
+        return "—";
+    }
+
+    private Guid AccountGuid(long number)
+    {
+        foreach (var a in Accounts)
+            if (a.Number == number) return a.Id;
+        return Guid.Empty;
+    }
+
+    private async Task AddDestination()
+    {
+        var accounts = _destAccounts.ToArray();
+        if (accounts.Length == 0) { Snack.Add("Select at least one destination account", Severity.Warning); return; }
+
+        var failed = false;
+        foreach (var number in accounts)
+        {
+            var r = await Http.PostAsJsonAsync($"/api/copy/profiles/{ProfileId}/destinations", new
+            {
+                DestinationAccountId = AccountGuid(number),
+                Mode = _mode,
+                Parameter = _param,
+                SlippagePips = _slippage,
+                MaxDelaySeconds = _maxDelay,
+                Reverse = _reverse,
+                CopyStopLoss = _copyStopLoss,
+                CopyTakeProfit = _copyTakeProfit,
+                Direction = _direction,
+                MinLot = _minLot,
+                MaxLot = _maxLot,
+                ForceMinLot = _forceMin,
+                MaxDrawdownPercent = _maxDrawdown,
+                DailyLossLimit = _dailyLoss,
+                SymbolFilterMode = _filterMode,
+                SymbolFilters = ParseCsv(_filterText),
+                SymbolMap = ParseMap(_symbolMapText),
+                MirrorPartialClose = _mirrorPartialClose,
+                MirrorScaleIn = _mirrorScaleIn,
+                CopyPendingOrders = _copyPending,
+                CopyTrailingStop = _copyTrailing,
+                OrderTypes = SelectedOrderTypes(),
+                CopyPendingExpiry = _copyPendingExpiry,
+                CopyMasterSlippage = _copyMasterSlippage
+            });
+            if (!r.IsSuccessStatusCode) failed = true;
+        }
+
+        if (failed) Snack.Add("Some destinations could not be added", Severity.Error);
+        _destAccounts = new HashSet<long>();
+        await Load();
+    }
+
+    private CopyOrderTypes SelectedOrderTypes()
+    {
+        var types = CopyOrderTypes.None;
+        if (_copyMarket) types |= CopyOrderTypes.Market;
+        if (_copyMarketRange) types |= CopyOrderTypes.MarketRange;
+        if (_copyLimit) types |= CopyOrderTypes.Limit;
+        if (_copyStop) types |= CopyOrderTypes.Stop;
+        if (_copyStopLimit) types |= CopyOrderTypes.StopLimit;
+        return types == CopyOrderTypes.None ? CopyOrderTypes.All : types;
+    }
+
+    private async Task RemoveDestination(Guid destinationId)
+    {
+        await Http.DeleteAsync($"/api/copy/profiles/{ProfileId}/destinations/{destinationId}");
+        await Load();
+    }
+
+    private async Task SuggestSymbols()
+    {
+        var first = _destAccounts.FirstOrDefault();
+        if (first == 0) return;
+        var guid = AccountGuid(first);
+        if (guid == Guid.Empty) return;
+        try { _suggested = await Http.GetFromJsonAsync<string[]>($"/api/copy/accounts/{guid}/symbols") ?? []; }
+        catch { _suggested = []; }
+    }
+
+    private static string[] ParseCsv(string text) => text
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    private static object[] ParseMap(string text) => text
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Select(pair => pair.Split('=', 2, StringSplitOptions.TrimEntries))
+        .Where(parts => parts.Length == 2)
+        .Select(parts => (object)new { Source = parts[0], Destination = parts[1] })
+        .ToArray();
+
+    private void Close() => Dialog.Close();
+
+    public sealed record AccountRef(Guid Id, long Number);
+}

@@ -40,7 +40,14 @@ Status: **IN EXECUTION** — Phase A started 2026-07-12. Author baseline: 2026-0
   reviewed allow-lists: pre-auth entry points and JWT-endpoint-filter-secured versioned APIs
   (`calendar/v1`, `market/v1`). A new accidentally-public endpoint now fails CI.
 
-**Status by workstream:** WS-1 gated ✓ · WS-2 harness ✓/live-run pending · WS-3 ✓ · WS-4 ✓✓
+- **WS-2 live copy — EXECUTED against the real cTrader DEMO broker (2026-07-12): 11/11 passed.**
+  `CopyTradingLiveTests` refreshed the cached tokens and ran the full suite (1:1, 1:many, reverse,
+  cross-cID, partial-close, pending+cancel, trailing, + the new full-close / SL-amend / resync-on-start).
+  `Partial_close_shrinks_the_slave_copy_proportionally` placed a **real mirrored trade** and asserted the
+  slave copy shrank (volume 2→1). Closed-market scenarios reported INCONCLUSIVE (skip-clean), never a
+  false pass. Live copy over the real Open API socket is verified working, not just harnessed.
+
+**Status by workstream:** WS-1 gated ✓ · WS-2 ✓ (live-verified 11/11) · WS-3 ✓ · WS-4 ✓✓
 (tenant-isolation ×2 + endpoint-auth gate; full `/security-review` sweep still pending) · WS-6 ✓ ·
 WS-10 ✓ · WS-12 ✓ · WS-5/7/8/9/11 tracked.
 

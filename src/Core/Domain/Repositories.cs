@@ -78,6 +78,15 @@ public interface IAlertRuleRepository
     Task SaveChangesAsync(CancellationToken ct);
 }
 
+public interface IJournalNoteRepository
+{
+    Task<Core.Journal.JournalNote?> GetByIdAsync(JournalNoteId id, UserId owner, CancellationToken ct);
+    Task<IReadOnlyList<Core.Journal.JournalNote>> ListByUserAsync(UserId owner, CancellationToken ct);
+    Task AddAsync(Core.Journal.JournalNote note, CancellationToken ct);
+    void Remove(Core.Journal.JournalNote note);
+    Task SaveChangesAsync(CancellationToken ct);
+}
+
 public interface IPropRuleRepository
 {
     Task<PropRule?> GetByIdAsync(PropRuleId id, UserId owner, CancellationToken ct);

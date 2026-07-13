@@ -41,6 +41,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<Core.Agent.AgentMemoryRecord> AgentMemories => Set<Core.Agent.AgentMemoryRecord>();
     public DbSet<AlertRule> AlertRules => Set<AlertRule>();
     public DbSet<AlertEvent> AlertEvents => Set<AlertEvent>();
+    public DbSet<Core.Journal.JournalNote> JournalNotes => Set<Core.Journal.JournalNote>();
     public DbSet<PropRule> PropRules => Set<PropRule>();
     public DbSet<PropFirmChallenge> PropFirmChallenges => Set<PropFirmChallenge>();
     public DbSet<LegalDocument> LegalDocuments => Set<LegalDocument>();
@@ -98,6 +99,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<AgentDecisionRecordId>().HaveConversion<StrongIdConverter<AgentDecisionRecordId>>();
         configurationBuilder.Properties<AgentMemoryRecordId>().HaveConversion<StrongIdConverter<AgentMemoryRecordId>>();
         configurationBuilder.Properties<AlertRuleId>().HaveConversion<StrongIdConverter<AlertRuleId>>();
+        configurationBuilder.Properties<JournalNoteId>().HaveConversion<StrongIdConverter<JournalNoteId>>();
         configurationBuilder.Properties<AlertEventId>().HaveConversion<StrongIdConverter<AlertEventId>>();
         configurationBuilder.Properties<PropRuleId>().HaveConversion<StrongIdConverter<PropRuleId>>();
         configurationBuilder.Properties<OpenApiApplicationId>().HaveConversion<StrongIdConverter<OpenApiApplicationId>>();
@@ -316,6 +318,12 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         {
             e.HasIndex(x => new { x.UserId, x.CreatedAt });
             e.HasOne(x => x.Rule).WithMany(x => x.Events).HasForeignKey(x => x.RuleId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Core.Journal.JournalNote>(e =>
+        {
+            e.HasIndex(x => new { x.UserId, x.CreatedAt });
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<PropRule>(e =>

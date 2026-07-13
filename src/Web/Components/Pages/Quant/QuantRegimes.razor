@@ -1,6 +1,7 @@
 @page "/quant/regimes"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @using System.Net.Http.Json
+@implements IDisposable
 @inject HttpClient Http
 @inject MudBlazor.ISnackbar Snack
 
@@ -72,6 +73,7 @@
     private string _mode = "returns";
     private bool _loading;
     private RegimeResult? _result;
+    private readonly CancellationTokenSource _cts = new();
 
     private async Task Analyze()
     {
@@ -87,12 +89,14 @@
         try
         {
             var body = _mode == "equity" ? (object)new { Equity = numbers } : new { Returns = numbers };
-            var response = await Http.PostAsJsonAsync("/api/quant/regimes", body);
+            var response = await Http.PostAsJsonAsync("/api/quant/regimes", body, _cts.Token);
+            if (_cts.IsCancellationRequested) return;
             if (response.IsSuccessStatusCode)
-                _result = await response.Content.ReadFromJsonAsync<RegimeResult>();
+                _result = await response.Content.ReadFromJsonAsync<RegimeResult>(_cts.Token);
             else
                 Snack.Add("Could not analyze that series.", Severity.Error);
         }
+        catch (OperationCanceledException) { }
         catch
         {
             Snack.Add("Could not analyze that series.", Severity.Error);
@@ -101,6 +105,12 @@
         {
             _loading = false;
         }
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
     }
 
     private static double[] Parse(string text)

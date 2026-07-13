@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Core;
+using Core.Domain;
 using Core.Journal;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
@@ -57,8 +58,65 @@ public static class JournalEndpoints
             });
         });
 
+        g.MapGet("/notes", async (Core.Domain.IJournalNoteRepository repo, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var notes = await repo.ListByUserAsync(uid, ct);
+            return Results.Ok(notes.Select(ToNoteResponse));
+        });
+
+        g.MapPost("/notes", async (
+            JournalNoteRequest req, Core.Domain.IJournalNoteRepository repo, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            try
+            {
+                var note = Core.Journal.JournalNote.Create(uid, req.Title ?? string.Empty, req.Body, req.Symbol);
+                await repo.AddAsync(note, ct);
+                await repo.SaveChangesAsync(ct);
+                return Results.Ok(ToNoteResponse(note));
+            }
+            catch (DomainException ex) { return Results.BadRequest(new { error = ex.Code }); }
+        });
+
+        g.MapPut("/notes/{id:guid}", async (
+            Guid id, JournalNoteRequest req, Core.Domain.IJournalNoteRepository repo, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var note = await repo.GetByIdAsync(JournalNoteId.From(id), uid, ct);
+            if (note is null) return Results.NotFound();
+            try
+            {
+                note.Edit(req.Title ?? string.Empty, req.Body, req.Symbol);
+                await repo.SaveChangesAsync(ct);
+                return Results.Ok(ToNoteResponse(note));
+            }
+            catch (DomainException ex) { return Results.BadRequest(new { error = ex.Code }); }
+        });
+
+        g.MapDelete("/notes/{id:guid}", async (
+            Guid id, Core.Domain.IJournalNoteRepository repo, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var note = await repo.GetByIdAsync(JournalNoteId.From(id), uid, ct);
+            if (note is null) return Results.NotFound();
+            repo.Remove(note);
+            await repo.SaveChangesAsync(ct);
+            return Results.NoContent();
+        });
+
         return app;
     }
+
+    private static object ToNoteResponse(Core.Journal.JournalNote n) => new
+    {
+        id = n.Id.Value,
+        title = n.Title,
+        body = n.Body,
+        symbol = n.Symbol,
+        createdAt = n.CreatedAt,
+        updatedAt = n.UpdatedAt
+    };
 
     private static JournalEntry ToEntry(Instance i)
     {
@@ -102,3 +160,5 @@ public static class JournalEndpoints
         return null;
     }
 }
+
+public sealed record JournalNoteRequest(string? Title, string? Body, string? Symbol);

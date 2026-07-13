@@ -1,7 +1,9 @@
 @page "/quant/tca"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @using System.Net.Http.Json
+@implements IDisposable
 @inject HttpClient Http
+@inject IStringLocalizer<Ui> L
 @inject MudBlazor.ISnackbar Snack
 
 <PageTitle>Quant · Execution Cost (TCA)</PageTitle>
@@ -66,11 +68,17 @@
     private string _fills = "";
     private bool _loading;
     private TcaResult? _result;
+    private readonly CancellationTokenSource _cts = new();
 
     private async Task Analyze()
     {
-        var fills = ParseFills(_fills);
-        if (fills.Count == 0)
+        var parsed = ParseFills(_fills);
+        if (parsed.HasNonPositive)
+        {
+            Snack.Add(L["quant.tca.fill_positive"], Severity.Warning);
+            return;
+        }
+        if (parsed.Fills.Count == 0)
         {
             Snack.Add("Enter at least one fill (price, quantity).", Severity.Warning);
             return;
@@ -81,12 +89,14 @@
         try
         {
             var response = await Http.PostAsJsonAsync("/api/quant/tca",
-                new { ArrivalPrice = _arrival, Side = _side, Fills = fills });
+                new { ArrivalPrice = _arrival, Side = _side, Fills = parsed.Fills }, _cts.Token);
+            if (_cts.IsCancellationRequested) return;
             if (response.IsSuccessStatusCode)
-                _result = await response.Content.ReadFromJsonAsync<TcaResult>();
+                _result = await response.Content.ReadFromJsonAsync<TcaResult>(_cts.Token);
             else
                 Snack.Add("Could not analyze those fills.", Severity.Error);
         }
+        catch (OperationCanceledException) { }
         catch
         {
             Snack.Add("Could not analyze those fills.", Severity.Error);
@@ -97,21 +107,34 @@
         }
     }
 
-    private static List<TcaFill> ParseFills(string text)
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    // Parses "price, quantity" lines. Flags a non-positive price or quantity so the caller can reject the
+    // whole input with a clear validation message rather than silently sending nonsensical fills.
+    private static ParsedFills ParseFills(string text)
     {
         var result = new List<TcaFill>();
-        if (string.IsNullOrWhiteSpace(text)) return result;
+        var hasNonPositive = false;
+        if (string.IsNullOrWhiteSpace(text)) return new ParsedFills(result, false);
         foreach (var line in text.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries))
         {
             var parts = line.Split([',', ' ', '\t', ';'], StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length < 2) continue;
             if (double.TryParse(parts[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var price)
                 && double.TryParse(parts[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var qty))
+            {
+                if (!(price > 0) || !(qty > 0)) { hasNonPositive = true; continue; }
                 result.Add(new TcaFill(price, qty));
+            }
         }
-        return result;
+        return new ParsedFills(result, hasNonPositive);
     }
 
+    private sealed record ParsedFills(List<TcaFill> Fills, bool HasNonPositive);
     private sealed record TcaFill(double Price, double Quantity);
     private sealed record TcaResult(
         double arrivalPrice, double averageFillPrice, double filledQuantity, string side,

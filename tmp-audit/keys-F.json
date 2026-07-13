@@ -1,0 +1,23 @@
+{
+  "common.delete": "Delete",
+  "journal.note.new": "New note",
+  "journal.note.edit": "Edit note",
+  "journal.note.title": "Title",
+  "journal.note.title_required": "A title is required.",
+  "journal.note.symbol": "Symbol (optional)",
+  "journal.note.body": "Notes",
+  "journal.note.delete": "Delete note",
+  "journal.note.delete_confirm": "Delete this journal note? This cannot be undone.",
+  "journal.note.saved": "Note saved.",
+  "journal.note.deleted": "Note deleted.",
+  "journal.note.save_failed": "Could not save that note.",
+  "journal.notes.title": "My notes",
+  "journal.notes.empty": "No notes yet. Add one to reflect on your trading.",
+  "journal.trades.title": "Recent trades",
+  "journal.trades.cbot": "cBot",
+  "journal.trades.symbol": "Symbol",
+  "journal.trades.kind": "Kind",
+  "journal.trades.status": "Status",
+  "quant.execution.quantity_positive": "Total quantity must be greater than zero.",
+  "quant.tca.fill_positive": "Fill price and quantity must be greater than zero."
+}

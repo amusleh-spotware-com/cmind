@@ -1,6 +1,7 @@
 @page "/quant/health"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @using System.Net.Http.Json
+@implements IDisposable
 @inject HttpClient Http
 @inject MudBlazor.ISnackbar Snack
 
@@ -68,6 +69,7 @@
     private string _mode = "returns";
     private bool _loading;
     private HealthResult? _result;
+    private readonly CancellationTokenSource _cts = new();
 
     private async Task Assess()
     {
@@ -83,12 +85,14 @@
         try
         {
             var body = _mode == "equity" ? (object)new { Equity = numbers } : new { Returns = numbers };
-            var response = await Http.PostAsJsonAsync("/api/quant/health", body);
+            var response = await Http.PostAsJsonAsync("/api/quant/health", body, _cts.Token);
+            if (_cts.IsCancellationRequested) return;
             if (response.IsSuccessStatusCode)
-                _result = await response.Content.ReadFromJsonAsync<HealthResult>();
+                _result = await response.Content.ReadFromJsonAsync<HealthResult>(_cts.Token);
             else
                 Snack.Add("Could not assess that series.", Severity.Error);
         }
+        catch (OperationCanceledException) { }
         catch
         {
             Snack.Add("Could not assess that series.", Severity.Error);
@@ -97,6 +101,12 @@
         {
             _loading = false;
         }
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
     }
 
     private static double[] Parse(string text)

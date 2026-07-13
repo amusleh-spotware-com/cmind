@@ -56,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<Core.Domain.ICBotRepository, CBotRepository>();
         services.AddScoped<Core.Domain.IAgentMandateRepository, AgentMandateRepository>();
         services.AddScoped<Core.Domain.IAlertRuleRepository, AlertRuleRepository>();
+        services.AddScoped<Core.Domain.IJournalNoteRepository, JournalNoteRepository>();
         services.AddScoped<Core.Domain.IPropRuleRepository, PropRuleRepository>();
         services.AddScoped<Core.Domain.IPropFirmChallengeRepository, PropFirmChallengeRepository>();
         services.AddScoped<Core.Domain.ILegalDocumentRepository, LegalDocumentRepository>();

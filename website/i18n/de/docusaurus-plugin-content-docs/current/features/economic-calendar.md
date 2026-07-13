@@ -7,11 +7,13 @@ einem Aggregator. Er ist zeitpunktgenau korrekt, bewahrt ≥10 Jahre Geschichte 
 der öffentlichen API, MCP, cBots, AI, Alerts und Backtests verdrahtet. Er ist ein entkoppeltes Modul:
 Er kann mit Null-Effekt auf den Trading-Kern deaktiviert werden.
 
-> **Status.** Die Domain-Kerne (Impact-Modell, Land→Symbol-Mapping, News-Window-Policy,
-> Point-in-Time-Revisionsketten, Two-Tier-Gating) **und** Persistence (das `calendar` Postgres-Schema,
-> die Append-Only-Read-/Write-Seite, der FRED-Connector und der Config-gesteuerte Ingestion-Worker)
-> sind implementiert und getestet (Unit + Testcontainers-Integration). Die JWT-REST-API, die MCP-Tools
-> und die UI landen in den nachfolgenden Rollout-Phasen, die unten beschrieben werden.
+> **Status.** P0–P4 sind implementiert und ausgeliefert. Der Domain-Kern, die Persistence (EF `calendar`-Schema,
+> Append-Only Read/Write, FRED + BLS + Central-Bank-Schedule-Quellen, Config-gesteuerter Ingestion-Worker
+> mit Per-Source-Frische-Tracking), die versionierte JWT-REST-API, die Mobile-First `/economic-calendar`
+> UI, MCP-Tools, cBot-JWT-API, High-Impact-Event-Alerts, Copy-Trade-News-Blackout-Pause,
+> Backtest-Event-Overlay, SSE-Stream, HMAC-signierte Webhooks und der typisierte `CmindCalendarClient`
+> sind alle implementiert und integrationstested. P5-Extras (Surprise-Analytics, iCal/CSV-Export,
+> Keyword-Suche, pluggbarer Konsens) sind die verbleibenden Elemente — siehe die Rollout-Phasen unten.
 
 ## Was ihn anders macht
 

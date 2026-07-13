@@ -7,6 +7,10 @@ sidebar_position: 1
 
 # Selamat datang di cMind 👋
 
+:::warning Perangkat lunak alpha — belum siap produksi
+cMind sedang dalam pengembangan aktif. Harap siap menghadapi ketidaksempurnaan, perubahan yang memutus kompatibilitas antar versi, dan fitur yang masih dalam proses. **Kami membutuhkan penguji komunitas, pelapor bug, dan kontributor awal** untuk membantu membentuknya. Jika Anda menemukan masalah, [laporkan](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml) — umpan balik nyata Anda adalah hal paling berharga yang bisa Anda berikan saat ini.
+:::
+
 Jadi Anda ingin membangun bot trading, membacktest-nya tanpa melelehkan laptop, menjalankannya di
 beberapa mesin, mencerminkan transaksi ke selusin akun, dan membiarkan AI mengawasi risiko saat Anda
 tidur. **Anda berada di tempat yang tepat.**
@@ -29,6 +33,13 @@ server Anda sendiri, di bawah merek Anda sendiri.
 | Menyalin satu akun ke banyak | Pencerminan tangguh dengan resinkronisasi, tanpa transaksi ganda | [Copy trading](./features/copy-trading.md) |
 | Membiarkan AI mengerjakan pekerjaan berat | Pembuatan strategi, perbaikan diri, penjaga risiko, post-mortem | [Inti AI](./features/ai.md) |
 | Tetap dalam aturan prop firm | Pelacakan ekuitas langsung + simulasi aturan tantangan | [Prop firm](./features/prop-firm.md) |
+| Memvalidasi keunggulan backtest | Koreksi overfitting PSR / DSR / t-stat | [Backtest Integrity Lab](./features/backtest-integrity.md) |
+| Memahami kebiasaan trading Anda sendiri | Deteksi kebocoran perilaku + pelatih AI | [Jurnal trading](./features/trading-journal.md) |
+| Melacak peristiwa makro untuk strategi | Kalender point-in-time, news blackout, API cBot | [Kalender ekonomi](./features/economic-calendar.md) |
+| Menilai kekuatan makro mata uang | Prospek AI ke depan untuk semua pasangan | [Kekuatan mata uang](./features/currency-strength.md) |
+| Mengamankan akun dengan 2FA | Aplikasi autentikator TOTP + kode cadangan | [Autentikasi dua faktor](./features/two-factor-auth.md) |
+| Membiarkan pemilik menyetelnya saat runtime | Setiap opsi white-label langsung di Pengaturan → Deployment | [Pengaturan pemilik](./features/white-label-owner-settings.md) |
+| Menjalankannya dalam bahasa apa pun | 23 bahasa termasuk RTL — build gagal jika ada kunci yang hilang | [Lokalisasi](./features/localization.md) |
 | Merilisnya sebagai produk *Anda* | White-label penuh: nama, warna, logo, favicon | [White-label](./features/white-label.md) |
 | Menjalankannya di ponsel Anda | PWA yang dapat dipasang dan mengutamakan seluler | [PWA](./features/pwa.md) |
 | Mengendalikannya dari klien AI | Server MCP bawaan (HTTP + SSE) | [MCP](./features/mcp.md) |

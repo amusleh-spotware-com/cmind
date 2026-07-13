@@ -7,11 +7,13 @@ aggregátoru. Je point-in-time správný, uchovává ≥10 let historie a je pro
 API, MCP, cBots, AI, alertů a backtestů. Je to dekaplový modul: lze ho deaktivovat s
 nulovým dopadem na trading core.
 
-> **Status.** Doménový core (model dopadu, mapování country→symbol, news-window politika, point-in-time
-> revision chains, two-tier gating) **a** persistence (Postgres `calendar` schema, append-only
-> read/write side, FRED konektor a config-gated ingestion worker) jsou implementovány a otestovány
-> (unit + Testcontainers integration). JWT REST API, MCP tools a UI přistávají v následujících
-> rollout fázích popsaných níže.
+> **Status.** P0–P4 jsou implementovány a dodány. Doménový core, persistence (EF `calendar` schema,
+> append-only read/write, zdroje FRED + BLS + central-bank-schedule, config-gated ingestion worker
+> s per-source tracking čerstvosti), verzované JWT REST API, mobile-first `/economic-calendar`
+> UI, MCP tools, cBot JWT API, upozornění na high-impact události, copy-trade news-blackout pauza,
+> backtest event overlay, SSE stream, HMAC-signed webhooks a typovaný `CmindCalendarClient` jsou
+> všechny implementovány a integration-testovány. Extras P5 (surprise analytics, iCal/CSV export,
+> keyword search, pluggable consensus) jsou zbývající položky — viz rollout fáze níže.
 
 ## Co ho dělá jiným
 

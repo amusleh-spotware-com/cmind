@@ -12,11 +12,14 @@ agregatorja. Je točkovno-pravilen, hrani ≥10 let zgodovine in je napeljan v t
 javni API, MCP, cBote, AI, opozorila in backteste. Je decupliran modul: lahko je onemogočen z
 ničelnim učinkom na trgovalno jedro.
 
-> **Status.** Jedro domene (model vpliva, država→simbol preslikava, politika okna novice, točkovno-čas
-> verige revizij, dvoslojna vrata) **in** vztrajnost (shema `calendar` Postgres, append-only
-> branje/pisanje stran, FRED connector in config-gate ingestion worker) sta implementirana in testirana
-> (enote + Testcontainers integracija). JWT REST API, MCP orodja in UI pristanejo v kasnejših
-> fazah opisanih spodaj.
+> **Status.** P0–P4 so implementirani in dostavljeni. Domensko jedro, vztrajnost (shema EF `calendar`,
+> append-only branje/pisanje, viri FRED + BLS + urnik centralne banke, delavec za vnos z nadzorom
+> svežosti per-vir), verzioniran JWT REST API, mobilno usmerjen `/economic-calendar` UI, MCP orodja,
+> cBot JWT API, opozorila za visoko-vplivne dogodke, pavza copy-trade news-blackout, prekrivanje
+> dogodkov backtesta, SSE tok, HMAC-podpisani webhooks in tipiziran `CmindCalendarClient` so vsi
+> implementirani in integracijski testirani. P5 dodatki (analitika presenečenj, iCal/CSV izvoz,
+> iskanje po ključnih besedah, priključljivi konsenz) so preostale postavke — glejte razvojne faze
+> spodaj.
 
 ## Kaj ga ločuje
 

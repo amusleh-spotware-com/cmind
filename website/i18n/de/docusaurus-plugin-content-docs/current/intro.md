@@ -7,6 +7,10 @@ sidebar_position: 1
 
 # Willkommen bei cMind 👋
 
+:::warning Alpha-Software — nicht produktionsreif
+cMind befindet sich in aktiver Entwicklung. Rechnen Sie mit Unfertigkeiten, Breaking Changes zwischen Versionen und noch nicht fertigen Features. **Wir brauchen Community-Tester, Bug-Reporter und frühe Mitwirkende**, die dabei helfen, es zu gestalten. Wenn Sie auf ein Problem stoßen, [melden Sie es](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml) — Ihr Feedback aus der Praxis ist der wertvollste Beitrag, den Sie jetzt leisten können.
+:::
+
 Sie möchten also Trading-Bots bauen, sie backtesten, ohne Ihren Laptop zum Schmelzen zu bringen, sie
 auf mehreren Rechnern laufen lassen, Trades auf ein Dutzend Konten spiegeln und eine KI das Risiko im
 Auge behalten lassen, während Sie schlafen. **Sie sind genau richtig hier.**
@@ -29,6 +33,13 @@ eingebauter KI, auf Ihren eigenen Servern, unter Ihrer eigenen Marke.
 | Ein Konto auf viele kopieren | Robustes Spiegeln mit Resync, keine Doppel-Trades | [Copy-Trading](./features/copy-trading.md) |
 | KI die Fleißarbeit machen lassen | Strategie-Generierung, Selbstreparatur, Risk Guard, Post-mortems | [KI-Kern](./features/ai.md) |
 | Innerhalb der Prop-Firm-Regeln bleiben | Live-Equity-Tracking + Simulation der Challenge-Regeln | [Prop-Firm](./features/prop-firm.md) |
+| Eine Backtest-Edge validieren | PSR / DSR / t-Stat-Überanpassungskorrektur | [Backtest-Integritätslabor](./features/backtest-integrity.md) |
+| Die eigenen Gewohnheiten verstehen | Erkennung von Verhaltensverlusten + KI-Coach | [Handelsjournal](./features/trading-journal.md) |
+| Makro-Ereignisse für eine Strategie verfolgen | Point-in-Time-Kalender, News-Blackout, cBot-API | [Wirtschaftskalender](./features/economic-calendar.md) |
+| Makro-Währungsstärke bewerten | KI-Vorausschau über alle Paare | [Währungsstärke](./features/currency-strength.md) |
+| Konten mit 2FA absichern | TOTP-Authentifikator-App + Backup-Codes | [Zwei-Faktor-Authentifizierung](./features/two-factor-auth.md) |
+| Besitzern erlauben, es zur Laufzeit einzustellen | Jede White-Label-Option live in Einstellungen → Bereitstellung | [Besitzereinstellungen](./features/white-label-owner-settings.md) |
+| Es in jeder Sprache betreiben | 23 Sprachen inkl. RTL — Build schlägt bei fehlendem Schlüssel fehl | [Lokalisierung](./features/localization.md) |
 | Es als *Ihr* Produkt ausliefern | Vollständiges White-Label: Name, Farben, Logo, Favicon | [White-Label](./features/white-label.md) |
 | Es auf Ihrem Handy betreiben | Installierbare, mobile-first PWA | [PWA](./features/pwa.md) |
 | Es von einem KI-Client aus steuern | Eingebauter MCP-Server (HTTP + SSE) | [MCP](./features/mcp.md) |

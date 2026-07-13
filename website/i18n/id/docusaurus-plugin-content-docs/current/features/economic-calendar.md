@@ -3,11 +3,14 @@
 cMind mengirim **sendiri** kalender ekonomi — jadwal release, actuals, forecasts, revisions dan data-driven
 impact model — bersumber dari **primary authorities** (central banks dan national statistical agencies), dengan **zero dependency** pada ForexFactory, FXStreet, Investing.com atau aggregator apa pun. Ini point-in-time correct, menyimpan ≥10 tahun history, dan diwiring ke trading, public API, MCP, cBots, AI, alerts dan backtests. Ini adalah modul yang decoupled: ia dapat dinonaktifkan dengan zero effect pada trading core.
 
-> **Status.** Domain core (impact model, country→symbol mapping, news-window policy, point-in-time
-> revision chains, two-tier gating) **dan** persistence (Postgres `calendar` schema, append-only
-> read/write side, FRED connector dan config-gated ingestion worker) diimplementasikan dan diuji
-> (unit + Testcontainers integration). JWT REST API, MCP tools dan UI mendarat dalam rollout phases berikutnya
-> yang dijelaskan di bawah.
+> **Status.** P0–P4 telah diimplementasikan dan dikirimkan. Domain core, persistence (EF `calendar`
+> schema, append-only read/write, sumber FRED + BLS + jadwal bank sentral, ingestion worker yang
+> dibatasi config dengan pelacakan kesegaran per sumber), JWT REST API berversi, UI mobile-first
+> `/economic-calendar`, MCP tools, cBot JWT API, alert peristiwa berdampak tinggi, jeda
+> copy-trade news-blackout, overlay peristiwa backtest, SSE stream, webhook bertanda tangan HMAC,
+> dan `CmindCalendarClient` berketikan semuanya telah diimplementasikan dan diuji integrasi. Ekstra
+> P5 (analitik kejutan, ekspor iCal/CSV, pencarian kata kunci, konsensus pluggable) adalah item yang
+> tersisa — lihat fase rollout di bawah.
 
 ## Apa yang membuatnya berbeda
 

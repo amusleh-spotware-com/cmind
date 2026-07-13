@@ -10,11 +10,14 @@ nazionali), con **zero dipendenza** da ForexFactory, FXStreet, Investing.com o q
 point-in-time correct, mantiene ≥10 anni di storia, ed è cablato in trading, la public API, MCP, cBots,
 AI, alerts e backtest. È un modulo decoupled: può essere disabilitato con zero effetto sul trading core.
 
-> **Status.** Il domain core (impact model, country→symbol mapping, news-window policy, point-in-time
-> revision chains, two-tier gating) **e** persistence (il `calendar` Postgres schema, l'append-only
-> read/write side, il FRED connector e l'ingestion worker gated da config) sono implementati e testati
-> (unit + Testcontainers integration). La JWT REST API, i tool MCP e l'UI atterrano nelle fasi di rollout
-> successive descritte sotto.
+> **Status.** P0–P4 sono implementati e rilasciati. Il domain core, la persistence (EF `calendar`
+> schema, read/write append-only, sorgenti FRED + BLS + calendar banche centrali, ingestion worker
+> gated da config con tracciamento della freschezza per sorgente), la JWT REST API versionata, l'UI
+> mobile-first `/economic-calendar`, i tool MCP, la cBot JWT API, gli alert per eventi ad alto impatto,
+> la pausa copy-trade news-blackout, l'overlay di eventi backtest, lo stream SSE, i webhook firmati
+> HMAC e il `CmindCalendarClient` tipizzato sono tutti implementati e testati in integrazione. Gli
+> extra P5 (analisi delle sorprese, export iCal/CSV, ricerca per parole chiave, consenso pluggable)
+> sono gli elementi rimanenti — vedi le fasi di rollout sotto.
 
 ## Cosa lo differenzia
 

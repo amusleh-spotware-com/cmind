@@ -11,11 +11,14 @@ aggregator. It is point-in-time correct, keeps ≥10 years of history, and is wi
 public API, MCP, cBots, AI, alerts and backtests. It is a decoupled module: it can be disabled with
 zero effect on the trading core.
 
-> **Status.** The domain core (impact model, country→symbol mapping, news-window policy, point-in-time
-> revision chains, two-tier gating) **and** persistence (the `calendar` Postgres schema, the append-only
-> read/write side, the FRED connector and the config-gated ingestion worker) are implemented and tested
-> (unit + Testcontainers integration). The JWT REST API, the MCP tools and the UI land in the subsequent
-> rollout phases described below.
+> **Estado.** P0–P4 están implementados y entregados. El núcleo del dominio, la persistencia (esquema EF `calendar`,
+> lectura/escritura de solo adición, fuentes FRED + BLS + central-bank-schedule, worker de ingestión
+> gated por config con seguimiento de frescura por fuente), la versioned JWT REST API, la UI
+> `/economic-calendar` mobile-first, las herramientas MCP, la cBot JWT API, alertas de eventos de
+> alto impacto, pausa de copy-trade por news-blackout, overlay de eventos de backtest, stream SSE,
+> webhooks firmados con HMAC y el `CmindCalendarClient` tipado — todos están implementados y
+> probados con integración. Los extras P5 (análisis de sorpresas, exportación iCal/CSV, búsqueda por
+> palabra clave, consenso conectable) son los elementos restantes — ver las fases de despliegue abajo.
 
 ## Qué lo hace diferente
 

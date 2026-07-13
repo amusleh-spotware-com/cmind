@@ -7,11 +7,13 @@ aggregator. It is point-in-time correct, keeps ≥10 years of history, and is wi
 public API, MCP, cBots, AI, alerts and backtests. It is a decoupled module: it can be disabled with
 zero effect on the trading core.
 
-> **Status.** The domain core (impact model, country→symbol mapping, news-window policy, point-in-time
-> revision chains, two-tier gating) **and** persistence (the `calendar` Postgres schema, the append-only
-> read/write side, the FRED connector and the config-gated ingestion worker) are implemented and tested
-> (unit + Testcontainers integration). The JWT REST API, the MCP tools and the UI land in the subsequent
-> rollout phases described below.
+> **Status.** P0–P4 are implemented and shipped. The domain core, persistence (EF `calendar` schema,
+> append-only read/write, FRED + BLS + central-bank-schedule sources, config-gated ingestion worker
+> with per-source freshness tracking), the versioned JWT REST API, the mobile-first `/economic-calendar`
+> UI, MCP tools, cBot JWT API, high-impact event alerts, copy-trade news-blackout pause, backtest
+> event overlay, SSE stream, HMAC-signed webhooks, and the typed `CmindCalendarClient` are all
+> implemented and integration-tested. P5 extras (surprise analytics, iCal/CSV export, keyword search,
+> pluggable consensus) are the remaining items — see the rollout phases below.
 
 ## What makes it different
 

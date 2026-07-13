@@ -1,4 +1,4 @@
----
+﻿---
 description: "cMind поставляет собственный экономический календарь — расписание релизов, фактические значения, прогнозы, пересмотры и модель воздействия на основе данных. Из primary authorities, без зависимости от ForexFactory, FXStreet, Investing.com."
 ---
 
@@ -11,10 +11,7 @@ data-driven модель воздействия — из **primary authorities**
 публичному API, MCP, cBots, AI, алертам и бэктестам. Это decoupled module: может быть выключен без
 влияния на trading core.
 
-> **Status.** Доменное ядро (модель воздействия, country→symbol mapping, политика news-window,
-> point-in-time цепочки пересмотров, two-tier gating) **и** persistence (схема `calendar` Postgres,
-> append-only read/write side, FRED connector и config-gated ingestion worker) реализованы и протестированы
-> (unit + Testcontainers integration). JWT REST API, MCP tools и UI приходят в последующих фазах.
+> **Status.** P0–P4 реализованы и выпущены. Доменное ядро, persistence (EF схема `calendar`, append-only read/write, источники FRED + BLS + central-bank-schedule, config-gated ingestion worker с per-source freshness tracking), versioned JWT REST API, mobile-first UI `/economic-calendar`, MCP tools, cBot JWT API, алерты high-impact событий, copy-trade news-blackout pause, backtest event overlay, SSE stream, HMAC-signed webhooks и типизированный `CmindCalendarClient` — всё реализовано и integration-tested. P5 extras (surprise analytics, iCal/CSV export, keyword search, pluggable consensus) — оставшиеся пункты, см. фазы rollout ниже.
 
 ## Чем это отличается
 

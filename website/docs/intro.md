@@ -7,6 +7,12 @@ sidebar_position: 1
 
 # Welcome to cMind 👋
 
+:::warning Alpha software — not production-ready
+cMind is under active development. Expect rough edges, breaking changes between versions, and features
+still in progress. **We need community testers, bug reporters, and early contributors** to help shape
+it. If you hit a problem, [report it](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml) — your real-world feedback is the most valuable thing you can contribute right now.
+:::
+
 So you want to build trading bots, backtest them without melting your laptop, run them across a
 few machines, mirror trades onto a dozen accounts, and have an AI keep an eye on the risk while
 you sleep. **You&apos;re in exactly the right place.**
@@ -29,7 +35,14 @@ servers, under your own brand.
 | Copy one account onto many | Robust mirroring with resync, not double-trades | [Copy trading](./features/copy-trading.md) |
 | Let AI do the grunt work | Strategy gen, self-repair, risk guard, post-mortems | [AI core](./features/ai.md) |
 | Stay inside prop-firm rules | Live equity tracking + challenge rule simulation | [Prop-firm](./features/prop-firm.md) |
+| Validate a backtest edge | PSR / DSR / t-stat overfitting correction | [Backtest Integrity Lab](./features/backtest-integrity.md) |
+| Understand your own habits | Behavioural leak detection + AI coach | [Trading Journal](./features/trading-journal.md) |
+| Track macro events for a strategy | Point-in-time calendar, news blackout, cBot API | [Economic calendar](./features/economic-calendar.md) |
+| Score currency macro strength | AI forward outlook across all pairs | [Currency strength](./features/currency-strength.md) |
+| Secure accounts with 2FA | TOTP authenticator app + backup codes | [Two-factor auth](./features/two-factor-auth.md) |
 | Ship it as *your* product | Full white-label: name, colors, logo, favicon | [White-label](./features/white-label.md) |
+| Let owners tune it at runtime | Every white-label option live in Settings → Deployment | [Owner settings](./features/white-label-owner-settings.md) |
+| Run it in any language | 23 languages incl. RTL — build fails on missing key | [Localization](./features/localization.md) |
 | Run it on your phone | Installable, mobile-first PWA | [PWA](./features/pwa.md) |
 | Drive it from an AI client | Built-in MCP server (HTTP + SSE) | [MCP](./features/mcp.md) |
 

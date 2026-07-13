@@ -7,11 +7,14 @@ agregátore. Je bod-v-čase správny, udržiava ≥10 roky histórie a je zapoje
 API, MCP, cBots, AI, upozornenia a backtesty. Je to oddelený modul: môže byť zakázaný s
 nula efekt na obchodné jadro.
 
-> **Stav.** Doménové jadro (impact model, krajina→symbol mapovanie, news-window politika, point-in-time
-> reviduje reťazce, dvoj-tier gating) **a** persistence (schéma `calendar` Postgres, append-only
-> čítať/napísať stranu, FRED konektor a config-gated ingestion worker) sú implementované a testované
-> (jednotka + Testcontainers integrácia). JWT REST API, MCP nástroje a UI doLanding v nasledujúcom
-> rollout fázy opísané nižšie.
+> **Stav.** P0–P4 sú implementované a dodané. Doménové jadro, persistence (schéma EF `calendar`,
+> append-only čítanie/zápis, zdroje FRED + BLS + harmonogram centrálnych bánk, ingestion worker
+> gatingovaný konfiguráciou so sledovaním čerstvosti per-zdroj), verzovaný JWT REST API, mobilne
+> orientované `/economic-calendar` UI, MCP nástroje, cBot JWT API, upozornenia na vysokovplyvné udalosti,
+> pauza copy-trade news-blackout, overlay udalostí backtestu, SSE stream, HMAC-podpísané webhooky a
+> typovaný `CmindCalendarClient` sú všetky implementované a integračne testované. Extras P5 (analytika
+> prekvapení, iCal/CSV export, hľadanie kľúčových slov, zapojiteľný konsenzus) sú zostávajúce položky —
+> pozrite si fázy zavádzania nižšie.
 
 ## Čo ho robí iným
 

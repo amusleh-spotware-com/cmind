@@ -1,4 +1,4 @@
-# Calendario economico
+﻿# Calendario economico
 
 cMind ships seu **proprio** calendario economico — agenda de releases, atuals, previsoes, revisoes e um
 modelo de impacto baseado em dados — originado de **autoridades primarias** (bancos centrais e agencias
@@ -7,9 +7,7 @@ agregador. E ponto-no-tempo correto, mantem >= 10 anos de historico, e conectado
 publica, MCP, cBots, AI, alertas e backtests. E um modulo desacoplado: pode ser desabilitado com
 zero efeito no nucleo de trading.
 
-> **Status.** O nucleo de dominio (modelo de impacto, mapeamento pais→simbolo, politica de janela de noticias, cadeias de revisao ponto-no-tempo em duas camadas) **e** persistencia (o schema Postgres `calendar`, o lado append-only de leitura/escrita, o conector FRED e o worker de ingestao controlado por config) estao implementados e testados
-> (unidade + integracao Testcontainers). A JWT REST API, as ferramentas MCP e a UI aterrizam nas
-> fases subsequentes descritas abaixo.
+> **Status.** P0–P4 estão implementados e entregues. O núcleo de domínio, persistência (schema EF `calendar`, append-only leitura/escrita, fontes FRED + BLS + agenda-banco-central, worker de ingestão controlado por configuração com rastreamento de frescor por fonte), a JWT REST API versionada, a UI mobile-first `/economic-calendar`, ferramentas MCP, API JWT cBot, alertas de eventos de alto impacto, pausa de bloqueio de notícias de copy-trade, overlay de eventos de backtest, stream SSE, webhooks assinados com HMAC e o `CmindCalendarClient` tipado estão todos implementados e testados em integração. Os extras P5 (análise de surpresas, exportação iCal/CSV, pesquisa por palavra-chave, consenso conectável) são os itens restantes — veja as fases de rollout abaixo.
 
 ## O que o diferencia
 

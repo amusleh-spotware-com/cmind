@@ -7,11 +7,14 @@ aggregator ใดๆ มัน point-in-time correct, เก็บ ≥10 ปี 
 public API, MCP, cBots, AI, alerts และ backtests มันเป็น decoupled module: สามารถ
 disable ได้โดยไม่มีผลกระทบต่อ trading core
 
-> **สถานะ.** Domain core (impact model, country→symbol mapping, news-window policy,
-> point-in-time revision chains, two-tier gating) **และ** persistence (calendar Postgres schema,
-> append-only read/write side, FRED connector และ config-gated ingestion worker) ถูก implement
-> และ test แล้ว (unit + Testcontainers integration) JWT REST API, MCP tools และ UI
-> มาถึงใน phases ถัดไปที่อธิบายด้านล่าง
+> **สถานะ.** P0–P4 ถูก implement และ ship แล้ว Domain core, persistence (EF `calendar` schema,
+> append-only read/write, แหล่งข้อมูล FRED + BLS + ตารางเวลาธนาคารกลาง, ingestion worker
+> ที่ควบคุมโดย config พร้อมติดตามความสดใหม่ per-source), JWT REST API ที่มีเวอร์ชัน, UI
+> `/economic-calendar` แบบ mobile-first, MCP tools, cBot JWT API, การแจ้งเตือนเหตุการณ์
+> ผลกระทบสูง, การหยุดชั่วคราว copy-trade news-blackout, backtest event overlay, SSE stream,
+> HMAC-signed webhooks และ `CmindCalendarClient` แบบ typed ทั้งหมดถูก implement และ
+> integration-tested แล้ว P5 extras (surprise analytics, iCal/CSV export, keyword search,
+> pluggable consensus) เป็นรายการที่เหลืออยู่ — ดู rollout phases ด้านล่าง
 
 ## อะไรทำให้มันแตกต่าง
 

@@ -7,6 +7,15 @@ sidebar_position: 1
 
 # cMind'e hoş geldiniz 👋
 
+:::warning Alfa yazılım — üretime hazır değil
+cMind aktif geliştirme aşamasındadır. Kaba kenarlar, sürümler arası kırıcı değişiklikler ve hâlâ
+geliştirilmekte olan özellikler bekleyin. **Topluluğu şekillendirmemize yardımcı olacak topluluk
+test edicileri, hata raporlayıcıları ve erken katkıda bulunanlar arıyoruz.** Bir sorunla
+karşılaşırsanız,
+[bildirin](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml) —
+gerçek dünya geri bildiriminiz şu anda katkıda bulunabileceğiniz en değerli şeydir.
+:::
+
 Yani ticaret botları oluşturmak, dizüstü bilgisayarınızı eritmeden geriye dönük test etmek, bunları
 birkaç makinede çalıştırmak, işlemleri bir düzine hesaba yansıtmak ve siz uyurken bir yapay zekânın
 riski gözetmesini istiyorsunuz. **Tam da doğru yerdesiniz.**
@@ -30,6 +39,13 @@ oluşturun → geriye dönük test edin → çalıştırın → kopyalayın.
 | Bir hesabı birçoğuna kopyalamak | Yeniden eşitlemeli sağlam yansıtma, çift işlem yok | [Kopya işlem](./features/copy-trading.md) |
 | Ağır işi yapay zekâya bırakmak | Strateji üretimi, kendi kendini onarma, risk muhafızı, olay sonrası analiz | [Yapay zekâ çekirdeği](./features/ai.md) |
 | Prop firma kurallarında kalmak | Canlı öz sermaye takibi + meydan okuma kuralı simülasyonu | [Prop firma](./features/prop-firm.md) |
+| Backtest avantajını doğrulamak | PSR / DSR / t-istat aşırı uyum düzeltmesi | [Backtest Bütünlük Laboratuvarı](./features/backtest-integrity.md) |
+| Kendi alışkanlıklarını anlamak | Davranışsal sızıntı tespiti + yapay zekâ koçu | [İşlem günlüğü](./features/trading-journal.md) |
+| Bir strateji için makro olayları takip etmek | Zaman içinde doğru takvim, haber engeli, cBot API | [Ekonomik takvim](./features/economic-calendar.md) |
+| Para birimi makro gücünü puanlamak | Tüm pariteler için yapay zekâ ileriye dönük görünüm | [Para birimi gücü](./features/currency-strength.md) |
+| Hesapları 2FA ile güvence altına almak | TOTP kimlik doğrulama uygulaması + yedek kodlar | [İki faktörlü kimlik doğrulama](./features/two-factor-auth.md) |
+| Sahiplerin çalışma zamanında ayarlamasına izin vermek | Her beyaz etiket seçeneği Ayarlar → Dağıtım'da canlı | [Sahip ayarları](./features/white-label-owner-settings.md) |
+| Herhangi bir dilde çalıştırmak | RTL dahil 23 dil — eksik anahtar olduğunda derleme başarısız | [Yerelleştirme](./features/localization.md) |
 | Onu *sizin* ürününüz olarak sunmak | Tam beyaz etiket: ad, renkler, logo, favicon | [Beyaz etiket](./features/white-label.md) |
 | Telefonunuzda çalıştırmak | Kurulabilir, mobil öncelikli PWA | [PWA](./features/pwa.md) |
 | Bir yapay zekâ istemcisinden sürmek | Yerleşik MCP sunucusu (HTTP + SSE) | [MCP](./features/mcp.md) |

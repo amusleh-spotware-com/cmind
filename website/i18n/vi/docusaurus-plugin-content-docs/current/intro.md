@@ -7,6 +7,15 @@ sidebar_position: 1
 
 # Chào mừng đến với cMind 👋
 
+:::warning Phần mềm alpha — chưa sẵn sàng cho môi trường sản xuất
+cMind đang trong quá trình phát triển tích cực. Hãy chuẩn bị cho những vấn đề chưa hoàn thiện,
+các thay đổi không tương thích giữa các phiên bản, và các tính năng vẫn đang được xây dựng.
+**Chúng tôi cần những người kiểm thử cộng đồng, người báo lỗi, và những người đóng góp sớm** để giúp
+định hình nó. Nếu gặp sự cố,
+[hãy báo cáo](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml) —
+phản hồi thực tế của bạn là thứ quý giá nhất bạn có thể đóng góp lúc này.
+:::
+
 Vậy là bạn muốn xây bot giao dịch, backtest chúng mà không làm chảy laptop, chạy chúng trên vài máy,
 sao chép giao dịch sang cả chục tài khoản, và để AI trông chừng rủi ro trong khi bạn ngủ. **Bạn đang ở
 đúng nơi rồi.**
@@ -29,6 +38,13 @@ máy chủ của riêng bạn, dưới thương hiệu của riêng bạn.
 | Sao chép một tài khoản sang nhiều | Sao chép mạnh mẽ có đồng bộ lại, không giao dịch trùng | [Sao chép giao dịch](./features/copy-trading.md) |
 | Để AI làm việc nặng | Tạo chiến lược, tự sửa lỗi, hộ vệ rủi ro, phân tích sau sự cố | [Lõi AI](./features/ai.md) |
 | Tuân thủ luật prop firm | Theo dõi vốn chủ sở hữu trực tiếp + mô phỏng luật thử thách | [Prop firm](./features/prop-firm.md) |
+| Xác thực lợi thế backtest | PSR / DSR / hiệu chỉnh overfitting t-stat | [Backtest Integrity Lab](./features/backtest-integrity.md) |
+| Hiểu thói quen của bản thân | Phát hiện rò rỉ hành vi + AI huấn luyện viên | [Nhật ký giao dịch](./features/trading-journal.md) |
+| Theo dõi sự kiện vĩ mô cho chiến lược | Lịch point-in-time, chặn tin tức, API cho cBot | [Lịch kinh tế](./features/economic-calendar.md) |
+| Chấm điểm sức mạnh vĩ mô tiền tệ | Triển vọng AI cho tất cả các cặp | [Sức mạnh tiền tệ](./features/currency-strength.md) |
+| Bảo mật tài khoản bằng 2FA | Ứng dụng xác thực TOTP + mã dự phòng | [Xác thực hai yếu tố](./features/two-factor-auth.md) |
+| Cho phép chủ sở hữu điều chỉnh lúc chạy | Mọi tùy chọn white-label trực tiếp trong Cài đặt → Triển khai | [Cài đặt chủ sở hữu](./features/white-label-owner-settings.md) |
+| Chạy bằng bất kỳ ngôn ngữ nào | 23 ngôn ngữ bao gồm RTL — build thất bại nếu thiếu key | [Bản địa hóa](./features/localization.md) |
 | Phát hành như sản phẩm *của bạn* | White-label đầy đủ: tên, màu sắc, logo, favicon | [White-label](./features/white-label.md) |
 | Chạy nó trên điện thoại | PWA cài đặt được, ưu tiên di động | [PWA](./features/pwa.md) |
 | Điều khiển từ một client AI | Máy chủ MCP tích hợp (HTTP + SSE) | [MCP](./features/mcp.md) |

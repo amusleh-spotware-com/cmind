@@ -7,6 +7,10 @@ sidebar_position: 1
 
 # Bienvenido a cMind 👋
 
+:::warning Software en fase Alfa — no está listo para producción
+cMind está en desarrollo activo. Espera aristas sin pulir, cambios que rompen la compatibilidad entre versiones y funciones todavía en progreso. **Necesitamos testers de la comunidad, reportadores de bugs y colaboradores tempranos** que ayuden a darle forma. Si te encuentras un problema, [repórtalo](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml) — tus comentarios del mundo real son lo más valioso que puedes aportar ahora mismo.
+:::
+
 Así que quieres crear bots de trading, hacerles backtesting sin fundir tu portátil, ejecutarlos en
 varias máquinas, replicar operaciones en una docena de cuentas y que una IA vigile el riesgo mientras
 duermes. **Estás justo en el lugar correcto.**
@@ -30,6 +34,13 @@ servidores y bajo tu propia marca.
 | Copiar una cuenta en muchas | Replicación robusta con resincronización, sin operaciones duplicadas | [Copy trading](./features/copy-trading.md) |
 | Que la IA haga el trabajo pesado | Generación de estrategias, autorreparación, guardián de riesgo, análisis posmortem | [Núcleo de IA](./features/ai.md) |
 | Cumplir las reglas de la prop firm | Seguimiento de equidad en vivo + simulación de reglas de desafío | [Prop-firm](./features/prop-firm.md) |
+| Validar un edge de backtest | Corrección de sobreajuste PSR / DSR / t-stat | [Laboratorio de integridad de backtest](./features/backtest-integrity.md) |
+| Entender tus propios hábitos | Detección de fugas de comportamiento + coach de IA | [Diario de trading](./features/trading-journal.md) |
+| Seguir eventos macro para una estrategia | Calendario punto-en-tiempo, bloqueo de noticias, API cBot | [Calendario económico](./features/economic-calendar.md) |
+| Puntuar la fortaleza macro de divisas | Perspectiva de IA sobre todos los pares | [Fortaleza de divisas](./features/currency-strength.md) |
+| Asegurar cuentas con 2FA | App autenticadora TOTP + códigos de respaldo | [Autenticación de dos factores](./features/two-factor-auth.md) |
+| Permitir a los propietarios ajustarlo en tiempo de ejecución | Cada opción de marca blanca en vivo en Ajustes → Despliegue | [Ajustes del propietario](./features/white-label-owner-settings.md) |
+| Ejecutarlo en cualquier idioma | 23 idiomas incl. RTL — el build falla si falta una clave | [Localización](./features/localization.md) |
 | Lanzarlo como *tu* producto | Marca blanca completa: nombre, colores, logotipo, favicon | [Marca blanca](./features/white-label.md) |
 | Ejecutarlo en tu teléfono | PWA instalable y adaptada a móviles | [PWA](./features/pwa.md) |
 | Controlarlo desde un cliente de IA | Servidor MCP integrado (HTTP + SSE) | [MCP](./features/mcp.md) |

@@ -7,6 +7,10 @@ sidebar_position: 1
 
 # Vítejte v cMind 👋
 
+:::warning Alfa software — není připraven na produkci
+cMind je v aktivním vývoji. Očekávejte hrubé hrany, nefungující změny mezi verzemi a funkce stále ve vývoji. **Potřebujeme komunitní testery, reportéry chyb a časné přispěvatele**, kteří pomohou ho formovat. Pokud narazíte na problém, [nahlaste ho](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml) — vaše zpětná vazba z reálného světa je nejcennější věc, kterou můžete právě teď přispět.
+:::
+
 Takže chcete stavět obchodní boty, backtestovat je, aniž byste roztavili notebook, spouštět je na
 několika strojích, zrcadlit obchody na tucet účtů a nechat AI hlídat riziko, zatímco spíte. **Jste
 přesně na správném místě.**
@@ -29,6 +33,13 @@ vlastních serverech a pod vlastní značkou.
 | Kopírovat jeden účet na mnoho | Robustní zrcadlení s resynchronizací, bez zdvojených obchodů | [Kopírování obchodů](./features/copy-trading.md) |
 | Nechat AI dělat dřinu | Generování strategií, samooprava, hlídač rizika, rozbory | [Jádro AI](./features/ai.md) |
 | Držet se pravidel prop firmy | Sledování equity v reálném čase + simulace pravidel challenge | [Prop firma](./features/prop-firm.md) |
+| Ověřit výhodu backtestů | Korekce PSR / DSR / t-stat pro přeučení | [Laboratoř integrity backtestů](./features/backtest-integrity.md) |
+| Porozumět vlastním zvyklostem | Detekce behaviorálních úniků + AI kouč | [Obchodní deník](./features/trading-journal.md) |
+| Sledovat makro události pro strategii | Point-in-time kalendář, news blackout, cBot API | [Ekonomický kalendář](./features/economic-calendar.md) |
+| Ohodnotit makro sílu měn | AI výhled na všechny páry | [Síla měn](./features/currency-strength.md) |
+| Zabezpečit účty pomocí 2FA | Aplikace autentizátoru TOTP + záložní kódy | [Dvoufaktorové ověřování](./features/two-factor-auth.md) |
+| Nechat vlastníky ladit za běhu | Každá white-label možnost živě v Nastavení → Nasazení | [Nastavení vlastníka](./features/white-label-owner-settings.md) |
+| Provozovat v libovolném jazyce | 23 jazyků včetně RTL — build selže při chybějícím klíči | [Lokalizace](./features/localization.md) |
 | Vydat to jako *váš* produkt | Kompletní white-label: název, barvy, logo, favicon | [White-label](./features/white-label.md) |
 | Provozovat to na telefonu | Instalovatelná, mobilně orientovaná PWA | [PWA](./features/pwa.md) |
 | Řídit to z AI klienta | Zabudovaný MCP server (HTTP + SSE) | [MCP](./features/mcp.md) |

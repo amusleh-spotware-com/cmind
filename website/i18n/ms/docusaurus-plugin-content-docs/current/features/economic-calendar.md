@@ -1,4 +1,4 @@
----
+﻿---
 description: "cMind kapal dengan kalendar ekonomi sendiri — jadual pelepasan, pencapaian sebenar, ramalan, pindaan dan model impak berdasarkan data — diperolehi dari autoriti utama (bank pusat dan agensi statistik nasional), dengan ketergantungan sifar…"
 ---
 
@@ -10,11 +10,7 @@ dengan **ketergantungan sifar** pada ForexFactory, FXStreet, Investing.com atau 
 mengikut masa, menyimpan ≥10 tahun sejarah, dan disambungkan ke perdagangan, API awam, MCP, cBots, AI,
 makluman dan backtest. Ia ialah modul terpisah: ia boleh dilumpuhkan dengan kesan sifar pada teras perdagangan.
 
-> **Status.** Teras domain (model impak, pemetaan negara→simbol, dasar tetingkap berita, rantai pindaan
-> tepat-masa, gerbang dua-tingkat) **dan** berterusan (skema Postgres `calendar`, sisi baca/tulis append-only,
-> penyambung FRED dan pekerja pengambilan yang gerbang konfigurasi) dilaksanakan dan diuji (unit +
-> integration Testcontainers). API REST JWT, alat MCP dan UI sampai dalam fasa pengeluaran seterusnya
-> yang diterangkan di bawah.
+> **Status.** P0–P4 telah dilaksanakan dan dihantar. Teras domain, berterusan (skema EF `calendar`, append-only baca/tulis, sumber FRED + BLS + jadual-bank-pusat, pekerja pengambilan dengan penjejakan kesegaran setiap sumber yang gerbang konfigurasi), API REST JWT berversi, UI `/economic-calendar` mengutamakan mudah alih, alat MCP, API JWT cBot, makluman peristiwa berimpak tinggi, jeda pemadaman berita salin-dagangan, hamparan peristiwa backtest, strim SSE, webhook bertanda HMAC, dan `CmindCalendarClient` yang ditaip semuanya dilaksanakan dan diuji integrasi. P5 tambahan (analitik kejutan, eksport iCal/CSV, carian kata kunci, konsensus pluggable) adalah item yang tinggal — lihat fasa pengeluaran di bawah.
 
 ## Apa yang membezakannya
 

@@ -7,11 +7,14 @@ aggregator nào. Nó point-in-time correct, giữ ≥10 years of history, và đ
 API, MCP, cBots, AI, alerts và backtests. Nó là một decoupled module: có thể disabled với
 zero effect on trading core.
 
-> **Status.** Domain core (impact model, country→symbol mapping, news-window policy, point-in-time
-> revision chains, two-tier gating) **and** persistence (the `calendar` Postgres schema, append-only
-> read/write side, FRED connector và config-gated ingestion worker) được implement và tested
-> (unit + Testcontainers integration). JWT REST API, MCP tools và UI land in subsequent
-> rollout phases described below.
+> **Status.** P0–P4 đã được implement và ship. Domain core, persistence (EF `calendar` schema,
+> append-only read/write, nguồn FRED + BLS + lịch ngân hàng trung ương, ingestion worker
+> được kiểm soát bởi config với theo dõi độ tươi mới per-source), JWT REST API có phiên bản,
+> UI `/economic-calendar` ưu tiên di động, MCP tools, cBot JWT API, cảnh báo sự kiện
+> tác động cao, tạm dừng copy-trade news-blackout, backtest event overlay, SSE stream,
+> HMAC-signed webhooks, và `CmindCalendarClient` có kiểu dữ liệu — tất cả đã được implement
+> và integration-tested. P5 extras (surprise analytics, xuất iCal/CSV, tìm kiếm từ khóa,
+> pluggable consensus) là các mục còn lại — xem các giai đoạn triển khai bên dưới.
 
 ## What makes it different
 

@@ -2,7 +2,14 @@
 
 A cMind a saját **gazdasági naptárát** szállítja — közzétételi ütemterv, tényadatok, előrejelzések, revíziók és egy adatvezérelt hatásmodell — **elsődleges hatóságokból** (központi bankok és nemzeti statisztikai ügynökségek) forrásolva, **nulla függőséggel** a ForexFactory, FXStreet, Investing.com vagy bármely aggregator felé. Pont-időben helyes, ≥10 év történetet tart, és csatlakoztatva van a kereskedéshez, a nyilvános API-hoz, MCP-hez, cBot-okhoz, AI-hoz, riasztásokhoz és backtesztekhez. Decentralizált modul: letiltható nulla hatással a kereskedési magra.
 
-> **Állapot.** A domain mag (hatásmodell, country→symbol mapping, news-window politika, point-in-time revision chains, két-szintű gating) **és** a perzisztencia (a `calendar` Postgres séma, az append-only olvasási/írási oldal, a FRED connector és a config-kapuzott ingestion worker) implementálva és tesztelve van (egység + Testcontainers integráció). A JWT REST API, az MCP eszközök és az UI a lent leírt későbbi rollout fázisokban landolnak.
+> **Állapot.** P0–P4 implementálva és szállítva. A domain mag, a perzisztencia (EF `calendar` séma,
+> append-only olvasás/írás, FRED + BLS + központi bank-menetrend források, config-kapuzott ingestion
+> worker forrás szerinti frissesség-követéssel), a verziózott JWT REST API, a mobilközpontú
+> `/economic-calendar` UI, az MCP eszközök, a cBot JWT API, a nagy hatású esemény riasztások,
+> a copy-trade news-blackout szünet, a backteszt esemény overlay, az SSE stream, a HMAC-aláírt
+> webhookok és a típusos `CmindCalendarClient` mind implementálva és integrációs tesztekkel ellenőrizve.
+> A P5 extrák (meglepetés-elemzés, iCal/CSV export, kulcsszavas keresés, pluggable konszenzus) a
+> maradék elemek — lásd az alábbi rollout fázisokat.
 
 ## Mi különbözteti meg
 

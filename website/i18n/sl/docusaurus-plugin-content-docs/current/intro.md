@@ -7,6 +7,14 @@ sidebar_position: 1
 
 # Dobrodošli v cMind 👋
 
+:::warning Alfa programska oprema — ni primerna za produkcijo
+cMind je v aktivnem razvoju. Pričakujte grobe robove, prelomne spremembe med različicami in funkcije,
+ki so še v razvoju. **Potrebujemo skupnostne testerje, poročevalce napak in zgodnje sodelavce**, ki
+nam pomagajo oblikovati ga. Če naletite na težavo,
+[jo prijavite](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml) —
+vaše resnično povratne informacije so najpomembnejša stvar, ki jo lahko prispevate zdaj.
+:::
+
 Torej želite graditi trgovalne bote, jih testirati za nazaj, ne da bi pri tem stopili prenosnik, jih
 poganjati na več računalnikih, zrcaliti posle na ducat računov in pustiti, da UI pazi na tveganje,
 medtem ko spite. **Ste točno na pravem mestu.**
@@ -30,6 +38,13 @@ vgrajenim UI, na svojih strežnikih in pod svojo znamko.
 | Kopirati en račun na mnoge | Robustno zrcaljenje z resinhronizacijo, brez podvojenih poslov | [Kopiranje trgovanja](./features/copy-trading.md) |
 | Prepustiti UI zamudno delo | Generiranje strategij, samopopravilo, varuh tveganja, obdukcije | [Jedro UI](./features/ai.md) |
 | Ostati znotraj pravil prop podjetja | Sledenje lastniškega kapitala v živo + simulacija pravil izziva | [Prop podjetje](./features/prop-firm.md) |
+| Potrditi prednost backtesta | PSR / DSR / korekcija prileganja t-statistike | [Laboratorij integritete backtesta](./features/backtest-integrity.md) |
+| Razumeti lastne navade | Zaznavanje vedenjskih uhajanj + AI trener | [Trgovalni dnevnik](./features/trading-journal.md) |
+| Slediti makro dogodkom za strategijo | Točkovno-pravilen koledar, blokada novic, API za cBot | [Ekonomski koledar](./features/economic-calendar.md) |
+| Oceniti makro moč valut | Napoved AI za vse pare | [Moč valut](./features/currency-strength.md) |
+| Zaščititi račune z 2FA | Aplikacija za preverjanje TOTP + varnostne kode | [Dvofaktorska avtentikacija](./features/two-factor-auth.md) |
+| Lastniki nastavijo ob izvajanju | Vsaka možnost bele znamke v živo v Nastavitve → Namestitev | [Nastavitve lastnika](./features/white-label-owner-settings.md) |
+| Zagnati v katerem koli jeziku | 23 jezikov vključno z RTL — gradnja ne uspe ob manjkajočem ključu | [Lokalizacija](./features/localization.md) |
 | Ga izdati kot *svoj* izdelek | Popolna bela znamka: ime, barve, logotip, favicon | [Bela znamka](./features/white-label.md) |
 | Ga poganjati na telefonu | Namestljiva, mobilnikom prijazna PWA | [PWA](./features/pwa.md) |
 | Ga upravljati iz UI odjemalca | Vgrajeni strežnik MCP (HTTP + SSE) | [MCP](./features/mcp.md) |

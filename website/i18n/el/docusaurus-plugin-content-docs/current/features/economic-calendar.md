@@ -12,11 +12,13 @@ Investing.com ή οποιονδήποτε aggregator. Είναι point-in-time c
 alerts και τα backtests. Είναι μια αποσυνδεδεμένη μονάδα: μπορεί να απενεργοποιηθεί με μηδενική
 επίδραση στον trading core.
 
-> **Κατάσταση.** Ο domain core (impact model, country→symbol mapping, news-window policy,
-> point-in-time revision chains, two-tier gating) **και** η persistence (το `calendar` Postgres
-> schema, το append-only read/write side, ο FRED connector και ο config-gated ingestion worker)
-> είναι υλοποιημένα και tested (unit + Testcontainers integration). Το JWT REST API, τα MCP
-> tools και το UI προσγειώνονται στις επόμενες φάσεις rollout που περιγράφονται παρακάτω.
+> **Κατάσταση.** Το P0–P4 είναι υλοποιημένο και παραδοθεί. Ο domain core, η persistence (EF `calendar` schema,
+> append-only read/write, πηγές FRED + BLS + central-bank-schedule, config-gated ingestion worker
+> με per-source freshness tracking), το versioned JWT REST API, το mobile-first `/economic-calendar`
+> UI, τα MCP tools, το cBot JWT API, τα high-impact event alerts, η copy-trade news-blackout παύση,
+> το backtest event overlay, το SSE stream, τα HMAC-signed webhooks και ο typed `CmindCalendarClient`
+> είναι όλα υλοποιημένα και integration-tested. Τα extras P5 (surprise analytics, iCal/CSV export,
+> keyword search, pluggable consensus) είναι τα υπόλοιπα στοιχεία — δείτε τις φάσεις rollout παρακάτω.
 
 ## Τι το κάνει διαφορετικό
 

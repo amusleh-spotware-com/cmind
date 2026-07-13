@@ -4,6 +4,14 @@
 
 <h1 align="center">cMind</h1>
 
+> [!WARNING]
+> **Alpha software — not production-ready.** cMind is under active development. Expect rough edges,
+> breaking changes between versions, and features still in progress. **We need community testers, bug
+> reporters, and early contributors** to help shape it into a production-grade platform. If you run
+> it and hit a problem, please [report it](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml)
+> — your real-world feedback is what turns alpha into stable. PRs, testing on demo accounts, and
+> honest issue reports are the most valuable things you can contribute right now. → **[Start here](CONTRIBUTING.md)**
+
 > [!CAUTION]
 > **Risk Warning — Trading involves substantial risk of loss.**
 > Trading foreign exchange (Forex) and Contracts for Difference (CFDs) on margin carries a high level
@@ -38,6 +46,7 @@
   <a href="https://github.com/amusleh-spotware-com/cmind/actions/workflows/ci.yml"><img src="https://github.com/amusleh-spotware-com/cmind/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
   <a href="https://github.com/amusleh-spotware-com/cmind/actions/workflows/codeql.yml"><img src="https://github.com/amusleh-spotware-com/cmind/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT"/></a>
+  <img src="https://img.shields.io/badge/alpha-not%20production%20ready-orange.svg" alt="Alpha"/>
   <img src="https://img.shields.io/badge/.NET-10-512BD4.svg?logo=dotnet&logoColor=white" alt=".NET 10"/>
   <img src="https://img.shields.io/badge/Blazor-MudBlazor-512BD4.svg?logo=blazor&logoColor=white" alt="Blazor"/>
   <img src="https://img.shields.io/badge/PostgreSQL-EF%20Core-4169E1.svg?logo=postgresql&logoColor=white" alt="PostgreSQL"/>
@@ -92,15 +101,20 @@
 
 | | |
 |---|---|
-| 🤖 **AI that does the work** | Plain-English prompt → runnable cBot via a generate → build → self-repair loop. Code review, strategy debate, market sentiment, exposure check, portfolio digest, tune advisor, and a background **risk guard** that can auto-stop bots. |
+| 🤖 **AI that does the work** | Plain-English prompt → runnable cBot via a generate → build → self-repair loop. Code review, strategy debate, market sentiment, exposure check, portfolio digest, tune advisor, and a background **risk guard** that can auto-stop bots. Provider-agnostic: Anthropic, OpenAI, Azure, Gemini, Ollama, or the built-in on-device ONNX model (default-on, no key needed). |
 | 🔁 **Copy trading, money-grade** | Mirror one master onto many accounts across brokers &amp; cTrader IDs — per-destination sizing, direction, symbols, order types (market / range / limit / stop / stop-limit), SL/TP, expiry, exact slippage. Reconciles through drops, rejections &amp; token rotation without duplicating trades. |
 | 🧠 **Build &amp; backtest cBots** | In-browser Monaco IDE (C# **and** Python), sandboxed `dotnet build` in throwaway containers, parameter sets, live logs and equity curves streamed back. |
 | 🛰️ **Distributed fleet** | Runs &amp; backtests are scheduled onto the least-loaded node; agents self-register and heartbeat; a self-healing lease reclaims a dead node's work automatically. |
 | 🏆 **Prop-firm tooling** | Live challenge tracking (drawdown / daily-loss / target / min-days), an AI exposure guardian, and auto-flatten on breach. |
+| 📅 **Economic calendar** | Built-in event calendar sourced from primary authorities (FRED, BLS, central banks) — point-in-time correct, ≥10 years of history, deterministic impact model, news-blackout filter for bots and copy trading, cBot JWT API, MCP tools, and high-impact event alerts. |
+| 📊 **Currency strength** | AI-powered macro scoring across all major currencies with a forward pair-outlook matrix, anchored to calendar events. Accessible to cBots via the JWT API. |
+| 🧮 **Institutional-edge analytics** | **Backtest Integrity Lab** (Probabilistic &amp; Deflated Sharpe, t-stat, overfitting correction) and **Trading Journal** (behavioural leak detection + AI coach). |
 | 📱 **Mobile-first &amp; installable** | Fully responsive UI you **install as an app** (PWA) — bottom-nav, card layouts, offline shell, add-to-home-screen. |
-| 🎨 **White-label** | Every deployment re-skins name, logo, colours, and icons from config — resellers ship it as their own. |
-| 🔌 **MCP server** | Exposes tools over HTTP+SSE so external AI clients can drive cMind. |
-| 🔒 **Hardened &amp; yours to run** | Argon2id, encrypted key ring, per-node signed JWTs, rate limiting, structured logs + OpenTelemetry. Self-host on Docker, Kubernetes, Azure, or AWS. |
+| 🎨 **White-label** | Every deployment re-skins name, logo, colours, and icons from config — resellers ship it as their own. Owner tunes every white-label option at runtime via **Settings → Deployment** without a redeploy. |
+| 🌐 **23-language localization** | Full UI localization in all cTrader-supported languages, including RTL (Arabic, Hebrew). Every user-facing string is translated; build fails on a missing key. |
+| 🔑 **Two-factor authentication** | Optional TOTP 2FA (any RFC 6238 app — Google Authenticator, Authy, Aegis) + single-use backup codes. White-label deployments can make it mandatory for all users. |
+| 🔌 **MCP server** | Exposes tools over HTTP+SSE so external AI clients can drive cMind — including calendar, AI features, portfolio queries, and trading operations. |
+| 🔒 **Hardened &amp; yours to run** | Argon2id, encrypted key ring, per-node signed JWTs, rate limiting, structured logs + OpenTelemetry (AWS X-Ray / Azure App Insights). Self-host on Docker, Kubernetes, Azure, or AWS. |
 
 ## 🎯 Who it's for
 
@@ -120,9 +134,17 @@
 | Open API token lifecycle (single valid token per cID, in-place rotation) | [Token lifecycle](https://amusleh-spotware-com.github.io/cmind/docs/features/token-lifecycle) |
 | AI assistant, agent, risk guard, alerts, prop-guard | [AI core](https://amusleh-spotware-com.github.io/cmind/docs/features/ai) |
 | Build &amp; backtest cBots (in-browser Monaco IDE, C# + Python) | [Build &amp; backtest](https://amusleh-spotware-com.github.io/cmind/docs/features/build-and-backtest) |
+| Economic calendar (primary sources, point-in-time, ≥10yr history, cBot API) | [Economic calendar](https://amusleh-spotware-com.github.io/cmind/docs/features/economic-calendar) · [cBot API](https://amusleh-spotware-com.github.io/cmind/docs/features/calendar-cbot-api) |
+| Currency strength (AI macro scoring, pair outlook) | [Currency strength](https://amusleh-spotware-com.github.io/cmind/docs/features/currency-strength) |
+| Backtest Integrity Lab (PSR / DSR / overfitting correction) | [Backtest integrity](https://amusleh-spotware-com.github.io/cmind/docs/features/backtest-integrity) |
+| Trading Journal &amp; AI coach | [Trading journal](https://amusleh-spotware-com.github.io/cmind/docs/features/trading-journal) |
+| Prop-firm challenge tracking | [Prop-firm](https://amusleh-spotware-com.github.io/cmind/docs/features/prop-firm) |
 | Node fleet &amp; horizontal scaling | [Node discovery](https://amusleh-spotware-com.github.io/cmind/docs/operations/node-discovery) · [Scaling](https://amusleh-spotware-com.github.io/cmind/docs/deployment/scaling) |
+| Two-factor authentication (TOTP + backup codes) | [2FA](https://amusleh-spotware-com.github.io/cmind/docs/features/two-factor-auth) |
+| 23-language localization + RTL | [Localization](https://amusleh-spotware-com.github.io/cmind/docs/features/localization) |
+| White-label (config + runtime owner settings) | [White-label](https://amusleh-spotware-com.github.io/cmind/docs/features/white-label) · [Owner settings](https://amusleh-spotware-com.github.io/cmind/docs/features/white-label-owner-settings) |
 | MCP server (HTTP + SSE tools for AI clients) | [MCP](https://amusleh-spotware-com.github.io/cmind/docs/features/mcp) |
-| Installable app &amp; design system (mobile-first, PWA, white-label) | [PWA](https://amusleh-spotware-com.github.io/cmind/docs/features/pwa) · [UI guidelines](https://amusleh-spotware-com.github.io/cmind/docs/ui-guidelines) |
+| Installable app &amp; design system (mobile-first, PWA) | [PWA](https://amusleh-spotware-com.github.io/cmind/docs/features/pwa) · [UI guidelines](https://amusleh-spotware-com.github.io/cmind/docs/ui-guidelines) |
 | Deployment (Compose, K8s/Helm, Azure, AWS) | [Deployment](https://amusleh-spotware-com.github.io/cmind/docs/deployment/cloud) |
 | Testing &amp; dev credentials | [Testing](https://amusleh-spotware-com.github.io/cmind/docs/testing/dev-credentials) |
 
@@ -148,9 +170,11 @@ Architecture follows **strict Domain-Driven Design** — see [CLAUDE.md](CLAUDE.
 
 ## Contributing — we'd love your help 💛
 
-**cMind is built by and for cTrader traders, quants, and developers.** Every bug report, doc fix, and
-PR makes it better — and you don't need to be a .NET expert to start. Traders who report precise
-cTrader behavior are as valuable as the people writing aggregates.
+**cMind is in alpha and needs your help to get to production-ready.** Every bug report, test result,
+doc fix, and PR makes it better — and you don't need to be a .NET expert to start. Traders who report
+precise cTrader behavior are as valuable as the people writing aggregates. Right now the most impactful
+things are: **testing on a demo account and filing issues**, improving the E2E test coverage, and
+helping verify that the cTrader Open API behavior matches the simulator.
 
 - 🐛 [Report a bug](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml)
   · 💡 [Request a feature](https://github.com/amusleh-spotware-com/cmind/issues/new?template=feature_request.yml)

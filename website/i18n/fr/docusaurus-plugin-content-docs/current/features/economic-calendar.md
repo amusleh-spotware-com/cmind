@@ -7,11 +7,14 @@ correct point-in-time, garde ≥10 ans d'historique, et est câblé dans le trad
 cBots, l'IA, les alertes et les backtests. C'est un module découplé : il peut être désactivé sans effet sur
 le cœur trading.
 
-> **Statut.** Le cœur domaine (modèle d'impact, mapping pays→symbole, politique de fenêtre de news,
-> chaînes de révision point-in-time, gating deux-niveaux) **et** la persistance (le schéma Postgres `calendar`,
-> le côté lecture/écriture append-only, le connecteur FRED et le worker d'ingestion gated par config) sont
-> implémentés et testés (unit + integration Testcontainers). L'API REST JWT, les outils MCP et l'UI arrivent
-> dans les phases de rollout décrites ci-dessous.
+> **Statut.** P0–P4 sont implémentés et livrés. Le cœur domaine, la persistance (schéma EF `calendar`,
+> lecture/écriture append-only, sources FRED + BLS + calendrier de banque centrale, worker d'ingestion
+> gated par config avec suivi de fraîcheur par source), l'API REST JWT versionnée, l'UI mobile-first
+> `/economic-calendar`, les outils MCP, l'API JWT cBot, les alertes d'événements à fort impact,
+> la pause copy-trade en blackout de news, l'overlay d'événements backtest, le flux SSE, les webhooks
+> signés HMAC et le `CmindCalendarClient` typé sont tous implémentés et testés en intégration. Les
+> extras P5 (analyse des surprises, export iCal/CSV, recherche par mots-clés, consensus pluggable)
+> sont les éléments restants — voir les phases de déploiement ci-dessous.
 
 ## Ce qui le différencie
 

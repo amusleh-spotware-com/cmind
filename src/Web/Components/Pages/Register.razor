@@ -2,6 +2,15 @@
 @layout EmptyLayout
 @inject Web.Branding.IBrandingThemeProvider Branding
 
+@*
+    Deliberate carve-out (H-05): unlike every other FeatureFlag — where disabling the flag hides the nav
+    entry AND 404s the API — /register intentionally stays HTTP 200 when Registration is off. It is an
+    anonymous, statically-rendered page with no nav entry to hide; a hard 404 would look like a broken
+    site to a prospective user following a stale sign-up link. Instead the feature gate lives at the API
+    (`GET /api/register/config` 404s while off), and this page's JS reveals the branded "registration
+    closed" notice (data-testid=register-closed). The 200-not-404 behavior is pinned by RegistrationTests.
+*@
+
 <PageTitle>Create account — @Branding.Branding.ProductName</PageTitle>
 
 <div class="app-auth" data-testid="register-page">

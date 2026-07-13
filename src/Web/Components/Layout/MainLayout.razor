@@ -63,7 +63,13 @@
     {
         _rightToLeft = SupportedCultures.IsRightToLeft(CultureInfo.CurrentUICulture.Name);
         Nav.LocationChanged += OnLocationChanged;
+        Branding.Changed += OnBrandingChanged;
     }
+
+    // The branding provider is an app-wide singleton; an owner editing a branding override in Settings →
+    // Deployment mutates it via IOptionsMonitor.OnChange. Blazor Server won't re-render this layout for a
+    // singleton field mutation on its own, so re-render explicitly on the circuit's dispatcher.
+    private void OnBrandingChanged() => InvokeAsync(StateHasChanged);
 
     // A Blazor ErrorBoundary latches on the first caught exception and keeps showing its error content on
     // every later render — so one page throwing would leave every subsequently navigated page (and the
@@ -73,5 +79,9 @@
 
     private void RecoverError() => _errorBoundary?.Recover();
 
-    public void Dispose() => Nav.LocationChanged -= OnLocationChanged;
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+        Branding.Changed -= OnBrandingChanged;
+    }
 }

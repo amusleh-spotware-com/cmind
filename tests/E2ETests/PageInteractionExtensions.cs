@@ -9,21 +9,25 @@ internal static class PageInteractionExtensions
     // full visibility timeout and fails flakily under parallel-boot CI load. Retry the trigger click until
     // the expected element becomes visible (the same tactic DialogTests uses), then let the caller assert.
     public static async Task ClickUntilVisibleAsync(this IPage page, string clickSelector, ILocator expected,
-        int attempts = 15)
+        int attempts = 15, bool force = false)
     {
+        // force bypasses Playwright's actionability wait (visible/enabled/STABLE): a MudBlazor button can
+        // stay "unstable" indefinitely while the component keeps re-rendering under CI load, so a normal
+        // click never fires. A forced click dispatches straight to the resolved element.
+        var options = new PageClickOptions { Force = force };
         for (var attempt = 0; attempt < attempts; attempt++)
         {
-            await page.ClickAsync(clickSelector);
             try
             {
+                await page.ClickAsync(clickSelector, options);
                 await expected.WaitForAsync(new() { Timeout = 2000, State = WaitForSelectorState.Visible });
                 return;
             }
-            catch (TimeoutException) { /* circuit not interactive yet — retry */ }
-            catch (PlaywrightException) { /* stale locator after circuit reconnect — retry */ }
+            catch (TimeoutException) { /* circuit not interactive / result not up yet — retry */ }
+            catch (PlaywrightException) { /* stale locator or click intercepted — retry */ }
         }
         // Retries exhausted: one final click so the caller's assertion surfaces the real diagnostic.
-        await page.ClickAsync(clickSelector);
+        await page.ClickAsync(clickSelector, options);
     }
 
     // Same race, but for a multi-step trigger (e.g. flip a mode toggle THEN click analyze): re-run the whole

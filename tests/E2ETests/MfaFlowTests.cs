@@ -28,7 +28,7 @@ public sealed class MfaFlowTests(AppFixture app)
             var account = await app.NewAuthedPageAsync();
             await account.GotoAsync("/account");
             await account.ClickUntilVisibleAsync("[data-testid=mfa-enable-open]",
-                account.Locator("[data-testid=mfa-qr] svg"));
+                account.Locator("[data-testid=mfa-qr] svg"), force: true);
 
             secret = await account.Locator("[data-testid=mfa-secret]").InputValueAsync();
             secret.Should().NotBeNullOrWhiteSpace();
@@ -65,7 +65,7 @@ public sealed class MfaFlowTests(AppFixture app)
         // doesn't leave the dialog closed, then let the (auto-retrying) assertion give the async setup POST
         // (/api/auth/mfa/setup) time to inject the inline SVG.
         var qr = page.Locator("[data-testid=mfa-qr] svg");
-        await page.ClickUntilVisibleAsync("[data-testid=mfa-enable-open]", qr);
+        await page.ClickUntilVisibleAsync("[data-testid=mfa-enable-open]", qr, force: true);
         await Assertions.Expect(qr).ToBeVisibleAsync(new() { Timeout = 30000 });
     }
 

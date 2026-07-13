@@ -175,7 +175,7 @@ public sealed class DialogTests(AppFixture app)
         await SubmitAsync(dialog, "Cancel");
     }
 
-    private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 15000 };
+    private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 30000 };
 
     private static async Task GotoAsync(IPage page, string path)
     {

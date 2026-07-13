@@ -1,0 +1,89 @@
+@* Edit an existing trading agent: rename, retune temperament, change autonomy, and — importantly —
+   choose which trading account(s) it manages. Persists via PUT /api/agent-studio/{id}. *@
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject MudBlazor.ISnackbar Snack
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Edit agent</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="_name" Label="Agent name" Required="true" RequiredError="Name is required"
+                          Immediate="true" Class="mb-2" data-testid="agent-edit-name" />
+            <MudSelect @bind-Value="_autonomy" Label="Autonomy" Class="mb-2">
+                <MudSelectItem Value="@("Advisory")">Advisory (proposes only)</MudSelectItem>
+                <MudSelectItem Value="@("ApprovalGated")">Approval-gated</MudSelectItem>
+            </MudSelect>
+            <MudSelect T="Guid" MultiSelection="true" @bind-SelectedValues="_accounts" Label="Managed accounts" Class="mb-2"
+                       HelperText="Which trading account(s) this agent manages (required to start it)"
+                       MultiSelectionTextFunc="@(v => $"{v?.Count ?? 0} account(s)")" data-testid="agent-edit-accounts">
+                @foreach (var a in Accounts)
+                {
+                    <MudSelectItem T="Guid" Value="@a.Id">@a.Number</MudSelectItem>
+                }
+            </MudSelect>
+            <MudText Typo="Typo.body2" Class="mt-2">Aggressiveness</MudText>
+            <MudSlider @bind-Value="_aggr" Min="0" Max="1" Step="0.1" Color="Color.Primary" />
+            <MudText Typo="Typo.body2">Patience</MudText>
+            <MudSlider @bind-Value="_patience" Min="0" Max="1" Step="0.1" Color="Color.Primary" />
+            <MudText Typo="Typo.body2">Trend-following</MudText>
+            <MudSlider @bind-Value="_trend" Min="0" Max="1" Step="0.1" Color="Color.Primary" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" data-testid="agent-edit-submit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public Guid AgentId { get; set; }
+    [Parameter] public string Name { get; set; } = "";
+    [Parameter] public string Autonomy { get; set; } = "Advisory";
+    [Parameter] public double Aggressiveness { get; set; } = 0.5;
+    [Parameter] public double Patience { get; set; } = 0.5;
+    [Parameter] public double TrendBias { get; set; } = 0.5;
+    [Parameter] public IReadOnlyList<Guid> AccountIds { get; set; } = [];
+    [Parameter] public IReadOnlyList<AgentCreateDialog.AgentAccountOption> Accounts { get; set; } = [];
+
+    private MudForm? _form;
+    private string _name = "";
+    private string _autonomy = "Advisory";
+    private double _aggr = 0.5;
+    private double _patience = 0.5;
+    private double _trend = 0.5;
+    private IEnumerable<Guid> _accounts = new HashSet<Guid>();
+
+    protected override void OnInitialized()
+    {
+        _name = Name;
+        _autonomy = Autonomy;
+        _aggr = Aggressiveness;
+        _patience = Patience;
+        _trend = TrendBias;
+        _accounts = AccountIds.ToHashSet();
+    }
+
+    private async Task Submit()
+    {
+        if (_form is not null) await _form.Validate();
+        if (string.IsNullOrWhiteSpace(_name)) return;
+        var response = await Http.PutAsJsonAsync($"/api/agent-studio/{AgentId}", new
+        {
+            Name = _name.Trim(),
+            AccountIds = _accounts.ToArray(),
+            Aggressiveness = _aggr,
+            Patience = _patience,
+            TrendBias = _trend,
+            Autonomy = _autonomy
+        });
+        if (response.IsSuccessStatusCode) Dialog.Close(DialogResult.Ok(true));
+        else Snack.Add("Could not save the agent.", Severity.Error);
+    }
+
+    private void Cancel() => Dialog.Cancel();
+}

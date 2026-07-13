@@ -89,8 +89,13 @@ public sealed class FullAppSmokeTests(AppFixture app, ITestOutputHelper output)
             if (!DialogOpeners.IsMatch(label)) continue;
 
             output.WriteLine($"    · click «{label}»");
+            // Park the mouse away from any control first: a lingering MudBlazor tooltip popover from a
+            // previous hover otherwise sits over the next icon-button and intercepts the click. Then click,
+            // treating an obscured/slow button as a skip (System.TimeoutException) — this walk asserts the
+            // circuit never breaks, not that every button is reachable, so a non-crash miss is fine.
+            try { await page.Mouse.MoveAsync(0, 0); } catch (PlaywrightException) { /* best effort */ }
             try { await button.ClickAsync(new() { Timeout = 5000 }); }
-            catch (PlaywrightException) { continue; /* obscured / detached — not a crash */ }
+            catch (Exception ex) when (ex is PlaywrightException or TimeoutException) { continue; }
 
             // If a dialog appeared, back out of it; if not, the click was a no-op and we move on.
             var dialog = page.Locator(".mud-dialog").Last;

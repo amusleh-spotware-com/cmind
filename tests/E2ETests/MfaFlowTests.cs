@@ -65,7 +65,7 @@ public sealed class MfaFlowTests(AppFixture app)
         // Use a Playwright Assertion (auto-retrying) rather than a raw DOM wait so the mobile dialog's async
         // setup POST (/api/auth/mfa/setup) has time to resolve and inject the inline SVG.
         await Assertions.Expect(page.Locator("[data-testid=mfa-qr] svg")).ToBeVisibleAsync(
-            new() { Timeout = 15000 });
+            new() { Timeout = 30000 });
     }
 
     private async Task SignInExpectingChallengeAsync(string code)

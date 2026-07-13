@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Playwright;
 using Testcontainers.PostgreSql;
@@ -13,6 +14,18 @@ public class AppFixture : IAsyncLifetime
 {
     public const string OwnerEmail = "owner@e2e.local";
     public const string OwnerPassword = "Owner_Pass_123!";
+
+    // Playwright's built-in defaults (5s for expect assertions, 30s for navigation) are too tight when
+    // several heavyweight collection fixtures boot in parallel (each = a full ASP.NET app + a Postgres
+    // Testcontainer + a browser): under that CPU/IO contention a slow-but-correct first render can exceed
+    // the default and flake. E2E must pass on machine speed, not race it — so we set generous timeouts
+    // once, globally, and per browser context below. Reliability over raw speed.
+    private const int ActionTimeoutMs = 30_000;
+    private const int NavigationTimeoutMs = 90_000;
+    private const float ExpectTimeoutMs = 20_000f;
+
+    [ModuleInitializer]
+    internal static void ConfigurePlaywrightDefaults() => Assertions.SetDefaultExpectTimeout(ExpectTimeoutMs);
 
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
         .WithImage("postgres:17-alpine")
@@ -161,9 +174,20 @@ public class AppFixture : IAsyncLifetime
         if (exit != 0) throw new InvalidOperationException($"Playwright install '{target}' failed with exit code {exit}.");
     }
 
+    // Applies the generous timeouts to a context so every navigation/action/expect on it survives
+    // parallel-boot contention, then tracks it for disposal.
+    private void Track(IBrowserContext context)
+    {
+        context.SetDefaultTimeout(ActionTimeoutMs);
+        context.SetDefaultNavigationTimeout(NavigationTimeoutMs);
+        _contexts.Add(context);
+    }
+
     private async Task<string> LogInAndCaptureStateAsync()
     {
         var context = await Browser.NewContextAsync(new() { BaseURL = BaseUrl });
+        context.SetDefaultTimeout(ActionTimeoutMs);
+        context.SetDefaultNavigationTimeout(NavigationTimeoutMs);
         var page = await context.NewPageAsync();
         await page.GotoAsync("/login");
         await page.FillAsync("input[name=Email]", OwnerEmail);
@@ -178,7 +202,7 @@ public class AppFixture : IAsyncLifetime
     public async Task<IPage> NewAuthedPageAsync()
     {
         var context = await Browser.NewContextAsync(new() { BaseURL = BaseUrl, StorageState = StorageState });
-        _contexts.Add(context);
+        Track(context);
         return await context.NewPageAsync();
     }
 
@@ -190,7 +214,7 @@ public class AppFixture : IAsyncLifetime
         options.BaseURL = BaseUrl;
         options.StorageState = StorageState;
         var context = await Browser.NewContextAsync(options);
-        _contexts.Add(context);
+        Track(context);
         return await context.NewPageAsync();
     }
 
@@ -198,7 +222,7 @@ public class AppFixture : IAsyncLifetime
     public async Task<IPage> NewAnonymousPageAsync()
     {
         var context = await Browser.NewContextAsync(new() { BaseURL = BaseUrl });
-        _contexts.Add(context);
+        Track(context);
         return await context.NewPageAsync();
     }
 
@@ -208,7 +232,7 @@ public class AppFixture : IAsyncLifetime
         var options = _playwright!.Devices[device];
         options.BaseURL = BaseUrl;
         var context = await Browser.NewContextAsync(options);
-        _contexts.Add(context);
+        Track(context);
         return await context.NewPageAsync();
     }
 

@@ -187,7 +187,10 @@ helping verify that the cTrader Open API behavior matches the simulator.
 
 Every merged contributor is credited. Come build the platform you wish existed. → **[Start here](CONTRIBUTING.md)**
 
-## 🔐 Security · License
+## 🔐 Security · License · Trademarks
 
 - Report vulnerabilities per [SECURITY.md](SECURITY.md).
 - MIT licensed — see [LICENSE](LICENSE).
+- **cMind is an independent community project — not affiliated with, endorsed by, or sponsored by
+  Spotware Systems Ltd.** cTrader, cAlgo and cBot are trademarks of Spotware Systems Ltd, used here
+  only to describe interoperability. See [TRADEMARKS.md](TRADEMARKS.md).

@@ -28,6 +28,7 @@ publish/
 /secrets/
 *.local.json
 tmp-onboard/
+tmp-audit/
 
 # Telegram / cMAM chat exports — contains member usernames, NEVER commit
 ChatExport*/

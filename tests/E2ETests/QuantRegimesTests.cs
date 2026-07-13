@@ -30,4 +30,26 @@ public sealed class QuantRegimesTests(AppFixture app)
         await Assertions.Expect(page.Locator("[data-testid=regimes-result]")).ToBeVisibleAsync(Slow);
         await Assertions.Expect(page.Locator("[data-testid=regimes-result]")).ToContainTextAsync("Hurst");
     }
+
+    [Fact]
+    public async Task Equity_curve_mode_renders_a_regime_breakdown()
+    {
+        // Calm-then-turbulent equity curve → derived returns produce the regime table.
+        var equity = string.Join(", ", Enumerable.Range(0, 60).Select(i =>
+        {
+            var step = i < 30 ? 2.0 : (i % 2 == 0 ? 30.0 : -30.0);
+            return (1000.0 + (i * 2) + step).ToString("0.0", CultureInfo.InvariantCulture);
+        }));
+
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/quant/regimes");
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        await page.GetByLabel("Returns or equity curve").FillAsync(equity);
+        await page.GetByText("Equity / balance curve").ClickAsync();
+        await page.ClickAsync("[data-testid=regimes-analyze]");
+
+        await Assertions.Expect(page.Locator("[data-testid=regimes-result]")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.Locator("[data-testid=regimes-result]")).ToContainTextAsync("Hurst");
+    }
 }

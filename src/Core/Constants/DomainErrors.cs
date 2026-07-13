@@ -89,6 +89,8 @@ public static class DomainErrors
     public const string ProbabilityOutOfRange = "domain.quant.probability_out_of_range";
     public const string TrialSurfaceInvalid = "domain.quant.trial_surface_invalid";
     public const string ExecutionInputInvalid = "domain.execution.input_invalid";
+    public const string JournalNoteTitleRequired = "domain.journal.note_title_required";
+    public const string JournalNoteBodyTooLong = "domain.journal.note_body_too_long";
     public const string PositioningInvalid = "domain.signals.positioning_invalid";
     public const string SentimentScoreInvalid = "domain.signals.sentiment_score_invalid";
     public const string PointInTimeSignalInvalid = "domain.signals.point_in_time_invalid";

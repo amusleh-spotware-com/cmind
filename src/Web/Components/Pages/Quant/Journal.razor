@@ -1,13 +1,20 @@
 @page "/journal"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @using System.Net.Http.Json
+@implements IDisposable
 @inject HttpClient Http
+@inject IStringLocalizer<Ui> L
+@inject MudBlazor.IDialogService Dialogs
+@inject MudBlazor.ISnackbar Snack
 
 <PageTitle>AI · Trading Journal</PageTitle>
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
     <MudText Typo="Typo.h5">Trading Journal &amp; Coach</MudText>
     <HelpTip Text="Analyse your own runs and backtests for behavioural leaks — over-concentration, repeated failures, a losing bias — so you can improve the strategy you already have." />
+    <MudSpacer />
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
+               OnClick="OpenNewNote" data-testid="journal-new-entry">@L["journal.note.new"]</MudButton>
 </MudStack>
 
 @if (_data is null)
@@ -48,16 +55,178 @@ else
     </MudGrid>
 }
 
+@if (_data is not null && _data.entries.Count > 0)
+{
+    <MudPaper Class="pa-4 mt-4" Elevation="1">
+        <MudText Typo="Typo.subtitle1" Class="mb-2">@L["journal.trades.title"]</MudText>
+        <MudTable Items="_data.entries" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm"
+                  data-testid="journal-entries">
+            <HeaderContent>
+                <MudTh>@L["journal.trades.cbot"]</MudTh>
+                <MudTh>@L["journal.trades.symbol"]</MudTh>
+                <MudTh>@L["journal.trades.kind"]</MudTh>
+                <MudTh>@L["journal.trades.status"]</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@(L["journal.trades.cbot"])">@context.cbot</MudTd>
+                <MudTd DataLabel="@(L["journal.trades.symbol"])">@(context.symbol ?? "—")</MudTd>
+                <MudTd DataLabel="@(L["journal.trades.kind"])">@context.kind</MudTd>
+                <MudTd DataLabel="@(L["journal.trades.status"])">@context.status</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+}
+
+<MudPaper Class="pa-4 mt-4" Elevation="1">
+    <MudText Typo="Typo.subtitle1" Class="mb-2">@L["journal.notes.title"]</MudText>
+    @if (_notes is null)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+    }
+    else if (_notes.Count == 0)
+    {
+        <MudText Typo="Typo.body2" Class="mud-text-secondary" data-testid="journal-notes-empty">
+            @L["journal.notes.empty"]
+        </MudText>
+    }
+    else
+    {
+        <MudTable Items="_notes" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm"
+                  data-testid="journal-notes">
+            <HeaderContent>
+                <MudTh>@L["journal.note.title"]</MudTh>
+                <MudTh>@L["journal.note.symbol"]</MudTh>
+                <MudTh>@L["journal.note.body"]</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@(L["journal.note.title"])">@context.title</MudTd>
+                <MudTd DataLabel="@(L["journal.note.symbol"])">@(context.symbol ?? "—")</MudTd>
+                <MudTd DataLabel="@(L["journal.note.body"])">@context.body</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                   aria-label="@(L["journal.note.edit"])"
+                                   data-testid="journal-note-edit"
+                                   OnClick="@(() => OpenEditNote(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                   aria-label="@(L["journal.note.delete"])"
+                                   data-testid="journal-note-delete"
+                                   OnClick="@(() => DeleteNote(context))" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudPaper>
+
 @code {
     private JournalData? _data;
+    private List<JournalNoteDto>? _notes;
+    private readonly CancellationTokenSource _cts = new();
 
     protected override async Task OnInitializedAsync()
     {
-        try { _data = await Http.GetFromJsonAsync<JournalData>("/api/journal"); }
+        await LoadSummaryAsync();
+        await LoadNotesAsync();
+    }
+
+    private async Task LoadSummaryAsync()
+    {
+        try { _data = await Http.GetFromJsonAsync<JournalData>("/api/journal", _cts.Token); }
+        catch (OperationCanceledException) { }
         catch { _data = new JournalData(new JournalSummaryDto(0, 0, 0, 0, 0, []), []); }
+    }
+
+    private async Task LoadNotesAsync()
+    {
+        try { _notes = await Http.GetFromJsonAsync<List<JournalNoteDto>>("/api/journal/notes", _cts.Token) ?? []; }
+        catch (OperationCanceledException) { }
+        catch { _notes = []; }
+    }
+
+    private async Task OpenNewNote()
+    {
+        var dialog = await Dialogs.ShowAsync<Web.Components.Dialogs.JournalNoteDialog>(L["journal.note.new"]);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled ||
+            result.Data is not Web.Components.Dialogs.JournalNoteDialog.JournalNoteDialogResult r) return;
+        await SaveNoteAsync(HttpMethod.Post, "/api/journal/notes", r);
+    }
+
+    private async Task OpenEditNote(JournalNoteDto note)
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(Web.Components.Dialogs.JournalNoteDialog.Title), note.title },
+            { nameof(Web.Components.Dialogs.JournalNoteDialog.Body), note.body },
+            { nameof(Web.Components.Dialogs.JournalNoteDialog.Symbol), note.symbol },
+            { nameof(Web.Components.Dialogs.JournalNoteDialog.IsEdit), true }
+        };
+        var dialog = await Dialogs.ShowAsync<Web.Components.Dialogs.JournalNoteDialog>(L["journal.note.edit"], parameters);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled ||
+            result.Data is not Web.Components.Dialogs.JournalNoteDialog.JournalNoteDialogResult r) return;
+        await SaveNoteAsync(HttpMethod.Put, $"/api/journal/notes/{note.id}", r);
+    }
+
+    private async Task SaveNoteAsync(
+        HttpMethod method, string url, Web.Components.Dialogs.JournalNoteDialog.JournalNoteDialogResult r)
+    {
+        try
+        {
+            var request = new HttpRequestMessage(method, url)
+            {
+                Content = JsonContent.Create(new { r.Title, r.Body, r.Symbol })
+            };
+            var response = await Http.SendAsync(request, _cts.Token);
+            if (_cts.IsCancellationRequested) return;
+            if (response.IsSuccessStatusCode)
+            {
+                Snack.Add(L["journal.note.saved"], Severity.Success);
+                await LoadNotesAsync();
+                StateHasChanged();
+            }
+            else
+            {
+                Snack.Add(L["journal.note.save_failed"], Severity.Error);
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch { Snack.Add(L["journal.note.save_failed"], Severity.Error); }
+    }
+
+    private async Task DeleteNote(JournalNoteDto note)
+    {
+        var confirmed = await Dialogs.ShowMessageBox(
+            L["journal.note.delete"], L["journal.note.delete_confirm"],
+            yesText: L["common.delete"], cancelText: L["common.cancel"]);
+        if (confirmed != true) return;
+        try
+        {
+            var response = await Http.DeleteAsync($"/api/journal/notes/{note.id}", _cts.Token);
+            if (_cts.IsCancellationRequested) return;
+            if (response.IsSuccessStatusCode)
+            {
+                Snack.Add(L["journal.note.deleted"], Severity.Success);
+                await LoadNotesAsync();
+                StateHasChanged();
+            }
+            else
+            {
+                Snack.Add(L["journal.note.save_failed"], Severity.Error);
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch { Snack.Add(L["journal.note.save_failed"], Severity.Error); }
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
     }
 
     private sealed record JournalData(JournalSummaryDto summary, List<JournalEntryDto> entries);
     private sealed record JournalSummaryDto(int total, int wins, int losses, int failures, double winRate, List<string> insights);
     private sealed record JournalEntryDto(string cbot, string? symbol, string kind, string status);
+    private sealed record JournalNoteDto(Guid id, string title, string body, string? symbol);
 }

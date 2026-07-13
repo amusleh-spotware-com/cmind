@@ -62,4 +62,20 @@ public class TransactionCostAnalyzerTests
         var badQty = () => _analyzer.Analyze(1.10, OrderSide.Buy, new List<Fill> { new(1.10, 0) });
         badQty.Should().Throw<DomainException>().Which.Code.Should().Be("domain.execution.input_invalid");
     }
+
+    [Theory]
+    [InlineData(-100.0)]
+    [InlineData(-0.5)]
+    public void Rejects_negative_fill_quantity(double quantity)
+    {
+        var act = () => _analyzer.Analyze(1.10, OrderSide.Buy, new List<Fill> { new(1.1005, quantity) });
+        act.Should().Throw<DomainException>().Which.Code.Should().Be("domain.execution.input_invalid");
+    }
+
+    [Fact]
+    public void Rejects_negative_fill_price()
+    {
+        var act = () => _analyzer.Analyze(1.10, OrderSide.Buy, new List<Fill> { new(-1.10, 100) });
+        act.Should().Throw<DomainException>().Which.Code.Should().Be("domain.execution.input_invalid");
+    }
 }

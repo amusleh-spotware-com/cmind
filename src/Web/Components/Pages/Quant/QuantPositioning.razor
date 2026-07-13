@@ -1,6 +1,7 @@
 @page "/quant/positioning"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @using System.Net.Http.Json
+@implements IDisposable
 @inject HttpClient Http
 @inject MudBlazor.ISnackbar Snack
 
@@ -52,18 +53,21 @@
     private double _longPercent = 50;
     private bool _loading;
     private PositioningResult? _result;
+    private readonly CancellationTokenSource _cts = new();
 
     private async Task Read()
     {
         _loading = true;
         try
         {
-            var response = await Http.PostAsJsonAsync("/api/quant/positioning", new { LongPercent = _longPercent });
+            var response = await Http.PostAsJsonAsync("/api/quant/positioning", new { LongPercent = _longPercent }, _cts.Token);
+            if (_cts.IsCancellationRequested) return;
             if (response.IsSuccessStatusCode)
-                _result = await response.Content.ReadFromJsonAsync<PositioningResult>();
+                _result = await response.Content.ReadFromJsonAsync<PositioningResult>(_cts.Token);
             else
                 Snack.Add("Could not read that positioning.", Severity.Error);
         }
+        catch (OperationCanceledException) { }
         catch
         {
             Snack.Add("Could not read that positioning.", Severity.Error);
@@ -72,6 +76,12 @@
         {
             _loading = false;
         }
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
     }
 
     private static Severity BiasSeverity(string bias) => bias switch

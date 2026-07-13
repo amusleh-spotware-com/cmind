@@ -160,6 +160,13 @@ public readonly record struct AlertRuleId(Guid Value) : IStronglyTypedId<AlertRu
     public override string ToString() => Value.ToString();
 }
 
+public readonly record struct JournalNoteId(Guid Value) : IStronglyTypedId<JournalNoteId>
+{
+    public static JournalNoteId New() => new(Guid.NewGuid());
+    public static JournalNoteId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct AlertEventId(Guid Value) : IStronglyTypedId<AlertEventId>
 {
     public static AlertEventId New() => new(Guid.NewGuid());

@@ -30,4 +30,25 @@ public sealed class QuantHealthTests(AppFixture app)
         await Assertions.Expect(page.Locator("[data-testid=health-verdict]")).ToBeVisibleAsync(Slow);
         await Assertions.Expect(page.Locator("[data-testid=health-verdict]")).ToContainTextAsync("Decayed");
     }
+
+    [Fact]
+    public async Task Equity_curve_mode_produces_a_verdict()
+    {
+        // Rising-then-flat equity curve → the derived returns still yield a health verdict.
+        var equity = string.Join(", ", Enumerable.Range(0, 40).Select(i =>
+        {
+            var value = i < 20 ? 1000.0 + (i * 10) : 1200.0 + (i % 2 == 0 ? 4 : -4);
+            return value.ToString("0.0", CultureInfo.InvariantCulture);
+        }));
+
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/quant/health");
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        await page.GetByLabel("Returns or equity curve").FillAsync(equity);
+        await page.GetByText("Equity / balance curve").ClickAsync();
+        await page.ClickAsync("[data-testid=health-assess]");
+
+        await Assertions.Expect(page.Locator("[data-testid=health-verdict]")).ToBeVisibleAsync(Slow);
+    }
 }

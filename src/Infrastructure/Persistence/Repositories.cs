@@ -126,6 +126,23 @@ public sealed class AlertRuleRepository(DataContext db) : IAlertRuleRepository
     public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
 }
 
+public sealed class JournalNoteRepository(DataContext db) : IJournalNoteRepository
+{
+    public Task<Core.Journal.JournalNote?> GetByIdAsync(JournalNoteId id, UserId owner, CancellationToken ct) =>
+        db.JournalNotes.FirstOrDefaultAsync(n => n.Id == id && n.UserId == owner, ct);
+
+    public async Task<IReadOnlyList<Core.Journal.JournalNote>> ListByUserAsync(UserId owner, CancellationToken ct) =>
+        await db.JournalNotes.Where(n => n.UserId == owner)
+            .OrderByDescending(n => n.CreatedAt).ToListAsync(ct);
+
+    public async Task AddAsync(Core.Journal.JournalNote note, CancellationToken ct) =>
+        await db.JournalNotes.AddAsync(note, ct);
+
+    public void Remove(Core.Journal.JournalNote note) => db.JournalNotes.Remove(note);
+
+    public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
+}
+
 public sealed class PropRuleRepository(DataContext db) : IPropRuleRepository
 {
     public Task<PropRule?> GetByIdAsync(PropRuleId id, UserId owner, CancellationToken ct) =>

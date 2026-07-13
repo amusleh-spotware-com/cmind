@@ -1,6 +1,7 @@
 @page "/quant/integrity"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @using System.Net.Http.Json
+@implements IDisposable
 @inject HttpClient Http
 @inject MudBlazor.ISnackbar Snack
 
@@ -94,6 +95,7 @@
     private string _grid = "";
     private bool _loading;
     private IntegrityResult? _result;
+    private readonly CancellationTokenSource _cts = new();
 
     private async Task Analyze()
     {
@@ -111,16 +113,18 @@
             var body = _mode == "equity"
                 ? (object)new { Equity = numbers, Trials = _trials }
                 : new { Returns = numbers, Trials = _trials };
-            var response = await Http.PostAsJsonAsync("/api/quant/integrity", body);
+            var response = await Http.PostAsJsonAsync("/api/quant/integrity", body, _cts.Token);
+            if (_cts.IsCancellationRequested) return;
             if (response.IsSuccessStatusCode)
             {
-                _result = await response.Content.ReadFromJsonAsync<IntegrityResult>();
+                _result = await response.Content.ReadFromJsonAsync<IntegrityResult>(_cts.Token);
             }
             else
             {
                 Snack.Add("Could not analyze that series.", Severity.Error);
             }
         }
+        catch (OperationCanceledException) { }
         catch
         {
             Snack.Add("Could not analyze that series.", Severity.Error);
@@ -145,12 +149,14 @@
         _result = null;
         try
         {
-            var response = await Http.PostAsJsonAsync("/api/quant/pbo", new { Trials = grid });
+            var response = await Http.PostAsJsonAsync("/api/quant/pbo", new { Trials = grid }, _cts.Token);
+            if (_cts.IsCancellationRequested) return;
             if (response.IsSuccessStatusCode)
-                _result = await response.Content.ReadFromJsonAsync<IntegrityResult>();
+                _result = await response.Content.ReadFromJsonAsync<IntegrityResult>(_cts.Token);
             else
                 Snack.Add("Could not assess that trial grid.", Severity.Error);
         }
+        catch (OperationCanceledException) { }
         catch
         {
             Snack.Add("Could not assess that trial grid.", Severity.Error);
@@ -159,6 +165,12 @@
         {
             _loading = false;
         }
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
     }
 
     private static double[] Parse(string text)

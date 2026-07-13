@@ -1,7 +1,9 @@
 @page "/quant/execution"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @using System.Net.Http.Json
+@implements IDisposable
 @inject HttpClient Http
+@inject IStringLocalizer<Ui> L
 @inject MudBlazor.ISnackbar Snack
 
 <PageTitle>Quant · Execution Schedule</PageTitle>
@@ -14,7 +16,7 @@
 <MudGrid>
     <MudItem xs="12" md="5">
         <MudPaper Class="pa-4" Elevation="1">
-            <MudNumericField @bind-Value="_total" Label="Total quantity (lots)" Min="0" Variant="Variant.Outlined" />
+            <MudNumericField @bind-Value="_total" Label="Total quantity (lots)" Min="0.0001" Variant="Variant.Outlined" />
             <MudNumericField @bind-Value="_slices" Label="Number of slices" Min="1" Max="50" Variant="Variant.Outlined" Class="mt-2" />
             <MudNumericField @bind-Value="_riskAversion" Label="Risk aversion" Min="0" Variant="Variant.Outlined" Class="mt-2"
                              HelperText="0 = patient (even TWAP); higher = front-loaded." />
@@ -58,9 +60,16 @@
     private double _impact = 0.1;
     private bool _loading;
     private List<Slice>? _result;
+    private readonly CancellationTokenSource _cts = new();
 
     private async Task Build()
     {
+        if (!(_total > 0))
+        {
+            Snack.Add(L["quant.execution.quantity_positive"], Severity.Warning);
+            return;
+        }
+
         _loading = true;
         try
         {
@@ -71,10 +80,11 @@
                 RiskAversion = _riskAversion,
                 Volatility = _volatility,
                 TemporaryImpact = _impact
-            });
+            }, _cts.Token);
+            if (_cts.IsCancellationRequested) return;
             if (response.IsSuccessStatusCode)
             {
-                var payload = await response.Content.ReadFromJsonAsync<ScheduleResponse>();
+                var payload = await response.Content.ReadFromJsonAsync<ScheduleResponse>(_cts.Token);
                 _result = payload?.Slices ?? [];
             }
             else
@@ -82,6 +92,7 @@
                 Snack.Add("Could not build that schedule.", Severity.Error);
             }
         }
+        catch (OperationCanceledException) { }
         catch
         {
             Snack.Add("Could not build that schedule.", Severity.Error);
@@ -90,6 +101,12 @@
         {
             _loading = false;
         }
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
     }
 
     private sealed record ScheduleResponse(List<Slice> Slices);

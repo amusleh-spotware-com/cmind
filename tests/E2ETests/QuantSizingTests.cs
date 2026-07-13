@@ -27,4 +27,23 @@ public sealed class QuantSizingTests(AppFixture app)
         await Assertions.Expect(page.Locator("[data-testid=sizing-recommendation]")).ToBeVisibleAsync(Slow);
         await Assertions.Expect(page.Locator("[data-testid=sizing-recommendation]")).ToContainTextAsync("×");
     }
+
+    [Fact]
+    public async Task Equity_curve_mode_returns_an_exposure()
+    {
+        // A rising, wobbling equity curve → the returns derived from it size to a positive exposure.
+        var equity = string.Join(", ", Enumerable.Range(0, 60)
+            .Select(i => (1000.0 + (i * 5) + (i % 2 == 0 ? 8 : -8)).ToString("0.0", CultureInfo.InvariantCulture)));
+
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/quant/sizing");
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        await page.GetByLabel("Returns or equity curve").FillAsync(equity);
+        await page.GetByText("Equity / balance curve").ClickAsync();
+        await page.ClickAsync("[data-testid=sizing-calculate]");
+
+        await Assertions.Expect(page.Locator("[data-testid=sizing-recommendation]")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.Locator("[data-testid=sizing-recommendation]")).ToContainTextAsync("×");
+    }
 }

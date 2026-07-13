@@ -1,0 +1,56 @@
+@* Modal dialog to add or edit a manual trading-journal note. Returns JournalNoteDialogResult on confirm. *@
+@inject IStringLocalizer<Ui> L
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(IsEdit ? L["journal.note.edit"] : L["journal.note.new"])</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="_title" Label="@(L["journal.note.title"])" Required="true"
+                          RequiredError="@(L["journal.note.title_required"])" MaxLength="128" Class="mb-2"
+                          data-testid="journal-note-title" />
+            <MudTextField @bind-Value="_symbol" Label="@(L["journal.note.symbol"])" MaxLength="32" Class="mb-2"
+                          data-testid="journal-note-symbol" />
+            <MudTextField @bind-Value="_body" Label="@(L["journal.note.body"])" Lines="5" MaxLength="4000"
+                          data-testid="journal-note-body" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@L["common.cancel"]</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit"
+                   data-testid="journal-note-save">@L["common.save"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Body { get; set; }
+    [Parameter] public string? Symbol { get; set; }
+    [Parameter] public bool IsEdit { get; set; }
+
+    private MudForm? _form;
+    private string _title = "";
+    private string _body = "";
+    private string _symbol = "";
+
+    protected override void OnInitialized()
+    {
+        _title = Title ?? "";
+        _body = Body ?? "";
+        _symbol = Symbol ?? "";
+    }
+
+    private async Task Submit()
+    {
+        if (_form is not null) await _form.Validate();
+        if (string.IsNullOrWhiteSpace(_title)) return;
+        Dialog.Close(DialogResult.Ok(new JournalNoteDialogResult(_title.Trim(), _body, _symbol)));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    public sealed record JournalNoteDialogResult(string Title, string? Body, string? Symbol);
+}

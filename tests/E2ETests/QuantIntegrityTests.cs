@@ -50,4 +50,22 @@ public sealed class QuantIntegrityTests(AppFixture app)
         await Assertions.Expect(page.Locator("[data-testid=integrity-verdict]")).ToBeVisibleAsync(Slow);
         await Assertions.Expect(page.Locator("[data-testid=integrity-verdict]")).ToContainTextAsync("Overfit");
     }
+
+    [Fact]
+    public async Task Equity_curve_mode_produces_a_verdict()
+    {
+        // A steadily rising equity curve → derived returns yield a deterministic verdict.
+        var equity = string.Join(", ", Enumerable.Range(0, 40)
+            .Select(i => (1000.0 + (i * 6) + (i % 2 == 0 ? 1 : -1)).ToString("0.0", CultureInfo.InvariantCulture)));
+
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/quant/integrity");
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        await page.GetByTestId("integrity-series").FillAsync(equity);
+        await page.GetByText("Equity / balance curve").ClickAsync();
+        await page.ClickAsync("[data-testid=integrity-analyze]");
+
+        await Assertions.Expect(page.Locator("[data-testid=integrity-verdict]")).ToBeVisibleAsync(Slow);
+    }
 }

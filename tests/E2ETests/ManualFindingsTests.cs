@@ -1,4 +1,3 @@
-using System;
 using FluentAssertions;
 using Microsoft.Playwright;
 using Xunit;
@@ -7,10 +6,19 @@ namespace E2ETests;
 
 // Regression coverage for the batch of bugs found by manual clicking (CLAUDE.md mandate 11): dependency
 // gating (run/backtest need a trading account), state-correct + icon lifecycle controls, no GUIDs in the
-// UI, detail/edit as a dialog, and the calendar's data-source gate. The base fixture's user has NO trading
-// accounts and NO AI key/data source — exactly the first-run state a user sees.
-[Collection(AppCollection.Name)]
-public sealed class ManualFindingsTests(AppFixture app)
+// UI, detail/edit as a dialog, and the calendar's data-source gate. These assertions depend on the
+// first-run state — NO trading accounts, NO AI key/data source — so this runs in its own fixture (fresh
+// DB) rather than the shared AppCollection whose DB other tests populate with accounts.
+public sealed class ManualFindingsFixture : AppFixture;
+
+[CollectionDefinition(Name)]
+public sealed class ManualFindingsCollection : ICollectionFixture<ManualFindingsFixture>
+{
+    public const string Name = "manual-findings";
+}
+
+[Collection(ManualFindingsCollection.Name)]
+public sealed class ManualFindingsTests(ManualFindingsFixture app)
 {
     private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 15000 };
 

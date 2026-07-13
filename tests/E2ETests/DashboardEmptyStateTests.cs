@@ -4,10 +4,21 @@ using Xunit;
 
 namespace E2ETests;
 
+// Own fixture (fresh app + empty DB) so the "no trading account" precondition is not polluted by other
+// tests in the shared collection that create accounts — this assertion is order-independent only in
+// isolation.
+public sealed class DashboardEmptyFixture : AppFixture;
+
+[CollectionDefinition(Name)]
+public sealed class DashboardEmptyCollection : ICollectionFixture<DashboardEmptyFixture>
+{
+    public const string Name = "dashboard-empty";
+}
+
 // Regression for I-04: with no trading account connected, the dashboard showed KPI zeros and no guidance.
 // Mandate 11 — an empty dependency state must show an actionable notice, not a silent blank/zero page.
-[Collection(AppCollection.Name)]
-public sealed class DashboardEmptyStateTests(AppFixture app)
+[Collection(DashboardEmptyCollection.Name)]
+public sealed class DashboardEmptyStateTests(DashboardEmptyFixture app)
 {
     [Fact]
     public async Task Dashboard_with_no_accounts_shows_an_actionable_connect_notice()

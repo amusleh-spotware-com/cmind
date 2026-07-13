@@ -115,6 +115,9 @@
   <data name="calendar.series.title" xml:space="preserve"><value>Lịch sử chỉ số</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Sự kiện lịch trong backtest này</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>Các tính năng AI bị tắt cho đến khi thiết lập nhà cung cấp AI trong Cài đặt → AI.</value></data>
+  <data name="instance.title" xml:space="preserve"><value>Instance</value></data>
+  <data name="instance.notFound" xml:space="preserve"><value>This instance no longer exists — it may have been deleted or never started.</value></data>
+  <data name="instance.back" xml:space="preserve"><value>Back to runs</value></data>
   <data name="agent.aiRequired" xml:space="preserve"><value>Thiết lập nhà cung cấp AI trong Cài đặt → AI để chạy mục này.</value></data>
   <data name="ai.notice.configure" xml:space="preserve"><value>Thiết lập AI</value></data>
   <data name="ai.notice.title" xml:space="preserve"><value>AI chưa được cấu hình</value></data>

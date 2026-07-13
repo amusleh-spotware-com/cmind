@@ -115,6 +115,9 @@
   <data name="calendar.series.title" xml:space="preserve"><value>Indikatorverlauf</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Kalenderereignisse während dieses Backtests</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>KI-Funktionen sind deaktiviert, bis unter Einstellungen → KI ein KI-Anbieter eingerichtet ist.</value></data>
+  <data name="instance.title" xml:space="preserve"><value>Instance</value></data>
+  <data name="instance.notFound" xml:space="preserve"><value>This instance no longer exists — it may have been deleted or never started.</value></data>
+  <data name="instance.back" xml:space="preserve"><value>Back to runs</value></data>
   <data name="agent.aiRequired" xml:space="preserve"><value>Richten Sie unter Einstellungen → KI einen KI-Anbieter ein, um dies auszuführen.</value></data>
   <data name="ai.notice.configure" xml:space="preserve"><value>KI einrichten</value></data>
   <data name="ai.notice.title" xml:space="preserve"><value>KI nicht konfiguriert</value></data>

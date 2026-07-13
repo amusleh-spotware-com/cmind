@@ -115,6 +115,9 @@
   <data name="calendar.series.title" xml:space="preserve"><value>Gösterge geçmişi</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Bu geri testi sırasındaki takvim olayları</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>Ayarlar → Yapay Zeka bölümünde bir yapay zeka sağlayıcısı yapılandırılana kadar yapay zeka özellikleri kapalıdır.</value></data>
+  <data name="instance.title" xml:space="preserve"><value>Instance</value></data>
+  <data name="instance.notFound" xml:space="preserve"><value>This instance no longer exists — it may have been deleted or never started.</value></data>
+  <data name="instance.back" xml:space="preserve"><value>Back to runs</value></data>
   <data name="agent.aiRequired" xml:space="preserve"><value>Bunu çalıştırmak için Ayarlar → YZ bölümünde bir YZ sağlayıcısı yapılandırın.</value></data>
   <data name="ai.notice.configure" xml:space="preserve"><value>Yapay zekayı ayarla</value></data>
   <data name="ai.notice.title" xml:space="preserve"><value>Yapay zeka yapılandırılmadı</value></data>

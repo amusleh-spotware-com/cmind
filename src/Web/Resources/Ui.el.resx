@@ -115,6 +115,9 @@
   <data name="calendar.series.title" xml:space="preserve"><value>Ιστορικό δείκτη</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Γεγονότα ημερολογίου κατά τη διάρκεια αυτού του backtest</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>Οι λειτουργίες AI είναι απενεργοποιημένες μέχρι να ρυθμιστεί ένας πάροχος AI στις Ρυθμίσεις → AI.</value></data>
+  <data name="instance.title" xml:space="preserve"><value>Instance</value></data>
+  <data name="instance.notFound" xml:space="preserve"><value>This instance no longer exists — it may have been deleted or never started.</value></data>
+  <data name="instance.back" xml:space="preserve"><value>Back to runs</value></data>
   <data name="agent.aiRequired" xml:space="preserve"><value>Ρυθμίστε έναν πάροχο AI στις Ρυθμίσεις → AI για να το εκτελέσετε.</value></data>
   <data name="ai.notice.configure" xml:space="preserve"><value>Ρύθμιση AI</value></data>
   <data name="ai.notice.title" xml:space="preserve"><value>Το AI δεν έχει ρυθμιστεί</value></data>

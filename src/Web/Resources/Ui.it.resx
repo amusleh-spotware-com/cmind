@@ -115,6 +115,9 @@
   <data name="calendar.series.title" xml:space="preserve"><value>Storico indicatore</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Eventi del calendario durante questo backtest</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>Le funzionalità IA sono disattivate finché non configuri un provider IA in Impostazioni → IA.</value></data>
+  <data name="instance.title" xml:space="preserve"><value>Instance</value></data>
+  <data name="instance.notFound" xml:space="preserve"><value>This instance no longer exists — it may have been deleted or never started.</value></data>
+  <data name="instance.back" xml:space="preserve"><value>Back to runs</value></data>
   <data name="agent.aiRequired" xml:space="preserve"><value>Configura un provider AI in Impostazioni → AI per eseguirlo.</value></data>
   <data name="ai.notice.configure" xml:space="preserve"><value>Configura IA</value></data>
   <data name="ai.notice.title" xml:space="preserve"><value>IA non configurata</value></data>

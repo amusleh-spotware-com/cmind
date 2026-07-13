@@ -115,6 +115,9 @@
   <data name="calendar.series.title" xml:space="preserve"><value>Zgodovina kazalnika</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Koledarski dogodki med tem backtestom</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>Funkcije AI so onemogočene, dokler v Nastavitve → AI ne nastavite ponudnika AI.</value></data>
+  <data name="instance.title" xml:space="preserve"><value>Instance</value></data>
+  <data name="instance.notFound" xml:space="preserve"><value>This instance no longer exists — it may have been deleted or never started.</value></data>
+  <data name="instance.back" xml:space="preserve"><value>Back to runs</value></data>
   <data name="agent.aiRequired" xml:space="preserve"><value>Za zagon nastavite ponudnika UI v Nastavitve → UI.</value></data>
   <data name="ai.notice.configure" xml:space="preserve"><value>Nastavi AI</value></data>
   <data name="ai.notice.title" xml:space="preserve"><value>AI ni konfiguriran</value></data>

@@ -115,6 +115,9 @@
   <data name="calendar.series.title" xml:space="preserve"><value>지표 기록</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>이 백테스트 기간의 캘린더 이벤트</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>설정 → AI에서 AI 공급자를 설정할 때까지 AI 기능이 꺼져 있습니다.</value></data>
+  <data name="instance.title" xml:space="preserve"><value>Instance</value></data>
+  <data name="instance.notFound" xml:space="preserve"><value>This instance no longer exists — it may have been deleted or never started.</value></data>
+  <data name="instance.back" xml:space="preserve"><value>Back to runs</value></data>
   <data name="agent.aiRequired" xml:space="preserve"><value>이를 실행하려면 설정 → AI에서 AI 공급자를 설정하세요.</value></data>
   <data name="ai.notice.configure" xml:space="preserve"><value>AI 설정</value></data>
   <data name="ai.notice.title" xml:space="preserve"><value>AI가 구성되지 않음</value></data>

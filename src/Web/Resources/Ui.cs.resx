@@ -115,6 +115,9 @@
   <data name="calendar.series.title" xml:space="preserve"><value>Historie ukazatele</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Události kalendáře během tohoto backtestu</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>Funkce AI jsou vypnuté, dokud v Nastavení → AI nenastavíte poskytovatele AI.</value></data>
+  <data name="instance.title" xml:space="preserve"><value>Instance</value></data>
+  <data name="instance.notFound" xml:space="preserve"><value>This instance no longer exists — it may have been deleted or never started.</value></data>
+  <data name="instance.back" xml:space="preserve"><value>Back to runs</value></data>
   <data name="agent.aiRequired" xml:space="preserve"><value>Chcete-li to spustit, nastavte v Nastavení → AI poskytovatele AI.</value></data>
   <data name="ai.notice.configure" xml:space="preserve"><value>Nastavit AI</value></data>
   <data name="ai.notice.title" xml:space="preserve"><value>AI není nakonfigurováno</value></data>

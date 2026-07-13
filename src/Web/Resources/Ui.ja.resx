@@ -115,6 +115,9 @@
   <data name="calendar.series.title" xml:space="preserve"><value>指標の履歴</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>このバックテスト中の経済カレンダーイベント</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>設定 → AI で AI プロバイダーを設定するまで、AI 機能は無効です。</value></data>
+  <data name="instance.title" xml:space="preserve"><value>Instance</value></data>
+  <data name="instance.notFound" xml:space="preserve"><value>This instance no longer exists — it may have been deleted or never started.</value></data>
+  <data name="instance.back" xml:space="preserve"><value>Back to runs</value></data>
   <data name="agent.aiRequired" xml:space="preserve"><value>これを実行するには、設定 → AI で AI プロバイダーを設定してください。</value></data>
   <data name="ai.notice.configure" xml:space="preserve"><value>AI を設定</value></data>
   <data name="ai.notice.title" xml:space="preserve"><value>AI が未設定です</value></data>

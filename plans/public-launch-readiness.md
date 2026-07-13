@@ -61,7 +61,23 @@ Status: **IN EXECUTION** — Phase A started 2026-07-12. Author baseline: 2026-0
   `/settings/deployment`. The only industry capability not modelled as an app option is a custom
   vanity domain, which is an operational/ingress concern (correctly out of app scope).
 
-**Status by workstream:** WS-1 gated ✓ · WS-2 ✓ (live-verified 11/11) · WS-3 ✓ · WS-4 ✓✓✓
+- **WS-5 API versioning — largely already done.** Externally-consumed surfaces are versioned:
+  `/api/calendar/v1/*` and `/api/market/v1/*` (URL-segment), and the node protocol carries
+  `X-Node-Protocol-Version` with a `426 Upgrade Required` reject on mismatch. The cookie-auth `/api/*`
+  routes back the same-app SSR UI and need no external version contract. Remaining: a formal
+  deprecation-policy doc.
+- **WS-7 dead-code/dedup.** `src/ExternalNode` was not a real project (no `.csproj`, absent from
+  `cmind.slnx`, unreferenced) — only stale local `obj/` residue; removed. Perf/anti-pattern scans found
+  no materialize-then-filter, sync-over-async, or duplicate-feature smells in the endpoints/infra
+  reviewed. A full solution-wide duplication scan remains a P2 nicety.
+- **WS-8 performance.** Hot-path scan clean (no `.Result`/`.Wait()`, no `ToList().Where()`, no
+  N+1 in the reviewed endpoints). Deeper optimisation (BenchmarkDotNet on the copy-dispatch decision +
+  resync diff, allocation profiling) is P2 and needs profiling infra, not pattern matching.
+
+**Status by workstream:** WS-1 ✓ · WS-2 ✓ (live 11/11) · WS-3 ✓ · WS-4 ✓✓✓ · WS-5 ✓ (bar deprecation
+doc) · WS-6 ✓ · WS-7 ✓ (bar full dup-scan) · WS-8 scanned-clean (deep profiling = P2) · WS-9 tracked ·
+WS-10 ✓ · WS-11 ✓ · WS-12 ✓. Remaining truly-open: literal-100% coverage backfill (multi-week; gates
+force all new coverage), external pen-test, per-persona deploy smoke (WS-9), BenchmarkDotNet perf.
 (tenant-isolation ×2 + endpoint-auth gate; full `/security-review` sweep still pending) · WS-6 ✓ ·
 WS-10 ✓ · WS-12 ✓ · WS-5/7/8/9/11 tracked.
 

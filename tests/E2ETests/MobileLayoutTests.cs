@@ -15,6 +15,9 @@ public sealed class MobileLayoutTests(AppFixture app)
     {
         "/", "/cbots", "/run", "/backtest", "/accounts", "/copy-trading",
         "/ai/build", "/nodes", "/users", "/account", "/settings/features", "/settings/deployment", "/economic-calendar",
+        // F-03: the quant suite + journal were absent from the mobile census.
+        "/quant/execution", "/quant/health", "/quant/integrity", "/quant/positioning",
+        "/quant/regimes", "/quant/sizing", "/quant/tca", "/journal",
     }.Select(r => new object[] { r });
 
     // Shell-simple pages that must never scroll sideways on a phone right now. Grows every phase.
@@ -24,6 +27,9 @@ public sealed class MobileLayoutTests(AppFixture app)
         "/mcp", "/prop-firm", "/settings/legal", "/copy-trading",
         "/agent", "/alerts", "/prop-guard", "/settings/ai", "/settings/openapi", "/accounts",
         "/ai/build", "/ai/review", "/ai/optimize", "/optimize", "/economic-calendar", "/settings/deployment",
+        // F-03: quant suite + journal (empty state) must not scroll sideways on a phone.
+        "/quant/execution", "/quant/health", "/quant/integrity", "/quant/positioning",
+        "/quant/regimes", "/quant/sizing", "/quant/tca", "/journal",
     }.Select(r => new object[] { r });
 
     [Theory]

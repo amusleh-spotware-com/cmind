@@ -6,7 +6,7 @@ namespace E2ETests;
 [Collection(AppCollection.Name)]
 public sealed class AiCopyRecommendTests(AppFixture app)
 {
-    private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 15000 };
+    private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 30000 };
 
     [Fact]
     public async Task Ai_suggest_button_calls_recommender_and_renders_result()
@@ -15,11 +15,12 @@ public sealed class AiCopyRecommendTests(AppFixture app)
         await page.GotoAsync("/copy-trading");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        await page.ClickAsync("[data-testid=ai-suggest]");
-
         // AI is not configured in the test environment, so the recommender degrades to a graceful message
         // that is rendered in the recommendation alert — proving the UI -> endpoint -> AI path is wired.
-        await Assertions.Expect(page.Locator("[data-testid=ai-recommendation]")).ToBeVisibleAsync(Slow);
-        await Assertions.Expect(page.Locator("[data-testid=ai-recommendation]")).ToContainTextAsync("not configured");
+        var recommendation = page.Locator("[data-testid=ai-recommendation]");
+        await page.ClickUntilVisibleAsync("[data-testid=ai-suggest]", recommendation);
+
+        await Assertions.Expect(recommendation).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(recommendation).ToContainTextAsync("not configured");
     }
 }

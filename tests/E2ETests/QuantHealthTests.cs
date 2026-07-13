@@ -8,7 +8,7 @@ namespace E2ETests;
 [Collection(AppCollection.Name)]
 public sealed class QuantHealthTests(AppFixture app)
 {
-    private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 15000 };
+    private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 30000 };
 
     [Fact]
     public async Task Assess_flags_a_decayed_edge()

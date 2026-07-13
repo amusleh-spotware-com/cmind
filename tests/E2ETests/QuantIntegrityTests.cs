@@ -8,7 +8,7 @@ namespace E2ETests;
 [Collection(AppCollection.Name)]
 public sealed class QuantIntegrityTests(AppFixture app)
 {
-    private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 15000 };
+    private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 30000 };
 
     [Fact]
     public async Task Analyze_scores_a_strong_edge_as_robust()

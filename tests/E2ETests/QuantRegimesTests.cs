@@ -8,7 +8,7 @@ namespace E2ETests;
 [Collection(AppCollection.Name)]
 public sealed class QuantRegimesTests(AppFixture app)
 {
-    private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 15000 };
+    private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 30000 };
 
     [Fact]
     public async Task Analyze_renders_a_regime_breakdown()

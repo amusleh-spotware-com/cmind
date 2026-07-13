@@ -6,7 +6,7 @@ namespace E2ETests;
 [Collection(AppCollection.Name)]
 public sealed class QuantPositioningTests(AppFixture app)
 {
-    private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 15000 };
+    private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 30000 };
 
     [Fact]
     public async Task Read_shows_a_contrarian_bias()

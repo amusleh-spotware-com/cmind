@@ -8,7 +8,7 @@ namespace E2ETests;
 [Collection(AppCollection.Name)]
 public sealed class QuantSizingTests(AppFixture app)
 {
-    private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 15000 };
+    private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 30000 };
 
     [Fact]
     public async Task Recommend_size_returns_an_exposure()

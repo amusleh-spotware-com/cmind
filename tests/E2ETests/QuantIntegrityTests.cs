@@ -65,9 +65,12 @@ public sealed class QuantIntegrityTests(AppFixture app)
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
         await page.GetByTestId("integrity-series").FillAsync(equity);
-        await page.GetByText("Equity / balance curve").ClickAsync();
         var verdict = page.Locator("[data-testid=integrity-verdict]");
-        await page.ClickUntilVisibleAsync("[data-testid=integrity-analyze]", verdict);
+        await page.RunUntilVisibleAsync(async () =>
+        {
+            await page.GetByText("Equity / balance curve").ClickAsync();
+            await page.ClickAsync("[data-testid=integrity-analyze]");
+        }, verdict);
 
         await Assertions.Expect(verdict).ToBeVisibleAsync(Slow);
     }

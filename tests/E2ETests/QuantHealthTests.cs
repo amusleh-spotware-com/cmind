@@ -47,9 +47,12 @@ public sealed class QuantHealthTests(AppFixture app)
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
         await page.GetByLabel("Returns or equity curve").FillAsync(equity);
-        await page.GetByText("Equity / balance curve").ClickAsync();
         var verdict = page.Locator("[data-testid=health-verdict]");
-        await page.ClickUntilVisibleAsync("[data-testid=health-assess]", verdict);
+        await page.RunUntilVisibleAsync(async () =>
+        {
+            await page.GetByText("Equity / balance curve").ClickAsync();
+            await page.ClickAsync("[data-testid=health-assess]");
+        }, verdict);
 
         await Assertions.Expect(verdict).ToBeVisibleAsync(Slow);
     }

@@ -27,9 +27,9 @@ public sealed class MfaFlowTests(AppFixture app)
             // --- Enable 2FA from the profile page ---
             var account = await app.NewAuthedPageAsync();
             await account.GotoAsync("/account");
-            await account.ClickAsync("[data-testid=mfa-enable-open]");
+            await account.ClickUntilVisibleAsync("[data-testid=mfa-enable-open]",
+                account.Locator("[data-testid=mfa-qr] svg"));
 
-            await account.WaitForSelectorAsync("[data-testid=mfa-qr] svg");
             secret = await account.Locator("[data-testid=mfa-secret]").InputValueAsync();
             secret.Should().NotBeNullOrWhiteSpace();
 
@@ -60,12 +60,13 @@ public sealed class MfaFlowTests(AppFixture app)
         await page.GotoAsync("/account");
 
         await Assertions.Expect(page.Locator("[data-testid=mfa-section]")).ToBeVisibleAsync();
-        await page.ClickAsync("[data-testid=mfa-enable-open]");
         // The dialog renders in a portal at the document root; assert the QR SVG inside it becomes visible.
-        // Use a Playwright Assertion (auto-retrying) rather than a raw DOM wait so the mobile dialog's async
-        // setup POST (/api/auth/mfa/setup) has time to resolve and inject the inline SVG.
-        await Assertions.Expect(page.Locator("[data-testid=mfa-qr] svg")).ToBeVisibleAsync(
-            new() { Timeout = 30000 });
+        // Retry the open click until the SVG shows so a click dropped before the circuit was interactive
+        // doesn't leave the dialog closed, then let the (auto-retrying) assertion give the async setup POST
+        // (/api/auth/mfa/setup) time to inject the inline SVG.
+        var qr = page.Locator("[data-testid=mfa-qr] svg");
+        await page.ClickUntilVisibleAsync("[data-testid=mfa-enable-open]", qr);
+        await Assertions.Expect(qr).ToBeVisibleAsync(new() { Timeout = 30000 });
     }
 
     private async Task SignInExpectingChallengeAsync(string code)

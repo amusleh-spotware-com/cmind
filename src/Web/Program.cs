@@ -46,9 +46,8 @@ builder.Services.AddMudServices();
 
 // Global mapping of domain/persistence failures on /api routes to RFC7807 ProblemDetails with the
 // correct status (DomainException → 400, unique-violation → 409) instead of a raw 500. See
-// Web.Security.DomainExceptionHandler.
+// Web.Security.DomainExceptionMiddleware (registered first in the pipeline below).
 builder.Services.AddProblemDetails();
-builder.Services.AddExceptionHandler<Web.Security.DomainExceptionHandler>();
 
 // Localization: resources live in src/Web/Resources (Ui.resx + one Ui.<culture>.resx per language).
 // The request-culture pipeline (below) picks the culture from the cookie the switcher/login writes,
@@ -164,16 +163,20 @@ builder.Services.AddHostedService<LocalNodeSeeder>();
 builder.Services.AddHostedService<InstanceReconciler>();
 
 var app = builder.Build();
+
+// FIRST in the pipeline so it catches /api domain/persistence failures before the developer exception
+// page (auto-added in Development) or the /error page — the /api ProblemDetails contract holds in every
+// environment. Non-/api and unclassified exceptions rethrow to the handlers below.
+app.UseMiddleware<Web.Security.DomainExceptionMiddleware>();
+
 app.UseSerilogRequestLogging();
 app.MapHostHealthEndpoints();
 app.MapGet(HealthEndpoints.Version, () => Results.Ok(new NodeAgentInfoResponse(VersionInfo.Product, NodeAgentProtocol.Version)))
     .AllowAnonymous();
 
-// Runs in every environment so the /api ProblemDetails contract (DomainExceptionHandler) is honored
-// in tests too; non-/api failures fall through to the /error page.
-app.UseExceptionHandler(new ExceptionHandlerOptions { ExceptionHandlingPath = "/error" });
 if (!app.Environment.IsDevelopment())
 {
+    app.UseExceptionHandler("/error");
     app.UseHsts();
 }
 

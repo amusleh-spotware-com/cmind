@@ -17,10 +17,22 @@ public static class UserEndpoints
     {
         var g = app.MapGroup("/api/users").RequireAuthorization("AdminOrAbove");
 
-        g.MapGet("/", async (DataContext db) =>
-            await db.Users
-                .Select(u => new { u.Id, u.Email, Role = u.RoleName, u.IsLockedOut, u.CreatedAt })
-                .ToListAsync());
+        g.MapGet("/", async (DataContext db, TimeProvider time) =>
+        {
+            // Effective lock = permanent lock OR an unexpired time-based lockout (A-05: the column
+            // previously showed only the permanent flag, so a failed-login lockout looked "unlocked").
+            var now = time.GetUtcNow();
+            return await db.Users
+                .Select(u => new
+                {
+                    u.Id,
+                    u.Email,
+                    Role = u.RoleName,
+                    IsLockedOut = u.IsLockedOut || (u.LockoutEnd != null && u.LockoutEnd > now),
+                    u.CreatedAt
+                })
+                .ToListAsync();
+        });
 
         g.MapGet("/pending", async (DataContext db) =>
             await db.Users

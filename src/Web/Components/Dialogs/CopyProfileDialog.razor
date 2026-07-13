@@ -26,11 +26,11 @@
                     <MudTd DataLabel="Account">@AccountNumber((Guid)context.destinationAccountId)</MudTd>
                     <MudTd DataLabel="Mode">@context.mode</MudTd>
                     <MudTd DataLabel="Param">@context.riskParameter</MudTd>
-                    <MudTd DataLabel="Reverse">@context.reverse</MudTd>
+                    <MudTd DataLabel="Reverse">@YesNo(context.reverse)</MudTd>
                     <MudTd DataLabel="Direction">@context.direction</MudTd>
-                    <MudTd DataLabel="Partial">@context.mirrorPartialClose</MudTd>
-                    <MudTd DataLabel="Pending">@context.copyPendingOrders</MudTd>
-                    <MudTd DataLabel="Trailing">@context.copyTrailingStop</MudTd>
+                    <MudTd DataLabel="Partial">@YesNo(context.mirrorPartialClose)</MudTd>
+                    <MudTd DataLabel="Pending">@YesNo(context.copyPendingOrders)</MudTd>
+                    <MudTd DataLabel="Trailing">@YesNo(context.copyTrailingStop)</MudTd>
                     <MudTd DataLabel=""><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
                                           aria-label="Remove destination" OnClick="@(() => RemoveDestination((Guid)context.id))" /></MudTd>
                 </RowTemplate>
@@ -161,6 +161,9 @@
             if (a.Id == id) return a.Number.ToString(System.Globalization.CultureInfo.CurrentCulture);
         return "—";
     }
+
+    // Render booleans as human Yes/No, not raw "True"/"False" (C-07).
+    private static string YesNo(dynamic value) => (bool)value ? "Yes" : "No";
 
     private Guid AccountGuid(long number)
     {

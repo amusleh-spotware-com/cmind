@@ -19,8 +19,12 @@
             </MudSelect>
             <MudTextField @bind-Value="_symbol" Label="Symbol" Required="true" RequiredError="Symbol is required" Class="mb-2" />
             <MudTextField @bind-Value="_timeframe" Label="Timeframe" Required="true" RequiredError="Timeframe is required" Class="mb-2" />
-            <MudDatePicker @bind-Date="_from" Label="From" Class="mb-2" />
-            <MudDatePicker @bind-Date="_to" Label="To" Class="mb-2" />
+            <MudDatePicker @bind-Date="_from" Label="From" Class="mb-2" data-testid="backtest-from" />
+            <MudDatePicker @bind-Date="_to" Label="To" Class="mb-2" data-testid="backtest-to" />
+            @if (_dateError is not null)
+            {
+                <MudText Color="Color.Error" Typo="Typo.caption" data-testid="backtest-date-error">@_dateError</MudText>
+            }
             <MudSelect T="Guid?" @bind-Value="_psId" Label="Parameter set" Clearable="true" Class="mb-2">
                 @foreach (var p in _paramsets) { <MudSelectItem T="Guid?" Value="@((Guid?)p.id)">@p.name</MudSelectItem> }
             </MudSelect>
@@ -41,6 +45,7 @@
     private Guid? _cbotId, _acctId, _psId;
     private string _symbol = "EURUSD", _timeframe = "h1", _image = "latest";
     private DateTime? _from, _to;
+    private string? _dateError;
 
     protected override async Task OnInitializedAsync()
     {
@@ -78,6 +83,14 @@
         if (_form is not null) await _form.Validate();
         if (_cbotId is null || _acctId is null
             || string.IsNullOrWhiteSpace(_symbol) || string.IsNullOrWhiteSpace(_timeframe)) return;
+        // A backtest with a missing or inverted window produces an empty --start/--end that the cTrader
+        // Console rejects silently (B-05) — validate the dates before dispatching.
+        if (_from is null || _to is null || _from >= _to)
+        {
+            _dateError = "Pick a valid From date earlier than the To date.";
+            return;
+        }
+        _dateError = null;
         Dialog.Close(DialogResult.Ok(new BacktestDialogResult(
             _cbotId, _acctId, _symbol.Trim(), _timeframe.Trim(), _psId, _image.Trim(), _from, _to)));
     }

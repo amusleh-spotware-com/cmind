@@ -2,6 +2,7 @@
    and the breach cause. Renders for any state (active, passed, failed, stopped, or missing) without
    crashing the circuit — every fetch is guarded. Opened from the /prop-firm table's view icon. *@
 @using System.Net.Http.Json
+@using Web.Json
 @inject HttpClient Http
 
 <MudDialog>
@@ -69,7 +70,7 @@
         {
             var response = await Http.GetAsync($"/api/prop-firm/challenges/{ChallengeId}");
             if (!response.IsSuccessStatusCode) { _notFound = true; return; }
-            _challenge = await response.Content.ReadFromJsonAsync<dynamic>();
+            _challenge = await response.Content.ReadFromJsonAsync<object?>(JsonDefaults.DynamicWeb);
         }
         catch { _notFound = true; }
     }

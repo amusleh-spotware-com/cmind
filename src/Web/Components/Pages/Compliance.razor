@@ -1,9 +1,11 @@
 ﻿@page "/settings/legal"
 @using System.Net.Http.Json
+@using Web.Components.Dialogs
 @using Web.Json
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
+@inject IDialogService Dialogs
 
 <PageTitle>Legal &amp; Privacy</PageTitle>
 
@@ -75,6 +77,10 @@ else
 
     private async Task Erase()
     {
+        if (!await Dialogs.ConfirmAsync("Erase my account",
+                "This permanently erases your account and all associated data. This cannot be undone. Continue?",
+                "Erase", "Cancel"))
+            return;
         var r = await Http.PostAsync("/api/compliance/erase", null);
         if (r.IsSuccessStatusCode) Snack.Add("Account erased — you will be signed out shortly.", Severity.Info);
         else Snack.Add("Erase failed", Severity.Error);

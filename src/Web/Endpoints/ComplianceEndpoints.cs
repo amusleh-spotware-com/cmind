@@ -64,7 +64,7 @@ public static class ComplianceEndpoints
             if (user is null) return Results.NotFound();
             return Results.Ok(new
             {
-                user = new { id = uid.Value, user.Email, user.RoleName, user.CreatedAt },
+                user = new { user.Email, user.RoleName, user.CreatedAt },
                 consents = (await consents.ListByUserAsync(uid, ct))
                     .Select(c => new { Type = c.DocumentType.ToString(), c.Version, c.AcceptedAt }),
                 copyProfiles = await db.CopyProfiles.AsNoTracking().Where(p => p.UserId == uid)

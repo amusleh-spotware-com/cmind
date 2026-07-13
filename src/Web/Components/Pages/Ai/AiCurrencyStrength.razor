@@ -2,6 +2,8 @@
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inherits AiFeaturePageBase
 @using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IStringLocalizer<Ui> L
 
 <PageTitle>AI · Currency Strength</PageTitle>
 
@@ -9,8 +11,18 @@
     <MudText Typo="Typo.h5">Macro Currency Strength</MudText>
     <HelpTip Text="A deterministic macro model ranks currencies by fundamental strength and projects a forward directional bias for every pair over a chosen horizon. The AI gathers the forward trajectory and geopolitics; the ranking and pair math are deterministic. Fundamentals are a medium/long-term positioning filter, not a short-term timing signal." />
     <MudSpacer />
-    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh"
-               OnClick="Refresh" Disabled="Busy" data-testid="cs-refresh">Refresh now</MudButton>
+    @if (_isOwner)
+    {
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="Refresh" Disabled="Busy" data-testid="cs-refresh">Refresh now</MudButton>
+    }
+    else
+    {
+        <MudTooltip Text='@L["cs.refresh.ownerOnly"]'>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh"
+                       Disabled="true" data-testid="cs-refresh">Refresh now</MudButton>
+        </MudTooltip>
+    }
 </MudStack>
 
 <AiFeatureNotice EnabledChanged="OnAiStatus" />
@@ -47,7 +59,7 @@ else
         <MudItem xs="12" md="6">
             <MudPaper Class="pa-4" Elevation="1" data-testid="cs-ranking">
                 <MudText Typo="Typo.subtitle1" Class="mb-2">Current ranking</MudText>
-                <MudTable Items="_view.Ranking" Dense="true" Breakpoint="Breakpoint.None" Hover="true">
+                <MudTable Items="_view.Ranking" Dense="true" Breakpoint="Breakpoint.Sm" Hover="true">
                     <HeaderContent>
                         <MudTh>#</MudTh><MudTh>Ccy</MudTh><MudTh>Tier</MudTh><MudTh>Score</MudTh><MudTh>Conf</MudTh>
                     </HeaderContent>
@@ -65,7 +77,7 @@ else
         <MudItem xs="12" md="6">
             <MudPaper Class="pa-4" Elevation="1" data-testid="cs-forecast">
                 <MudText Typo="Typo.subtitle1" Class="mb-2">Forward forecast (@_view.Horizon)</MudText>
-                <MudTable Items="_view.Forecasts.OrderByDescending(f => f.Projected)" Dense="true" Breakpoint="Breakpoint.None">
+                <MudTable Items="_view.Forecasts.OrderByDescending(f => f.Projected)" Dense="true" Breakpoint="Breakpoint.Sm">
                     <HeaderContent>
                         <MudTh>Ccy</MudTh><MudTh>Current</MudTh><MudTh>Projected</MudTh><MudTh>Δ</MudTh>
                     </HeaderContent>
@@ -83,7 +95,7 @@ else
             <MudPaper Class="pa-4" Elevation="1" data-testid="cs-matrix">
                 <MudText Typo="Typo.subtitle1" Class="mb-2">Pair outlook (@_view.Horizon)</MudText>
                 <div style="overflow-x:auto;">
-                    <MudTable Items="_view.Pairs.OrderByDescending(p => p.Conviction)" Dense="true" Breakpoint="Breakpoint.None" Hover="true">
+                    <MudTable Items="_view.Pairs.OrderByDescending(p => p.Conviction)" Dense="true" Breakpoint="Breakpoint.Sm" Hover="true">
                         <HeaderContent>
                             <MudTh>Pair</MudTh><MudTh>Bias</MudTh><MudTh>Conviction</MudTh><MudTh>Differential</MudTh><MudTh>Flags</MudTh>
                         </HeaderContent>
@@ -121,11 +133,19 @@ else
 }
 
 @code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
     private string _horizon = "3M";
     private string _tier = "All";
+    private bool _isOwner;
     private CsView? _view;
 
-    protected override async Task OnInitializedAsync() => await Load();
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState is not null)
+            _isOwner = (await AuthState).User.IsInRole("Owner");
+        await Load();
+    }
 
     private async Task OnHorizonChanged(string? value) { _horizon = value ?? "3M"; await Load(); }
     private async Task OnTierChanged(string? value) { _tier = value ?? "All"; await Load(); }

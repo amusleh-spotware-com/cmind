@@ -24,6 +24,9 @@ public sealed class EconomicCalendarE2ETests(AppFixture app)
             .WaitForAsync(new LocatorWaitForOptions { Timeout = 10000 });
         (await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Filters" }).CountAsync())
             .Should().Be(0, "the filter action is hidden until a data source is configured");
+
+        // G-06: the page carries a HelpTip explaining what the calendar shows / how to configure a source.
+        (await page.Locator("[data-testid=help-tip]").First.IsVisibleAsync()).Should().BeTrue();
     }
 
     [Fact]
@@ -36,5 +39,13 @@ public sealed class EconomicCalendarE2ETests(AppFixture app)
         (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
         (await page.Locator("[data-testid=page-error]").IsVisibleAsync()).Should().BeFalse();
         (await page.GetByText("US.CPI").First.IsVisibleAsync()).Should().BeTrue();
+
+        // G-02: source-less ⇒ the series page shows the same actionable notice as the main calendar,
+        // not a neutral "no events" alert.
+        await page.Locator("[data-testid=calendar-source-required]")
+            .WaitForAsync(new LocatorWaitForOptions { Timeout = 10000 });
+
+        // G-06: the series page carries a HelpTip too.
+        (await page.Locator("[data-testid=help-tip]").First.IsVisibleAsync()).Should().BeTrue();
     }
 }

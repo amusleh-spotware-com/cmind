@@ -84,7 +84,7 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
     {
         var page = await OpenAsync("/ai/currency-strength");
 
-        // AI is configured (fake local LLM) ⇒ no keyless gate, refresh is enabled.
+        // AI is configured (fake local LLM) ⇒ no keyless gate; the owner sees the refresh enabled.
         (await page.Locator("[data-testid=ai-not-configured]").IsVisibleAsync()).Should().BeFalse();
         var refresh = page.Locator("[data-testid=cs-refresh]");
         await Assertions.Expect(refresh).ToBeEnabledAsync(new() { Timeout = 20000 });
@@ -94,6 +94,67 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
         await page.WaitForTimeoutAsync(1500);
         (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
         (await page.Locator("[data-testid=page-error]").IsVisibleAsync()).Should().BeFalse();
+
+        // G-05: after a successful refresh the AI narrative must render and carry the fake LLM's canned reply.
+        var narrative = page.Locator("[data-testid=cs-narrative]");
+        await Assertions.Expect(narrative).ToBeVisibleAsync(Slow);
+        if (app.UsingFakeLlm)
+            (await narrative.InnerTextAsync()).Should().Contain(AiLocalFixture.CannedReply);
+    }
+
+    [Fact]
+    public async Task Currency_strength_refresh_is_disabled_for_non_owner()
+    {
+        // G-01: the refresh POST is Owner-only; a non-owner must never see an enabled (doomed) button.
+        var email = $"cs-user-{Guid.NewGuid():N}@e2e.local";
+        const string password = "User_Pass_123!";
+        const string newPassword = "User_Pass_456!";
+
+        var ownerPage = await app.NewAuthedPageAsync();
+        var create = await ownerPage.APIRequest.PostAsync($"{app.BaseUrl}/api/users",
+            new APIRequestContextOptions { DataObject = new { Email = email, Password = password, Role = 2 } });
+        create.Status.Should().Be(200);
+
+        var context = await app.Browser.NewContextAsync(new BrowserNewContextOptions { BaseURL = app.BaseUrl });
+        try
+        {
+            var login = await context.APIRequest.PostAsync($"{app.BaseUrl}/api/auth/login",
+                new APIRequestContextOptions { DataObject = new { Email = email, Password = password } });
+            login.Status.Should().Be(200);
+            var change = await context.APIRequest.PostAsync($"{app.BaseUrl}/api/auth/change-password",
+                new APIRequestContextOptions
+                { DataObject = new { CurrentPassword = password, NewPassword = newPassword } });
+            change.Status.Should().Be(200);
+
+            var page = await context.NewPageAsync();
+            await page.GotoAsync("/ai/currency-strength", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+            var refresh = page.Locator("[data-testid=cs-refresh]");
+            await Assertions.Expect(refresh).ToBeVisibleAsync(Slow);
+            await Assertions.Expect(refresh).ToBeDisabledAsync(new() { Timeout = 20000 });
+            (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
+        }
+        finally
+        {
+            await context.DisposeAsync();
+        }
+    }
+
+    [Fact]
+    public async Task Currency_strength_has_no_horizontal_overflow_on_mobile_with_data()
+    {
+        // G-04: after a refresh loads the (multi-column) tables, the phone layout must not scroll sideways.
+        var page = await OpenAsync("/ai/currency-strength", mobile: true);
+
+        var refresh = page.Locator("[data-testid=cs-refresh]");
+        await Assertions.Expect(refresh).ToBeEnabledAsync(new() { Timeout = 20000 });
+        await refresh.ClickAsync();
+        await Assertions.Expect(page.Locator("[data-testid=cs-ranking]")).ToBeVisibleAsync(Slow);
+
+        var noOverflow = await page.EvaluateAsync<bool>(
+            "() => document.documentElement.scrollWidth <= window.innerWidth + 1");
+        noOverflow.Should().BeTrue("the currency-strength tables must collapse to cards on a 360px phone");
     }
 
     [Fact]

@@ -120,4 +120,7 @@
   <data name="ai.notice.body" xml:space="preserve"><value>Настройте поставщика ИИ в Настройки → ИИ, чтобы использовать функции ИИ — встроенную модель, локальную LLM или облачного поставщика.</value></data>
   <data name="ai.notice.openSettings" xml:space="preserve"><value>Открыть настройки ИИ</value></data>
   <data name="ai.notice.later" xml:space="preserve"><value>Позже</value></data>
+  <data name="cs.refresh.ownerOnly" xml:space="preserve"><value>Only the deployment owner can refresh the currency-strength snapshot.</value></data>
+  <data name="calendar.help" xml:space="preserve"><value>Upcoming high-impact economic releases (CPI, NFP, rate decisions). Configure a FRED/BLS data source in Settings -&gt; Deployment to populate the calendar.</value></data>
+  <data name="calendar.series.help" xml:space="preserve"><value>Full release history for this economic series - actual vs forecast vs previous. Configure a FRED/BLS data source in Settings -&gt; Deployment to populate it.</value></data>
 </root>

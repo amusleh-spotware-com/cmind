@@ -74,10 +74,32 @@ Status: **IN EXECUTION** — Phase A started 2026-07-12. Author baseline: 2026-0
   N+1 in the reviewed endpoints). Deeper optimisation (BenchmarkDotNet on the copy-dispatch decision +
   resync diff, allocation profiling) is P2 and needs profiling infra, not pattern matching.
 
-**Status by workstream:** WS-1 ✓ · WS-2 ✓ (live 11/11) · WS-3 ✓ · WS-4 ✓✓✓ · WS-5 ✓ (bar deprecation
-doc) · WS-6 ✓ · WS-7 ✓ (bar full dup-scan) · WS-8 scanned-clean (deep profiling = P2) · WS-9 tracked ·
-WS-10 ✓ · WS-11 ✓ · WS-12 ✓. Remaining truly-open: literal-100% coverage backfill (multi-week; gates
-force all new coverage), external pen-test, per-persona deploy smoke (WS-9), BenchmarkDotNet perf.
+**Status by workstream:** WS-1 ✓ · WS-2 ✓ (live 11/11) · WS-3 ✓ · WS-4 ✓✓✓ · WS-5 ✓ · WS-6 ✓ · WS-7 ✓
+(bar full dup-scan) · WS-8 scanned-clean (deep profiling = P2) · WS-9 ✓ (self-hoster compose-smoke +
+K8s Kind smoke; cloud personas doc-only) · WS-10 ✓ · WS-11 ✓ · WS-12 ✓. Remaining truly-open:
+literal-100% coverage backfill (multi-week; gates force all new coverage), external pen-test,
+BenchmarkDotNet perf (P2), cloud (AWS/Azure IaC) deploy smoke.
+
+### API versioning & deprecation policy (WS-5 contract)
+
+Externally-consumed surfaces are versioned and evolve under this contract:
+- **REST APIs** (`/api/calendar/v1`, `/api/market/v1`): URL-segment version. A breaking change ships a
+  new `/vN+1` group; the previous version stays for **≥ 2 minor releases** (≥ 90 days) and is announced
+  under `## [Unreleased] > Deprecated` in `CHANGELOG.md` before removal.
+- **Node agent protocol**: every main→agent request carries `X-Node-Protocol-Version`; the agent rejects
+  an incompatible caller with `426 Upgrade Required`. Bump the protocol constant on any wire-breaking
+  change and add a compat-matrix test (main vN ↔ agent vN±1).
+- **Product SemVer** (`VersionPrefix` in `Directory.Build.props`): MAJOR = breaking API/protocol, MINOR =
+  additive, PATCH = fixes. Every release tags `vX.Y.Z` and updates the CHANGELOG.
+
+### Deployment personas (WS-9)
+
+| Persona | One command | Smoke gate |
+|---|---|---|
+| Local evaluator | `dotnet run --project src/AppHost` (Aspire) | E2E `AppFixture` |
+| Self-hoster | `cp .env.example .env && docker compose up --build` | `scripts/compose-smoke.sh` (nightly) |
+| Kubernetes | `helm install cmind deploy/helm/cmind` | `scripts/k8s-e2e.sh` (nightly Kind) |
+| Cloud (AWS/Azure) | `deploy/aws/*.tf` · `deploy/azure/main.bicep` | doc-only (IaC smoke = P2) |
 (tenant-isolation ×2 + endpoint-auth gate; full `/security-review` sweep still pending) · WS-6 ✓ ·
 WS-10 ✓ · WS-12 ✓ · WS-5/7/8/9/11 tracked.
 

@@ -51,7 +51,11 @@ public sealed class OwnerSeeder(
 
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         var email = new Email(opts.OwnerEmail);
-        var owner = OwnerUser.Create(email, hasher.Hash(opts.OwnerPassword), RandomNumberGenerator.GetBytes(32));
+        // The owner password is explicit deployment config (App:OwnerPassword), not a generated temp
+        // password — the operator chose it, so don't force a change-password on first sign-in (which the
+        // MustChangePassword enforcement guard would otherwise require).
+        var owner = OwnerUser.Create(email, hasher.Hash(opts.OwnerPassword), RandomNumberGenerator.GetBytes(32),
+            mustChangePassword: false);
         db.Users.Add(owner);
         await db.SaveChangesAsync(ct);
         log.OwnerSeeded(email.Value);

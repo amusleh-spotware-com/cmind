@@ -113,6 +113,8 @@
   <data name="whitelabel.cat.openApi" xml:space="preserve"><value>Open API</value></data>
   <data name="whitelabel.cat.propFirm" xml:space="preserve"><value>Prop firm</value></data>
   <data name="calendar.series.title" xml:space="preserve"><value>Ιστορικό δείκτη</value></data>
+  <data name="calendar.series.loading" xml:space="preserve"><value>Φόρτωση ιστορικού δείκτη…</value></data>
+  <data name="calendar.series.empty" xml:space="preserve"><value>Δεν υπάρχει ακόμη ιστορικό για αυτή τη σειρά. Μόλις ρυθμιστεί μια πηγή δεδομένων και εισαχθούν δεδομένα, οι δημοσιεύσεις θα εμφανιστούν εδώ.</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Γεγονότα ημερολογίου κατά τη διάρκεια αυτού του backtest</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>Οι λειτουργίες AI είναι απενεργοποιημένες μέχρι να ρυθμιστεί ένας πάροχος AI στις Ρυθμίσεις → AI.</value></data>
   <data name="common.delete" xml:space="preserve"><value>Delete</value></data>

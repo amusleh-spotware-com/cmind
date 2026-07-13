@@ -113,6 +113,8 @@
   <data name="whitelabel.cat.openApi" xml:space="preserve"><value>Open API</value></data>
   <data name="whitelabel.cat.propFirm" xml:space="preserve"><value>Prop firm</value></data>
   <data name="calendar.series.title" xml:space="preserve"><value>История показателя</value></data>
+  <data name="calendar.series.loading" xml:space="preserve"><value>Загрузка истории индикатора…</value></data>
+  <data name="calendar.series.empty" xml:space="preserve"><value>Для этой серии пока нет истории. После настройки источника данных и импорта данных публикации появятся здесь.</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>События календаря во время этого бэктеста</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>Функции ИИ отключены, пока в Настройки → ИИ не настроен поставщик ИИ.</value></data>
   <data name="common.delete" xml:space="preserve"><value>Delete</value></data>

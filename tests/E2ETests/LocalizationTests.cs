@@ -71,4 +71,29 @@ public sealed class LocalizationTests(AppFixture app)
         }
         finally { await SwitchCultureAsync(page, "en"); }
     }
+
+    // I-05: it is not enough that <html dir=rtl> is set — assert the computed flow direction actually
+    // cascades to a shell element (the nav), so a future MudBlazor RTL regression is caught programmatically
+    // rather than only by eye.
+    [Fact]
+    public async Task Arabic_locale_lays_out_shell_right_to_left()
+    {
+        var page = await app.NewAuthedPageAsync();
+        try
+        {
+            await SwitchCultureAsync(page, "ar");
+
+            (await page.GetAttributeAsync("html", "dir")).Should().Be("rtl");
+
+            var htmlDirection = await page.Locator("html")
+                .EvaluateAsync<string>("el => getComputedStyle(el).direction");
+            htmlDirection.Should().Be("rtl", "the document root must compute RTL in Arabic");
+
+            var nav = page.Locator("[data-testid=nav-settings]");
+            await nav.WaitForAsync(new() { State = WaitForSelectorState.Visible });
+            var navDirection = await nav.EvaluateAsync<string>("el => getComputedStyle(el).direction");
+            navDirection.Should().Be("rtl", "a shell nav element must inherit RTL flow direction in Arabic");
+        }
+        finally { await SwitchCultureAsync(page, "en"); }
+    }
 }

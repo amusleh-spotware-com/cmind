@@ -36,24 +36,21 @@
             }
             else
             {
-                <MudSimpleTable Dense="true" Hover="true">
-                    <thead><tr><th>Name</th><th>Symbol</th><th>Every</th><th>On</th><th></th></tr></thead>
-                    <tbody>
-                        @foreach (var r in _rules)
-                        {
-                            <tr>
-                                <td>@r.name</td>
-                                <td>@r.symbol</td>
-                                <td>@r.intervalMinutes m</td>
-                                <td>@(((bool)r.enabled) ? "Yes" : "No")</td>
-                                <td>
-                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
-                                                   OnClick="@(() => DeleteRule((Guid)r.id))" />
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </MudSimpleTable>
+                <MudTable Items="_rules" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
+                    <HeaderContent>
+                        <MudTh>Name</MudTh><MudTh>Symbol</MudTh><MudTh>Every</MudTh><MudTh>On</MudTh><MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Name">@context.name</MudTd>
+                        <MudTd DataLabel="Symbol">@context.symbol</MudTd>
+                        <MudTd DataLabel="Every">@context.intervalMinutes m</MudTd>
+                        <MudTd DataLabel="On">@(((bool)context.enabled) ? "Yes" : "No")</MudTd>
+                        <MudTd DataLabel="">
+                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
+                                           OnClick="@(() => DeleteRule((Guid)context.id))" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
             }
         </MudPaper>
     </MudItem>

@@ -115,6 +115,7 @@
   <data name="calendar.series.title" xml:space="preserve"><value>Historique de l'indicateur</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Événements du calendrier pendant ce backtest</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>Les fonctionnalités d'IA sont désactivées tant qu'un fournisseur d'IA n'est pas configuré dans Paramètres → IA.</value></data>
+  <data name="agent.aiRequired" xml:space="preserve"><value>Configurez un fournisseur d'IA dans Paramètres → IA pour l'exécuter.</value></data>
   <data name="ai.notice.configure" xml:space="preserve"><value>Configurer l'IA</value></data>
   <data name="ai.notice.title" xml:space="preserve"><value>IA non configurée</value></data>
   <data name="ai.notice.body" xml:space="preserve"><value>Configurez un fournisseur d'IA dans Paramètres → IA pour utiliser les fonctionnalités d'IA — le modèle intégré, un LLM local ou un fournisseur cloud.</value></data>

@@ -21,6 +21,11 @@
 @code {
     [Parameter] public EventCallback<bool> EnabledChanged { get; set; }
 
+    // Opt-in one-time dialog: dedicated AI feature pages that want the intrusive "configure a provider"
+    // prompt set this true; AI-independent surfaces (Alerts, MCP keys, the Agent list) show the banner
+    // only and never a blocking dialog.
+    [Parameter] public bool PromptOnLoad { get; set; }
+
     private bool _enabled;
     private bool _loaded;
     private bool _promptPending;
@@ -37,7 +42,7 @@
             _enabled = false;
         }
         _loaded = true;
-        _promptPending = !_enabled;
+        _promptPending = PromptOnLoad && !_enabled;
         await EnabledChanged.InvokeAsync(_enabled);
     }
 

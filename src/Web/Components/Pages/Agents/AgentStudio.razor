@@ -6,6 +6,7 @@
 @inject HttpClient Http
 @inject IDialogService Dialogs
 @inject MudBlazor.ISnackbar Snack
+@inject IStringLocalizer<Ui> L
 
 <PageTitle>AI · Agent Studio</PageTitle>
 
@@ -17,6 +18,8 @@
                OnClick="CreateAgent" data-testid="agent-new">New agent</MudButton>
 </MudStack>
 
+<AiFeatureNotice EnabledChanged="OnAiStatus" />
+
 @if (_agents.Count == 0)
 {
     <MudText Typo="Typo.body2" Class="mud-text-secondary" data-testid="agents-empty">
@@ -25,20 +28,20 @@
 }
 else
 {
-    <MudTable Items="_agents" Dense="true" Hover="true" data-testid="agents-table">
+    <MudTable Items="_agents" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" data-testid="agents-table">
         <HeaderContent>
             <MudTh>Agent</MudTh><MudTh>Type</MudTh><MudTh>Autonomy</MudTh><MudTh>Accounts</MudTh>
             <MudTh>Goals</MudTh><MudTh>Status</MudTh><MudTh>Last action</MudTh><MudTh>Controls</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd>@context.name</MudTd>
-            <MudTd>@context.archetype</MudTd>
-            <MudTd>@context.autonomy</MudTd>
-            <MudTd>@context.accountCount</MudTd>
-            <MudTd>@context.goalCount</MudTd>
-            <MudTd><MudChip T="string" Size="Size.Small" Color="@StatusColor(context.status)">@context.status</MudChip></MudTd>
-            <MudTd>@(context.lastAction ?? "—")</MudTd>
-            <MudTd>
+            <MudTd DataLabel="Agent">@context.name</MudTd>
+            <MudTd DataLabel="Type">@context.archetype</MudTd>
+            <MudTd DataLabel="Autonomy">@context.autonomy</MudTd>
+            <MudTd DataLabel="Accounts">@context.accountCount</MudTd>
+            <MudTd DataLabel="Goals">@context.goalCount</MudTd>
+            <MudTd DataLabel="Status"><MudChip T="string" Size="Size.Small" Color="@StatusColor(context.status)">@context.status</MudChip></MudTd>
+            <MudTd DataLabel="Last action">@(context.lastAction ?? "—")</MudTd>
+            <MudTd DataLabel="Controls">
                 <MudTooltip Text="Details">
                     <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" aria-label="Agent details"
                                    OnClick="() => OpenDetail(context.id, context.name)" data-testid="agent-details" />
@@ -47,9 +50,9 @@ else
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" aria-label="Edit agent"
                                    OnClick="() => EditAgent(context)" data-testid="agent-edit" />
                 </MudTooltip>
-                <MudTooltip Text="Start agent">
+                <MudTooltip Text="@(_aiEnabled ? "Start agent" : L["agent.aiRequired"])">
                     <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" Color="Color.Success"
-                                   aria-label="Start agent" Disabled="@(context.status == "Running")"
+                                   aria-label="Start agent" Disabled="@(!_aiEnabled || context.status == "Running")"
                                    OnClick="() => Start(context.id)" data-testid="agent-start" />
                 </MudTooltip>
                 <MudTooltip Text="Stop agent">
@@ -70,6 +73,13 @@ else
 @code {
     private List<AgentRow> _agents = [];
     private List<AgentCreateDialog.AgentAccountOption> _accounts = [];
+    private bool _aiEnabled;
+
+    private void OnAiStatus(bool enabled)
+    {
+        _aiEnabled = enabled;
+        StateHasChanged();
+    }
 
     protected override async Task OnInitializedAsync()
     {

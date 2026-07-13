@@ -115,6 +115,7 @@
   <data name="calendar.series.title" xml:space="preserve"><value>História ukazovateľa</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Udalosti kalendára počas tohto backtestu</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>Funkcie AI sú vypnuté, kým v Nastavenia → AI nenastavíte poskytovateľa AI.</value></data>
+  <data name="agent.aiRequired" xml:space="preserve"><value>Ak to chcete spustiť, nastavte v Nastavenia → AI poskytovateľa AI.</value></data>
   <data name="ai.notice.configure" xml:space="preserve"><value>Nastaviť AI</value></data>
   <data name="ai.notice.title" xml:space="preserve"><value>AI nie je nakonfigurované</value></data>
   <data name="ai.notice.body" xml:space="preserve"><value>Nastavte poskytovateľa AI v Nastavenia → AI, aby ste mohli používať funkcie AI — vstavaný model, lokálny LLM alebo cloudového poskytovateľa.</value></data>

@@ -115,6 +115,7 @@
   <data name="calendar.series.title" xml:space="preserve"><value>Histórico do indicador</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Eventos do calendário durante este backtest</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>Os recursos de IA estão desativados até que um provedor de IA seja configurado em Configurações → IA.</value></data>
+  <data name="agent.aiRequired" xml:space="preserve"><value>Configure um provedor de IA em Configurações → IA para executar isto.</value></data>
   <data name="ai.notice.configure" xml:space="preserve"><value>Configurar IA</value></data>
   <data name="ai.notice.title" xml:space="preserve"><value>IA não configurada</value></data>
   <data name="ai.notice.body" xml:space="preserve"><value>Configure um provedor de IA em Configurações → IA para usar os recursos de IA — o modelo integrado, um LLM local ou um provedor de nuvem.</value></data>

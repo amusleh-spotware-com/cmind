@@ -9,7 +9,7 @@
     <HelpTip Text="The AI searches current news and price action for a symbol and summarises the prevailing market sentiment." />
 </MudStack>
 
-<AiFeatureNotice EnabledChanged="OnAiStatus" />
+<AiFeatureNotice EnabledChanged="OnAiStatus" PromptOnLoad="true" />
 
 <MudPaper Class="pa-4" Elevation="1">
     <MudTextField @bind-Value="_symbol" Label="Symbol" Style="max-width:200px;" Placeholder="EURUSD" />

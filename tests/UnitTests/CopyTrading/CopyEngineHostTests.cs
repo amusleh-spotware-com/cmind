@@ -750,4 +750,59 @@ public sealed class CopyEngineHostTests
             1056, // partial close
         });
     }
+
+    [Fact]
+    public async Task One_master_open_copies_to_every_slave()
+    {
+        var session = NewSession();
+        var plan = Plan(
+            new CopyDestinationPlan(Slave, "t", 1, Destination(Slave)),
+            new CopyDestinationPlan(Slave2, "t", 1, Destination(Slave2)));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushOpen(Source, 7201, SymbolId, isBuy: true, volume: 100);
+            await WaitUntil(() => session.Orders.Count == 2);
+        });
+
+        session.Orders.Select(o => o.Ctid).Should().BeEquivalentTo([Slave, Slave2],
+            "a 1:many profile mirrors the master open onto every slave");
+        session.Orders.Should().OnlyContain(o => o.Volume == 100 && o.Label == "7201");
+    }
+
+    // Different risk-management (money-management) sizing modes each size the copy as configured, through
+    // the real engine + fake session. Master and destination share the fake's 10000 balance/equity/free
+    // margin, so proportional ratios are 1; a master open of 1 lot (100 wire units at LotSize 100) sizes as
+    // the mode dictates. The live counterpart (Risk_sizing_mode_places_a_live_copy) clamps to min lot for
+    // safety; here the exact sized volume is asserted.
+    public static IEnumerable<object[]> SizingModes() =>
+    [
+        [MoneyManagementMode.FixedLot, 2.0, 200L],             // param is the destination lot size directly
+        [MoneyManagementMode.LotMultiplier, 2.0, 200L],        // 1 master lot x 2
+        [MoneyManagementMode.NotionalMultiplier, 1.0, 100L],   // equal contract size -> 1:1
+        [MoneyManagementMode.ProportionalBalance, 1.0, 100L],  // equal balances -> ratio 1
+        [MoneyManagementMode.ProportionalEquity, 1.0, 100L],
+        [MoneyManagementMode.ProportionalFreeMargin, 1.0, 100L],
+        [MoneyManagementMode.AutoProportional, 1.0, 100L],
+        [MoneyManagementMode.FixedRiskPercent, 0.01, 100L],    // 0.01% of 10000 / contract size 1 = 1 lot
+        [MoneyManagementMode.FixedLeverage, 0.0001, 100L],     // 0.0001x of 10000 / contract size 1 = 1 lot
+    ];
+
+    [Theory]
+    [MemberData(nameof(SizingModes))]
+    public async Task Risk_sizing_mode_sizes_the_copy(MoneyManagementMode mode, double parameter, long expectedVolume)
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
+            Destination(Slave, d => d.ConfigureRisk(new RiskSettings(mode, parameter)))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushOpen(Source, 7101, SymbolId, isBuy: true, volume: 100);
+            await WaitUntil(() => session.Orders.Count == 1);
+        });
+
+        session.Orders.Single().Volume.Should().Be(expectedVolume,
+            $"the {mode} sizing mode must size the copy as configured");
+    }
 }

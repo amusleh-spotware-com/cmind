@@ -44,7 +44,7 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
         await probe.StartAsync(ct);
 
         var symbolId = await ResolveSymbolAsync(probe, masterCtid, slaves.Select(s => s.Account.Ctid).ToList(), ct);
-        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct)).First();
+        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct))[0];
         var volume = details.MinVolume > 0 ? details.MinVolume : details.StepVolume;
 
         var label = $"cmind-live-{Guid.NewGuid():N}"[..24];
@@ -99,7 +99,7 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
         await probe.StartAsync(ct);
 
         var symbolId = await ResolveSymbolAsync(probe, masterCtid, [slave.Account.Ctid], ct);
-        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct)).First();
+        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct))[0];
         var step = details.StepVolume > 0 ? details.StepVolume : 1;
         var volume = Math.Max(details.MinVolume, step * 2);
 
@@ -138,13 +138,15 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
         return new PartialCloseResult(false, null, before, after);
     }
 
-    public sealed record PendingResult(bool Inconclusive, string? Reason, bool SlavePendingAppeared, bool SlavePendingCancelled);
+    public sealed record PendingResult(bool Inconclusive, string? Reason, bool SlavePendingAppeared,
+        bool SlaveKindMatches, bool SlavePendingCancelled);
 
-    // Places a resting limit order on the master (away from market so it won't fill), asserts a
-    // matching pending appears on the slave, cancels it on the master, and asserts the slave pending
-    // is cancelled too. Demo only; cancels every order it created.
+    // Places a resting pending order on the master of the requested kind (Limit below market, Stop above
+    // market — either way away from market so it won't fill), asserts a matching pending of the SAME kind
+    // appears on the slave, cancels it on the master, and asserts the slave pending is cancelled too.
+    // Demo only; cancels every order it created.
     public async Task<PendingResult> RunPendingAsync(LiveCopyFixture.LiveAccount master,
-        SlaveSetup slave, CancellationToken ct)
+        SlaveSetup slave, CopyOrderKind kind, CancellationToken ct)
     {
         var masterCtid = master.Ctid;
         var plan = new CopyProfilePlan(CopyProfileId.New(), Live: false, fixture.ClientId, fixture.ClientSecret,
@@ -159,14 +161,15 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
         await probe.StartAsync(ct);
 
         var symbolId = await ResolveSymbolAsync(probe, masterCtid, [slave.Account.Ctid], ct, FxPreference);
-        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct)).First();
+        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct))[0];
         var volume = details.MinVolume > 0 ? details.MinVolume : details.StepVolume;
-        var (bid, _) = await probe.LoadSpotPriceAsync(masterCtid, symbolId, ct);
-        var limitPrice = Math.Round(bid * 0.98, 5); // resting buy well below market — will not fill
+        var (bid, ask) = await probe.LoadSpotPriceAsync(masterCtid, symbolId, ct);
+        // A resting BUY: a Stop rests ABOVE market, a Limit rests BELOW market — neither fills now.
+        var price = kind == CopyOrderKind.Stop ? Math.Round(ask * 1.02, 5) : Math.Round(bid * 0.98, 5);
 
         var label = $"cmind-pn-{Guid.NewGuid():N}"[..24];
         await Task.Delay(HostWarmup, ct);
-        await probe.SendPendingOrderAsync(masterCtid, symbolId, isBuy: true, volume, CopyOrderKind.Limit, limitPrice, label, ct);
+        await probe.SendPendingOrderAsync(masterCtid, symbolId, isBuy: true, volume, kind, price, label, ct);
 
         var masterOrder = await PollAsync(async () =>
             (await probe.ReconcilePendingOrdersAsync(masterCtid, ct)).FirstOrDefault(o => o.Label == label),
@@ -174,7 +177,7 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
         if (masterOrder is null)
         {
             await StopHostAsync(hostCts, hostTask);
-            return new PendingResult(true, "Master pending order was not accepted.", false, false);
+            return new PendingResult(true, "Master pending order was not accepted.", false, false, false);
         }
 
         var masterOrderId = masterOrder.OrderId.ToString();
@@ -182,7 +185,8 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
             (await probe.ReconcilePendingOrdersAsync(slave.Account.Ctid, ct)).FirstOrDefault(o => o.Label == masterOrderId),
             CopyTimeout, ct);
         var appeared = slavePending is not null;
-        output.WriteLine($"pending: slave pending appeared={appeared}");
+        var kindMatches = slavePending?.Kind == kind;
+        output.WriteLine($"pending ({kind}): slave pending appeared={appeared} kindMatches={kindMatches}");
 
         await probe.CancelOrderAsync(masterCtid, masterOrder.OrderId, ct);
         var cancelled = await PollUntilAsync(async () =>
@@ -193,7 +197,7 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
         await CancelPendingsAsync(probe, masterCtid, label, ct);
         await CancelPendingsAsync(probe, slave.Account.Ctid, masterOrderId, ct);
         await StopHostAsync(hostCts, hostTask);
-        return new PendingResult(false, null, appeared, cancelled);
+        return new PendingResult(false, null, appeared, kindMatches, cancelled);
     }
 
     public sealed record TrailingResult(bool Inconclusive, string? Reason, bool SlaveTrailing);
@@ -216,7 +220,7 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
         await probe.StartAsync(ct);
 
         var symbolId = await ResolveSymbolAsync(probe, masterCtid, [slave.Account.Ctid], ct, FxPreference);
-        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct)).First();
+        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct))[0];
         var volume = details.MinVolume > 0 ? details.MinVolume : details.StepVolume;
         var (bid, _) = await probe.LoadSpotPriceAsync(masterCtid, symbolId, ct);
 
@@ -269,7 +273,7 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
         await probe.StartAsync(ct);
 
         var symbolId = await ResolveSymbolAsync(probe, masterCtid, [slave.Account.Ctid], ct);
-        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct)).First();
+        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct))[0];
         var volume = details.MinVolume > 0 ? details.MinVolume : details.StepVolume;
         var label = $"cmind-swo-{Guid.NewGuid():N}"[..24];
 
@@ -316,7 +320,7 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
         await probe.StartAsync(ct);
 
         var symbolId = await ResolveSymbolAsync(probe, masterCtid, [slave.Account.Ctid], ct);
-        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct)).First();
+        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct))[0];
         var volume = details.MinVolume > 0 ? details.MinVolume : details.StepVolume;
 
         var label = $"cmind-fc-{Guid.NewGuid():N}"[..24];
@@ -369,7 +373,7 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
         await probe.StartAsync(ct);
 
         var symbolId = await ResolveSymbolAsync(probe, masterCtid, [slave.Account.Ctid], ct, FxPreference);
-        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct)).First();
+        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct))[0];
         var volume = details.MinVolume > 0 ? details.MinVolume : details.StepVolume;
         var (bid, _) = await probe.LoadSpotPriceAsync(masterCtid, symbolId, ct);
 
@@ -405,6 +409,56 @@ public sealed class LiveCopyScenario(LiveCopyFixture fixture, ITestOutputHelper 
         await CleanupAsync(probe, masterCtid, sourceId, [slave], ct);
         await StopHostAsync(hostCts, hostTask);
         return new StopLossResult(false, null, slaveWithSl is not null);
+    }
+
+    public sealed record SizingResult(bool Inconclusive, string? Reason, bool Copied, long SlaveVolume);
+
+    // Proves a money-management (risk) sizing mode actually routes a real copy through the broker. The
+    // destination bounds are clamped to exactly the slave's min lot (ForceMinLot + MaxLot = minLot) so
+    // whatever the mode computes — a sub-min proportional slice or an oversized notional/leverage figure —
+    // lands as a single safe min-lot order on the demo account. The per-mode sizing MATH is proven
+    // exhaustively by CopySizingCalculatorTests; this asserts the mode fires end to end live. Demo only.
+    public async Task<SizingResult> RunSizingModeAsync(LiveCopyFixture.LiveAccount master,
+        SlaveSetup slave, CancellationToken ct)
+    {
+        var masterCtid = master.Ctid;
+        await using var probe = fixture.NewSession(new[] { master, slave.Account });
+        await probe.StartAsync(ct);
+
+        var symbolId = await ResolveSymbolAsync(probe, masterCtid, [slave.Account.Ctid], ct);
+        var details = (await probe.LoadSymbolDetailsAsync(masterCtid, [symbolId], ct))[0];
+        var volume = details.MinVolume > 0 ? details.MinVolume : details.StepVolume;
+        var minLots = details.LotSize > 0 ? (double) details.MinVolume / details.LotSize : 0.01;
+        if (minLots <= 0) minLots = 0.01;
+        // Clamp the copy to exactly one min lot regardless of what the mode computes (safe + deterministic).
+        slave.Config.ConfigureBounds(new LotBounds(0, minLots, forceMinLot: true));
+
+        var plan = new CopyProfilePlan(CopyProfileId.New(), Live: false, fixture.ClientId, fixture.ClientSecret,
+            masterCtid, master.AccessToken, 1,
+            [new CopyDestinationPlan(slave.Account.Ctid, slave.Account.AccessToken, 1, slave.Config)]);
+        var host = new CopyEngineHost(plan, new OpenApiTradingSessionFactory(fixture.ConnectionFactory),
+            new CopyDecisionEngine(new CopySizingCalculator()), TimeProvider.System, NullLogger.Instance);
+        using var hostCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var hostTask = Task.Run(() => host.RunAsync(hostCts.Token), CancellationToken.None);
+
+        var label = $"cmind-sz-{Guid.NewGuid():N}"[..24];
+        await Task.Delay(HostWarmup, ct);
+        await probe.SendMarketOrderAsync(masterCtid, symbolId, isBuy: true, volume, label, ct);
+
+        var masterPosition = await PollAsync(() => FindByLabelAsync(probe, masterCtid, label, ct), TimeSpan.FromSeconds(12), ct);
+        if (masterPosition is null)
+        {
+            await StopHostAsync(hostCts, hostTask);
+            return new SizingResult(true, "Master order did not fill (market likely closed).", false, 0);
+        }
+
+        var sourceId = masterPosition.PositionId.ToString();
+        var copy = await PollAsync(() => FindByLabelAsync(probe, slave.Account.Ctid, sourceId, ct), CopyTimeout, ct);
+        output.WriteLine($"sizing {slave.Config.RiskMode}: copied={copy is not null} volume={copy?.Volume ?? 0}");
+
+        await CleanupAsync(probe, masterCtid, sourceId, [slave], ct);
+        await StopHostAsync(hostCts, hostTask);
+        return new SizingResult(false, null, copy is not null, copy?.Volume ?? 0);
     }
 
     private static async Task<bool> PollUntilAsync(Func<Task<bool>> condition, TimeSpan timeout, CancellationToken ct)

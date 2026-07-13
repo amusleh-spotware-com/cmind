@@ -1,3 +1,4 @@
+using Core.Domain;
 using CTraderOpenApi.Client;
 using FluentAssertions;
 using Xunit;
@@ -83,8 +84,12 @@ public sealed class CopyTradingLiveTests(LiveCopyFixture fixture, ITestOutputHel
             "a master partial close must shrink the mirrored copy");
     }
 
-    [Fact]
-    public async Task Pending_limit_order_is_mirrored_and_cancel_propagates()
+    // Different order-type selection: a resting Limit AND a resting Stop are each mirrored to the slave as
+    // the same order type, and cancelling the master pending cancels the slave pending.
+    [Theory]
+    [InlineData(CopyOrderKind.Limit)]
+    [InlineData(CopyOrderKind.Stop)]
+    public async Task Pending_order_is_mirrored_and_cancel_propagates(CopyOrderKind kind)
     {
         if (!fixture.Available) { output.WriteLine(fixture.SkipReason); return; }
         var accounts = SameCid(1);
@@ -92,11 +97,46 @@ public sealed class CopyTradingLiveTests(LiveCopyFixture fixture, ITestOutputHel
             LiveCopyScenario.Destination(d => d.SetPendingOrderCopying(true)));
 
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-        var result = await new LiveCopyScenario(fixture, output).RunPendingAsync(accounts[0], slave, cts.Token);
+        var result = await new LiveCopyScenario(fixture, output).RunPendingAsync(accounts[0], slave, kind, cts.Token);
 
-        if (result.Inconclusive) { output.WriteLine($"INCONCLUSIVE: {result.Reason}"); return; }
-        result.SlavePendingAppeared.Should().BeTrue("a master limit order must be mirrored onto the slave");
+        if (result.Inconclusive) { output.WriteLine($"INCONCLUSIVE ({kind}): {result.Reason}"); return; }
+        result.SlavePendingAppeared.Should().BeTrue($"a master {kind} order must be mirrored onto the slave");
+        result.SlaveKindMatches.Should().BeTrue($"the slave pending must be the same order type ({kind})");
         result.SlavePendingCancelled.Should().BeTrue("cancelling the master pending must cancel the slave pending");
+    }
+
+    // Different risk-management (money-management) sizing modes each place a real copy end to end. Every
+    // mode is clamped to one min lot on the demo slave (safe); the per-mode sizing math is proven by
+    // CopySizingCalculatorTests. RiskFromStopLoss is excluded here — it needs a master stop distance at
+    // open, which a plain market open does not carry; its wire path is covered by the SL-mirror live test.
+    public static IEnumerable<object[]> SizingModes() =>
+    [
+        [MoneyManagementMode.FixedLot, 0.01],
+        [MoneyManagementMode.LotMultiplier, 1.0],
+        [MoneyManagementMode.NotionalMultiplier, 1.0],
+        [MoneyManagementMode.ProportionalBalance, 1.0],
+        [MoneyManagementMode.ProportionalEquity, 1.0],
+        [MoneyManagementMode.ProportionalFreeMargin, 1.0],
+        [MoneyManagementMode.AutoProportional, 1.0],
+        [MoneyManagementMode.FixedRiskPercent, 1.0],
+        [MoneyManagementMode.FixedLeverage, 1.0],
+    ];
+
+    [Theory]
+    [MemberData(nameof(SizingModes))]
+    public async Task Risk_sizing_mode_places_a_live_copy(MoneyManagementMode mode, double parameter)
+    {
+        if (!fixture.Available) { output.WriteLine(fixture.SkipReason); return; }
+        var accounts = SameCid(1);
+        var slave = new LiveCopyScenario.SlaveSetup(accounts[1],
+            LiveCopyScenario.Destination(d => d.ConfigureRisk(new RiskSettings(mode, parameter))));
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        var result = await new LiveCopyScenario(fixture, output).RunSizingModeAsync(accounts[0], slave, cts.Token);
+
+        if (result.Inconclusive) { output.WriteLine($"INCONCLUSIVE ({mode}): {result.Reason}"); return; }
+        result.Copied.Should().BeTrue($"the {mode} sizing mode must place a real copy on the slave");
+        result.SlaveVolume.Should().BeGreaterThan(0, "the copy must carry a real volume");
     }
 
     [Fact]

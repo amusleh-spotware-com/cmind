@@ -71,6 +71,21 @@ html {
 [data-theme='dark'] .navbar {
   border-bottom: 1px solid rgba(38, 194, 129, 0.16);
 }
+/* backdrop-filter makes .navbar a containing block for its descendants, which
+ * clips the fixed-position mobile menu (.navbar-sidebar) to the 4rem navbar box
+ * so it opens but never shows. Drop the frost at the mobile breakpoint and give
+ * the sidebar an opaque surface. */
+@media (max-width: 996px) {
+  .navbar {
+    backdrop-filter: none;
+  }
+}
+.navbar-sidebar {
+  background-color: var(--ifm-navbar-background-color);
+}
+[data-theme='dark'] .navbar-sidebar {
+  background-color: #141414;
+}
 .navbar__title {
   font-weight: 800;
   letter-spacing: -0.02em;

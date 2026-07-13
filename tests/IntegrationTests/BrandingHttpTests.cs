@@ -33,7 +33,9 @@ public class BrandingHttpTests(PostgresFixture fixture) : IClassFixture<Postgres
 
         html.Should().Contain("<title>AcmeFX</title>");
         html.Should().Contain("AcmeFX copy trading");
-        html.Should().Contain("content=\"#0A0A0A\"");
+        // The custom background colour is surfaced in the head as the --app-bg CSS variable (the
+        // theme-color meta deliberately tracks the app-bar colour, not the page background).
+        html.Should().Contain("--app-bg:#0A0A0A");
     }
 
     [Fact]

@@ -13,6 +13,11 @@ public static class NodesUiAccess
     /// <summary>Whether the Nodes nav link and page are reachable at all (any mode except Hidden).</summary>
     public static bool IsPageVisible(NodesUiMode mode) => mode is not NodesUiMode.Hidden;
 
+    /// <summary>Whether the manage/read node API is reachable. Hidden ⇒ the page AND the API are gone, so
+    /// gating stays consistent across nav, page and endpoint (a hidden surface must not be readable by URL).
+    /// Auto-discovery register/heartbeat is a separate anonymous route and is unaffected.</summary>
+    public static bool IsApiReachable(NodesUiMode mode) => mode is not NodesUiMode.Hidden;
+
     /// <summary>Whether a node may be added or removed by hand; false ⇒ auto-discovery only.</summary>
     public static bool AllowsManualManagement(NodesUiMode mode) => mode is NodesUiMode.Full;
 

@@ -34,6 +34,15 @@ public static class NodeEndpoints
         var g = app.MapGroup("/api/nodes")
             .RequireAuthorization(NodesUiAccess.RequiredPolicy(branding.RestrictNodesToOwner));
 
+        // NodesUi=Hidden hides the nav + page AND the API — a hidden surface must not be readable by URL
+        // (H-02). Read per-request so a runtime white-label override takes effect without a restart.
+        g.AddEndpointFilter(async (context, next) =>
+        {
+            var mode = context.HttpContext.RequestServices
+                .GetRequiredService<IOptionsMonitor<AppOptions>>().CurrentValue.Branding.NodesUi;
+            return NodesUiAccess.IsApiReachable(mode) ? await next(context) : Results.NotFound();
+        });
+
         g.MapGet("/", async (DataContext db) =>
         {
             var rows = await db.Nodes.Include(n => n.LatestStats)

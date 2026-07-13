@@ -39,4 +39,13 @@ public sealed class NodesHiddenTests(NodesHiddenFixture app)
         await page.WaitForURLAsync(url => !url.EndsWith("/nodes"), new() { Timeout = 15000 });
         page.Url.Should().NotEndWith("/nodes");
     }
+
+    [Fact]
+    public async Task Hidden_mode_also_gates_the_node_api_not_just_the_ui()
+    {
+        // H-02: hiding the UI must hide the API too — a hidden surface must not be readable by URL.
+        var page = await app.NewAuthedPageAsync();
+        var res = await page.APIRequest.GetAsync($"{app.BaseUrl}/api/nodes/");
+        res.Status.Should().Be(404, "GET /api/nodes must 404 when NodesUi=Hidden (UI and API must agree)");
+    }
 }

@@ -1258,3 +1258,38 @@ Routes: `/` (dashboard), nav menu, `/mcp` landing, PWA, help tips; cross-cutting
 - **Suspected root cause:** PWA offline scenario not included in any E2E test class.
 - **Which tier SHOULD catch it:** E2E.
 - **Regression-test sketch:** `await context.SetOfflineAsync(true); await page.GotoAsync("/"); Assert.Contains("offline", (await page.TextContentAsync("body"))!, StringComparison.OrdinalIgnoreCase)`.
+
+---
+
+## Fix Status (post-remediation)
+
+**Approach:** root-caused why the mandates didn't prevent these (see
+`plans/audit-root-cause-and-gate-hardening.md`), hardened the enforcement gates so each *class* can't
+recur, then fixed bugs across cross-cutting infra + 4 parallel worktree lanes (D/E/F/G) + main-tree
+lanes (A/B/C/H).
+
+### Recurrence-prevention gates added (CLAUDE.md mandate 12 — census, never opt-in)
+- `NoHardcodedUiTextTests` → **census ratchet** over ALL components vs `pending-localization.txt` (78→ baseline). Root cause: the old gate watched 5 enrolled files while ~78 pages shipped un-localized.
+- `NoWallClockInRazorTests` — no `DateTime.UtcNow/.Now` in `.razor` (A-02 class).
+- `RouteExistenceTests` — no E2E may navigate a dead route (E-06 `/assistant` class).
+- `DestructiveActionConfirmTests` — every DELETE/erase must confirm; ratchet baseline (13→10).
+- `DomainExceptionMappingTests` — `/api` domain/persistence errors map to 400/409, not 500 (**live-verified**).
+
+### Fixed + verified
+- **Cross-cutting:** C-04/D-07/I-01 (CSP fonts), C-01/C-02/C-03 (DomainException→400/409, live 3/3), E-02/E-03 (AiFeatureNotice opt-in modal), shared `ConfirmDialog`.
+- **Auth (critical):** A-08 (MustChangePassword enforced) + owner-seeder fix (was breaking the whole authed E2E suite); A-01 (pending notice), A-02 (TimeProvider), A-05 (time-based lockout column), A-06 (delete-user confirm). Verified live.
+- **cBots:** B-01/B-02 (instance detail: no GUID, not-found notice — **live-verified**), B-03/B-04/B-06 (delete confirm + feedback + Load guard).
+- **Copy/Users:** C-07 (Yes/No), H-02 (node API gated when Hidden — **live-verified**).
+- **Lane D (merged, 12/12 E2E live):** D-01..D-11 — incl. D-02 per-row equity (data-corruption), detail dialog, breach cause, erase/delete confirms, GDPR id removal, responsive tables.
+- **Lane E (merged):** E-04 (agent-studio AI gate), E-06 (stale test), E-07 (fake-LLM output asserts), E-08 (responsive tables), E-09 (agent create gate).
+- **Lane F (merged, live-verified):** F-02 (journal entries render), F-04/F-05 (input guards), F-06 (equity-mode E2E), F-07 (journal notes CRUD aggregate + migration), F-08 (disposal guards).
+- **Lane G (merged):** G-01 (owner-gate refresh), G-02 (series source gate), G-04 (mobile tables), G-05 (assert AI narrative), G-06 (HelpTips).
+
+### Remaining (tracked; medium/low, no data-loss/security/crash)
+- A-03 (fix flaky MFA-mobile test), A-07 (reset-password dialog vs snackbar).
+- B-05 (backtest null-date validation), B-08 (instance route smoke), B-09 (navigate to new instance).
+- C-05 (copy-profile deep-link route), C-06 (dialog focus trap).
+- H-03 (brand live-refresh in open circuit), H-04 (feature-label mapping), H-05 (pin registration-closed behavior).
+- I-02 (manifest href), I-04 (dashboard empty-state notice), I-05 (RTL computed-direction assert), I-06 (calendar-series loading indicator), I-07 (offline-path E2E).
+- **Localization debt (ratcheted):** ~78 pages carry hard-coded English (A-04/B-07/E-05/F-01/H-01/I-03). The census gate now blocks any *new* un-localized page and forces the baseline to only shrink; new strings added during fixes were localized (keys seeded across all 23 locales). Paying down the full baseline is a separate, tracked effort.
+- **ui-translations.json ↔ resx drift:** subagents seeded new keys directly into resx (parity green); reconcile into `ui-translations.json` before the next `gen-resx.ps1` run so the pipeline stays source-of-truth (`tmp-audit/keys-*.json` hold the fragments).

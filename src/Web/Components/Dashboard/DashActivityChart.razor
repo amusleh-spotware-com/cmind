@@ -34,6 +34,33 @@
     private readonly ApexChartOptions<Point> _options = new();
     private bool _themed;
 
+    // Configure every option (including a non-null Chart) BEFORE the first render so the ApexCharts JS
+    // layer initializes once with a stable, fully-formed options object. Replacing _options.Chart after
+    // the library has already initialized the chart — as this used to do in OnAfterRender — discards the
+    // library-stamped chart id, so a later re-render (period change, live poll, or navigating back to the
+    // dashboard) drives the JS renderChart/destroyChart path with an undefined id and throws "Cannot read
+    // properties of undefined (reading 'toString')", which the ErrorBoundary turns into a dead page.
+    protected override void OnInitialized()
+    {
+        _options.Chart = new Chart
+        {
+            Toolbar = new Toolbar { Show = false },
+            Background = "transparent",
+            Animations = new Animations { Enabled = false },
+            FontFamily = "Inter, sans-serif"
+        };
+        _options.Theme = new ApexCharts.Theme { Mode = Mode.Dark };
+        _options.Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 };
+        _options.DataLabels = new DataLabels { Enabled = false };
+        _options.Legend = new Legend { Show = true, Position = LegendPosition.Top };
+        _options.Xaxis = new XAxis { Type = XAxisType.Datetime };
+        _options.Fill = new Fill
+        {
+            Type = FillType.Gradient,
+            Gradient = new FillGradient { OpacityFrom = 0.35, OpacityTo = 0.03 }
+        };
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         _points = [.. Buckets.Select(b => new Point(b.Start.UtcDateTime, b.Started, b.Completed, b.Failed))];
@@ -58,30 +85,13 @@
         }
         catch
         {
-            colors = [];
+            // Couldn't read theme tokens — keep the default palette. Don't redraw: a no-op
+            // UpdateOptionsAsync only adds another JS round-trip that can race the chart lifecycle.
+            return;
         }
 
-        _options.Chart = new Chart
-        {
-            Toolbar = new Toolbar { Show = false },
-            Background = "transparent",
-            Animations = new Animations { Enabled = false },
-            FontFamily = "Inter, sans-serif"
-        };
-        _options.Theme = new ApexCharts.Theme { Mode = Mode.Dark };
-        _options.Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 };
-        _options.DataLabels = new DataLabels { Enabled = false };
-        _options.Legend = new Legend { Show = true, Position = LegendPosition.Top };
-        _options.Xaxis = new XAxis { Type = XAxisType.Datetime };
-        _options.Fill = new Fill
-        {
-            Type = FillType.Gradient,
-            Gradient = new FillGradient { OpacityFrom = 0.35, OpacityTo = 0.03 }
-        };
-        if (colors.Length == 3 && colors.All(c => !string.IsNullOrWhiteSpace(c)))
-        {
-            _options.Colors = [.. colors];
-        }
+        if (colors.Length != 3 || colors.Any(string.IsNullOrWhiteSpace)) return;
+        _options.Colors = [.. colors];
 
         try
         {

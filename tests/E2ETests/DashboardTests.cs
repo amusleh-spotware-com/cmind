@@ -85,6 +85,37 @@ public sealed class DashboardTests(AppFixture app)
         }
     }
 
+    // Regression: navigating away from the dashboard and back must re-render the activity chart, not
+    // crash it. The ApexChart used to rebuild its options (replacing _options.Chart) in OnAfterRender,
+    // which discarded the library-stamped chart id; on the fresh remount the JS renderChart/destroyChart
+    // path hit an undefined id and threw "Cannot read properties of undefined (reading 'toString')",
+    // tripping the ErrorBoundary into a dead "Something went wrong on this page" — found only by manual
+    // clicking. Round-trip a few times and assert the chart survives and the circuit stays up.
+    [Fact]
+    public async Task Navigating_away_and_back_re_renders_the_chart_without_crashing_the_page()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await WaitLoadedAsync(page);
+        (await page.Locator("[data-testid=widget-activity-chart]").IsVisibleAsync())
+            .Should().BeTrue("the activity chart widget renders on first load");
+
+        for (var i = 0; i < 3; i++)
+        {
+            await page.Locator("[data-testid=kpi-active]").ClickAsync();
+            await page.WaitForURLAsync("**/run", new() { Timeout = 15000 });
+
+            await page.GoBackAsync(new PageGoBackOptions { WaitUntil = WaitUntilState.NetworkIdle });
+            await page.Locator("[data-testid=widget-activity-chart]").WaitForAsync(new() { Timeout = 15000 });
+
+            (await page.Locator("[data-testid=page-error]").IsVisibleAsync())
+                .Should().BeFalse($"returning to the dashboard (round-trip {i + 1}) must not trip the ErrorBoundary");
+            (await page.Locator(".blazor-error-ui").IsVisibleAsync())
+                .Should().BeFalse($"returning to the dashboard (round-trip {i + 1}) must not break the circuit");
+            (await page.Locator("#components-reconnect-modal").IsVisibleAsync())
+                .Should().BeFalse($"returning to the dashboard (round-trip {i + 1}) must not drop the connection");
+        }
+    }
+
     [Fact]
     public async Task Powered_by_link_is_shown_by_default_and_points_to_the_site()
     {

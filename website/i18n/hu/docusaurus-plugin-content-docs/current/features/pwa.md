@@ -1,44 +1,66 @@
 ---
-description: "A cMind egy telefonra vagy asztali számítógépre telepítve, mint egy natív alkalmazás — kezdőképernyő ikon, önálló ablak, sikló és barátságos offline oldal. Ez mobil-első és teljes mértékben reagálékony; lásd a [ui-guidelines.md](../ui-guidelines.md) fájlt."
+title: Telepitheto alkalmazas (PWA)
+description: "A cMind telepítheto mint PWA - mobil-elsofokus, offline shell, es hozzaadas a kezdokepernyohoz. Minden kepessege mukodik a webes feluleten."
 ---
 
-# Telepítendő alkalmazás (PWA)
+# Telepitheto alkalmazas (PWA)
 
-A cMind egy telefonra vagy asztali számítógépre telepítve, mint egy natív alkalmazás — kezdőképernyő ikon, önálló ablak, sikló és barátságos offline oldal. Ez **mobil-első** és teljes mértékben reagálékony; lásd a [ui-guidelines.md](../ui-guidelines.md) fájlt.
+A cMind telepíthető mint **Progressive Web App (PWA)** - mobil-elősfókusz, offline shell, és hozzáadás a kezdőképernyőhöz. Minden képessége működik a webes felületen.
 
-## Mit jelent az "telepítendő" itt — és az őszinte korlát
+## Mi a PWA
 
-A Blazor **szerver** egy élő SignalR áramkörön keresztül rendez, így az alkalmazás nem futhat teljesen offline. Mit a PWA szállít:
+A PWA egy webalkalmazás, amely natív app-szerű élményt nyújt:
+- **Telepíthető** - hozzáadás a kezdőképernyőhöz
+- **Offline** - az alkalmazás részlegesen offline működik
+- **Gyors** - service worker gyorsítja a betöltést
+- **Reszponzív** - mobil, tablet, desktop egyaránt
 
-- **Telepítendő** — érvényes webes kiáltvány + ikonok, így a böngészők kínálnak *Telepítés* / *Hozzáadás a kezdőképernyőhöz*.
-- **Alkalmazás-héj gyorsítótárazva** — a szolgáltatási munkavállaló a statikus eszközöket (CSS, ikonok, kiáltvány) gyorsítótárazza, és megjeleníti az **offline oldalt**, amikor a hálózat leesik, böngésző hiba helyett.
-- **Natív érzés** — önálló megjelenítés, márkanem téma-szín/állapot sáv, alkalmazás ikon, iOS kezdőképernyő ikon.
+## Telepites
 
-Ez **nem** ad offline interaktivitást — ez Blazor WebAssembly (egy külön jövő nyomvonal) szükséglet. Ne ígérj offline használatát az élő funkciók.
+### Android (Chrome)
 
-## Darabok
+1. Nyisd meg a cMind-et Chrome-ban.
+2. Kattints a **Telepítés** bannerre (alsó sáv) vagy a menü → "Hozzáadás a kezdőképernyőhöz".
+3. A cMind ikon megjelenik a kezdőképernyőn.
 
-| Darab | Hol |
-|-------|-------|
-| Kiáltvány (dinamikus, márkanem) | `Web/Endpoints/PwaEndpoints.cs` → `GET /manifest.webmanifest` (névtelen) |
-| Ikonok (192, 512, 512-maszkolható, apple-touch-180) | `Web/wwwroot/icons/` |
-| Szolgáltatási munkavállaló (alkalmazás-héj) | `Web/wwwroot/service-worker.js` |
-| Offline visszajelzési oldal | `Web/wwwroot/offline.html` |
-| Regisztráció + iOS-jelzők + telepítési felszólítás rögzítése | `Web/Components/App.razor` |
-| Útvonal-konstansok | `Core.Constants.PwaRoutes` |
+### iOS (Safari)
 
-### Kiáltvány
+1. Nyisd meg a cMind-et Safari-ban.
+2. Kattints a **Megosztás** gombra → "Hozzáadás a kezdőképernyőhöz".
+3. A cMind ikon megjelenik a kezdőképernyőn.
 
-Dinamikusan kiszolgálva az `BrandingOptions`-ből, így az átjáró termékneve, színei és ikonai az telepített alkalmazásba kerülnek: `name`/`short_name` a `ProductName`-ből, `description`, `theme_color` az `AppBarColor`-ből, `background_color` a `BackgroundColor`-ből, `display: standalone` és az ikonsík (incl. egy **maszkolható** 512 egy tiszta Android-ikonhoz). Névtelen — a telepítési felszólítás az bejelentkezés előtt működnie kell.
+### Desktop (Chrome/Edge)
 
-### Szolgáltatási munkavállaló
+1. Kattints a telepítés ikonra a címsorban (vagy a menü → "Telepíthető alkalmazásként telepítés").
+2. A cMind külön ablakban nyílik meg, asztali parancsikonnal.
 
-Alkalmazás-héj csak. Ez **soha nem** szakítja meg az Blazor áramkört (`/_blazor`), keretrendszert (`/_framework`) vagy SignalR hub-okat (`/hubs`) — ezek mindig hálózat. A navigációk hálózat-első az offline oldal visszajelzésével; a statikus eszközök (`/css`, `/icons`, `/_content`) gyorsítótár-első a háttér-revalidálásával. Regisztrálva az `updateViaCache: 'none'`-vel, így a munkavállaló-frissítések megbízhatóan alkalmazódnak. A gyorsítótárak verziót kapnak (`cmind-shell-v<n>`) — szívverés a héj módosítások során.
+## Offline kepessegek
 
-### iOS
+A PWA **offline shell**-t biztosít - a UI betöltődik, de az adatok nem frissülnek:
 
-Az iOS figyelmen kívül hagyja a kiáltvány-ikonokat/sikló-kat, így az `App.razor` az `apple-touch-icon` és az `apple-mobile-web-app-*` meta-jelzőket is kibocsát. Az iOS nincs `beforeinstallprompt`; a felhasználók az Safari *Add to Home Screen* segítségével telepítenek. A `beforeinstallprompt` az `window.deferredInstallPrompt`-ba van rögzítve a Chromium/Android-on egy egyéni telepítési előforduláshoz.
+| Működik offline | Nem működik offline |
+|----------------|-------------------|
+| Navigáció | Élő adatok |
+| Beállítások megtekintése | Kereskedés |
+| Cache-elt stratégiák | Élő grafikonok |
+| Helyi beállítások | SignalR frissítések |
 
-## Tesztek
+## Service Worker
 
-- **E2E** — `E2ETests/PwaTests.cs`: kiáltvány kiszolgálva az `application/manifest+json` értékkel, nem üres ikonok incl. a maszkolható, `display: standalone`, `apple-touch-icon` csatornára, és a szolgáltatási munkavállaló regisztrálódik + aktiválódik. A `MobileLayoutTests` / `MobileDialogTests` a mobilhéjt fedik le, amelyet a PWA telepít.
+A service worker gyorsítja a betöltést és lehetővé teszi az offline működést. A PWA a **Cache First** stratégiát használja statikus asszettekhez (JS, CSS, képek) és a **Network First** stratégiát API hívásokhoz.
+
+## Reszponzivitats
+
+A cMind mobil-elősfókuszos - 360px szélességre tervezve. A következő mérettartományok támogatottak:
+
+| Tartomány | Elrendezés |
+|-----------|-----------|
+| 320-360px | Egyoszlopos mobil |
+| 360-640px | Táblagép (mobil elrendezés) |
+| 640-1024px | Tablet asztali elemekkel |
+| 1024px+ | Teljes asztali elrendezés |
+
+## Kapcsolodo
+
+- **[UI tervezési irányelvek](../ui-guidelines.md)**
+- **[White-label](./white-label.md)**

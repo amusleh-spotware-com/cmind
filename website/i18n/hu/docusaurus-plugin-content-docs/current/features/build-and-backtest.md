@@ -1,30 +1,76 @@
 ---
-description: "A cBot-szerzői az egy szöveg-szerkesztő az Monaco-ban az SDK-t, az forráskódot, a rögzítési paramétert és az backtests az összes intézmény felületén nyitott. Az Kontextus-menü a paraméter-értékeket szerkeszti, az előzményt visszaállít."
+title: Epites es backtest
+description: "A cMind Epites és Backtest rendszere lehetővé teszi cBot-ok létrehozását, fordításását és backtest-elését egy sandboxolt konténerben, Monaco IDE-val a böngészőben."
 ---
 
-# cBot-szerzői & backtest
+# Epites es Backtest
 
-A cBot-szerzői az egy szöveg-szerkesztő az Monaco-ban az SDK-t, az forráskódot és az rögzítési paramétereket. A backtest az egy teljes kontextusban futó — adatok, szimbólumok, paraméterek — az a cTrader-konzol.
+A cMind Epites és Backtest rendszere lehetővé teszi cBot-ok létrehozását, fordításását és backtest-elését egy sandboxolt konténerben, Monaco IDE-val a böngészőben.
 
-## cBot-szerkesztés
+## Mi az a cBot
 
-Az felhasználó az egy .csproj-projekt felépítésű cBot-ot hozza létre vagy módosítja. Az szerkesztő az Monaco-ban futón, az szintaxisbetöltésekkel, az debug-szimbólumokkal. Az "Építés" gomb az CBotBuilder-t futtatja az web-gazdagépen.
+A **cBot** automatizált kereskedési robot, amit a cTrader platformon futtatsz. A cMind lehetővé teszi, hogy C# vagy Python nyelven írj cBot-okat, és azokat a platformon keresztül futtasd vagy backtest-eld.
 
-## Backtest-konfigurálás
+## cBot letrehozasa
 
-Az felhasználó az egy backtest-munkáját hoz létre az a paramétereket megadásával:
+1. Menj a **cBots → Epites** oldalra.
+2. Válaszd ki a **nyelvet** (C# vagy Python).
+3. Válassz egy **sablont** vagy kezd üres projekttel.
+4. Kattints a **Létrehozás** gombra.
 
-- **Szimbólum** — az kereskedési szimbólum.
-- **Periódus** — az időkeret (M1, H1 stb).
-- **Kezdeti dátuma** — az backtest-kezdet.
-- **Befejezési dátuma** — az backtest-vég.
-- **Paraméterek** — az cBot-paraméterek (dinamikus az paramset-ből).
+## Koderosztaly (Monaco IDE)
 
-## Háttérben futó munkák
+A beépített Monaco IDE minden szükséges funkciót biztosít:
+- **Szintaxis kiemelés** - C# és Python
+- **IntelliSense** - kód kiegészítés, hibák jelzése
+- **Debug** - töréspontok, változók nézegetése
+- **Sablonok** - gyakori stratégiák
 
-Az BuildJob az web-gazdagépen futón, az egy Docker-konténer belül. Az BacktestJob az egy node-ügynökön futón az `--data-mode=m1` az cTrader-konzol által.
+## Forditas
 
-## Tesztek
+A `CBotBuilder` egy sandboxolt MSBuild konténerben fordítja a kódot. Az image az `AllowedImagePrefix` által korlátozott; az ügynök nem éri el a host FS/jhálózatát.
 
-- **Integráció** — `IntegrationTests/BuildAndBacktestTests.cs`: az építés sikeres, az backtest futón, az eredményt adja vissza.
-- **E2E** — `E2ETests/BuildAndBacktestTests.cs`: az szerzői az editorban, az építés, az backtest az parameterrel.
+```http
+POST /api/cbots/{id}/build
+```
+
+Fordítási log: `GET /api/cbots/{id}/build/logs`
+
+## Backtest
+
+A backtest egy teljes historikus futás, szabályozott kezdeti feltételekkel:
+
+1. **Konfiguráció** - symbol, időtartam, kezdeti egyenleg, adat mód (M1/M5/H1).
+2. **Paraméterek** - szabadon állítható input paraméterek.
+3. **Indítás** - konténer indul a cTrader Console CLI-vel.
+
+```http
+POST /api/backtest
+{
+  "cbotId": "...",
+  "symbol": "EURUSD",
+  "startDate": "2024-01-01",
+  "endDate": "2024-12-31",
+  "initialBalance": 10_000,
+  "dataMode": "M1",
+  "parameters": { "period": 14, "threshold": 0.5 }
+}
+```
+
+## Eredmenyek
+
+A backtest eredménye:
+- **Equity görbe** - nyereség/veszteség az időben
+- **Teljesítmény metrikák** - Sharpe, max drawdown, win rate, avg R:R
+- **Keresések** - minden megnyitott/zárt pozíció
+- **Log** - a cBot kimenete
+
+## Integrity Lab
+
+Minden befejezett backtest automatikusan elérhető az **Integrity Lab**-ban, ahol statisztikai elemzés fut rajta (PSR, DSR, PBO) - lásd [backtest-integrity.md](./backtest-integrity.md).
+
+## Kapcsolodo
+
+- **[Backtest Integrity Lab](./backtest-integrity.md)**
+- **[Strategy Health](./strategy-health.md)**
+- **[Position Sizing](./position-sizing.md)**

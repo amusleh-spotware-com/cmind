@@ -273,6 +273,8 @@ else
                 return;
             }
             Snack.Add("Started", Severity.Success);
+            if (d.InstanceId is { } instanceId)
+                Nav.NavigateTo($"/instance/{instanceId}");
         }
         finally { _busy = false; }
     }

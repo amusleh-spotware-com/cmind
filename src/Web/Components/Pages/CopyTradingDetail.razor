@@ -1,0 +1,76 @@
+@* Deep-link page for a single copy profile (C-05): navigating to /copy-trading/{id} loads the profile
+   and opens its detail dialog (mandate 7/11 — detail is a dialog, not an inline page form). A missing or
+   unauthorized id renders an actionable notice with a back link, never a blank shell or a crash. *@
+@page "/copy-trading/{Id:guid}"
+@using System.Net.Http.Json
+@using Web.Components.Dialogs
+@using Web.Json
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@inject HttpClient Http
+@inject IDialogService Dialogs
+@inject NavigationManager Nav
+@inject IStringLocalizer<Ui> L
+
+<PageTitle>@L["copyDetail.title"]</PageTitle>
+<MudText Typo="Typo.h5" Class="mb-2">@(_name is { Length: > 0 } ? _name : L["copyDetail.title"])</MudText>
+
+@if (_loaded && _missing)
+{
+    <MudAlert Severity="Severity.Warning" Class="mb-3" data-testid="copy-not-found">
+        @L["copyDetail.notFound"]
+        <MudButton Class="ms-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
+                   Href="/copy-trading" data-testid="copy-detail-back">@L["copyDetail.back"]</MudButton>
+    </MudAlert>
+}
+else if (!_loaded)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private bool _loaded;
+    private bool _missing;
+    private string _name = "";
+    private bool _opened;
+
+    protected override async Task OnInitializedAsync()
+    {
+        dynamic? profile = null;
+        try { profile = await Http.GetDynamicAsync($"/api/copy/profiles/{Id}"); }
+        catch { profile = null; }
+
+        if (profile is null)
+        {
+            _missing = true;
+            _loaded = true;
+            return;
+        }
+
+        _name = (string)profile.name;
+        _loaded = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_loaded || _missing || _opened) return;
+        _opened = true;
+
+        var accounts = await Http.GetDynamicArrayAsync("/api/accounts");
+        var refs = ((IEnumerable<dynamic>)accounts)
+            .Select(a => new CopyProfileDialog.AccountRef((Guid)a.id, (long)a.accountNumber))
+            .ToList();
+
+        var parameters = new DialogParameters<CopyProfileDialog>
+        {
+            { x => x.ProfileId, Id },
+            { x => x.Name, _name },
+            { x => x.Accounts, refs }
+        };
+        var dlg = await Dialogs.ShowAsync<CopyProfileDialog>(null, parameters,
+            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Large, FullWidth = true });
+        await dlg.Result;
+        Nav.NavigateTo("/copy-trading");
+    }
+}

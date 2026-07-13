@@ -1,7 +1,5 @@
 ---
-description: "Bezpieczna, white-label-gated self-service user registration — on-app sign-up strona i
-server-to-server provisioning API, z configurable user attributes, admin-approval albo email-verification
-gating, i anti-abuse guards. Disabled domyślnie."
+description: "Bezpieczna, white-label-gated self-service user registration — on-app sign-up strona i server-to-server provisioning API, z configurable user attributes, admin-approval albo email-verification gating, i anti-abuse guards. Disabled domyślnie."
 ---
 
 # User registration

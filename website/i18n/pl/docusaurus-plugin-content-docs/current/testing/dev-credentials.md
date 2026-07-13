@@ -1,6 +1,5 @@
 ---
-description: "Wszystkie credentials test suites potrzebują żyją w single gitignored file:
-secrets/dev-credentials.local.json. Copy committed template i fill w co ty"
+description: "Wszystkie credentials test suites potrzebują żyją w single gitignored file: secrets/dev-credentials.local.json. Copy committed template i fill w co ty"
 ---
 
 # Dev credentials — jeden file dla każdego test

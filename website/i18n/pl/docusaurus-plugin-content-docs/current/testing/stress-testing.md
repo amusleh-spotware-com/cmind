@@ -1,6 +1,5 @@
 ---
-description: "Stress suite. Hammers app parts których failure kosztuje users money — chiefly
-copy trading — z hostile, randomized, fault-injected workloads. Asserts system…"
+description: "Stress suite. Hammers app parts których failure kosztuje users money — chiefly copy trading — z hostile, randomized, fault-injected workloads. Asserts system…"
 ---
 
 # Stress testing

@@ -1,7 +1,6 @@
 ---
 title: Failure-path coverage map
-description: Każdy failure scenario mandate requires, mapowany do test(s) że actually exercise
-to — więc gap jest visible, nie assumed.
+description: Każdy failure scenario mandate requires, mapowany do test(s) że actually exercise to — więc gap jest visible, nie assumed.
 ---
 
 # Failure-path coverage map

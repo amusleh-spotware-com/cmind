@@ -1,6 +1,5 @@
 ---
-description: "Full verify remaining copy-trading work — wszystko poniżej **actually executed**,
-nie tylko authored."
+description: "Full verify remaining copy-trading work — wszystko poniżej **actually executed**, nie tylko authored."
 ---
 
 # Copy-trading verification run (2026-07-10)

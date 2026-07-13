@@ -1,6 +1,5 @@
 ---
-description: "Reseller rebrand app — product name, logo, favicon, colours, custom CSS — poprzez
-deployment config, brak code change. Każda branding wartość domyślnie do stock…"
+description: "Reseller rebrand app — product name, logo, favicon, colours, custom CSS — poprzez deployment config, brak code change. Każda branding wartość domyślnie do stock…"
 ---
 
 # White-label branding

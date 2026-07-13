@@ -1,6 +1,5 @@
 ---
-description: "Handlu-symulatora firm prop (FTMO-style) — trader musi trafić profit target przy utrzymaniu
-wewnątrz risk limits (max daily loss, max…"
+description: "Handlu-symulatora firm prop (FTMO-style) — trader musi trafić profit target przy utrzymaniu wewnątrz risk limits (max daily loss, max…"
 ---
 
 # Symulacja wyzwania Prop-firm

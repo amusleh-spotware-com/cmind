@@ -1,6 +1,5 @@
 ---
-description: "tests/UnitTests/CopyTrading/FakeTradingSession.cs = in-memory IOpenApiTradingSession
-wszystkie copy-trading unit tests run przeciwko. Job: mimic real cTrader Open…"
+description: "tests/UnitTests/CopyTrading/FakeTradingSession.cs = in-memory IOpenApiTradingSession wszystkie copy-trading unit tests run przeciwko. Job: mimic real cTrader Open…"
 ---
 
 # FakeTradingSession — cTrader Open API fidelity contract

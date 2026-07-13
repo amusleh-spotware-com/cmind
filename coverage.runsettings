@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Coverage settings for the XPlat Code Coverage collector (pass with the settings option).
+     Excludes code that must not count toward the 100% target: compiler/source-generated code (the
+     source-gen LogMessages enumerators, records' generated members), EF migrations (generated), and
+     anything explicitly marked ExcludeFromCodeCoverage. See plans/public-launch-readiness.md WS-1. -->
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute,DebuggerNonUserCodeAttribute</ExcludeByAttribute>
+          <ExcludeByFile>**/obj/**/*.cs,**/Migrations/*.cs</ExcludeByFile>
+          <Exclude>[*]*.Migrations.*</Exclude>
+          <SkipAutoProps>true</SkipAutoProps>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

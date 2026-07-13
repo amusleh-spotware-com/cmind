@@ -47,7 +47,21 @@ Status: **IN EXECUTION** — Phase A started 2026-07-12. Author baseline: 2026-0
   slave copy shrank (volume 2→1). Closed-market scenarios reported INCONCLUSIVE (skip-clean), never a
   false pass. Live copy over the real Open API socket is verified working, not just harnessed.
 
-**Status by workstream:** WS-1 gated ✓ · WS-2 ✓ (live-verified 11/11) · WS-3 ✓ · WS-4 ✓✓
+- **WS-4 security audit (2026-07-12):** raw-SQL scan clean (all `ExecuteSqlInterpolated`, no
+  concat/raw); secrets-in-logs clean (token-refresh logs carry only account id / expiry / error kind,
+  never a token value; no source-gen log arg is a secret); node-agent JWT hardened to pin
+  `ValidAlgorithms=[HS256]` (matching `CalendarJwt`); the only user-controlled outbound (AI provider
+  BaseUrl) is the intentional self-hosted-LLM feature. Plus the two automated gates (tenant isolation
+  ×2, endpoint-auth). A full external pen-test remains a pre-launch to-do.
+- **WS-11 white-label — assessed complete.** `WhiteLabelCatalogParityTests` *guarantees* every
+  white-label options-record property is catalogued or explicitly excluded (build fails otherwise), so
+  coverage is complete by construction: branding (name/logo/favicon/description/support URL), 9 theme
+  colour tokens, custom CSS, MFA enforcement, AI provider limits, broker allow-list, full registration
+  controls, nodes-UI mode, powered-by toggle — all owner-tunable at runtime via
+  `/settings/deployment`. The only industry capability not modelled as an app option is a custom
+  vanity domain, which is an operational/ingress concern (correctly out of app scope).
+
+**Status by workstream:** WS-1 gated ✓ · WS-2 ✓ (live-verified 11/11) · WS-3 ✓ · WS-4 ✓✓✓
 (tenant-isolation ×2 + endpoint-auth gate; full `/security-review` sweep still pending) · WS-6 ✓ ·
 WS-10 ✓ · WS-12 ✓ · WS-5/7/8/9/11 tracked.
 

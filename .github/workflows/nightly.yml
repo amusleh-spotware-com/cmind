@@ -58,3 +58,11 @@ jobs:
         with:
           name: k8s-e2e-log
           path: /tmp/cmind-tests.log
+
+  compose-smoke:
+    name: Self-hoster deploy smoke (Docker Compose)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Boot the one-command compose stack and probe /alive
+        run: bash scripts/compose-smoke.sh

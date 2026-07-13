@@ -1,30 +1,24 @@
 ---
-title: "ADR-0004: CBotBuilder web sunucusunda"
+title: CBotBuilder Web Ana Bilgisayarında Çalışır
 ---
 
-# ADR-0004: CBotBuilder web sunucusunda
+# `CBotBuilder` Web Ana Bilgisayarında bir Sandbox'ta Çalışır
 
-## Bağlam
+**Bağlam:** cBot oluşturmak MSBuild çalıştırmayı gerektirir, bu da dosya sistemi erişimi ve potansiyel olarak ağ erişimi talep eder. Güvenilmeyen kaynak kodu derlemek, bir VM'nin tüm dosya sistemi için bir kötü amaçlı MSBuild eklentisi ile riski ortaya koyar.
 
-cBot derleme untrusted MSBuild çalıştırır — kullanıcı kodu, harici paketler, yol tarama.
+**Karar:** `CBotBuilder` aşağıdakiler içinde çalışır:
 
-## Karar
+- Web ana bilgisayarında (Docker soketine doğrudan erişim içerik ihtiyacı)
+- Tek kullanımlı SDK konteyneri içinde (throwaway, her derleme için yeniden)
+- Bind-mounted `/work` dizini (kaynak) + paylaşılan `app-nuget-cache` hacmi
+- Ev sahibi dosya sistemi / ağ erişimi yok
 
-`CBotBuilder` **web sunucusu üzerinde çalışır** (Docker soketine erişim gerekir) bir tek seferlik SDK
-konteynerinde:
+**Sonuçlar:**
 
-```bash
-docker run -it --rm -v /work:/work -v app-nuget-cache:/root/.nuget \
-  mcr.microsoft.com/dotnet/sdk:10 \
-  dotnet build /work/cBot.csproj
-```
+✅ **Sandbox:** MSBuild sadece belirtilen hacimlere erişebilir.
 
-- Bind-mount `/work` (kullanıcı projesine)
-- Paylaşılmış `app-nuget-cache` hacmi (paket indirmeyi hızlandırır)
-- Konteyner, ana bilgisayar FS/net erişemez (güvenlik sınırı)
+✅ **Yalıtım:** Kötü kaynak kod ev sahibi kaynaklarını zarar veremez.
 
-## Sonuçlar
+❌ **Yapı performansı:** Her derleme yeni konteyner = ısıtma süresi. Önbelleği tarafından azaltılmış (hacim).
 
-- MSBuild malicious komutlar kesinlikle sınırlandırılmış.
-- Derleme yalıtılmış; birkaç saniye sonra başında silinir.
-- Ölçek: çoklu derlemeler yapılamaz — web sunucusunda DinD ve kuyruk gereklidir.
+Daha fazla: [Build & Backtest →](../features/build-and-backtest.md)

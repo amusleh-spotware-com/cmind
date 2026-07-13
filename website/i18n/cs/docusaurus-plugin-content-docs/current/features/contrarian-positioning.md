@@ -1,29 +1,29 @@
 ---
-description: "Contrarian Retail Positioning — změní % prodejců na dlouho na kontrarní zkreslení (selhání davu, když je vychýleno), plus point-in-time signální objekty hodnoty, které chrání před zkreslením look-ahead."
+description: "Contrarian Retail Positioning — změní % maloobchodních traderů long na contrarian bias (fade dav když je lopsided), plus point-in-time signal value objekty které hlídají proti look-ahead bias."
 ---
 
-# Kontrarní Retail Positioning
+# Contrarian Retail Positioning
 
-Maloobchodní dav je jedním z mála skutečně užitečných signálů sentimentu v FX — jako **kontrarní** indikátor. Když je velká většina maloobchodních obchodníků na dlouho, cena historicky měla tendenci klesat a naopak. Tento nástroj změní pozicování davu na lze jednat čtení.
+Maloobchodní dav je jeden z mála skutečně užitečných sentiment signálů v FX — jako **contrarian** indikátor. Když veliká většina maloobchodních traderů je long, cena historicky měla tendenci padat, a naopak. Tento nástroj změní crowd positioning na actionable čtení.
 
-Otevřete **cBots → Contrarian Positioning** (`/quant/positioning`).
+Otevřít **cBots → Contrarian Positioning** (`/quant/positioning`).
 
-## Co dělá
+## Co to dělá
 
-Zadejte **% maloobchodních obchodníků na dlouho** (ze stránky sentimentu vašeho makléře nebo kanálu, jako je FXSSI) a vrátí:
+Zadejte **% maloobchodních traderů long** (z vašeho broker sentiment stránky nebo feed jako FXSSI) a vrátí:
 
-- **Kontrarní zkreslení** — **Bearish** když ≥ 60% je na dlouho (dav příliš dlouho), **Bullish** když ≤ 40% je na dlouho (dav příliš krátko), **Neutral** v pásmu 40–60% nejistoty;
-- **Síla** — jak je dav vychýlen (0 = vyvážený, 1 = zcela jednostranný), aby se vážil signál.
+- **Contrarian bias** — **Bearish** když ≥ 60% jsou long (dav příliš long), **Bullish** když ≤ 40% jsou long (dav příliš short), **Neutral** v 40–60% indecision pasu;
+- **Strength** — jak lopsided dav je (0 = balanced, 1 = fully one-sided), k váze signál.
 
 ```http
 POST /api/quant/positioning
 { "longPercent": 72 }
 ```
 
-## Point-in-time konstrukcí
+## Point-in-time podle konstrukce
 
-Pod kapotou signální vrstva (`Core.Signals`) modeluje `PointInTimeSignal`, který je **razítkem s momentem, kdy to bylo poznable** a odmítá být konstruován bez něj. Libovolný backtest nebo autonomní agent, který konzumuje signál, kontroluje `IsKnownAt(decisionTime)` — takže budoucí data nemohou nikdy prosakovat do historického rozhodnutí. Look-ahead zkreslení je největším vrahem reprodukovatelnosti v kvantitativních financích; doménový model to činí strukturálně nemožným.
+Pod kapotou signal vrstva (`Core.Signals`) modeluje `PointInTimeSignal`, která je **razítko s okamžikem kdy byl znám** a odmítá se staví bez něj. Jakýkoliv backtest nebo autonomous agent který konzumuje signál kontroly `IsKnownAt(decisionTime)` — takže budoucí data nemůže nikdy uniknout do historické rozhodnutí. Look-ahead bias je top reproducibility zabijáka v quant financích; doménový model dělá to strukturálně nemožné.
 
-## Proč je spolehlivý
+## Proč to je spolehlivé
 
-Čisté, deterministické doménové kódy bez infrastrukturní závislosti — kontrarní prahové hodnoty a guard point-in-time jsou testovány jednotkami, včetně hranic 40/60 a zamítnutí mimo rozsah.
+Čistý, deterministický doménový kód bez infra závislosti — contrarian prahů a point-in-time stráže jsou unit-testovány, včetně 40/60 hranic a out-of-range odmítnutí.

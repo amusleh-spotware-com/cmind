@@ -1,54 +1,54 @@
 ---
 slug: /audience
-title: Ki számára való a cMind?
-description: A cMind cTrader kereskedőknek, brókereknek és felhő/VPS szolgáltatóknak. Találja meg az Ön útját — önfenntartó kereskedőként, fehér címkés brókerként, vagy felügyelt üzemeltetés biztosítóként — plusz hogyan járulhat hozzá.
+title: Ki a cMind számára?
+description: A cMind a cTrader kereskedőknek, brókereknek és felhő/VPS-szolgáltatóknak szól. Keresse meg az útvonalat — önmeghatározott kereskedőként, fehér címke brókerként vagy felügyelt üzemeltetésként szolgáltatóként — valamint hogyan lehet hozzájárulni.
 keywords:
   - cTrader platform
-  - algoritmikus kereskedelem
-  - fehér címkés broker
-  - felügyelt kereskedelem üzemeltetés
-  - nyílt forráskódú kereskedelem
+  - algoritmikus kereskedés
+  - fehér címke bróker
+  - felügyelt kereskedelmi üzemeltetés
+  - nyílt forráskódú kereskedés
 sidebar_position: 2
 ---
 
-# Ki számára való a cMind?
+# Ki a cMind számára?
 
-Rövid verzió: **emberek, akiknek pénze a tét és szeretik az irányítást.** A cMind egy komoly algoritmikus-kereskedelem operációs konzol — nem egy fogyasztó fintech játékszer, amely konfetti animációt mutat, amikor $3-t kerestek. Függetlenül attól, hogy Ön kereskedik, bróker vagy üzemeltet, van egy Ön számára felépített út alább.
+Rövid verzió: **emberek pénzzel a vonalon, akik szeretnék az irányítást.** A cMind egy komolyabb algoritmikus-kereskedelmi műveleti konzol — nem egy fogyasztói fintech játék konfetti animációval, amikor Ön 3 dollárt keresnek. Legyen szó kereskedésről, brókerségről vagy üzemeltetésről, alul van az Ön számára kialakított útvonal.
 
-## 📈 Kereskedők — saját asztalt önfenntartó
+## 📈 Kereskedők — önmeghatározott az egész asztalod
 
-Kereskedik a cTrader-en és fáradt, hogy összeragassz egy szerkesztőt, egy backtest-et, egy VPS-t és három böngészőlapot. Saját fenntartás cMind és kapj szerzőséget, backtesting-et, élő végrehajtást, másolati kereskedelmét és monitorozást egy AI-hajtott konzolban — a saját dobozban, az adataid soha nem hagyják el.
+Ön a cTrader-en kereskedik, és fáradt az olyan szerkesztő, backtester, VPS és három böngészőfül összeragasztásáról. Az önmeghatározott cMind-et kapja az szerzői, backtesting, élő végrehajtás, másolási kereskedés és figyelemmel követés egy AI-alapú konzolon — az Ön gépén, az adatok soha sem hagyják el.
 
-**Olvasás:** [cMind cTrader kereskedőkhöz →](./for-traders.md)
+**Olvassa el:** [cMind cTrader-kereskedőknek →](./for-traders.md)
 
-## 🏦 Brokerek — fehér címke az ügyfeleinek
+## 🏦 Brókerek — fehér címke az Ön ügyfelei
 
-Ön egy cTrader brókerség működtet és az előnyt szeretné megelőzni a konkurenseket ajánló semmi de egy terminál. Szállít cMind-t saját termékként: adj az ügyfeleknek AI-t, másolat kereskedelmét és prop-firm kihívás az Ön márkanév alatt, korlátozz fiókokat az Ön könyv-hez, és nyiss új bevétel vonalakat.
+Ön egy cTrader-brókerséget vezet, és versenytársak felett akar előnyt szerezni, akik semmit nem kínálnak, mint egy terminál. Szállítsa a cMind-et a saját termékként: adjon ügyfeleknek AI-t, másolási kereskedést és prop-firm-kihívásokat az Ön márkaneve alatt, korlátozza az számlákat az Ön könyvéhez, és nyisson meg új bevételi vonalakat.
 
-**Olvasás:** [cMind cTrader brókerekhez →](./for-brokers.md) · [Fehér címke az üzlethez →](./white-label-for-business.md)
+**Olvassa el:** [cMind cTrader-brókereknek →](./for-brokers.md) · [Fehér címke az üzlethez →](./white-label-for-business.md)
 
-## 🖥️ Felhő és VPS szolgáltatók — eladj felügyelt üzemeltetésként
+## 🖥️ Felhő & VPS-szolgáltatók — szállítsd felügyelt üzemeltetésként
 
-Ön számítást bérel. Kínálj felügyelt cMind üzemeltetést és leszáll egy magas érték, számítás-éhes, ragadós munkaterhelésre — és pénzeszközöt a feliratkozás, a mért számítás, a fehér címke és az AI segítségével.
+Ön számítást bérel. Kínáljon felügyelt cMind-üzemeltetést és egy magas értékű, számítás-éhes, ragasztós terhelést érkezik — és a szinlét, a mért számítást, a fehér címkét és az AI-t pénzszerez.
 
-**Olvasás:** [cMind felhő és VPS szolgáltatókhoz →](./for-cloud-providers.md)
+**Olvassa el:** [cMind felhő & VPS-szolgáltatók számára →](./for-cloud-providers.md)
 
-## 🧑‍💻 Hozzájáruló — segítséget nyújtanak, hogy jobb legyen
+## 🧑‍💻 Közreműködők — segítsen jobbá tenni
 
-A cMind nyílt forráskódú (MIT) és közösség-alakított: C# 14 / .NET 10, szigorú DDD, EF Core + PostgreSQL, .NET Aspire, egy MCP szerver, és három teszt szint. Minden személyként fent fel tud — és kellene — előre tud nyomni:
+A cMind nyílt forráskódú (MIT) és közösség-alakított: C# 14 / .NET 10, szigorú DDD, EF Core + PostgreSQL, .NET Aspire, egy MCP szerver és három teszti szint. Az alábbiakban minden személy — és kellene — előre nyomulva:
 
-- **Kereskedők:** cBot sablonok hozzáadása, funkciókhöz kérés, hibáktól jelentés.
-- **Brokerek:** hozzájáruld az integrációt és irányítást, amelyre az asztal szüksége van.
-- **Szolgáltatók:** felfelé az operációs javításokat és IaC fejlesztéseket.
+- **Kereskedők:** cBot-sablonok hozzáadása, funkciók kérése, hibák jelentése.
+- **Brókerek:** járuljon hozzá az integrációkat és vezérléseket az asztal szükséges.
+- **Szolgáltatók:** az operációs javítások és az IaC-fejlesztések felsőbb adatfolyama.
 
-Fájl-problémákat, UI fordítások vagy AI szolgáltató adapterek hozzáadása, és PRs küldés — az [Hozzájárulási útmutató](./contributing.md) és az [MCP szerver docs](./features/mcp.md) indulnak.
+Fájl-problémákat, UI-fordítások vagy AI-szolgáltatói adapterek hozzáadása, és PR-eket küld — a [Hozzájárulás útmutató](./contributing.md) és az [MCP szerver dokumentáció](./features/mcp.md) elindít.
 
-## A cMind *nem* az Ön számára?
+## A cMind *nem* Ön számára?
 
-Légy becsületes magaddal. A cMind túlmérethalkodás lehetne ha:
+Legyen őszinte magaddal. A cMind lehet túlzott, ha:
 
-- Soha nem érintette meg a terminált és nem akarsz elkezdeni — bár egy [felhő/VPS szolgáltató üzemeltet-het az Ön számára](./for-cloud-providers.md).
-- Csak kézileg keresked és nem érdekel botok, backtesz vagy másolat kereskedelem.
-- Akarsz üzemeltetett SaaS-t egy támogat hotline-nal és nem akarsz, hogy bárki önfenntartó lenne — a cMind önfenntartó a tervezés szerint (csak nagyon nehéz fájdalommentessé tenni).
+- Soha nem érintette a terminált, és nem szeretne kezdeni — bár egy [felhő/VPS-szolgáltató üzemeltethet az Ön számára](./for-cloud-providers.md).
+- Csak manuálisan kereskedik, és nem érdekelnek az botok, backtestjek vagy másolási kereskedés.
+- Szeretne egy üzemeltetett SaaS-ot egy támogatási forródróttal, és nem szeretne, hogy bárki önmeghatározottként üzemeltetje — a cMind önmeghatározott tervből (csak nagyon keményen próbálja megtenni, hogy fájdalommentes).
 
-Továbbra is bólogatva? Üdvözöljük a fedélzeten. → [Futtasd helyileg](./deployment/local.md)
+Még mindig bólintva halad? Üdvözöljük a fedélzeten. → [Futtassa helyileg](./deployment/local.md)

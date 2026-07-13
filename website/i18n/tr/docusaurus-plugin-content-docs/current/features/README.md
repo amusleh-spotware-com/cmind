@@ -1,75 +1,71 @@
 ---
-slug: /features
-title: Özellikler — tam tur
-description: cMind'ın yapabileceği her şey — kopya ticareti, AI, derleme ve backtest, prop-firma koruyucuları, beyaz etiket, PWA, MCP ve daha fazlası.
-sidebar_label: Genel Bakış
+title: Özellikler
+sidebar_position: 1
 ---
 
-# Özellikler — tam tur 🧭
+# cMind Özellikleri
 
-Büyük tura hoşgeldiniz. cMind bir uygulamaya *çok fazlasını* paketler, bu nedenle işte harita. Her yetenek
-kendi derin dalış dokümanına sahip — sizin kaşındığınız şeyi tıklatın.
+cMind'in temel yetenekleri — ne yapabilir, nasıl çalışır, nerede öğrenmek gerekirse.
 
-## 🔁 Kopya ticareti
+## Çekirdek
 
-Taç mücevheri. Bir ana hesabı birçok hesaba yansıtın ve internet ağız açmasında bile senkronizasyonda
-tutun.
+- **[Derle & Backtest](./build-and-backtest.md)** — Monaco IDE'de C# ve Python; docker'da tahmin edilebilir backtesting
+- **[cBot API](./calendar-cbot-api.md)** — Ekonomik takvim verilerine erişim
+- **[Kopyalama Ticareti](./copy-trading.md)** — Kaynak hesaplarından canlı yansıtma, token rotasyonu, resync
 
-- **[Kopya ticareti](./copy-trading.md)** — çekirdek: yansıtma, sipariş türleri, SL/TP, kayan, desync/resync.
-- **[Yürütme transparanması](./copy-execution-transparency.md)** — tam olarak ne, ne zaman ve neden kopyalandığını görün.
-- **[Performans ücretleri](./copy-performance-fees.md)** — sinyaliniz için ücret alın, yüksek su işareti tarzı.
-- **[Sağlayıcı pazarı](./copy-provider-marketplace.md)** — tüccarların sağlayıcıları keşfetmesine ve
-  takip etmesine izin verin.
-- **[Bildirimler](./copy-notifications.md)** — sizi ihtiyacınız olduğunda bilgilendir.
-- **[AI kopya tavsiyesi](./ai-copy-recommender.md)** — AI'nın kimi kopyalayacağını önermasine izin verin.
-- **[Open API jeton yaşam döngüsü](./token-lifecycle.md)** — cMind, per cID tam olarak bir geçerli jeton tutar.
+## AI & Otomasyon
 
-## 📊 Sizin ana tabanınız
+- **[AI Çekirdeği](./ai.md)** — Prompt → cBot kodu, parameter tuning, backtest analizi, risk koruma
+- **[AI Kopyalama Tavsiyesi](./ai-copy-recommender.md)** — AI destekli kopya profili seçimi
+- **[Ajan Stüdyosu](./agent-studio.md)** — Uzun akış görevleri ve ajanlar
 
-- **[Pano](./dashboard.md)** — canlı, mobil-ilk komuta merkezi: sparklines ile KPI'lar, bir etkinlik
-  grafiği, durum halkası, canlı beslenme ve (yöneticiler için) küme sağlığı. Kendisini yeniler.
+## Analiz & Kontrol
 
-## 🧠 AI çekirdeği
+- **[Pano](./dashboard.md)** — Gerçek zamanlı KPI'lar, grafikler, ticaret beslemesi
+- **[Ticaret Günlüğü](./trading-journal.md)** — Trade post-mortem ve P&L analizi
+- **[Yürütme TCA](./execution-tca.md)** — Kaymalar, gecikmeler, sipariş kalitesi ölçümü
+- **[Strateji Sağlığı](./strategy-health.md)** — Canlı bot performansı ve anomali tespiti
+- **[Rejim Laboratuvarı](./regime-lab.md)** — Pazar rejimi analizi ve adaptif ticaret
 
-Yanına yapıştırılmış bir sohbet kutusu değil — gerçekten *işi yapan* AI.
+## İşletme & Yönetim
 
-- **[AI asistanı, aracısı, risk koruması ve uyarıları](./ai.md)** — strateji oluşturma, kendi kendini
-  onarma derleme, botları otomatik olarak durdtabilen arka plan risk koruması ve akıllı uyarılar.
+- **[Prop-Firm Kuralları](./prop-firm.md)** — Finansmanlı tüccar zorlukları, canlı sermaye izleme
+- **[Uyum](./compliance.md)** — Denetim günlüğü, 2FA, uyum saklı tutma
+- **[Beyaz Etiketli](./white-label.md)** — Markalamayı tam kontrol: ad, logo, renkler, alan adı
+- **[Beyaz Etiketli Sahip Ayarları](./white-label-owner-settings.md)** — Sahip, dağıtım ayarlarını çalışma zamanında ayarlayabilir
 
-## 🛠️ İnşa et ve çalıştır
+## Entegrasyon & Uzantı
 
-- **[cBot'ları derle ve backtest](./build-and-backtest.md)** — tarayıcıda Monaco IDE, C#/Python şablonları,
-  sandbox derleme ve canlı öz sermaye eğrileri.
-- **[MCP sunucusu](./mcp.md)** — AI istemcileri bunu sürüş yapabilir böylece cMind araçlarını HTTP + SSE
-  aracılığıyla ortaya koyduk.
+- **[Açık API Paylaşılan Uygulama](./open-api-shared-app.md)** — Tek cTrader OAuth uygulaması tüm kullanıcılar için
+- **[Ortak Ağ Protokolü](./mcp.md)** — AI istemcileriyle cMind araçlarını ifşa edin
+- **[Özellik Geçiş Anahtarları](./feature-toggles.md)** — Her dağıtımda yetenekleri etkinleştir/devre dışı bırak
 
-## 🏢 Bir işletme olarak çalıştırın
+## Veri & Gözlemlenebilirlik
 
-- **[Beyaz etiket / markalaştırma](./white-label.md)** — yapılandırma aracılığıyla her yüzeyi yeniden
-  markalaştırın.
-- **[Prop-firma zorluk simülasyonu](./prop-firm.md)** — canlı öz sermaye ile günlük kayıp, geri çekilme
-  ve hedef kurallarını uygulayın.
-- **[Özellik geçişleri](./feature-toggles.md)** — her dağıtım/tenant'ın ne göreceğine karar verin.
-- **[Uyum / yasal](./compliance.md)** — denetim izi ve yasal yüzey.
+- **[Ekonomik Takvim](./economic-calendar.md)** — Haberler ve göstergeler, cBot tetikleme
+- **[Para Gücü](./currency-strength.md)** — AI makro analizi, çift görünümü
+- **[Konumlandırma](./position-sizing.md)** — Risk kararları ve toplu boyutlandırma
+- **[İki Faktörlü Kimlik Doğrulama](./two-factor-auth.md)** — TOTP, yedek kodlar, zorunlu moda
 
-## 📱 Deneyim
+## Kullanıcı Deneyimi
 
-- **[Yüklenebilir uygulama (PWA)](./pwa.md)** — mobil-ilk, çevrimdışı kabuk, ana ekrana ekle.
-- **[UI tasarım sistemi ve mobil-ilk](../ui-guidelines.md)** — görünüş arkasındaki tasarım jetonları
-  ve kurallar.
+- **[PWA](./pwa.md)** — Yüklenebilir, çevrimdışı-yetkin mobil uygulama
+- **[Yerelleştirme](./localization.md)** — 23 dil, RTL destek
+- **[Kullanıcı Kaydı](./user-registration.md)** — Kendi barındırılan kaydolma, e-posta doğrulama
 
-## ⚙️ Kapu altı
+## Kopyalama Ticareti Derinliği
 
-Tümünü çalışan tutan operasyonel bitler:
+- **[Kopyalama Uygulaması Saydamlığı](./copy-execution-transparency.md)** — Eşleştirme, tahsisler, kayma günlüğü
+- **[Kopyalama Bildirimleri](./copy-notifications.md)** — Profil durum güncellemeleri ve uyarıları
+- **[Kopyalama Performans Ücretleri](./copy-performance-fees.md)** — Kazaç payları ve uzlaşmalar
+- **[Kopyalama Sağlayıcı Pazarı](./copy-provider-marketplace.md)** — Keşif ve seçim
+- **[İçgüdüsel Konumlandırma](./contrarian-positioning.md)** — Karşı ticaret stratejisi
 
-- **[Düğüm filosu ve keşfi](../operations/node-discovery.md)** — düğümler kendi kendini nasıl kaydeder
-  ve iyileştirir.
-- **[Yatay ölçekleme](../deployment/scaling.md)** — kopyalar ekleyin, harici koordinatör gerekmez.
-- **[Günlükleme ve denetim](../operations/logging.md)** — yapılandırılmış günlükler + OpenTelemetry.
-- **[Konuşlandırma](../deployment/local.md)** — herhangi bir yerde çalıştırın.
+## Test & Doğrulama
 
-:::note Dokümanları dürüst tutmak
-Her özellik dokümanı kod ile kilitli adımda tutulur — davranışı değiştir, dokümanı güncelle, aynı
-commit. Eğer hiç sapma farkederseniz, bu bir hata: lütfen [bir sorun açın](https://github.com/amusleh-spotware-com/cmind/issues/new/choose)
-veya PR gönderin. 🙏
-:::
+- **[Backtest Bütünlüğü](./backtest-integrity.md)** — Kaçma olmadan, fair kilitli tahminler
+- **[Token Yaşam Döngüsü](./token-lifecycle.md)** — Yenileme, rotasyon, süresi dolan token yönetimi
+- **[Kopyalama Ticareti Doğrulama Çalışması](../testing/copy-trading-verification-run.md)** — Kod değişiklikleri test etme
+- **[Stres Testi](../testing/stress-testing.md)** — Belirlenmişken ölçek ve kayıp yönetimi
+
+Özellik geçiş anahtarlarıyla olanları ve olmayan olanları etkinleştirin → [Feature toggles](./feature-toggles.md).

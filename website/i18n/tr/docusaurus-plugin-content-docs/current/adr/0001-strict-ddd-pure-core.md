@@ -1,28 +1,26 @@
 ---
-title: "ADR-0001: Katı DDD, saf Core"
+title: Kesin DDD, Saf Core
 ---
 
-# ADR-0001: Katı DDD, saf Core
+# Kesin Domain-Driven Design, Saf `Core`
 
-## Bağlam
+**Bağlam:** cMind gerçek para taşıyor. Hatalı iş mantığı kullanıcı sermayesine maliyetli olabilir. Kod değişikliklerinin sonuçları ayarlamak için iş kurallarının açık, testlenebilir, altyapıdan izole olması gerekir.
 
-cMind finans-duyarlı bir platform — bir hata gerçek parayı kaybedebilir. İş mantığı dokunmazlık
-gereklidir. Kod tabanı büyür.
+**Karar:** Kesin Domain-Driven Design uygulayın:
 
-## Karar
+- `src/Core` saf etki alanı: varlıklar, agregalar, değer nesneleri, güçlü tipi ID'ler, etki alanı olayları, Core tarafı arayüzler.
+- **Sıfır altyapı bağımlılıkları** `Core` içinde: EF, HttpClient, Docker, ASP.NET yok.
+- Tüm iş mantığı agregalar ve domain hizmetleri üzerinde yaşar.
+- Uç noktalar ve UI bileşenleri yalnızca orkestrasyonu yapır.
 
-Tüm iş alanı mantığı **saf `src/Core`** 'da yaşar:
+**Sonuçlar:**
 
-- Varlıklar, toplamalar, değer nesneleri
-- Güçlü ID'ler, etki alanı olayları
-- Hiçbir HttpClient, hiçbir EF, hiçbir ASP.NET — sadece C# + matematik
+✅ **Düşük riski yeniden**: Domain mantığı eğik etmek eski temel ek değiştirme ihtiyaç değil.
 
-Altyapı — EF, Web, DI — **etki alanı yöntemleri** kapsamında `Core` 'u çağırır. Uç noktalar ve
-arka plan hizmetleri **hiçbir zaman** iş mantığı karar vertemez.
+✅ **Testlenebilir:** Ağ, veritabanı veya kütüphaneler olmadan birim testleri çalışır; dış bağımlılıklar tehdit değildir.
 
-## Sonuçlar
+✅ **Saklı alan kalıp'ı:** Etki alanı değişiklikleri (yeni özellik, bulgu düzeltme) `Core` ile başlar, ardından bitiş noktası katmanını aşama.
 
-- İş mantığı, test **birim testleri ile**, harici bağımlılıklar olmadan.
-- Değişiklikler Web tarafında veya EF tarafında, Core tarafı tehdit etmez.
-- Uyum sağlama testi zorunlu — hiçbir Core bağımlılığı altyapıya
-  fırlatılmış.
+❌ **Yavaş önerici başvuru:** Herşeyi yapı bloğa inşa etmek yavaş başlangıçtır, ancak değişim süresi kısalır.
+
+Uygulama: [src/Core/CLAUDE.md →](https://github.com/amusleh-spotware-com/cmind/blob/main/src/Core/CLAUDE.md) · [ddd-dotnet ↗ yetenek](https://example.com)

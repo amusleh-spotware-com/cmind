@@ -1,29 +1,25 @@
 ---
-title: "ADR-0005: Anthropic raw HTTP"
+title: AI İstemcisi Ham HTTP Kullanır, SDK Değil
 ---
 
-# ADR-0005: Anthropic raw HTTP
+# Anthropic'i Ham HTTP Üzerinden Çağırın, SDK Değil
 
-## Bağlam
+**Bağlam:** Anthropic SDK bağımlılığı ekler, sürümleri başka kütüphanelerle çakışabilir, temelleri iptal eder. Metin/JSON istekleriyle, HTTP çağrıları tarafından çalışan Endpoint'ler basitçe.
 
-AI özellikleri dinamik komut istemleri gönderir (kullanıcı veri, zaman damgası, durum). SDK bellek
-kaldırır; HTTP istek/yanıt denetim sağlar.
+**Karar:** `IAiClient` yazılı bir `HttpClient` yoluyla Anthropic'i çağırır, SDK'sını değil.
 
-## Karar
+- İstek: JSON gövdesi ile POST
+- Yanıt: Doğrudan JSON ayrıştırma
+- Yeniden denemeler: Polly politikası
 
-`IAiClient`, **Anthropic SDK değildir**; ham HTTP (typed `HttpClient`, JSON el ile):
+**Sonuçlar:**
 
-```csharp
-var request = new { model = "claude-3-5-sonnet", messages = [...], max_tokens = ... };
-var response = await _http.PostAsJsonAsync("https://api.anthropic.com/v1/messages", request);
-```
+✅ **Minimal Bağımlılık:** SDK sürüm sorunları olmaz.
 
-- Cevap üstün kontrol
-- Akış kolayı (Server-Sent Events)
-- SDK yükseltme riski yok
+✅ **Hızlı:** Doğrudan Malibu; kütüphane yükleme yok.
 
-## Sonuçlar
+❌ **Sürüm Kopya:** API değişiklikleri el ile izlenmesi gerekir.
 
-- AI yanıtı test edilebilir, sahte hale getirilebilir.
-- Başarısız istek yeniden denenebilir, kısaltılabilir.
-- Başka sağlayıcılara geçmek basit.
+❌ **Hata İşleme:** SDK, HTTP hatalarını onu niceliklerir; biz elle tutmalı.
+
+Uygulama: [src/Infrastructure/Ai/AnthropicClient.cs →](https://github.com/amusleh-spotware-com/cmind/blob/main/src/Infrastructure/Ai/AnthropicClient.cs)

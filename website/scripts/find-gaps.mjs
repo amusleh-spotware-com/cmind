@@ -32,11 +32,21 @@ function body(text) {
   return t.replace(/\s+/g, ' ').trim();
 }
 
+// Non-empty line count — a structural proxy that is script-agnostic (markdown headings, list markers,
+// table rows, code fences and preserved line breaks map ~1:1 across languages). A stub/placeholder
+// collapses to a handful of lines, so a target with far fewer lines than the source is not a real
+// translation, regardless of character-length differences between scripts.
+function lineCount(text) {
+  return text.split('\n').filter((l) => l.trim().length > 0).length;
+}
+
 const docs = walk(DOCS)
   .map((p) => relative(DOCS, p).split('\\').join('/'))
   .filter((r) => r !== 'intro.md');
 
-const srcBody = new Map(docs.map((r) => [r, body(readFileSync(join(DOCS, r), 'utf8'))]));
+const srcRaw = new Map(docs.map((r) => [r, readFileSync(join(DOCS, r), 'utf8')]));
+const srcBody = new Map(docs.map((r) => [r, body(srcRaw.get(r))]));
+const srcLines = new Map(docs.map((r) => [r, lineCount(srcRaw.get(r))]));
 
 const PRUNE = process.argv.includes('--prune');
 const gaps = {};
@@ -48,13 +58,11 @@ for (const locale of LOCALES) {
   for (const r of docs) {
     const t = join(base, r);
     if (!existsSync(t)) { need.push(r); continue; }
-    const tb = body(readFileSync(t, 'utf8'));
-    const src = srcBody.get(r);
-    // Compact scripts (CJK/Thai) render far fewer characters than English for the same content, so a
-    // length ratio would false-flag real translations — for them only "missing/empty/English" counts.
-    const compact = ['ja', 'ko', 'zh-Hans', 'th'].includes(locale);
-    const minRatio = compact ? 0.18 : 0.5;
-    const isGap = tb.length === 0 || tb === src || tb.length < src.length * minRatio;
+    const raw = readFileSync(t, 'utf8');
+    const tb = body(raw);
+    // Gap = empty, still English, or too few non-empty lines vs source (stub/placeholder). Line count
+    // is script-agnostic, so it flags CJK stubs without false-flagging real compact translations.
+    const isGap = tb.length === 0 || tb === srcBody.get(r) || lineCount(raw) < srcLines.get(r) * 0.6;
     if (isGap) {
       need.push(r);
       if (PRUNE) { rmSync(t); pruned++; } // remove stub/English copy so it is cleanly re-created

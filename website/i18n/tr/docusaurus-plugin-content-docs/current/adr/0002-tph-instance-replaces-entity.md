@@ -1,25 +1,23 @@
 ---
-title: "ADR-0002: TPH örneği, varlığı değiştirir"
+title: TPH; Geçiş, Varlığı Değiştirir
 ---
 
-# ADR-0002: TPH örneği, varlığı değiştirir
+# Örnek Durum TPH'dir; Bir Geçiş Varlığı Değiştirir
 
-## Bağlam
+**Bağlam:** cMind örneğinin (cBot çalışması, backtest) yaşam döngüsü: Başlama → Çalışıyor → Terminal (Durduruldu/Başarısız). Durum hangisine bağlı olduğu, ne için devredilip ne yapabileceği değişir.
 
-Örnek bir yaşam döngüsü var: başlangıç → çalışılıyor → terminal (başarılı/başarısız). Durum
-değiştikçe davranış değişir.
+**Karar:** Tablo başına Hiyerarşi (TPH) ayrımcılığı ile; durum **geçiş sonunda varlık değiştirildiğinde.**
 
-## Karar
+- `RunningInstance`, `BacktestInstance` vs. ayrı TPH davranış türleri.
+- Durum değişikliği: eski varlık kalır, yeni geçiş durumu için yeni yazı derlenmiş (id'si değişir).
+- Konteyner id ve yürütme raporları taşınır, örnek id değiş.
 
-Örnek durum **TPH (Tablo-ilk Hiyerarşi)** kullanılır; bir geçiş **yeni varlığın yerine geçer**:
+**Sonuçlar:**
 
-- `Instance.Id` → yeni örnek kimliği (başlangıç → çalıştırılıyor)
-- `Instance.Id` → yeni örnek kimliği (çalıştırılıyor → başarısız)
+✅ **Tür güvenliği:** Derleyici geçiş sırasında geçersiz uç nokta çağrılarını yakalar.
 
-Konteyner kimliği kararlı — HTTP aracısı bunu takip eder; örnek kimliği değişir.
+✅ **Durum makinesi güvenliği:** `RunningInstance` üzerindeki "başlama" durumu türü tarafından yok sayılır.
 
-## Sonuçlar
+❌ **Şema karmaşıklığı:** Benzer veriler çok tablosu arasında yaşadığında, nerede sorgu yazarsınız?
 
-- Hiçbir `if (state == ...)` mutable entity karmaşaklığı.
-- EF sahneleme basit: biz yeni varlığı kaydetmek.
-- İstemciler durum geçişlerini izlemek için veritabanını yoklayabilir.
+İlgili: [0003-external-nodes-http-jwt →](./0003-external-nodes-http-jwt.md)

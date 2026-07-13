@@ -13,6 +13,15 @@ Status: **IN EXECUTION** — Phase A started 2026-07-12. Author baseline: 2026-0
   `PageSmokeTests.Routes()` or explicitly excluded). WS-12 CLAUDE.md mandates fused (root DoD + full
   `tests/CLAUDE.md` coverage/K8s/live-copy sections). Kind in-cluster run verified locally via
   `scripts/k8s-e2e.sh`.
+- **Coverage measurement FIXED + baselined (2026-07-13).** The CI `--collect:"XPlat Code Coverage"`
+  was a **silent no-op** — `coverlet.collector` was never referenced, so no report was ever produced.
+  Added the collector to all three test projects (CPM) + a `coverage.runsettings` that excludes
+  compiler/source-generated code, EF migrations and `[ExcludeFromCodeCoverage]`, and wired `--settings`
+  into every CI tier. Coverage now actually measures. **Unit-tier baseline (generated excluded):**
+  CopyEngine 100%, Core ~73% (the domain — the real backfill target), CopyEngine/Core are unit-owned;
+  Infrastructure/CTraderOpenApi/Nodes are covered by the integration/E2E tiers (low under unit alone by
+  design). The literal-100% backfill is now *unblocked and measurable* — remaining Core gaps are mostly
+  DTO/record types and a few TPH state-entity transitions.
 - **Coverage stance (user directive: 100%, no compromise).** 100% line/branch across all three tiers is
   now the mandated target and the enforced direction (census gates + never-regress rule). Reaching a
   literal 100% number on ~740 source files is a multi-week fill campaign tracked by WS-1; the gates make

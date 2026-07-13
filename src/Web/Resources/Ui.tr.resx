@@ -114,4 +114,10 @@
   <data name="whitelabel.cat.propFirm" xml:space="preserve"><value>Prop firm</value></data>
   <data name="calendar.series.title" xml:space="preserve"><value>Gösterge geçmişi</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Bu geri testi sırasındaki takvim olayları</value></data>
+  <data name="ai.notice.banner" xml:space="preserve"><value>Ayarlar → Yapay Zeka bölümünde bir yapay zeka sağlayıcısı yapılandırılana kadar yapay zeka özellikleri kapalıdır.</value></data>
+  <data name="ai.notice.configure" xml:space="preserve"><value>Yapay zekayı ayarla</value></data>
+  <data name="ai.notice.title" xml:space="preserve"><value>Yapay zeka yapılandırılmadı</value></data>
+  <data name="ai.notice.body" xml:space="preserve"><value>Yapay zeka özelliklerini kullanmak için Ayarlar → Yapay Zeka bölümünde bir sağlayıcı yapılandırın — yerleşik model, yerel LLM veya bulut sağlayıcısı.</value></data>
+  <data name="ai.notice.openSettings" xml:space="preserve"><value>Yapay zeka ayarlarını aç</value></data>
+  <data name="ai.notice.later" xml:space="preserve"><value>Daha sonra</value></data>
 </root>

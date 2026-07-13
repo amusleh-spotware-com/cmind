@@ -4,15 +4,16 @@
 @inject HttpClient Http
 @inject IDialogService Dialogs
 @inject NavigationManager Nav
+@inject IStringLocalizer<Ui> L
 
 @if (_loaded && !_enabled)
 {
     <MudAlert Severity="Severity.Warning" Class="mb-3" data-testid="ai-not-configured">
         <div class="d-flex align-center" style="gap:12px;">
-            <span>AI features are turned off until an Anthropic API key is added in Settings → AI.</span>
+            <span>@L["ai.notice.banner"]</span>
             <MudSpacer />
             <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled"
-                       Href="/settings/ai" data-testid="ai-add-key">Add API key</MudButton>
+                       Href="/settings/ai" data-testid="ai-add-key">@L["ai.notice.configure"]</MudButton>
         </div>
     </MudAlert>
 }
@@ -45,9 +46,9 @@
         if (!_promptPending) return;
         _promptPending = false;
         var ok = await Dialogs.ShowMessageBox(
-            "AI not configured",
-            "Add your Anthropic API key in Settings → AI to use AI features.",
-            yesText: "Open AI settings", cancelText: "Later");
+            L["ai.notice.title"],
+            L["ai.notice.body"],
+            yesText: L["ai.notice.openSettings"], cancelText: L["ai.notice.later"]);
         if (ok == true) Nav.NavigateTo("/settings/ai");
     }
 }

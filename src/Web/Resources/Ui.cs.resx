@@ -114,4 +114,10 @@
   <data name="whitelabel.cat.propFirm" xml:space="preserve"><value>Prop firm</value></data>
   <data name="calendar.series.title" xml:space="preserve"><value>Historie ukazatele</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Události kalendáře během tohoto backtestu</value></data>
+  <data name="ai.notice.banner" xml:space="preserve"><value>Funkce AI jsou vypnuté, dokud v Nastavení → AI nenastavíte poskytovatele AI.</value></data>
+  <data name="ai.notice.configure" xml:space="preserve"><value>Nastavit AI</value></data>
+  <data name="ai.notice.title" xml:space="preserve"><value>AI není nakonfigurováno</value></data>
+  <data name="ai.notice.body" xml:space="preserve"><value>Nastavte poskytovatele AI v Nastavení → AI, abyste mohli používat funkce AI — vestavěný model, místní LLM nebo cloudového poskytovatele.</value></data>
+  <data name="ai.notice.openSettings" xml:space="preserve"><value>Otevřít nastavení AI</value></data>
+  <data name="ai.notice.later" xml:space="preserve"><value>Později</value></data>
 </root>

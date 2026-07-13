@@ -111,7 +111,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "Indicator history",
-      "calendar.backtestEvents": "Calendar events during this backtest"
+      "calendar.backtestEvents": "Calendar events during this backtest",
+      "ai.notice.banner": "AI features are turned off until an AI provider is set up in Settings → AI.",
+      "ai.notice.configure": "Set up AI",
+      "ai.notice.title": "AI not configured",
+      "ai.notice.body": "Set up an AI provider in Settings → AI to use AI features — the built-in model, a local LLM, or a cloud provider.",
+      "ai.notice.openSettings": "Open AI settings",
+      "ai.notice.later": "Later"
     },
     "ar": {
       "common.retry": "إعادة المحاولة",
@@ -223,7 +229,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "سجل المؤشر",
-      "calendar.backtestEvents": "أحداث التقويم خلال هذا الاختبار الرجعي"
+      "calendar.backtestEvents": "أحداث التقويم خلال هذا الاختبار الرجعي",
+      "ai.notice.banner": "ميزات الذكاء الاصطناعي متوقفة حتى يتم إعداد مزوّد ذكاء اصطناعي في الإعدادات → الذكاء الاصطناعي.",
+      "ai.notice.configure": "إعداد الذكاء الاصطناعي",
+      "ai.notice.title": "الذكاء الاصطناعي غير مُهيّأ",
+      "ai.notice.body": "قم بإعداد مزوّد ذكاء اصطناعي في الإعدادات → الذكاء الاصطناعي لاستخدام ميزات الذكاء الاصطناعي — النموذج المدمج أو نموذج محلي أو مزوّد سحابي.",
+      "ai.notice.openSettings": "فتح إعدادات الذكاء الاصطناعي",
+      "ai.notice.later": "لاحقًا"
     },
     "cs": {
       "common.retry": "Zkusit znovu",
@@ -335,7 +347,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "Historie ukazatele",
-      "calendar.backtestEvents": "Události kalendáře během tohoto backtestu"
+      "calendar.backtestEvents": "Události kalendáře během tohoto backtestu",
+      "ai.notice.banner": "Funkce AI jsou vypnuté, dokud v Nastavení → AI nenastavíte poskytovatele AI.",
+      "ai.notice.configure": "Nastavit AI",
+      "ai.notice.title": "AI není nakonfigurováno",
+      "ai.notice.body": "Nastavte poskytovatele AI v Nastavení → AI, abyste mohli používat funkce AI — vestavěný model, místní LLM nebo cloudového poskytovatele.",
+      "ai.notice.openSettings": "Otevřít nastavení AI",
+      "ai.notice.later": "Později"
     },
     "de": {
       "common.retry": "Wiederholen",
@@ -447,7 +465,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "Indikatorverlauf",
-      "calendar.backtestEvents": "Kalenderereignisse während dieses Backtests"
+      "calendar.backtestEvents": "Kalenderereignisse während dieses Backtests",
+      "ai.notice.banner": "KI-Funktionen sind deaktiviert, bis unter Einstellungen → KI ein KI-Anbieter eingerichtet ist.",
+      "ai.notice.configure": "KI einrichten",
+      "ai.notice.title": "KI nicht konfiguriert",
+      "ai.notice.body": "Richten Sie unter Einstellungen → KI einen KI-Anbieter ein, um KI-Funktionen zu nutzen — das integrierte Modell, ein lokales LLM oder einen Cloud-Anbieter.",
+      "ai.notice.openSettings": "KI-Einstellungen öffnen",
+      "ai.notice.later": "Später"
     },
     "el": {
       "common.retry": "Επανάληψη",
@@ -559,7 +583,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "Ιστορικό δείκτη",
-      "calendar.backtestEvents": "Γεγονότα ημερολογίου κατά τη διάρκεια αυτού του backtest"
+      "calendar.backtestEvents": "Γεγονότα ημερολογίου κατά τη διάρκεια αυτού του backtest",
+      "ai.notice.banner": "Οι λειτουργίες AI είναι απενεργοποιημένες μέχρι να ρυθμιστεί ένας πάροχος AI στις Ρυθμίσεις → AI.",
+      "ai.notice.configure": "Ρύθμιση AI",
+      "ai.notice.title": "Το AI δεν έχει ρυθμιστεί",
+      "ai.notice.body": "Ρυθμίστε έναν πάροχο AI στις Ρυθμίσεις → AI για να χρησιμοποιήσετε τις λειτουργίες AI — το ενσωματωμένο μοντέλο, ένα τοπικό LLM ή έναν πάροχο cloud.",
+      "ai.notice.openSettings": "Άνοιγμα ρυθμίσεων AI",
+      "ai.notice.later": "Αργότερα"
     },
     "es": {
       "common.retry": "Reintentar",
@@ -671,7 +701,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "Historial del indicador",
-      "calendar.backtestEvents": "Eventos del calendario durante este backtest"
+      "calendar.backtestEvents": "Eventos del calendario durante este backtest",
+      "ai.notice.banner": "Las funciones de IA están desactivadas hasta que se configure un proveedor de IA en Configuración → IA.",
+      "ai.notice.configure": "Configurar IA",
+      "ai.notice.title": "IA no configurada",
+      "ai.notice.body": "Configura un proveedor de IA en Configuración → IA para usar las funciones de IA: el modelo integrado, un LLM local o un proveedor en la nube.",
+      "ai.notice.openSettings": "Abrir configuración de IA",
+      "ai.notice.later": "Más tarde"
     },
     "fr": {
       "common.retry": "Réessayer",
@@ -783,7 +819,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "Historique de l'indicateur",
-      "calendar.backtestEvents": "Événements du calendrier pendant ce backtest"
+      "calendar.backtestEvents": "Événements du calendrier pendant ce backtest",
+      "ai.notice.banner": "Les fonctionnalités d'IA sont désactivées tant qu'un fournisseur d'IA n'est pas configuré dans Paramètres → IA.",
+      "ai.notice.configure": "Configurer l'IA",
+      "ai.notice.title": "IA non configurée",
+      "ai.notice.body": "Configurez un fournisseur d'IA dans Paramètres → IA pour utiliser les fonctionnalités d'IA — le modèle intégré, un LLM local ou un fournisseur cloud.",
+      "ai.notice.openSettings": "Ouvrir les paramètres d'IA",
+      "ai.notice.later": "Plus tard"
     },
     "hu": {
       "common.retry": "Újra",
@@ -895,7 +937,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "Mutató előzményei",
-      "calendar.backtestEvents": "Naptáresemények a backteszt alatt"
+      "calendar.backtestEvents": "Naptáresemények a backteszt alatt",
+      "ai.notice.banner": "Az AI-funkciók ki vannak kapcsolva, amíg be nem állít egy AI-szolgáltatót a Beállítások → AI menüben.",
+      "ai.notice.configure": "AI beállítása",
+      "ai.notice.title": "Az AI nincs konfigurálva",
+      "ai.notice.body": "Állítson be egy AI-szolgáltatót a Beállítások → AI menüben az AI-funkciók használatához — a beépített modellt, egy helyi LLM-et vagy egy felhőszolgáltatót.",
+      "ai.notice.openSettings": "AI-beállítások megnyitása",
+      "ai.notice.later": "Később"
     },
     "id": {
       "common.retry": "Coba lagi",
@@ -1007,7 +1055,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "Riwayat indikator",
-      "calendar.backtestEvents": "Peristiwa kalender selama backtest ini"
+      "calendar.backtestEvents": "Peristiwa kalender selama backtest ini",
+      "ai.notice.banner": "Fitur AI dinonaktifkan hingga penyedia AI disiapkan di Pengaturan → AI.",
+      "ai.notice.configure": "Siapkan AI",
+      "ai.notice.title": "AI belum dikonfigurasi",
+      "ai.notice.body": "Siapkan penyedia AI di Pengaturan → AI untuk menggunakan fitur AI — model bawaan, LLM lokal, atau penyedia cloud.",
+      "ai.notice.openSettings": "Buka pengaturan AI",
+      "ai.notice.later": "Nanti"
     },
     "it": {
       "common.retry": "Riprova",
@@ -1119,7 +1173,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "Storico indicatore",
-      "calendar.backtestEvents": "Eventi del calendario durante questo backtest"
+      "calendar.backtestEvents": "Eventi del calendario durante questo backtest",
+      "ai.notice.banner": "Le funzionalità IA sono disattivate finché non configuri un provider IA in Impostazioni → IA.",
+      "ai.notice.configure": "Configura IA",
+      "ai.notice.title": "IA non configurata",
+      "ai.notice.body": "Configura un provider IA in Impostazioni → IA per usare le funzionalità IA: il modello integrato, un LLM locale o un provider cloud.",
+      "ai.notice.openSettings": "Apri impostazioni IA",
+      "ai.notice.later": "Più tardi"
     },
     "ja": {
       "common.retry": "再試行",
@@ -1231,7 +1291,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "指標の履歴",
-      "calendar.backtestEvents": "このバックテスト中の経済カレンダーイベント"
+      "calendar.backtestEvents": "このバックテスト中の経済カレンダーイベント",
+      "ai.notice.banner": "設定 → AI で AI プロバイダーを設定するまで、AI 機能は無効です。",
+      "ai.notice.configure": "AI を設定",
+      "ai.notice.title": "AI が未設定です",
+      "ai.notice.body": "AI 機能を使用するには、設定 → AI で AI プロバイダーを設定してください — 内蔵モデル、ローカル LLM、またはクラウドプロバイダー。",
+      "ai.notice.openSettings": "AI 設定を開く",
+      "ai.notice.later": "後で"
     },
     "ko": {
       "common.retry": "다시 시도",
@@ -1343,7 +1409,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "지표 기록",
-      "calendar.backtestEvents": "이 백테스트 기간의 캘린더 이벤트"
+      "calendar.backtestEvents": "이 백테스트 기간의 캘린더 이벤트",
+      "ai.notice.banner": "설정 → AI에서 AI 공급자를 설정할 때까지 AI 기능이 꺼져 있습니다.",
+      "ai.notice.configure": "AI 설정",
+      "ai.notice.title": "AI가 구성되지 않음",
+      "ai.notice.body": "AI 기능을 사용하려면 설정 → AI에서 AI 공급자를 설정하세요 — 내장 모델, 로컬 LLM 또는 클라우드 공급자.",
+      "ai.notice.openSettings": "AI 설정 열기",
+      "ai.notice.later": "나중에"
     },
     "ms": {
       "common.retry": "Cuba semula",
@@ -1455,7 +1527,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "Sejarah penunjuk",
-      "calendar.backtestEvents": "Peristiwa kalendar semasa backtest ini"
+      "calendar.backtestEvents": "Peristiwa kalendar semasa backtest ini",
+      "ai.notice.banner": "Ciri AI dimatikan sehingga penyedia AI disediakan dalam Tetapan → AI.",
+      "ai.notice.configure": "Sediakan AI",
+      "ai.notice.title": "AI belum dikonfigurasi",
+      "ai.notice.body": "Sediakan penyedia AI dalam Tetapan → AI untuk menggunakan ciri AI — model terbina dalam, LLM tempatan, atau penyedia awan.",
+      "ai.notice.openSettings": "Buka tetapan AI",
+      "ai.notice.later": "Kemudian"
     },
     "pl": {
       "common.retry": "Ponów",
@@ -1567,7 +1645,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "Historia wskaźnika",
-      "calendar.backtestEvents": "Wydarzenia kalendarza podczas tego backtestu"
+      "calendar.backtestEvents": "Wydarzenia kalendarza podczas tego backtestu",
+      "ai.notice.banner": "Funkcje AI są wyłączone, dopóki w Ustawienia → AI nie skonfigurujesz dostawcy AI.",
+      "ai.notice.configure": "Skonfiguruj AI",
+      "ai.notice.title": "AI nie skonfigurowano",
+      "ai.notice.body": "Skonfiguruj dostawcę AI w Ustawienia → AI, aby korzystać z funkcji AI — wbudowany model, lokalny LLM lub dostawcę w chmurze.",
+      "ai.notice.openSettings": "Otwórz ustawienia AI",
+      "ai.notice.later": "Później"
     },
     "pt-BR": {
       "common.retry": "Tentar novamente",
@@ -1679,7 +1763,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "Histórico do indicador",
-      "calendar.backtestEvents": "Eventos do calendário durante este backtest"
+      "calendar.backtestEvents": "Eventos do calendário durante este backtest",
+      "ai.notice.banner": "Os recursos de IA estão desativados até que um provedor de IA seja configurado em Configurações → IA.",
+      "ai.notice.configure": "Configurar IA",
+      "ai.notice.title": "IA não configurada",
+      "ai.notice.body": "Configure um provedor de IA em Configurações → IA para usar os recursos de IA — o modelo integrado, um LLM local ou um provedor de nuvem.",
+      "ai.notice.openSettings": "Abrir configurações de IA",
+      "ai.notice.later": "Mais tarde"
     },
     "ru": {
       "common.retry": "Повторить",
@@ -1791,7 +1881,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "История показателя",
-      "calendar.backtestEvents": "События календаря во время этого бэктеста"
+      "calendar.backtestEvents": "События календаря во время этого бэктеста",
+      "ai.notice.banner": "Функции ИИ отключены, пока в Настройки → ИИ не настроен поставщик ИИ.",
+      "ai.notice.configure": "Настроить ИИ",
+      "ai.notice.title": "ИИ не настроен",
+      "ai.notice.body": "Настройте поставщика ИИ в Настройки → ИИ, чтобы использовать функции ИИ — встроенную модель, локальную LLM или облачного поставщика.",
+      "ai.notice.openSettings": "Открыть настройки ИИ",
+      "ai.notice.later": "Позже"
     },
     "sk": {
       "common.retry": "Skúsiť znova",
@@ -1903,7 +1999,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "História ukazovateľa",
-      "calendar.backtestEvents": "Udalosti kalendára počas tohto backtestu"
+      "calendar.backtestEvents": "Udalosti kalendára počas tohto backtestu",
+      "ai.notice.banner": "Funkcie AI sú vypnuté, kým v Nastavenia → AI nenastavíte poskytovateľa AI.",
+      "ai.notice.configure": "Nastaviť AI",
+      "ai.notice.title": "AI nie je nakonfigurované",
+      "ai.notice.body": "Nastavte poskytovateľa AI v Nastavenia → AI, aby ste mohli používať funkcie AI — vstavaný model, lokálny LLM alebo cloudového poskytovateľa.",
+      "ai.notice.openSettings": "Otvoriť nastavenia AI",
+      "ai.notice.later": "Neskôr"
     },
     "sl": {
       "common.retry": "Poskusi znova",
@@ -2015,7 +2117,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "Zgodovina kazalnika",
-      "calendar.backtestEvents": "Koledarski dogodki med tem backtestom"
+      "calendar.backtestEvents": "Koledarski dogodki med tem backtestom",
+      "ai.notice.banner": "Funkcije AI so onemogočene, dokler v Nastavitve → AI ne nastavite ponudnika AI.",
+      "ai.notice.configure": "Nastavi AI",
+      "ai.notice.title": "AI ni konfiguriran",
+      "ai.notice.body": "Nastavite ponudnika AI v Nastavitve → AI za uporabo funkcij AI — vgrajeni model, lokalni LLM ali ponudnika v oblaku.",
+      "ai.notice.openSettings": "Odpri nastavitve AI",
+      "ai.notice.later": "Pozneje"
     },
     "sr": {
       "common.retry": "Покушај поново",
@@ -2127,7 +2235,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "Istorija indikatora",
-      "calendar.backtestEvents": "Događaji kalendara tokom ovog bektesta"
+      "calendar.backtestEvents": "Događaji kalendara tokom ovog bektesta",
+      "ai.notice.banner": "Функције AI-ја су искључене док у Подешавања → AI не подесите добављача AI-ја.",
+      "ai.notice.configure": "Подеси AI",
+      "ai.notice.title": "AI није конфигурисан",
+      "ai.notice.body": "Подесите добављача AI-ја у Подешавања → AI да бисте користили AI функције — уграђени модел, локални LLM или добављача у облаку.",
+      "ai.notice.openSettings": "Отвори подешавања AI-ја",
+      "ai.notice.later": "Касније"
     },
     "th": {
       "common.retry": "ลองอีกครั้ง",
@@ -2239,7 +2353,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "ประวัติตัวชี้วัด",
-      "calendar.backtestEvents": "เหตุการณ์ปฏิทินระหว่างการทดสอบย้อนหลังนี้"
+      "calendar.backtestEvents": "เหตุการณ์ปฏิทินระหว่างการทดสอบย้อนหลังนี้",
+      "ai.notice.banner": "ฟีเจอร์ AI ถูกปิดจนกว่าจะตั้งค่าผู้ให้บริการ AI ใน การตั้งค่า → AI",
+      "ai.notice.configure": "ตั้งค่า AI",
+      "ai.notice.title": "ยังไม่ได้กำหนดค่า AI",
+      "ai.notice.body": "ตั้งค่าผู้ให้บริการ AI ใน การตั้งค่า → AI เพื่อใช้ฟีเจอร์ AI — โมเดลในตัว, LLM ในเครื่อง หรือผู้ให้บริการคลาวด์",
+      "ai.notice.openSettings": "เปิดการตั้งค่า AI",
+      "ai.notice.later": "ภายหลัง"
     },
     "tr": {
       "common.retry": "Yeniden dene",
@@ -2351,7 +2471,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "Gösterge geçmişi",
-      "calendar.backtestEvents": "Bu geri testi sırasındaki takvim olayları"
+      "calendar.backtestEvents": "Bu geri testi sırasındaki takvim olayları",
+      "ai.notice.banner": "Ayarlar → Yapay Zeka bölümünde bir yapay zeka sağlayıcısı yapılandırılana kadar yapay zeka özellikleri kapalıdır.",
+      "ai.notice.configure": "Yapay zekayı ayarla",
+      "ai.notice.title": "Yapay zeka yapılandırılmadı",
+      "ai.notice.body": "Yapay zeka özelliklerini kullanmak için Ayarlar → Yapay Zeka bölümünde bir sağlayıcı yapılandırın — yerleşik model, yerel LLM veya bulut sağlayıcısı.",
+      "ai.notice.openSettings": "Yapay zeka ayarlarını aç",
+      "ai.notice.later": "Daha sonra"
     },
     "vi": {
       "common.retry": "Thử lại",
@@ -2463,7 +2589,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "Lịch sử chỉ số",
-      "calendar.backtestEvents": "Sự kiện lịch trong backtest này"
+      "calendar.backtestEvents": "Sự kiện lịch trong backtest này",
+      "ai.notice.banner": "Các tính năng AI bị tắt cho đến khi thiết lập nhà cung cấp AI trong Cài đặt → AI.",
+      "ai.notice.configure": "Thiết lập AI",
+      "ai.notice.title": "AI chưa được cấu hình",
+      "ai.notice.body": "Thiết lập nhà cung cấp AI trong Cài đặt → AI để sử dụng các tính năng AI — mô hình tích hợp, LLM cục bộ hoặc nhà cung cấp đám mây.",
+      "ai.notice.openSettings": "Mở cài đặt AI",
+      "ai.notice.later": "Để sau"
     },
     "zh-Hans": {
       "common.retry": "重试",
@@ -2575,7 +2707,13 @@
       "whitelabel.cat.openApi": "Open API",
       "whitelabel.cat.propFirm": "Prop firm",
       "calendar.series.title": "指标历史",
-      "calendar.backtestEvents": "此回测期间的日历事件"
+      "calendar.backtestEvents": "此回测期间的日历事件",
+      "ai.notice.banner": "在“设置 → AI”中配置 AI 提供商之前，AI 功能处于关闭状态。",
+      "ai.notice.configure": "配置 AI",
+      "ai.notice.title": "AI 未配置",
+      "ai.notice.body": "在“设置 → AI”中配置 AI 提供商即可使用 AI 功能——内置模型、本地 LLM 或云提供商。",
+      "ai.notice.openSettings": "打开 AI 设置",
+      "ai.notice.later": "稍后"
     }
   }
 }

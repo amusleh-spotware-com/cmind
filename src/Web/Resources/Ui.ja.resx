@@ -114,4 +114,10 @@
   <data name="whitelabel.cat.propFirm" xml:space="preserve"><value>Prop firm</value></data>
   <data name="calendar.series.title" xml:space="preserve"><value>指標の履歴</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>このバックテスト中の経済カレンダーイベント</value></data>
+  <data name="ai.notice.banner" xml:space="preserve"><value>設定 → AI で AI プロバイダーを設定するまで、AI 機能は無効です。</value></data>
+  <data name="ai.notice.configure" xml:space="preserve"><value>AI を設定</value></data>
+  <data name="ai.notice.title" xml:space="preserve"><value>AI が未設定です</value></data>
+  <data name="ai.notice.body" xml:space="preserve"><value>AI 機能を使用するには、設定 → AI で AI プロバイダーを設定してください — 内蔵モデル、ローカル LLM、またはクラウドプロバイダー。</value></data>
+  <data name="ai.notice.openSettings" xml:space="preserve"><value>AI 設定を開く</value></data>
+  <data name="ai.notice.later" xml:space="preserve"><value>後で</value></data>
 </root>

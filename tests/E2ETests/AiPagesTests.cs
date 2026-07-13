@@ -43,8 +43,32 @@ public sealed class AiPagesTests(AppFixture app)
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync(route, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
 
-        await page.Locator("[data-testid=ai-not-configured]").First
-            .WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 8000 });
+        var banner = page.Locator("[data-testid=ai-not-configured]").First;
+        await banner.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 8000 });
+
+        // The notice is provider-agnostic now (built-in model / local LLM / cloud) — it must not name a
+        // single vendor, and it must point users at Settings → AI to set up a provider.
+        var text = await banner.InnerTextAsync();
+        text.Should().Contain("AI provider").And.Contain("Settings → AI");
+        text.Should().NotContainEquivalentOf("Anthropic");
+    }
+
+    [Fact]
+    public async Task Ai_not_configured_dialog_is_provider_agnostic()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/ai/build", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+
+        // The one-time "AI not configured" message box must not name a single vendor now that the app
+        // supports the built-in model, local LLMs, and multiple cloud providers.
+        var dialog = page.Locator(".mud-dialog:has-text('AI not configured')").First;
+        await dialog.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 15000 });
+
+        var text = await dialog.InnerTextAsync();
+        text.Should().Contain("AI provider").And.Contain("built-in model");
+        text.Should().NotContainEquivalentOf("Anthropic");
+
+        await page.Locator("button:has-text('Later')").First.ClickAsync(new() { Timeout = 8000 });
     }
 
     [Fact]

@@ -114,4 +114,10 @@
   <data name="whitelabel.cat.propFirm" xml:space="preserve"><value>Prop firm</value></data>
   <data name="calendar.series.title" xml:space="preserve"><value>Zgodovina kazalnika</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Koledarski dogodki med tem backtestom</value></data>
+  <data name="ai.notice.banner" xml:space="preserve"><value>Funkcije AI so onemogočene, dokler v Nastavitve → AI ne nastavite ponudnika AI.</value></data>
+  <data name="ai.notice.configure" xml:space="preserve"><value>Nastavi AI</value></data>
+  <data name="ai.notice.title" xml:space="preserve"><value>AI ni konfiguriran</value></data>
+  <data name="ai.notice.body" xml:space="preserve"><value>Nastavite ponudnika AI v Nastavitve → AI za uporabo funkcij AI — vgrajeni model, lokalni LLM ali ponudnika v oblaku.</value></data>
+  <data name="ai.notice.openSettings" xml:space="preserve"><value>Odpri nastavitve AI</value></data>
+  <data name="ai.notice.later" xml:space="preserve"><value>Pozneje</value></data>
 </root>

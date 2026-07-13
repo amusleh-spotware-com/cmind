@@ -114,4 +114,10 @@
   <data name="whitelabel.cat.propFirm" xml:space="preserve"><value>Prop firm</value></data>
   <data name="calendar.series.title" xml:space="preserve"><value>Indikatorverlauf</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Kalenderereignisse während dieses Backtests</value></data>
+  <data name="ai.notice.banner" xml:space="preserve"><value>KI-Funktionen sind deaktiviert, bis unter Einstellungen → KI ein KI-Anbieter eingerichtet ist.</value></data>
+  <data name="ai.notice.configure" xml:space="preserve"><value>KI einrichten</value></data>
+  <data name="ai.notice.title" xml:space="preserve"><value>KI nicht konfiguriert</value></data>
+  <data name="ai.notice.body" xml:space="preserve"><value>Richten Sie unter Einstellungen → KI einen KI-Anbieter ein, um KI-Funktionen zu nutzen — das integrierte Modell, ein lokales LLM oder einen Cloud-Anbieter.</value></data>
+  <data name="ai.notice.openSettings" xml:space="preserve"><value>KI-Einstellungen öffnen</value></data>
+  <data name="ai.notice.later" xml:space="preserve"><value>Später</value></data>
 </root>

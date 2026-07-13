@@ -168,4 +168,9 @@
   <data name="feature.Compliance" xml:space="preserve"><value>Compliance</value></data>
   <data name="feature.Registration" xml:space="preserve"><value>Registration</value></data>
   <data name="feature.EconomicCalendar" xml:space="preserve"><value>Economic Calendar</value></data>
+  <data name="users.tempPassword.title" xml:space="preserve"><value>Временный пароль</value></data>
+  <data name="users.tempPassword.warning" xml:space="preserve"><value>Скопируйте этот пароль сейчас - он показывается только один раз. Пользователь должен изменить его при следующем входе.</value></data>
+  <data name="users.tempPassword.label" xml:space="preserve"><value>Временный пароль</value></data>
+  <data name="common.copy" xml:space="preserve"><value>Копировать</value></data>
+  <data name="common.copiedToClipboard" xml:space="preserve"><value>Скопировано в буфер обмена</value></data>
 </root>

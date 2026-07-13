@@ -168,4 +168,9 @@
   <data name="feature.Compliance" xml:space="preserve"><value>Compliance</value></data>
   <data name="feature.Registration" xml:space="preserve"><value>Registration</value></data>
   <data name="feature.EconomicCalendar" xml:space="preserve"><value>Economic Calendar</value></data>
+  <data name="users.tempPassword.title" xml:space="preserve"><value>Mật khẩu tạm thời</value></data>
+  <data name="users.tempPassword.warning" xml:space="preserve"><value>Sao chép mật khẩu này ngay - chỉ hiển thị một lần. Người dùng phải đổi ở lần đăng nhập tiếp theo.</value></data>
+  <data name="users.tempPassword.label" xml:space="preserve"><value>Mật khẩu tạm thời</value></data>
+  <data name="common.copy" xml:space="preserve"><value>Sao chép</value></data>
+  <data name="common.copiedToClipboard" xml:space="preserve"><value>Đã sao chép vào bảng nhớ tạm</value></data>
 </root>

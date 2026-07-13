@@ -168,4 +168,9 @@
   <data name="feature.Compliance" xml:space="preserve"><value>Compliance</value></data>
   <data name="feature.Registration" xml:space="preserve"><value>Registration</value></data>
   <data name="feature.EconomicCalendar" xml:space="preserve"><value>Economic Calendar</value></data>
+  <data name="users.tempPassword.title" xml:space="preserve"><value>كلمة مرور مؤقتة</value></data>
+  <data name="users.tempPassword.warning" xml:space="preserve"><value>انسخ كلمة المرور الآن - تُعرض مرة واحدة فقط. يجب على المستخدم تغييرها عند تسجيل الدخول التالي.</value></data>
+  <data name="users.tempPassword.label" xml:space="preserve"><value>كلمة مرور مؤقتة</value></data>
+  <data name="common.copy" xml:space="preserve"><value>نسخ</value></data>
+  <data name="common.copiedToClipboard" xml:space="preserve"><value>تم النسخ إلى الحافظة</value></data>
 </root>

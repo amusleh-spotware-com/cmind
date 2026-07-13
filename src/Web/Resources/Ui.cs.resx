@@ -168,4 +168,9 @@
   <data name="feature.Compliance" xml:space="preserve"><value>Compliance</value></data>
   <data name="feature.Registration" xml:space="preserve"><value>Registration</value></data>
   <data name="feature.EconomicCalendar" xml:space="preserve"><value>Economic Calendar</value></data>
+  <data name="users.tempPassword.title" xml:space="preserve"><value>Dočasné heslo</value></data>
+  <data name="users.tempPassword.warning" xml:space="preserve"><value>Zkopírujte toto heslo nyní - zobrazí se pouze jednou. Uživatel jej musí při příštím přihlášení změnit.</value></data>
+  <data name="users.tempPassword.label" xml:space="preserve"><value>Dočasné heslo</value></data>
+  <data name="common.copy" xml:space="preserve"><value>Kopírovat</value></data>
+  <data name="common.copiedToClipboard" xml:space="preserve"><value>Zkopírováno do schránky</value></data>
 </root>

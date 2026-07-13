@@ -168,4 +168,9 @@
   <data name="feature.Compliance" xml:space="preserve"><value>Compliance</value></data>
   <data name="feature.Registration" xml:space="preserve"><value>Registration</value></data>
   <data name="feature.EconomicCalendar" xml:space="preserve"><value>Economic Calendar</value></data>
+  <data name="users.tempPassword.title" xml:space="preserve"><value>Kata laluan sementara</value></data>
+  <data name="users.tempPassword.warning" xml:space="preserve"><value>Salin kata laluan ini sekarang - ia dipaparkan sekali sahaja. Pengguna mesti menukarnya pada log masuk seterusnya.</value></data>
+  <data name="users.tempPassword.label" xml:space="preserve"><value>Kata laluan sementara</value></data>
+  <data name="common.copy" xml:space="preserve"><value>Salin</value></data>
+  <data name="common.copiedToClipboard" xml:space="preserve"><value>Disalin ke papan keratan</value></data>
 </root>

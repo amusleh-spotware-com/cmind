@@ -168,4 +168,9 @@
   <data name="feature.Compliance" xml:space="preserve"><value>Compliance</value></data>
   <data name="feature.Registration" xml:space="preserve"><value>Registration</value></data>
   <data name="feature.EconomicCalendar" xml:space="preserve"><value>Economic Calendar</value></data>
+  <data name="users.tempPassword.title" xml:space="preserve"><value>Začasno geslo</value></data>
+  <data name="users.tempPassword.warning" xml:space="preserve"><value>To geslo zdaj kopirajte - prikazano je samo enkrat. Uporabnik ga mora ob naslednji prijavi spremeniti.</value></data>
+  <data name="users.tempPassword.label" xml:space="preserve"><value>Začasno geslo</value></data>
+  <data name="common.copy" xml:space="preserve"><value>Kopiraj</value></data>
+  <data name="common.copiedToClipboard" xml:space="preserve"><value>Kopirano v odložišče</value></data>
 </root>

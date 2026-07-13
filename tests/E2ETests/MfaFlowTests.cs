@@ -59,9 +59,13 @@ public sealed class MfaFlowTests(AppFixture app)
         var page = await app.NewAuthedMobilePageAsync();
         await page.GotoAsync("/account");
 
-        (await page.Locator("[data-testid=mfa-section]").IsVisibleAsync()).Should().BeTrue();
+        await Assertions.Expect(page.Locator("[data-testid=mfa-section]")).ToBeVisibleAsync();
         await page.ClickAsync("[data-testid=mfa-enable-open]");
-        (await page.WaitForSelectorAsync("[data-testid=mfa-qr] svg")).Should().NotBeNull();
+        // The dialog renders in a portal at the document root; assert the QR SVG inside it becomes visible.
+        // Use a Playwright Assertion (auto-retrying) rather than a raw DOM wait so the mobile dialog's async
+        // setup POST (/api/auth/mfa/setup) has time to resolve and inject the inline SVG.
+        await Assertions.Expect(page.Locator("[data-testid=mfa-qr] svg")).ToBeVisibleAsync(
+            new() { Timeout = 15000 });
     }
 
     private async Task SignInExpectingChallengeAsync(string code)

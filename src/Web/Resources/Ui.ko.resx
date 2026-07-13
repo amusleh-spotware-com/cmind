@@ -168,4 +168,9 @@
   <data name="feature.Compliance" xml:space="preserve"><value>Compliance</value></data>
   <data name="feature.Registration" xml:space="preserve"><value>Registration</value></data>
   <data name="feature.EconomicCalendar" xml:space="preserve"><value>Economic Calendar</value></data>
+  <data name="users.tempPassword.title" xml:space="preserve"><value>임시 비밀번호</value></data>
+  <data name="users.tempPassword.warning" xml:space="preserve"><value>이 비밀번호를 지금 복사하세요 - 한 번만 표시됩니다. 사용자는 다음 로그인 시 변경해야 합니다.</value></data>
+  <data name="users.tempPassword.label" xml:space="preserve"><value>임시 비밀번호</value></data>
+  <data name="common.copy" xml:space="preserve"><value>복사</value></data>
+  <data name="common.copiedToClipboard" xml:space="preserve"><value>클립보드에 복사됨</value></data>
 </root>

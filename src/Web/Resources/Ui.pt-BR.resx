@@ -168,4 +168,9 @@
   <data name="feature.Compliance" xml:space="preserve"><value>Compliance</value></data>
   <data name="feature.Registration" xml:space="preserve"><value>Registration</value></data>
   <data name="feature.EconomicCalendar" xml:space="preserve"><value>Economic Calendar</value></data>
+  <data name="users.tempPassword.title" xml:space="preserve"><value>Senha temporária</value></data>
+  <data name="users.tempPassword.warning" xml:space="preserve"><value>Copie esta senha agora - ela é exibida apenas uma vez. O usuário deve alterá-la no próximo login.</value></data>
+  <data name="users.tempPassword.label" xml:space="preserve"><value>Senha temporária</value></data>
+  <data name="common.copy" xml:space="preserve"><value>Copiar</value></data>
+  <data name="common.copiedToClipboard" xml:space="preserve"><value>Copiado para a área de transferência</value></data>
 </root>

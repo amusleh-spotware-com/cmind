@@ -88,7 +88,14 @@
     {
         var pw = Guid.NewGuid().ToString("N")[..12];
         var r = await Http.PostAsJsonAsync($"/api/users/{id}/reset-password", new { NewPassword = pw });
-        if (r.IsSuccessStatusCode) Snack.Add($"Temp password: {pw}", Severity.Info);
+        if (!r.IsSuccessStatusCode)
+        {
+            Snack.Add("Reset failed", Severity.Error);
+            return;
+        }
+        await Dialogs.ShowAsync<TempPasswordDialog>("Temporary password",
+            new DialogParameters<TempPasswordDialog> { { x => x.Password, pw } },
+            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
     }
 
     private async Task Remove(Guid id)

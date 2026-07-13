@@ -99,7 +99,7 @@ Externally-consumed surfaces are versioned and evolve under this contract:
 | Local evaluator | `dotnet run --project src/AppHost` (Aspire) | E2E `AppFixture` |
 | Self-hoster | `cp .env.example .env && docker compose up --build` | `scripts/compose-smoke.sh` (nightly) |
 | Kubernetes | `helm install cmind deploy/helm/cmind` | `scripts/k8s-e2e.sh` (nightly Kind) |
-| Cloud (AWS/Azure) | `deploy/aws/*.tf` · `deploy/azure/main.bicep` | doc-only (IaC smoke = P2) |
+| Cloud (AWS/Azure) | `deploy/aws/*.tf` · `deploy/azure/main.bicep` | `iac-validate` (nightly: `terraform validate` + `bicep build`) |
 (tenant-isolation ×2 + endpoint-auth gate; full `/security-review` sweep still pending) · WS-6 ✓ ·
 WS-10 ✓ · WS-12 ✓ · WS-5/7/8/9/11 tracked.
 

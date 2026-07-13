@@ -51,7 +51,7 @@ public static class ImpactModel
     public static ImpactAssessment Score(ImpactInputs inputs, ImpactBands bands)
     {
         var prior = Clamp01(inputs.SeriesPrior);
-        var vol = ReferenceFootprint <= 0 ? 0 : Clamp01(inputs.VolFootprint / ReferenceFootprint);
+        var vol = Clamp01(inputs.VolFootprint / ReferenceFootprint);
         var sensitivity = Clamp01(inputs.SurpriseSensitivity);
 
         var raw = 100.0 * (PriorWeight * prior + VolWeight * vol + SurpriseWeight * sensitivity);

@@ -29,10 +29,12 @@ Dialogs/NewMcpKeyDialog.razor
 Dialogs/NewNodeDialog.razor
 Dialogs/NewProjectDialog.razor
 Dialogs/NewPropFirmChallengeDialog.razor
+Dialogs/NewPropRuleDialog.razor
 Dialogs/NewTradingAccountDialog.razor
 Dialogs/NewUserDialog.razor
 Dialogs/OpenApiAppDialog.razor
 Dialogs/ParamSetDialog.razor
+Dialogs/PropFirmChallengeDetailDialog.razor
 Dialogs/RegenerateBackupCodesDialog.razor
 Dialogs/RunDialog.razor
 InstallAppButton.razor

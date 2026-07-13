@@ -175,4 +175,7 @@
   <data name="users.tempPassword.label" xml:space="preserve"><value>Временный пароль</value></data>
   <data name="common.copy" xml:space="preserve"><value>Копировать</value></data>
   <data name="common.copiedToClipboard" xml:space="preserve"><value>Скопировано в буфер обмена</value></data>
+  <data name="copyDetail.title" xml:space="preserve"><value>Copy Profile</value></data>
+  <data name="copyDetail.notFound" xml:space="preserve"><value>This copy profile no longer exists - it may have been deleted or you do not have access to it.</value></data>
+  <data name="copyDetail.back" xml:space="preserve"><value>Back to copy trading</value></data>
 </root>

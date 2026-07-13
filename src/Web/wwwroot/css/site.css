@@ -629,6 +629,15 @@ html, body {
     .app-reconnect-spinner { animation: none; }
 }
 
+/* Copy-profile dialog (C-06): a MudSelect's click-away overlay must never permanently trap the dialog's
+   own action bar. The dropdown list popover sits at the top of the dialog, so lifting the action bar into
+   its own stacking context above the transparent select overlay keeps Close/Add reachable in one click
+   without hiding the open dropdown. */
+.copy-profile-dialog .mud-dialog-actions {
+    position: relative;
+    z-index: var(--mud-zindex-popover, 1200);
+}
+
 /* ---- Dialogs go near-full-screen on phones -------------------------------- */
 
 @media (max-width: 600px) {

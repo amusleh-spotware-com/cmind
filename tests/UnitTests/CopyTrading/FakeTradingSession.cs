@@ -83,6 +83,12 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
     private long _positionSeq = 5000;
     private long _orderSeq = 8000;
 
+    // The host dispatches to every destination in parallel (Task.WhenAll) against this single shared
+    // session, so the recording lists and per-account stores are mutated concurrently. A real cTrader
+    // session serializes per-account server state; mirror that here with one gate so a 1:many fan-out
+    // can't lose a racing List.Add (which flaked One_master_open_copies_to_every_slave under CI load).
+    private readonly Lock _gate = new();
+
     public List<OrderCall> Orders { get; } = [];
     public List<PendingCall> Pendings { get; } = [];
     public List<AmendPendingCall> AmendedPendings { get; } = [];
@@ -124,9 +130,12 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
 
     public Task SwapAccessTokenAsync(long ctidTraderAccountId, string accessToken, CancellationToken ct)
     {
-        Swaps.Add(new SwapCall(ctidTraderAccountId, accessToken));
-        _accountTokens[ctidTraderAccountId] = accessToken;
-        _invalidTokens.Remove(accessToken); // a fresh token is valid again (the in-place swap recovery path)
+        lock (_gate)
+        {
+            Swaps.Add(new SwapCall(ctidTraderAccountId, accessToken));
+            _accountTokens[ctidTraderAccountId] = accessToken;
+            _invalidTokens.Remove(accessToken); // a fresh token is valid again (the in-place swap recovery path)
+        }
         return Task.CompletedTask;
     }
 
@@ -234,13 +243,16 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
     public Task<double> LoadBalanceAsync(long ctidTraderAccountId, CancellationToken ct) => Task.FromResult(Balance);
 
     public Task<IReadOnlyList<PositionValuation>> LoadPositionValuationsAsync(long ctidTraderAccountId, CancellationToken ct)
-        => Task.FromResult<IReadOnlyList<PositionValuation>>(PositionStore(ctidTraderAccountId)
-            .Select(p =>
-            {
-                var v = _valuations.TryGetValue(p.PositionId, out var val) ? val : (Entry: 1.10, Swap: 0.0, Commission: 0.0);
-                return new PositionValuation(p.PositionId, p.SymbolId, p.IsBuy, p.Volume, v.Entry, v.Swap, v.Commission);
-            })
-            .ToList());
+    {
+        lock (_gate)
+            return Task.FromResult<IReadOnlyList<PositionValuation>>(PositionStore(ctidTraderAccountId)
+                .Select(p =>
+                {
+                    var v = _valuations.TryGetValue(p.PositionId, out var val) ? val : (Entry: 1.10, Swap: 0.0, Commission: 0.0);
+                    return new PositionValuation(p.PositionId, p.SymbolId, p.IsBuy, p.Volume, v.Entry, v.Swap, v.Commission);
+                })
+                .ToList());
+    }
 
     public Task<IReadOnlyDictionary<string, long>> LoadSymbolIdsAsync(long ctidTraderAccountId, CancellationToken ct)
         => Task.FromResult<IReadOnlyDictionary<string, long>>(_symbolIds);
@@ -254,15 +266,18 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
     public Task SendMarketOrderAsync(long ctidTraderAccountId, long symbolId, bool isBuy, long volume, string label,
         CancellationToken ct, int? slippageInPoints = null, double? baseSlippagePrice = null)
     {
-        EnsureTokenValid(ctidTraderAccountId);
-        ThrowIfTypedReject(ctidTraderAccountId);
-        if (FailOrdersForCtid.Contains(ctidTraderAccountId))
-            throw new InvalidOperationException("simulated order rejection");
-        if (slippageInPoints.HasValue && IsMarketRangeRejected(ctidTraderAccountId, symbolId, isBuy, slippageInPoints.Value, baseSlippagePrice))
-            throw new CtraderRejectException(CtraderRejectReason.MarketRangeExceeded);
-        var filled = NormalizeVolume(ctidTraderAccountId, volume);
-        Orders.Add(new OrderCall(ctidTraderAccountId, symbolId, isBuy, volume, label, slippageInPoints, baseSlippagePrice));
-        PositionStore(ctidTraderAccountId).Add(new OpenPositionSnapshot(++_positionSeq, symbolId, isBuy, filled, label));
+        lock (_gate)
+        {
+            EnsureTokenValid(ctidTraderAccountId);
+            ThrowIfTypedReject(ctidTraderAccountId);
+            if (FailOrdersForCtid.Contains(ctidTraderAccountId))
+                throw new InvalidOperationException("simulated order rejection");
+            if (slippageInPoints.HasValue && IsMarketRangeRejected(ctidTraderAccountId, symbolId, isBuy, slippageInPoints.Value, baseSlippagePrice))
+                throw new CtraderRejectException(CtraderRejectReason.MarketRangeExceeded);
+            var filled = NormalizeVolume(ctidTraderAccountId, volume);
+            Orders.Add(new OrderCall(ctidTraderAccountId, symbolId, isBuy, volume, label, slippageInPoints, baseSlippagePrice));
+            PositionStore(ctidTraderAccountId).Add(new OpenPositionSnapshot(++_positionSeq, symbolId, isBuy, filled, label));
+        }
         return Task.CompletedTask;
     }
 
@@ -270,48 +285,60 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
         CopyOrderKind kind, double price, string label, CancellationToken ct,
         long? expirationTimestamp = null, int? slippageInPoints = null)
     {
-        EnsureTokenValid(ctidTraderAccountId);
-        ThrowIfTypedReject(ctidTraderAccountId);
-        if (FailOrdersForCtid.Contains(ctidTraderAccountId))
-            throw new InvalidOperationException("simulated order rejection");
-        var normalized = NormalizeVolume(ctidTraderAccountId, volume);
-        Pendings.Add(new PendingCall(ctidTraderAccountId, symbolId, isBuy, volume, kind, price, label,
-            expirationTimestamp, slippageInPoints));
-        PendingStore(ctidTraderAccountId).Add(new PendingOrderSnapshot(++_orderSeq, symbolId, isBuy, normalized, kind, price, label));
+        lock (_gate)
+        {
+            EnsureTokenValid(ctidTraderAccountId);
+            ThrowIfTypedReject(ctidTraderAccountId);
+            if (FailOrdersForCtid.Contains(ctidTraderAccountId))
+                throw new InvalidOperationException("simulated order rejection");
+            var normalized = NormalizeVolume(ctidTraderAccountId, volume);
+            Pendings.Add(new PendingCall(ctidTraderAccountId, symbolId, isBuy, volume, kind, price, label,
+                expirationTimestamp, slippageInPoints));
+            PendingStore(ctidTraderAccountId).Add(new PendingOrderSnapshot(++_orderSeq, symbolId, isBuy, normalized, kind, price, label));
+        }
         return Task.CompletedTask;
     }
 
     public Task AmendPendingOrderAsync(long ctidTraderAccountId, long orderId, CopyOrderKind kind, long volume,
         double price, long? expirationTimestamp, int? slippageInPoints, CancellationToken ct)
     {
-        EnsureTokenValid(ctidTraderAccountId);
-        AmendedPendings.Add(new AmendPendingCall(ctidTraderAccountId, orderId, kind, volume, price, expirationTimestamp, slippageInPoints));
-        var store = PendingStore(ctidTraderAccountId);
-        var index = store.FindIndex(o => o.OrderId == orderId);
-        if (index >= 0) store[index] = store[index] with { Price = price, Volume = volume };
+        lock (_gate)
+        {
+            EnsureTokenValid(ctidTraderAccountId);
+            AmendedPendings.Add(new AmendPendingCall(ctidTraderAccountId, orderId, kind, volume, price, expirationTimestamp, slippageInPoints));
+            var store = PendingStore(ctidTraderAccountId);
+            var index = store.FindIndex(o => o.OrderId == orderId);
+            if (index >= 0) store[index] = store[index] with { Price = price, Volume = volume };
+        }
         return Task.CompletedTask;
     }
 
     public Task CancelOrderAsync(long ctidTraderAccountId, long orderId, CancellationToken ct)
     {
-        EnsureTokenValid(ctidTraderAccountId);
-        Cancels.Add(new CancelCall(ctidTraderAccountId, orderId));
-        PendingStore(ctidTraderAccountId).RemoveAll(o => o.OrderId == orderId);
+        lock (_gate)
+        {
+            EnsureTokenValid(ctidTraderAccountId);
+            Cancels.Add(new CancelCall(ctidTraderAccountId, orderId));
+            PendingStore(ctidTraderAccountId).RemoveAll(o => o.OrderId == orderId);
+        }
         return Task.CompletedTask;
     }
 
     public Task ClosePositionAsync(long ctidTraderAccountId, long positionId, long volume, CancellationToken ct)
     {
-        EnsureTokenValid(ctidTraderAccountId);
-        ThrowIfTypedReject(ctidTraderAccountId);
-        Closes.Add(new CloseCall(ctidTraderAccountId, positionId, volume));
-        var store = PositionStore(ctidTraderAccountId);
-        var index = store.FindIndex(p => p.PositionId == positionId);
-        if (index >= 0)
+        lock (_gate)
         {
-            var existing = store[index];
-            if (volume >= existing.Volume) store.RemoveAt(index);
-            else store[index] = existing with { Volume = existing.Volume - volume };
+            EnsureTokenValid(ctidTraderAccountId);
+            ThrowIfTypedReject(ctidTraderAccountId);
+            Closes.Add(new CloseCall(ctidTraderAccountId, positionId, volume));
+            var store = PositionStore(ctidTraderAccountId);
+            var index = store.FindIndex(p => p.PositionId == positionId);
+            if (index >= 0)
+            {
+                var existing = store[index];
+                if (volume >= existing.Volume) store.RemoveAt(index);
+                else store[index] = existing with { Volume = existing.Volume - volume };
+            }
         }
         return Task.CompletedTask;
     }
@@ -319,8 +346,11 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
     public Task AmendPositionSltpAsync(long ctidTraderAccountId, long positionId, double? stopLoss,
         double? takeProfit, bool trailingStopLoss, CancellationToken ct)
     {
-        EnsureTokenValid(ctidTraderAccountId);
-        Amends.Add(new AmendCall(ctidTraderAccountId, positionId, stopLoss, takeProfit, trailingStopLoss));
+        lock (_gate)
+        {
+            EnsureTokenValid(ctidTraderAccountId);
+            Amends.Add(new AmendCall(ctidTraderAccountId, positionId, stopLoss, takeProfit, trailingStopLoss));
+        }
         return Task.CompletedTask;
     }
 
@@ -330,12 +360,18 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
 
     public Task<IReadOnlyList<OpenPositionSnapshot>> ReconcileAsync(long ctidTraderAccountId, CancellationToken ct)
     {
-        ReconcileCountByCtid[ctidTraderAccountId] = ReconcileCountByCtid.GetValueOrDefault(ctidTraderAccountId) + 1;
-        return Task.FromResult<IReadOnlyList<OpenPositionSnapshot>>(PositionStore(ctidTraderAccountId).ToList());
+        lock (_gate)
+        {
+            ReconcileCountByCtid[ctidTraderAccountId] = ReconcileCountByCtid.GetValueOrDefault(ctidTraderAccountId) + 1;
+            return Task.FromResult<IReadOnlyList<OpenPositionSnapshot>>(PositionStore(ctidTraderAccountId).ToList());
+        }
     }
 
     public Task<IReadOnlyList<PendingOrderSnapshot>> ReconcilePendingOrdersAsync(long ctidTraderAccountId, CancellationToken ct)
-        => Task.FromResult<IReadOnlyList<PendingOrderSnapshot>>(PendingStore(ctidTraderAccountId).ToList());
+    {
+        lock (_gate)
+            return Task.FromResult<IReadOnlyList<PendingOrderSnapshot>>(PendingStore(ctidTraderAccountId).ToList());
+    }
 
     public Task<IReadOnlyList<SymbolDetails>> LoadSymbolDetailsAsync(
         long ctidTraderAccountId, IReadOnlyCollection<long> symbolIds, CancellationToken ct)

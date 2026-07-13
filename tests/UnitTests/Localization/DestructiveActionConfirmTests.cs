@@ -23,7 +23,10 @@ public sealed class DestructiveActionConfirmTests
                      && !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
             .Select(f => (Path: f, Text: File.ReadAllText(f)))
             .Where(x => DestructiveMarkers.Any(m => x.Text.Contains(m, StringComparison.Ordinal)))
-            .Where(x => !x.Text.Contains("ConfirmAsync", StringComparison.Ordinal))
+            // A confirmation is either the shared ConfirmAsync helper or a MudBlazor ShowMessageBox
+            // (both present the user a cancelable confirm before the destructive call).
+            .Where(x => !x.Text.Contains("ConfirmAsync", StringComparison.Ordinal)
+                     && !x.Text.Contains("ShowMessageBox", StringComparison.Ordinal))
             .Select(x => Path.GetRelativePath(root, x.Path).Replace('\\', '/'))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 

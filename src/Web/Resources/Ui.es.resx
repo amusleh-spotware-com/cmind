@@ -115,6 +115,27 @@
   <data name="calendar.series.title" xml:space="preserve"><value>Historial del indicador</value></data>
   <data name="calendar.backtestEvents" xml:space="preserve"><value>Eventos del calendario durante este backtest</value></data>
   <data name="ai.notice.banner" xml:space="preserve"><value>Las funciones de IA están desactivadas hasta que se configure un proveedor de IA en Configuración → IA.</value></data>
+  <data name="common.delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="journal.note.new" xml:space="preserve"><value>New note</value></data>
+  <data name="journal.note.edit" xml:space="preserve"><value>Edit note</value></data>
+  <data name="journal.note.title" xml:space="preserve"><value>Title</value></data>
+  <data name="journal.note.title_required" xml:space="preserve"><value>A title is required.</value></data>
+  <data name="journal.note.symbol" xml:space="preserve"><value>Symbol (optional)</value></data>
+  <data name="journal.note.body" xml:space="preserve"><value>Notes</value></data>
+  <data name="journal.note.delete" xml:space="preserve"><value>Delete note</value></data>
+  <data name="journal.note.delete_confirm" xml:space="preserve"><value>Delete this journal note? This cannot be undone.</value></data>
+  <data name="journal.note.saved" xml:space="preserve"><value>Note saved.</value></data>
+  <data name="journal.note.deleted" xml:space="preserve"><value>Note deleted.</value></data>
+  <data name="journal.note.save_failed" xml:space="preserve"><value>Could not save that note.</value></data>
+  <data name="journal.notes.title" xml:space="preserve"><value>My notes</value></data>
+  <data name="journal.notes.empty" xml:space="preserve"><value>No notes yet. Add one to reflect on your trading.</value></data>
+  <data name="journal.trades.title" xml:space="preserve"><value>Recent trades</value></data>
+  <data name="journal.trades.cbot" xml:space="preserve"><value>cBot</value></data>
+  <data name="journal.trades.symbol" xml:space="preserve"><value>Symbol</value></data>
+  <data name="journal.trades.kind" xml:space="preserve"><value>Kind</value></data>
+  <data name="journal.trades.status" xml:space="preserve"><value>Status</value></data>
+  <data name="quant.execution.quantity_positive" xml:space="preserve"><value>Total quantity must be greater than zero.</value></data>
+  <data name="quant.tca.fill_positive" xml:space="preserve"><value>Fill price and quantity must be greater than zero.</value></data>
   <data name="instance.title" xml:space="preserve"><value>Instance</value></data>
   <data name="instance.notFound" xml:space="preserve"><value>This instance no longer exists — it may have been deleted or never started.</value></data>
   <data name="instance.back" xml:space="preserve"><value>Back to runs</value></data>

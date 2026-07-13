@@ -1,14 +1,14 @@
 ---
-title: Failure-path coverage map
-description: Every failure scenario the mandate requires, mapped to the test(s) that actually exercise it — so a gap is visible, not assumed.
+title: Bản đồ coverage failure-path
+description: Mọi failure scenario mandate yêu cầu, được ánh xạ đến test(s) thực sự exercise nó — vì vậy một khoảng trống nhìn thấy được, không phải giả định.
 ---
 
-# Failure-path coverage map
+# Bản đồ coverage failure-path
 
-The test mandate is explicit: **failure paths count** — a change that can break on a dropped
-connection, a rejected order, a desync, a token rotation, or a dead node ships with a test for that,
-in the same commit. This page maps each required scenario to the test(s) that exercise it, so a real
-gap is *visible* rather than assumed. When you add a failure path, add a row here.
+Mandate test rõ ràng: **failure paths được tính** — một thay đổi có thể break trên dropped
+connection, rejected order, desync, token rotation, hoặc dead node ship với một test cho nó,
+trong cùng một commit. Trang này ánh xạ mỗi scenario được yêu cầu đến test(s) exercise nó, vì vậy một khoảng trống thực
+*sẽ thấy được* hơn là giả định. Khi bạn thêm một failure path, thêm một hàng ở đây.
 
 ## Required scenarios → tests
 
@@ -27,21 +27,18 @@ gap is *visible* rather than assumed. When you add a failure path, add a row her
 | **Prop-firm breach** | unit · integration | `PropFirmChallengeRulesTests`; `PropFirmAlertNotifierTests`; `PropFirmChallengePersistenceTests` |
 | **Invalid input / auth reject (UI + branding)** | unit · integration · E2E | `LoginTests.Invalid_credentials_show_an_error`; `HexColorTests.Rejects_invalid_hex`; `BrandingOptionsValidatorTests` |
 
-## Thin spots — verify before assuming covered
+## Vùng mỏng — xác minh trước khi giả định đã cover
 
-These are worth an explicit check (add a row above once confirmed or filled):
+Những thứ này đáng để kiểm tra rõ ràng (thêm hàng ở trên khi đã xác nhận hoặc đã fill):
 
-- **MCP tool auth rejection** — `McpKeyAuthHandler` rejects a bad/absent key. No dedicated test was
-  found; add an integration test that calls an MCP tool endpoint with a missing/invalid key and
-  asserts 401.
-- **CBot build failure surfacing** — a compile error must land on the instance/UI as `Failed` with the
-  build output. `CBotLifecycleTests` covers the happy path; confirm the failure branch is asserted.
-- **Live order execution** — end-to-end copy execution against real cTrader credentials remains gated
-  (needs credentials + a node cluster); see [Live copy trading](./live-copy-trading.md).
+- **MCP tool auth rejection** — `McpKeyAuthHandler` từ chối key sai/vắng mặt. Không tìm thấy test chuyên dụng;
+  thêm một integration test gọi endpoint MCP tool với key thiếu/không hợp lệ và assert 401.
+- **CBot build failure surfacing** — compile error phải hiển thị trên instance/UI là `Failed` với
+  build output. `CBotLifecycleTests` cover happy path; xác nhận failure branch được assert.
+- **Live order execution** — copy execution end-to-end với tài khoản cTrader thực vẫn bị gated
+  (cần credentials + node cluster); xem [Live copy trading](./live-copy-trading.md).
 
-## How this is enforced
+## Cách điều này được enforce
 
-The deterministic stress suite (DST, `tests/StressTests`) replays these failures on a compressed
-clock and must stay green — **never weaken a DST scenario to make it pass; fix the code**. The
-[FakeTradingSession](./fake-trading-session.md) is the cTrader-faithful simulator these unit tests
-drive; extend it for new broker behavior rather than relaxing an assertion.
+Deterministic stress suite (DST, `tests/StressTests`) replay các failure này trên compressed
+clock và phải giữ green — **không bao giờ weaken một DST scenario để nó pass; sửa code**. [FakeTradingSession](./fake-trading-session.md) là cTrader-faithful simulator các unit test này drive; extend nó cho broker behavior mới hơn là relax một assertion.

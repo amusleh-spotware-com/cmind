@@ -1,63 +1,52 @@
 ---
-description: "Money-manager performance fees on a high-water-mark, the standard copy-trading model (cTrader Copy, Darwinex, ZuluTrade profit-share): a provider charges…"
+description: "Phí hiệu suất của money-manager trên high-water-mark, mô hình copy-trading tiêu chuẩn (cTrader Copy, Darwinex, ZuluTrade profit-share): provider tính phần trăm của lợi nhuận *mới* trên đỉnh equity của mỗi người theo dõi."
 ---
 
-# Copy performance fees (Phase 4)
+# Phí hiệu suất copy (Giai đoạn 4)
 
-Money-manager **performance fees on a high-water-mark**, the standard copy-trading model (cTrader Copy,
-Darwinex, ZuluTrade profit-share): a provider charges một phần trăm của *new* profit above each follower's
-peak equity — không bao giờ trên opening balance, và không bao giờ hai lần cho cùng một ground đã recovered. **Opt-in** via
-`App:Copy:FeesEnabled` (off by default).
+**Phí hiệu suất của money-manager trên high-water-mark**, mô hình copy-trading tiêu chuẩn (cTrader Copy,
+Darwinex, ZuluTrade profit-share): provider tính phần trăm của lợi nhuận *mới* trên đỉnh equity của mỗi người theo dõi — không bao giờ trên opening balance, và không bao giờ hai lần cho cùng một ground đã recovered. **Opt-in** qua
+`App:Copy:FeesEnabled` (tắt theo mặc định).
 
-## The model (high-water-mark)
+## Mô hình (high-water-mark)
 
-Per destination (follower account), each settlement:
+Mỗi destination (tài khoản người theo dõi), mỗi settlement:
 
-1. **First settlement** seeds the high-water-mark (HWM) at current equity → no charge (a follower is
-   never billed on their deposit).
-2. **New high** (equity > HWM): `fee = performanceFeePercent × (equity − HWM)`, rồi `HWM ← equity`.
-3. **At or below the peak**: no fee, HWM unchanged — follower phải recover past the old peak trước, vì vậy
-   they are never charged twice for the same gains.
+1. **Settlement đầu tiên** gieo high-water-mark (HWM) tại equity hiện tại → không tính phí (người theo dõi không bao giờ bị tính phí trên số dư gửi của họ).
+2. **Đỉnh mới** (equity > HWM): `fee = performanceFeePercent × (equity − HWM)`, rồi `HWM ← equity`.
+3. **Tại hoặc dưới đỉnh**: không tính phí, HWM không đổi — người theo dõi phải recover vượt qua đỉnh cũ trước, vì vậy họ không bao giờ bị tính phí hai lần cho cùng một khoản lợi nhuận.
 
-Fee arithmetic là một domain invariant trên `CopyDestination.SettleFee(equity)` — aggregate owns it; settlement service only supplies polled equity và records returned amount. `PerformanceFee` là một
-value object capped at 50% nên một misconfiguration không thể charge away a follower's whole gain.
+Số học phí là một invariant miền trên `CopyDestination.SettleFee(equity)` — aggregate sở hữu nó; settlement service chỉ cung cấp equity được poll và ghi lại số tiền được trả về. `PerformanceFee` là một value object được giới hạn ở 50% vì vậy một misconfiguration không thể tính phí hết toàn bộ lợi nhuận của người theo dõi.
 
-## How it settles
+## Cách nó settlement
 
 ```
-CopyFeeSettlementService (BackgroundService, only when FeesEnabled)
-   │  every App:Copy:FeeSettlementInterval
-   ├─ load running profiles with a fee-configured destination
-   ├─ ICopyEquityReader.ReadEquityAsync(ctid)   ← OpenApiCopyEquityReader opens a session,
-   │                                               computes balance + floating P&L (PropFirmEquityCalculator)
-   ├─ destination.SettleFee(equity)             ← HWM logic on the aggregate
-   └─ persist advanced HWM + append CopyFeeAccrual (only on a new high)
+CopyFeeSettlementService (BackgroundService, chỉ khi FeesEnabled)
+   │  mỗi App:Copy:FeeSettlementInterval
+   ├─ load các profile đang chạy có destination được cấu hình phí
+   ├─ ICopyEquityReader.ReadEquityAsync(ctid)   ← OpenApiCopyEquityReader mở một session,
+   │                                               tính balance + floating P&L (PropFirmEquityCalculator)
+   ├─ destination.SettleFee(equity)             ← logic HWM trên aggregate
+   └─ persist HWM đã advance + append CopyFeeAccrual (chỉ khi đỉnh mới)
 ```
 
-- `ICopyEquityReader` là một Core abstraction; live implementation (`OpenApiCopyEquityReader`) là only
-  infra piece — vì vậy settlement + HWM logic được exercise in tests với a fake reader, no live broker.
-- `CopyFeeAccrual` là một append-only log (HWM-before, equity, fee %, fee amount, settled-at) — một fact log cho
-  fee report và billing, không phải aggregate.
+- `ICopyEquityReader` là một abstraction Core; implementation thực (`OpenApiCopyEquityReader`) là infra piece duy nhất — vì vậy settlement + logic HWM được exercise trong tests với một fake reader, không cần broker thực.
+- `CopyFeeAccrual` là một log append-only (HWM-before, equity, fee %, số tiền phí, settled-at) — một fact log cho báo cáo phí và billing, không phải aggregate.
 
-## Configuration & API
+## Cấu hình & API
 
-| `App:Copy` setting | Default | Effect |
-|--------------------|---------|--------|
-| `FeesEnabled` | `false` | Run the settlement service. |
-| `FeeSettlementInterval` | `1h` | How often equity is polled và fees settled. |
+| `App:Copy` setting | Mặc định | Hiệu ứng |
+|--------------------|---------|---------|
+| `FeesEnabled` | `false` | Chạy settlement service. |
+| `FeeSettlementInterval` | `1h` | Tần suất equity được poll và phí được settlement. |
 
-Per-destination: `PerformanceFeePercent` (0–50) được set on destination (add/edit destination request).
+Mỗi destination: `PerformanceFeePercent` (0–50) được đặt trên destination (add/edit destination request).
 
-- `GET /api/copy/profiles/{id}/fees` — profile's fee accruals + total charged.
+- `GET /api/copy/profiles/{id}/fees` — các fee accrual của profile + tổng đã tính.
 
 ## Tests
 
-- **Unit** (`CopyPerformanceFeeTests`) — HWM invariant: first settlement seeds + charges nothing; a new
-  high charges only the gain above the peak; at/below the peak charges nothing và peak never retreats;
-  after a drawdown only recovery past old peak is charged; 0% never charges; VO rejects
-  out-of-range percents.
-- **Integration** (`CopyFeeSettlementTests`, real Postgres, fake equity reader) — seed→10k (no charge, mark
-  seeded), 12k (charges 400, mark advances), 11k (no charge, mark held); accrual persisted với right
-  owner/amount.
+- **Unit** (`CopyPerformanceFeeTests`) — invariant HWM: settlement đầu tiên gieo + không tính phí; đỉnh mới chỉ tính phí trên phần lợi nhuận trên đỉnh; tại/dưới đỉnh không tính phí và đỉnh không bao giờ lùi; sau drawdown chỉ recovery vượt đỉnh cũ mới bị tính phí; 0% không bao giờ tính; VO từ chối phần trăm ngoài phạm vi.
+- **Integration** (`CopyFeeSettlementTests`, real Postgres, fake equity reader) — seed→10k (không tính phí, mark đã gieo), 12k (tính 400, mark tiến), 11k (không tính phí, mark giữ); accrual persisted đúng owner/amount.
 
-Copy host untouched by fees (settlement là một separate DB job), vì vậy copy DST stress suite unaffected (23/23).
+Copy host không thay đổi bởi phí (settlement là một DB job riêng), vì vậy copy DST stress suite không bị ảnh hưởng (23/23).

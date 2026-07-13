@@ -23,30 +23,72 @@ public sealed class CalendarBackfillService(
     : BackgroundService
 {
     private const string CompletedSetting = "calendar.backfill.completed";
+    private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(10);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var calendar = options.CurrentValue.Calendar;
-        if (!calendar.IngestionEnabled) return;
+        if (!options.CurrentValue.Calendar.IngestionEnabled) return;
 
+        // The warm-up races app startup — migrations may not have created the schema yet. A DB/transient
+        // fault must never fault this BackgroundService (that would stop the host); retry until the schema
+        // is ready, then run once and return. Cancellation ends it cleanly.
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                if (await TryWarmUpAsync(stoppingToken)) return;
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                return;
+            }
+            catch (Exception)
+            {
+                // DB not migrated yet, or a transient fault — back off and retry.
+            }
+
+            try
+            {
+                await Task.Delay(RetryDelay, timeProvider, stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+        }
+    }
+
+    /// <summary>One warm-up attempt. Returns true when the work is done (or the calendar is gated off / already
+    /// warmed), false to signal a retry is warranted. Throws only on cancellation or an unexpected fault.</summary>
+    private async Task<bool> TryWarmUpAsync(CancellationToken ct)
+    {
         await using var scope = scopeFactory.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<DataContext>();
-        if (await db.AppSettings.AnyAsync(s => s.Key == CompletedSetting, stoppingToken)) return;
 
+        // Honour the white-label / owner gate: a calendar-off deployment must not warm up even though
+        // ingestion is on by default.
+        var featureGate = scope.ServiceProvider.GetRequiredService<Core.Features.IFeatureGate>();
+        if (!CalendarEnablement.IsEnabled(options.CurrentValue.Branding, featureGate)) return true;
+
+        var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+        if (await db.AppSettings.AnyAsync(s => s.Key == CompletedSetting, ct)) return true;
+
+        var calendar = options.CurrentValue.Calendar;
         var backfiller = scope.ServiceProvider.GetRequiredService<CalendarBackfiller>();
         var sourcesByName = sources.ToDictionary(s => s.Name, StringComparer.OrdinalIgnoreCase);
 
-        var seeded = await backfiller.SeedCoreSeriesAsync(stoppingToken);
+        var seeded = await backfiller.SeedCoreSeriesAsync(ct);
         foreach (var series in seeded)
         {
             if (!sourcesByName.TryGetValue(series.SourceName, out var source)) continue;
             try
             {
-                await backfiller.BackfillAsync(series, source, calendar.BackfillYears, stoppingToken);
+                await backfiller.BackfillScheduleAsync(
+                    series, source, calendar.BackfillYears, calendar.ScheduleHorizonDays, ct);
+                await backfiller.BackfillAsync(series, source, calendar.BackfillYears, ct);
             }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
-                return;
+                throw;
             }
             catch (Exception)
             {
@@ -56,6 +98,7 @@ public sealed class CalendarBackfillService(
 
         db.AppSettings.Add(AppSetting.Create(
             CompletedSetting, timeProvider.GetUtcNow().ToString("O"), timeProvider.GetUtcNow()));
-        await db.SaveChangesAsync(stoppingToken);
+        await db.SaveChangesAsync(ct);
+        return true;
     }
 }

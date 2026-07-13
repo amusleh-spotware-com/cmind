@@ -49,8 +49,9 @@ public sealed record AppOptions
 public sealed record CurrencyStrengthOptions
 {
     /// <summary>Whether the scheduled refresh worker runs (assemble → gather → compute → project → persist).
-    /// Off by default — the read side, explicit owner refresh and degradation paths work without it.</summary>
-    public bool RefreshEnabled { get; init; }
+    /// On by default so the read side is populated out of the box; a deployment or the owner turns it off (or
+    /// disables the AI / economic-calendar feature, which the refresher honours by degrading to no snapshot).</summary>
+    public bool RefreshEnabled { get; init; } = true;
 
     public TimeSpan RefreshInterval { get; init; } = TimeSpan.FromHours(6);
 
@@ -76,11 +77,13 @@ public sealed record CurrencyConfig
 public sealed record CalendarOptions
 {
     /// <summary>
-    /// Whether the ingestion worker (schedule-sync + release-poll + reconciliation) runs. Off by default —
-    /// the domain, lazy read-through backfill and REST/MCP read side work without it; a deployment turns it
-    /// on to proactively keep the calendar warm. Independent of the feature gate, which controls visibility.
+    /// Whether the ingestion worker (schedule-sync + release-poll + reconciliation) runs. On by default so the
+    /// calendar is warm out of the box — the keyless central-bank schedule populates with no external key; the
+    /// value sources (FRED/BLS) fill in once their keys are configured. A deployment, or the owner disabling the
+    /// economic-calendar feature (white-label / feature gate), turns the worker off — the workers honour
+    /// <see cref="Core.Calendar.CalendarEnablement"/> so ingestion never runs for a calendar-off deployment.
     /// </summary>
-    public bool IngestionEnabled { get; init; }
+    public bool IngestionEnabled { get; init; } = true;
 
     public TimeSpan ScheduleSyncInterval { get; init; } = TimeSpan.FromHours(6);
     public TimeSpan ReleasePollInterval { get; init; } = TimeSpan.FromSeconds(30);

@@ -58,6 +58,12 @@ public sealed class CalendarIngestionService(
         Dictionary<string, ICalendarSource> sourcesByName, CancellationToken ct)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
+
+        // Honour the white-label / owner gate at runtime: a calendar-off deployment must not ingest even
+        // though ingestion is on by default. Re-checked each cycle so an owner toggle takes effect live.
+        var featureGate = scope.ServiceProvider.GetRequiredService<Core.Features.IFeatureGate>();
+        if (!CalendarEnablement.IsEnabled(options.CurrentValue.Branding, featureGate)) return;
+
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
         var writer = scope.ServiceProvider.GetRequiredService<CalendarWriteService>();
         var health = scope.ServiceProvider.GetRequiredService<CalendarHealthStore>();

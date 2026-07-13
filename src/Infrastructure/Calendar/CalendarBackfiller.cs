@@ -23,6 +23,23 @@ public sealed class CalendarBackfiller(CalendarWriteService writer, TimeProvider
         return seeded;
     }
 
+    /// <summary>
+    /// Backfills the schedule for one series across recent history and the forward horizon — the keyless
+    /// central-bank meeting dates the value sources do not carry, so past and upcoming decisions are both
+    /// listed out of the box (history browsing works without any API key). Idempotent (ingest by instant).
+    /// </summary>
+    public async Task BackfillScheduleAsync(
+        EconomicSeries series, ICalendarSource source, int years, int horizonDays, CancellationToken ct)
+    {
+        var now = timeProvider.GetUtcNow();
+        var from = now.AddYears(-Math.Max(1, years));
+        var to = now.AddDays(Math.Max(1, horizonDays));
+
+        var scheduled = await source.FetchScheduleAsync(series.SourceSeriesId, from, to, ct);
+        foreach (var item in scheduled)
+            await writer.IngestScheduleAsync(series, item, ct);
+    }
+
     /// <summary>Backfills up to <paramref name="years"/> of history for one series, one calendar year at a time.</summary>
     public async Task BackfillAsync(EconomicSeries series, ICalendarSource source, int years, CancellationToken ct)
     {

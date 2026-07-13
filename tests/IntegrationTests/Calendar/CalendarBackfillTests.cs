@@ -87,4 +87,29 @@ public class CalendarBackfillTests(PostgresFixture fixture) : IClassFixture<Post
         events.Should().ContainSingle("the same print fetched across chunks/reruns persists once");
         events[0].Revisions.Should().HaveCount(2); // Scheduled + Released only
     }
+
+    [Fact]
+    public async Task Backfill_schedule_seeds_central_bank_meetings_across_history_and_is_idempotent()
+    {
+        await using var db = await FreshAsync();
+        var now = new DateTimeOffset(2026, 7, 12, 0, 0, 0, TimeSpan.Zero);
+        var time = new FixedTimeProvider(now);
+        var backfiller = new CalendarBackfiller(new CalendarWriteService(db, time), time);
+        var seeded = await backfiller.SeedCoreSeriesAsync(CancellationToken.None);
+        var fomc = seeded.First(s => s.SeriesCodeValue == "US.FOMC");
+        var source = new CentralBankScheduleSource();
+
+        await backfiller.BackfillScheduleAsync(fomc, source, years: 2, horizonDays: 120, CancellationToken.None);
+        var afterFirst = await db.EconomicEvents.Where(e => e.SeriesId == fomc.Id).CountAsync();
+        await backfiller.BackfillScheduleAsync(fomc, source, years: 2, horizonDays: 120, CancellationToken.None);
+        var afterSecond = await db.EconomicEvents.Where(e => e.SeriesId == fomc.Id).CountAsync();
+
+        afterFirst.Should().BeGreaterThan(1, "past and upcoming FOMC meetings are both seeded, keyless");
+        afterSecond.Should().Be(afterFirst, "re-running the schedule backfill is idempotent");
+
+        // History browsing (the user's 'last month' case): a meeting from before 'now' is listed.
+        var pastMeeting = new DateTimeOffset(2026, 6, 17, 19, 0, 0, TimeSpan.Zero);
+        (await db.EconomicEvents.AnyAsync(e => e.SeriesId == fomc.Id && e.EffectiveAt == pastMeeting))
+            .Should().BeTrue("a past central-bank meeting is reachable when browsing history");
+    }
 }

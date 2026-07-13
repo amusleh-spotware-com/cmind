@@ -12,11 +12,14 @@ namespace UnitTests.Ai;
 
 public sealed class OnnxGenAiProviderTests
 {
-    private static OnnxGenAiProvider Create(string modelPath)
+    private static OnnxGenAiProvider Create(string modelPath, bool autoDownload = false, IBuiltInModelInstaller? installer = null)
     {
         var options = Substitute.For<IOptionsMonitor<AppOptions>>();
-        options.CurrentValue.Returns(new AppOptions { Ai = new AiOptions { BuiltIn = new AiBuiltInOptions { ModelPath = modelPath } } });
-        return new OnnxGenAiProvider(options, NullLogger<OnnxGenAiProvider>.Instance);
+        options.CurrentValue.Returns(new AppOptions
+        {
+            Ai = new AiOptions { BuiltIn = new AiBuiltInOptions { ModelPath = modelPath, AutoDownload = autoDownload } }
+        });
+        return new OnnxGenAiProvider(options, NullLogger<OnnxGenAiProvider>.Instance, installer);
     }
 
     private static AiProviderRequest Request() =>
@@ -36,6 +39,33 @@ public sealed class OnnxGenAiProviderTests
         using var provider = Create(Path.Combine(Path.GetTempPath(), "no-such-onnx-model-dir"));
         var result = await provider.CompleteAsync(Request(), CancellationToken.None);
         result.Success.Should().BeFalse();
+        result.Error.Should().Be(AiConstants.BuiltInUnavailableMessage);
+    }
+
+    [Fact]
+    public async Task Auto_download_kicks_off_install_and_reports_downloading()
+    {
+        var installer = Substitute.For<IBuiltInModelInstaller>();
+        installer.State.Returns(BuiltInModelInstallState.Downloading);
+        using var provider = Create(Path.Combine(Path.GetTempPath(), "no-such-onnx-model-dir"),
+            autoDownload: true, installer: installer);
+
+        var result = await provider.CompleteAsync(Request(), CancellationToken.None);
+
+        installer.Received(1).EnsureInstalling();
+        result.Success.Should().BeFalse();
+        result.Error.Should().Be(AiConstants.BuiltInDownloadingMessage);
+    }
+
+    [Fact]
+    public async Task Failed_download_falls_back_to_install_hint()
+    {
+        var installer = Substitute.For<IBuiltInModelInstaller>();
+        installer.State.Returns(BuiltInModelInstallState.Failed);
+        using var provider = Create(Path.Combine(Path.GetTempPath(), "no-such-onnx-model-dir"),
+            autoDownload: true, installer: installer);
+
+        var result = await provider.CompleteAsync(Request(), CancellationToken.None);
         result.Error.Should().Be(AiConstants.BuiltInUnavailableMessage);
     }
 }

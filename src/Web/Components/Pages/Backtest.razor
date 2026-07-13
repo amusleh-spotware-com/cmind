@@ -1,5 +1,6 @@
 @page "/backtest"
 @using Web.Components.Dialogs
+@using Web.Json
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
@@ -10,18 +11,41 @@
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
     <MudText Typo="Typo.h5">Backtest cBot</MudText>
     <MudSpacer />
-    <MudButton Color="Color.Primary" Variant="Variant.Filled"
-               StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew">
-        Backtest New cBot
-    </MudButton>
+    <MudTooltip Text="@(_hasAccounts ? "Backtest a cBot on a trading account" : "Add a cTrader trading account first")">
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(!_hasAccounts)"
+                   StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew" data-testid="backtest-new">
+            Backtest New cBot
+        </MudButton>
+    </MudTooltip>
 </MudStack>
+
+@if (!_hasAccounts)
+{
+    <MudAlert Severity="Severity.Info" Class="mb-3" data-testid="backtest-no-accounts">
+        Add a cTrader trading account before backtesting a cBot — a backtest needs an account to source data.
+        <MudLink Href="/accounts" Class="ml-1">Add a trading account</MudLink>
+    </MudAlert>
+}
 
 <MudText Typo="Typo.h6" Class="mt-4">Backtests</MudText>
 <InstanceTable Type="Backtest" />
 
 @code {
+    private bool _hasAccounts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _hasAccounts = (await Http.GetDynamicArrayAsync("/api/accounts/")).Length > 0; }
+        catch { _hasAccounts = false; }
+    }
+
     private async Task OpenNew()
     {
+        if (!_hasAccounts)
+        {
+            Snack.Add("Add a trading account before backtesting a cBot", Severity.Warning);
+            return;
+        }
         var dlg = await Dialogs.ShowAsync<BacktestDialog>("Backtest cBot",
             new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
         var res = await dlg.Result;

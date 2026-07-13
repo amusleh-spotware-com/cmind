@@ -15,6 +15,14 @@
                 <MudSelectItem Value="@("Advisory")">Advisory (proposes only)</MudSelectItem>
                 <MudSelectItem Value="@("ApprovalGated")">Approval-gated</MudSelectItem>
             </MudSelect>
+            <MudSelect T="Guid" MultiSelection="true" @bind-SelectedValues="_accounts" Label="Managed accounts" Class="mb-2"
+                       HelperText="Which trading account(s) this agent manages (required to start it)"
+                       MultiSelectionTextFunc="@(v => $"{v?.Count ?? 0} account(s)")" data-testid="agent-accounts">
+                @foreach (var a in Accounts)
+                {
+                    <MudSelectItem T="Guid" Value="@a.Id">@a.Number</MudSelectItem>
+                }
+            </MudSelect>
             <MudText Typo="Typo.body2" Class="mt-2">Aggressiveness</MudText>
             <MudSlider @bind-Value="_aggr" Min="0" Max="1" Step="0.1" Color="Color.Primary" />
             <MudText Typo="Typo.body2">Patience</MudText>
@@ -32,6 +40,8 @@
 @code {
     [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
 
+    [Parameter] public IReadOnlyList<AgentAccountOption> Accounts { get; set; } = [];
+
     private static readonly string[] Archetypes =
         ["Scalper", "DayTrader", "SwingTrader", "PositionTrader", "NewsTrader", "Contrarian", "MeanReversion", "BreakoutMomentum"];
 
@@ -42,15 +52,21 @@
     private double _aggr = 0.5;
     private double _patience = 0.5;
     private double _trend = 0.5;
+    private IEnumerable<Guid> _accounts = new HashSet<Guid>();
 
     private async Task Submit()
     {
         if (_form is not null) await _form.Validate();
         if (string.IsNullOrWhiteSpace(_name)) return;
-        Dialog.Close(DialogResult.Ok(new AgentCreateResult(_name.Trim(), _archetype, _autonomy, _aggr, _patience, _trend)));
+        Dialog.Close(DialogResult.Ok(new AgentCreateResult(
+            _name.Trim(), _archetype, _autonomy, _aggr, _patience, _trend, _accounts.ToArray())));
     }
 
     private void Cancel() => Dialog.Cancel();
 
-    public sealed record AgentCreateResult(string Name, string Archetype, string Autonomy, double Aggressiveness, double Patience, double TrendBias);
+    public sealed record AgentAccountOption(Guid Id, long Number);
+
+    public sealed record AgentCreateResult(
+        string Name, string Archetype, string Autonomy, double Aggressiveness, double Patience, double TrendBias,
+        Guid[] AccountIds);
 }

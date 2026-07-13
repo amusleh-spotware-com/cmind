@@ -77,6 +77,7 @@
   <data name="calendar.previous" xml:space="preserve"><value>Predchádzajúce</value></data>
   <data name="calendar.released" xml:space="preserve"><value>Zverejnené</value></data>
   <data name="calendar.empty" xml:space="preserve"><value>V tomto rozsahu nie sú žiadne udalosti.</value></data>
+  <data name="calendar.sourceRequired" xml:space="preserve"><value>This feature needs an economic-calendar data source. Set App:Calendar:FredApiKey or App:Calendar:BlsApiKey to enable it.</value></data>
   <data name="calendar.impact.low" xml:space="preserve"><value>Nízky</value></data>
   <data name="calendar.impact.medium" xml:space="preserve"><value>Stredný</value></data>
   <data name="calendar.impact.high" xml:space="preserve"><value>Vysoký</value></data>

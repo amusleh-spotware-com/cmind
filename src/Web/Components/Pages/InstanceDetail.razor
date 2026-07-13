@@ -66,8 +66,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _detail = await Http.GetDynamicAsync($"/api/instances/{Id}");
-        _isBacktest = _detail is not null && (string)_detail.kind == "Backtest";
+        try { _detail = await Http.GetDynamicAsync($"/api/instances/{Id}"); }
+        catch { _detail = null; }
+        if (_detail is null) return;
+        _isBacktest = (string)_detail.kind == "Backtest";
         if (_isBacktest && _detail?.equity is not null)
         {
             foreach (var p in _detail.equity)
@@ -76,17 +78,32 @@
 
         await LoadCalendarOverlayAsync();
 
-        _hub = new HubConnectionBuilder().WithUrl(Nav.ToAbsoluteUri("/hubs/logs")).Build();
-        await _hub.StartAsync();
+        try
+        {
+            _hub = new HubConnectionBuilder().WithUrl(Nav.ToAbsoluteUri("/hubs/logs")).Build();
+            await _hub.StartAsync();
+        }
+        catch
+        {
+            _hub = null;
+            return;
+        }
+
         var stream = _hub.StreamAsync<string>("Tail", Id);
+        // Stream errors (a terminal instance whose container is gone, a docker error, a dropped
+        // connection) must never bubble out of this background task and tear down the Blazor circuit.
         _ = Task.Run(async () =>
         {
-            await foreach (var line in stream)
+            try
             {
-                _logs.Add(line);
-                if (_logs.Count > 500) _logs.RemoveAt(0);
-                await InvokeAsync(StateHasChanged);
+                await foreach (var line in stream)
+                {
+                    _logs.Add(line);
+                    if (_logs.Count > 500) _logs.RemoveAt(0);
+                    await InvokeAsync(StateHasChanged);
+                }
             }
+            catch { /* log stream ended or failed — nothing to tail */ }
         });
     }
 

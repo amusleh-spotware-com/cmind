@@ -77,6 +77,7 @@
   <data name="calendar.previous" xml:space="preserve"><value>Prejšnje</value></data>
   <data name="calendar.released" xml:space="preserve"><value>Objavljeno</value></data>
   <data name="calendar.empty" xml:space="preserve"><value>V tem obsegu ni dogodkov.</value></data>
+  <data name="calendar.sourceRequired" xml:space="preserve"><value>This feature needs an economic-calendar data source. Set App:Calendar:FredApiKey or App:Calendar:BlsApiKey to enable it.</value></data>
   <data name="calendar.impact.low" xml:space="preserve"><value>Nizko</value></data>
   <data name="calendar.impact.medium" xml:space="preserve"><value>Srednje</value></data>
   <data name="calendar.impact.high" xml:space="preserve"><value>Visoko</value></data>

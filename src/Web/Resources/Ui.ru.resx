@@ -77,6 +77,7 @@
   <data name="calendar.previous" xml:space="preserve"><value>Пред.</value></data>
   <data name="calendar.released" xml:space="preserve"><value>Опубликовано</value></data>
   <data name="calendar.empty" xml:space="preserve"><value>Нет событий в этом диапазоне.</value></data>
+  <data name="calendar.sourceRequired" xml:space="preserve"><value>This feature needs an economic-calendar data source. Set App:Calendar:FredApiKey or App:Calendar:BlsApiKey to enable it.</value></data>
   <data name="calendar.impact.low" xml:space="preserve"><value>Низкое</value></data>
   <data name="calendar.impact.medium" xml:space="preserve"><value>Среднее</value></data>
   <data name="calendar.impact.high" xml:space="preserve"><value>Высокое</value></data>

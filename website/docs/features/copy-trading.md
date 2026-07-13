@@ -98,3 +98,8 @@ Alongside logs, engine emits **OpenTelemetry metrics** on `cMind.Copy` meter (re
 - **Live** — real cTrader demo accounts; see [testing/live-copy-trading.md](../testing/live-copy-trading.md).
 
 See [dev-credentials.md](../testing/dev-credentials.md) for single credentials file live + E2E tiers read.
+## Profile controls and destination management
+
+Start/stop are icon buttons on each profile row (disabled when the action does not apply). Source and
+destination accounts are shown by their **account number**, never an internal id. Clicking a profile
+opens a **dialog** to manage its destination accounts (add/remove with full per-destination settings).

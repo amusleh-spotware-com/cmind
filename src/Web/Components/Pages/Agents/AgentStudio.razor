@@ -2,6 +2,7 @@
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @using System.Net.Http.Json
 @using Web.Components.Dialogs
+@using Web.Json
 @inject HttpClient Http
 @inject IDialogService Dialogs
 @inject MudBlazor.ISnackbar Snack
@@ -38,11 +39,29 @@ else
             <MudTd><MudChip T="string" Size="Size.Small" Color="@StatusColor(context.status)">@context.status</MudChip></MudTd>
             <MudTd>@(context.lastAction ?? "—")</MudTd>
             <MudTd>
-                <MudButton Size="Size.Small" OnClick="() => OpenDetail(context.id, context.name)" data-testid="agent-details">Details</MudButton>
-                <MudButton Size="Size.Small" OnClick="() => Start(context.id)" Disabled="@(context.status == "Running")">Start</MudButton>
-                <MudButton Size="Size.Small" OnClick="() => Stop(context.id)" Disabled="@(context.status is "Draft" or "Stopped")">Stop</MudButton>
-                <MudButton Size="Size.Small" Color="Color.Error" OnClick="() => Kill(context.id)"
-                           Disabled="@(context.status != "Running")" data-testid="agent-kill">Kill</MudButton>
+                <MudTooltip Text="Details">
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" aria-label="Agent details"
+                                   OnClick="() => OpenDetail(context.id, context.name)" data-testid="agent-details" />
+                </MudTooltip>
+                <MudTooltip Text="Edit agent">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" aria-label="Edit agent"
+                                   OnClick="() => EditAgent(context)" data-testid="agent-edit" />
+                </MudTooltip>
+                <MudTooltip Text="Start agent">
+                    <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" Color="Color.Success"
+                                   aria-label="Start agent" Disabled="@(context.status == "Running")"
+                                   OnClick="() => Start(context.id)" data-testid="agent-start" />
+                </MudTooltip>
+                <MudTooltip Text="Stop agent">
+                    <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Small" Color="Color.Warning"
+                                   aria-label="Stop agent" Disabled="@(context.status is "Draft" or "Stopped")"
+                                   OnClick="() => Stop(context.id)" data-testid="agent-stop" />
+                </MudTooltip>
+                <MudTooltip Text="Kill switch">
+                    <MudIconButton Icon="@Icons.Material.Filled.PowerSettingsNew" Size="Size.Small" Color="Color.Error"
+                                   aria-label="Kill agent" Disabled="@(context.status != "Running")"
+                                   OnClick="() => Kill(context.id)" data-testid="agent-kill" />
+                </MudTooltip>
             </MudTd>
         </RowTemplate>
     </MudTable>
@@ -50,8 +69,23 @@ else
 
 @code {
     private List<AgentRow> _agents = [];
+    private List<AgentCreateDialog.AgentAccountOption> _accounts = [];
 
-    protected override Task OnInitializedAsync() => Reload();
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAccounts();
+        await Reload();
+    }
+
+    private async Task LoadAccounts()
+    {
+        try
+        {
+            var accts = await Http.GetDynamicArrayAsync("/api/accounts/");
+            _accounts = accts.Select(a => new AgentCreateDialog.AgentAccountOption((Guid)a.id, (long)a.accountNumber)).ToList();
+        }
+        catch { _accounts = []; }
+    }
 
     private async Task Reload()
     {
@@ -61,17 +95,37 @@ else
 
     private async Task CreateAgent()
     {
-        var dialog = await Dialogs.ShowAsync<AgentCreateDialog>("New agent");
+        var parameters = new DialogParameters<AgentCreateDialog> { { x => x.Accounts, (IReadOnlyList<AgentCreateDialog.AgentAccountOption>)_accounts } };
+        var dialog = await Dialogs.ShowAsync<AgentCreateDialog>("New agent", parameters);
         var result = await dialog.Result;
         if (result is { Canceled: false, Data: AgentCreateDialog.AgentCreateResult r })
         {
             var response = await Http.PostAsJsonAsync("/api/agent-studio", new
             {
-                r.Name, r.Archetype, r.Autonomy, r.Aggressiveness, r.Patience, r.TrendBias
+                r.Name, r.Archetype, r.Autonomy, r.Aggressiveness, r.Patience, r.TrendBias, r.AccountIds
             });
             if (response.IsSuccessStatusCode) { await Reload(); StateHasChanged(); }
             else Snack.Add("Could not create the agent.", Severity.Error);
         }
+    }
+
+    private async Task EditAgent(AgentRow row)
+    {
+        var parameters = new DialogParameters<AgentEditDialog>
+        {
+            { x => x.AgentId, row.id },
+            { x => x.Name, row.name },
+            { x => x.Autonomy, row.autonomy },
+            { x => x.Aggressiveness, row.aggressiveness },
+            { x => x.Patience, row.patience },
+            { x => x.TrendBias, row.trendBias },
+            { x => x.AccountIds, (IReadOnlyList<Guid>)(row.accountIds ?? []) },
+            { x => x.Accounts, (IReadOnlyList<AgentCreateDialog.AgentAccountOption>)_accounts }
+        };
+        var dialog = await Dialogs.ShowAsync<AgentEditDialog>("Edit agent", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true });
+        var result = await dialog.Result;
+        if (result is { Canceled: false }) { await Reload(); StateHasChanged(); }
     }
 
     private Task OpenDetail(Guid id, string name)
@@ -105,5 +159,6 @@ else
     };
 
     private sealed record AgentRow(Guid id, string name, string archetype, string autonomy, string status,
-        int accountCount, string? lastAction, DateTimeOffset? lastActionAt, int goalCount);
+        int accountCount, Guid[]? accountIds, double aggressiveness, double patience, double trendBias,
+        string? lastAction, DateTimeOffset? lastActionAt, int goalCount);
 }

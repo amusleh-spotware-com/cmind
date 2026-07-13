@@ -132,7 +132,7 @@
         Gate.IsEnabled(FeatureFlag.PropGuard) || Gate.IsEnabled(FeatureFlag.PropFirm);
 
     private bool CalendarOn =>
-        CalendarEnablement.IsEnabled(AppOptionsMonitor.CurrentValue.Branding, Gate);
+        CalendarEnablement.IsVisible(AppOptionsMonitor.CurrentValue.Branding, Gate, AppOptionsMonitor.CurrentValue.Calendar);
 
     private bool NodesPageVisible =>
         NodesUiAccess.IsPageVisible(AppOptionsMonitor.CurrentValue.Branding.NodesUi);

@@ -84,3 +84,10 @@ degrading safely when an account is not linked. **Requires the Anthropic API key
 generate orders (until then the engine holds); still to come are multi-agent debate roles and layered
 memory/reflection. The runtime is off unless `App:Ai:AgentRuntimeEnabled` is set, so live trading only
 happens on an explicit, fully-consented opt-in.
+
+## Managed accounts and editing
+
+When creating an agent you pick the trading account(s) it manages (required before it can start).
+Every agent can be **edited** afterwards (name, temperament, autonomy, and managed accounts) from the
+pencil icon on its roster row. Lifecycle controls (details, edit, start, stop, kill) are icon buttons,
+each disabled in states where the action does not apply.

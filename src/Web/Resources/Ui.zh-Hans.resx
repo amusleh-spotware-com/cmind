@@ -77,6 +77,7 @@
   <data name="calendar.previous" xml:space="preserve"><value>前值</value></data>
   <data name="calendar.released" xml:space="preserve"><value>已发布</value></data>
   <data name="calendar.empty" xml:space="preserve"><value>此范围内没有事件。</value></data>
+  <data name="calendar.sourceRequired" xml:space="preserve"><value>This feature needs an economic-calendar data source. Set App:Calendar:FredApiKey or App:Calendar:BlsApiKey to enable it.</value></data>
   <data name="calendar.impact.low" xml:space="preserve"><value>低</value></data>
   <data name="calendar.impact.medium" xml:space="preserve"><value>中</value></data>
   <data name="calendar.impact.high" xml:space="preserve"><value>高</value></data>

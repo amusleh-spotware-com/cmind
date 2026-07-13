@@ -21,4 +21,20 @@ public static class CalendarEnablement
 
     /// <summary>Whether the runtime toggle should even be shown — only when the white-label gate permits it.</summary>
     public static bool IsRuntimeToggleVisible(BrandingOptions branding) => branding.EnableEconomicCalendar;
+
+    /// <summary>
+    /// Whether a value-carrying source (FRED or BLS) is configured. Without a source key the calendar only
+    /// has the keyless central-bank schedule — no actual/forecast/previous values — so it is not useful and
+    /// stays hidden. A deployment that supplies a key gets the full calendar.
+    /// </summary>
+    public static bool HasConfiguredSource(CalendarOptions calendar) =>
+        !string.IsNullOrWhiteSpace(calendar.FredApiKey) || !string.IsNullOrWhiteSpace(calendar.BlsApiKey);
+
+    /// <summary>
+    /// Whether the calendar should be surfaced in the UI (nav + page data): the two-tier enablement gate AND
+    /// a configured data source. When enabled but source-less, the feature stays hidden from nav; the page,
+    /// if reached directly, explains that a source key is required (see <see cref="IsEnabled(BrandingOptions, IFeatureGate)"/>).
+    /// </summary>
+    public static bool IsVisible(BrandingOptions branding, IFeatureGate featureGate, CalendarOptions calendar) =>
+        IsEnabled(branding, featureGate) && HasConfiguredSource(calendar);
 }

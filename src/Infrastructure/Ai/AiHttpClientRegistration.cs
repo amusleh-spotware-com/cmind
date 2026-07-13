@@ -47,6 +47,12 @@ public static class AiHttpClientRegistration
         // Built-in real local LLM (ONNX) — singleton so the model loads once and is reused.
         services.AddSingleton<IAiProvider, OnnxGenAiProvider>();
 
+        // Built-in model auto-download: a dedicated long-timeout client (model weights are large) + the
+        // single-flight installer, so the built-in AI works out of the box with no manual provisioning.
+        services.AddHttpClient(BuiltInModelInstaller.HttpClientName)
+            .ConfigureHttpClient(c => c.Timeout = Timeout.InfiniteTimeSpan);
+        services.AddSingleton<IBuiltInModelInstaller, BuiltInModelInstaller>();
+
         return services;
     }
 

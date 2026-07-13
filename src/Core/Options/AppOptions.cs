@@ -334,10 +334,25 @@ public sealed record AiBuiltInOptions
     public bool Enabled { get; init; } = true;
 
     /// <summary>Directory of the ONNX GenAI model (config + weights). Relative paths resolve under the app
-    /// base directory. When absent, the provider degrades to a typed failure with an install hint.</summary>
+    /// base directory. When absent, the provider degrades to a typed failure with an install hint (or, when
+    /// <see cref="AutoDownload"/> is on, a one-time background download of the model).</summary>
     public string ModelPath { get; init; } = Constants.AiConstants.BuiltInModelDefaultPath;
 
     public int MaxTokens { get; init; } = 1024;
+
+    /// <summary>
+    /// When true (default) and the model is absent, the app downloads it once in the background from
+    /// <see cref="DownloadBaseUrl"/> so the built-in AI works out of the box with no manual setup. A
+    /// deployment can turn this off (air-gapped/metered networks) and pre-provision the model directory.
+    /// </summary>
+    public bool AutoDownload { get; init; } = true;
+
+    /// <summary>Base URL the model files are fetched from (a HuggingFace ONNX GenAI model folder by default).</summary>
+    public string DownloadBaseUrl { get; init; } = Constants.AiConstants.BuiltInModelDownloadBaseUrl;
+
+    /// <summary>The model file names to download (relative to <see cref="DownloadBaseUrl"/>). Empty ⇒ the
+    /// built-in default set for the canonical Phi-3-mini int4 ONNX model.</summary>
+    public IReadOnlyList<string> DownloadFiles { get; init; } = [];
 }
 
 public sealed record AiProviderOptions

@@ -9,12 +9,23 @@
         <MudTd DataLabel="cBot">@context.cBot</MudTd>
         <MudTd DataLabel="Symbol">@context.symbol</MudTd>
         <MudTd DataLabel="TF">@context.timeframe</MudTd>
-        <MudTd DataLabel="Status"><MudChip T="string" Size="Size.Small">@context.status</MudChip></MudTd>
+        <MudTd DataLabel="Status"><MudChip T="string" Size="Size.Small" Color="StatusColor((string)context.status)">@context.status</MudChip></MudTd>
         <MudTd DataLabel="Node">@context.node</MudTd>
         <MudTd DataLabel="">
-            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" aria-label="View instance" OnClick="@(() => Open((Guid)context.id))" />
-            <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Small" Color="Color.Warning" aria-label="Stop instance" OnClick="@(() => Stop((Guid)context.id))" />
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="Delete instance" OnClick="@(() => Delete((Guid)context.id))" />
+            <MudTooltip Text="View instance">
+                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" aria-label="View instance"
+                               OnClick="@(() => Open((Guid)context.id))" data-testid="instance-view" />
+            </MudTooltip>
+            <MudTooltip Text="@(IsActive((string)context.status) ? "Stop instance" : "Instance already stopped")">
+                <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Small" Color="Color.Warning"
+                               Disabled="@(!IsActive((string)context.status))" aria-label="Stop instance"
+                               OnClick="@(() => Stop((Guid)context.id))" data-testid="instance-stop" />
+            </MudTooltip>
+            <MudTooltip Text="@(IsActive((string)context.status) ? "Stop the instance before deleting" : "Delete instance")">
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                               Disabled="@IsActive((string)context.status)" aria-label="Delete instance"
+                               OnClick="@(() => Delete((Guid)context.id))" data-testid="instance-delete" />
+            </MudTooltip>
         </MudTd>
     </RowTemplate>
 </MudTable>
@@ -29,6 +40,18 @@
         var all = await Http.GetDynamicArrayAsync("/api/instances/");
         _items = all.Where(i => (string)i.kind == Type).ToArray();
     }
+
+    // An instance is only stoppable while it is still executing; once terminal (Stopped/Completed/Failed)
+    // the Stop control is disabled and Delete is enabled instead.
+    private static bool IsActive(string status) => status is "Running" or "Starting" or "Stopping";
+
+    private static Color StatusColor(string status) => status switch
+    {
+        "Running" => Color.Success,
+        "Completed" or "Stopped" => Color.Default,
+        "Failed" => Color.Error,
+        _ => Color.Info
+    };
 
     private void Open(Guid id) => Nav.NavigateTo($"/instance/{id}");
     private async Task Stop(Guid id) { await Http.PostAsync($"/api/instances/{id}/stop", null); await Load(); }

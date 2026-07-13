@@ -124,6 +124,17 @@ public static class AgentStudioEndpoints
         g.MapPut("/{id:guid}/goals", async (Guid id, GoalsRequest req, DataContext db, ICurrentUser u, CancellationToken ct) =>
             await Mutate(db, id, u, ct, a => a.SetGoals((req.Goals ?? []).Select(ToTarget).ToList())));
 
+        g.MapPut("/{id:guid}", async (Guid id, UpdateAgentRequest req, DataContext db, ICurrentUser u, CancellationToken ct) =>
+            await Mutate(db, id, u, ct, a =>
+            {
+                if (!string.IsNullOrWhiteSpace(req.Name)) a.Rename(req.Name);
+                if (req.AccountIds is not null) a.SetManagedAccounts(req.AccountIds.Select(TradingAccountId.From));
+                if (req.Aggressiveness is not null || req.Patience is not null || req.TrendBias is not null)
+                    a.SetTemperament(new AgentTemperament(
+                        req.Aggressiveness ?? a.Aggressiveness, req.Patience ?? a.Patience, req.TrendBias ?? a.TrendBias));
+                if (!string.IsNullOrWhiteSpace(req.Autonomy)) a.SetAutonomy(ParseEnum(req.Autonomy, a.Autonomy));
+            }));
+
         g.MapPost("/{id:guid}/start", async (Guid id, DataContext db, ICurrentUser u, TimeProvider time, CancellationToken ct) =>
             await Mutate(db, id, u, ct, a => a.Start(time.GetUtcNow())));
 
@@ -197,6 +208,10 @@ public static class AgentStudioEndpoints
         autonomy = a.Autonomy.ToString(),
         status = a.Status.ToString(),
         accountCount = a.ManagedAccounts.Count,
+        accountIds = a.ManagedAccounts.Select(x => x.Value),
+        aggressiveness = a.Aggressiveness,
+        patience = a.Patience,
+        trendBias = a.TrendBias,
         lastAction = a.LastAction,
         lastActionAt = a.LastActionAt,
         goalCount = a.Goals.Count
@@ -210,6 +225,10 @@ public static class AgentStudioEndpoints
         autonomy = a.Autonomy.ToString(),
         status = a.Status.ToString(),
         accountCount = a.ManagedAccounts.Count,
+        accountIds = a.ManagedAccounts.Select(x => x.Value),
+        aggressiveness = a.Aggressiveness,
+        patience = a.Patience,
+        trendBias = a.TrendBias,
         goalCount = a.Goals.Count,
         systemPrompt = a.CompileSystemPrompt(),
         lastAction = a.LastAction,
@@ -245,3 +264,6 @@ public sealed record EnvelopeDto(
     int MaxConsecutiveLosses, int MaxOrdersPerHour, string? AllowedSymbolsCsv);
 
 public sealed record GoalsRequest(AgentGoalDto[]? Goals);
+
+public sealed record UpdateAgentRequest(
+    string? Name, Guid[]? AccountIds, double? Aggressiveness, double? Patience, double? TrendBias, string? Autonomy);

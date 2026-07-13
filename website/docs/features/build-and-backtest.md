@@ -37,3 +37,9 @@ Backtests need `--data-mode` (default `m1`), dates as `dd/MM/yyyy HH:mm`, and
 
 Execution capacity scale by adding node agents (self-register + heartbeat). See
 [node discovery](../operations/node-discovery.md) and [scaling](../deployment/scaling.md).
+## A trading account is required
+
+Running or backtesting a cBot needs a cTrader trading account to connect to. Until you add one under
+**Trading accounts**, the **Run New cBot** / **Backtest New cBot** buttons are disabled (with a
+tooltip) and the page shows a prompt linking to account setup — you no longer hit a raw
+`stream connect failed` error from a bot with no account.

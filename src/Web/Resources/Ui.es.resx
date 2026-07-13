@@ -77,6 +77,7 @@
   <data name="calendar.previous" xml:space="preserve"><value>Anterior</value></data>
   <data name="calendar.released" xml:space="preserve"><value>Publicado</value></data>
   <data name="calendar.empty" xml:space="preserve"><value>No hay eventos en este rango.</value></data>
+  <data name="calendar.sourceRequired" xml:space="preserve"><value>This feature needs an economic-calendar data source. Set App:Calendar:FredApiKey or App:Calendar:BlsApiKey to enable it.</value></data>
   <data name="calendar.impact.low" xml:space="preserve"><value>Bajo</value></data>
   <data name="calendar.impact.medium" xml:space="preserve"><value>Medio</value></data>
   <data name="calendar.impact.high" xml:space="preserve"><value>Alto</value></data>

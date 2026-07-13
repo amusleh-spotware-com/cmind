@@ -4,23 +4,26 @@ using Xunit;
 
 namespace E2ETests;
 
-// Drives the economic-calendar page through the real UI on mobile emulation: it renders without tripping
-// the Blazor error UI, and the filter action opens a dialog (mandate 7 — a dialog, never an inline form).
+// Drives the economic-calendar page through the real UI on mobile emulation. The base fixture configures no
+// FRED/BLS key, so the calendar is source-less: it renders the actionable "configure a source" notice (not
+// empty values or a raw error) and hides the filter action (CLAUDE.md mandate 11 — dependency gating).
 [Collection(AppCollection.Name)]
 public sealed class EconomicCalendarE2ETests(AppFixture app)
 {
     [Fact]
-    public async Task Calendar_page_renders_on_mobile()
+    public async Task Calendar_page_is_gated_and_renders_without_error_on_mobile()
     {
         var page = await app.NewAuthedMobilePageAsync();
         await page.GotoAsync("/economic-calendar", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
 
         (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
         (await page.Locator("[data-testid=page-error]").IsVisibleAsync()).Should().BeFalse();
-        // The page body rendered: its Filters action (which only appears when the calendar is enabled) is visible.
-        var filters = page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Filters" });
-        await filters.WaitForAsync(new LocatorWaitForOptions { Timeout = 5000 });
-        (await filters.IsVisibleAsync()).Should().BeTrue();
+
+        // Source-less ⇒ the actionable notice is shown and the filter action is hidden.
+        await page.Locator("[data-testid=calendar-source-required]")
+            .WaitForAsync(new LocatorWaitForOptions { Timeout = 10000 });
+        (await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Filters" }).CountAsync())
+            .Should().Be(0, "the filter action is hidden until a data source is configured");
     }
 
     [Fact]
@@ -33,18 +36,5 @@ public sealed class EconomicCalendarE2ETests(AppFixture app)
         (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
         (await page.Locator("[data-testid=page-error]").IsVisibleAsync()).Should().BeFalse();
         (await page.GetByText("US.CPI").First.IsVisibleAsync()).Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task Filter_action_opens_a_dialog()
-    {
-        var page = await app.NewAuthedMobilePageAsync();
-        await page.GotoAsync("/economic-calendar", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-
-        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Filters" }).ClickAsync();
-
-        var dialog = page.Locator(".mud-dialog");
-        await dialog.WaitForAsync(new LocatorWaitForOptions { Timeout = 5000 });
-        (await dialog.GetByText("Minimum impact").IsVisibleAsync()).Should().BeTrue();
     }
 }

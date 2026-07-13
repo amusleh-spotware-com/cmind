@@ -184,3 +184,11 @@ so re-enabling is instant.
 - **P5 — extras**: surprise analytics, iCal/CSV export, keyword search, pluggable consensus.
 
 See the [cBot & REST API reference](calendar-cbot-api.md) for the integration surface.
+
+## Data source is required (feature is hidden without one)
+
+The calendar surfaces actual/forecast/previous values only from a configured value source (FRED or
+BLS). Without `App:Calendar:FredApiKey` or `App:Calendar:BlsApiKey` the feature is **hidden** from
+navigation; if it is force-enabled (white-label/owner) without a key, the page shows an actionable
+"configure a data source" notice instead of empty values, and the filter action stays hidden until a
+source is set. Event rows show the series **name** (from the catalog), not the raw series code.

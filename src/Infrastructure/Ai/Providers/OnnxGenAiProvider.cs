@@ -18,7 +18,8 @@ namespace Infrastructure.Ai.Providers;
 /// is not run concurrently).
 /// </summary>
 public sealed class OnnxGenAiProvider(
-    IOptionsMonitor<AppOptions> options, ILogger<OnnxGenAiProvider> logger) : IAiProvider, IDisposable
+    IOptionsMonitor<AppOptions> options, ILogger<OnnxGenAiProvider> logger,
+    IBuiltInModelInstaller? installer = null) : IAiProvider, IDisposable
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
     private Model? _model;
@@ -37,7 +38,7 @@ public sealed class OnnxGenAiProvider(
 
     public async Task<AiResult> CompleteAsync(AiProviderRequest request, CancellationToken ct)
     {
-        if (!IsModelPresent()) return AiResult.Fail(AiConstants.BuiltInUnavailableMessage);
+        if (!IsModelPresent()) return AiResult.Fail(NotPresentMessage());
 
         var maxTokens = Math.Clamp(request.MaxTokens, 16, options.CurrentValue.Ai.BuiltIn.MaxTokens);
         try
@@ -53,6 +54,19 @@ public sealed class OnnxGenAiProvider(
             logger.AiRequestError(ex);
             return AiResult.Fail("Built-in AI request errored.");
         }
+    }
+
+    // The model is absent: when auto-download is enabled, kick off the one-time background install and tell
+    // the caller it is downloading (a retryable, informative failure) instead of the bare "not installed".
+    private string NotPresentMessage()
+    {
+        if (installer is null || !options.CurrentValue.Ai.BuiltIn.AutoDownload)
+            return AiConstants.BuiltInUnavailableMessage;
+
+        installer.EnsureInstalling();
+        return installer.State == BuiltInModelInstallState.Failed
+            ? AiConstants.BuiltInUnavailableMessage
+            : AiConstants.BuiltInDownloadingMessage;
     }
 
     private AiResult Generate(AiProviderRequest request, int maxTokens, CancellationToken ct)

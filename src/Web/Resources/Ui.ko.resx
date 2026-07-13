@@ -77,6 +77,7 @@
   <data name="calendar.previous" xml:space="preserve"><value>이전</value></data>
   <data name="calendar.released" xml:space="preserve"><value>발표됨</value></data>
   <data name="calendar.empty" xml:space="preserve"><value>이 범위에 이벤트가 없습니다.</value></data>
+  <data name="calendar.sourceRequired" xml:space="preserve"><value>This feature needs an economic-calendar data source. Set App:Calendar:FredApiKey or App:Calendar:BlsApiKey to enable it.</value></data>
   <data name="calendar.impact.low" xml:space="preserve"><value>낮음</value></data>
   <data name="calendar.impact.medium" xml:space="preserve"><value>보통</value></data>
   <data name="calendar.impact.high" xml:space="preserve"><value>높음</value></data>

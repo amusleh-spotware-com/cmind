@@ -139,7 +139,9 @@ else
             if (response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.NoContent)
                 _view = await response.Content.ReadFromJsonAsync<CsView>();
             else if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
-                Snack.Add("Refresh produced no data (AI and calendar both unavailable).", MudBlazor.Severity.Warning);
+                Snack.Add("No data yet. The built-in AI model may still be downloading (first-time setup) — "
+                    + "try again shortly, or configure an AI provider / economic-calendar source in Settings → AI.",
+                    MudBlazor.Severity.Warning);
         }
         catch { Snack.Add("Refresh failed", MudBlazor.Severity.Error); }
         finally { Loading = false; }

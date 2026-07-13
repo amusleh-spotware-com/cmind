@@ -326,6 +326,27 @@ public static class AiConstants
         "The built-in local AI model is not installed. Add an ONNX GenAI model under the configured path " +
         "(App:Ai:BuiltIn:ModelPath) or configure another provider in Settings → AI.";
 
+    // Built-in model auto-download: the canonical Phi-3-mini 4k instruct int4 ONNX model folder + its files.
+    // When the model directory is absent the app fetches these once in the background (App:Ai:BuiltIn:AutoDownload).
+    public const string BuiltInModelDownloadBaseUrl =
+        "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-onnx/resolve/main/cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/";
+
+    public static readonly string[] BuiltInModelDownloadFiles =
+    [
+        "genai_config.json",
+        "config.json",
+        "special_tokens_map.json",
+        "tokenizer.json",
+        "tokenizer_config.json",
+        "added_tokens.json",
+        "phi3-mini-4k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx",
+        "phi3-mini-4k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx.data"
+    ];
+
+    public const string BuiltInDownloadingMessage =
+        "The built-in local AI model is downloading in the background (first-time setup). This can take a " +
+        "few minutes; try again shortly, or configure another provider in Settings → AI.";
+
     // Vision requested against a provider that cannot accept images (e.g. a text-only local model).
     public const string VisionUnsupportedMessage =
         "The active AI provider does not support image input. Switch to a vision-capable provider in Settings → AI.";

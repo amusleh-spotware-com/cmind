@@ -59,6 +59,15 @@ public static partial class LogMessages
     [LoggerMessage(EventId = 1120, Level = LogLevel.Warning, Message = "News blackout: {Count} running bot symbol(s) inside a high-impact window: {Symbols}")]
     public static partial void RiskGuardNewsBlackout(this ILogger logger, int count, IReadOnlyList<string> symbols);
 
+    [LoggerMessage(EventId = 1130, Level = LogLevel.Information, Message = "Built-in AI model download started to {Path}")]
+    public static partial void BuiltInModelDownloadStarted(this ILogger logger, string path);
+
+    [LoggerMessage(EventId = 1131, Level = LogLevel.Information, Message = "Built-in AI model download completed ({Files} files)")]
+    public static partial void BuiltInModelDownloadCompleted(this ILogger logger, int files);
+
+    [LoggerMessage(EventId = 1132, Level = LogLevel.Error, Message = "Built-in AI model download failed")]
+    public static partial void BuiltInModelDownloadFailed(this ILogger logger, Exception ex);
+
     [LoggerMessage(EventId = 1130, Level = LogLevel.Information, Message = "Currency-strength snapshot refreshed ({Source}) over {Count} currencies")]
     public static partial void CurrencyStrengthRefreshed(this ILogger logger, Ai.CurrencyStrength.SnapshotSource source, int count);
 

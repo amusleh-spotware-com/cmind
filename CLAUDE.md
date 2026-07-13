@@ -155,6 +155,30 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
     listed in `WhiteLabelCatalog.IntentionallyExcluded` with a reason (operational-only/restart-only). The
     build **fails** (`WhiteLabelCatalogParityTests`) if a white-label options-record property is neither
     catalogued nor excluded. Never add a config-only white-label flag. → `website/docs/features/white-label-owner-settings.md`.
+11. **UI reflects real state — no dead controls, no raw IDs, no crash on the empty path.** These bug classes
+    were all found by *manual* clicking, not by the suite; every one must now be caught by an E2E test.
+    - **Dependency gating.** A feature that needs external config to work — a **trading account** (run,
+      backtest, copy, agent-managed accounts), an **API key / data source** (economic calendar → FRED/BLS,
+      currency-strength), or a **downloaded model** (built-in ONNX) — MUST, when the dependency is absent,
+      either be **hidden** (nav + entrypoints) or show a **clear, actionable notice** (what to configure and
+      where). Never a silent no-op, never a raw framework/connection error (e.g. `stream connect failed`),
+      never an action that is doomed to fail. The action button that triggers it is **disabled** with a
+      tooltip explaining why. Gating helpers live in one place (e.g. `CalendarEnablement`) so nav, page,
+      endpoint and worker never disagree. E2E asserts the disabled/hidden/notice path with the dependency
+      absent **and** the working path when present.
+    - **State-correct controls.** Per-row lifecycle controls (start/stop/delete/kill/pause) are **icon
+      buttons** and are **disabled in states where the action is invalid** — Stop on a terminal
+      (Failed/Stopped/Completed) instance, Delete on an active one, Start on a running profile/agent. A
+      control that would be a no-op or a 409 must be disabled, not enabled. Don't ship a button that does
+      nothing. E2E asserts the disabled state on the relevant status.
+    - **No internal identifiers in the UI.** User-facing columns/fields show the human value (account
+      **number**, name) — **never** a strong-ID `Guid`. Map id→number at the edge. E2E asserts no GUID text.
+    - **Detail/edit is a dialog, not an inline page form** (reinforces mandate 7). Clicking a row opens a
+      MudBlazor dialog; never grow a form at the bottom of the page.
+    - **Detail pages never crash the circuit.** Navigating to a detail/view page for **any** entity state
+      (including failed/terminal, missing, or gated-off) must render — guard every non-200 fetch and wrap
+      background streams (SignalR log tails) in try/catch. A row's view/eye control is E2E-driven for a
+      terminal entity. → `src/Web/CLAUDE.md`.
 
 ## Modern C# — MANDATORY (target C# 14 / .NET 10, `LangVersion=latest`)
 
@@ -202,6 +226,10 @@ match surrounding code, don't fight the whole codebase.
 - [ ] `dotnet test` green (incl. pre-existing); new behavior covered unit + integration + E2E, failure
       paths included; bug fix has a regression test; new route added to `PageSmokeTests`.
 - [ ] DDD checklist passes; `src/Core` has no infra deps; touched anemic code left more encapsulated.
+- [ ] **UI state/gating (mandate 11):** dependency-gated features hide or show an actionable notice + disabled
+      button when their account/key/model is absent; lifecycle controls are icons disabled in invalid states;
+      no raw `Guid` shown to users; detail/edit is a dialog; detail pages render for terminal/missing/gated
+      entities without crashing. Each covered by an E2E (disabled/empty path **and** working path).
 - [ ] No `DateTime.UtcNow`/`.Now`; no secrets; no magic strings; no direct `ILogger.Log*`; modern C#.
 - [ ] No hard-coded user-facing text — every string via `@L["key"]`, present in all locales (hardcoded +
       parity gates green); new RTL renders correctly.

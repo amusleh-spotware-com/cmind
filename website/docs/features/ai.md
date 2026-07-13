@@ -169,3 +169,13 @@ Ollama/LM Studio/vLLM. It backs:
   real creds win) and drives every AI feature through the real UI. Adding or changing any AI feature
   **requires** an E2E test through this fixture (see the repo test mandate). An opt-in lane
   (`AI_LOCAL_LLM=1`) runs one real completion through an **Ollama** Testcontainer.
+
+## Built-in local AI — zero-setup by default
+
+The built-in ONNX local LLM works out of the box: when its model directory is absent and
+`App:Ai:BuiltIn:AutoDownload` is `true` (the default), the app downloads the model once in the
+background from `App:Ai:BuiltIn:DownloadBaseUrl`. While the download runs, AI calls (and **Test
+connection** in Settings → AI) return a clear "model is downloading (first-time setup)" message
+rather than a hard failure. Air-gapped/metered deployments set `AutoDownload=false` and
+pre-provision the model directory (`App:Ai:BuiltIn:ModelPath`). The white-label
+`App:Branding:AllowBuiltInAi` gate still applies.

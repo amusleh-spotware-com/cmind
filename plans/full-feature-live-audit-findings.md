@@ -1293,3 +1293,24 @@ lanes (A/B/C/H).
 - I-02 (manifest href), I-04 (dashboard empty-state notice), I-05 (RTL computed-direction assert), I-06 (calendar-series loading indicator), I-07 (offline-path E2E).
 - **Localization debt (ratcheted):** ~78 pages carry hard-coded English (A-04/B-07/E-05/F-01/H-01/I-03). The census gate now blocks any *new* un-localized page and forces the baseline to only shrink; new strings added during fixes were localized (keys seeded across all 23 locales). Paying down the full baseline is a separate, tracked effort.
 - **ui-translations.json ↔ resx drift:** subagents seeded new keys directly into resx (parity green); reconcile into `ui-translations.json` before the next `gen-resx.ps1` run so the pipeline stays source-of-truth (`tmp-audit/keys-*.json` hold the fragments).
+
+---
+
+## Fix Status — UPDATE 2 (remaining items completed)
+
+The previously-tracked "Remaining" items were fixed via a second wave of 5 parallel worktree lanes
+(A2/B+C/H2/I2) + main-tree work, all merged + pushed:
+
+- **A-03** MFA-mobile test hardened (Playwright Assertions vs raw wait). **A-07** temp-password now shown in a persistent `TempPasswordDialog` with copy (not a transient snackbar).
+- **B-05** backtest window validated (no empty --start/--end). **B-08** `/builder/{id}` + `/instance/{id}` smoke+mobile E2E (`CBotDetailPagesTests`). **B-09** quick-run navigates to the new instance (test asserts navigate-on-success, verified live). **F-03** quant+journal added to the mobile census (no 360px overflow — verified).
+- **C-05** new `@page /copy-trading/{id}` deep-link (guards missing id). **C-06** copy dialog Cancel reachable past an open dropdown. **C-07** Yes/No rendering.
+- **H-03** brand name updates live in an open circuit (IOptionsMonitor.OnChange → StateHasChanged). **H-04** human feature labels (not raw enum). **H-05** registration-closed 200-behavior pinned.
+- **I-02** absolute manifest href. **I-04** dashboard empty-state notice (verified live). **I-05** RTL computed-direction assert. **I-06** calendar-series loading/empty states. **I-07** offline path E2E.
+
+New enforcement gate added earlier in the effort: **`DomainExceptionMappingTests`** (live-verified). Second-wave lanes also seeded all new keys across the 23 locales (parity green).
+
+**Result:** every audit finding is fixed except the deliberate localization-debt paydown (ratcheted — the
+census gate blocks any new un-localized page and only shrinks the 78-file baseline). Full solution: 0
+warnings. Unit 1058/1059 (one pre-existing `CopyEngineHost` timing flake, passes isolated). Extensive
+live E2E green across all lanes. `ui-translations.json`↔resx reconciliation (`tmp-audit/keys-*.json`) is
+the one tracked follow-up before the next `gen-resx.ps1` run.

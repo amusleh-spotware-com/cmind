@@ -16,12 +16,17 @@
     <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Href="/economic-calendar"
                    aria-label="@L["common.close"]" />
     <MudText Typo="Typo.h5">@Code</MudText>
+    <HelpTip Text='@L["calendar.series.help"]' />
 </MudStack>
 <MudText Typo="Typo.subtitle2" Class="mb-3 mud-text-secondary">@L["calendar.series.title"]</MudText>
 
 @if (!_enabled)
 {
     <MudAlert Severity="Severity.Info">@L["calendar.empty"]</MudAlert>
+}
+else if (!_hasSource)
+{
+    <MudAlert Severity="Severity.Warning" data-testid="calendar-source-required">@L["calendar.sourceRequired"]</MudAlert>
 }
 else if (_loading)
 {
@@ -72,12 +77,14 @@ else
 
     private IReadOnlyList<CalendarEventView> _events = [];
     private bool _enabled;
+    private bool _hasSource;
     private bool _loading = true;
 
     protected override async Task OnParametersSetAsync()
     {
         _enabled = CalendarEnablement.IsEnabled(Options.CurrentValue.Branding, Gate);
-        if (!_enabled)
+        _hasSource = CalendarEnablement.HasConfiguredSource(Options.CurrentValue.Calendar);
+        if (!_enabled || !_hasSource)
         {
             _loading = false;
             return;

@@ -25,6 +25,14 @@ public sealed class FakeLocalLlmServer : IDisposable
     public int Port { get; }
     public string BaseUrl => $"http://127.0.0.1:{Port}/v1/";
 
+    // Marker from AiPrompts.CurrencyForwardSystem — the currency-strength gather is the one AI call whose
+    // reply must be structured JSON (a plain canned string parses to no trajectories, so no snapshot is
+    // ever produced and the page renders empty). We reply with a valid forward-gather payload for the major
+    // currencies so the deterministic model produces a snapshot; every other call still gets the canned reply.
+    private const string CurrencyGatherMarker = "deterministic currency-strength model";
+
+    private static readonly string CurrencyGatherJson = BuildCurrencyGatherJson();
+
     private async Task LoopAsync()
     {
         while (!_cts.IsCancellationRequested)
@@ -33,7 +41,15 @@ public sealed class FakeLocalLlmServer : IDisposable
             try { ctx = await _listener.GetContextAsync(); }
             catch { return; }
 
-            var body = "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"" + _reply + "\"}}]}";
+            string requestBody;
+            using (var reader = new System.IO.StreamReader(ctx.Request.InputStream, Encoding.UTF8))
+                requestBody = await reader.ReadToEndAsync();
+
+            var content = requestBody.Contains(CurrencyGatherMarker, StringComparison.Ordinal)
+                ? CurrencyGatherJson
+                : _reply;
+
+            var body = "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"" + content + "\"}}]}";
             var bytes = Encoding.UTF8.GetBytes(body);
             ctx.Response.ContentType = "application/json";
             ctx.Response.StatusCode = (int)HttpStatusCode.OK;
@@ -41,6 +57,18 @@ public sealed class FakeLocalLlmServer : IDisposable
             try { await ctx.Response.OutputStream.WriteAsync(bytes); } catch { /* client gone */ }
             ctx.Response.Close();
         }
+    }
+
+    // A minimal, deterministic forward-gather payload covering the majors, JSON-escaped for embedding in the
+    // OpenAI chat "content" string. Only code + trajectory.ratePathBp are required by CurrencyMacroParser.
+    private static string BuildCurrencyGatherJson()
+    {
+        string[] majors = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "NZD"];
+        var entries = string.Join(",", majors.Select((code, i) =>
+            "{\\\"code\\\": \\\"" + code + "\\\", \\\"trajectory\\\": {\\\"ratePathBp\\\": " + (25 - i * 5) +
+            ", \\\"inflationTrend\\\": -0.2, \\\"growthMomentum\\\": 0.1, \\\"geopoliticalDelta\\\": 0.0}, " +
+            "\\\"dataConfidence\\\": \\\"Medium\\\"}"));
+        return "{\\\"currencies\\\": [" + entries + "]}";
     }
 
     private static int GetFreePort()

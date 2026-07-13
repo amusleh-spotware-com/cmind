@@ -120,4 +120,7 @@
   <data name="ai.notice.body" xml:space="preserve"><value>在“设置 → AI”中配置 AI 提供商即可使用 AI 功能——内置模型、本地 LLM 或云提供商。</value></data>
   <data name="ai.notice.openSettings" xml:space="preserve"><value>打开 AI 设置</value></data>
   <data name="ai.notice.later" xml:space="preserve"><value>稍后</value></data>
+  <data name="cs.refresh.ownerOnly" xml:space="preserve"><value>Only the deployment owner can refresh the currency-strength snapshot.</value></data>
+  <data name="calendar.help" xml:space="preserve"><value>Upcoming high-impact economic releases (CPI, NFP, rate decisions). Configure a FRED/BLS data source in Settings -&gt; Deployment to populate the calendar.</value></data>
+  <data name="calendar.series.help" xml:space="preserve"><value>Full release history for this economic series - actual vs forecast vs previous. Configure a FRED/BLS data source in Settings -&gt; Deployment to populate it.</value></data>
 </root>

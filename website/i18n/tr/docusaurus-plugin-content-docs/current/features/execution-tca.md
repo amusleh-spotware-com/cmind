@@ -1,30 +1,46 @@
 ---
-title: Yürütme Taşı Maliyet Analizi
-description: Sipariş kalitesinin analiz — kaymış, gecikme, kısmi dolgu oranları.
-sidebar_position: 16
+description: "İşlem Maliyeti Analizi — bir emrin varış fiyatına göre yürütme kalitesini (baz puan cinsinden kayma ve uygulama açığı) ölçer; bankaların yaşadığı bileşik yürütme avantajı. Deterministik."
 ---
 
-# Yürütme TCA
+# İşlem Maliyeti Analizi (TCA)
 
-Gerçek yürütme vs. çıkış fiyatı — kaymış, gecikme, kalite metrikler.
+Yürütme alfası işlem başına küçük, binlerce işlem üzerinde ise devasadır — bankaların ve prop masalarının
+avantajlarını korumasının büyük bir parçasıdır. TCA, gerçekte elde ettiğiniz fiyatın, işlem yapmaya *karar
+verdiğiniz* andaki fiyattan ne kadar saptığını ölçer.
 
-## Metrikler
+**cBots → Execution Cost** (`/quant/tca`) sayfasını açın.
 
-- **Kaymış**: (Gerçek - Beklenen) × Lot
-- **Gecikme**: Sipariş → Sonuçlanma (ms)
-- **Kısmi Doldurma**: (Gerçek / İstenilen) %
+## Ne ölçer
 
-Örnek:
-- Siparişe: 1.1000
-- Gerçek: 1.1005
-- Kaymış: 50 pips
+**Varış (karar) fiyatı**, **yön** ve **gerçekleşmeleriniz** (fiyat × miktar) verildiğinde şunları raporlar:
 
-## Rapor
+- **Ortalama gerçekleşme fiyatı (VWAP)** — gerçekte elde ettiğiniz hacim ağırlıklı fiyat.
+- **Kayma (bps)** — varıştan VWAP'a sapma, baz puan cinsinden, **pozitif bir sayı maliyet olacak şekilde
+  işaretli** (varışın üzerinde alım veya altında satım) ve negatif bir sayı fiyat iyileşmesidir.
+- **Uygulama açığı** — bu maliyetin fiyat × miktar cinsinden ifadesi: sapmanın bu emirde size maliyeti olan para.
 
-Pano > TCA:
+```http
+POST /api/quant/tca
+{ "arrivalPrice": 1.1000, "side": "Buy",
+  "fills": [ { "price": 1.1010, "quantity": 100 }, { "price": 1.1020, "quantity": 100 } ] }
+```
 
-- Sipariş başına analiz
-- Stratejiste ortalama kaymış
-- Zamanla trend (kaliteti iyiyor mu?)
+## Akıllı dilimleme (Almgren-Chriss)
 
-Daha fazla: [Trading Journal →](./trading-journal.md)
+Maliyeti ölçmenin ötesinde, cMind büyük bir emri onu *en aza indirmek* için planlayabilir. **cBots →
+Execution Schedule** (`/quant/execution`) bir **Almgren-Chriss optimal-yürütme çizelgesi** oluşturur:
+toplam miktar, dilim sayısı, risk kaçınmanız, volatilite ve geçici piyasa etkisi verildiğinde, her dilimde
+işlem yapılacak boyutu döndürür. Daha yüksek risk kaçınma çizelgeyi **öne yükler** (zamanlama riskini
+azaltır); sıfır risk kaçınma düz bir **TWAP**'a düzleşir. Dilimler her zaman toplama eşittir.
+
+```http
+POST /api/quant/execution-schedule
+{ "totalQuantity": 100, "slices": 5, "riskAversion": 2, "volatility": 0.02, "temporaryImpact": 0.1 }
+```
+
+## Neden güvenilir
+
+Altyapı bağımlılığı ve dış çağrısı olmayan saf, deterministik alan kodu (`Core.Execution`) — alım/satım
+maliyet işareti, fiyat iyileşmesi, sıfır-kayma, VWAP toplama ve girdi korumaları için birim testlidir. Bu,
+yürütme kalitesinin ölçüm yarısıdır; kopya motorunun aynalanan emirlerin maliyetini yargılamak (ve akıllı
+dilimlemeyle azaltmak) için kullandığı aynı açık metriğidir.

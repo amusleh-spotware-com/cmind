@@ -1,41 +1,35 @@
 ---
-description: "AI-powered market regime detection — identify bull/bear/consolidation, adapt strategy. Live analysis + backtests."
+description: "Regime Lab — labels a return series into Calm / Normal / Turbulent volatility regimes and reports per-regime performance, plus the Hurst exponent (trend-persistence vs mean-reversion). Deterministic."
 ---
 
-# Regime lab
+# Regime Lab
 
-AI-powered market regime detection — identify bull/bear/consolidation, adapt strategy. Live analysis + backtests.
+A single Sharpe ratio hides the truth that most edges are conditional: great in calm, trending markets
+and dead in turbulence (or the reverse). The Regime Lab breaks a strategy's history into volatility
+regimes and shows how it did in each — so you know *when* your edge actually works.
 
-## Regime types
+Open **cBots → Regime Lab** (`/quant/regimes`).
 
-- **Bull** — uptrend, rising lows + highs.
-- **Bear** — downtrend, falling lows + highs.
-- **Consolidation** — range-bound, no clear trend.
-- **Volatility spike** — unusual price swings.
+## What it does
 
-## Detection
+Given a return series (or equity curve, oldest first), it:
 
-AI analyzes price action + volume, assigns confidence score.
+- computes a **trailing realized volatility** at each point and splits the history into **Calm**,
+  **Normal** and **Turbulent** regimes by the terciles of that volatility;
+- reports **per-regime performance** — observations, mean return, volatility and Sharpe — so you can see
+  where the edge lives;
+- estimates the **Hurst exponent** via rescaled-range (R/S) analysis: above ~0.55 the series is
+  **trending / persistent**, below ~0.45 it is **mean-reverting**, and around 0.5 it is close to a
+  random walk.
 
-Xác định per pair + timeframe.
+```http
+POST /api/quant/regimes
+{ "returns": [...], "window": 10 }   // or { "equity": [...] }
+```
 
-## Strategy adaptation
+## Why it is reliable
 
-Agents switch strategy based on regime:
-
-- Bull mode: trend-follow.
-- Bear mode: range-bound.
-- Consolidation: scalp.
-
-## Live dashboard
-
-Regime Lab page:
-
-- Current regime per pair.
-- Historical regime timeline.
-- Agent performance by regime.
-- Recommended adjustments.
-
-## Backtests
-
-Backtest reports include regime phase — see how strategy performed in each regime.
+Pure, deterministic domain code (`Core.Regimes`) with no infrastructure dependency and no external calls
+— unit-tested for regime separation (calm vs turbulent volatility) and for the Hurst direction
+(anti-persistent series score below 0.5, a persistent trend scores above). The same regime signal feeds
+the autonomous agents' reflection loop, so an agent can lean into the regimes where its edge is real.

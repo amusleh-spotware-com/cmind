@@ -1,33 +1,39 @@
 ---
-description: "Monitor strategy performance — drawdown, Sharpe, win rate. Alerts when performance degrades."
+description: "Strategy Health & Alpha Decay — deterministic decay detection that compares a strategy's recent Sharpe to its earlier record and locates the biggest mean-shift (CUSUM change-point), returning a Healthy / Degrading / Decayed verdict."
 ---
 
-# Strategy health
+# Strategy Health & Alpha Decay
 
-Monitor strategy performance — drawdown, Sharpe, win rate. Alerts khi performance degrades.
+Every edge decays — the research is blunt that the half-life of a quant strategy has collapsed from years
+to months, so *adaptation beats discovery*. The Strategy Health monitor tells you, from a strategy's own
+return history, whether the edge is still there.
 
-## KPIs
+Open **cBots → Strategy Health** (`/quant/health`).
 
-Tracked per agent / profile:
+## What it does
 
-- **ROI** — return on initial capital.
-- **Sharpe ratio** — risk-adjusted return.
-- **Max drawdown** — peak-to-trough loss.
-- **Win rate** — % profitable trades.
-- **Profit factor** — gross profit / gross loss.
+Given a return series (or equity curve, oldest first), it:
 
-## Health checks
+- splits the history into an **earlier** and a **recent** half and compares their Sharpe ratios;
+- runs a **CUSUM change-point** scan to locate the observation where the mean most clearly shifted (a
+  regime break), reported only when the deviation is statistically notable;
+- returns a verdict:
 
-- Drawdown approaching limit → alert.
-- Win rate dropping below threshold → alert.
-- Sharpe deteriorating → warning.
+| Verdict | Meaning |
+|---|---|
+| **Healthy** | Recent performance is in line with (or better than) the earlier record. |
+| **Degrading** | Recent Sharpe is materially weaker than the earlier record — watch closely. |
+| **Decayed** | The edge has effectively disappeared in the recent window — consider pausing. |
+| **Unknown** | Not enough history to judge. |
 
-## AI risk guard
+```http
+POST /api/quant/health
+{ "returns": [...] }   // or { "equity": [...] }
+```
 
-Background service monitors all agents. Nếu health check fails:
+## Why it is reliable
 
-- Auto-pause agent.
-- Alert owner.
-- Recommendations (scale down, review strategy).
-
-Xem [ai.md](./ai.md) cho risk guard details.
+It is pure, deterministic domain code (`Core.Health`) with no infrastructure dependency and no external
+calls — unit-tested for the decayed, degrading, healthy and too-short cases and for change-point
+localization. It is the manual companion to the always-on health checks that back the autonomous agents:
+the same statistics drive the circuit breaker that de-risks a live strategy whose edge is fading.

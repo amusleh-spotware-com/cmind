@@ -1,42 +1,34 @@
 ---
-description: "Automatic trade logging — every entry/exit recorded with P&L, commission, slippage. Export CSV for tax."
+description: "Trading Journal & Coach — analyses your own runs and backtests for behavioural leaks (over-concentration, repeated failures, a losing bias) and coaches you on the strategy you already have. Deterministic, with optional AI narrative."
 ---
 
-# Trading journal
+# Trading Journal & Coach
 
-Automatic trade logging — mỗi entry/exit recorded với P&L, commission, slippage. Export CSV cho tax.
+The newest genuinely-useful category of AI-for-trading is not predicting the market — it is analysing
+*your own* behaviour. The Trading Journal turns your history of runs and backtests into honest feedback so
+you can improve the strategy you already have.
 
-## Journal entries
+Open **AI → Trading Journal** (`/journal`).
 
-Mỗi closed position records:
+## What it surfaces
 
-- Entry price + time
-- Exit price + time
-- Profit/loss (PnL)
-- Commission
-- Slippage
-- Pair + volume
-- Source (manual / copy trading / AI)
+From your instances (runs and backtests) it computes, deterministically:
 
-## Filtering & export
+- **Win / loss / failure counts and win rate** across your backtests;
+- **Behavioural insights** — the leaks that quietly cost retail traders:
+  - **Over-concentration** — most of your activity is in one symbol;
+  - **Repeated failures** — a high share of runs failed to build or configure;
+  - **Losing bias** — more losing than winning backtests (with a nudge to run the Integrity Lab and
+    check the edge is real);
+  - a clean bill of health when none of the above applies.
 
-Journal page:
+```http
+GET /api/journal
+```
 
-- Filter bởi date, pair, source.
-- Sort bởi P&L, slippage.
-- Export CSV cho tax software.
+## Why it is reliable
 
-## P&L tracking
-
-Dashboard + Journal both show:
-
-- Daily P&L
-- Weekly / monthly summary
-- YTD total
-- Win rate
-
-Xem [dashboard.md](./dashboard.md) cho KPI cards.
-
-## Tax reporting
-
-Exported CSV + audit trail used cho tax filing.
+The behavioural analysis is pure, deterministic domain code (`Core.Journal`) with no infrastructure
+dependency — unit-tested for over-concentration, repeated failures, losing bias, the balanced case and
+the empty account. The facts come first; the AI coach (Portfolio Digest) is an optional narrative layer
+on top, gated on the Anthropic API key, so the journal works fully without AI configured.

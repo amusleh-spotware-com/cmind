@@ -1,29 +1,38 @@
 ---
-description: "Copy trading with reverse: flip entry side, swap SL/TP. Hedge masters or bet against them, all in one platform."
+description: "Contrarian Retail Positioning — turns the % of retail traders long into a contrarian bias (fade the crowd when it is lopsided), plus point-in-time signal value objects that guard against look-ahead bias."
 ---
 
-# Contrarian positioning
+# Contrarian Retail Positioning
 
-Copy trading với reverse: flip entry side, swap SL/TP. Hedge masters hoặc bet against them, tất cả trong một platform.
+The retail crowd is one of the few genuinely useful sentiment signals in FX — as a **contrarian**
+indicator. When the great majority of retail traders are long, price has historically tended to fall,
+and vice-versa. This tool turns crowd positioning into an actionable read.
 
-## Reverse copy
+Open **cBots → Contrarian Positioning** (`/quant/positioning`).
 
-Per-destination toggle: **Reverse** = flip side.
+## What it does
 
-- Master long → slave short.
-- Master SL/TP swapped (SL becomes TP, vice versa).
-- Sizing unchanged.
+Enter the **% of retail traders long** (from your broker's sentiment page or a feed such as FXSSI) and
+it returns:
 
-Use case:
+- **Contrarian bias** — **Bearish** when ≥ 60% are long (crowd too long), **Bullish** when ≤ 40% are
+  long (crowd too short), **Neutral** in the 40–60% indecision band;
+- **Strength** — how lopsided the crowd is (0 = balanced, 1 = fully one-sided), to weight the signal.
 
-- Hedge (run copies both direction to offset risk).
-- Bet against perceived over-leveraged master.
-- Market-neutral pair copy.
+```http
+POST /api/quant/positioning
+{ "longPercent": 72 }
+```
 
-Xem [copy-trading.md](./copy-trading.md#per-destination-options) cho config.
+## Point-in-time by construction
 
-## Rules apply
+Under the hood the signal layer (`Core.Signals`) models a `PointInTimeSignal` that is **stamped with the
+moment it was knowable** and refuses to be constructed without it. Any backtest or autonomous agent that
+consumes a signal checks `IsKnownAt(decisionTime)` — so future data can never leak into a historical
+decision. Look-ahead bias is the top reproducibility killer in quant finance; the domain model makes it
+structurally impossible.
 
-Prop-firm rules still apply — if master breaches, so might reverse copy (opposite side loss).
+## Why it is reliable
 
-No magic hedge — use responsibly.
+Pure, deterministic domain code with no infrastructure dependency — the contrarian thresholds and the
+point-in-time guard are unit-tested, including the 40/60 boundaries and out-of-range rejection.

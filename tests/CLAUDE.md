@@ -59,6 +59,17 @@ Census gates make omissions fail the build, not depend on a reviewer:
 - **Mandate guards** (`ArchitectureGuardTests`, `NoHardcodedUiTextTests`, `ResourceParityTests`,
   `WhiteLabelCatalogParityTests`) stay green — they are the machine-enforced CLAUDE.md.
 
+## Full-app smoke walk — keep it in sync (MANDATORY)
+
+`FullAppSmokeTests` is the single "real user" pass: signed in as the owner it visits **every** page,
+opens and Cancels **every** dialog-launching control, and asserts the circuit never breaks — creating,
+editing, deleting nothing. It follows `PageSmokeTests.Routes()` (so routes stay in sync automatically)
+and dismisses dialogs by generic heuristics (`DialogOpeners` / `Destructive` / `CloseLabels`). **Any UI
+change must keep this walk green and current:** a new page is picked up via `Routes()`; a new
+dialog-opening button whose label isn't matched by `DialogOpeners`, a new close/cancel affordance whose
+text isn't in `CloseLabels`, or a new destructive verb missing from `Destructive` → update those lists in
+`FullAppSmokeTests` in the **same commit**. Never let this smoke walk drift behind the UI.
+
 ## Kubernetes — the app must work in-cluster
 
 The app is deployed to K8s (`deploy/helm/cmind`); "works locally" is not "works". Every feature is

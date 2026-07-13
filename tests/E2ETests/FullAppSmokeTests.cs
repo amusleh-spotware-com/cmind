@@ -32,7 +32,8 @@ public sealed class FullAppSmokeTests(AppFixture app, ITestOutputHelper output)
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     // Ways a dialog offers to back out, in preference order. Escape is the universal fallback.
-    private static readonly string[] CloseLabels = ["Cancel", "Close", "Back", "Dismiss", "Not now", "No"];
+    private static readonly string[] CloseLabels =
+        ["Cancel", "Close", "Back", "Dismiss", "Not now", "Later", "Maybe later", "No"];
 
     [Fact]
     public async Task Owner_walks_every_page_opens_and_cancels_every_dialog_without_breaking()
@@ -51,10 +52,14 @@ public sealed class FullAppSmokeTests(AppFixture app, ITestOutputHelper output)
             catch (TimeoutException) { /* a purely-static page is fine — nothing interactive to poke */ }
 
             await AssertHealthyAsync(page, route);
+            // Some pages pop a dialog on load with no click (e.g. AI pages' "AI not configured — configure?"
+            // prompt). Back out of anything already open before we start poking.
+            await DismissOpenDialogsAsync(page, $"{route} (on load)");
             await PokeEveryDialogOpenerAsync(page, route);
 
-            // Left nothing open behind us.
-            (await page.Locator(".mud-dialog").CountAsync())
+            // Left nothing open behind us (MudBlazor can keep a hidden dialog node in the DOM, so count
+            // only the visible ones).
+            (await page.Locator(".mud-dialog:visible").CountAsync())
                 .Should().Be(0, $"{route} left a dialog open after the walk");
             await AssertHealthyAsync(page, route);
         }
@@ -100,6 +105,16 @@ public sealed class FullAppSmokeTests(AppFixture app, ITestOutputHelper output)
             if (opened) await CloseDialogAsync(page, dialog, label);
 
             await AssertHealthyAsync(page, $"{route} after «{label}»");
+        }
+    }
+
+    private static async Task DismissOpenDialogsAsync(IPage page, string where)
+    {
+        for (var guard = 0; guard < 5; guard++)
+        {
+            var open = page.Locator(".mud-dialog:visible");
+            if (await open.CountAsync() == 0) return;
+            await CloseDialogAsync(page, open.Last, $"auto-open on {where}");
         }
     }
 

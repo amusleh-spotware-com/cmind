@@ -1,13 +1,21 @@
 @page "/prop-guard"
 @using System.Net.Http.Json
+@using Web.Components.Dialogs
 @using Web.Json
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
+@inject IDialogService Dialogs
 
 <PageTitle>Prop Guard</PageTitle>
 
-<MudText Typo="Typo.h5" Class="mb-2">Prop-Firm Guard</MudText>
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+    <MudText Typo="Typo.h5">Prop-Firm Guard</MudText>
+    <HelpTip Text="Set exposure limits per trading account. With auto-flatten on, the guard stops every live bot on an account the moment its concurrent live count exceeds the cap. Daily-loss and max-drawdown limits are recorded for account-level equity enforcement." />
+    <MudSpacer />
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
+               OnClick="OpenNew" Disabled="_busy">New rule</MudButton>
+</MudStack>
 <MudText Typo="Typo.body2" Class="mb-1">
     Set exposure limits per trading account. With auto-flatten on, the guard stops every live bot on an
     account the moment its concurrent live count exceeds the cap.
@@ -17,71 +25,38 @@
     equity feed); the active guardrail today is the concurrent live-instance cap and one-click flatten.
 </MudText>
 
-<MudGrid>
-    <MudItem xs="12" md="5">
-        <MudPaper Class="pa-4" Elevation="1">
-            <MudText Typo="Typo.h6" Class="mb-2">New rule</MudText>
-            <MudTextField @bind-Value="_name" Label="Rule name" Placeholder="FTMO 100k" />
-            <MudSelect T="Guid?" @bind-Value="_accountId" Label="Trading account" Dense="true" Class="mt-2">
-                @foreach (var a in _accounts) { <MudSelectItem T="Guid?" Value="@((Guid?)a.id)">@a.accountNumber - @a.broker</MudSelectItem> }
-            </MudSelect>
-            <MudNumericField T="int" @bind-Value="_maxConcurrent" Label="Max concurrent live bots" Min="0" Max="100" Class="mt-2" />
-            <MudStack Row="true" Spacing="2" Class="mt-2">
-                <MudNumericField T="double" @bind-Value="_dailyLoss" Label="Daily loss limit" Min="0" />
-                <MudNumericField T="double" @bind-Value="_maxDrawdown" Label="Max drawdown %" Min="0" Max="100" />
-            </MudStack>
-            <MudSwitch @bind-Value="_autoFlatten" Label="Auto-flatten on breach" Color="Color.Error" Class="mt-2" />
-            <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
-                       StartIcon="@Icons.Material.Filled.Add" OnClick="CreateRule" Disabled="_busy">
-                Create rule
-            </MudButton>
-        </MudPaper>
-    </MudItem>
-
-    <MudItem xs="12" md="7">
-        <MudPaper Class="pa-4" Elevation="1">
-            <MudText Typo="Typo.h6" Class="mb-2">Rules</MudText>
-            @if (_rules.Length == 0)
-            {
-                <MudText Typo="Typo.body2">No rules yet.</MudText>
-            }
-            else
-            {
-                <MudSimpleTable Dense="true" Hover="true">
-                    <thead>
-                        <tr><th>Name</th><th>Account</th><th>Max live</th><th>Auto-flatten</th><th>On</th><th></th></tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var r in _rules)
-                        {
-                            <tr>
-                                <td>@r.name</td>
-                                <td>@r.accountNumber</td>
-                                <td>@r.maxConcurrentLiveInstances</td>
-                                <td>@(((bool)r.autoFlatten) ? "Yes" : "No")</td>
-                                <td>@(((bool)r.enabled) ? "Yes" : "No")</td>
-                                <td>
-                                    <MudButton Size="Size.Small" Color="Color.Error"
-                                               OnClick="@(() => Flatten((Guid)r.tradingAccountId))" Disabled="_busy">Flatten</MudButton>
-                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
-                                                   OnClick="@(() => DeleteRule((Guid)r.id))" />
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </MudSimpleTable>
-            }
-        </MudPaper>
-    </MudItem>
-</MudGrid>
+<MudPaper Class="pa-4" Elevation="1">
+    <MudText Typo="Typo.h6" Class="mb-2">Rules</MudText>
+    @if (_rules.Length == 0)
+    {
+        <MudText Typo="Typo.body2">No rules yet.</MudText>
+    }
+    else
+    {
+        <MudTable Items="_rules" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>Name</MudTh><MudTh>Account</MudTh><MudTh>Max live</MudTh><MudTh>Auto-flatten</MudTh><MudTh>On</MudTh><MudTh /></HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Name">@context.name</MudTd>
+                <MudTd DataLabel="Account">@context.accountNumber</MudTd>
+                <MudTd DataLabel="Max live">@context.maxConcurrentLiveInstances</MudTd>
+                <MudTd DataLabel="Auto-flatten">@(((bool)context.autoFlatten) ? "Yes" : "No")</MudTd>
+                <MudTd DataLabel="On">@(((bool)context.enabled) ? "Yes" : "No")</MudTd>
+                <MudTd DataLabel="">
+                    <MudButton Size="Size.Small" Color="Color.Error"
+                               OnClick="@(() => Flatten((Guid)context.tradingAccountId))" Disabled="_busy">Flatten</MudButton>
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                                   aria-label="Delete rule"
+                                   OnClick="@(() => DeleteRule((Guid)context.id, (string)context.name))" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudPaper>
 
 @code {
     private dynamic[] _accounts = [], _rules = [];
-    private Guid? _accountId;
-    private string _name = "";
-    private int _maxConcurrent = 3;
-    private double _dailyLoss, _maxDrawdown;
-    private bool _autoFlatten, _busy;
+    private bool _busy;
 
     protected override async Task OnInitializedAsync()
     {
@@ -91,28 +66,38 @@
 
     private async Task LoadRules() => _rules = await Http.GetDynamicArrayAsync("/api/prop/rules");
 
-    private async Task CreateRule()
+    private async Task OpenNew()
     {
-        if (_accountId is null) { Snack.Add("Pick an account", Severity.Warning); return; }
-        if (string.IsNullOrWhiteSpace(_name)) { Snack.Add("Name required", Severity.Warning); return; }
+        var options = ((IEnumerable<dynamic>)_accounts)
+            .Select(a => new NewPropRuleDialog.PropRuleAccountOption((Guid)a.id, $"{a.accountNumber} - {a.broker}"))
+            .ToList();
+        var parameters = new DialogParameters<NewPropRuleDialog>
+        {
+            { d => d.Accounts, (IReadOnlyList<NewPropRuleDialog.PropRuleAccountOption>)options },
+        };
+        var dlg = await Dialogs.ShowAsync<NewPropRuleDialog>(null, parameters,
+            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
+        var res = await dlg.Result;
+        if (res is null || res.Canceled) return;
+        var data = (NewPropRuleDialog.NewPropRuleResult)res.Data!;
+
         _busy = true;
         try
         {
             var body = new
             {
-                TradingAccountId = _accountId,
-                Name = _name,
-                MaxConcurrentLiveInstances = _maxConcurrent,
-                DailyLossLimit = _dailyLoss,
-                MaxDrawdownPercent = _maxDrawdown,
-                AutoFlatten = _autoFlatten,
+                data.TradingAccountId,
+                data.Name,
+                data.MaxConcurrentLiveInstances,
+                data.DailyLossLimit,
+                data.MaxDrawdownPercent,
+                data.AutoFlatten,
                 Enabled = true
             };
             var response = await Http.PostAsJsonAsync("/api/prop/rules", body);
             if (response.IsSuccessStatusCode)
             {
                 Snack.Add("Rule created", Severity.Success);
-                _name = "";
                 await LoadRules();
             }
             else
@@ -124,8 +109,12 @@
         finally { _busy = false; }
     }
 
-    private async Task DeleteRule(Guid id)
+    private async Task DeleteRule(Guid id, string name)
     {
+        if (!await Dialogs.ConfirmAsync("Delete rule",
+                $"Delete the guard rule \"{name}\"? This stops protecting that account.",
+                "Delete", "Cancel"))
+            return;
         var response = await Http.DeleteAsync($"/api/prop/rules/{id}");
         if (response.IsSuccessStatusCode) await LoadRules();
         else Snack.Add("Delete failed", Severity.Error);

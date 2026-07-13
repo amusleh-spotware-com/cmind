@@ -108,6 +108,133 @@ public sealed class PropFirmTests(AppFixture app)
     }
 
     [Fact]
+    public async Task Two_challenges_record_equity_independently_per_row()
+    {
+        var page = await app.NewAuthedPageAsync();
+
+        var nameA = $"E2E-A {Guid.NewGuid():N}";
+        var nameB = $"E2E-B {Guid.NewGuid():N}";
+        var idA = await CreateChallengeAsync(page, nameA);
+        var idB = await CreateChallengeAsync(page, nameB);
+
+        try
+        {
+            await page.GotoAsync("/prop-firm");
+            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+            await Assertions.Expect(page.GetByText(nameA)).ToBeVisibleAsync(Slow);
+            await Assertions.Expect(page.GetByText(nameB)).ToBeVisibleAsync(Slow);
+
+            // Type a distinct value in each row's equity input, then record only row B.
+            var rowA = page.Locator("tr", new() { HasTextString = nameA });
+            var rowB = page.Locator("tr", new() { HasTextString = nameB });
+
+            await rowA.Locator("input").First.FillAsync("105000");
+            await rowB.Locator("input").First.FillAsync("111000");
+            await rowB.GetByRole(AriaRole.Button, new() { NameString = "Record" }).ClickAsync();
+
+            await page.WaitForTimeoutAsync(1000);
+
+            // Only challenge B's equity changed; challenge A stays at its starting balance.
+            var detailA = await page.APIRequest.GetAsync($"{app.BaseUrl}/api/prop-firm/challenges/{idA}");
+            var detailB = await page.APIRequest.GetAsync($"{app.BaseUrl}/api/prop-firm/challenges/{idB}");
+            JsonDocument.Parse(await detailB.TextAsync()).RootElement.GetProperty("currentEquity").GetDecimal()
+                .Should().Be(111000m, "row B's own input value was recorded");
+            JsonDocument.Parse(await detailA.TextAsync()).RootElement.GetProperty("currentEquity").GetDecimal()
+                .Should().Be(100000m, "recording row B must not touch row A");
+        }
+        finally
+        {
+            await page.APIRequest.DeleteAsync($"{app.BaseUrl}/api/prop-firm/challenges/{idA}");
+            await page.APIRequest.DeleteAsync($"{app.BaseUrl}/api/prop-firm/challenges/{idB}");
+        }
+    }
+
+    [Fact]
+    public async Task Failed_challenge_shows_breach_cause_and_detail_dialog()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var name = $"E2E-fail {Guid.NewGuid():N}";
+        var id = await CreateChallengeAsync(page, name, profitTarget: 50.0);
+
+        try
+        {
+            var breach = await page.APIRequest.PostAsync($"{app.BaseUrl}/api/prop-firm/challenges/{id}/equity",
+                new APIRequestContextOptions { DataObject = new { Equity = 94000m } });
+            breach.Status.Should().Be(200);
+
+            await page.GotoAsync("/prop-firm");
+            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+            await Assertions.Expect(page.GetByText(name)).ToBeVisibleAsync(Slow);
+
+            // D-03: the breach cause is visible in the table for a failed challenge.
+            await Assertions.Expect(page.Locator("[data-testid=challenge-breach]").First).ToBeVisibleAsync(Slow);
+            await Assertions.Expect(page.GetByText("DailyLoss").First).ToBeVisibleAsync(Slow);
+
+            // D-04: the view/eye icon opens a detail dialog that renders for a terminal challenge without crashing.
+            var row = page.Locator("tr", new() { HasTextString = name });
+            await row.GetByLabel("View challenge").ClickAsync();
+            await Assertions.Expect(page.Locator("[data-testid=challenge-detail]")).ToBeVisibleAsync(Slow);
+            await Assertions.Expect(page.Locator("[data-testid=challenge-detail-breach]")).ToBeVisibleAsync(Slow);
+        }
+        finally
+        {
+            await page.APIRequest.DeleteAsync($"{app.BaseUrl}/api/prop-firm/challenges/{id}");
+        }
+    }
+
+    [Fact]
+    public async Task Delete_challenge_asks_for_confirmation_first()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var name = $"E2E-del {Guid.NewGuid():N}";
+        var id = await CreateChallengeAsync(page, name);
+        await page.APIRequest.PostAsync($"{app.BaseUrl}/api/prop-firm/challenges/{id}/stop");
+
+        try
+        {
+            await page.GotoAsync("/prop-firm");
+            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+            await Assertions.Expect(page.GetByText(name)).ToBeVisibleAsync(Slow);
+
+            var row = page.Locator("tr", new() { HasTextString = name });
+            await row.GetByLabel("Delete challenge").ClickAsync();
+
+            // D-05/D-06 pattern: destructive delete opens a confirm dialog before the DELETE fires.
+            await Assertions.Expect(page.Locator("[data-testid=confirm-accept]")).ToBeVisibleAsync(Slow);
+            // Cancel — the challenge must still exist.
+            await page.ClickAsync("[data-testid=confirm-cancel]");
+            var still = await page.APIRequest.GetAsync($"{app.BaseUrl}/api/prop-firm/challenges/{id}");
+            still.Status.Should().Be(200, "cancelling the confirm dialog must not delete the challenge");
+        }
+        finally
+        {
+            await page.APIRequest.DeleteAsync($"{app.BaseUrl}/api/prop-firm/challenges/{id}");
+        }
+    }
+
+    private async Task<Guid> CreateChallengeAsync(IPage page, string name, double profitTarget = 10.0)
+    {
+        var create = await page.APIRequest.PostAsync($"{app.BaseUrl}/api/prop-firm/challenges",
+            new APIRequestContextOptions
+            {
+                DataObject = new
+                {
+                    Name = name,
+                    TradingAccountId = Guid.NewGuid(),
+                    StartingBalance = 100000m,
+                    ProfitTargetPercent = profitTarget,
+                    MaxDailyLossPercent = 5.0,
+                    MaxTotalDrawdownPercent = 10.0,
+                    DrawdownMode = 0,
+                    MinTradingDays = 0,
+                    SingleStep = true
+                }
+            });
+        create.Status.Should().Be(200);
+        return JsonDocument.Parse(await create.TextAsync()).RootElement.GetProperty("id").GetGuid();
+    }
+
+    [Fact]
     public async Task Templates_endpoint_returns_industry_presets()
     {
         var page = await app.NewAuthedPageAsync();

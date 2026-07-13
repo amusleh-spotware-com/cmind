@@ -70,6 +70,10 @@ public class ComplianceFlowTests(PostgresFixture fixture) : IClassFixture<Postgr
         var export = await client.GetFromJsonAsync<JsonElement>("/api/compliance/export");
         export.GetProperty("user").GetProperty("email").GetString().Should().Be(Owner);
 
+        // D-11: the GDPR export must not leak the internal user UUID (its database primary key).
+        export.GetProperty("user").TryGetProperty("id", out _)
+            .Should().BeFalse("the user-facing GDPR export must not expose the internal user UUID");
+
         var audit = await client.GetFromJsonAsync<JsonElement>("/api/compliance/audit/verify");
         audit.GetProperty("intact").GetBoolean().Should().BeTrue();
     }

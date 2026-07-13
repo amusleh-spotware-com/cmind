@@ -35,12 +35,15 @@ public class PropFirmHttpTests(PostgresFixture fixture) : IClassFixture<Postgres
 
     private static async Task<Guid> SeedAccountAsync(HttpClient client)
     {
-        (await client.PostAsJsonAsync("/api/ctids/", new { Username = "pf-trader", Password = "p" }))
+        var username = $"pf-{Guid.NewGuid():N}";
+        var accountNumber = Random.Shared.NextInt64(1_000_000, 9_000_000);
+        (await client.PostAsJsonAsync("/api/ctids/", new { Username = username, Password = "p" }))
             .EnsureSuccessStatusCode();
         var cids = await (await client.GetAsync("/api/ctids/")).Content.ReadFromJsonAsync<JsonElement>();
-        var cidId = cids.EnumerateArray().First().GetProperty("id").GetGuid();
+        var cidId = cids.EnumerateArray()
+            .First(c => c.GetProperty("username").GetString() == username).GetProperty("id").GetGuid();
         (await client.PostAsJsonAsync($"/api/ctids/{cidId}/accounts",
-            new { AccountNumber = 8001234L, Broker = "Pepperstone", IsLive = false, Label = "demo" }))
+            new { AccountNumber = accountNumber, Broker = "Pepperstone", IsLive = false, Label = "demo" }))
             .EnsureSuccessStatusCode();
         var accounts = await (await client.GetAsync($"/api/ctids/{cidId}/accounts")).Content.ReadFromJsonAsync<JsonElement>();
         return accounts.EnumerateArray().First().GetProperty("id").GetGuid();
@@ -81,6 +84,47 @@ public class PropFirmHttpTests(PostgresFixture fixture) : IClassFixture<Postgres
 
         var list = await (await client.GetAsync("/api/prop-firm/challenges")).Content.ReadFromJsonAsync<JsonElement>();
         list.EnumerateArray().Select(c => c.GetProperty("id").GetGuid()).Should().Contain(id);
+    }
+
+    [Fact]
+    public async Task Detail_endpoint_returns_breach_cause_for_a_failed_challenge()
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+        var accountId = await SeedAccountAsync(client);
+
+        var create = await client.PostAsJsonAsync("/api/prop-firm/challenges", new
+        {
+            Name = "Breach eval",
+            TradingAccountId = accountId,
+            StartingBalance = 100000m,
+            ProfitTargetPercent = 50.0,
+            MaxDailyLossPercent = 5.0,
+            MaxTotalDrawdownPercent = 10.0,
+            DrawdownMode = DrawdownMode.Static,
+            MinTradingDays = 0,
+            SingleStep = true,
+        });
+        create.StatusCode.Should().Be(HttpStatusCode.OK);
+        var id = (await create.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+
+        // Drive a daily-loss breach.
+        var breach = await client.PostAsJsonAsync($"/api/prop-firm/challenges/{id}/equity", new { Equity = 94000m });
+        breach.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var detail = await (await client.GetAsync($"/api/prop-firm/challenges/{id}")).Content.ReadFromJsonAsync<JsonElement>();
+        detail.GetProperty("status").GetString().Should().Be("Failed");
+        detail.GetProperty("breach").GetString().Should().Be("DailyLoss");
+    }
+
+    [Fact]
+    public async Task Detail_endpoint_returns_not_found_for_a_missing_challenge()
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+
+        (await client.GetAsync($"/api/prop-firm/challenges/{Guid.NewGuid()}")).StatusCode
+            .Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]

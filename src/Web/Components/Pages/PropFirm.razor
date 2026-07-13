@@ -25,21 +25,34 @@ else
 {
     <MudTable Items="_challenges" Dense="true" Breakpoint="Breakpoint.Sm">
         <HeaderContent>
-            <MudTh>Name</MudTh><MudTh>Kind</MudTh><MudTh>Phase</MudTh><MudTh>Status</MudTh><MudTh>Equity</MudTh>
+            <MudTh>Name</MudTh><MudTh>Kind</MudTh><MudTh>Phase</MudTh><MudTh>Status</MudTh><MudTh>Breach</MudTh><MudTh>Equity</MudTh>
             <MudTh>Peak</MudTh><MudTh>Days</MudTh><MudTh>Record equity</MudTh><MudTh /></HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Name">@context.name</MudTd>
             <MudTd DataLabel="Kind">@context.kind</MudTd>
             <MudTd DataLabel="Phase">@context.phase</MudTd>
             <MudTd DataLabel="Status"><MudChip T="string" Size="Size.Small" Color="StatusColor((string)context.status)">@context.status</MudChip></MudTd>
+            <MudTd DataLabel="Breach">
+                @if ((string)context.status == "Failed" && (string)context.breach != "None")
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Error" data-testid="challenge-breach">@context.breach</MudChip>
+                }
+                else
+                {
+                    <span class="mud-text-secondary">-</span>
+                }
+            </MudTd>
             <MudTd DataLabel="Equity">@context.currentEquity</MudTd>
             <MudTd DataLabel="Peak">@context.peakEquity</MudTd>
             <MudTd DataLabel="Days">@context.tradingDaysCount</MudTd>
             <MudTd DataLabel="Record equity">
-                <MudNumericField T="decimal" @bind-Value="_equityInput" Label="Equity" Margin="Margin.Dense" Style="max-width:140px" />
+                <MudNumericField T="decimal" Value="@EquityFor((Guid)context.id)" ValueChanged="@((decimal v) => SetEquity((Guid)context.id, v))"
+                                 Label="Equity" Margin="Margin.Dense" Style="max-width:140px" />
                 <MudButton Size="Size.Small" Color="Color.Primary" OnClick="@(() => RecordEquity((Guid)context.id))">Record</MudButton>
             </MudTd>
             <MudTd DataLabel="">
+                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small"
+                               aria-label="View challenge" OnClick="@(() => OpenDetail((Guid)context.id, (string)context.name))" />
                 @if ((string)context.status == "Stopped")
                 {
                     <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" Color="Color.Success"
@@ -52,7 +65,7 @@ else
                 }
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
                                Disabled="@((string)context.status == "Active")"
-                               aria-label="Delete challenge" OnClick="@(() => Remove((Guid)context.id))" />
+                               aria-label="Delete challenge" OnClick="@(() => Remove((Guid)context.id, (string)context.name))" />
             </MudTd>
         </RowTemplate>
     </MudTable>
@@ -61,7 +74,11 @@ else
 @code {
     private dynamic[] _challenges = [];
     private dynamic[] _accounts = [];
-    private decimal _equityInput;
+    private readonly Dictionary<Guid, decimal> _equityInputs = [];
+
+    private decimal EquityFor(Guid id) => _equityInputs.GetValueOrDefault(id);
+
+    private void SetEquity(Guid id, decimal value) => _equityInputs[id] = value;
 
     protected override async Task OnInitializedAsync()
     {
@@ -123,9 +140,20 @@ else
 
     private async Task RecordEquity(Guid id)
     {
-        var r = await Http.PostAsJsonAsync($"/api/prop-firm/challenges/{id}/equity", new { Equity = _equityInput });
+        var r = await Http.PostAsJsonAsync($"/api/prop-firm/challenges/{id}/equity", new { Equity = EquityFor(id) });
         if (!r.IsSuccessStatusCode) Snack.Add("Could not record equity", Severity.Error);
         await Load();
+    }
+
+    private async Task OpenDetail(Guid id, string name)
+    {
+        var parameters = new DialogParameters<PropFirmChallengeDetailDialog>
+        {
+            { d => d.ChallengeId, id },
+            { d => d.Name, name },
+        };
+        await Dialogs.ShowAsync<PropFirmChallengeDetailDialog>(name, parameters,
+            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
     }
 
     private async Task Start(Guid id)
@@ -142,9 +170,14 @@ else
         await Load();
     }
 
-    private async Task Remove(Guid id)
+    private async Task Remove(Guid id, string name)
     {
-        await Http.DeleteAsync($"/api/prop-firm/challenges/{id}");
+        if (!await Dialogs.ConfirmAsync("Delete challenge",
+                $"Delete the challenge \"{name}\"? This permanently removes it and its equity history.",
+                "Delete", "Cancel"))
+            return;
+        var r = await Http.DeleteAsync($"/api/prop-firm/challenges/{id}");
+        if (!r.IsSuccessStatusCode) Snack.Add("Could not delete challenge", Severity.Error);
         await Load();
     }
 }

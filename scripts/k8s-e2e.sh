@@ -28,6 +28,8 @@ IMAGE_REPO="${IMAGE_REPO:-cmind}"
 IMAGE_TAG="${IMAGE_TAG:-e2e}"
 IMG="${IMAGE_REGISTRY}/${IMAGE_REPO}"
 TEST_FILTER="${TEST_FILTER:-FullyQualifiedName~CopyTrading}"   # deterministic by default (no secrets)
+TEST_PROJECT="${TEST_PROJECT:-}"   # empty = chart default (deterministic UnitTests suite); set to
+                                   # tests/IntegrationTests/IntegrationTests.csproj for the live suite
 USE_EXISTING_CLUSTER="${USE_EXISTING_CLUSTER:-0}"
 KEEP_CLUSTER="${KEEP_CLUSTER:-0}"
 
@@ -88,7 +90,8 @@ helm upgrade --install "$RELEASE" "$CHART" -n "$NAMESPACE" \
 log "Enabling test Job"
 helm upgrade "$RELEASE" "$CHART" -n "$NAMESPACE" --reuse-values \
   --set tests.enabled=true --set tests.filter="$TEST_FILTER" \
-  --set tests.copySecret="$COPY_SECRET"
+  --set tests.copySecret="$COPY_SECRET" \
+  ${TEST_PROJECT:+--set-string tests.project="$TEST_PROJECT"}
 
 JOB="job/${RELEASE}-cmind-tests"
 log "Waiting for $JOB"

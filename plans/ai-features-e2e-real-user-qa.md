@@ -61,8 +61,21 @@ surface. `RiskGuardWorkerE2ETests`: seed a running instance → the worker asses
 (carrying the canned reply) appears in the captured app log. ✅
 
 **All 19 AI features are now covered by real-user / real-worker E2E** (plus the real-ONNX-model proof and
-MCP 5/5). The only items left are the pre-existing heavy/live lanes — F1 build pipeline (Docker) and the
-live-account variants (onboarding pattern) — already gated out of the PR lane and run locally/nightly.
+MCP 5/5).
+
+**Increment 9 (shipped) — live account + Kubernetes.** With real Open API app + cID creds in
+`secrets/dev-credentials.local.json`, the live copy-trading suite (`CopyTradingLiveTests`, 21 tests) was
+run against **real cTrader demo accounts** — `LiveCopyFixture` auto-refreshes the access token from the
+cached refresh token (no re-onboarding needed) and connects to the demo gateway directly. Green:
+- **Locally** — 21/21 against the real broker (3m44s).
+- **In-cluster on Kind** — 21/21 from inside the pod (`scripts/k8s-e2e.sh`, 2m53s), proving the
+  "runs on Kubernetes" mandate with real trading accounts. Required a script fix: `k8s-e2e.sh` set
+  `tests.filter`/`tests.copySecret` but never `tests.project`, so it always ran `UnitTests.dll`; wired a
+  `TEST_PROJECT` env through to `--set-string tests.project` so the live IntegrationTests suite runs
+  in-cluster (`TEST_PROJECT=tests/IntegrationTests/IntegrationTests.csproj TEST_FILTER=…CopyTradingLiveTests`).
+
+The only item now left is the pre-existing heavy F1 build pipeline (Docker) — already gated to the heavy
+lane and covered by `AiFeatureLocalTests.Build_page_is_ai_enabled_and_runs`.
 
 **Goal.** Today every AI feature has *an* E2E test, but for the data-dependent features the test only
 asserts a weak contract: "AI is configured → the button is enabled → clicking it does not crash the

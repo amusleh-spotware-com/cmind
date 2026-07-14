@@ -159,11 +159,16 @@ builder.Services.AddScoped(sp =>
 });
 builder.Services.AddScoped<Web.OpenApi.OpenApiAccountLinker>();
 builder.Services.AddScoped<Core.Accounts.IBrokerVerifier, Web.Accounts.BrokerVerifier>();
-builder.Services.AddHostedService<OwnerSeeder>();
+builder.Services.AddSingleton<OwnerSeeder>();
 builder.Services.AddHostedService<LocalNodeSeeder>();
 builder.Services.AddHostedService<InstanceReconciler>();
 
 var app = builder.Build();
+
+// Apply migrations + first-run seeding synchronously BEFORE the host serves requests or starts background
+// services, so nothing (settings readers, the DataProtection keyring, node/instance pollers) ever queries
+// a not-yet-created schema on a fresh database. Runs under the shared advisory lock (safe across replicas).
+await app.Services.GetRequiredService<OwnerSeeder>().InitializeAsync(default);
 
 // FIRST in the pipeline so it catches /api domain/persistence failures before the developer exception
 // page (auto-added in Development) or the /error page — the /api ProblemDetails contract holds in every

@@ -6,18 +6,22 @@ using Core.Options;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Web.Auth;
 
+// Applies migrations AND seeds first-run data (owner user, config-seeded AI providers, shared Open API
+// app) under one advisory lock. Invoked synchronously from Program.cs after Build() and BEFORE app.Run(),
+// so the schema exists before any background service, request, DataProtection keyring read, or settings
+// lookup touches the database — otherwise a fresh DB logs a burst of "relation does not exist" errors
+// until the migration eventually lands.
 public sealed class OwnerSeeder(
     IServiceScopeFactory sf,
     IOptionsMonitor<AppOptions> options,
-    ILogger<OwnerSeeder> log) : IHostedService
+    ILogger<OwnerSeeder> log)
 {
-    public async Task StartAsync(CancellationToken ct)
+    public async Task InitializeAsync(CancellationToken ct)
     {
         using var scope = sf.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
@@ -60,6 +64,4 @@ public sealed class OwnerSeeder(
         await db.SaveChangesAsync(ct);
         log.OwnerSeeded(email.Value);
     }
-
-    public Task StopAsync(CancellationToken ct) => Task.CompletedTask;
 }

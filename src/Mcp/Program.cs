@@ -39,6 +39,12 @@ if (features.PropFirm) mcp.WithTools<PropFirmTools>();
 if (features.EconomicCalendar) mcp.WithTools<CalendarTools>();
 
 var app = builder.Build();
+
+// Apply migrations under the shared advisory lock BEFORE serving, so a fresh database does not log a burst
+// of "relation does not exist" errors when the settings readers and the DataProtection keyring first touch
+// it. Idempotent and cross-process safe: if the Web host already migrated, this is a no-op.
+await DatabaseMigrator.MigrateAsync(app.Services);
+
 app.UseSerilogRequestLogging();
 app.UseAuthentication();
 app.UseAuthorization();

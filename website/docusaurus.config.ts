@@ -130,9 +130,13 @@ const config: Config = {
       { property: 'og:image:height', content: '630' },
       { property: 'og:image:alt', content: 'cMind — your entire cTrader trading desk, in one calm dark app.' },
     ],
+    // The brand lives in the dark ("one calm dark app") and the landing page is styled dark-only,
+    // so force dark everywhere: a light-OS visitor previously got an unstyled light theme with
+    // near-invisible hero text. Lock it, hide the toggle, ignore prefers-color-scheme.
     colorMode: {
       defaultMode: 'dark',
-      respectPrefersColorScheme: true,
+      disableSwitch: true,
+      respectPrefersColorScheme: false,
     },
     navbar: {
       title: 'cMind',

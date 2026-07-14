@@ -42,11 +42,16 @@ message) for the alerting prompt. `AlertsWorkerE2ETests`: create a market-watch 
 evaluates it → an `AlertEvent` with the AI-authored message appears (canned reply asserted). ✅ The
 worker-driven pattern (short poll + marker-keyed fake JSON + isolated collection) generalises to F15/F17.
 
-**Remaining** (increments 6+): F17 prop-guard + F15 portfolio agent — same worker pattern, but each needs
-more seeded state (running instances / an agent mandate + accounts) and a `FakeLocalLlmServer` marker
-returning valid risk-action / agent-action JSON, plus an observable assertion surface (audit record /
-decision record). F19 currency-strength MCP tool needs a seeded currency snapshot. Live-account variants
-follow the onboarding pattern.
+**Increment 6 (shipped).** F19 currency-strength MCP tool — `tests/IntegrationTests/McpCurrencyStrengthLocalLlmTests.cs`
+(own `PostgresFixture` so its global snapshot never perturbs the ordering-sensitive
+`CurrencyStrengthApiTests`): seed calendar → refresh (persists a snapshot with an AI narrative) → the MCP
+`AiTools.CurrencyStrength` tool returns that narrative. **MCP AI tools now 5/5.** ✅
+
+**Remaining:** F17 AiRiskGuard + F15 portfolio agent — the worker action has real side-effects
+(`docker stop` an instance, TPH id-swap, order execution) and the seeded running instance is also reaped
+by the completion pollers, so there is no stable, race-free assertion surface without a product change
+(e.g. a persisted, readable risk-assessment / decision record). Deferred rather than ship a flaky test.
+F1 build pipeline + live-account variants stay on the heavy/live lanes (already gated).
 
 **Goal.** Today every AI feature has *an* E2E test, but for the data-dependent features the test only
 asserts a weak contract: "AI is configured → the button is enabled → clicking it does not crash the

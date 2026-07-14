@@ -24,9 +24,12 @@ public sealed class QuantRegimesTests(AppFixture app)
         await page.GotoAsync("/quant/regimes");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        await page.GetByLabel("Returns or equity curve").FillAsync(series);
         var result = page.Locator("[data-testid=regimes-result]");
-        await page.ClickUntilVisibleAsync("[data-testid=regimes-analyze]", result);
+        await page.RunUntilVisibleAsync(async () =>
+        {
+            await page.GetByLabel("Returns or equity curve").FillAsync(series);
+            await page.ClickAsync("[data-testid=regimes-analyze]");
+        }, result);
 
         await Assertions.Expect(result).ToBeVisibleAsync(Slow);
         await Assertions.Expect(result).ToContainTextAsync("Hurst");
@@ -46,10 +49,10 @@ public sealed class QuantRegimesTests(AppFixture app)
         await page.GotoAsync("/quant/regimes");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        await page.GetByLabel("Returns or equity curve").FillAsync(equity);
         var result = page.Locator("[data-testid=regimes-result]");
         await page.RunUntilVisibleAsync(async () =>
         {
+            await page.GetByLabel("Returns or equity curve").FillAsync(equity);
             await page.GetByText("Equity / balance curve").ClickAsync();
             await page.ClickAsync("[data-testid=regimes-analyze]");
         }, result);

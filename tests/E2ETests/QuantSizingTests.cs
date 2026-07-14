@@ -21,9 +21,14 @@ public sealed class QuantSizingTests(AppFixture app)
         await page.GotoAsync("/quant/sizing");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        await page.GetByLabel("Returns or equity curve").FillAsync(series);
         var recommendation = page.Locator("[data-testid=sizing-recommendation]");
-        await page.ClickUntilVisibleAsync("[data-testid=sizing-calculate]", recommendation);
+        // Re-fill inside the retried action: a fill dropped before the Blazor circuit is interactive would
+        // otherwise leave the field empty forever while only the calculate click is retried.
+        await page.RunUntilVisibleAsync(async () =>
+        {
+            await page.GetByLabel("Returns or equity curve").FillAsync(series);
+            await page.ClickAsync("[data-testid=sizing-calculate]");
+        }, recommendation);
 
         await Assertions.Expect(recommendation).ToBeVisibleAsync(Slow);
         await Assertions.Expect(recommendation).ToContainTextAsync("×");
@@ -40,10 +45,12 @@ public sealed class QuantSizingTests(AppFixture app)
         await page.GotoAsync("/quant/sizing");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        await page.GetByLabel("Returns or equity curve").FillAsync(equity);
         var recommendation = page.Locator("[data-testid=sizing-recommendation]");
+        // Fill + mode-toggle + calculate all inside the retried action: any one dropped before the circuit
+        // is interactive (empty field, still in returns mode) would otherwise never render a recommendation.
         await page.RunUntilVisibleAsync(async () =>
         {
+            await page.GetByLabel("Returns or equity curve").FillAsync(equity);
             await page.GetByText("Equity / balance curve").ClickAsync();
             await page.ClickAsync("[data-testid=sizing-calculate]");
         }, recommendation);

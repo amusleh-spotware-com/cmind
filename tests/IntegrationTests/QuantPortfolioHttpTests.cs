@@ -50,6 +50,23 @@ public class QuantPortfolioHttpTests(PostgresFixture fixture) : IClassFixture<Po
     }
 
     [Fact]
+    public async Task Sizing_from_an_equity_curve_returns_a_recommendation()
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+
+        // A rising, wobbling equity/balance curve (not raw returns) → the endpoint derives returns from it
+        // and sizes to a positive exposure. Deterministic guard for the equity-mode path the UI drives.
+        var equity = Enumerable.Range(0, 60).Select(i => 1000.0 + (i * 5) + (i % 2 == 0 ? 8 : -8)).ToArray();
+        var response = await client.PostAsJsonAsync("/api/quant/sizing",
+            new { Equity = equity, TargetVolatility = 0.10, KellyFraction = 0.5, LeverageCap = 3.0 });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("recommendedFraction").GetDouble().Should().BeGreaterThan(0.0);
+    }
+
+    [Fact]
     public async Task Portfolio_allocates_across_strategies()
     {
         await using var app = CreateApp();

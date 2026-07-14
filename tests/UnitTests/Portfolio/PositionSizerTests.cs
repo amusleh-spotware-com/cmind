@@ -28,6 +28,18 @@ public class PositionSizerTests
     }
 
     [Fact]
+    public void Sizes_a_rising_equity_curve_to_a_positive_exposure()
+    {
+        // A rising, wobbling equity/balance curve → returns derived from it carry a positive edge, so the
+        // recommendation is a non-zero exposure. Guards the equity-curve sizing path end to end (domain).
+        var equity = Enumerable.Range(0, 60).Select(i => 1000.0 + (i * 5) + (i % 2 == 0 ? 8 : -8)).ToArray();
+        var r = _sizer.Size(ReturnSeries.FromEquityCurve(equity), new VolatilityTarget(0.10), KellyFraction.Half, LeverageCap.Default);
+
+        r.FullKellyFraction.Should().BeGreaterThan(0.0);
+        r.RecommendedFraction.Should().BeGreaterThan(0.0);
+    }
+
+    [Fact]
     public void Negative_edge_recommends_no_exposure()
     {
         var r = _sizer.Size(Series(50, -0.001, 0.02), new VolatilityTarget(0.10), KellyFraction.Half, LeverageCap.Default);

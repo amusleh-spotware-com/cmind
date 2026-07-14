@@ -21,9 +21,12 @@ public sealed class QuantIntegrityTests(AppFixture app)
         await page.GotoAsync("/quant/integrity");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        await page.GetByLabel("Returns or equity curve").FillAsync(series);
         var verdict = page.Locator("[data-testid=integrity-verdict]");
-        await page.ClickUntilVisibleAsync("[data-testid=integrity-analyze]", verdict);
+        await page.RunUntilVisibleAsync(async () =>
+        {
+            await page.GetByLabel("Returns or equity curve").FillAsync(series);
+            await page.ClickAsync("[data-testid=integrity-analyze]");
+        }, verdict);
 
         await Assertions.Expect(verdict).ToBeVisibleAsync(Slow);
         await Assertions.Expect(verdict).ToContainTextAsync("Robust");
@@ -45,9 +48,12 @@ public sealed class QuantIntegrityTests(AppFixture app)
         await page.GotoAsync("/quant/integrity");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        await page.GetByLabel("Trial grid (one return series per line)").FillAsync(grid);
         var verdict = page.Locator("[data-testid=integrity-verdict]");
-        await page.ClickUntilVisibleAsync("[data-testid=integrity-pbo]", verdict);
+        await page.RunUntilVisibleAsync(async () =>
+        {
+            await page.GetByLabel("Trial grid (one return series per line)").FillAsync(grid);
+            await page.ClickAsync("[data-testid=integrity-pbo]");
+        }, verdict);
 
         await Assertions.Expect(verdict).ToBeVisibleAsync(Slow);
         await Assertions.Expect(verdict).ToContainTextAsync("Overfit");
@@ -64,10 +70,10 @@ public sealed class QuantIntegrityTests(AppFixture app)
         await page.GotoAsync("/quant/integrity");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        await page.GetByTestId("integrity-series").FillAsync(equity);
         var verdict = page.Locator("[data-testid=integrity-verdict]");
         await page.RunUntilVisibleAsync(async () =>
         {
+            await page.GetByTestId("integrity-series").FillAsync(equity);
             await page.GetByText("Equity / balance curve").ClickAsync();
             await page.ClickAsync("[data-testid=integrity-analyze]");
         }, verdict);

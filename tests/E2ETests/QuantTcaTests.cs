@@ -15,9 +15,12 @@ public sealed class QuantTcaTests(AppFixture app)
         await page.GotoAsync("/quant/tca");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        await page.GetByLabel("Fills (price, quantity per line)").FillAsync("1.1010, 100\n1.1020, 100");
         var result = page.Locator("[data-testid=tca-result]");
-        await page.ClickUntilVisibleAsync("[data-testid=tca-analyze]", result);
+        await page.RunUntilVisibleAsync(async () =>
+        {
+            await page.GetByLabel("Fills (price, quantity per line)").FillAsync("1.1010, 100\n1.1020, 100");
+            await page.ClickAsync("[data-testid=tca-analyze]");
+        }, result);
 
         await Assertions.Expect(result).ToBeVisibleAsync(Slow);
         await Assertions.Expect(result).ToContainTextAsync("bps");
@@ -30,10 +33,13 @@ public sealed class QuantTcaTests(AppFixture app)
         await page.GotoAsync("/quant/tca");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        await page.GetByLabel("Fills (price, quantity per line)").FillAsync("1.1005, -100");
         // A warning snackbar appears and no result is computed (negative quantity rejected client-side).
         var warning = page.Locator(".mud-snackbar.mud-alert-filled-warning");
-        await page.ClickUntilVisibleAsync("[data-testid=tca-analyze]", warning);
+        await page.RunUntilVisibleAsync(async () =>
+        {
+            await page.GetByLabel("Fills (price, quantity per line)").FillAsync("1.1005, -100");
+            await page.ClickAsync("[data-testid=tca-analyze]");
+        }, warning);
 
         await Assertions.Expect(warning).ToBeVisibleAsync(Slow);
         await Assertions.Expect(page.Locator("[data-testid=tca-result]")).Not.ToBeVisibleAsync();

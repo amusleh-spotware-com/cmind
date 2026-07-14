@@ -36,3 +36,6 @@ ChatExport*/
 cmam-telegram*
 *telegram-export*
 result.json
+
+# Local test run artifacts (trx/logs)
+artifacts/

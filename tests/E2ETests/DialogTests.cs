@@ -105,13 +105,16 @@ public sealed class DialogTests(AppFixture app)
         // Seed a cBot through the real upload UI (no .algo validation, no Docker build needed).
         var cbotName = $"cbot-{Suffix}";
         await GotoAsync(page, "/cbots");
-        await page.SetInputFilesAsync("#cbotFile", new FilePayload
+        // Retry the upload until the row appears: a file-input change fired before the Blazor circuit is
+        // interactive is silently dropped, so a single-shot upload flakes under parallel-boot CI load.
+        var cbotRow = page.GetByText(cbotName).First;
+        await page.RunUntilVisibleAsync(() => page.SetInputFilesAsync("#cbotFile", new FilePayload
         {
             Name = $"{cbotName}.algo",
             MimeType = "application/octet-stream",
             Buffer = "dummy-algo-content"u8.ToArray()
-        });
-        await Assertions.Expect(page.GetByText(cbotName)).ToBeVisibleAsync(Slow);
+        }), cbotRow);
+        await Assertions.Expect(cbotRow).ToBeVisibleAsync(Slow);
 
         // Parameter sets now live per-cBot: open them from the cBot row's params button.
         var paramsButton = page.Locator($"tr:has-text('{cbotName}') [data-testid=paramsets-btn]").First;

@@ -16,7 +16,7 @@ sidebar_position: 7
 
 Ön már számítást bérel. A cMind egy kész, nyílt forráskódú termék, amelyet az adott számítás körül csomagolhat: **felügyelt cMind-üzemeltetést kínálnak**, és egy magas értékű, ragasztós, számítás-éhes terhelés hozzák — algoritmikus kereskedők, brókerek, prop-cégek és kereskedelmi közösségek, akik a platform futtatása nélkül az operációs csapatnak nem akarnak lenni.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Futtassa az állapot nélküli szintet + Postgres + egy node-flottát; adjon ügyfeleknek egy márkanem URL-t. A szinlét, a számítást, a fehér címkét és az AI-t pénzszerezheti. → [Telepítés a felhőbe](./deployment/cloud.md)
 :::
 
@@ -43,7 +43,7 @@ Futtassa az állapot nélküli szintet + Postgres + egy node-flottát; adjon üg
 | Adatbázis | PostgreSQL | Felügyelt Postgres (RDS / Rugalmas szerver / saját) |
 | Node-flotta | cTrader-konténereket építenek és futtat | **VM-ek vagy Kubernetes — szükséges jogosult Docker** |
 
-:::warning Egy dolog az cím elöl
+:::warning[Egy dolog az cím elöl]
 A Node-ügynökök cTrader-konténereket építenek és futtatnak, így **jogosult Docker**-hez szükségük van. Ez kiszűri a kiszolgáló nélküli konténer-futási megoldások (Azure Container Apps, AWS Fargate) *az ügynökök számára* — futtassuk az [Kubernetes](./deployment/kubernetes.md), VM vagy EC2-n. Az állapot nélküli szint mindenhol futhat.
 :::
 

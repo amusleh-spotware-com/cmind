@@ -7,7 +7,7 @@ sidebar_position: 1
 
 # Witamy w cMind 👋
 
-:::warning Oprogramowanie alfa — niegotowe do produkcji
+:::warning[Oprogramowanie alfa — niegotowe do produkcji]
 cMind jest w trakcie aktywnego rozwoju. Spodziewaj się niedoskonałości, przełomowych zmian między wersjami i funkcji wciąż w trakcie realizacji. **Potrzebujemy testerów społeczności, zgłaszających błędy i wczesnych współtwórców**, aby pomóc go kształtować. Jeśli napotkasz problem, [zgłoś go](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml) — Twoja opinia z realnego świata jest teraz najbardziej wartościową rzeczą, jaką możesz wnieść.
 :::
 
@@ -20,7 +20,7 @@ jak o całym swoim biurku tradingowym — tworzenie, wykonywanie, flota obliczen
 i rdzeń SI — zapakowane w spokojną, ciemną, przyjazną dla urządzeń mobilnych aplikację, którą posiadasz
 od początku do końca.
 
-:::tip W jednym zdaniu
+:::tip[W jednym zdaniu]
 Buduj → backtestuj → uruchamiaj → kopiuj swoje strategie cTrader na dużą skalę, z wbudowaną SI, na
 własnych serwerach i pod własną marką.
 :::

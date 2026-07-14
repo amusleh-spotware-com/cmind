@@ -16,7 +16,7 @@ sidebar_position: 7
 
 Você já aluga computação. cMind é um produto pronto para uso, open-source que você pode envolver essa computação ao redor: **ofereça hospedagem cMind gerenciada** e desembarque uma carga de trabalho de alto valor, pegajosa, fome de computação — traders algorítmicos, brokers, empresas de prop-firm e comunidades de negociação que desejam a plataforma em execução sem se tornarem a equipe de operações.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Execute o nível stateless + Postgres + frota de nó; entregue aos clientes uma URL com marca. Monetize a assinatura, a computação, a marca branca e a IA. → [Implante na nuvem](./deployment/cloud.md)
 :::
 
@@ -43,7 +43,7 @@ Você opera três camadas; o cliente recebe uma URL web com marca:
 | Banco de dados | PostgreSQL | Postgres gerenciado (RDS / Servidor Flexível / seu próprio) |
 | Frota de nó | Constrói e executa contêineres cTrader | **VMs ou Kubernetes — precisa de Docker privilegiado** |
 
-:::warning Uma coisa para escopar antecipadamente
+:::warning[Uma coisa para escopar antecipadamente]
 Agentes de nó constroem e executam contêineres cTrader, então eles precisam de **Docker privilegiado**. Isto descarta tempos de execução de container serverless (Azure Container Apps, AWS Fargate) *para os agentes* — execute aqueles em [Kubernetes](./deployment/kubernetes.md), uma VM ou EC2. A camada stateless é executada em qualquer lugar.
 :::
 

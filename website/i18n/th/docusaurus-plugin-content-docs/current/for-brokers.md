@@ -16,7 +16,7 @@ sidebar_position: 6
 
 คุณบริหาร brokerage cTrader ลูกค้าของคุณสามารถค้าแล้ว — แต่เก่งเท่าคู่แข่ง brokers ของลูกค้า **cMind ให้คุณมอบ traders ทั้งหมด AI-powered trading operations platform branded เป็นของคุณเอง** ดังนั้นพวกเขา build backtest run copy และ monitor strategies ภายใน *ecosystem ของคุณ* แทน drifting เป็น third-party tool นั่น stickier clients volume มากขึ้น และ edge จริง ๆ เหนือ brokers ไม่นำเสนอไป terminal เท่านั้น
 
-:::tip TL;DR
+:::tip[TL;DR]
 Run white-label cMind สำหรับลูกค้าของคุณ จำกัด accounts เป็น **brokerage ของคุณ** เปลี่ยน AI และ copy trading บน และ ship มันภายใต้ชื่อแบรนด์ของคุณ → [White-label สำหรับธุรกิจ](./white-label-for-business.md)
 :::
 

@@ -57,6 +57,6 @@ Operacyjne bity, które utrzymują to wszystko uruchomione:
 - **[Logowanie i audyt](../operations/logging.md)** — strukturalne dzienniki + OpenTelemetry.
 - **[Wdrażanie](../deployment/local.md)** — uruchom go wszędzie.
 
-:::note Utrzymanie dokumentów uczciwie
+:::note[Utrzymanie dokumentów uczciwie]
 Każdy dokument funkcji jest utrzymywany w synchronizacji z kodem — zmień zachowanie, zaktualizuj dokument, ten sam commit. Jeśli kiedykolwiek zauważysz dryf, to jest błąd: proszę [otwórz issue](https://github.com/amusleh-spotware-com/cmind/issues/new/choose) lub wyślij PR. 🙏
 :::

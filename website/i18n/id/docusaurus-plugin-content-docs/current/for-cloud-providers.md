@@ -18,7 +18,7 @@ Anda sudah menyewa compute. cMind adalah produk open-source siap pakai yang dapa
 trader algoritmik, broker, prop firm, dan komunitas perdagangan yang menginginkan platform berjalan
 tanpa menjadi tim ops sendiri.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Jalankan tier stateless + Postgres + armada node; beri pelanggan URL bermerek. Monetisasi
 langganan, compute, white-label, dan AI. → [Deploy ke cloud](./deployment/cloud.md)
 :::
@@ -49,7 +49,7 @@ Anda mengoperasikan tiga tier; pelanggan mendapat URL web bermerek:
 | Database | PostgreSQL | Managed Postgres (RDS / Flexible Server / milik Anda sendiri) |
 | Armada node | Build & jalankan container cTrader | **VM atau Kubernetes — memerlukan privileged Docker** |
 
-:::warning Satu hal untuk scope di depan
+:::warning[Satu hal untuk scope di depan]
 Agen node membangun dan menjalankan container cTrader, jadi mereka membutuhkan **privileged Docker**. Itu mengecualikan
 serverless container runtime (Azure Container Apps, AWS Fargate) *untuk agent* — jalankan di
 [Kubernetes](./deployment/kubernetes.md), VM, atau EC2. Tier stateless berjalan di mana saja.

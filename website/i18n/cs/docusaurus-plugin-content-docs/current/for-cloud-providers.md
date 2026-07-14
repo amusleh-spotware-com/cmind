@@ -16,7 +16,7 @@ sidebar_position: 7
 
 Už pronajímáte compute. cMind je hotový, open-source produkt, který můžete zabalit compute kolem: **nabídněte spravované cMind hostování** a přistání high-value, sticky, compute-hungry workloadu — algoritmické tradery, brokery, prop firmy, a trading komunity, které chtějí platformu běžící bez stávání se ops týmem.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Spustěte stateless vrstvu + Postgres + fleet uzlu; ručku klientům značku URL. Peníze na subscription, compute, white-label, a AI. → [Nasaďte do cloudu](./deployment/cloud.md)
 :::
 
@@ -43,7 +43,7 @@ Provozujete tři vrstvy; klient dostane značku web URL:
 | Databáze | PostgreSQL | Spravované Postgres (RDS / Flexible Server / vaše vlastní) |
 | Fleet uzlu | Builds & spouští cTrader kontejnery | **VMs nebo Kubernetes — potřebuje privilegovaný Docker** |
 
-:::warning Jedna věc na scope up front
+:::warning[Jedna věc na scope up front]
 Agenti uzlu staví a spouští cTrader kontejnery, takže potřebují **privilegovaný Docker**. To vylučuje serverless container runtimes (Azure Container Apps, AWS Fargate) *pro agenty* — spusťte ty na [Kubernetes](./deployment/kubernetes.md), VM, nebo EC2. Stateless vrstva běží kdekoli.
 :::
 

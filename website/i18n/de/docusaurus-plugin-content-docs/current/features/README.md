@@ -57,6 +57,6 @@ Die operativen Bits, die alles am Laufen halten:
 - **[Logging & Audit](../operations/logging.md)** – strukturierte Logs + OpenTelemetry.
 - **[Bereitstellung](../deployment/local.md)** – get it running anywhere.
 
-:::note Docs ehrlich halten
+:::note[Docs ehrlich halten]
 Jede Feature-Doc wird im Lockstep mit dem Code gehalten – ändere das Verhalten, aktualisiere die Doc, gleicher Commit. Wenn du jemals Drift bemerkst, das ist ein Bug: bitte [öffne ein Issue](https://github.com/amusleh-spotware-com/cmind/issues/new/choose) oder sende eine PR. 🙏
 :::

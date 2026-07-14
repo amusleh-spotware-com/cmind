@@ -20,7 +20,7 @@ vašu vlastnú**, takže stavajú, backtestujú, spúšťajú, kopírujú a moni
 namiesto driftu na tretiu stranu nástroj. To je lepší retenčný klienti, viac objemu a skutočná výhoda nad
 brokermi, ktorí ponúkajú len terminál.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Spustite white-label cMind pre vašich klientov. Obmedzte účty na **vašu** brokeráž, zapnite AI a
 copy trading a dodajte to pod vašou značkou. → [White-label pre obchod](./white-label-for-business.md)
 :::

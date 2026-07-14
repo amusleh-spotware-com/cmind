@@ -9,7 +9,7 @@ sidebar_position: 1
 Ini adalah cara tercepat untuk melihat cMind sebenarnya — contoh penuh di mesin anda sendiri. Ambil kopi;
 anda mungkin akan menyusun masuk sebelum itu sejuk.
 
-:::tip Apa yang anda akan ada pada akhirnya
+:::tip[Apa yang anda akan ada pada akhirnya]
 Aplikasi web yang berjalan di **localhost:8080**, pelayan MCP di **localhost:8081**, pangkalan data Postgres,
 dan nod pekerja tempatan yang bersedia untuk membina dan menguji cBots belakang. Semuanya di mesin anda, semuanya milik anda.
 :::

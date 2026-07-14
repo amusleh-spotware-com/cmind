@@ -20,7 +20,7 @@ your own**, so they build, backtest, run, copy, and monitor strategies inside *y
 instead of drifting to a third-party tool. That's stickier clients, more volume, and a real edge over
 brokers offering nothing but a terminal.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Run a white-label cMind for your clients. Restrict accounts to **your** brokerage, switch on AI and
 copy trading, and ship it under your brand. → [White-label for business](./white-label-for-business.md)
 :::

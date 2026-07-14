@@ -7,7 +7,7 @@ sidebar_position: 1
 
 # cMind'e hoş geldiniz 👋
 
-:::warning Alfa yazılım — üretime hazır değil
+:::warning[Alfa yazılım — üretime hazır değil]
 cMind aktif geliştirme aşamasındadır. Kaba kenarlar, sürümler arası kırıcı değişiklikler ve hâlâ
 geliştirilmekte olan özellikler bekleyin. **Topluluğu şekillendirmemize yardımcı olacak topluluk
 test edicileri, hata raporlayıcıları ve erken katkıda bulunanlar arıyoruz.** Bir sorunla
@@ -25,7 +25,7 @@ platformudur**. Onu tüm ticaret masanız gibi düşünün — yazım, yürütme
 işlem ve bir yapay zekâ çekirdeği — baştan sona size ait olan sakin, koyu, mobil dostu tek bir
 uygulamada toplanmış.
 
-:::tip Tek cümlede
+:::tip[Tek cümlede]
 cTrader stratejilerinizi kendi sunucularınızda, kendi markanız altında, yerleşik yapay zekâ ile ölçekte
 oluşturun → geriye dönük test edin → çalıştırın → kopyalayın.
 :::

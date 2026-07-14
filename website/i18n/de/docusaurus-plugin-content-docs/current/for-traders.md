@@ -16,7 +16,7 @@ sidebar_position: 5
 
 Du handelst bereits auf cTrader. Du jonglierst bereits mit einem Code-Editor, einem Backtester, einem VPS und drei Browser-Tabs. **cMind kollabiert alles das in eine dunkle, tastaturfreundliche Konsole, die du selbst betreibst** – und sie ist Open Source, daher verlassen deine Edge, deine Strategien oder deine Anmeldedaten niemals deine Box.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Hoste cMind selbst auf einem Laptop, einem billigen VPS oder einem Home-Server. Erstelle, teste, führe aus und beobachte cBots an einem Ort, mit einem KI-Kern, der die Hausarbeit erledigt. → [Führe es in 5 Minuten aus](./deployment/local.md)
 :::
 

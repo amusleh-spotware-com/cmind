@@ -9,7 +9,7 @@ sidebar_position: 1
 Đây là cách nhanh nhất để thấy cMind thực tế — một thực thể đầy đủ trên máy của bạn. Chắc cà phê; bạn
 có khả năng được ký vào trước khi nó mát.
 
-:::tip Những gì bạn sẽ có ở cuối
+:::tip[Những gì bạn sẽ có ở cuối]
 Một ứng dụng web chạy tại **localhost:8080**, máy chủ MCP tại **localhost:8081**, cơ sở dữ liệu Postgres,
 và một nút công nhân cục bộ sẵn sàng xây dựng và backtest cBots. Tất cả trên máy của bạn, tất cả của bạn.
 :::

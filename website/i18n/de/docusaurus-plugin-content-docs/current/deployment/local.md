@@ -8,7 +8,7 @@ sidebar_position: 1
 
 Dies ist das schnellste Weg zu sehen cMind zum echt — ein Vollständig Instanz auf Ihr eigen Maschine. Ergriff ein Kaffee; du wirst wahrscheinlich angemeldet bevor es kühl.
 
-:::tip Was du wirst haben bei die Ende
+:::tip[Was du wirst haben bei die Ende]
 
 Ein läuft Web-App bei **localhost:8080**, ein MCP Server bei **localhost:8081**, ein Postgres Datenbank, und ein lokal Worker Knoten bereit zu Bau und Backtest cBots. Alles auf Ihr Maschine, alles Ihres.
 

@@ -9,7 +9,7 @@ sidebar_position: 5
 
 Děkuji že jste zde. cMind se stane lepším pokaždé, když někdo otevře issue, nahlásí přesné chování cTrader, opraví překlep v těchto samých dokumentech, nebo zašle PR. **Nemusíte být .NET průvodce** — testeři, tradeři a opravovatelé dokumentů jsou stejně ceníni jako lidé psaní agregáty.
 
-:::tip Kanonická příručka žije v repozitáři
+:::tip[Kanonická příručka žije v repozitáři]
 Tato stránka je přátelský on-ramp. Plný, vždy-aktuální proces — základní pravidla, programovací konvence, review tok — je v **[CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md)**.
 :::
 

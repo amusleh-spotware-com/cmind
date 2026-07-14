@@ -8,7 +8,7 @@ sidebar_position: 1
 
 Ez a leggyorsabb módja a cMind igazi megnézésének — egy teljes instancia az Ön gépén. Vegyenek egy kávét; valószínűleg bejelentkezni fog, mielőtt lehűl.
 
-:::tip Mit fog lenni a vég végén
+:::tip[Mit fog lenni a vég végén]
 Egy futó webalkalmazás a **localhost:8080**-on, egy MCP-szerver a **localhost:8081**-on, egy Postgres-adatbázis, és egy helyi munkacsomópont kész cBot-ok építésére és backtestjére. Mindez az Ön gépén, mindez az enyé.
 :::
 

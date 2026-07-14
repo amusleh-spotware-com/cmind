@@ -57,5 +57,5 @@ A működésben tartó operatív részek:
 - **[Naplózás és audit](../operations/logging.md)** - strukturált naplók + OpenTelemetry.
 - **[Telepítés](../deployment/local.md)** - futtasd bárhol.
 
-:::note A docs-ok őszintétartása
+:::note[A docs-ok őszintétartása]
 Minden funkció docja lépést tart a kóddal - változtasd meg a viselkedést, frissítsd a docot, ugyanabban a commitban. Ha valaha eltérést észlelsz, az egy hiba: kérlek nyiss egy issue-t vagy küldj PR-t. :::

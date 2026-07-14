@@ -57,6 +57,6 @@ sidebar_label: ภาพรวม
 - **[Logging & audit](../operations/logging.md)** — บันทึกโครงสร้าง + OpenTelemetry
 - **[Deployment](../deployment/local.md)** — รันให้ทำงานทุกที่
 
-:::note การเก็บเอกสารให้ซื่อสัตย์
+:::note[การเก็บเอกสารให้ซื่อสัตย์]
 ทุกเอกสารฟีเจอร์ได้รับการเก็บไว้ในลูกศรกับโค้ด — เปลี่ยนพฤติกรรม อัปเดตเอกสาร การ commit เดียวกัน หากคุณเคยเห็นการดริฟท์ นั่นคือบั๊ก: โปรดเปิด [ปัญหา](https://github.com/amusleh-spotware-com/cmind/issues/new/choose) หรือส่ง PR 🙏
 :::

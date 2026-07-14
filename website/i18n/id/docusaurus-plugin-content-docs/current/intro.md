@@ -7,7 +7,7 @@ sidebar_position: 1
 
 # Selamat datang di cMind 👋
 
-:::warning Perangkat lunak alpha — belum siap produksi
+:::warning[Perangkat lunak alpha — belum siap produksi]
 cMind sedang dalam pengembangan aktif. Harap siap menghadapi ketidaksempurnaan, perubahan yang memutus kompatibilitas antar versi, dan fitur yang masih dalam proses. **Kami membutuhkan penguji komunitas, pelapor bug, dan kontributor awal** untuk membantu membentuknya. Jika Anda menemukan masalah, [laporkan](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml) — umpan balik nyata Anda adalah hal paling berharga yang bisa Anda berikan saat ini.
 :::
 
@@ -19,7 +19,7 @@ cMind adalah **platform operasi trading untuk cTrader yang open-source dan dapat
 Anggap saja sebagai seluruh meja trading Anda — penulisan, eksekusi, armada komputasi, copy trading, dan
 inti AI — dikemas dalam satu aplikasi yang tenang, gelap, dan ramah seluler yang sepenuhnya Anda miliki.
 
-:::tip Dalam satu kalimat
+:::tip[Dalam satu kalimat]
 Bangun → backtest → jalankan → salin strategi cTrader Anda dalam skala besar, dengan AI bawaan, di
 server Anda sendiri, di bawah merek Anda sendiri.
 :::

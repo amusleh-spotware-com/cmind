@@ -8,7 +8,7 @@ sidebar_position: 1
 
 Ini adalah cara tercepat untuk melihat cMind secara nyata — instance penuh di mesin Anda sendiri. Ambil kopi; Anda mungkin akan sign in sebelum dingin.
 
-:::tip Apa yang akan Anda miliki di akhir
+:::tip[Apa yang akan Anda miliki di akhir]
 Aplikasi web yang berjalan di **localhost:8080**, server MCP di **localhost:8081**, database Postgres, dan local worker node siap untuk build dan backtest cBot. Semua di mesin Anda, semua milik Anda.
 :::
 

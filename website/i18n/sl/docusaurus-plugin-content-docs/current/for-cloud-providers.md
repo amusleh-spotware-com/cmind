@@ -19,7 +19,7 @@ računanja: **ponudite upravljano nameščanje cMind** in pridobite visoko vredn
 teško bremensko platformo — algoritmične trgovce, posrednike, lastnine in trgovalne skupnosti, ki
 želijo, da platforma teče brez da bi postali sami operativni tim.
 
-:::tip Povzetek
+:::tip[Povzetek]
 Tečite brezstansko raven + Postgres + floto vozlišč; odjemalci dobijo poimenovano URL. Monetizirajte
 naročilo, računanje, belo označeno in AI. → [Namestite v oblak](./deployment/cloud.md)
 :::
@@ -51,7 +51,7 @@ Delate tri ravni; odjemalec dobije poimenovano spletno URL:
 | Podatkovna baza | PostgreSQL | Upravljan Postgres (RDS / Flexible Server / vaš lastni) |
 | Flota vozlišč | Gradnja in tečanje kontejnerjev cTraderja | **VMs ali Kubernetes — potrebuje priviligirani Docker** |
 
-:::warning Ena stvar za obseg vnaprej
+:::warning[Ena stvar za obseg vnaprej]
 Agenti vozlišč gradijo in tečejo kontejnerje cTraderja, zato potrebujejo **priviligirani Docker**. To
 izključuje brezzasebne kontejnerske čase izvajanja (Azure Container Apps, AWS Fargate) *za agente* —
 tečite tiste na [Kubernetesem](./deployment/kubernetes.md), VM ali EC2. Brezstansko raven teče

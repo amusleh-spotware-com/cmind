@@ -57,6 +57,6 @@ Các bits vận hành giữ tất cả chạy:
 - **[Logging & audit](../operations/logging.md)** — structured logs + OpenTelemetry.
 - **[Deployment](../deployment/local.md)** — chạy nó ở bất kỳ nơi nào.
 
-:::note Giữ docs trung thực
+:::note[Giữ docs trung thực]
 Mỗi feature doc được giữ đồng bộ với code — thay đổi behavior, cập nhật doc, same commit. Nếu bạn bao giờ phát hiện drift, đó là bug: vui lòng [mở issue](https://github.com/amusleh-spotware-com/cmind/issues/new/choose) hoặc gửi PR. 🙏
 :::

@@ -16,7 +16,7 @@ sidebar_position: 6
 
 Provozujete cTrader brokerství. Vaši klienti už mohou obchodovat — ale tak mohou klienti každého jiného brokera. **cMind vám umožňuje dát svým traderkům plnou AI-powered trading operace platformu, značenou jako vaši**, takže oni staví, testují, spouští, kopírují a monitorují strategie uvnitř *vaší* ekosystému místo aby se driftu do nástrojů třetích stran. To je lepší držení klientů, více objemů, a skutečná výhoda nad brokery nabízející nic než terminál.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Spusťte white-label cMind pro své klienty. Omezit účty na **vaši** brokerage, přepnout AI a copy trading, a lodní jej pod vaší značkou. → [White-label pro firmy](./white-label-for-business.md)
 :::
 

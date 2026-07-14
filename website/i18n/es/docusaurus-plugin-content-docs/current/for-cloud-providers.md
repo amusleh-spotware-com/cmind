@@ -19,7 +19,7 @@ alrededor: **ofrece alojamiento administrado de cMind** y aterriza una carga de 
 comerciantes algorítmicos, corredores, empresas de prop-firm y comunidades comerciales que quieren la plataforma ejecutándose
 sin convertirse en el equipo de ops ellos mismos.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Ejecuta la capa sin estado + Postgres + una flota de nodos; entrega a los clientes una URL marcada. Monetiza la
 suscripción, la computación, la etiqueta blanca y la IA. → [Despliegúealo en la nube](./deployment/cloud.md)
 :::
@@ -50,7 +50,7 @@ Operas tres niveles; el cliente obtiene una URL web marcada:
 | Base de datos | PostgreSQL | PostgreSQL administrado (RDS / Flexible Server / tu propio) |
 | Flota de nodos | Compila y ejecuta contenedores de cTrader | **VMs o Kubernetes — necesita Docker privilegiado** |
 
-:::warning Una cosa a escala por adelantado
+:::warning[Una cosa a escala por adelantado]
 Los agentes de nodo construyen y ejecutan contenedores de cTrader, por lo que necesitan **Docker privilegiado**. Eso descarta
 tiempos de ejecución de contenedores sin servidor (Azure Container Apps, AWS Fargate) *para los agentes* — ejecuta los en
 [Kubernetes](./deployment/kubernetes.md), una VM o EC2. La capa sin estado se ejecuta en cualquier lugar.

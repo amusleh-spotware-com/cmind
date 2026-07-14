@@ -16,7 +16,7 @@ sidebar_position: 6
 
 Ön egy cTrader-brókerséget vezet. Az Ön kliensai már tudnak kereskedni — de így tudnak az összes többi bróker klienseiként is. **A cMind lehetővé teszi, hogy az Ön kereskedőinek egy teljes AI-alapú kereskedelmi műveleti platformot adjon meg, a saját márkaneve alatt**, így stratégiákat építenek, backtesztelnek, futtatnak, másolnak és figyelemmel követnek az *Ön* ökoszisztémájában, ahelyett, hogy harmadik féltől származó eszközre sodródnának. Ez ragasztósabb kliensek, nagyobb mennyiség és igazi előny azokkal a brókerekkel szemben, akik semmit nem kínálnak, mint egy terminál.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Futtasson egy fehér címkés cMind-et az Ön klienseihez. Korlátozza az számlákat az **Ön** brókerségéhez, kapcsolja be az AI-t és a másolási kereskedést, és szállítsa a saját márkaneve alatt. → [Fehér címke az üzlethez](./white-label-for-business.md)
 :::
 

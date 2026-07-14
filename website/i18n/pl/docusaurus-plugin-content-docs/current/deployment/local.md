@@ -8,7 +8,7 @@ sidebar_position: 1
 
 To najszybszy sposób, aby zobaczyć cMind naprawdę — pełna instancja na własnym komputerze. Weź kawę; prawdopodobnie będziesz zalogowany, zanim się schłodzi.
 
-:::tip Co będziesz mieć na koniec
+:::tip[Co będziesz mieć na koniec]
 Uruchamiająca się aplikacja sieciowa na **localhost:8080**, serwer MCP na **localhost:8081**, baza danych Postgres i lokalny węzeł pracownika gotowy do kompilacji i backtestowania cBots. Wszystko na Twojej maszynie, wszystko twoje.
 :::
 

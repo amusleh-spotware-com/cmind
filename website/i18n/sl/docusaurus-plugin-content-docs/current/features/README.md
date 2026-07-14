@@ -64,7 +64,7 @@ Operativni deli, ki to vse drži delujoče:
 - **[Beležka in revizija](../operations/logging.md)** — strukturirani dnevniki + OpenTelemetry.
 - **[Nameščanje](../deployment/local.md)** — ga tečite kjerkoli.
 
-:::note Keeping docs honest
+:::note[Keeping docs honest]
 Vsak dokument značilnosti je vzdržavan v koraku s kodo — spremenite vedenje, ažurirajte dokument, isti
 potrdek. Če kdaj opazite drift, to je napaka: prosimo
 [odprite težavo](https://github.com/amusleh-spotware-com/cmind/issues/new/choose) ali pošljite PR. 🙏

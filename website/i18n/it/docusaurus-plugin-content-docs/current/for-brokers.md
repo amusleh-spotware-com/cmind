@@ -20,7 +20,7 @@ la tua**, così costruiscono, backtestano, eseguono, copiano e monitorano strate
 invece di andare alla deriva verso uno strumento di terze parti. Questo è più "appiccicaticcio" i client, più volume, e un vero vantaggio
 sui broker che offrono solo un terminale.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Esegui un cMind white-label per i tuoi client. Limita gli account al **tuo** brokerage, attiva IA e
 copy trading, e spediscilo sotto il tuo marchio. → [White-label per business](./white-label-for-business.md)
 :::

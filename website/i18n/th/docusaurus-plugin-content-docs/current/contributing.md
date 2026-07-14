@@ -9,7 +9,7 @@ sidebar_position: 5
 
 ขอบคุณสำหรับการอยู่ที่นี่ cMind ดีขึ้นทุกครั้งที่คนใดคนหนึ่ง opens issue reports precise cTrader behavior fixes typo ใน docs เหล่านี้ หรือ ships PR **คุณไม่ต้องเป็น .NET wizard** — testers traders และ doc-fixers ถูกประเมินค่าเท่า folks writing aggregates
 
-:::tip canonical guide อยู่ใน repo
+:::tip[canonical guide อยู่ใน repo]
 หน้านี้เป็น friendly on-ramp full always-current process — ground rules coding conventions review flow — เป็น **[CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md)**
 :::
 

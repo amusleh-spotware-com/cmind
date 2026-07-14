@@ -12,7 +12,7 @@ Jalankan prop firm, meja broker, atau perkhidmatan salinan perdagangan? cMind di
 apl telefon yang boleh dipasang — membengkok ke jenama anda. Pelanggan anda melihat *perniagaan* anda. Tiada perubahan kod,
 tiada garpu, hanya config.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Arahkan `App:Branding` kepada nama, warna, dan logo anda. Mula semula. Selesai. Rujukan teknikal penuh hidup
 dalam [dokumen ciri label-putih](./features/white-label.md).
 :::

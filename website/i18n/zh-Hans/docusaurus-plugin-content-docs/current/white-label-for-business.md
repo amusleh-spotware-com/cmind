@@ -12,7 +12,7 @@ Run a prop firm, a broker desk, or a copy-trading service? cMind was built from 
 the installable phone app — bends to your brand. Your customers see *your* company. No code changes,
 no fork, just config.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Point `App:Branding` at your name, colors, and logo. Restart. Done. Full technical reference lives
 in the [White-label feature doc](./features/white-label.md).
 :::

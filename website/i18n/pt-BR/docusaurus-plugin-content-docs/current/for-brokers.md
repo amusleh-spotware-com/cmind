@@ -20,7 +20,7 @@ entao eles constroem, backtest, executam, copiam e monitoram estrategias dentro 
 ecossistema ao inves de derivar para uma ferramenta de terceiros. Isso significa clientes mais fixos, mais volume e uma vantagem real sobre
 corretoras que oferecem apenas um terminal.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Execute um cMind white-label para seus clientes. Restrinja contas a **sua** corretagem, ative AI e
 copy trading, e faca o ship sob sua marca. → [White-label para negocios](./white-label-for-business.md)
 :::

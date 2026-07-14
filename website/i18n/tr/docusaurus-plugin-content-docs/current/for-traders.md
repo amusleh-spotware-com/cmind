@@ -16,7 +16,7 @@ sidebar_position: 5
 
 Zaten cTrader'da ticaret yapıyorsunuz. Zaten kod editörü, backtester, VPS ve üç tarayıcı sekmesi ile uğraşıyorsunuz. **cMind, tüm bunları, kendiniz çalıştırdığınız bir koyu, tuş tahtası dostu konsolda birleştirir** — ve açık kaynak, bu nedenle avantajınız, stratejileriniz veya kimlik bilgileriniz hakkında hiçbir şey hiçbir zaman kutudan çıkmaz.
 
-:::tip TL;DR
+:::tip[TL;DR]
 cMind'i dizüstü, ucuz VPS'de veya ev sunucusunda barındırın. Bir yerde cBot'ları yazın, test edin, çalıştırın ve izleyin, AI çekirdeği işleri yapıyor. → [5 dakikada çalıştırın](./deployment/local.md)
 :::
 

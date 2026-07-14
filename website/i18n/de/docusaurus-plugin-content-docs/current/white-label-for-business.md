@@ -9,7 +9,7 @@ sidebar_position: 4
 
 Betreibst du eine Prop Firm, einen Broker Desk oder einen Copy-Trading-Service? cMind wurde von Tag eins gebaut, um **als dein eigenes Produkt weiterverkauft zu werden**. Jede Oberfläche – der Name, das Logo, das Favicon, die Farben, sogar die installierbare Phone-App – beugt sich deiner Marke. Deine Kunden sehen *dein* Unternehmen. Keine Code-Änderungen, kein Fork, nur Config.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Zeige `App:Branding` auf deinen Namen, Farben und Logo. Neustart. Fertig. Vollständige technische Referenz lebt in der [White-Label-Feature-Doc](./features/white-label.md).
 :::
 

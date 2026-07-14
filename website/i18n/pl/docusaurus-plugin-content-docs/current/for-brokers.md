@@ -16,7 +16,7 @@ sidebar_position: 6
 
 Prowadzisz biuro maklerskie cTrader. Twoi klienci już mogą handlować — ale tak mogą klienci każdego innego brokera. **cMind pozwala ci wręczyć swoim handlowcom pełną platformę operacyjną handlu napędzaną AI, oznakowaną jako twoja**, aby budowali, testowali wstecz, uruchamiali, kopiowali i monitorowali strategie wewnątrz *twojego* ekosystemu zamiast dryfować do narzędzia strony trzeciej. To lepiej przylepiący się klienci, większa objętość i rzeczywista przewaga nad brokerami, którzy nie oferują nic poza terminalem.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Uruchom white-label cMind dla twoich klientów. Ogranicz konta do **twojego** biura maklerskiego, włącz AI i kopiowanie transakcji, i wyślij go pod swoją marką. → [White-label dla biznesu](./white-label-for-business.md)
 :::
 

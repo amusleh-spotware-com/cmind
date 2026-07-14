@@ -12,7 +12,7 @@ Menjalankan prop firm, meja broker, atau layanan copy-trading? cMind dibangun se
 aplikasi telepon yang dapat diinstal — membengkok ke brand Anda. Pelanggan Anda melihat *perusahaan Anda*. Tanpa perubahan kode,
 tanpa fork, hanya config.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Arahkan `App:Branding` ke nama, warna, dan logo Anda. Restart. Selesai. Referensi teknis lengkap hidup
 di [doc fitur White-label](./features/white-label.md).
 :::

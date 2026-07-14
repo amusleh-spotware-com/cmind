@@ -7,7 +7,7 @@ sidebar_position: 1
 
 # Dobrodošli v cMind 👋
 
-:::warning Alfa programska oprema — ni primerna za produkcijo
+:::warning[Alfa programska oprema — ni primerna za produkcijo]
 cMind je v aktivnem razvoju. Pričakujte grobe robove, prelomne spremembe med različicami in funkcije,
 ki so še v razvoju. **Potrebujemo skupnostne testerje, poročevalce napak in zgodnje sodelavce**, ki
 nam pomagajo oblikovati ga. Če naletite na težavo,
@@ -24,7 +24,7 @@ Predstavljajte si jo kot celotno svojo trgovalno mizo — pisanje, izvajanje, ra
 trgovanja in jedro UI — vse zapakirano v mirno, temno, mobilnikom prijazno aplikacijo, ki jo imate v
 lasti od začetka do konca.
 
-:::tip V enem stavku
+:::tip[V enem stavku]
 Gradite → testirajte za nazaj → poganjajte → kopirajte svoje strategije cTrader v velikem obsegu, z
 vgrajenim UI, na svojih strežnikih in pod svojo znamko.
 :::

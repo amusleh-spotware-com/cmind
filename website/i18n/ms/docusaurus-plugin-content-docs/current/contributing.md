@@ -11,7 +11,7 @@ Terima kasih kerana berada di sini. cMind menjadi lebih baik setiap kali seseora
 membaiki kesalahan taip dalam dokumen ini sendiri, atau menghantar PR. **Anda tidak perlu menjadi ahli .NET**
 — penguji, pedagang, dan pembaik dokumen dihargai sama seperti mereka yang menulis agregat.
 
-:::tip Panduan kanonik hidup dalam repo
+:::tip[Panduan kanonik hidup dalam repo]
 Halaman ini adalah lintasan mesra. Proses penuh, sentiasa terkini — peraturan asas, konvensyen pengkodean,
 aliran ulasan — berada dalam **[CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md)**.
 :::

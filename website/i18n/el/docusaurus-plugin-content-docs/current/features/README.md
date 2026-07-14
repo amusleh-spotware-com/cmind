@@ -59,7 +59,7 @@ sidebar_label: Επισκόπηση
 - **[Logging & audit](../operations/logging.md)** — structured logs + OpenTelemetry.
 - **[Deployment](../deployment/local.md)** — βάλτε το να λειτουργεί οπουδήποτε.
 
-:::note Κρατώντας τα docs ειλικρινή
+:::note[Κρατώντας τα docs ειλικρινή]
 Κάθε doc δυνατότητας κρατείται σε συμφωνία με τον κώδικα — αλλάξτε τη συμπεριφορά, ενημερώστε το doc, ίδιο
 commit. Αν ποτέ δείτε drift, είναι ένα bug: παρακαλώ
 [ανοίξτε ένα issue](https://github.com/amusleh-spotware-com/cmind/issues/new/choose) ή στείλτε ένα PR. 🙏

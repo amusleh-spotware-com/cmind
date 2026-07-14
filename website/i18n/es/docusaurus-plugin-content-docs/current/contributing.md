@@ -11,7 +11,7 @@ Gracias por estar aquí. cMind mejora cada vez que alguien abre un problema, rep
 de cTrader, arregla una errata en estos documentos, o envía un PR. **No necesitas ser un mago de .NET** — 
 probadores, comerciantes y correctores de documentos son tan valorados como los que escriben agregados.
 
-:::tip La guía canónica vive en el repositorio
+:::tip[La guía canónica vive en el repositorio]
 Esta página es la rampa de entrada amigable. El proceso completo y siempre actual — 
 reglas fundamentales, convenciones de codificación, flujo de revisión — está en 
 **[CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md)**.

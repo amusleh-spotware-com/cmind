@@ -9,7 +9,7 @@ sidebar_position: 5
 
 여기 있어주셔서 감사합니다. cMind는 누군가 이슈를 열거나, 정확한 cTrader 동작을 보고하거나, 이 문서의 오타를 수정하거나, PR을 배포할 때마다 더 좋아집니다. **당신은 .NET 마법사일 필요가 없습니다** — 테스터, 트레이더, 문서 수정자는 애그리게이트를 작성하는 사람들만큼 소중합니다.
 
-:::tip 정규 가이드는 저장소에 있습니다
+:::tip[정규 가이드는 저장소에 있습니다]
 이 페이지는 친절한 온-램프입니다. 전체, 항상 최신 프로세스 — 기본 규칙, 코딩 규약, 검토 흐름 — 은 **[CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md)**에 있습니다.
 :::
 

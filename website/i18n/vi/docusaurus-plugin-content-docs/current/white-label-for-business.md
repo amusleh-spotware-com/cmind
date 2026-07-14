@@ -12,7 +12,7 @@ Chạy một công ty prop-firm, một bàn làm việc broker hoặc một dị
 ứng dụng điện thoại có thể cài đặt được — bends với thương hiệu của bạn. Khách hàng của bạn thấy *your* công ty. Không có thay đổi mã,
 không rẽ nhánh, chỉ cấu hình.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Chỉ `App:Branding` tại tên, màu sắc và logo của bạn. Khởi động lại. Xong. Tham chiếu kỹ thuật đầy đủ sống
 trong [Tài liệu tính năng White-label](./features/white-label.md).
 :::

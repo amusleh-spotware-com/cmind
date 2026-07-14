@@ -12,7 +12,7 @@ Executa uma empresa prop, uma mesa de corretor ou um serviço de copy-trading? c
 o aplicativo de telefone instalável — se dobra à sua marca. Seus clientes veem *sua* empresa. Nenhuma mudança de código,
 nenhuma bifurcação, apenas config.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Aponte `App:Branding` para seu nome, cores e logotipo. Reinicie. Pronto. Referência técnica completa vive
 na [documentação de recurso de Rótulo Branco](./features/white-label.md).
 :::

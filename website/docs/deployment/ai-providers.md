@@ -72,13 +72,13 @@ ONNX built-in is the reference implementation. See [AI features → Extending](.
 
 ### Anthropic (Claude)
 
-- Key: <https://console.anthropic.com/> → API keys.
+- Key: [console.anthropic.com](https://console.anthropic.com/) → API keys.
 - Base URL: `https://api.anthropic.com/` · Model: e.g. `claude-opus-4-8`.
 - Capabilities: web search + vision on by default.
 
 ### OpenAI
 
-- Key: <https://platform.openai.com/api-keys>.
+- Key: [platform.openai.com/api-keys](https://platform.openai.com/api-keys).
 - Base URL: `https://api.openai.com/v1/` · Model: e.g. `gpt-4o`.
 - Kind: **OpenAiCompatible**. Enable vision in the dialog if using a vision model.
 
@@ -90,7 +90,7 @@ ONNX built-in is the reference implementation. See [AI features → Extending](.
 
 ### Google Gemini
 
-- Key: <https://aistudio.google.com/app/apikey>.
+- Key: [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey).
 - Base URL: `https://generativelanguage.googleapis.com/` · Model: e.g. `gemini-2.0-flash`.
 - Kind: **Gemini**. Web-search grounding + vision on by default.
 

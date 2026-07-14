@@ -9,7 +9,7 @@ sidebar_position: 5
 
 Danke, dass du hier bist. cMind wird bei jedem Beitrag besser – ob jemand ein Issue öffnet, präzises cTrader-Verhalten berichtet, einen Tippfehler in dieser Dokumentation behebt oder eine PR einreicht. **Du brauchst kein .NET-Magier zu sein** – Tester, Trader und Doc-Fixer sind genauso wertvoll wie diejenigen, die Aggregate schreiben.
 
-:::tip Der kanonische Leitfaden lebt im Repository
+:::tip[Der kanonische Leitfaden lebt im Repository]
 Diese Seite ist die freundliche Einstiegshilfe. Der vollständige, immer aktuelle Prozess – Grundregeln, Coding-Konventionen, Review-Ablauf – findet sich in **[CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md)**.
 :::
 

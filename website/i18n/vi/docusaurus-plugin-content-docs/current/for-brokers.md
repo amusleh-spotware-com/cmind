@@ -20,7 +20,7 @@ vì vậy họ xây dựng, backtest, chạy, sao chép và giám sát chiến l
 thay vì trôi dạo đến một công cụ của bên thứ ba. Đó là các khách hàng dính hơn, khối lượng lớn hơn và một lợi thế thực sự
 so với các broker chỉ cung cấp một terminal.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Chạy một cMind white-label cho các khách hàng của bạn. Hạn chế tài khoản của bạn đến **your** brokerage, bật AI và
 giao dịch sao chép, và ship nó dưới thương hiệu của bạn. → [White-label cho kinh doanh](./white-label-for-business.md)
 :::

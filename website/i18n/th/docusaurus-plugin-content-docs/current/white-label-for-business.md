@@ -9,7 +9,7 @@ sidebar_position: 4
 
 Run prop firm desk ของ broker หรือ copy-trading service cMind ถูก built จาก day เดียว เพื่อ **resold เป็น product ของคุณเอง** ทุก ๆ surface — name logo favicon colors แม้กระทั่ง installable phone app — bends เป็น brand ของคุณ Customers ของคุณเห็น *company ของคุณ* ไม่มี code changes ไม่มี fork เพียง config
 
-:::tip TL;DR
+:::tip[TL;DR]
 Point `App:Branding` บน name colors และ logo ของคุณ Restart Done technical reference full อยู่ใน [White-label feature doc](./features/white-label.md)
 :::
 

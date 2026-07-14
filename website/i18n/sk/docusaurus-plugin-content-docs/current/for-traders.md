@@ -19,7 +19,7 @@ prehliadačovými záložkami. **cMind zrúta všetko to do jednej tmavej, keybo
 sami** — a je to open source, takže nič o vašej výhode, vašich stratégiách alebo vašich poverení
 nikdy neopúšťa váš box.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Self-hostujte cMind na notebooku, lacnom VPS alebo home serveri. Author, backtest, spúšťanie a monitorovanie cBots
 na jednom mieste, s AI jadrom robiace chores. → [Spustiť za 5 minút](./deployment/local.md)
 :::

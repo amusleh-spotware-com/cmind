@@ -16,7 +16,7 @@ sidebar_position: 6
 
 Bir cTrader borsası yönetiyorsunuz. Müşterileriniz zaten ticaret yapabilir — ancak diğer broker'ların müşterileri de yapabilir. **cMind, tüccarlarınıza tam bir AI destekli ticaret operasyonları platformu vererek kendi markanızla etiketlenir**, böylece bir üçüncü taraf aracına sürüklenme yerine *sizin* ekosisteminizin içinde stratejiler oluşturur, test eder, çalıştırır, kopyalayarak izlerler. Bu, yapışkan müşteriler, daha fazla hacim ve yalnızca terminal sunan broker'lardan daha gerçek bir avantaj.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Müşterileriniz için beyaz etiketli cMind çalıştırın. Hesapları **sizin** borsanıza kısıtlayın, AI ve kopyalama ticaretini açın ve markanız altında gönderin. → [İşletme için beyaz etiketli](./white-label-for-business.md)
 :::
 

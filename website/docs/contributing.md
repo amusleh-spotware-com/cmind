@@ -11,7 +11,7 @@ Thanks for being here. cMind gets better every single time someone opens an issu
 cTrader behavior, fixes a typo in these very docs, or ships a PR. **You do not need to be a .NET
 wizard** — testers, traders, and doc-fixers are as valued as the folks writing aggregates.
 
-:::tip The canonical guide lives in the repo
+:::tip[The canonical guide lives in the repo]
 This page is the friendly on-ramp. The full, always-current process — ground rules, coding
 conventions, review flow — is in **[CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md)**.
 :::

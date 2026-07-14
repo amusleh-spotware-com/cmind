@@ -9,7 +9,7 @@ sidebar_position: 5
 
 Köszönjük, hogy itt vagy. A cMind minden alkalommal jobban lesz, amikor valaki megnyit egy problémát, pontos cTrader-viselkedést jelent, javít egy gépelési hibát ebben a dokumentációban, vagy egy PR-t szállít. **Nem kell, hogy .NET-varázsló legyél** — a tesztelők, kereskedők és dokumentáció-javítók ugyanolyan értékesek, mint az aggregátumokat írók.
 
-:::tip A kanonikus útmutató az adattárban található
+:::tip[A kanonikus útmutató az adattárban található]
 Ez az oldal a barátságos bevezetés. A teljes, mindig aktuális folyamat — alapelvek, kódolási konvenciók, felülvizsgálat-folyamat — a **[CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md)**-ben van.
 :::
 

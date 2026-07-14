@@ -9,7 +9,7 @@ sidebar_position: 5
 
 Terima kasih telah berada di sini. cMind menjadi lebih baik setiap kali seseorang membuka issue, melaporkan perilaku cTrader yang tepat, memperbaiki typo di docs ini, atau mengirimkan PR. **Anda tidak perlu menjadi wizard .NET** — tester, trader, dan doc-fixer sama berharganya dengan orang yang menulis agregat.
 
-:::tip Panduan kanonik hidup di repo
+:::tip[Panduan kanonik hidup di repo]
 Halaman ini adalah on-ramp yang ramah. Proses penuh, selalu-terkini — aturan dasar, konvensi coding,
 aliran review — ada di **[CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md)**.
 :::

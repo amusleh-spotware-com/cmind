@@ -16,7 +16,7 @@ sidebar_position: 6
 
 Ejecutas un corretaje de cTrader. Tus clientes ya pueden comerciar — pero también pueden los clientes de cualquier otro corredor. **cMind te permite entregar a tus comerciantes una plataforma completa de operaciones comerciales potenciada por IA, marcada como tuya**, para que construyan, backtestean, ejecuten, copien y monitoreen estrategias dentro de *tu* ecosistema en lugar de derivarse a una herramienta de terceros. Eso son clientes más pegajosos, más volumen y una verdadera ventaja sobre corredores que no ofrecen nada más que una terminal.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Ejecuta un cMind de etiqueta blanca para tus clientes. Restringe cuentas a **tu** corretaje, activa IA y
 copia comercial, y entrégalo bajo tu marca. → [Etiqueta blanca para negocios](./white-label-for-business.md)
 :::

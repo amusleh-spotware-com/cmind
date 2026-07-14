@@ -19,7 +19,7 @@ compute: **ponúknite managed cMind hosting** a prikryte si high-value, sticky, 
 algoritmus obchodníci, brokeri, prop firmy a trading komunity, ktorí chcú platformu bežiacu
 bez toho, aby sa stali ops tímom sami.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Spustite stateless tier + Postgres + node fleet; dajte zákazníkom branded URL. Monetizujte
 subscription, compute, white-label a AI. → [Deploy do cloud](./deployment/cloud.md)
 :::
@@ -50,7 +50,7 @@ Prevádzkyujete tri tiers; zákazník dostáva branded web URL:
 | Database | PostgreSQL | Managed Postgres (RDS / Flexible Server / váš vlastný) |
 | Node fleet | Builds & spúšťa cTrader kontajnery | **VMs alebo Kubernetes — potrebuje privileged Docker** |
 
-:::warning Jedna vec na scope up front
+:::warning[Jedna vec na scope up front]
 Node agenti stavajú a spúšťajú cTrader kontajnery, takže potrebujú **privileged Docker**. To vylučuje
 serverless container runtimes (Azure Container Apps, AWS Fargate) *pre agents* — spustite na
 [Kubernetes](./deployment/kubernetes.md), VM alebo EC2. Stateless tier bežíč kdekoľvek.

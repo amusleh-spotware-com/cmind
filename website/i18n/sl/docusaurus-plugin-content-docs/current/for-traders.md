@@ -19,7 +19,7 @@ zavihki v brskalniku. **cMind vse to sesuje v eno temno, tipkovničko konzolo, k
 sami** — in je odprte kode, zato informacije o vaši prednosti, strategijah in kredencialih
 nikoli ne zapustijo vašega sistema.
 
-:::tip Povzetek
+:::tip[Povzetek]
 Hostite cMind na prenosnem računalniku, poceni VPS ali domačem strežniku. Avtorski ustvarite, testirajte, tečite in spremljajte cBote na enem mestu z jedrom AI, ki dela opravila. → [Tečite ga v 5 minutah](./deployment/local.md)
 :::
 

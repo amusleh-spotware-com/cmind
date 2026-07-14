@@ -16,7 +16,7 @@ sidebar_position: 5
 
 คุณค้าแล้ว cTrader คุณ juggle code editor backtester VPS และ browser tabs สามแท็บอยู่แล้ว **cMind ปิดทั้งหมดนั้นเป็น dark keyboard-friendly console เดียวที่คุณรัน** — และมันเป็น open source ดังนั้นไม่มีอะไรเกี่ยวกับ edge strategies หรือ credentials ของคุณออกจากกล่องของคุณ
 
-:::tip TL;DR
+:::tip[TL;DR]
 Self-host cMind บนแล็ปท็อป cheap VPS หรือ home server Author backtest run และ monitor cBots ในสถานที่เดียว กับ AI core ทำงานหนัก → [รันใน 5 นาที](./deployment/local.md)
 :::
 

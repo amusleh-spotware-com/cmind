@@ -9,7 +9,7 @@ sidebar_position: 5
 
 Obrigado por estar aqui. cMind fica melhor toda vez que alguém abre uma issue, relata comportamento preciso do cTrader, corrige um typo nessas próprias docs, ou envia uma PR. **Você não precisa ser um mago de .NET** — testers, traders e doc-fixers são tão valorizados quanto o pessoal escrevendo agregados.
 
-:::tip O guia canônico vive no repo
+:::tip[O guia canônico vive no repo]
 Esta página é a rampa amigável. O processo completo, sempre atualizado — regras base, convenções de código, fluxo de review — está em **[CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md)**.
 :::
 

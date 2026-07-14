@@ -9,7 +9,7 @@ sidebar_position: 4
 
 Spuštění prop firmy, broker desk, nebo copy-trading služby? cMind byl postaven od prvního dne jako **prodáno jako váš vlastní produkt**. Každý povrch — jméno, logo, favicon, barvy, i instalovatelná telefonní aplikace — ohýbá se na vaši značku. Vaši zákazníci vidí *vaši* společnost. Bez změn kódu, bez fork, jen config.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Bod `App:Branding` na vaše jméno, barvy a logo. Restart. Hotovo. Plná technická reference žije v [White-label feature doc](./features/white-label.md).
 :::
 

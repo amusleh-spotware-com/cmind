@@ -16,7 +16,7 @@ sidebar_position: 5
 
 Již obchodujete na cTrader. Již manuálně přepínáte mezi editorem kódu, backtesterem, VPS a třemi záložkami prohlížeče. **cMind to vše shrnuje do jedné tmavé, klávesnici-přívětivé konzole, kterou si sami provozujete** — a je open source, takže nic z vaší výhody, vašich strategií nebo vašich pověření nikdy neopustí váš počítač.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Self-hostujte cMind na notebooku, levném VPS nebo domácím serveru. Autorujte, backtestujte, spouštějte a monitorujte cBots na jednom místě, s AI jádrem dělajícím práci. → [Spusťte to za 5 minut](./deployment/local.md)
 :::
 

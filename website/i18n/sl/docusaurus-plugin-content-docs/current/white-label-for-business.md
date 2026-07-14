@@ -12,7 +12,7 @@ izgrajen od prvega dne, da bi se **prodal kot vaš lastni izdelek**. Vsaka povr�
 favicon, barve, celo namestljiva aplikacija za telefon — se upogne vaši blagovski znamki. Vaši
 odjemalci vidijo *vašo* podjetje. Brez sprememb kode, brez forka, le konfiguracija.
 
-:::tip Povzetek
+:::tip[Povzetek]
 Pokažite `App:Branding` na svoje ime, barve in logotip. Ponovno zaženite. Dokončano. Polna tehnična
 referenca je v [dokumentu belo označene značilnosti](./features/white-label.md).
 :::

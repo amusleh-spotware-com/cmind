@@ -16,7 +16,7 @@ sidebar_position: 7
 
 คุณเช่า compute แล้ว cMind เป็น ready-made open-source product คุณสามารถ wrap compute นั้นรอบ: **นำเสนอ managed cMind hosting** และ land high-value sticky compute-hungry workload — algo traders brokers prop firms และ trading communities ผู้ต้องการ platform วิ่ง โดยไม่กลาย ops team พวกเขา
 
-:::tip TL;DR
+:::tip[TL;DR]
 Run stateless tier + Postgres + node fleet; มอบ customers branded URL Monetize subscription compute white-label และ AI → [Deploy เป็นคลาวด์](./deployment/cloud.md)
 :::
 
@@ -43,7 +43,7 @@ Run stateless tier + Postgres + node fleet; มอบ customers branded URL Mone
 | Database | PostgreSQL | Managed Postgres (RDS / Flexible Server / ของคุณเอง) |
 | Node fleet | Builds & runs cTrader containers | **VMs หรือ Kubernetes — ต้องการ privileged Docker** |
 
-:::warning สิ่งหนึ่งที่ scope up front
+:::warning[สิ่งหนึ่งที่ scope up front]
 Node agents build และ run cTrader containers ดังนั้นพวกเขาต้อง **privileged Docker** นั่นกฎออก serverless container runtimes (Azure Container Apps AWS Fargate) *สำหรับ agents* — run พวกเขา [Kubernetes](./deployment/kubernetes.md) VM หรือ EC2 stateless tier วิ่งที่ไหนก็ได้
 :::
 

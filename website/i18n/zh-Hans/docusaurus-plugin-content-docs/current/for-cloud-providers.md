@@ -19,7 +19,7 @@ around: **offer managed cMind hosting** and land a high-value, sticky, compute-h
 algorithmic traders, brokers, prop firms, and trading communities who want the platform running
 without becoming the ops team themselves.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Run the stateless tier + Postgres + a node fleet; hand customers a branded URL. Monetize the
 subscription, the compute, the white-label, and the AI. → [Deploy to the cloud](./deployment/cloud.md)
 :::
@@ -50,7 +50,7 @@ You operate three tiers; the customer gets a branded web URL:
 | Database | PostgreSQL | Managed Postgres (RDS / Flexible Server / your own) |
 | Node fleet | Builds & runs cTrader containers | **VMs or Kubernetes — needs privileged Docker** |
 
-:::warning One thing to scope up front
+:::warning[One thing to scope up front]
 Node agents build and run cTrader containers, so they need **privileged Docker**. That rules out
 serverless container runtimes (Azure Container Apps, AWS Fargate) *for the agents* — run those on
 [Kubernetes](./deployment/kubernetes.md), a VM, or EC2. The stateless tier runs anywhere.

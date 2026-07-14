@@ -16,7 +16,7 @@ sidebar_position: 7
 
 Już wynajmujesz moc obliczeniową. cMind to gotowy, otwarte oprogramowanie produkt, który możesz owinąć tę moc obliczeniową wokół: **oferuj zarządzany hosting cMind** i wyląduj wysokowartościowe, lepkie, żelazne obciążenie — handlowcy algorytmiczni, brokerzy, prop firmy i społeczności handlowe, które chcą platformy działającej bez bycia zespołem ops.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Uruchom warstwę bezstanową + Postgres + flotę węzłów; ręka klientów oznakowana URL. Zarabiaj na subskrypcji, mocy obliczeniowej, white-labelu i AI. → [Wdrażaj do chmury](./deployment/cloud.md)
 :::
 
@@ -43,7 +43,7 @@ Obsługujesz trzy warstwy; klient uzyskuje oznakowany URL sieciowy:
 | Baza danych | PostgreSQL | Zarządzany Postgres (RDS / Flexible Server / twój własny) |
 | Flota węzłów | Kompiluje i uruchamia kontenery cTrader | **VM lub Kubernetes — wymaga uprzywilejowanego Docker** |
 
-:::warning Jedna rzecz do zakresu z przodu
+:::warning[Jedna rzecz do zakresu z przodu]
 Agenci węzłów kompilują i uruchamiają kontenery cTrader, więc potrzebują **uprzywilejowanego Docker**. To wyklucza bezserwerowe runtimes kontenera (Azure Container Apps, AWS Fargate) *dla agentów* — uruchamia je na [Kubernetes](./deployment/kubernetes.md), VM lub EC2. Warstwa bezstanowa działa wszędzie.
 :::
 

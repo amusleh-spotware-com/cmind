@@ -16,7 +16,7 @@ sidebar_position: 7
 
 Zaten işlem kaynakları kiralar mısınız. cMind, o işlemi çevresine sarabilir açık kaynak, hazır bir üründür: **yönetilen cMind barındırması** sunun ve yüksek değerli, yapışkan, işlem gücüne aç iş yükü kazanın — algoritmik tüccarlar, broker'lar, prop firmalar ve işlem toplulukları, platformun ops ekibi olunması gereksiniminden çalışmasını isteyenler.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Durumsuz katmanı + Postgres + bir düğüm filosu çalıştırın; müşterilere markalı bir URL verin. Abonelik, işlem, beyaz etiket ve AI'yi para ile değiştirin. → [Buluta dağıtın](./deployment/cloud.md)
 :::
 
@@ -43,7 +43,7 @@ Durumsuz katmanı + Postgres + bir düğüm filosu çalıştırın; müşteriler
 | Veritabanı | PostgreSQL | Yönetilen Postgres (RDS / Esnek Sunucu / kendi'siniz) |
 | Düğüm filosu | cTrader konteynerleri oluşturur ve çalıştırır | **VM'ler veya Kubernetes — ayrıcalıklı Docker ihtiyaç** |
 
-:::warning Başlangıçta kapsam dışına çıkılacak bir şey
+:::warning[Başlangıçta kapsam dışına çıkılacak bir şey]
 Düğüm aracıları cTrader konteynerleri oluşturur ve çalıştırır, bu nedenle **ayrıcalıklı Docker** gerekir. Bu sunucusuz konteyner çalışma zamanlarını (Azure Container Apps, AWS Fargate) *aracılar* için dışlar — bunları [Kubernetes](./deployment/kubernetes.md), bir VM veya EC2 üzerinde çalıştırın. Durumsuz katman her yerde çalışır.
 :::
 

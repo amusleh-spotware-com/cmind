@@ -9,7 +9,7 @@ sidebar_position: 1
 Toto je nejrychlejší způsob, jak cMind vidět naživo — celá instance na vašem vlastním počítači. Dejte si kafe;
 nejspíš budete přihlášení dřív, než vychladne.
 
-:::tip Co budete mít na konci
+:::tip[Co budete mít na konci]
 Běžící webovou aplikaci na **localhost:8080**, MCP server na **localhost:8081**, Postgres databázi
 a lokální worker node připravený buildovat a backtestovat cBots. Vše na vašem počítači, všechno vaše.
 :::

@@ -57,6 +57,6 @@ sidebar_label: 概要
 - **[ログ記録＆監査](../operations/logging.md)** — 構造化ログ + OpenTelemetry。
 - **[デプロイメント](../deployment/local.md)** — どこでも実行。
 
-:::note ドキュメントの正確性を保つ
+:::note[ドキュメントの正確性を保つ]
 各機能ドキュメントはコードと歩調を合わせています — 動作を変更したら、同じコミットでドキュメントを更新してください。乖離を見つけた場合、それはバグです：是非[イシューを開く](https://github.com/amusleh-spotware-com/cmind/issues/new/choose)かPRを送ってください。
 :::

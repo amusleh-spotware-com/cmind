@@ -9,7 +9,7 @@ sidebar_position: 4
 
 Egy prop-céget, egy bróker asztalt vagy egy másolási kereskedési szolgáltatást futtat? A cMind az első naptól kezdve arra építése meg lett, hogy **a saját termékeként legyen újra értékesítve**. Minden felület — a név, a logó, a favicon, a színek, még az telepítendő telefonalkalmazás is — megkötött az Ön márkanevéhez. Az Ön ügyfelei az *Ön* cégét látják. Nincs kódmódosítás, nincs fork, csak config.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Mutasd az `App:Branding` értéket az Ön nevére, színeire és logójára. Indítsa újra. Kész. Teljes technikai referencia a [Fehér címke funkcióját](./features/white-label.md) tartalmazó dokumentumban él.
 :::
 

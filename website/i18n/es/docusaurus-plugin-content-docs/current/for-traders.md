@@ -19,7 +19,7 @@ pestañas del navegador. **cMind colapsa todo eso en una consola oscura, amigabl
 tú mismo** — y es código abierto, por lo que nada sobre tu ventaja, tus estrategias o tus credenciales
 jamás sale de tu cuadro.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Auto-aloja cMind en un portátil, un VPS barato o un servidor doméstico. Autor, backtest, ejecuta y monitorea cBots
 en un lugar, con un núcleo de IA haciendo las tareas. → [Ejecútalo en 5 minutos](./deployment/local.md)
 :::

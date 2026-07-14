@@ -8,7 +8,7 @@ sidebar_position: 1
 
 Questo è il modo più veloce per vedere cMind per davvero — un'istanza completa sulla tua macchina. Prendi un caffè; probabilmente sarai autenticato prima che si sia raffreddato.
 
-:::tip Quello che avrai alla fine
+:::tip[Quello che avrai alla fine]
 Un'app web in esecuzione a **localhost:8080**, un server MCP a **localhost:8081**, un database Postgres e un nodo di lavoro locale pronto per compilare e eseguire il backtest dei cBot. Tutto sulla tua macchina, tutto tuo.
 :::
 

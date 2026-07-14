@@ -57,6 +57,6 @@ sidebar_label: 개요
 - **[로깅 & 감사](../operations/logging.md)** — 구조화된 로그 + OpenTelemetry.
 - **[배포](../deployment/local.md)** — 어디든지 실행하게 하세요.
 
-:::note 문서를 정직하게 유지하기
+:::note[문서를 정직하게 유지하기]
 모든 기능 문서는 코드와 lockstep으로 유지됩니다 — 행동 변경, 문서 업데이트, 동일한 커밋. 당신이 드리프트를 발견하면, 그것은 버그입니다: 당신은 [이슈를 열거나](https://github.com/amusleh-spotware-com/cmind/issues/new/choose) PR을 전송하세요. 🙏
 :::

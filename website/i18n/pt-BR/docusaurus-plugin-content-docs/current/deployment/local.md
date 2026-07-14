@@ -9,7 +9,7 @@ sidebar_position: 1
 Esta é a forma mais rápida de ver o cMind funcionando — uma instância completa na sua própria máquina. Pegue um café;
 você provavelmente estará conectado antes que esfrie.
 
-:::tip O que você terá no final
+:::tip[O que você terá no final]
 Um aplicativo web funcionando em **localhost:8080**, um servidor MCP em **localhost:8081**, um banco de dados Postgres,
 e um nó trabalhador local pronto para compilar e fazer backtest de cBots. Tudo na sua máquina, tudo seu.
 :::

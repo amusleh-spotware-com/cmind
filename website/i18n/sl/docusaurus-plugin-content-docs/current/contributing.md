@@ -9,7 +9,7 @@ sidebar_position: 5
 
 Hvala, ker si tu. cMind postane bolje vsakič, ko nekdo odpre问題, prijavi natančno cTrader vedenje, popravi pisemo v teh dokumentih ali pošlje PR. **Ne rabiš biti .NET čarovnik** — testeri, trgovci in popravci dokumentov so enako vredni kot ljudje, ki pišejo agregatoje.
 
-:::tip Kanonični vodnik živi v repozitoriju
+:::tip[Kanonični vodnik živi v repozitoriju]
 Ta stran je prijazna pot vstopa. Polni, vedno aktualni proces — osnovna pravila, dogovori o kodiranju, tok pregleda — je v **[CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md)**.
 :::
 

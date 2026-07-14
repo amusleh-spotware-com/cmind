@@ -34,6 +34,8 @@ const config: Config = {
     mermaid: true,
     // Migrated .md docs contain C# generics like IOptionsMonitor<AppOptions> in prose;
     // 'detect' parses .md as CommonMark (not MDX) so angle brackets never break the build.
+    // NOTE: admonition titles MUST use bracket form `:::tip[Title]` — the space form `:::tip Title`
+    // (Docusaurus 2 / MDX 1) no longer parses under remark-directive and renders as literal text.
     format: 'detect',
     hooks: {
       onBrokenMarkdownLinks: 'warn',

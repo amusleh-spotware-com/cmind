@@ -12,7 +12,7 @@ sidebar_position: 4
 la aplicación de teléfono instalable — se dobla a tu marca. Tus clientes ven *tu* empresa. Sin cambios de código,
 sin bifurcación, solo config.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Apunta `App:Branding` a tu nombre, colores y logo. Reinicia. Listo. La referencia técnica completa vive
 en la [documentación de características de etiqueta blanca](./features/white-label.md).
 :::

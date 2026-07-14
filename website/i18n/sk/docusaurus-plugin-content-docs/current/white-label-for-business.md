@@ -12,7 +12,7 @@ Prevádzkyujete prop firmu, broker desk alebo copy-trading službu? cMind bol po
 installable phone app — sa ohýba vašej značke. Vaši zákazníci vidia *vašu* spoločnosť. Žiadne zmeny kódu,
 žiadny fork, len config.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Nasmerujte `App:Branding` na vaše meno, farby a logo. Restart. Hotovo. Plný technický reference žije
 v [White-label feature doc](./features/white-label.md).
 :::

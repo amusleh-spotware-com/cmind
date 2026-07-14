@@ -11,7 +11,7 @@ Merci d'être là. cMind s'améliore chaque fois que quelqu'un ouvre un issue, r
 corrige une typo dans ces très docs, ou fournit une PR. **Vous n'avez pas besoin d'être un gourou .NET** — les testeurs, traders, et fixeurs de doc sont
 aussi appréciés que ceux qui écrivent des agrégats.
 
-:::tip Le guide canonique vit dans le repo
+:::tip[Le guide canonique vit dans le repo]
 Cette page est l'on-ramp convivial. Le processus complet, toujours actuel — règles fondamentales, conventions de codage,
 flux de révision — est dans **[CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md)**.
 :::

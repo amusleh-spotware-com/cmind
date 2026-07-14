@@ -59,7 +59,7 @@ Operačné bity, ktoré to všetko drží spustené:
 - **[Logging & audit](../operations/logging.md)** — structured logs + OpenTelemetry.
 - **[Deployment](../deployment/local.md)** — spustite kdekoľvek.
 
-:::note Dokumenty čestne
+:::note[Dokumenty čestne]
 Každý feature dokumentácia je udržiavaná v lockstep s kódom — zmena správania, update doc, rovnaký
 commit. Ak kedy vidíte drift, to je bug: prosím
 [otvoriť issue](https://github.com/amusleh-spotware-com/cmind/issues/new/choose) alebo poslať PR. 🙏

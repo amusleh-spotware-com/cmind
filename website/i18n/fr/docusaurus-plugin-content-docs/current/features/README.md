@@ -57,6 +57,6 @@ Les bits opérationnels qui gardent tout cela en marche :
 - **[Logging & audit](../operations/logging.md)** — logs structurés + OpenTelemetry.
 - **[Déploiement](../deployment/local.md)** — faites-le fonctionner n'importe où.
 
-:::note Garder les docs honnêtes
+:::note[Garder les docs honnêtes]
 Chaque doc de fonctionnalité est gardée en lockstep avec le code — changez le comportement, mettez à jour la doc, même commit. Si vous repérez jamais la dérive, c'est un bug : s'il vous plaît [ouvrez une issue](https://github.com/amusleh-spotware-com/cmind/issues/new/choose) ou envoyez un PR. 🙏
 :::

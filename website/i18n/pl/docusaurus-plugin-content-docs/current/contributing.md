@@ -9,7 +9,7 @@ sidebar_position: 5
 
 Dziękuję za to, że jesteś tutaj. cMind staje się lepszy za każdym razem, gdy ktoś otwiera problem, raport dokładne zachowanie cTrader, naprawia literówkę w tych samych dokumentach lub wysyła PR. **Nie musisz być czarodziejem .NET** — testerzy, traderzy i osoby naprawiające dokumenty są tak cenne, jak osoby piszące agregaty.
 
-:::tip Kanoniczny przewodnik żyje w repo
+:::tip[Kanoniczny przewodnik żyje w repo]
 Ta strona jest przyjaznym wjazdem. Pełny, zawsze bieżący proces — podstawowe reguły, konwencje kodowania, przepływ przeglądu — znajduje się w **[CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md)**.
 :::
 

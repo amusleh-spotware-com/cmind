@@ -57,6 +57,6 @@ sidebar_label: نظرة عامة
 - **[التسجيل والتدقيق](../operations/logging.md)** — السجلات المنظمة + OpenTelemetry.
 - **[النشر](../deployment/local.md)** — احصل عليها تعمل في أي مكان.
 
-:::note الاحتفاظ بالوثائق صادقة
+:::note[الاحتفاظ بالوثائق صادقة]
 كل وثيقة ميزة يتم الاحتفاظ بها في lockstep مع الكود - تغيير السلوك، تحديث الوثيقة، نفس الالتزام. إذا أخطأت الانجراف، فهذا عطل: يرجى [فتح مشكلة](https://github.com/amusleh-spotware-com/cmind/issues/new/choose) أو إرسال PR.
 :::

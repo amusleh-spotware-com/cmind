@@ -57,6 +57,6 @@ Bahagian operasi yang memastikan semuanya berjalan:
 - **[Penlog & audit](../operations/logging.md)** — log berstruktur + OpenTelemetry.
 - **[Penempatan](../deployment/local.md)** — dapatkannya berjalan di mana sahaja.
 
-:::note Memastikan dokumen jujur
+:::note[Memastikan dokumen jujur]
 Setiap dokumen ciri-ciri disimpan dalam langkah dengan kod — ubah tingkah laku, kemaskini dokumen, komit yang sama. Jika anda pernah melihat hanyutan, itu pepijat: sila [buka isu](https://github.com/amusleh-spotware-com/cmind/issues/new/choose) atau hantar PR. 🙏
 :::

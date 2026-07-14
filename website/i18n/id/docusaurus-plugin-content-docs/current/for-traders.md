@@ -19,7 +19,7 @@ tab browser. **cMind meruntuhkan semua itu menjadi satu konsol gelap, ramah keyb
 sendiri** — dan itu open source, jadi tidak ada yang tentang edge, strategi, atau credentials Anda
 pernah meninggalkan kotak Anda.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Self-host cMind di laptop, VPS murah, atau server rumah. Author, backtest, jalankan, dan pantau cBot
 di satu tempat, dengan inti AI melakukan pekerjaan. → [Jalankan dalam 5 menit](./deployment/local.md)
 :::

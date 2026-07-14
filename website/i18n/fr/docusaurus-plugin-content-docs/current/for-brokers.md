@@ -16,7 +16,7 @@ sidebar_position: 6
 
 Vous gérez un courtage cTrader. Vos clients peuvent déjà trader — mais tout aussi les clients des autres courtiers. **cMind vous permet de remettre à vos traders une plateforme complète d'opérations de trading alimentée par l'IA, marquée comme la vôtre**, afin qu'ils construisent, backtestent, exécutent, copient, et surveillent les stratégies dans *votre* écosystème au lieu de dériver vers un outil tiers. C'est des clients plus collants, plus de volume, et un vrai avantage sur les courtiers n'offrant rien qu'un terminal.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Exécutez un cMind white-label pour vos clients. Limitez les comptes à **votre** courtage, activez l'IA et le copy trading, et livrez-le sous votre marque. → [White-label pour le business](./white-label-for-business.md)
 :::
 

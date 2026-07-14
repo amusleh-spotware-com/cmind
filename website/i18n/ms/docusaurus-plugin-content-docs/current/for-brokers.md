@@ -20,7 +20,7 @@ milik anda sendiri**, jadi mereka membina, ujian belakang, jalankan, salinan, da
 bukannya hanyut ke alat pihak ketiga. Itu lebih melekit klien, lebih banyak volum, dan keunggulan sebenar berbanding
 broker yang tidak menawarkan apa-apa kecuali terminal.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Jalankan cMind label-putih untuk pelanggan anda. Hadkan akaun ke pembrokeran **anda**, hidupkan AI dan
 salinan perdagangan, dan hantarnya di bawah jenama anda. → [Label-putih untuk perniagaan](./white-label-for-business.md)
 :::

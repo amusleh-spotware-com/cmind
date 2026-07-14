@@ -9,7 +9,7 @@ sidebar_position: 4
 
 Prop firma, broker masası veya kopyalama ticareti hizmeti yönetiyor musunuz? cMind günden birinden **kendi ürün olarak yeniden satılacak** şekilde oluşturuldu. Her yüzey — ad, logo, favicon, renkler, hatta yüklenebilir telefon uygulaması — markanız içinde bükülür. Müşterileriniz *sizin* şirketinizi görür. Kod değişikliği yok, fork yok, sadece yapılandırma.
 
-:::tip TL;DR
+:::tip[TL;DR]
 `App:Branding` adınıza, renklerinize ve logonuza işaret edin. Yeniden başlatın. Bitti. Tam teknik referans [Beyaz etiketli özellik belgesi](./features/white-label.md) içinde yaşıyor.
 :::
 

@@ -8,7 +8,7 @@ sidebar_position: 1
 
 Bu, cMind'i gerçekten görmenin en hızlı yolu — kendi makinenizde tam bir örnek. Kahve alın; muhtemelen soğumadan önce oturmuş olursunuz.
 
-:::tip Sonunda sahip olacağınız şey
+:::tip[Sonunda sahip olacağınız şey]
 **localhost:8080** adresinde çalışan bir web uygulaması, **localhost:8081** adresinde bir MCP sunucusu, bir Postgres veritabanı ve cBot'ları derlemek ve test etmeye hazır yerel bir çalışan düğümü. Hepsi makinenizde, hepsi sizin.
 :::
 

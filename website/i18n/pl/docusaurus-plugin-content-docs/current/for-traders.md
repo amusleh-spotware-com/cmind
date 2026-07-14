@@ -16,7 +16,7 @@ sidebar_position: 5
 
 Już handlujesz na cTrader. Już żongliruj edytorem kodu, backtestem, VPS i trzema kartami przeglądarki. **cMind zwija to wszystko w jedną ciemną, przyjazną klawiaturę konsolę, którą uruchamiasz sam** — i jest to otwarte oprogramowanie, więc nic o twoim przedzie, strategiach lub poświadczeniach nigdy nie opuszcza twojej skrzyni.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Samodzielnie hostuj cMind na laptopie, tanią VPS lub domowym serwerze. Autor, backtest, uruchom i monitoruj cBoty w jednym miejscu, z rdzeniem AI wykonującym prace. → [Uruchom go w 5 minut](./deployment/local.md)
 :::
 

@@ -57,7 +57,7 @@ Bits operasional yang membuat semuanya berjalan:
 - **[Logging & audit](../operations/logging.md)** — structured log + OpenTelemetry.
 - **[Deployment](../deployment/local.md)** — dapatkan berjalan di mana saja.
 
-:::note Menjaga docs jujur
+:::note[Menjaga docs jujur]
 Setiap doc fitur dijaga tetap lockstep dengan kode — ubah perilaku, perbarui doc, commit sama.
 Jika Anda pernah melihat drift, itu adalah bug: silakan [buka issue](https://github.com/amusleh-spotware-com/cmind/issues/new/choose)
 atau kirim PR. 🙏

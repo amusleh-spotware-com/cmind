@@ -16,7 +16,7 @@ sidebar_position: 7
 
 Du vermietest bereits Rechenleistung. cMind ist ein fertiges, Open-Source-Produkt, das du um diese Rechenleistung wickeln kannst: **biete verwaltetes cMind-Hosting an** und lande eine hochwertige, klebrige, rechenleistungshungrige Workload – Algo-Trader, Broker, Prop Firms und Trading-Communities, die die Plattform laufen lassen möchten, ohne selbst das Ops-Team zu werden.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Führe die zustandslose Ebene + Postgres + eine Node-Flotte aus; hand Kunden eine gebrandete URL. Monetarisiere das Abonnement, die Rechenleistung, das White-Label und die KI. → [Bereitstellung in die Cloud](./deployment/cloud.md)
 :::
 
@@ -43,7 +43,7 @@ Du bedienst drei Ebenen; der Kunde bekommt eine gebrandete Web-URL:
 | Datenbank | PostgreSQL | Verwaltetes Postgres (RDS / Flexible Server / Dein eigenes) |
 | Node-Flotte | Baut und führt cTrader-Container aus | **VMs oder Kubernetes – benötigt privilegiertes Docker** |
 
-:::warning Eine Sache, um vorab zu planen
+:::warning[Eine Sache, um vorab zu planen]
 Node-Agents bauen und führen cTrader-Container aus, daher benötigen sie **privilegiertes Docker**. Das schließt serverlose Container-Runtimes aus (Azure Container Apps, AWS Fargate) *für die Agents* – führe diese auf [Kubernetes](./deployment/kubernetes.md), einer VM oder EC2 aus. Die zustandslose Ebene läuft überall.
 :::
 

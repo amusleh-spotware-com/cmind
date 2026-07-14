@@ -21,7 +21,7 @@ kopirajo in spremljajo strategije znotraj *vaše* ekosistema namesto, da bi se z
 tretjega partnerja. To je lepljivi odjemalci, več količine in prava prednost pred posredovalci, ki
 nudijo samo terminal.
 
-:::tip Povzetek
+:::tip[Povzetek]
 Tečite belo oznako cMind za svoje odjemalce. Omejite račune na **vašo** posredovalno hišo, vključite AI in
 kopiranje trgovanja ter ga pošljite pod vašo blagovno znamko. → [Belo označena za poslovanje](./white-label-for-business.md)
 :::

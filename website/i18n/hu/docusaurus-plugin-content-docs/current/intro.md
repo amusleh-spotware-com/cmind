@@ -7,7 +7,7 @@ sidebar_position: 1
 
 # Üdvözöljük a cMind-ban 👋
 
-:::warning Alfa szoftver — nem production-kész
+:::warning[Alfa szoftver — nem production-kész]
 A cMind aktív fejlesztés alatt áll. Számítson egyenetlenségekre, verziók közötti kompatibilitástörő változásokra és még folyamatban lévő funkciókra. **Közösségi tesztelőkre, hibajelentőkre és korai közreműködőkre van szükségünk** a platform alakításához. Ha problémába ütközik, [jelezze](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml) — a valós visszajelzése a legértékesebb dolog, amit most hozzájárulhat.
 :::
 
@@ -20,7 +20,7 @@ Képzelje el mint a teljes kereskedési asztalát — szerzés, végrehajtás, s
 és egy AI mag — egyetlen nyugodt, sötét, mobilbarát alkalmazásba csomagolva, amelyet teljes egészében
 Ön birtokol.
 
-:::tip Egy mondatban
+:::tip[Egy mondatban]
 Építsen → backtesztelje → futtassa → másolja cTrader stratégiáit nagy léptékben, beépített AI-val,
 saját szerverein, saját márkájával.
 :::

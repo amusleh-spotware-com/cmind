@@ -9,7 +9,7 @@ sidebar_position: 1
 This is the fastest way to see cMind for real — a full instance on your own machine. Grab a coffee;
 you&apos;ll likely be signed in before it&apos;s cool.
 
-:::tip What you&apos;ll have at the end
+:::tip[What you&apos;ll have at the end]
 A running web app at **localhost:8080**, an MCP server at **localhost:8081**, a Postgres database,
 and a local worker node ready to build and backtest cBots. All on your machine, all yours.
 :::
@@ -30,8 +30,8 @@ cp .env.example .env        # edit PG_PASSWORD, OWNER_EMAIL, OWNER_PASSWORD
 docker compose up --build
 ```
 
-- Web UI: <http://localhost:8080> (sign in with owner from `.env`; forced to change password on first login).
-- MCP server: <http://localhost:8081/mcp>.
+- Web UI: [http://localhost:8080](http://localhost:8080) (sign in with owner from `.env`; forced to change password on first login).
+- MCP server: [http://localhost:8081/mcp](http://localhost:8081/mcp).
 - Postgres data persists in `pgdata` volume; schema migrates automatically on startup.
 
 Web container mounts host Docker socket (`/var/run/docker.sock`) so in-browser builder and seeded **LocalNode** build + run cTrader Console containers on your machine.

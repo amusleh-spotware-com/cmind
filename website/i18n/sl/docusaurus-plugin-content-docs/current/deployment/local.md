@@ -9,7 +9,7 @@ sidebar_position: 1
 To je najhitrejši način za pravi pogled cMind — polna instanca na svojem stroju. Vzemite kavo;
 verjetno se boste prijavili, preden se ohladi.
 
-:::tip Kaj boste imeli na koncu
+:::tip[Kaj boste imeli na koncu]
 Tekajoči spletni program na **localhost:8080**, strežnik MCP na **localhost:8081**, podatkovna baza
 Postgres in lokalno delavsko vozlišče, pripravljeno za gradnjo in testiranje cBotov. Vse na
 svojem stroju, vse je vaše.

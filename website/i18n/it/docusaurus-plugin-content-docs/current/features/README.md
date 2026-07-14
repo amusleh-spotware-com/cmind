@@ -59,7 +59,7 @@ I bit operativi che mantengono tutto in funzione:
 - **[Logging & audit](../operations/logging.md)** — log strutturati + OpenTelemetry.
 - **[Deployment](../deployment/local.md)** — fallo funzionare ovunque.
 
-:::note Mantenere i documenti onesti
+:::note[Mantenere i documenti onesti]
 Ogni documento di funzionalità è tenuto in sincronia con il codice — cambia il comportamento, aggiorna il doc, stesso
 commit. Se noti mai un disallineamento, è un bug: per favore
 [apri un issue](https://github.com/amusleh-spotware-com/cmind/issues/new/choose) o invia una PR. 🙏

@@ -19,7 +19,7 @@ tab pelayar. **cMind meruntuhkan semua itu menjadi satu konsol gelap, mesra papa
 sendiri** — dan ia adalah sumber terbuka, jadi tidak ada apa-apa tentang tepi anda, strategi anda, atau kredensial anda
 pernah meninggalkan kotak anda.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Hos-sendiri cMind di laptop, VPS murah, atau pelayan rumah. Pengarang, ujian belakang, jalankan, dan pantau cBots
 di satu tempat, dengan inti AI melakukan kerja-kerja. → [Jalankannya dalam 5 minit](./deployment/local.md)
 :::

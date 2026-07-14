@@ -16,7 +16,7 @@ sidebar_position: 7
 
 Vous louez déjà du compute. cMind est un produit open source clé en main que vous pouvez envelopper autour de ce compute : **proposez un hébergement cMind géré** et remportez un workload de valeur élevée, collant et gourmand en compute — les traders algorithmiques, les courtiers, les prop firms, et les communautés de trading qui veulent la plateforme exécutée sans devenir l'équipe ops eux-mêmes.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Exécutez le tier sans état + Postgres + une flotte de nœuds ; donnez aux clients une URL marquée. Monétisez l'abonnement, le compute, le white-label, et l'IA. → [Déployez sur le cloud](./deployment/cloud.md)
 :::
 
@@ -43,7 +43,7 @@ Vous exploitez trois tiers ; le client obtient une URL web marquée :
 | Base de données | PostgreSQL | Postgres géré (RDS / Flexible Server / votre propre) |
 | Flotte de nœuds | Construit & exécute les conteneurs cTrader | **VMs ou Kubernetes — a besoin de Docker privilégié** |
 
-:::warning Une chose à planifier à l'avance
+:::warning[Une chose à planifier à l'avance]
 Les agents de nœud construisent et exécutent les conteneurs cTrader, donc ils ont besoin de **Docker privilégié**. Cela exclut les runtimes de conteneurs sans serveur (Azure Container Apps, AWS Fargate) *pour les agents* — exécutez-les sur [Kubernetes](./deployment/kubernetes.md), une VM, ou EC2. Le tier sans état s'exécute partout.
 :::
 

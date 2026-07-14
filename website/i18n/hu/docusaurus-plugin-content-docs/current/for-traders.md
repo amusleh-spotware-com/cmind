@@ -16,7 +16,7 @@ sidebar_position: 5
 
 Már kereskedik a cTrader-ben. Már juggel egy kódszerkesztővel, egy backtest-tel, egy VPS-sel és három böngészőlappal. **A cMind összecsomagol mindent egy sötét, billentyűbarát konzolba, amelyet Ön maga futtat** — és nyílt forráskódú, így az Ön előnyei, stratégiái vagy hitelesítő adatai soha nem hagyják el a dobozt.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Saját üzemeltetésben futassa a cMind-et egy laptopon, egy olcsó VPS-en vagy egy otthoni szerveren. Szerzőség, backtest, futtatás és monitoring cBotoknak egy helyen, az AI maggal kezelve a rutinfeladatokat. → [5 percben futtat](./deployment/local.md)
 :::
 

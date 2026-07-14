@@ -9,7 +9,7 @@ sidebar_position: 5
 
 Burada olduğunuz için teşekkürler. cMind, birisi bir sorun açtığında, kesin cTrader davranışını bildirdiğinde, bu belgelerdeki bir yazım hatası düzeltdiğinde veya bir PR gönderdiğinde her seferinde daha iyi hale gelir. **.NET sihirbazı olmak zorunda değilsiniz** — test edenler, tüccarlar ve belge düzenleyenleri, agregalar yazan insanlar kadar değerlidir.
 
-:::tip Kanonik kılavuz repo'da yaşıyor
+:::tip[Kanonik kılavuz repo'da yaşıyor]
 Bu sayfa, dostça bir giriş yoludur. Tam, her zaman güncel olan süreç — temel kurallar, kodlama kuralları, inceleme akışı — **[CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md)** içindedir.
 :::
 

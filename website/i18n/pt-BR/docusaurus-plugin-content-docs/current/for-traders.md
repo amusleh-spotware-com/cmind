@@ -16,7 +16,7 @@ sidebar_position: 5
 
 Você já negocia no cTrader. Você já malabariza um editor de código, um backtester, um VPS e três abas de navegador. **cMind colapsa tudo isso em um console escuro, amigável ao teclado que você executa você mesmo** — e é open source, então nada sobre sua vantagem, suas estratégias ou suas credenciais nunca sai da sua caixa.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Auto-hospede cMind em um laptop, um VPS barato ou um servidor doméstico. Autor, backtest, execute e monitore cBots em um lugar, com um núcleo de AI fazendo as tarefas. → [Execute em 5 minutos](./deployment/local.md)
 :::
 

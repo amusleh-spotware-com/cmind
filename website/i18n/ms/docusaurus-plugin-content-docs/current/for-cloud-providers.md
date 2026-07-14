@@ -19,7 +19,7 @@ di sekitar: **tawarkan pengehosan cMind yang terurus** dan mendapatkan beban ker
 pedagang algoritma, broker, prop firm, dan komuniti perdagangan yang ingin platform berjalan
 tanpa menjadi pasukan ops mereka sendiri.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Jalankan peringkat tanpa keadaan + Postgres + armada nod; berikan pelanggan URL berjenama. Mendapatkan wang
 langganan, pengiraan, label-putih, dan AI. → [Sebarkan ke cloud](./deployment/cloud.md)
 :::
@@ -50,7 +50,7 @@ Anda mengoperasikan tiga peringkat; pelanggan mendapat URL web yang berjenama:
 | Pangkalan data | PostgreSQL | Postgres terurus (RDS / Pelayan Fleksibel / milik anda sendiri) |
 | Armada nod | Binaan & jalankan bekas cTrader | **VM atau Kubernetes — perlu Docker istimewa** |
 
-:::warning Satu perkara untuk skop depan
+:::warning[Satu perkara untuk skop depan]
 Ejen nod membina dan menjalankan bekas cTrader, jadi mereka memerlukan **Docker istimewa**. Itu menghalang
 waktu jalan bekas tanpa pelayan (Azure Container Apps, AWS Fargate) *untuk ejen* — jalankan pada
 [Kubernetes](./deployment/kubernetes.md), VM, atau EC2. Peringkat tanpa keadaan berjalan di mana-mana.

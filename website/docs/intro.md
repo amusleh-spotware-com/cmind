@@ -7,7 +7,7 @@ sidebar_position: 1
 
 # Welcome to cMind 👋
 
-:::warning Alpha software — not production-ready
+:::warning[Alpha software — not production-ready]
 cMind is under active development. Expect rough edges, breaking changes between versions, and features
 still in progress. **We need community testers, bug reporters, and early contributors** to help shape
 it. If you hit a problem, [report it](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml) — your real-world feedback is the most valuable thing you can contribute right now.
@@ -21,7 +21,7 @@ cMind is an **open-source, self-hostable trading operations platform for cTrader
 your whole trading desk — authoring, execution, a compute fleet, copy trading, and an AI core —
 packed into one calm, dark, mobile-friendly app that you own end to end.
 
-:::tip In one sentence
+:::tip[In one sentence]
 Build → backtest → run → copy your cTrader strategies at scale, with AI built in, on your own
 servers, under your own brand.
 :::
@@ -57,7 +57,7 @@ cp .env.example .env        # set OWNER_EMAIL + OWNER_PASSWORD
 docker compose up --build
 ```
 
-Then open **<http://localhost:8080>**, sign in, and you&apos;re off. The full walkthrough (with
+Then open **[http://localhost:8080](http://localhost:8080)**, sign in, and you&apos;re off. The full walkthrough (with
 troubleshooting for when Docker inevitably has opinions) lives in
 **[Run it locally](./deployment/local.md)**.
 

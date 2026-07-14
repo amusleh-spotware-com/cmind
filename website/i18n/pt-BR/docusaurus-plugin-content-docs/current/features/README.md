@@ -59,7 +59,7 @@ Os bits operacionais que mantêm tudo funcionando:
 - **[Registro & auditoria](../operations/logging.md)** — logs estruturados + OpenTelemetry.
 - **[Implantação](../deployment/local.md)** — execute-o em qualquer lugar.
 
-:::note Mantendo docs honestos
+:::note[Mantendo docs honestos]
 Cada documento de característica é mantido em sincronismo com o código — altere o comportamento, atualize o doc, mesmo
 commit. Se você nunca ver deriva, isso é um bug: por favor
 [abra um problema](https://github.com/amusleh-spotware-com/cmind/issues/new/choose) ou envie um PR. 🙏

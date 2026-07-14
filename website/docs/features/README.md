@@ -59,7 +59,7 @@ The operational bits that keep it all running:
 - **[Logging & audit](../operations/logging.md)** — structured logs + OpenTelemetry.
 - **[Deployment](../deployment/local.md)** — get it running anywhere.
 
-:::note Keeping docs honest
+:::note[Keeping docs honest]
 Every feature doc is kept in lockstep with the code — change the behavior, update the doc, same
 commit. If you ever spot drift, that&apos;s a bug: please
 [open an issue](https://github.com/amusleh-spotware-com/cmind/issues/new/choose) or send a PR. 🙏

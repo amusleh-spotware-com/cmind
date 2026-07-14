@@ -16,7 +16,7 @@ sidebar_position: 6
 
 Du betreibst ein cTrader-Brokergeschäft. Deine Kunden können bereits handeln – aber das können auch die Kunden jedes anderen Brokers. **cMind lässt dich deine Trader mit einer vollständigen KI-gestützten Handelsoperationsplattform ausstatten, unter deinem Brand**, daher bauen, testen, führen, kopieren und überwachen sie Strategien in *deinem* Ökosystem, statt zu einem Drittanbieter zu driften. Das bedeutet klebrigere Kunden, mehr Volumen und einen echten Vorteil gegenüber Brokern, die nichts als ein Terminal anbieten.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Betreibe ein White-Label cMind für deine Kunden. Beschränke Konten auf **dein** Brokergeschäft, schalte KI und Copy-Trading ein und versende es unter deinem Brand. → [White-Label für Business](./white-label-for-business.md)
 :::
 

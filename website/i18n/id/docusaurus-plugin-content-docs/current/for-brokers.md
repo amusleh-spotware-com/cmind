@@ -20,7 +20,7 @@ milik Anda**, sehingga mereka membangun, backtest, jalankan, salin, dan pantau s
 daripada melayang ke alat pihak ketiga. Itu lebih sticky clients, lebih volume, dan keunggulan nyata atas
 broker yang menawarkan tidak ada kecuali terminal.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Jalankan white-label cMind untuk klien Anda. Batasi akun ke **brokerage Anda**, nyalakan AI dan
 copy trading, dan kirimnya di bawah brand Anda. → [White-label untuk bisnis](./white-label-for-business.md)
 :::

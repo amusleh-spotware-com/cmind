@@ -7,7 +7,7 @@ sidebar_position: 1
 
 # Selamat datang ke cMind 👋
 
-:::warning Perisian alfa — tidak bersedia untuk pengeluaran
+:::warning[Perisian alfa — tidak bersedia untuk pengeluaran]
 cMind sedang dalam pembangunan aktif. Jangkakan ketidaksempurnaan, perubahan yang memecahkan antara versi, dan ciri yang masih dalam proses. **Kami memerlukan penguji komuniti, pelapor pepijat, dan penyumbang awal** untuk membantu membentuknya. Jika anda menemui masalah, [laporkannya](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml) — maklum balas dunia nyata anda adalah perkara paling berharga yang boleh anda sumbangkan sekarang.
 :::
 
@@ -20,7 +20,7 @@ Anggaplah ia sebagai keseluruhan meja dagangan anda — penulisan, pelaksanaan, 
 copy trading, dan teras AI — dikemas dalam satu aplikasi yang tenang, gelap, mesra mudah alih yang anda
 miliki dari hujung ke hujung.
 
-:::tip Dalam satu ayat
+:::tip[Dalam satu ayat]
 Bina → backtest → jalankan → salin strategi cTrader anda pada skala besar, dengan AI terbina dalam, pada
 pelayan anda sendiri, di bawah jenama anda sendiri.
 :::

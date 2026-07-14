@@ -7,7 +7,7 @@ sidebar_position: 1
 
 # Willkommen bei cMind 👋
 
-:::warning Alpha-Software — nicht produktionsreif
+:::warning[Alpha-Software — nicht produktionsreif]
 cMind befindet sich in aktiver Entwicklung. Rechnen Sie mit Unfertigkeiten, Breaking Changes zwischen Versionen und noch nicht fertigen Features. **Wir brauchen Community-Tester, Bug-Reporter und frühe Mitwirkende**, die dabei helfen, es zu gestalten. Wenn Sie auf ein Problem stoßen, [melden Sie es](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml) — Ihr Feedback aus der Praxis ist der wertvollste Beitrag, den Sie jetzt leisten können.
 :::
 
@@ -19,7 +19,7 @@ cMind ist eine **quelloffene, selbst hostbare Trading-Operations-Plattform für 
 es sich als Ihren gesamten Trading-Desk vor — Erstellung, Ausführung, eine Compute-Flotte, Copy-Trading
 und einen KI-Kern — verpackt in einer ruhigen, dunklen, mobiltauglichen App, die Ihnen von A bis Z gehört.
 
-:::tip In einem Satz
+:::tip[In einem Satz]
 Bauen → backtesten → ausführen → kopieren Sie Ihre cTrader-Strategien im großen Maßstab, mit
 eingebauter KI, auf Ihren eigenen Servern, unter Ihrer eigenen Marke.
 :::

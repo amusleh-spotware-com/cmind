@@ -16,7 +16,7 @@ sidebar_position: 7
 
 이미 컴퓨트를 임대합니다. cMind는 컴퓨트 주위에 래핑할 수 있는 준비된 오픈소스 제품입니다: **관리형 cMind 호스팅을 제공**하고 고가치, 끈적한, 컴퓨트를 많이 사용하는 워크로드를 확보합니다 — algo 트레이더, 브로커, 프로프irms 및 플랫폼을 실행하고 싶지만 ops 팀이 되고 싶지 않은 트레이딩 커뮤니티.
 
-:::tip TL;DR
+:::tip[TL;DR]
 무상태 티어 + Postgres + 노드 플릿을 실행합니다; 고객에게 브랜드 URL을 제공합니다. 구독, 컴퓨팅, 화이트라벨 및 AI를 monetizing합니다. → [클라우드에 배포](./deployment/cloud.md)
 :::
 
@@ -43,7 +43,7 @@ sidebar_position: 7
 | 데이터베이스 | PostgreSQL | 관리형 Postgres (RDS / Flexible Server / 자체) |
 | 노드 플릿 | cTrader 컨테이너 빌드 및 실행 | **VM 또는 Kubernetes — 권한 있는 Docker 필요** |
 
-:::warning一开始就 scoping할 것
+:::warning[미리 범위를 정할 한 가지]
 노드 에이전트는 cTrader 컨테이너를 빌드하고 실행하므로 **권한 있는 Docker가 필요합니다**. 이것은 에이전트에 대해 Azure Container Apps, AWS Fargate와 같은 서버리스 컨테이너 런타임을 배제합니다 — [Kubernetes](./deployment/kubernetes.md), VM 또는 EC2에서 에이전트를 실행합니다. 무상태 티어는 어디서나 실행됩니다.
 :::
 

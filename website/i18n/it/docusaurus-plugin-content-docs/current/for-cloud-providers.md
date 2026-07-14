@@ -16,7 +16,7 @@ sidebar_position: 7
 
 Affitti già il calcolo. cMind è un prodotto open-source pronto all'uso che puoi avvolgere attorno a quel calcolo: **offri hosting cMind gestito** e atterra un carico di lavoro di alto valore, appiccicaticcio e affamato di calcolo — trader algoritmici, broker, prop firm e comunità di trading che vogliono la piattaforma in esecuzione senza diventare loro il team ops.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Esegui il tier stateless + Postgres + una flotta di nodi; dai ai clienti un URL marchiato. Monetizza l'abbonamento, il calcolo, il white-label e l'AI. → [Distribuisci al cloud](./deployment/cloud.md)
 :::
 
@@ -43,7 +43,7 @@ Gestisci tre tier; il cliente ottiene un URL web marchiato:
 | Database | PostgreSQL | Postgres gestito (RDS / Flexible Server / tuoi) |
 | Flotta di nodi | Builds & esegue contenitori cTrader | **VM o Kubernetes — necessita di Docker privilegiato** |
 
-:::warning Una cosa da scopo in anticipo
+:::warning[Una cosa da scopo in anticipo]
 Gli agenti del nodo compilano ed eseguono contenitori cTrader, quindi hanno bisogno di **Docker privilegiato**. Ciò esclude i runtime di container serverless (Azure Container Apps, AWS Fargate) *per gli agenti* — eseguili su [Kubernetes](./deployment/kubernetes.md), una VM o EC2. Il tier stateless viene eseguito ovunque.
 :::
 

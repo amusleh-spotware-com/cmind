@@ -7,7 +7,7 @@ sidebar_position: 1
 
 # Bienvenue sur cMind 👋
 
-:::warning Logiciel alpha — pas prêt pour la production
+:::warning[Logiciel alpha — pas prêt pour la production]
 cMind est en développement actif. Attendez-vous à des aspérités, des changements cassants entre les versions et des fonctionnalités encore en cours. **Nous avons besoin de testeurs communautaires, de rapporteurs de bugs et de contributeurs précoces** pour aider à le façonner. Si vous rencontrez un problème, [signalez-le](https://github.com/amusleh-spotware-com/cmind/issues/new?template=bug_report.yml) — vos retours du monde réel sont la chose la plus précieuse que vous puissiez apporter en ce moment.
 :::
 
@@ -20,7 +20,7 @@ Voyez-la comme l'ensemble de votre desk de trading — création, exécution, un
 trading et un cœur d'IA — réuni dans une application calme, sombre et adaptée au mobile, qui vous
 appartient de bout en bout.
 
-:::tip En une phrase
+:::tip[En une phrase]
 Créez → backtestez → exécutez → copiez vos stratégies cTrader à grande échelle, avec l'IA intégrée, sur
 vos propres serveurs et sous votre propre marque.
 :::

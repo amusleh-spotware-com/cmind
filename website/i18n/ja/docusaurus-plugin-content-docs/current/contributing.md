@@ -9,7 +9,7 @@ sidebar_position: 5
 
 ここに いてくれてありがとう。cMind 良くなる すべての時 誰か issue を開く、報告 正確 cTrader 動作、これらの正確 ドキュメント タイプの typo を修正、または PR を船。**あなたは .NET ウィザード である必要はありません** — テスター、トレーダー、ドキュメント フィッサー 値打ちある アグリゲート 書く人 同様。
 
-:::tip 正規ガイド リポで生きる
+:::tip[正規ガイド リポで生きる]
 このページ 親切 オンランプ。完全、常 最新 プロセス — 基礎ルール、コーディング慣例、レビュー フロー — **[CONTRIBUTING.md](https://github.com/amusleh-spotware-com/cmind/blob/main/CONTRIBUTING.md)**。
 :::
 

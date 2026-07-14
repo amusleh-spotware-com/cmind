@@ -7,7 +7,7 @@ sidebar_position: 1
 
 # Vitajte v cMind 👋
 
-:::warning Alfa softvér — nie je pripravený na produkčné nasadenie
+:::warning[Alfa softvér — nie je pripravený na produkčné nasadenie]
 cMind je vo aktívnom vývoji. Očakávajte hrubé hrany, prelomové zmeny medzi verziami a funkcie
 stále vo vývoji. **Potrebujeme komunitných testerov, hlásičov chýb a prvých prispievateľov**, ktorí
 nám pomôžu ho formovať. Ak narazíte na problém,
@@ -23,7 +23,7 @@ cMind je **otvorená, samostatne hostovateľná platforma pre obchodné operáci
 ju ako celý svoj obchodný stôl — tvorbu, vykonávanie, výpočtovú flotilu, kopírovanie obchodov a jadro AI
 — zabalené do pokojnej, tmavej, mobilne prívetivej aplikácie, ktorú vlastníte od začiatku do konca.
 
-:::tip V jednej vete
+:::tip[V jednej vete]
 Zostavte → backtestujte → spustite → kopírujte svoje stratégie cTrader vo veľkom, so zabudovanou AI, na
 vlastných serveroch a pod vlastnou značkou.
 :::

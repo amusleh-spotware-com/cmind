@@ -19,7 +19,7 @@ browser tabs. **cMind collapses all of that into one dark, keyboard-friendly con
 yourself** — and it's open source, so nothing about your edge, your strategies, or your credentials
 ever leaves your box.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Self-host cMind on a laptop, a cheap VPS, or a home server. Author, backtest, run, and monitor cBots
 in one place, with an AI core doing the chores. → [Run it in 5 minutes](./deployment/local.md)
 :::

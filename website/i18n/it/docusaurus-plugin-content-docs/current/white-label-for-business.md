@@ -12,7 +12,7 @@ Gestisci una prop firm, una scrivania di brokeraggio, o un servizio di copy-trad
 l'app del telefono installabile — si piega al tuo marchio. I tuoi clienti vedono l'azienda *tua*. Nessun cambio di codice,
 nessun fork, solo config.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Punta `App:Branding` al tuo nome, colori e logo. Riavvia. Fatto. Il riferimento tecnico completo vive
 nella [documentazione della feature white-label](./features/white-label.md).
 :::

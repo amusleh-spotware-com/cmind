@@ -19,7 +19,7 @@ schede del browser. **cMind collassa tutto ciò in una sola console scura e keyb
 tu stesso** — ed è open source, quindi nulla del tuo edge, delle tue strategie, o delle tue credenziali
 esce mai dalla tua scatola.
 
-:::tip TL;DR
+:::tip[TL;DR]
 Self-host cMind su un laptop, un VPS economico, o un server domestico. Autore, backtest, esecuzione e monitoraggio di cBots
 in un unico posto, con un core IA che fa i lavori. → [Eseguilo in 5 minuti](./deployment/local.md)
 :::

@@ -129,10 +129,20 @@ public sealed class PropFirmTests(AppFixture app)
             var rowB = page.Locator("tr", new() { HasTextString = nameB });
 
             await rowA.Locator("input").First.FillAsync("105000");
-            await rowB.Locator("input").First.FillAsync("111000");
-            await rowB.GetByRole(AriaRole.Button, new() { NameString = "Record" }).ClickAsync();
 
-            await page.WaitForTimeoutAsync(1000);
+            // Retry the fill + Record until the API reflects it: a fill/click dropped before the Blazor
+            // circuit is interactive silently no-ops, and the old fixed 1s wait would then assert a stale
+            // value. Re-recording the same value is idempotent; row A is never recorded so it stays put.
+            var recordB = rowB.GetByRole(AriaRole.Button, new() { NameString = "Record" });
+            for (var attempt = 0; attempt < 20; attempt++)
+            {
+                await rowB.Locator("input").First.FillAsync("111000");
+                await recordB.ClickAsync();
+                var probe = await page.APIRequest.GetAsync($"{app.BaseUrl}/api/prop-firm/challenges/{idB}");
+                if (JsonDocument.Parse(await probe.TextAsync()).RootElement.GetProperty("currentEquity").GetDecimal() == 111000m)
+                    break;
+                await page.WaitForTimeoutAsync(500);
+            }
 
             // Only challenge B's equity changed; challenge A stays at its starting balance.
             var detailA = await page.APIRequest.GetAsync($"{app.BaseUrl}/api/prop-firm/challenges/{idA}");

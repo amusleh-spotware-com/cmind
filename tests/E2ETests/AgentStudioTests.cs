@@ -17,12 +17,15 @@ public sealed class AgentStudioTests(AppFixture app)
         await page.GotoAsync("/agent-studio");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        await page.ClickAsync("[data-testid=agent-new]");
-        await page.GetByLabel("Agent name").FillAsync("E2E Scalper");
-        await page.ClickAsync("[data-testid=agent-create-submit]");
+        // Retry the dialog-open and submit until the roster row appears: a click issued before the Blazor
+        // circuit is interactive is dropped, so a single-shot open/submit flakes under parallel-boot CI load.
+        var nameField = page.GetByLabel("Agent name");
+        await page.ClickUntilVisibleAsync("[data-testid=agent-new]", nameField);
+        await nameField.FillAsync("E2E Scalper");
+        var row = page.Locator("[data-testid=agents-table]").GetByText("E2E Scalper").First;
+        await page.ClickUntilVisibleAsync("[data-testid=agent-create-submit]", row);
 
-        await Assertions.Expect(page.Locator("[data-testid=agents-table]")).ToBeVisibleAsync(Slow);
-        await Assertions.Expect(page.Locator("[data-testid=agents-table]")).ToContainTextAsync("E2E Scalper");
+        await Assertions.Expect(row).ToBeVisibleAsync(Slow);
     }
 
     [Fact]
@@ -33,10 +36,12 @@ public sealed class AgentStudioTests(AppFixture app)
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
         var name = "Detail " + Guid.NewGuid().ToString("N")[..6];
-        await page.ClickAsync("[data-testid=agent-new]");
-        await page.GetByLabel("Agent name").FillAsync(name);
-        await page.ClickAsync("[data-testid=agent-create-submit]");
-        await Assertions.Expect(page.Locator("[data-testid=agents-table]")).ToContainTextAsync(name, SlowText);
+        var nameField = page.GetByLabel("Agent name");
+        await page.ClickUntilVisibleAsync("[data-testid=agent-new]", nameField);
+        await nameField.FillAsync(name);
+        var createdRow = page.Locator("[data-testid=agents-table]").GetByText(name).First;
+        await page.ClickUntilVisibleAsync("[data-testid=agent-create-submit]", createdRow);
+        await Assertions.Expect(createdRow).ToBeVisibleAsync(Slow);
 
         // Open the agent's Details dialog from its roster row.
         await page.Locator($"tr:has-text(\"{name}\")").Locator("[data-testid=agent-details]").ClickAsync();

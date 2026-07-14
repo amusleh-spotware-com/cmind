@@ -55,47 +55,55 @@ public sealed class OnboardingTests(ITestOutputHelper output)
                 Accounts = r.Accounts.Select(a => new { a.CtidTraderAccountId, a.TraderLogin, a.IsLive })
             })
         };
-        var dir = Path.Combine(FindSecretsDir(), "openapi-tokens.local.json");
-        File.WriteAllText(dir, JsonSerializer.Serialize(cache, new JsonSerializerOptions { WriteIndented = true }));
+        var indented = new JsonSerializerOptions { WriteIndented = true };
+
+        // Write the tokens into the single source of truth, dev-credentials.local.json (OpenApi.Tokens).
+        // Onboarding loaded its app credentials from that same file, so it exists here; if it somehow does
+        // not, create it under secrets/ with just the tokens.
+        var unified = Find("dev-credentials.local.json");
+        if (unified is not null)
+        {
+            var root = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(unified))!.AsObject();
+            var openApi = root["OpenApi"]?.AsObject() ?? [];
+            openApi["Tokens"] = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(cache));
+            root["OpenApi"] = openApi;
+            File.WriteAllText(unified, root.ToJsonString(indented));
+            return;
+        }
+
+        var fresh = new System.Text.Json.Nodes.JsonObject
+        {
+            ["OpenApi"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["Tokens"] = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(cache))
+            }
+        };
+        File.WriteAllText(Path.Combine(FindSecretsDir(), "dev-credentials.local.json"), fresh.ToJsonString(indented));
     }
 
     private static (string ClientId, string ClientSecret)? LoadApp()
     {
         var unified = Find("dev-credentials.local.json");
-        if (unified is not null)
-        {
-            using var dev = JsonDocument.Parse(File.ReadAllText(unified));
-            if (dev.RootElement.TryGetProperty("OpenApi", out var oa) && oa.TryGetProperty("App", out var app)
-                && app.TryGetProperty("ClientId", out var clientId) && !string.IsNullOrWhiteSpace(clientId.GetString()))
-                return (clientId.GetString()!, app.GetProperty("ClientSecret").GetString()!);
-        }
-
-        var path = Find("openapi-test-app.local.json");
-        if (path is null) return null;
-        using var doc = JsonDocument.Parse(File.ReadAllText(path));
-        return (doc.RootElement.GetProperty("ClientId").GetString()!, doc.RootElement.GetProperty("ClientSecret").GetString()!);
+        if (unified is null) return null;
+        using var dev = JsonDocument.Parse(File.ReadAllText(unified));
+        if (dev.RootElement.TryGetProperty("OpenApi", out var oa) && oa.TryGetProperty("App", out var app)
+            && app.TryGetProperty("ClientId", out var clientId) && !string.IsNullOrWhiteSpace(clientId.GetString()))
+            return (clientId.GetString()!, app.GetProperty("ClientSecret").GetString()!);
+        return null;
     }
 
     private static IReadOnlyList<(string Cid, string Username, string Password)> LoadCids()
     {
         var unified = Find("dev-credentials.local.json");
-        if (unified is not null)
-        {
-            using var dev = JsonDocument.Parse(File.ReadAllText(unified));
-            if (dev.RootElement.TryGetProperty("OpenApi", out var oa) && oa.TryGetProperty("Cids", out var cids)
-                && cids.ValueKind == JsonValueKind.Array && cids.GetArrayLength() > 0)
-                return cids.EnumerateArray()
-                    .Where(c => !string.IsNullOrWhiteSpace(c.GetProperty("Cid").GetString()))
-                    .Select(c => (c.GetProperty("Cid").GetString()!, c.GetProperty("Username").GetString()!, c.GetProperty("Password").GetString()!))
-                    .ToList();
-        }
-
-        var path = Find("openapi-cids.local.json");
-        if (path is null) return [];
-        using var doc = JsonDocument.Parse(File.ReadAllText(path));
-        return doc.RootElement.GetProperty("Cids").EnumerateArray()
-            .Select(c => (c.GetProperty("Cid").GetString()!, c.GetProperty("Username").GetString()!, c.GetProperty("Password").GetString()!))
-            .ToList();
+        if (unified is null) return [];
+        using var dev = JsonDocument.Parse(File.ReadAllText(unified));
+        if (dev.RootElement.TryGetProperty("OpenApi", out var oa) && oa.TryGetProperty("Cids", out var cids)
+            && cids.ValueKind == JsonValueKind.Array && cids.GetArrayLength() > 0)
+            return cids.EnumerateArray()
+                .Where(c => !string.IsNullOrWhiteSpace(c.GetProperty("Cid").GetString()))
+                .Select(c => (c.GetProperty("Cid").GetString()!, c.GetProperty("Username").GetString()!, c.GetProperty("Password").GetString()!))
+                .ToList();
+        return [];
     }
 
     private static string FindSecretsDir()

@@ -39,13 +39,23 @@ public sealed class OpenApiLiveConnectionTests
         connection.State.Should().Be(ConnectionState.Connected);
     }
 
+    // Single source of truth: secrets/dev-credentials.local.json (OpenApi.App).
     private static Credentials? LoadCredentials()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null)
         {
-            var path = Path.Combine(directory.FullName, "secrets", "openapi-test-app.local.json");
-            if (File.Exists(path)) return JsonSerializer.Deserialize<Credentials>(File.ReadAllText(path));
+            var path = Path.Combine(directory.FullName, "secrets", "dev-credentials.local.json");
+            if (File.Exists(path))
+            {
+                using var document = JsonDocument.Parse(File.ReadAllText(path));
+                if (document.RootElement.TryGetProperty("OpenApi", out var openApi)
+                    && openApi.TryGetProperty("App", out var app)
+                    && app.TryGetProperty("ClientId", out var clientId)
+                    && !string.IsNullOrWhiteSpace(clientId.GetString()))
+                    return new Credentials(clientId.GetString()!, app.GetProperty("ClientSecret").GetString()!);
+                return null;
+            }
             directory = directory.Parent;
         }
 

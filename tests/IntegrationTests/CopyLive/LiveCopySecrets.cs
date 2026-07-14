@@ -5,14 +5,12 @@ namespace IntegrationTests.CopyLive;
 // Loads local, gitignored credentials for the live copy-trading tests. Every value is read from a
 // single unified file, secrets/dev-credentials.local.json (copy dev-credentials.example.json from the
 // repo root and fill it in) — OpenAPI app/tokens, owner login, AI key and the economic-calendar source
-// keys (Calendar.FredApiKey / Calendar.BlsApiKey). The legacy split files (openapi-test-app.local.json / openapi-tokens
-// .local.json) are still honoured as a fallback so existing machines keep working. Returns null when a
-// value is absent, which makes the live tests skip cleanly on machines without the secrets.
+// keys (Calendar.FredApiKey / Calendar.BlsApiKey). It is the SINGLE source of truth for every live test's
+// credentials — there is no legacy split-file fallback. Returns null when a value is absent, which makes
+// the live tests skip cleanly on machines without the secrets.
 public static class LiveCopySecrets
 {
     public const string DevCredentialsFileName = "dev-credentials.local.json";
-    public const string AppFileName = "openapi-test-app.local.json";
-    public const string TokensFileName = "openapi-tokens.local.json";
 
     private static readonly JsonSerializerOptions ReadOptions = new() { PropertyNameCaseInsensitive = true };
     private static readonly JsonSerializerOptions WriteOptions = new() { WriteIndented = true };
@@ -63,10 +61,10 @@ public static class LiveCopySecrets
     }
 
     public static AppCredentials? LoadApp()
-        => LoadDevCredentials()?.OpenApi?.App ?? Load<AppCredentials>(AppFileName);
+        => LoadDevCredentials()?.OpenApi?.App;
 
     public static TokenCache? LoadTokens()
-        => LoadDevCredentials()?.OpenApi?.Tokens ?? Load<TokenCache>(TokensFileName);
+        => LoadDevCredentials()?.OpenApi?.Tokens;
 
     public static IReadOnlyList<CidLogin> LoadCids()
         => LoadDevCredentials()?.OpenApi?.Cids ?? [];
@@ -87,27 +85,15 @@ public static class LiveCopySecrets
         try
         {
             var unified = FindPath(DevCredentialsFileName);
-            if (unified is not null)
-            {
-                var dev = LoadDevCredentials() ?? new DevCredentials(null, null, null, null, null);
-                var openApi = (dev.OpenApi ?? new OpenApiSection(null, null, null)) with { Tokens = tokens };
-                File.WriteAllText(unified, JsonSerializer.Serialize(dev with { OpenApi = openApi }, WriteOptions));
-                return;
-            }
-
-            File.WriteAllText(Path.Combine(SecretsDirectory, TokensFileName),
-                JsonSerializer.Serialize(tokens, WriteOptions));
+            if (unified is null) return; // single source absent — keep the refreshed tokens in memory only.
+            var dev = LoadDevCredentials() ?? new DevCredentials(null, null, null, null, null);
+            var openApi = (dev.OpenApi ?? new OpenApiSection(null, null, null)) with { Tokens = tokens };
+            File.WriteAllText(unified, JsonSerializer.Serialize(dev with { OpenApi = openApi }, WriteOptions));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            // read-only or absent secrets mount — keep the freshly refreshed tokens in memory only.
+            // read-only secrets mount (e.g. a K8s Secret) — keep the freshly refreshed tokens in memory only.
         }
-    }
-
-    private static T? Load<T>(string fileName) where T : class
-    {
-        var path = FindPath(fileName);
-        return path is null ? null : JsonSerializer.Deserialize<T>(File.ReadAllText(path), ReadOptions);
     }
 
     private static string? FindPath(string fileName)

@@ -31,8 +31,8 @@ public sealed class LiveCopyFixture : IAsyncLifetime
         var tokens = LiveCopySecrets.LoadTokens();
         if (app is null || tokens is null || tokens.Cids.Count == 0)
         {
-            SkipReason = $"Live copy secrets missing (need secrets/{LiveCopySecrets.AppFileName} and " +
-                         $"secrets/{LiveCopySecrets.TokensFileName}). Run the OAuth onboarding once " +
+            SkipReason = $"Live copy secrets missing (need secrets/{LiveCopySecrets.DevCredentialsFileName} " +
+                         "with OpenApi.App + OpenApi.Tokens). Run the OAuth onboarding once " +
                          "(see website/docs/testing/live-copy-trading.md).";
             return;
         }

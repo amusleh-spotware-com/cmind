@@ -141,26 +141,16 @@ public sealed class CBotRealRunBacktestTests(AppFixture app, ITestOutputHelper o
     private static async Task<JsonElement> ReadJsonAsync(IAPIResponse response)
         => JsonSerializer.Deserialize<JsonElement>(await response.TextAsync());
 
-    // Reads the first cID that declares a demo account number in its Accounts array, from the unified
-    // dev-credentials.local.json (OpenApi.Cids) or the legacy split openapi-cids.local.json (Cids).
+    // Reads the first cID that declares a demo account number in its Accounts array, from the single
+    // source of truth secrets/dev-credentials.local.json (OpenApi.Cids).
     private static (string Username, string Password, long AccountNumber)? LoadDemoCredential()
     {
         var unified = FindSecret("dev-credentials.local.json");
-        if (unified is not null)
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(unified));
-            if (document.RootElement.TryGetProperty("OpenApi", out var openApi) && openApi.TryGetProperty("Cids", out var cids)
-                && TryPickAccount(cids, out var result))
-                return result;
-        }
-
-        var split = FindSecret("openapi-cids.local.json");
-        if (split is not null)
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(split));
-            if (document.RootElement.TryGetProperty("Cids", out var cids) && TryPickAccount(cids, out var result))
-                return result;
-        }
+        if (unified is null) return null;
+        using var document = JsonDocument.Parse(File.ReadAllText(unified));
+        if (document.RootElement.TryGetProperty("OpenApi", out var openApi) && openApi.TryGetProperty("Cids", out var cids)
+            && TryPickAccount(cids, out var result))
+            return result;
         return null;
     }
 

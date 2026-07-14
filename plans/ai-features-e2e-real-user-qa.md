@@ -35,11 +35,18 @@ seeds a completed backtest (with report) for a user in a real Testcontainers DB,
 at the fake local LLM with an authenticated caller, and asserts the tool returns the model reply. MCP AI
 tools now covered 4/5 (generate/review/sentiment via `McpAiToolsLocalLlmTests` + analyze-backtest here). ✅
 
-**Remaining** (increments 5+): F19 currency-strength MCP tool needs a seeded currency snapshot (the
-`ICurrencyStrengthQuery` returns null without one). F15 portfolio agent + F17 prop-guard + F18 alerts are
-driven by background workers with no on-demand trigger — they need a dev-only "run one cycle" hook (like
-the seed endpoint) plus a `FakeLocalLlmServer` extension that returns valid alert/action JSON (the canned
-string isn't JSON, so the parsers raise nothing). Live-account variants follow the onboarding pattern.
+**Increment 5 (shipped).** F18 market-watch alerts driven through the REAL background worker
+(`AlertEvaluator`). New `AiWorkersFixture` (collection `ai-workers`) enables the worker with a 2s poll;
+`FakeLocalLlmServer` now returns a valid alert-assessment JSON (alert raised, canned reply embedded in the
+message) for the alerting prompt. `AlertsWorkerE2ETests`: create a market-watch rule → the worker
+evaluates it → an `AlertEvent` with the AI-authored message appears (canned reply asserted). ✅ The
+worker-driven pattern (short poll + marker-keyed fake JSON + isolated collection) generalises to F15/F17.
+
+**Remaining** (increments 6+): F17 prop-guard + F15 portfolio agent — same worker pattern, but each needs
+more seeded state (running instances / an agent mandate + accounts) and a `FakeLocalLlmServer` marker
+returning valid risk-action / agent-action JSON, plus an observable assertion surface (audit record /
+decision record). F19 currency-strength MCP tool needs a seeded currency snapshot. Live-account variants
+follow the onboarding pattern.
 
 **Goal.** Today every AI feature has *an* E2E test, but for the data-dependent features the test only
 asserts a weak contract: "AI is configured → the button is enabled → clicking it does not crash the

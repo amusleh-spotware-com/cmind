@@ -13,7 +13,7 @@ namespace E2ETests;
 //
 // The fake speaks the OpenAI wire, so this same fixture validates every OpenAI-compatible target (all
 // local runtimes + most clouds) without change — the "works with any provider, no diff" property.
-public sealed class AiLocalFixture : AppFixture
+public class AiLocalFixture : AppFixture
 {
     public const string CannedReply = "E2E-LOCAL-LLM-REPLY";
 

@@ -16,6 +16,7 @@ public sealed class FakeLocalLlmServer : IDisposable
     public FakeLocalLlmServer(string reply)
     {
         _reply = reply;
+        _alertJson = BuildAlertJson(reply);
         Port = GetFreePort();
         _listener.Prefixes.Add($"http://127.0.0.1:{Port}/");
         _listener.Start();
@@ -33,6 +34,14 @@ public sealed class FakeLocalLlmServer : IDisposable
 
     private static readonly string CurrencyGatherJson = BuildCurrencyGatherJson();
 
+    // Marker from AiPrompts.AlertSystem — the market-watch alert call whose reply must be a structured
+    // alert JSON (the plain canned string parses to no alert, so the worker raises nothing). We reply with
+    // alert=true and embed the canned reply in the message so the raised AlertEvent carries it. Every other
+    // call still gets the canned reply.
+    private const string AlertMarker = "alerting agent";
+
+    private readonly string _alertJson;
+
     private async Task LoopAsync()
     {
         while (!_cts.IsCancellationRequested)
@@ -45,8 +54,8 @@ public sealed class FakeLocalLlmServer : IDisposable
             using (var reader = new System.IO.StreamReader(ctx.Request.InputStream, Encoding.UTF8))
                 requestBody = await reader.ReadToEndAsync();
 
-            var content = requestBody.Contains(CurrencyGatherMarker, StringComparison.Ordinal)
-                ? CurrencyGatherJson
+            var content = requestBody.Contains(CurrencyGatherMarker, StringComparison.Ordinal) ? CurrencyGatherJson
+                : requestBody.Contains(AlertMarker, StringComparison.Ordinal) ? _alertJson
                 : _reply;
 
             var body = "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"" + content + "\"}}]}";
@@ -70,6 +79,12 @@ public sealed class FakeLocalLlmServer : IDisposable
             "\\\"dataConfidence\\\": \\\"Medium\\\"}"));
         return "{\\\"currencies\\\": [" + entries + "]}";
     }
+
+    // A valid alert-assessment payload (alert raised), JSON-escaped for embedding in the OpenAI chat
+    // "content" string. The message embeds the canned reply so the raised AlertEvent carries a marker the
+    // E2E can assert on.
+    private static string BuildAlertJson(string reply) =>
+        "{\\\"alert\\\": true, \\\"severity\\\": \\\"warning\\\", \\\"message\\\": \\\"" + reply + " market update\\\"}";
 
     private static int GetFreePort()
     {

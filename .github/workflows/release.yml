@@ -1,0 +1,219 @@
+name: Release
+
+# Cut a release by pushing a SemVer tag:  git tag v1.0.0-alpha.1 && git push origin v1.0.0-alpha.1
+# A tag with a pre-release suffix (-alpha/-beta/-rc) publishes a GitHub *pre-release*.
+on:
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write        # create the GitHub Release
+  packages: write        # push images + chart to GHCR
+  id-token: write        # cosign keyless signing + provenance attestation
+  attestations: write    # build-provenance attestations
+
+env:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  REGISTRY: ghcr.io
+  IMAGE_BASE: ghcr.io/${{ github.repository }}   # ghcr.io/amusleh-spotware-com/cmind
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Resolve version + gate: no release ships on a red build or red core tests.
+  # ---------------------------------------------------------------------------
+  gate:
+    name: Gate (version + build + tests)
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+      version_prefix: ${{ steps.ver.outputs.version_prefix }}
+      version_suffix: ${{ steps.ver.outputs.version_suffix }}
+      is_prerelease: ${{ steps.ver.outputs.is_prerelease }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: ver
+        run: bash scripts/release-version.sh "$GITHUB_REF" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - run: dotnet restore
+      - name: Build (0 warnings)
+        run: dotnet build --no-restore --configuration Release
+             -p:VersionPrefix=${{ steps.ver.outputs.version_prefix }}
+             -p:VersionSuffix=${{ steps.ver.outputs.version_suffix }}
+      - name: Unit tests
+        run: dotnet test tests/UnitTests --configuration Release --no-build
+      - name: Integration tests (Postgres)
+        run: dotnet test tests/IntegrationTests --configuration Release --no-build
+
+  # ---------------------------------------------------------------------------
+  # Container images → GHCR. Signed (cosign keyless) + provenance + SBOM each.
+  # ---------------------------------------------------------------------------
+  images:
+    name: Image ${{ matrix.component }}
+    runs-on: ubuntu-latest
+    needs: gate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - component: web
+            dockerfile: Dockerfile.web
+          - component: mcp
+            dockerfile: Dockerfile.mcp
+          - component: node-agent
+            dockerfile: Dockerfile.node-agent
+          - component: copy-agent
+            dockerfile: Dockerfile.copy-agent
+          - component: tests
+            dockerfile: Dockerfile.tests
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v3
+      - uses: sigstore/cosign-installer@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: |
+            ${{ env.IMAGE_BASE }}-${{ matrix.component }}:${{ needs.gate.outputs.version }}
+            ${{ env.IMAGE_BASE }}-${{ matrix.component }}:sha-${{ github.sha }}
+          build-args: |
+            VERSION=${{ needs.gate.outputs.version }}
+          provenance: true
+          sbom: true
+      - name: Sign image (keyless)
+        env:
+          COSIGN_YES: "true"
+        run: cosign sign "${{ env.IMAGE_BASE }}-${{ matrix.component }}@${{ steps.build.outputs.digest }}"
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.IMAGE_BASE }}-${{ matrix.component }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+      - name: Generate SBOM (SPDX)
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.IMAGE_BASE }}-${{ matrix.component }}@${{ steps.build.outputs.digest }}
+          format: spdx-json
+          output-file: sbom-${{ matrix.component }}.spdx.json
+          upload-artifact: false
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sbom-${{ matrix.component }}
+          path: sbom-${{ matrix.component }}.spdx.json
+
+  # ---------------------------------------------------------------------------
+  # CtraderCliNode self-contained binaries for remote hosts.
+  # ---------------------------------------------------------------------------
+  node-binaries:
+    name: Node agent (${{ matrix.rid }})
+    runs-on: ubuntu-latest
+    needs: gate
+    strategy:
+      fail-fast: false
+      matrix:
+        rid: [linux-x64, linux-arm64, win-x64, osx-arm64]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Publish self-contained
+        run: >
+          dotnet publish src/CtraderCliNode/CtraderCliNode.csproj
+          --configuration Release
+          --runtime ${{ matrix.rid }}
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:VersionPrefix=${{ needs.gate.outputs.version_prefix }}
+          -p:VersionSuffix=${{ needs.gate.outputs.version_suffix }}
+          -o publish/${{ matrix.rid }}
+      - name: Package
+        run: |
+          set -euo pipefail
+          name="ctrader-cli-node-${{ needs.gate.outputs.version }}-${{ matrix.rid }}"
+          ( cd publish/${{ matrix.rid }} && zip -rq "../../${name}.zip" . )
+          sha256sum "${name}.zip" > "${name}.zip.sha256"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: node-binary-${{ matrix.rid }}
+          path: |
+            ctrader-cli-node-*.zip
+            ctrader-cli-node-*.zip.sha256
+
+  # ---------------------------------------------------------------------------
+  # Helm chart → GHCR OCI + attached .tgz. Chart version tracks the app version.
+  # ---------------------------------------------------------------------------
+  chart:
+    name: Helm chart
+    runs-on: ubuntu-latest
+    needs: gate
+    steps:
+      - uses: actions/checkout@v7
+      - uses: azure/setup-helm@v4
+      - name: Stamp chart version + package
+        run: |
+          set -euo pipefail
+          v="${{ needs.gate.outputs.version }}"
+          helm package deploy/helm/cmind --version "$v" --app-version "$v" -d dist
+          ( cd dist && sha256sum cmind-*.tgz > "cmind-${v}.tgz.sha256" )
+      - name: Push chart to GHCR OCI
+        run: |
+          set -euo pipefail
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ${{ env.REGISTRY }} \
+            --username ${{ github.actor }} --password-stdin
+          helm push dist/cmind-*.tgz oci://${{ env.REGISTRY }}/${{ github.repository }}/charts
+      - uses: actions/upload-artifact@v7
+        with:
+          name: helm-chart
+          path: |
+            dist/cmind-*.tgz
+            dist/cmind-*.tgz.sha256
+
+  # ---------------------------------------------------------------------------
+  # Assemble the GitHub Release with every attachment + aggregate checksums.
+  # ---------------------------------------------------------------------------
+  release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs: [gate, images, node-binaries, chart]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
+        with:
+          path: artifacts
+      - name: Stage assets + aggregate checksums
+        run: |
+          set -euo pipefail
+          mkdir -p assets
+          find artifacts -type f \( -name '*.zip' -o -name '*.tgz' -o -name '*.spdx.json' \) \
+            -exec cp {} assets/ \;
+          ( cd assets && find . -maxdepth 1 -type f ! -name SHA256SUMS.txt -printf '%P\0' \
+            | sort -z | xargs -0 sha256sum > SHA256SUMS.txt )
+          ls -la assets
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: cMind ${{ needs.gate.outputs.version }}
+          tag_name: ${{ github.ref_name }}
+          prerelease: ${{ needs.gate.outputs.is_prerelease == 'true' }}
+          generate_release_notes: true
+          body_path: ${{ github.workspace }}/.github/release-body.md
+          append_body: true
+          files: assets/*

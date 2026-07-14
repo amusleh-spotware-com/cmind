@@ -2,7 +2,7 @@
 
 image:
   registry: ghcr.io
-  repository: your-org/cmind
+  repository: amusleh-spotware-com/cmind
   # Per-component tags default to Chart.appVersion; override per environment.
   tag: ""
   pullPolicy: IfNotPresent

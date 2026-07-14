@@ -4,10 +4,22 @@ All notable changes documented here. Format based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), project aims to follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+> **Alpha.** All `-alpha` releases are pre-releases — breaking changes may land between them with no
+> upgrade guarantee. Pin an exact version.
+
 ## [Unreleased]
+
+## [1.0.0-alpha.1] - 2026-07-14
+
+First public alpha.
 
 ### Added
 
+- Release infrastructure: tag-driven [`release.yml`](.github/workflows/release.yml) publishing signed
+  GHCR images (`cmind-{web,mcp,node-agent,copy-agent,tests}`), the Helm chart (OCI + `.tgz`), and
+  self-contained `CtraderCliNode` binaries, with cosign signatures, build provenance, SBOMs, and
+  `SHA256SUMS.txt`. See [`RELEASING.md`](RELEASING.md) and the
+  [Releases doc](website/docs/deployment/releases.md).
 - **Copy trading** over cTrader Open API: cID OAuth onboarding, faithful order mirroring
   (market/pending types, expiry, market-range slippage, partial close, SL/TP amend, trailing,
   partial-fill true-up), distributed `CopyEngineHost` with node lease + affinity, self-healing
@@ -75,4 +87,5 @@ All notable changes documented here. Format based on
 - `AsNoTracking()` on read-only instance list/detail queries.
 
 <!-- Link references -->
-[Unreleased]: https://github.com/amusleh-spotware-com/cmind/commits/main
+[Unreleased]: https://github.com/amusleh-spotware-com/cmind/compare/v1.0.0-alpha.1...HEAD
+[1.0.0-alpha.1]: https://github.com/amusleh-spotware-com/cmind/releases/tag/v1.0.0-alpha.1

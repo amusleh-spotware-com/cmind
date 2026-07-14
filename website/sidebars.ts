@@ -89,6 +89,7 @@ const sidebars: SidebarsConfig = {
       label: 'Deployment',
       link: { type: 'doc', id: 'deployment/cloud' },
       items: [
+        'deployment/releases',
         'deployment/local',
         'deployment/ai-providers',
         'deployment/cloud-azure',

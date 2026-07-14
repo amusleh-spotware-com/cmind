@@ -14,8 +14,15 @@
 
   <!-- Single source of truth for the product version (SemVer 2.0.0). All assemblies ship
        in lockstep; bump here on release. Drives AssemblyVersion, FileVersion and the
-       InformationalVersion surfaced by Core.VersionInfo. -->
+       InformationalVersion surfaced by Core.VersionInfo. Pre-release builds pass
+       -p:VersionSuffix=alpha.N so the release workflow stamps 1.0.0-alpha.N without a source edit. -->
   <PropertyGroup>
     <VersionPrefix>1.0.0</VersionPrefix>
+    <VersionSuffix></VersionSuffix>
+    <Product>cMind</Product>
+    <Company>Spotware</Company>
+    <Authors>Spotware</Authors>
+    <RepositoryUrl>https://github.com/amusleh-spotware-com/cmind</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 </Project>

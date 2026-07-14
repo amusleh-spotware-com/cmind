@@ -71,6 +71,10 @@ if [[ -d "$ROOT/secrets" ]]; then
     --from-file="$WROOT/secrets" --dry-run=client -o yaml | kubectl apply -f -
 else
   log "No ./secrets directory — the live suite will skip; deterministic suite still runs"
+  # No Secret to mount: clear copySecret so the tests Job renders WITHOUT the seed-secrets init
+  # container + secret-src volume. Otherwise the pod references a non-existent Secret and hangs in
+  # PodInitializing until the 15m wait times out.
+  COPY_SECRET=""
 fi
 
 log "Deploying chart (Web + Postgres only; node agents not needed for copy tests)"
@@ -83,7 +87,8 @@ helm upgrade --install "$RELEASE" "$CHART" -n "$NAMESPACE" \
 
 log "Enabling test Job"
 helm upgrade "$RELEASE" "$CHART" -n "$NAMESPACE" --reuse-values \
-  --set tests.enabled=true --set tests.filter="$TEST_FILTER" --set tests.copySecret="$COPY_SECRET"
+  --set tests.enabled=true --set tests.filter="$TEST_FILTER" \
+  --set tests.copySecret="$COPY_SECRET"
 
 JOB="job/${RELEASE}-cmind-tests"
 log "Waiting for $JOB"

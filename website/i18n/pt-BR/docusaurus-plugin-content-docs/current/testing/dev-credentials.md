@@ -22,6 +22,7 @@ cp dev-credentials.example.json secrets/dev-credentials.local.json
 | **E2E onboarding** (`tests/E2ETests/CopyLive`) | aplicativo OpenAPI + logins cID | `OpenApi.App`, `OpenApi.Cids` |
 | **E2E execução/backtest real** (`CBotRealRunBacktestTests`) | um login cID + um número de conta **demo** | `OpenApi.Cids[].{Username,Password,Accounts}` |
 | **Recursos de IA** | chave Anthropic | `Ai.ApiKey` (não definido ⇒ recursos de IA retornam desabilitado, aplicativo ainda é executado) |
+| **Live economic-calendar sources** (`tests/IntegrationTests/Calendar/CalendarSourceLiveTests`) | FRED / BLS API keys | `Calendar.FredApiKey`, `Calendar.BlsApiKey` (unset ⇒ that source's live test skips; the keyless central-bank schedule still works) |
 
 ## Esquema
 
@@ -33,6 +34,10 @@ Veja `dev-credentials.example.json` na raiz do repositório. Seções:
 - `Owner` — login do proprietário de sementes para o aplicativo em E2E.
 - `Database.ConnectionString` — apenas ao apontar testes para um Postgres externo em vez de Testcontainers.
 - `Ai.ApiKey` — chave de API Anthropic para os recursos de IA.
+- `Calendar.FredApiKey` — [FRED](https://fredaccount.stlouisfed.org/apikeys) (St. Louis Fed) API key. The primary economic-calendar value source (interest rates, inflation, employment).
+- `Calendar.BlsApiKey` — [BLS](https://data.bls.gov/registrationEngine/) (US Bureau of Labor Statistics) v2 registration key (CPI, PPI, employment, JOLTS). Absent ⇒ the low-quota public tier.
+
+  Both feed the exact `FredSource`/`BlsSource` the ingestion worker uses. With a key present, `CalendarSourceLiveTests` hits the real provider and asserts observations come back; absent, that source's test skips cleanly. The app also reads these at runtime via `App:Calendar:FredApiKey` / `App:Calendar:BlsApiKey` (environment variables override — e.g. `FRED_API_KEY`, `BLS_API_KEY`).
 
 ## Precedência
 

@@ -55,3 +55,12 @@ Ha a dev alkalmazás tokenje lejár (refresh token single-use, 30 napos élettar
 1. Töröld a `secrets/openapi-dev.local.json` `accessToken` / `refreshToken` mezőjét.
 2. Futtasd újra a tesztet - az Alkalmazásbetöltő új OAuth folyamattal regenerálja.
 3. A fájl automatikusan frissül az új titkokkal.
+
+## Gazdasági naptár források (FRED / BLS)
+
+A `secrets/dev-credentials.local.json` `Calendar` szekciója adja meg a gazdasági naptár élő adatforrásainak kulcsait:
+
+- `Calendar.FredApiKey` — [FRED](https://fredaccount.stlouisfed.org/apikeys) (St. Louis Fed) API kulcs. Az elsődleges értékforrás (kamatok, infláció, foglalkoztatás).
+- `Calendar.BlsApiKey` — [BLS](https://data.bls.gov/registrationEngine/) (US Bureau of Labor Statistics) v2 regisztrációs kulcs (CPI, PPI, foglalkoztatás, JOLTS). Hiányában az alacsony kvótájú nyilvános szint.
+
+Mindkettő ugyanazt a `FredSource`/`BlsSource` kódot hajtja meg, amelyet az adatbetöltő worker használ. Kulcs jelenlétében a `CalendarSourceLiveTests` a valódi szolgáltatóhoz fordul; hiányában az adott forrás tesztje tisztán kihagyódik. Az app futásidőben az `App:Calendar:FredApiKey` / `App:Calendar:BlsApiKey` beállításból olvassa (a környezeti változók felülírják — pl. `FRED_API_KEY`, `BLS_API_KEY`).

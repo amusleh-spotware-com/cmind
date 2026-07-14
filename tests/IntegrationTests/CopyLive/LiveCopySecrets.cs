@@ -4,7 +4,8 @@ namespace IntegrationTests.CopyLive;
 
 // Loads local, gitignored credentials for the live copy-trading tests. Every value is read from a
 // single unified file, secrets/dev-credentials.local.json (copy dev-credentials.example.json from the
-// repo root and fill it in). The legacy split files (openapi-test-app.local.json / openapi-tokens
+// repo root and fill it in) — OpenAPI app/tokens, owner login, AI key and the economic-calendar source
+// keys (Calendar.FredApiKey / Calendar.BlsApiKey). The legacy split files (openapi-test-app.local.json / openapi-tokens
 // .local.json) are still honoured as a fallback so existing machines keep working. Returns null when a
 // value is absent, which makes the live tests skip cleanly on machines without the secrets.
 public static class LiveCopySecrets
@@ -33,10 +34,12 @@ public static class LiveCopySecrets
 
     public sealed record AiSection(string? ApiKey);
 
+    public sealed record CalendarSection(string? FredApiKey, string? BlsApiKey);
+
     public sealed record OpenApiSection(AppCredentials? App, IReadOnlyList<CidLogin>? Cids, TokenCache? Tokens);
 
     public sealed record DevCredentials(
-        OpenApiSection? OpenApi, OwnerSection? Owner, DatabaseSection? Database, AiSection? Ai);
+        OpenApiSection? OpenApi, OwnerSection? Owner, DatabaseSection? Database, AiSection? Ai, CalendarSection? Calendar);
 
     public static string SecretsDirectory
     {
@@ -70,6 +73,10 @@ public static class LiveCopySecrets
 
     public static string? LoadAiApiKey() => LoadDevCredentials()?.Ai?.ApiKey;
 
+    public static string? LoadFredApiKey() => LoadDevCredentials()?.Calendar?.FredApiKey;
+
+    public static string? LoadBlsApiKey() => LoadDevCredentials()?.Calendar?.BlsApiKey;
+
     public static OwnerSection? LoadOwner() => LoadDevCredentials()?.Owner;
 
     // Best-effort: the refreshed access token is only cached to speed up the next local run. When the
@@ -82,7 +89,7 @@ public static class LiveCopySecrets
             var unified = FindPath(DevCredentialsFileName);
             if (unified is not null)
             {
-                var dev = LoadDevCredentials() ?? new DevCredentials(null, null, null, null);
+                var dev = LoadDevCredentials() ?? new DevCredentials(null, null, null, null, null);
                 var openApi = (dev.OpenApi ?? new OpenApiSection(null, null, null)) with { Tokens = tokens };
                 File.WriteAllText(unified, JsonSerializer.Serialize(dev with { OpenApi = openApi }, WriteOptions));
                 return;

@@ -221,6 +221,14 @@ app.MapAgentEndpoints();
 app.MapAlertEndpoints();
 app.MapPropGuardEndpoints();
 app.MapPropFirmEndpoints();
+// Dev-only, config-gated test seeding — never mapped in Production (guarded twice). Fail-fast if the
+// flag is ever set outside Development so a prod misconfiguration crashes loudly instead of silently.
+if (app.Configuration.GetValue<bool>(TestSeedEndpoints.EnabledKey))
+{
+    if (!app.Environment.IsDevelopment())
+        throw new InvalidOperationException($"{TestSeedEndpoints.EnabledKey} must never be enabled outside Development.");
+    app.MapTestSeedEndpoints();
+}
 app.MapComplianceEndpoints();
 app.MapImageEndpoints();
 app.MapPwaEndpoints();

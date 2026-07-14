@@ -16,10 +16,19 @@ Self-gates via `AI_ONNX_MODEL` (runs locally, skips the CI PR lane). CPU inferen
 lane covers the bounded-output features (review is already in `OnnxE2ETests`, + debate here); unbounded
 ones (codegen, sentiment) stay on the deterministic fake lane.
 
-**Remaining** (increments 2+): the data-dependent features (F6–F11, F15–F18) still need the deterministic
-seeding seam (§2) — terminal Instances, backtest reports, a TradingAccount + positions — which requires a
-test-env-gated seed endpoint (a source change deferred to avoid clashing with the concurrent editing
-session). MCP AI tools (F19) and the live-account variants follow.
+**Increment 2 (shipped).** The deterministic seeding seam (§2) + data-dependent feature coverage:
+- `src/Web/Endpoints/TestSeedEndpoints.cs` — a **dev-only, config-gated** (`App:TestSeed:Enabled` AND
+  `IsDevelopment()`, fail-fast if the flag is set outside Development) `POST /api/testseed/ai-portfolio`
+  that seeds a cBot + param set + a completed backtest (with a report) + a running instance for the
+  current user, using the same domain factories/transitions the integration tests use — no Docker/broker.
+- `tests/E2ETests/AiFeatureDataE2ETests.cs` (collection `ai-local`) — real-user, data-backed coverage,
+  **6/6 green**: F6 digest (UI) and F7 exposure (UI) render the AI output over seeded instances; F10
+  analyze-backtest, F8 tune/decay, F9 optimize-params, F11 post-mortem each produce AI output over the
+  seeded report/cBot (canned reply asserted on the fake). Previously all six were "enabled + no-crash".
+
+**Remaining** (increments 3+): F15 portfolio agent + F16 agent-studio (drive a cycle → assert AI
+decision), F17 prop-guard + F18 alerts (seed running bots / a rule → assert AI verdict surfaces), F19 MCP
+AI tools (extend `McpAiToolsLocalLlmTests` to all five), and the live-account variants (onboarding pattern).
 
 **Goal.** Today every AI feature has *an* E2E test, but for the data-dependent features the test only
 asserts a weak contract: "AI is configured → the button is enabled → clicking it does not crash the

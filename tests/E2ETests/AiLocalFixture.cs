@@ -34,6 +34,10 @@ public sealed class AiLocalFixture : AppFixture
 
     protected override void ConfigureApp(ProcessStartInfo psi)
     {
+        // Enable the dev-only test-seeding endpoints so the data-dependent AI features (digest, exposure,
+        // tune, optimize, analyze, post-mortem) can be driven against real seeded state without Docker.
+        psi.Environment["App__TestSeed__Enabled"] = "true";
+
         // Seed one active provider via config (App:Ai:Providers[0]); the store imports it on startup.
         if (UsingFakeLlm)
         {

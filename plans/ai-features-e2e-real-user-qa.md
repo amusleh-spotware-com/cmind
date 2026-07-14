@@ -54,11 +54,15 @@ proposal (execution is Auto-only, so nothing is traded) — a clean, side-effect
 agent-action JSON with the canned reply in its reasoning. `AgentWorkerE2ETests`: seed a cBot → create an
 enabled Suggest mandate → the worker records an `AgentProposal` whose AI-authored reasoning renders. ✅
 
-**Remaining:** F17 AiRiskGuard is the last uncovered feature — its only worker action is destructive
-(`docker stop` + TPH id-swap on the running instance, which the completion pollers also reap), so it has
-no stable, race-free assertion surface without a product change (persist a readable risk-assessment
-record, as F15 does with proposals). Deferred rather than ship a flaky test. F1 build pipeline +
-live-account variants stay on the heavy/live lanes (already gated).
+**Increment 8 (shipped).** F17 AI risk-guard driven through the REAL background worker (`AiRiskGuard`) in
+**assessment-only** mode (`AiRiskGuardFixture`, collection `ai-riskguard`): auto-stop OFF, so the worker
+calls the AI on the running bots and logs the summary WITHOUT stopping anything — a clean, non-destructive
+surface. `RiskGuardWorkerE2ETests`: seed a running instance → the worker assesses it → the AI summary
+(carrying the canned reply) appears in the captured app log. ✅
+
+**All 19 AI features are now covered by real-user / real-worker E2E** (plus the real-ONNX-model proof and
+MCP 5/5). The only items left are the pre-existing heavy/live lanes — F1 build pipeline (Docker) and the
+live-account variants (onboarding pattern) — already gated out of the PR lane and run locally/nightly.
 
 **Goal.** Today every AI feature has *an* E2E test, but for the data-dependent features the test only
 asserts a weak contract: "AI is configured → the button is enabled → clicking it does not crash the

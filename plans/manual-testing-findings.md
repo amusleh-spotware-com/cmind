@@ -191,9 +191,11 @@ The four gaps from the first pass were closed on 2026-07-14:
 - **Real AWS/Azure cloud** stand-up (no cloud account) — wiring is now unit-guarded, but a live cloud
   deploy + trace-in-backend verification remains a manual cloud-account task.
 
-> Note: the Aspire smoke's Postgres uses the persistent `app-pg-data` volume (`.WithDataVolume`). The
-> test uses a stable password so a fresh volume works across runs; a volume pre-created with a different
-> password (e.g. a prior manual `dotnet run`) must be removed once (`docker volume rm app-pg-data`).
+> Fixed: the Aspire smoke now runs against an EPHEMERAL Postgres (`PgDataVolume=""` ⇒ the AppHost skips
+> `.WithDataVolume`), so it no longer shares — and password-poisons — the developer's persistent
+> `app-pg-data` volume. Dev `dotnet run` keeps the stable `appdev` password on `app-pg-data`; the two never
+> collide. (Postgres only applies the password on first init, so a deliberate `PgPassword` change still
+> needs a one-time `docker volume rm app-pg-data`.)
 
 ---
 

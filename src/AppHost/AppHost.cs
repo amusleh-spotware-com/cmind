@@ -6,9 +6,17 @@ var dataProtectionCertB64 = builder.AddParameter("DataProtectionCertBase64", sec
 var dataProtectionCertPass = builder.AddParameter("DataProtectionCertPassword", secret: true);
 
 var pgPassword = builder.AddParameter("PgPassword", secret: true);
-var postgres = builder.AddPostgres("postgres", password: pgPassword)
-    .WithDataVolume("app-pg-data")
-    .WithPgAdmin();
+
+// Persist Postgres across dev runs via a named volume (PgDataVolume, default app-pg-data). Postgres only
+// applies POSTGRES_PASSWORD when it FIRST initializes an empty data dir, so a persistent volume created
+// with one password rejects a later run that uses a different password ("password authentication failed
+// for user postgres"). The Aspire smoke test runs with PgDataVolume="" (an ephemeral, per-run store) so it
+// never shares — and poisons — the developer's volume with its own password. If you deliberately change
+// PgPassword, delete the volume once so it re-initializes: docker volume rm app-pg-data.
+var pgDataVolume = builder.Configuration["PgDataVolume"];
+var postgres = builder.AddPostgres("postgres", password: pgPassword).WithPgAdmin();
+if (!string.IsNullOrWhiteSpace(pgDataVolume))
+    postgres = postgres.WithDataVolume(pgDataVolume);
 
 var appDb = postgres.AddDatabase("appdb");
 

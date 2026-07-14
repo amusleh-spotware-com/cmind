@@ -21,7 +21,12 @@ public sealed class AspireAppHostSmokeTests
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
 
-        var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.AppHost>(cts.Token);
+        // Pass PgDataVolume as a command-line arg so the AppHost's CreateBuilder(args) reads it EAGERLY
+        // (a post-hoc builder.Configuration set is too late — the entry point runs during CreateAsync).
+        // Empty ⇒ the AppHost skips WithDataVolume, so the smoke runs against an EPHEMERAL Postgres and
+        // never shares — and password-poisons — the developer's persistent app-pg-data volume.
+        var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.AppHost>(
+            ["--PgDataVolume="], cts.Token);
 
         // Supply the values the AppHost's AddParameter calls require (no interactive prompt in a test).
         builder.Configuration["Parameters:OwnerEmail"] = "owner@aspire.local";

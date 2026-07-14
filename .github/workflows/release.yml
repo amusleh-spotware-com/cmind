@@ -198,6 +198,10 @@ jobs:
       - uses: actions/download-artifact@v7
         with:
           path: artifacts
+          # Only the release assets — skip the .dockerbuild metadata artifacts that
+          # build-push-action uploads automatically (they are large and flaky to re-download).
+          pattern: '{node-binary-*,helm-chart,sbom-*}'
+          merge-multiple: true
       - name: Stage assets + aggregate checksums
         run: |
           set -euo pipefail

@@ -66,6 +66,11 @@
   <data name="language.title" xml:space="preserve"><value>Језик</value></data>
   <data name="language.description" xml:space="preserve"><value>Изаберите језик интерфејса. Ваш избор се чува у профилу и примењује у целој апликацији.</value></data>
   <data name="language.current" xml:space="preserve"><value>Тренутни језик</value></data>
+  <data name="settings.section.timezone" xml:space="preserve"><value>Временска зона</value></data>
+  <data name="timezone.title" xml:space="preserve"><value>Временска зона</value></data>
+  <data name="timezone.description" xml:space="preserve"><value>Изаберите временску зону у којој се приказују времена. Ваш избор се чува у профилу и примењује у целој апликацији.</value></data>
+  <data name="timezone.current" xml:space="preserve"><value>Тренутна временска зона</value></data>
+  <data name="timezone.select" xml:space="preserve"><value>Претрага временске зоне</value></data>
   <data name="nav.economicCalendar" xml:space="preserve"><value>Ekonomski kalendar</value></data>
   <data name="calendar.title" xml:space="preserve"><value>Ekonomski kalendar</value></data>
   <data name="calendar.upcoming" xml:space="preserve"><value>Predstojeće</value></data>

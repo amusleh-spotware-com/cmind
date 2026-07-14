@@ -82,4 +82,11 @@ public sealed record BrandingOptions
     /// surface can. Defaults to <c>false</c>. Normal users never see nodes regardless of this flag.
     /// </summary>
     public bool RestrictNodesToOwner { get; init; }
+
+    /// <summary>
+    /// Default display time zone (canonical IANA id, e.g. <c>Europe/London</c>) shown to a user who has not
+    /// chosen their own and whose browser zone was not detected. Defaults to <c>UTC</c>. An owner can retune
+    /// it at runtime from Deployment settings; every displayed time is rendered in the effective zone.
+    /// </summary>
+    public string DefaultTimeZone { get; init; } = SupportedTimeZones.Default;
 }

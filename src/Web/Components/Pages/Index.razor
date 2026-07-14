@@ -8,12 +8,14 @@
 @using Web.Components.Dashboard
 @using Web.Components.Dialogs
 @using Web.Json
+@using Web.Time
 @implements IDisposable
 @inject HttpClient Http
 @inject TimeProvider Time
 @inject IDialogService Dialogs
 @inject IFeatureGate Gate
 @inject Web.Branding.IBrandingThemeProvider Branding
+@inject IUserTimeZone UserZone
 
 <PageTitle>Dashboard</PageTitle>
 
@@ -128,8 +130,11 @@ else
 
     private double SuccessRateDelta => _data is null ? 0 : Math.Round(_data.Kpis.SuccessRateDelta * 100, 1);
 
+    private TimeZoneInfo _zone = TimeZoneInfo.Utc;
+
     protected override async Task OnInitializedAsync()
     {
+        _zone = await UserZone.GetZoneAsync();
         await RefreshAsync();
         await LoadLayoutAsync();
         _ = PollAsync(_cts.Token);
@@ -227,7 +232,7 @@ else
         {
             _data = await Http.GetFromJsonAsync<DashboardOverview>(
                 $"/api/dashboard/overview?period={_period}", JsonDefaults.DynamicWeb, _cts.Token);
-            _updatedLocal = Time.GetUtcNow().ToLocalTime().ToString("HH:mm:ss", CultureInfo.InvariantCulture);
+            _updatedLocal = Time.GetUtcNow().ToUserString(_zone, "HH:mm:ss");
             _error = false;
         }
         catch (Exception) when (!_cts.IsCancellationRequested)

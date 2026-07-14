@@ -143,6 +143,7 @@ builder.Services.AddSingleton<Microsoft.Extensions.Options.IValidateOptions<AppO
 builder.Services.AddSingleton<Microsoft.Extensions.Options.IValidateOptions<AppOptions>, Web.Registration.RegistrationOptionsValidator>();
 builder.Services.AddSingleton<Web.Branding.IBrandingThemeProvider, Web.Branding.BrandingThemeProvider>();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
+builder.Services.AddScoped<Web.Time.IUserTimeZone, Web.Time.UserTimeZone>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<CookieForwardingHandler>();
 builder.Services.AddHttpClient("self")
@@ -194,6 +195,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 app.MapAuthEndpoints();
 app.MapLocalizationEndpoints();
+app.MapTimeZoneEndpoints();
 app.MapRegistrationEndpoints();
 app.MapCBotEndpoints();
 app.MapNodeEndpoints();

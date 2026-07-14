@@ -66,6 +66,11 @@
   <data name="language.title" xml:space="preserve"><value>Язык</value></data>
   <data name="language.description" xml:space="preserve"><value>Выберите язык интерфейса. Ваш выбор сохранится в профиле и применится во всём приложении.</value></data>
   <data name="language.current" xml:space="preserve"><value>Текущий язык</value></data>
+  <data name="settings.section.timezone" xml:space="preserve"><value>Часовой пояс</value></data>
+  <data name="timezone.title" xml:space="preserve"><value>Часовой пояс</value></data>
+  <data name="timezone.description" xml:space="preserve"><value>Выберите часовой пояс, в котором отображается время. Ваш выбор сохранится в профиле и применится во всём приложении.</value></data>
+  <data name="timezone.current" xml:space="preserve"><value>Текущий часовой пояс</value></data>
+  <data name="timezone.select" xml:space="preserve"><value>Поиск часового пояса</value></data>
   <data name="nav.economicCalendar" xml:space="preserve"><value>Экономический календарь</value></data>
   <data name="calendar.title" xml:space="preserve"><value>Экономический календарь</value></data>
   <data name="calendar.upcoming" xml:space="preserve"><value>Предстоящие</value></data>

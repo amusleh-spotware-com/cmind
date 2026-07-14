@@ -252,46 +252,9 @@ public static class AuthEndpoints
         return user.ConsumeBackupCode(MfaBackupCodes.Hash(code), now);
     }
 
-    private static async Task SignInAsync(HttpContext ctx, AppUser user, bool rememberMe,
-        DateTimeOffset now, bool setupRequired)
-    {
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.Id.Value.ToString()),
-            new(ClaimTypes.Email, user.Email),
-            new(ClaimTypes.Role, user.RoleName)
-        };
-        if (setupRequired)
-            claims.Add(new Claim(MfaConstants.SetupRequiredClaimType, MfaConstants.SetupRequiredClaimValue));
-        if (user.MustChangePassword)
-            claims.Add(new Claim(PasswordPolicyConstants.MustChangePasswordClaimType, PasswordPolicyConstants.MustChangePasswordClaimValue));
-
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var authProps = new AuthenticationProperties
-        {
-            IsPersistent = rememberMe,
-            ExpiresUtc = rememberMe ? now.AddDays(30) : null
-        };
-        await ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(identity), authProps);
-
-        // Carry the user's saved language into the culture cookie so the very next request (and the Blazor
-        // circuit that boots from it) renders in their language without waiting for a manual switch.
-        if (CultureName.TryFrom(user.Profile.Locale, out var culture))
-        {
-            ctx.Response.Cookies.Append(
-                CookieRequestCultureProvider.DefaultCookieName,
-                CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture.Value)),
-                new CookieOptions
-                {
-                    MaxAge = TimeSpan.FromDays(365),
-                    SameSite = SameSiteMode.Lax,
-                    Secure = ctx.Request.IsHttps,
-                    IsEssential = true,
-                    Path = "/"
-                });
-        }
-    }
+    private static Task SignInAsync(HttpContext ctx, AppUser user, bool rememberMe,
+        DateTimeOffset now, bool setupRequired) =>
+        AuthCookieIssuer.IssueAsync(ctx, user, rememberMe, now, setupRequired);
 
     private static async Task<(string Email, string Password, string? ReturnUrl, bool RememberMe, bool IsForm)>
         ReadLoginAsync(HttpContext ctx)

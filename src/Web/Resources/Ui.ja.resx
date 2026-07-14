@@ -66,6 +66,11 @@
   <data name="language.title" xml:space="preserve"><value>言語</value></data>
   <data name="language.description" xml:space="preserve"><value>インターフェースの言語を選択してください。選択内容はプロフィールに保存され、アプリ全体に適用されます。</value></data>
   <data name="language.current" xml:space="preserve"><value>現在の言語</value></data>
+  <data name="settings.section.timezone" xml:space="preserve"><value>タイムゾーン</value></data>
+  <data name="timezone.title" xml:space="preserve"><value>タイムゾーン</value></data>
+  <data name="timezone.description" xml:space="preserve"><value>時刻を表示するタイムゾーンを選択してください。選択内容はプロフィールに保存され、アプリ全体に適用されます。</value></data>
+  <data name="timezone.current" xml:space="preserve"><value>現在のタイムゾーン</value></data>
+  <data name="timezone.select" xml:space="preserve"><value>タイムゾーンを検索</value></data>
   <data name="nav.economicCalendar" xml:space="preserve"><value>経済カレンダー</value></data>
   <data name="calendar.title" xml:space="preserve"><value>経済カレンダー</value></data>
   <data name="calendar.upcoming" xml:space="preserve"><value>予定</value></data>

@@ -11,11 +11,12 @@
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
+<TimeZoneInitializer />
 
 <MudLayout>
     <MudAppBar Elevation="1" Dense="true">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
-                       aria-label="@L["layout.toggleNav"]"
+                       aria-label="@L["layout.toggleNav"]" data-testid="nav-drawer-toggle"
                        OnClick="@(() => _drawerOpen = !_drawerOpen)" />
         @if (!string.IsNullOrWhiteSpace(Branding.Branding.LogoUrl))
         {

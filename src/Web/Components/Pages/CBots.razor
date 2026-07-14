@@ -2,11 +2,13 @@
 @using Web.Json
 @using Web.Components
 @using Web.Components.Dialogs
+@using Web.Time
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
 @inject IDialogService Dialogs
 @inject NavigationManager Nav
+@inject IUserTimeZone UserZone
 
 <PageTitle>cBots</PageTitle>
 
@@ -121,7 +123,13 @@ else
     private bool _loading = true;
     private bool _busy;
 
-    protected override Task OnInitializedAsync() => Load();
+    private TimeZoneInfo _zone = TimeZoneInfo.Utc;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _zone = await UserZone.GetZoneAsync();
+        await Load();
+    }
 
     private async Task Load()
     {
@@ -183,8 +191,8 @@ else
         await dlg.Result;
     }
 
-    private static string FormatTs(DateTimeOffset? v) =>
-        v is null ? "—" : v.Value.LocalDateTime.ToString("yyyy-MM-dd HH:mm");
+    private string FormatTs(DateTimeOffset? v) =>
+        v is null ? "—" : v.Value.ToUserString(_zone, "yyyy-MM-dd HH:mm");
 
     private RenderFragment BuildStatusChip(CBotRow p) => builder =>
     {

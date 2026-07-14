@@ -1,0 +1,25 @@
+@inject IJSRuntime JS
+
+@* Invisible first-visit helper: a Blazor Server circuit can't read the browser's time zone, so on first
+   interactive render we ask the browser (via JS) for its IANA zone — but only when no time-zone cookie
+   exists yet — and persist it through a background request (cookie + profile) without navigating the page,
+   so it never races an in-flight navigation. The zone takes effect on the next full load / sign-in. Runs at
+   most once (the cookie then suppresses it). *@
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        try
+        {
+            var zone = await JS.InvokeAsync<string?>("cmindTimeZone.detect");
+            if (string.IsNullOrWhiteSpace(zone)) return;
+            await JS.InvokeVoidAsync("cmindTimeZone.persist", zone);
+        }
+        catch (Exception)
+        {
+            // JS interop can be unavailable during prerender/disconnect; detection is best-effort.
+        }
+    }
+}

@@ -66,6 +66,11 @@
   <data name="language.title" xml:space="preserve"><value>언어</value></data>
   <data name="language.description" xml:space="preserve"><value>인터페이스 언어를 선택하세요. 선택 내용은 프로필에 저장되어 앱 전체에 적용됩니다.</value></data>
   <data name="language.current" xml:space="preserve"><value>현재 언어</value></data>
+  <data name="settings.section.timezone" xml:space="preserve"><value>시간대</value></data>
+  <data name="timezone.title" xml:space="preserve"><value>시간대</value></data>
+  <data name="timezone.description" xml:space="preserve"><value>시간을 표시할 시간대를 선택하세요. 선택 내용은 프로필에 저장되어 앱 전체에 적용됩니다.</value></data>
+  <data name="timezone.current" xml:space="preserve"><value>현재 시간대</value></data>
+  <data name="timezone.select" xml:space="preserve"><value>시간대 검색</value></data>
   <data name="nav.economicCalendar" xml:space="preserve"><value>경제 캘린더</value></data>
   <data name="calendar.title" xml:space="preserve"><value>경제 캘린더</value></data>
   <data name="calendar.upcoming" xml:space="preserve"><value>예정</value></data>

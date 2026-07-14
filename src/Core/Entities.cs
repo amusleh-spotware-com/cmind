@@ -228,6 +228,11 @@ public abstract class AppUser : AuditedEntity<UserId>
     public void SetLocale(Core.Localization.CultureName culture) =>
         Profile = Profile with { Locale = culture.Value };
 
+    // Records the user's chosen display time zone. Only a resolvable zone reaches here (the TimeZoneId value
+    // object already rejected anything else and canonicalized it), so this overlays it onto the owned profile.
+    public void SetTimeZone(Core.Time.TimeZoneId timeZone) =>
+        Profile = Profile with { TimeZone = timeZone.Value };
+
     // Issues a fresh email-verification token (stored as a hash), invalidating any earlier ones so only the
     // most recently sent link is redeemable.
     public void IssueEmailVerificationToken(string tokenHash, DateTimeOffset expiresAt)

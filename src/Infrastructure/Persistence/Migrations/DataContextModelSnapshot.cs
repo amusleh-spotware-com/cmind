@@ -3136,6 +3136,10 @@ namespace Infrastructure.Persistence.Migrations
                                 .HasMaxLength(20)
                                 .HasColumnType("character varying(20)");
 
+                            b1.Property<string>("TimeZone")
+                                .HasMaxLength(64)
+                                .HasColumnType("character varying(64)");
+
                             b1.HasKey("AppUserId");
 
                             b1.ToTable("Users");

@@ -1,0 +1,47 @@
+@using Core.Constants
+@using Web.Time
+@inject NavigationManager Nav
+@inject IUserTimeZone UserZone
+@inject IStringLocalizer<Ui> L
+
+@* Time-zone picker. A Blazor Server circuit can't change its zone live, so each choice force-navigates to
+   the /set-timezone endpoint (a full HTTP GET, outside the circuit) which sets the cookie + persists the
+   choice + re-issues the auth cookie; the reload boots a fresh circuit rendering every time in the new zone. *@
+
+<MudAutocomplete T="SupportedTimeZones.TimeZoneOption" Dense="true" ResetValueOnEmptyText="true"
+                 Label="@L["timezone.select"]" data-testid="timezone-switcher"
+                 SearchFunc="Search" ToStringFunc="@(o => o.DisplayName)"
+                 Value="_selected" ValueChanged="SwitchTo" Clearable="false">
+    <ItemTemplate Context="option">
+        <MudText Typo="Typo.body2" data-testid="@($"timezone-option-{option.Id}")">@option.DisplayName</MudText>
+    </ItemTemplate>
+</MudAutocomplete>
+
+@code {
+    private SupportedTimeZones.TimeZoneOption _selected;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var current = await UserZone.GetZoneIdAsync();
+        _selected = SupportedTimeZones.All.FirstOrDefault(o => o.Id == current);
+    }
+
+    private Task<IEnumerable<SupportedTimeZones.TimeZoneOption>> Search(string? value, CancellationToken ct)
+    {
+        var all = SupportedTimeZones.All;
+        if (string.IsNullOrWhiteSpace(value))
+            return Task.FromResult<IEnumerable<SupportedTimeZones.TimeZoneOption>>(all);
+        var matches = all.Where(o =>
+            o.DisplayName.Contains(value, StringComparison.OrdinalIgnoreCase)
+            || o.Id.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(matches);
+    }
+
+    private void SwitchTo(SupportedTimeZones.TimeZoneOption option)
+    {
+        if (string.IsNullOrEmpty(option.Id) || option.Id == _selected.Id) return;
+        var back = "/" + Nav.ToBaseRelativePath(Nav.Uri);
+        var url = $"/set-timezone?tz={Uri.EscapeDataString(option.Id)}&redirectUri={Uri.EscapeDataString(back)}";
+        Nav.NavigateTo(url, forceLoad: true);
+    }
+}

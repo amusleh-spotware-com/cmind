@@ -66,6 +66,11 @@
   <data name="language.title" xml:space="preserve"><value>Γλώσσα</value></data>
   <data name="language.description" xml:space="preserve"><value>Επιλέξτε τη γλώσσα της διεπαφής. Η επιλογή σας αποθηκεύεται στο προφίλ σας και εφαρμόζεται σε όλη την εφαρμογή.</value></data>
   <data name="language.current" xml:space="preserve"><value>Τρέχουσα γλώσσα</value></data>
+  <data name="settings.section.timezone" xml:space="preserve"><value>Ζώνη ώρας</value></data>
+  <data name="timezone.title" xml:space="preserve"><value>Ζώνη ώρας</value></data>
+  <data name="timezone.description" xml:space="preserve"><value>Επιλέξτε τη ζώνη ώρας στην οποία εμφανίζονται οι ώρες σας. Η επιλογή σας αποθηκεύεται στο προφίλ σας και εφαρμόζεται σε όλη την εφαρμογή.</value></data>
+  <data name="timezone.current" xml:space="preserve"><value>Τρέχουσα ζώνη ώρας</value></data>
+  <data name="timezone.select" xml:space="preserve"><value>Αναζήτηση ζώνης ώρας</value></data>
   <data name="nav.economicCalendar" xml:space="preserve"><value>Οικονομικό ημερολόγιο</value></data>
   <data name="calendar.title" xml:space="preserve"><value>Οικονομικό ημερολόγιο</value></data>
   <data name="calendar.upcoming" xml:space="preserve"><value>Επερχόμενα</value></data>

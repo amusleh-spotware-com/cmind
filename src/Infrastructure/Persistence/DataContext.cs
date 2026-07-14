@@ -145,6 +145,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
                 p.Property(v => v.PhoneNumber).HasMaxLength(20);
                 p.Property(v => v.Company).HasMaxLength(128);
                 p.Property(v => v.Locale).HasMaxLength(32);
+                p.Property(v => v.TimeZone).HasMaxLength(64);
             });
         });
 

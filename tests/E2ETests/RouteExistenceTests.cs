@@ -15,7 +15,7 @@ public sealed partial class RouteExistenceTests
     // but not backed by a Blazor @page. Keep tight; add with a reason.
     private static readonly HashSet<string> NonPageRoutes = new(StringComparer.OrdinalIgnoreCase)
     {
-        "/", "/set-culture", "/error", "/forbidden", "/logout",
+        "/", "/set-culture", "/set-timezone", "/error", "/forbidden", "/logout",
         "/openapi/callback",                 // minimal-API OAuth callback endpoint (OpenApiEndpoints)
         "/assistant",                        // deliberately removed; Old_assistant_route_is_gone asserts it 404s
     };

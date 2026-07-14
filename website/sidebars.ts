@@ -58,6 +58,7 @@ const sidebars: SidebarsConfig = {
         'features/white-label',
         'features/white-label-owner-settings',
         'features/localization',
+        'features/time-zone',
         'features/feature-toggles',
         'features/compliance',
         'features/pwa',

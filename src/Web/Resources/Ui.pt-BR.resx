@@ -66,6 +66,11 @@
   <data name="language.title" xml:space="preserve"><value>Idioma</value></data>
   <data name="language.description" xml:space="preserve"><value>Escolha o idioma da interface. Sua escolha é salva no seu perfil e aplicada em todo o app.</value></data>
   <data name="language.current" xml:space="preserve"><value>Idioma atual</value></data>
+  <data name="settings.section.timezone" xml:space="preserve"><value>Fuso horário</value></data>
+  <data name="timezone.title" xml:space="preserve"><value>Fuso horário</value></data>
+  <data name="timezone.description" xml:space="preserve"><value>Escolha o fuso horário em que seus horários são exibidos. Sua escolha é salva no seu perfil e aplicada em todo o app.</value></data>
+  <data name="timezone.current" xml:space="preserve"><value>Fuso horário atual</value></data>
+  <data name="timezone.select" xml:space="preserve"><value>Buscar fuso horário</value></data>
   <data name="nav.economicCalendar" xml:space="preserve"><value>Calendário econômico</value></data>
   <data name="calendar.title" xml:space="preserve"><value>Calendário econômico</value></data>
   <data name="calendar.upcoming" xml:space="preserve"><value>Próximos</value></data>

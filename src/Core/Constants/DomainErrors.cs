@@ -120,9 +120,11 @@ public static class DomainErrors
     public const string ProfileCountryInvalid = "domain.profile.country_invalid";
     public const string ProfilePhoneInvalid = "domain.profile.phone_invalid";
     public const string ProfileLocaleInvalid = "domain.profile.locale_invalid";
+    public const string ProfileTimeZoneInvalid = "domain.profile.timezone_invalid";
     public const string ProfileTextTooLong = "domain.profile.text_too_long";
 
     public const string CultureNotSupported = "domain.localization.culture_not_supported";
+    public const string TimeZoneNotSupported = "domain.time.timezone_not_supported";
 
     public const string AiModelRequired = "domain.ai.model_required";
     public const string AiEndpointInvalid = "domain.ai.endpoint_invalid";

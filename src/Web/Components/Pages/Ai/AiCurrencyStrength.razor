@@ -128,7 +128,7 @@ else
     </MudGrid>
 
     <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mt-3">
-        As of @_view.AsOf.ToLocalTime().ToString("g") · source @_view.Source
+        As of <UserTime Value="_view.AsOf" Format="g" /> · source @_view.Source
     </MudText>
 }
 

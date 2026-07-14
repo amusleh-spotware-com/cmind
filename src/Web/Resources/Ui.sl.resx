@@ -66,6 +66,11 @@
   <data name="language.title" xml:space="preserve"><value>Jezik</value></data>
   <data name="language.description" xml:space="preserve"><value>Izberite jezik vmesnika. Vaša izbira se shrani v profil in uporabi v celotni aplikaciji.</value></data>
   <data name="language.current" xml:space="preserve"><value>Trenutni jezik</value></data>
+  <data name="settings.section.timezone" xml:space="preserve"><value>Časovni pas</value></data>
+  <data name="timezone.title" xml:space="preserve"><value>Časovni pas</value></data>
+  <data name="timezone.description" xml:space="preserve"><value>Izberite časovni pas, v katerem so prikazani vaši časi. Vaša izbira se shrani v profil in uporabi v celotni aplikaciji.</value></data>
+  <data name="timezone.current" xml:space="preserve"><value>Trenutni časovni pas</value></data>
+  <data name="timezone.select" xml:space="preserve"><value>Iskanje časovnega pasu</value></data>
   <data name="nav.economicCalendar" xml:space="preserve"><value>Ekonomski koledar</value></data>
   <data name="calendar.title" xml:space="preserve"><value>Ekonomski koledar</value></data>
   <data name="calendar.upcoming" xml:space="preserve"><value>Prihajajoče</value></data>

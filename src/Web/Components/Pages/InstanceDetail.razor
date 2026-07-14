@@ -49,7 +49,7 @@
                 @foreach (var e in _calendarEvents)
                 {
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@e.EffectiveAt.ToLocalTime().DateTime.ToString("g")</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary"><UserTime Value="e.EffectiveAt" Format="g" /></MudText>
                         <MudChip T="string" Size="MudBlazor.Size.Small" Color="@ImpactColor(e.Impact)">@e.SeriesCode</MudChip>
                     </MudStack>
                 }

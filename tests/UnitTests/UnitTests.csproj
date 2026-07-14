@@ -2,6 +2,10 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- Time-zone resolution needs the ICU/IANA zone database (TimeZoneId, SupportedTimeZones); the repo
+         default InvariantGlobalization=true disables ICU so only UTC resolves. Match the app + IntegrationTests
+         (both non-invariant) so unit tests exercise real zones exactly as production does. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Core\Core.csproj" />

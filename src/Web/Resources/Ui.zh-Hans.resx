@@ -66,6 +66,11 @@
   <data name="language.title" xml:space="preserve"><value>语言</value></data>
   <data name="language.description" xml:space="preserve"><value>选择界面语言。您的选择将保存到个人资料并应用于整个应用。</value></data>
   <data name="language.current" xml:space="preserve"><value>当前语言</value></data>
+  <data name="settings.section.timezone" xml:space="preserve"><value>时区</value></data>
+  <data name="timezone.title" xml:space="preserve"><value>时区</value></data>
+  <data name="timezone.description" xml:space="preserve"><value>选择显示时间所用的时区。您的选择将保存到个人资料并应用于整个应用。</value></data>
+  <data name="timezone.current" xml:space="preserve"><value>当前时区</value></data>
+  <data name="timezone.select" xml:space="preserve"><value>搜索时区</value></data>
   <data name="nav.economicCalendar" xml:space="preserve"><value>经济日历</value></data>
   <data name="calendar.title" xml:space="preserve"><value>经济日历</value></data>
   <data name="calendar.upcoming" xml:space="preserve"><value>即将到来</value></data>

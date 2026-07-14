@@ -26,6 +26,9 @@ public sealed partial record UserProfile
     /// <summary>BCP-47 / .NET culture name (e.g. <c>en-US</c>).</summary>
     public string? Locale { get; init; }
 
+    /// <summary>Canonical IANA time zone id (e.g. <c>Europe/London</c>) the user's times are shown in.</summary>
+    public string? TimeZone { get; init; }
+
     public bool MarketingOptIn { get; init; }
     public bool AgeConfirmed { get; init; }
 
@@ -39,7 +42,7 @@ public sealed partial record UserProfile
     public static UserProfile Create(
         string? fullName = null, string? displayName = null, string? countryCode = null,
         string? phoneNumber = null, string? company = null, string? locale = null,
-        bool marketingOptIn = false, bool ageConfirmed = false)
+        bool marketingOptIn = false, bool ageConfirmed = false, string? timeZone = null)
         => new()
         {
             FullName = Text(fullName),
@@ -48,6 +51,7 @@ public sealed partial record UserProfile
             CountryCode = Country(countryCode),
             PhoneNumber = Phone(phoneNumber),
             Locale = LocaleName(locale),
+            TimeZone = TimeZoneName(timeZone),
             MarketingOptIn = marketingOptIn,
             AgeConfirmed = ageConfirmed
         };
@@ -91,6 +95,16 @@ public sealed partial record UserProfile
             if (parts[i].Length == 2 && parts[i].All(char.IsLetter))
                 parts[i] = parts[i].ToUpperInvariant();
         return string.Join('-', parts);
+    }
+
+    // Validates a time zone by resolving it through TimeZoneId (any IANA or Windows id the platform knows),
+    // storing the canonical IANA form so the value is portable. Throws on an unknown zone.
+    private static string? TimeZoneName(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        if (!Time.TimeZoneId.TryFrom(value, out var zone))
+            throw new DomainException(DomainErrors.ProfileTimeZoneInvalid);
+        return zone.Value;
     }
 
     [GeneratedRegex(@"^\+[1-9]\d{1,14}$")]

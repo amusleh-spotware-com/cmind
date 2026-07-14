@@ -66,6 +66,11 @@
   <data name="language.title" xml:space="preserve"><value>Ngôn ngữ</value></data>
   <data name="language.description" xml:space="preserve"><value>Chọn ngôn ngữ giao diện. Lựa chọn của bạn được lưu vào hồ sơ và áp dụng trên toàn ứng dụng.</value></data>
   <data name="language.current" xml:space="preserve"><value>Ngôn ngữ hiện tại</value></data>
+  <data name="settings.section.timezone" xml:space="preserve"><value>Múi giờ</value></data>
+  <data name="timezone.title" xml:space="preserve"><value>Múi giờ</value></data>
+  <data name="timezone.description" xml:space="preserve"><value>Chọn múi giờ hiển thị thời gian của bạn. Lựa chọn của bạn được lưu vào hồ sơ và áp dụng trên toàn ứng dụng.</value></data>
+  <data name="timezone.current" xml:space="preserve"><value>Múi giờ hiện tại</value></data>
+  <data name="timezone.select" xml:space="preserve"><value>Tìm múi giờ</value></data>
   <data name="nav.economicCalendar" xml:space="preserve"><value>Lịch kinh tế</value></data>
   <data name="calendar.title" xml:space="preserve"><value>Lịch kinh tế</value></data>
   <data name="calendar.upcoming" xml:space="preserve"><value>Sắp tới</value></data>

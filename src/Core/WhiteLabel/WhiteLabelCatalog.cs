@@ -68,6 +68,9 @@ public static class WhiteLabelCatalog
             Enum("branding.nodesUi", "Branding.NodesUi", WhiteLabelCategory.Branding, "Nodes UI mode",
                 typeof(NodesUiMode),
                 "How much of the Nodes surface is exposed: Full (manage), Monitor (read-only), or Hidden."),
+            Str("branding.defaultTimeZone", "Branding.DefaultTimeZone", WhiteLabelCategory.Branding,
+                "Default time zone",
+                "Canonical IANA time zone new users see until they choose their own or their browser zone is detected."),
 
             // ---- Theme (palette) ----
             Color("branding.primaryColor", "Branding.PrimaryColor", "Primary colour"),

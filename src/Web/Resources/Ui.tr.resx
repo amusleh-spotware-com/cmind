@@ -66,6 +66,11 @@
   <data name="language.title" xml:space="preserve"><value>Dil</value></data>
   <data name="language.description" xml:space="preserve"><value>Arayüz dilini seçin. Seçiminiz profilinize kaydedilir ve uygulamanın tamamında uygulanır.</value></data>
   <data name="language.current" xml:space="preserve"><value>Geçerli dil</value></data>
+  <data name="settings.section.timezone" xml:space="preserve"><value>Saat dilimi</value></data>
+  <data name="timezone.title" xml:space="preserve"><value>Saat dilimi</value></data>
+  <data name="timezone.description" xml:space="preserve"><value>Saatlerinizin gösterileceği saat dilimini seçin. Seçiminiz profilinize kaydedilir ve uygulamanın tamamında uygulanır.</value></data>
+  <data name="timezone.current" xml:space="preserve"><value>Geçerli saat dilimi</value></data>
+  <data name="timezone.select" xml:space="preserve"><value>Saat dilimi ara</value></data>
   <data name="nav.economicCalendar" xml:space="preserve"><value>Ekonomik Takvim</value></data>
   <data name="calendar.title" xml:space="preserve"><value>Ekonomik Takvim</value></data>
   <data name="calendar.upcoming" xml:space="preserve"><value>Yaklaşan</value></data>

@@ -4,6 +4,7 @@
 @using Web.Components.Pages
 @inject IFeatureGate Gate
 @inject IStringLocalizer<Ui> L
+@inject Web.Time.IUserTimeZone UserZone
 
 @* Full-screen settings surface: a section list on the left, the selected settings panel on the right
    (Claude-settings style), replacing the old nested Settings nav items. Opened from the nav. *@
@@ -48,6 +49,9 @@
                     <MudNavLink Icon="@Icons.Material.Filled.Language" data-testid="settings-section-language"
                                 OnClick="@(() => _active = Section.Language)"
                                 Class="@ActiveClass(Section.Language)">@L["settings.section.language"]</MudNavLink>
+                    <MudNavLink Icon="@Icons.Material.Filled.Schedule" data-testid="settings-section-timezone"
+                                OnClick="@(() => _active = Section.TimeZone)"
+                                Class="@ActiveClass(Section.TimeZone)">@L["settings.section.timezone"]</MudNavLink>
                     @if (Gate.IsEnabled(FeatureFlag.Compliance))
                     {
                         <MudNavLink Icon="@Icons.Material.Filled.Gavel" data-testid="settings-section-legal"
@@ -82,6 +86,17 @@
                             </div>
                         </div>
                         break;
+                    case Section.TimeZone:
+                        <div class="d-flex flex-column ga-3" data-testid="settings-timezone-panel">
+                            <MudText Typo="Typo.h6">@L["timezone.title"]</MudText>
+                            <MudText Typo="Typo.body2" Class="mud-text-secondary">@L["timezone.description"]</MudText>
+                            <div class="d-flex align-center ga-2">
+                                <MudText Typo="Typo.body2">@L["timezone.current"]:</MudText>
+                                <MudChip T="string" Color="Color.Primary" Size="Size.Small" data-testid="timezone-current">@_currentZoneId</MudChip>
+                            </div>
+                            <TimeZoneSwitcher />
+                        </div>
+                        break;
                     case Section.Legal:
                         <Compliance />
                         break;
@@ -94,7 +109,12 @@
 @code {
     [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
 
-    private enum Section { OpenApi, Ai, Features, Deployment, Language, Legal }
+    private enum Section { OpenApi, Ai, Features, Deployment, Language, TimeZone, Legal }
+
+    private string _currentZoneId = SupportedTimeZones.Default;
+
+    protected override async Task OnInitializedAsync() =>
+        _currentZoneId = await UserZone.GetZoneIdAsync();
 
     private Section _active = Section.Features;
     private string _currentLanguageName = SupportedCultures.NativeNames[SupportedCultures.Default];

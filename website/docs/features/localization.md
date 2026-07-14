@@ -4,6 +4,9 @@ cMind is fully localizable and ships in the **same 23 languages cTrader itself s
 uses the platform — and reads these docs — in their own language. English is the fallback; any missing
 translation degrades gracefully to English rather than showing a blank or a raw key.
 
+Display formatting (dates, times, numbers) follows the chosen language, and every shown time is converted to
+the user's own zone — see [Time zone](./time-zone.md).
+
 ## Supported languages
 
 Arabic (RTL), Chinese (Simplified), Czech, English, French, German, Greek, Hungarian, Indonesian,

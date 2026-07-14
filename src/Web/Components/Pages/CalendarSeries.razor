@@ -45,7 +45,7 @@ else
             <MudCard Elevation="1">
                 <MudCardContent>
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudText Typo="Typo.body2">@e.EffectiveAt.ToLocalTime().DateTime.ToString("g")</MudText>
+                        <MudText Typo="Typo.body2"><UserTime Value="e.EffectiveAt" Format="g" /></MudText>
                         <MudChip T="string" Size="Size.Small" Color="@ImpactColor(e.Impact)">@ImpactLabel(e.Impact)</MudChip>
                         <MudSpacer />
                         @if (e.Released)

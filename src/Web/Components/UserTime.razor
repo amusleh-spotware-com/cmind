@@ -1,0 +1,26 @@
+@using System.Globalization
+@using Web.Time
+@inject IUserTimeZone UserZone
+
+@_text
+
+@code {
+    // Renders a UTC timestamp in the current user's resolved time zone, formatted with the current culture.
+    // The single markup seam for user-facing times — never ToLocalTime() (which binds the server zone).
+    [Parameter, EditorRequired] public DateTimeOffset? Value { get; set; }
+    [Parameter] public string Format { get; set; } = "g";
+    [Parameter] public string Empty { get; set; } = "—";
+
+    private string _text = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Value is not { } value)
+        {
+            _text = Empty;
+            return;
+        }
+        var zone = await UserZone.GetZoneAsync();
+        _text = TimeZoneInfo.ConvertTime(value, zone).ToString(Format, CultureInfo.CurrentCulture);
+    }
+}

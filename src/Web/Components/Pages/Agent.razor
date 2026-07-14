@@ -1,10 +1,12 @@
 @page "/agent"
 @using System.Net.Http.Json
 @using Web.Json
+@using Web.Time
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
 @inject IStringLocalizer<Ui> L
+@inject IUserTimeZone UserZone
 
 <PageTitle>Portfolio Agent</PageTitle>
 
@@ -130,8 +132,11 @@
         StateHasChanged();
     }
 
+    private TimeZoneInfo _zone = TimeZoneInfo.Utc;
+
     protected override async Task OnInitializedAsync()
     {
+        _zone = await UserZone.GetZoneAsync();
         // Load each source independently and tolerate a disabled/unavailable feature (e.g. Authoring off
         // makes /api/cbots return 404). A failed load leaves that list empty and the page usable rather
         // than throwing into the ErrorBoundary.
@@ -226,10 +231,10 @@
         finally { _busy = false; }
     }
 
-    private static string FormatDate(dynamic value)
+    private string FormatDate(dynamic value)
     {
         if (value is null) return "-";
         DateTimeOffset dto = value;
-        return dto.ToString("yyyy-MM-dd HH:mm");
+        return dto.ToUserString(_zone, "yyyy-MM-dd HH:mm");
     }
 }

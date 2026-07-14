@@ -122,6 +122,29 @@
                 return (choice && choice.outcome) ? choice.outcome : 'dismissed';
             }
         };
+
+        // Time-zone auto-detect: on a first visit with no time-zone cookie yet, report the browser's IANA
+        // zone so the app can default to the user's local zone. Returns null once a cookie exists (the user
+        // has a resolved zone) so detection runs at most once and never fights an explicit choice.
+        window.cmindTimeZone = {
+            detect: () => {
+                try {
+                    if (document.cookie.split('; ').some(c => c.startsWith('.Cmind.TimeZone='))) return null;
+                    return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+                } catch { return null; }
+            },
+            // Persist the detected zone via a background request (sets the cookie in the browser and, when
+            // signed in, saves it to the profile) WITHOUT navigating the page — so it never races an
+            // in-flight navigation. The zone takes effect on the next full load / sign-in.
+            persist: async (zone) => {
+                try {
+                    // silent=1 → sets the cookie + saves the profile but does NOT re-issue the auth cookie
+                    // (which would tear down the live Blazor circuit) and returns 204 (no redirect/navigation).
+                    await fetch('/set-timezone?tz=' + encodeURIComponent(zone) + '&silent=true',
+                        { credentials: 'same-origin' });
+                } catch { /* best-effort detection */ }
+            }
+        };
     </script>
 </body>
 </html>

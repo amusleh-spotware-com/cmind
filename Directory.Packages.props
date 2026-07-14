@@ -59,7 +59,7 @@
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.1" />
 
     <!-- cTrader Open API (protobuf) -->
-    <PackageVersion Include="Google.Protobuf" Version="3.31.1" />
+    <PackageVersion Include="Google.Protobuf" Version="3.35.1" />
     <PackageVersion Include="Grpc.Tools" Version="2.72.0" />
 
     <!-- Built-in local LLM (in-process, no API key) -->

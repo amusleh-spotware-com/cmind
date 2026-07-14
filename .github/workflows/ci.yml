@@ -167,7 +167,6 @@ jobs:
   docs:
     name: Docs site (link check)
     runs-on: ubuntu-latest
-    if: false  # TEMP-ASPIRE-ONLY
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v7

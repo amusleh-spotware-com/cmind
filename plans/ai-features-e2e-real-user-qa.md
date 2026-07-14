@@ -47,11 +47,18 @@ worker-driven pattern (short poll + marker-keyed fake JSON + isolated collection
 `CurrencyStrengthApiTests`): seed calendar → refresh (persists a snapshot with an AI narrative) → the MCP
 `AiTools.CurrencyStrength` tool returns that narrative. **MCP AI tools now 5/5.** ✅
 
-**Remaining:** F17 AiRiskGuard + F15 portfolio agent — the worker action has real side-effects
-(`docker stop` an instance, TPH id-swap, order execution) and the seeded running instance is also reaped
-by the completion pollers, so there is no stable, race-free assertion surface without a product change
-(e.g. a persisted, readable risk-assessment / decision record). Deferred rather than ship a flaky test.
-F1 build pipeline + live-account variants stay on the heavy/live lanes (already gated).
+**Increment 7 (shipped).** F15 portfolio agent driven through the REAL background worker
+(`PortfolioAgentService`). A **Suggest**-autonomy mandate makes the worker call the AI and RECORD a
+proposal (execution is Auto-only, so nothing is traded) — a clean, side-effect-free assertion surface.
+`AiWorkersFixture` also runs the agent worker on a 2s cadence; `FakeLocalLlmServer` returns a valid
+agent-action JSON with the canned reply in its reasoning. `AgentWorkerE2ETests`: seed a cBot → create an
+enabled Suggest mandate → the worker records an `AgentProposal` whose AI-authored reasoning renders. ✅
+
+**Remaining:** F17 AiRiskGuard is the last uncovered feature — its only worker action is destructive
+(`docker stop` + TPH id-swap on the running instance, which the completion pollers also reap), so it has
+no stable, race-free assertion surface without a product change (persist a readable risk-assessment
+record, as F15 does with proposals). Deferred rather than ship a flaky test. F1 build pipeline +
+live-account variants stay on the heavy/live lanes (already gated).
 
 **Goal.** Today every AI feature has *an* E2E test, but for the data-dependent features the test only
 asserts a weak contract: "AI is configured → the button is enabled → clicking it does not crash the

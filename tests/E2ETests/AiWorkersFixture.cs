@@ -17,6 +17,12 @@ public sealed class AiWorkersFixture : AiLocalFixture
         // seconds instead of the 5-minute production cadence.
         psi.Environment["App__Alerts__Enabled"] = "true";
         psi.Environment["App__Alerts__PollInterval"] = "00:00:02";
+
+        // Portfolio-agent worker (PortfolioAgentService): on, running fast so a Suggest-autonomy mandate
+        // produces a proposal within seconds instead of the 30-minute production cadence. Suggest never
+        // executes — it only records a proposal — so no orders/containers are touched.
+        psi.Environment["App__Agent__Enabled"] = "true";
+        psi.Environment["App__Agent__Interval"] = "00:00:02";
     }
 }
 

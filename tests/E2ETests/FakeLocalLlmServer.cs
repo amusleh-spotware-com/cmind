@@ -17,6 +17,7 @@ public sealed class FakeLocalLlmServer : IDisposable
     {
         _reply = reply;
         _alertJson = BuildAlertJson(reply);
+        _agentJson = BuildAgentJson(reply);
         Port = GetFreePort();
         _listener.Prefixes.Add($"http://127.0.0.1:{Port}/");
         _listener.Start();
@@ -40,7 +41,14 @@ public sealed class FakeLocalLlmServer : IDisposable
     // call still gets the canned reply.
     private const string AlertMarker = "alerting agent";
 
+    // Marker from AiPrompts.AgentSystem — the portfolio-agent proposal call whose reply must be a
+    // structured agent-action JSON ({reasoning, name, parameters}); the plain canned string parses to no
+    // action, so the worker records no proposal. The reasoning embeds the canned reply so the persisted
+    // AgentProposal carries it. Every other call still gets the canned reply.
+    private const string AgentMarker = "autonomous trading portfolio agent";
+
     private readonly string _alertJson;
+    private readonly string _agentJson;
 
     private async Task LoopAsync()
     {
@@ -56,6 +64,7 @@ public sealed class FakeLocalLlmServer : IDisposable
 
             var content = requestBody.Contains(CurrencyGatherMarker, StringComparison.Ordinal) ? CurrencyGatherJson
                 : requestBody.Contains(AlertMarker, StringComparison.Ordinal) ? _alertJson
+                : requestBody.Contains(AgentMarker, StringComparison.Ordinal) ? _agentJson
                 : _reply;
 
             var body = "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"" + content + "\"}}]}";
@@ -85,6 +94,12 @@ public sealed class FakeLocalLlmServer : IDisposable
     // E2E can assert on.
     private static string BuildAlertJson(string reply) =>
         "{\\\"alert\\\": true, \\\"severity\\\": \\\"warning\\\", \\\"message\\\": \\\"" + reply + " market update\\\"}";
+
+    // A valid agent-action payload, JSON-escaped for embedding in the OpenAI chat "content" string. The
+    // reasoning embeds the canned reply so the persisted AgentProposal carries a marker the E2E asserts on.
+    private static string BuildAgentJson(string reply) =>
+        "{\\\"reasoning\\\": \\\"" + reply + " tighten the stop\\\", \\\"name\\\": \\\"opt-1\\\", " +
+        "\\\"parameters\\\": {\\\"period\\\": 20}}";
 
     private static int GetFreePort()
     {

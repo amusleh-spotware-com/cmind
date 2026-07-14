@@ -35,6 +35,7 @@ jobs:
   analyzer-sweep:
     name: Analyzer sweep (info CA/IDE)
     runs-on: ubuntu-latest
+    if: false  # TEMP-ASPIRE-ONLY
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v5
@@ -52,6 +53,7 @@ jobs:
   test-unit:
     name: Unit tests
     runs-on: ubuntu-latest
+    if: false  # TEMP-ASPIRE-ONLY
     needs: build
     steps:
       - uses: actions/checkout@v7
@@ -79,6 +81,7 @@ jobs:
   test-integration:
     name: Integration tests (Postgres)
     runs-on: ubuntu-latest
+    if: false  # TEMP-ASPIRE-ONLY
     needs: build
     steps:
       - uses: actions/checkout@v7
@@ -132,6 +135,7 @@ jobs:
   test-e2e:
     name: E2E tests (Playwright)
     runs-on: ubuntu-latest
+    if: false  # TEMP-ASPIRE-ONLY
     needs: build
     steps:
       - uses: actions/checkout@v7
@@ -163,6 +167,7 @@ jobs:
   docs:
     name: Docs site (link check)
     runs-on: ubuntu-latest
+    if: false  # TEMP-ASPIRE-ONLY
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v7

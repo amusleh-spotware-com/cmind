@@ -38,10 +38,14 @@ public sealed class AspireAppHostSmokeTests
         // Web waits on appdb (WaitFor) and runs migrations + owner seeding before its readiness passes.
         await app.ResourceNotifications.WaitForResourceHealthyAsync("web", cts.Token);
 
-        // Target the plain-http endpoint by name: the default endpoint is https, whose ASP.NET dev cert is
-        // untrusted on a CI runner (UntrustedRoot) and would fail the smoke's own request even though the
-        // resource is healthy. The smoke only needs to reach the app, not exercise TLS.
-        var http = app.CreateHttpClient("web", "http");
+        // The app redirects http -> https (UseHttpsRedirection) and a CI runner has no trusted ASP.NET dev
+        // cert, so any request ends at an untrusted-root TLS handshake even though the resource is healthy.
+        // The smoke only needs to reach the app, not validate TLS — accept any server certificate.
+        using var handler = new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+        };
+        using var http = new HttpClient(handler) { BaseAddress = app.GetEndpoint("web", "http") };
 
         var health = await http.GetAsync("/health", cts.Token);
         health.StatusCode.Should().Be(HttpStatusCode.OK, "the Web resource must report healthy under Aspire wiring");

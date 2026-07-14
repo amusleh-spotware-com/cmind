@@ -101,7 +101,7 @@ jobs:
           COSIGN_YES: "true"
         run: cosign sign "${{ env.IMAGE_BASE }}-${{ matrix.component }}@${{ steps.build.outputs.digest }}"
       - name: Attest build provenance
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-name: ${{ env.IMAGE_BASE }}-${{ matrix.component }}
           subject-digest: ${{ steps.build.outputs.digest }}

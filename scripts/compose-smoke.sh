@@ -13,6 +13,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 WEB_URL="${WEB_URL:-http://localhost:8080}"
+MCP_URL="${MCP_URL:-http://localhost:8081}"
 KEEP_STACK="${KEEP_STACK:-0}"
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-240}"
 
@@ -29,6 +30,12 @@ OWNER_PASSWORD=Smoke-Owner-Str0ng!1
 EOF
   CREATED_ENV=1
 fi
+
+# Load the owner credentials the smoke asserts a real login against.
+set -a
+# shellcheck disable=SC1090
+source "$ENV_FILE"
+set +a
 
 cleanup() {
   if [[ "$KEEP_STACK" != "1" ]]; then
@@ -53,4 +60,35 @@ until curl -fsS "$WEB_URL/alive" >/dev/null 2>&1; do
   sleep 3
 done
 
-log "PASS: self-hoster compose stack is up and Web /alive is healthy"
+log "Asserting deployment invariants (health, version, auth, MCP routing)"
+fail=0
+code() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
+assert() { # <label> <expected> <actual>
+  if [[ "$3" == "$2" ]]; then
+    printf '    ok   %-26s %s\n' "$1" "$3"
+  else
+    printf '    FAIL %-26s expected %s got %s\n' "$1" "$2" "$3"
+    fail=1
+  fi
+}
+
+assert "web /health"        200 "$(code "$WEB_URL/health")"
+assert "web /version"       200 "$(code "$WEB_URL/version")"
+assert "web / -> login 302" 302 "$(code "$WEB_URL/")"
+assert "web /login"         200 "$(code "$WEB_URL/login")"
+assert "owner login 200"    200 "$(code -X POST "$WEB_URL/api/auth/login" \
+          -H 'Content-Type: application/json' \
+          -d "{\"email\":\"${OWNER_EMAIL}\",\"password\":\"${OWNER_PASSWORD}\",\"rememberMe\":true}")"
+assert "bad login 401"      401 "$(code -X POST "$WEB_URL/api/auth/login" \
+          -H 'Content-Type: application/json' \
+          -d "{\"email\":\"${OWNER_EMAIL}\",\"password\":\"definitely-wrong\",\"rememberMe\":true}")"
+# The MCP endpoint is a POST/SSE surface — a GET must be rejected (405), which proves it is routing.
+assert "mcp /mcp GET 405"   405 "$(code "$MCP_URL/mcp")"
+
+if [[ "$fail" != "0" ]]; then
+  log "FAIL: compose deployment smoke failed one or more invariants"
+  docker compose logs --tail=50 web || true
+  exit 1
+fi
+
+log "PASS: compose stack up — Web healthy, DB migrated, owner seeded, auth works, MCP routing"

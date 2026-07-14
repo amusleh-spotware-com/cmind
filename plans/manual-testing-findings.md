@@ -182,7 +182,7 @@ The four gaps from the first pass were closed on 2026-07-14:
 | Gap | Status | Evidence |
 |---|---|---|
 | **Docker Compose** deployment not stood up | ✅ Closed | `scripts/compose-smoke.sh` (enhanced) brought the real stack up and asserted 7 invariants green: web `/health` 200, `/version` 200, `/`→`/login` 302, `/login` 200, **owner login 200** (DB migrated + owner seeded), bad login 401, MCP `/mcp` GET 405 (routing). Committable regression guard now — the Compose counterpart of `k8s-e2e.sh`. |
-| **Aspire** deployment not stood up | ⚠️ Smoked | `dotnet run --project src/AppHost` booted the topology: dashboard on :17052, Postgres + pgAdmin containers provisioned, **Web served `/version` 200**. Web `/health` was 503 due to a local **DCP proxy port collision on 5080** (Windows env issue, not an app defect — the identical Web binary is health-200 under Compose + k8s). No new automated test added (Aspire testing harness is heavy; topology is the same binary already guarded by Compose smoke + k8s tests-job). |
+| **Aspire** deployment not stood up | ✅ Closed | New `tests/AspireTests/AspireAppHostSmokeTests.cs` boots the real AppHost via `Aspire.Hosting.Testing` (`DistributedApplicationTestingBuilder`), waits for the **web** resource to become healthy, and asserts `/health` 200 + `/version` 200. Ran green (1m6s). The harness allocates endpoints dynamically and returns a wired `HttpClient`, so it does **not** hit the fixed-port **DCP proxy collision on 5080** that the manual `dotnet run` did — that was a local Windows env issue, not an app defect. Wired into CI as the `test-aspire` job. |
 | **AWS / Azure** observability wiring untested | ✅ Closed | New `tests/UnitTests/Observability/TelemetryConfiguratorTests.cs` (4 tests, green): asserts `AddAppTelemetry` builds a working tracer+meter pipeline with the OTLP endpoint (AWS ADOT / K8s collector), the Azure Monitor connection string (App Insights), both, and neither — guards the cloud exporter wiring with **no cloud infra**. Real cloud stand-up still out of scope (no cloud account this pass). |
 | **Live FRED/BLS HTTP round-trip** not asserted | ✅ Closed (was stale) | `tests/IntegrationTests/Calendar/CalendarSourceLiveTests.cs` **already** drives the real `FredSource`/`BlsSource` against stlouisfed.org / bls.gov and asserts non-empty observations. Ran green live (~1s each) with the keys in `secrets/dev-credentials.local.json`. The first-pass "no live-fetch test" statement was outdated. (Note: it silently returns/skips when a key is absent — xUnit v2 has no `Assert.Skip`; matches the repo's existing live-test pattern.) |
 | The 2 E2E failures need classification | ✅ Fixed | Classified as flake (passed isolated), root-caused, fixed, and regression-guarded in the prior commit — see §4 Resolution. |
@@ -190,8 +190,10 @@ The four gaps from the first pass were closed on 2026-07-14:
 ### Still genuinely out of scope
 - **Real AWS/Azure cloud** stand-up (no cloud account) — wiring is now unit-guarded, but a live cloud
   deploy + trace-in-backend verification remains a manual cloud-account task.
-- **Aspire** has no automated smoke test (only a live manual run this pass); its DCP proxy port
-  behaviour on Windows is environmental.
+
+> Note: the Aspire smoke's Postgres uses the persistent `app-pg-data` volume (`.WithDataVolume`). The
+> test uses a stable password so a fresh volume works across runs; a volume pre-created with a different
+> password (e.g. a prior manual `dotnet run`) must be removed once (`docker volume rm app-pg-data`).
 
 ---
 

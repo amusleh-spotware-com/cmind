@@ -90,4 +90,34 @@ public sealed class AiFeatureRealUserTests(AiLocalFixture app)
         text.Should().NotBeNullOrWhiteSpace();
         if (app.UsingFakeLlm) text.Should().Contain(AiLocalFixture.CannedReply);
     }
+
+    // F16 — Agent Studio research-desk debate: create an agent, then run the multi-analyst debate. The
+    // desk calls the AI once per analyst + a reviewer synthesis; every analyst opinion and the synthesis
+    // carry the model's reply, so the AI output must surface (canned reply on the fake).
+    [Fact]
+    public async Task Agent_studio_debate_returns_ai_output()
+    {
+        var page = await app.NewAuthedPageAsync();
+
+        var create = await page.APIRequest.PostAsync($"{app.BaseUrl}/api/agent-studio",
+            new() { DataObject = new { Name = $"desk-{Guid.NewGuid():N}", Archetype = "Scalper" } });
+        create.Status.Should().Be(200, $"create agent failed: {await create.TextAsync()}");
+        using var created = JsonDocument.Parse(await create.TextAsync());
+        var agentId = created.RootElement.GetProperty("id").GetGuid();
+
+        var debate = await page.APIRequest.PostAsync($"{app.BaseUrl}/api/agent-studio/{agentId}/debate",
+            new() { DataObject = new { } });
+        debate.Status.Should().Be(200, $"debate failed: {await debate.TextAsync()}");
+
+        using var doc = JsonDocument.Parse(await debate.TextAsync());
+        doc.RootElement.GetProperty("opinions").GetArrayLength().Should().BeGreaterThan(0);
+        var synthesis = doc.RootElement.GetProperty("synthesis").GetString();
+        synthesis.Should().NotBeNullOrWhiteSpace();
+        if (app.UsingFakeLlm)
+        {
+            synthesis.Should().Contain(AiLocalFixture.CannedReply);
+            var firstOpinion = doc.RootElement.GetProperty("opinions")[0].GetProperty("opinion").GetString();
+            firstOpinion.Should().Contain(AiLocalFixture.CannedReply);
+        }
+    }
 }

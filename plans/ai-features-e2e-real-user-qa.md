@@ -26,9 +26,15 @@ ones (codegen, sentiment) stay on the deterministic fake lane.
   analyze-backtest, F8 tune/decay, F9 optimize-params, F11 post-mortem each produce AI output over the
   seeded report/cBot (canned reply asserted on the fake). Previously all six were "enabled + no-crash".
 
-**Remaining** (increments 3+): F15 portfolio agent + F16 agent-studio (drive a cycle → assert AI
-decision), F17 prop-guard + F18 alerts (seed running bots / a rule → assert AI verdict surfaces), F19 MCP
-AI tools (extend `McpAiToolsLocalLlmTests` to all five), and the live-account variants (onboarding pattern).
+**Increment 3 (shipped).** F16 Agent-Studio research-desk **debate** (`AiFeatureRealUserTests`): create an
+agent → `POST /api/agent-studio/{id}/debate` → the desk runs 4 analyst calls + a reviewer synthesis, and
+every opinion + the synthesis carry the AI reply (canned reply asserted on the fake). ✅
+
+**Remaining** (increments 4+): F15 portfolio agent + F17 prop-guard + F18 alerts are driven by background
+workers with no on-demand trigger endpoint — they need either a dev-only "run one cycle" hook (like the
+seed endpoint) or worker-level integration coverage. F19: `McpAiToolsLocalLlmTests` covers 3/5 text tools;
+the remaining two (analyze-backtest, currency-strength) read the DB/query and need a Testcontainers-backed
+fixture. Live-account variants follow the onboarding pattern.
 
 **Goal.** Today every AI feature has *an* E2E test, but for the data-dependent features the test only
 asserts a weak contract: "AI is configured → the button is enabled → clicking it does not crash the

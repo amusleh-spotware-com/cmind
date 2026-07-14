@@ -166,7 +166,7 @@ jobs:
     needs: gate
     steps:
       - uses: actions/checkout@v7
-      - uses: azure/setup-helm@v4
+      - uses: azure/setup-helm@v5
       - name: Stamp chart version + package
         run: |
           set -euo pipefail

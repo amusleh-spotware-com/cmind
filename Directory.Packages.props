@@ -60,7 +60,7 @@
 
     <!-- cTrader Open API (protobuf) -->
     <PackageVersion Include="Google.Protobuf" Version="3.31.1" />
-    <PackageVersion Include="Grpc.Tools" Version="2.72.0" />
+    <PackageVersion Include="Grpc.Tools" Version="2.82.0" />
 
     <!-- Built-in local LLM (in-process, no API key) -->
     <PackageVersion Include="Microsoft.ML.OnnxRuntimeGenAI" Version="0.5.2" />

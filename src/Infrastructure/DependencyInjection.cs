@@ -21,7 +21,11 @@ public static class DependencyInjection
 {
     private const string DataProtectionApplicationName = "app";
 
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
+    // backgroundServices: register the DB-polling hosted workers (agent runtime, calendar ingest/backfill/
+    // webhook). The Web host + nodes run them; a read-only surface like the MCP server passes false so two
+    // processes never race the same one-time backfill/ingest (duplicate-key 23505 on a fresh database).
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services, IConfiguration config, bool backgroundServices = true)
     {
         var dp = services.AddDataProtection().SetApplicationName(DataProtectionApplicationName);
         dp.PersistKeysToDbContext<DataContext>();
@@ -92,7 +96,7 @@ public static class DependencyInjection
         services.AddScoped<Core.Agent.IAgentDecisionEngine, Infrastructure.Agent.AiAgentDecisionEngine>();
         services.AddScoped<Core.Agent.IResearchDesk, Core.Agent.ResearchDesk>();
         services.AddScoped<Core.Agent.IAgentMemory, Infrastructure.Agent.EfAgentMemory>();
-        services.AddHostedService<Infrastructure.Agent.AgentRuntimeService>();
+        if (backgroundServices) services.AddHostedService<Infrastructure.Agent.AgentRuntimeService>();
         services.AddHttpClient<CTraderOpenApi.Auth.IOpenApiTokenClient, CTraderOpenApi.Auth.OpenApiTokenClient>(
             (sp, client) =>
             {
@@ -139,7 +143,7 @@ public static class DependencyInjection
         services.AddAiHttpClient();
         services.AddScoped<IAiClient, RoutingAiClient>();
         services.AddScoped<IAiFeatureService, AiFeatureService>();
-        services.AddCalendarInfrastructure();
+        services.AddCalendarInfrastructure(backgroundServices);
         services.AddCurrencyStrengthInfrastructure();
         return services;
     }
@@ -163,7 +167,8 @@ public static class DependencyInjection
     /// the append-only write service, the pure news-window policy, the default (null) forecast port, the FRED
     /// source behind a resilient typed client, and the (config-gated) ingestion worker.
     /// </summary>
-    public static IServiceCollection AddCalendarInfrastructure(this IServiceCollection services)
+    public static IServiceCollection AddCalendarInfrastructure(
+        this IServiceCollection services, bool backgroundServices = true)
     {
         services.TryAddSingleton<Core.Calendar.INewsWindowPolicy, Core.Calendar.NewsWindowPolicy>();
         services.TryAddSingleton<Core.Calendar.IForecastProvider, Infrastructure.Calendar.NullForecastProvider>();
@@ -186,9 +191,12 @@ public static class DependencyInjection
         }).AddHttpMessageHandler<Infrastructure.Calendar.CalendarRateLimitHandler>();
         services.AddSingleton<Core.Calendar.ICalendarSource, Infrastructure.Calendar.CentralBankScheduleSource>();
         services.AddHttpClient<Infrastructure.Calendar.WebhookDelivery>();
-        services.AddHostedService<Infrastructure.Calendar.WebhookDeliveryService>();
-        services.AddHostedService<Infrastructure.Calendar.CalendarBackfillService>();
-        services.AddHostedService<Infrastructure.Calendar.CalendarIngestionService>();
+        if (backgroundServices)
+        {
+            services.AddHostedService<Infrastructure.Calendar.WebhookDeliveryService>();
+            services.AddHostedService<Infrastructure.Calendar.CalendarBackfillService>();
+            services.AddHostedService<Infrastructure.Calendar.CalendarIngestionService>();
+        }
         return services;
     }
 }

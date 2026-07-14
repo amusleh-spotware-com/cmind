@@ -19,7 +19,10 @@ builder.AddNpgsqlDbContext<DataContext>(ConnectionStrings.AppDb, settings =>
     settings.DisableRetry = false;
     settings.CommandTimeout = DatabaseDefaults.CommandTimeoutSeconds;
 });
-builder.Services.AddInfrastructure(builder.Configuration);
+// The MCP server is a read-only tool surface: it must NOT run the DB-polling background workers (agent
+// runtime, calendar ingest/backfill/webhook) — the Web host + nodes own those. Running them here too made
+// two processes race the same one-time backfill on a fresh DB (duplicate-key 23505).
+builder.Services.AddInfrastructure(builder.Configuration, backgroundServices: false);
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthentication(AuthSchemes.McpKey)

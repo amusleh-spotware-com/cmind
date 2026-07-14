@@ -30,11 +30,16 @@ ones (codegen, sentiment) stay on the deterministic fake lane.
 agent → `POST /api/agent-studio/{id}/debate` → the desk runs 4 analyst calls + a reviewer synthesis, and
 every opinion + the synthesis carry the AI reply (canned reply asserted on the fake). ✅
 
-**Remaining** (increments 4+): F15 portfolio agent + F17 prop-guard + F18 alerts are driven by background
-workers with no on-demand trigger endpoint — they need either a dev-only "run one cycle" hook (like the
-seed endpoint) or worker-level integration coverage. F19: `McpAiToolsLocalLlmTests` covers 3/5 text tools;
-the remaining two (analyze-backtest, currency-strength) read the DB/query and need a Testcontainers-backed
-fixture. Live-account variants follow the onboarding pattern.
+**Increment 4 (shipped).** F19 MCP AnalyzeBacktest — `tests/IntegrationTests/McpAnalyzeBacktestLocalLlmTests.cs`:
+seeds a completed backtest (with report) for a user in a real Testcontainers DB, points the MCP `AiTools`
+at the fake local LLM with an authenticated caller, and asserts the tool returns the model reply. MCP AI
+tools now covered 4/5 (generate/review/sentiment via `McpAiToolsLocalLlmTests` + analyze-backtest here). ✅
+
+**Remaining** (increments 5+): F19 currency-strength MCP tool needs a seeded currency snapshot (the
+`ICurrencyStrengthQuery` returns null without one). F15 portfolio agent + F17 prop-guard + F18 alerts are
+driven by background workers with no on-demand trigger — they need a dev-only "run one cycle" hook (like
+the seed endpoint) plus a `FakeLocalLlmServer` extension that returns valid alert/action JSON (the canned
+string isn't JSON, so the parsers raise nothing). Live-account variants follow the onboarding pattern.
 
 **Goal.** Today every AI feature has *an* E2E test, but for the data-dependent features the test only
 asserts a weak contract: "AI is configured → the button is enabled → clicking it does not crash the

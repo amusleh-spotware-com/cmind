@@ -358,6 +358,9 @@
         _busy = true;
         _bottomTab = 1;
         _runLog = "Building and starting...\n";
+        // Render now so the Run Logs tab is selected the moment the dialog closes, not only after the
+        // (slow) build+start round-trip below completes.
+        StateHasChanged();
         try
         {
             var resp = await Http.PostAsJsonAsync($"/api/builder/projects/{Id}/quick-run", new

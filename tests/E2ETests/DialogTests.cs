@@ -1,3 +1,5 @@
+using System.Linq;
+using FluentAssertions;
 using Microsoft.Playwright;
 using Xunit;
 
@@ -90,14 +92,18 @@ public sealed class DialogTests(AppFixture app)
         var accountNo = (100000 + Convert.ToInt32(Suffix, 16) % 900000).ToString();
         var taDialog = await OpenDialogAsync(page, "New Trading Account");
         var taInputs = taDialog.Locator("input");
+        // Distinct, non-substring broker name so this row never collides with the "RealBroker-…" row the
+        // live-toggle test creates in the same shared app (has-text is a substring match).
+        var broker = $"DemoBroker-{Suffix}";
         await taInputs.Nth(0).FillAsync(accountNo);
-        await taInputs.Nth(1).FillAsync($"Broker-{Suffix}");
+        await taInputs.Nth(1).FillAsync(broker);
         await SubmitAsync(taDialog, "Add");
 
-        await Assertions.Expect(page.GetByText($"Broker-{Suffix}")).ToBeVisibleAsync(Slow);
-        // Type column shows Demo for a non-live account (the Live toggle defaults off).
-        var accountRow = page.Locator($"tr:has-text('Broker-{Suffix}')");
-        await Assertions.Expect(accountRow.GetByText("Demo")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.GetByText(broker)).ToBeVisibleAsync(Slow);
+        // Type column shows Demo for a non-live account (the Live toggle defaults off). Exact match so it
+        // targets the Type cell, not the "Demo…" broker name.
+        var accountRow = page.Locator($"tr:has-text('{broker}')");
+        await Assertions.Expect(accountRow.GetByText("Demo", new() { Exact = true })).ToBeVisibleAsync(Slow);
     }
 
     [Fact]
@@ -189,11 +195,14 @@ public sealed class DialogTests(AppFixture app)
     public async Task Run_new_button_opens_dialog_with_fields()
     {
         var page = await app.NewAuthedPageAsync();
+        // The "Run New cBot" button is gated on having a trading account — seed one so the dialog can open
+        // regardless of test ordering (otherwise the button stays disabled and the open flakes).
+        await SeedTradingAccountAsync(page);
         await GotoAsync(page, "/run");
 
         var dialog = await OpenDialogAsync(page, "Run New cBot");
         await Assertions.Expect(dialog.GetByLabel("Symbol")).ToBeVisibleAsync(Slow);
-        await Assertions.Expect(dialog.Locator("button:has-text('Start')")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(dialog.Locator("button:has-text('Run')")).ToBeVisibleAsync(Slow);
         await SubmitAsync(dialog, "Cancel");
     }
 
@@ -201,6 +210,8 @@ public sealed class DialogTests(AppFixture app)
     public async Task Backtest_new_button_opens_dialog_with_fields()
     {
         var page = await app.NewAuthedPageAsync();
+        // Same account gating as the Run page — seed an account so the Backtest dialog can open deterministically.
+        await SeedTradingAccountAsync(page);
         await GotoAsync(page, "/backtest");
 
         var dialog = await OpenDialogAsync(page, "Backtest New cBot");
@@ -210,6 +221,25 @@ public sealed class DialogTests(AppFixture app)
     }
 
     private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 30000 };
+
+    // Creates a cID + demo trading account via the app API so account-gated buttons (Run/Backtest) are
+    // enabled independently of other tests' ordering.
+    private async Task SeedTradingAccountAsync(IPage page)
+    {
+        var username = $"dlg-{Guid.NewGuid():N}";
+        (await page.APIRequest.PostAsync($"{app.BaseUrl}/api/ctids/",
+            new APIRequestContextOptions { DataObject = new { Username = username, Password = "cid_pw_123" } }))
+            .Ok.Should().BeTrue();
+        var cids = System.Text.Json.JsonDocument.Parse(
+            await (await page.APIRequest.GetAsync($"{app.BaseUrl}/api/ctids/")).TextAsync()).RootElement;
+        var cidId = cids.EnumerateArray().First(c => c.GetProperty("username").GetString() == username)
+            .GetProperty("id").GetGuid();
+        (await page.APIRequest.PostAsync($"{app.BaseUrl}/api/ctids/{cidId}/accounts",
+            new APIRequestContextOptions
+            {
+                DataObject = new { AccountNumber = 9_000_000L + Random.Shared.Next(999_999), Broker = "Pepperstone", IsLive = false, Label = "demo" }
+            })).Ok.Should().BeTrue();
+    }
 
     private static async Task GotoAsync(IPage page, string path)
     {

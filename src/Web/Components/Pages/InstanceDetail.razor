@@ -6,11 +6,14 @@
 @using Core.Options
 @using Microsoft.Extensions.Options
 @using Microsoft.AspNetCore.SignalR.Client
+@using Microsoft.JSInterop
 @using Web.Hubs
 @using ApexCharts
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inject HttpClient Http
 @inject NavigationManager Nav
+@inject ISnackbar Snack
+@inject IJSRuntime JS
 @inject IStringLocalizer<Ui> L
 @inject IEconomicCalendar Calendar
 @inject IFeatureGate Gate
@@ -19,65 +22,150 @@
 @implements IAsyncDisposable
 
 <PageTitle>Instance</PageTitle>
-<MudText Typo="Typo.h5" Class="mb-2">@(_detail is not null ? $"{_detail.symbol} — {_detail.status}" : L["instance.title"])</MudText>
 
-@if (_loaded && _detail is null)
-{
-    <MudAlert Severity="Severity.Warning" Class="mb-3" data-testid="instance-not-found">
-        @L["instance.notFound"]
-        <MudButton Class="ms-2" Size="MudBlazor.Size.Small" Variant="Variant.Filled" Color="MudBlazor.Color.Primary"
-                   Href="/run" data-testid="instance-back">@L["instance.back"]</MudButton>
-    </MudAlert>
-}
-
-@if (_detail is not null)
-{
-    <MudPaper Class="pa-2 mb-2">
-        <MudText>Status: @_detail.status</MudText>
-        <MudText>Symbol: @_detail.symbol  TF: @_detail.timeframe</MudText>
-    </MudPaper>
-
-    @if (_isBacktest && _equity.Count > 0)
-    {
-        <ApexChart TItem="EquityPoint" Title="Equity curve">
-            <ApexPointSeries TItem="EquityPoint" Items="_equity" Name="Equity"
-                             XValue="@(p => p.Ts)" YValue="@(p => (decimal)p.Value)" SeriesType="SeriesType.Line" />
-        </ApexChart>
-
-        @if (_calendarEvents.Count > 0)
+<div class="instance-detail-page">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
+        <MudTooltip Text="Back">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="Back"
+                           aria-label="Back" data-testid="instance-back-btn" />
+        </MudTooltip>
+        <MudText Typo="Typo.h5">@(_detail is not null ? $"{_detail.symbol} — {_detail.status}" : L["instance.title"])</MudText>
+        @if (_detail is not null)
         {
-            <MudText Typo="Typo.subtitle2" Class="mt-2 mb-1">@L["calendar.backtestEvents"]</MudText>
-            <MudStack Spacing="1" data-testid="backtest-calendar-events">
-                @foreach (var e in _calendarEvents)
+            <MudChip T="string" Size="MudBlazor.Size.Small" Color="@StatusColor((string)_detail.status)">@_detail.status</MudChip>
+        }
+        <MudSpacer />
+        @if (_detail is not null)
+        {
+            <MudTooltip Text="@(IsActive ? "Stop instance" : "Instance already stopped")">
+                <MudIconButton Icon="@Icons.Material.Filled.Stop" Color="MudBlazor.Color.Warning"
+                               Disabled="@(!IsActive || _stopping)" OnClick="StopAsync"
+                               aria-label="Stop instance" data-testid="instance-detail-stop" />
+            </MudTooltip>
+        }
+    </MudStack>
+
+    @if (_loaded && _detail is null)
+    {
+        <MudAlert Severity="Severity.Warning" Class="mb-3" data-testid="instance-not-found">
+            @L["instance.notFound"]
+            <MudButton Class="ms-2" Size="MudBlazor.Size.Small" Variant="Variant.Filled" Color="MudBlazor.Color.Primary"
+                       Href="/run" data-testid="instance-back">@L["instance.back"]</MudButton>
+        </MudAlert>
+    }
+
+    @if (_detail is not null)
+    {
+        <MudPaper Class="pa-2 mb-2 flex-none">
+            <MudText Typo="Typo.body2">Symbol: @_detail.symbol &nbsp;·&nbsp; TF: @_detail.timeframe</MudText>
+        </MudPaper>
+
+        @if (_isBacktest && _equity.Count > 0)
+        {
+            <div class="flex-none">
+                <ApexChart TItem="EquityPoint" Title="Equity curve">
+                    <ApexPointSeries TItem="EquityPoint" Items="_equity" Name="Equity"
+                                     XValue="@(p => p.Ts)" YValue="@(p => (decimal)p.Value)" SeriesType="SeriesType.Line" />
+                </ApexChart>
+
+                @if (_calendarEvents.Count > 0)
                 {
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary"><UserTime Value="e.EffectiveAt" Format="g" /></MudText>
-                        <MudChip T="string" Size="MudBlazor.Size.Small" Color="@ImpactColor(e.Impact)">@e.SeriesCode</MudChip>
+                    <MudText Typo="Typo.subtitle2" Class="mt-2 mb-1">@L["calendar.backtestEvents"]</MudText>
+                    <MudStack Spacing="1" data-testid="backtest-calendar-events">
+                        @foreach (var e in _calendarEvents)
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary"><UserTime Value="e.EffectiveAt" Format="g" /></MudText>
+                                <MudChip T="string" Size="MudBlazor.Size.Small" Color="@ImpactColor(e.Impact)">@e.SeriesCode</MudChip>
+                            </MudStack>
+                        }
                     </MudStack>
                 }
-            </MudStack>
+            </div>
         }
-    }
-}
 
-@if (_detail is not null)
-{
-    <MudPaper Class="pa-2" Style="background:#0E1218;color:#E6E8EC;max-height:400px;overflow:auto;font-family:monospace;">
-        @foreach (var l in _logs) { <div>@l</div> }
-    </MudPaper>
-}
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1 flex-none">
+            <MudText Typo="Typo.overline">Logs</MudText>
+            <MudSpacer />
+            <MudSwitch T="bool" @bind-Value="_autoScroll" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Small"
+                       Label="Auto-scroll" data-testid="logs-autoscroll" />
+            <MudTooltip Text="@(_logs.Count > 0 ? "Download logs" : "No logs yet")">
+                <MudIconButton Icon="@Icons.Material.Filled.Download" Size="MudBlazor.Size.Small"
+                               Disabled="@(_logs.Count == 0)" OnClick="DownloadLogsAsync"
+                               aria-label="Download logs" data-testid="instance-detail-logs-download" />
+            </MudTooltip>
+        </MudStack>
+
+        <MudPaper id="@LogsElementId" Class="instance-logs pa-2">
+            @foreach (var l in _logs) { <div>@l</div> }
+        </MudPaper>
+    }
+</div>
+
+<style>
+    .instance-detail-page { display: flex; flex-direction: column; height: calc(100vh - 90px); }
+    .instance-detail-page .flex-none { flex: 0 0 auto; }
+    .instance-logs {
+        flex: 1 1 auto; min-height: 120px; overflow: auto;
+        background: #0E1218; color: #E6E8EC;
+        font-family: 'Consolas', 'Courier New', monospace; font-size: 12px;
+        white-space: pre-wrap; word-break: break-all;
+    }
+</style>
 
 @code {
     [Parameter] public Guid Id { get; set; }
+    private const string LogsElementId = "instance-detail-logs";
     private dynamic? _detail;
     private bool _loaded;
     private bool _isBacktest;
+    private bool _autoScroll = true;
+    private bool _stopping;
     private List<string> _logs = new();
     private List<EquityPoint> _equity = new();
     private List<CalendarEventView> _calendarEvents = new();
     private HubConnection? _hub;
 
+    private bool IsActive => _detail is not null
+        && ((string)_detail.status) is "Running" or "Starting" or "Stopping";
+
     public record EquityPoint(DateTime Ts, double Value);
+
+    private void Back() => Nav.NavigateTo(_isBacktest ? "/backtest" : "/run");
+
+    private async Task StopAsync()
+    {
+        _stopping = true;
+        try
+        {
+            var r = await Http.PostAsync($"/api/instances/{Id}/stop", null);
+            Snack.Add(r.IsSuccessStatusCode ? "Instance stopping" : "Stop failed",
+                r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+            try { _detail = await Http.GetDynamicAsync($"/api/instances/{Id}"); } catch { /* keep prior */ }
+        }
+        finally { _stopping = false; }
+    }
+
+    private async Task DownloadLogsAsync()
+    {
+        try
+        {
+            var text = await Http.GetStringAsync($"/api/instances/{Id}/logs");
+            await JS.InvokeVoidAsync("appDownloadText", $"instance-{Id:N}.log", text);
+        }
+        catch
+        {
+            Snack.Add("No logs available for this instance", Severity.Warning);
+        }
+    }
+
+    private static MudBlazor.Color StatusColor(string status) => status switch
+    {
+        "Running" => MudBlazor.Color.Success,
+        "Completed" or "Stopped" => MudBlazor.Color.Default,
+        "Failed" => MudBlazor.Color.Error,
+        _ => MudBlazor.Color.Info
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -93,6 +181,19 @@
         }
 
         await LoadCalendarOverlayAsync();
+
+        // For a terminal instance the container is gone, so seed the persisted console log (last run) — it
+        // stays viewable and downloadable. An active instance streams its logs live below instead.
+        if (!IsActive)
+        {
+            try
+            {
+                var persisted = await Http.GetStringAsync($"/api/instances/{Id}/logs");
+                if (!string.IsNullOrEmpty(persisted))
+                    _logs = persisted.Replace("\r\n", "\n").Split('\n').TakeLast(500).ToList();
+            }
+            catch { /* no persisted logs for this instance */ }
+        }
 
         try
         {
@@ -116,7 +217,15 @@
                 {
                     _logs.Add(line);
                     if (_logs.Count > 500) _logs.RemoveAt(0);
-                    await InvokeAsync(StateHasChanged);
+                    await InvokeAsync(async () =>
+                    {
+                        StateHasChanged();
+                        if (_autoScroll)
+                        {
+                            try { await JS.InvokeVoidAsync("appScrollToEnd", LogsElementId); }
+                            catch { /* JS unavailable (e.g. prerender) — ignore */ }
+                        }
+                    });
                 }
             }
             catch { /* log stream ended or failed — nothing to tail */ }

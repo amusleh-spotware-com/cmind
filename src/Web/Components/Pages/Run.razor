@@ -28,10 +28,11 @@
 }
 
 <MudText Typo="Typo.h6" Class="mt-4">Instances</MudText>
-<InstanceTable Type="Run" />
+<InstanceTable @ref="_table" Type="Run" />
 
 @code {
     private bool _hasAccounts;
+    private InstanceTable? _table;
 
     protected override async Task OnInitializedAsync()
     {
@@ -57,5 +58,6 @@
             data.ParamSetId, DockerImageTag = data.Image, Type = "Run"
         });
         Snack.Add(r.IsSuccessStatusCode ? "Started" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        if (r.IsSuccessStatusCode && _table is not null) await _table.RefreshAsync();
     }
 }

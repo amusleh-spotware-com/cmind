@@ -91,6 +91,25 @@
     <script>
         window.copyToClipboard = (text) => navigator.clipboard.writeText(text);
 
+        // Scroll a log/output container to its latest line (used by the auto-scroll toggle on log views).
+        window.appScrollToEnd = (id) => {
+            const el = document.getElementById(id);
+            if (el) el.scrollTop = el.scrollHeight;
+        };
+
+        // Download arbitrary text as a file (used by "Download logs"). Blob + object URL, no eval — CSP safe.
+        window.appDownloadText = (filename, text) => {
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
+
         // Resolve design-token CSS custom properties to concrete colours so charts (which paint SVG,
         // not CSS) stay white-label-driven instead of hard-coding hex. Returns [] on any failure.
         window.appReadTokens = (names) => {

@@ -30,7 +30,7 @@ public sealed class JournalTests(AppFixture app)
         await Assertions.Expect(page.Locator("[data-testid=journal-notes-empty]")).ToBeVisibleAsync(Slow);
 
         // Add via the dialog (mandate 7).
-        await page.ClickAsync("[data-testid=journal-new-entry]");
+        await page.ClickUntilVisibleAsync("[data-testid=journal-new-entry]", page.Locator(".mud-dialog"));
         await Assertions.Expect(page.Locator(".mud-dialog")).ToBeVisibleAsync(Slow);
         await page.GetByTestId("journal-note-title").FillAsync("Held a loser too long");
         await page.GetByTestId("journal-note-body").FillAsync("Should have cut at the stop.");
@@ -40,14 +40,14 @@ public sealed class JournalTests(AppFixture app)
         await Assertions.Expect(page.Locator("[data-testid=journal-notes]")).ToContainTextAsync("Held a loser too long");
 
         // Edit.
-        await page.ClickAsync("[data-testid=journal-note-edit]");
+        await page.ClickUntilVisibleAsync("[data-testid=journal-note-edit]", page.Locator(".mud-dialog"));
         await Assertions.Expect(page.Locator(".mud-dialog")).ToBeVisibleAsync(Slow);
         await page.GetByTestId("journal-note-title").FillAsync("Held a loser — fixed the rule");
         await page.ClickAsync("[data-testid=journal-note-save]");
         await Assertions.Expect(page.Locator("[data-testid=journal-notes]")).ToContainTextAsync("fixed the rule");
 
         // Delete (confirmation dialog).
-        await page.ClickAsync("[data-testid=journal-note-delete]");
+        await page.ClickUntilVisibleAsync("[data-testid=journal-note-delete]", page.Locator(".mud-dialog"));
         await Assertions.Expect(page.Locator(".mud-dialog")).ToBeVisibleAsync(Slow);
         await page.ClickAsync(".mud-dialog button:has-text('Delete')");
         await Assertions.Expect(page.Locator("[data-testid=journal-notes-empty]")).ToBeVisibleAsync(Slow);
@@ -60,7 +60,7 @@ public sealed class JournalTests(AppFixture app)
         await page.GotoAsync("/journal");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        await page.ClickAsync("[data-testid=journal-new-entry]");
+        await page.ClickUntilVisibleAsync("[data-testid=journal-new-entry]", page.Locator(".mud-dialog"));
         await Assertions.Expect(page.Locator(".mud-dialog")).ToBeVisibleAsync(Slow);
         // Submit with an empty title → dialog stays open (validation blocks close).
         await page.ClickAsync("[data-testid=journal-note-save]");

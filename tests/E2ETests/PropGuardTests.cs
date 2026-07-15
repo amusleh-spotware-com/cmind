@@ -31,7 +31,9 @@ public sealed class PropGuardTests(AppFixture app)
 
         // D-01: creating a rule opens a MudBlazor dialog, not an inline page form.
         (await page.Locator(".mud-dialog").CountAsync()).Should().Be(0, "no dialog is open before clicking New rule");
-        await page.ClickAsync("button:has-text('New rule')");
+        // Retry the open until the dialog appears — a click before the circuit is interactive is dropped and
+        // flakes under parallel-boot load.
+        await page.ClickUntilVisibleAsync("button:has-text('New rule')", page.Locator(".mud-dialog"));
         await Assertions.Expect(page.Locator(".mud-dialog")).ToBeVisibleAsync(Slow);
     }
 

@@ -50,7 +50,10 @@ public static class InstanceEndpoints
                 CBot = i.CBot.Name,
                 Node = i.Node!.Name,
                 StartedAt = GetStartedAt(i),
-                StoppedAt = GetStoppedAt(i)
+                StoppedAt = GetStoppedAt(i),
+                // Logs are downloadable when they were persisted at termination, or the instance is still
+                // live on a node (a snapshot can be tailed on demand).
+                HasLogs = i.ConsoleLog is not null || (i.IsActive && i.NodeId is not null)
             });
             return Results.Ok(rows);
         });
@@ -164,7 +167,14 @@ public static class InstanceEndpoints
                 return Results.Forbid();
 
             if (i.Node is not null)
-                try { await factory.For(i).StopAsync(i, default); } catch { /* swallow */ }
+            {
+                var dispatcher = factory.For(i);
+                // Capture the console output BEFORE stopping — StopAsync removes the container, taking its
+                // logs with it. Persist a bounded snapshot so the last run's logs stay downloadable.
+                var captured = await CaptureLogsAsync(dispatcher, i);
+                if (!string.IsNullOrWhiteSpace(captured)) i.CaptureConsoleLog(captured);
+                try { await dispatcher.StopAsync(i, default); } catch { /* swallow */ }
+            }
 
             // Replace with Stopped/Completed entity
             var now = timeProvider.GetUtcNow();
@@ -176,6 +186,34 @@ public static class InstanceEndpoints
             db.Instances.Add(terminal);
             await db.SaveChangesAsync();
             return Results.Ok();
+        });
+
+        g.MapGet("/{id:guid}/logs", async (Guid id, DataContext db, ICurrentUser u,
+            IContainerDispatcherFactory factory) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var iid = InstanceId.From(id);
+            var i = await db.Instances.Include(x => x.Node).FirstOrDefaultAsync(x => x.Id == iid);
+            if (i is null) return Results.NotFound();
+            if (u.IsInRole("Viewer"))
+            {
+                var viewer = await db.Users.OfType<ViewerUser>().FirstOrDefaultAsync(x => x.Id == uid);
+                if (viewer is null) return Results.Unauthorized();
+                if (!viewer.SeeAllInstances && !await db.ViewerGrants.AnyAsync(v => v.ViewerId == uid && v.InstanceId == iid))
+                    return Results.Forbid();
+            }
+            else if (u.IsInRole("User") && i.UserId != uid)
+            {
+                return Results.Forbid();
+            }
+
+            // Persisted logs win; for a still-live instance, tail a bounded snapshot on demand.
+            var text = i.ConsoleLog;
+            if (string.IsNullOrEmpty(text) && i.IsActive && i.Node is not null)
+                text = await CaptureLogsAsync(factory.For(i), i);
+            if (string.IsNullOrEmpty(text)) return Results.NotFound("no logs available");
+
+            return Results.File(System.Text.Encoding.UTF8.GetBytes(text), "text/plain", $"instance-{id:N}.log");
         });
 
         g.MapDelete("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u) =>
@@ -193,6 +231,27 @@ public static class InstanceEndpoints
         });
 
         return app;
+    }
+
+    private const int MaxLogChars = 200_000;
+
+    // Tails a bounded snapshot of a container's console output (the docker `logs -f` backlog dumps first,
+    // then the follow blocks) so a running or about-to-stop instance yields its logs within a short budget.
+    private static async Task<string> CaptureLogsAsync(IContainerDispatcher dispatcher, Instance instance)
+    {
+        var builder = new System.Text.StringBuilder();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        try
+        {
+            await foreach (var line in dispatcher.TailLogsAsync(instance, cts.Token))
+            {
+                builder.AppendLine(line);
+                if (builder.Length >= MaxLogChars) break;
+            }
+        }
+        catch (OperationCanceledException) { /* budget reached — return what was captured */ }
+        catch { /* logs unavailable — return what was captured */ }
+        return builder.ToString();
     }
 
     internal static DateTimeOffset? GetStartedAt(Instance i) => i switch

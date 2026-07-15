@@ -171,6 +171,35 @@ public sealed class CBotDetailPagesTests(AppFixture app)
             "a null parameter set must be handled, not crash /api/instances with a 500");
     }
 
+    // The instance detail page has a Back button (rendered even on the not-found path) that returns to the
+    // Run list — navigating there and back must never crash the circuit.
+    [Fact]
+    public async Task Instance_detail_back_button_returns_to_the_run_list()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var missingId = "00000000-0000-0000-0000-0000000000bb";
+        await page.GotoAsync($"/instance/{missingId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        var back = page.Locator("[data-testid=instance-back-btn]");
+        await Assertions.Expect(back).ToBeVisibleAsync(Slow);
+        await back.ClickAsync();
+        await page.WaitForURLAsync("**/run", new() { Timeout = 15000 });
+        page.Url.Should().EndWith("/run");
+        (await page.Locator(".blazor-error-ui").IsVisibleAsync())
+            .Should().BeFalse("navigating back from the instance page must not crash the circuit");
+    }
+
+    // The console-log download endpoint must be reachable and degrade cleanly (404 for a missing instance),
+    // never a 500 that would break the download button.
+    [Fact]
+    public async Task Instance_logs_endpoint_is_reachable_and_never_500s()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var res = await page.APIRequest.GetAsync(app.BaseUrl + $"/api/instances/{Guid.NewGuid()}/logs");
+        res.Status.Should().BeLessThan(500, "the logs endpoint must handle a missing instance without a 500");
+    }
+
     private static async Task<string> CreateProjectAsync(IPage page, string name, string language)
     {
         await page.GotoAsync("/cbots");

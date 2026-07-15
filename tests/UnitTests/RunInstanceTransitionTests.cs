@@ -102,6 +102,18 @@ public class RunInstanceTransitionTests
     }
 
     [Fact]
+    public void Captured_console_log_survives_the_transition_to_terminal()
+    {
+        var running = NewStarting().ToRunning("container-1", Now);
+        running.CaptureConsoleLog("line 1\nline 2");
+
+        var stopped = running.ToStopped(Now.AddMinutes(1));
+
+        stopped.ConsoleLog.Should().Be("line 1\nline 2",
+            "the captured console log must be persisted onto the terminal entity so it stays downloadable");
+    }
+
+    [Fact]
     public void Create_starting_without_an_account_or_param_set_is_allowed()
     {
         var starting = NewStarting();

@@ -28,10 +28,11 @@
 }
 
 <MudText Typo="Typo.h6" Class="mt-4">Backtests</MudText>
-<InstanceTable Type="Backtest" />
+<InstanceTable @ref="_table" Type="Backtest" />
 
 @code {
     private bool _hasAccounts;
+    private InstanceTable? _table;
 
     protected override async Task OnInitializedAsync()
     {
@@ -63,5 +64,6 @@
         });
         Snack.Add(r.IsSuccessStatusCode ? "Backtest queued" : "Failed",
             r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        if (r.IsSuccessStatusCode && _table is not null) await _table.RefreshAsync();
     }
 }

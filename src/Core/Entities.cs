@@ -835,6 +835,10 @@ public abstract class Instance : AuditedEntity<InstanceId>
     public ParamSet? ParamSet { get; private set; }
     [MaxLength(512)] public string? DataDirSubPath { get; internal set; }
 
+    // The container's captured console output. Persisted when an instance terminates (e.g. on Stop) so the
+    // last run's logs remain readable/downloadable after the container is gone. Null until captured.
+    public string? ConsoleLog { get; internal set; }
+
     public abstract string KindName { get; }
     public abstract string StatusName { get; }
     public abstract bool IsTerminal { get; }
@@ -848,6 +852,9 @@ public abstract class Instance : AuditedEntity<InstanceId>
 
     public void SetDataDirSubPath(string dataDirSubPath) => DataDirSubPath = dataDirSubPath;
 
+    // Records the container's captured console output so it survives the container being removed.
+    public void CaptureConsoleLog(string consoleLog) => ConsoleLog = consoleLog;
+
     protected static void CopyExecutionState(Instance source, Instance target)
     {
         target.PreserveCreatedAt(source.CreatedAt);
@@ -860,6 +867,7 @@ public abstract class Instance : AuditedEntity<InstanceId>
         target.Timeframe = source.Timeframe;
         target.ParamSetId = source.ParamSetId;
         target.DataDirSubPath = source.DataDirSubPath;
+        target.ConsoleLog = source.ConsoleLog;
     }
 }
 

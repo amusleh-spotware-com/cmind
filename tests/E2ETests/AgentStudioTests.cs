@@ -43,8 +43,8 @@ public sealed class AgentStudioTests(AppFixture app)
         await page.ClickUntilVisibleAsync("[data-testid=agent-create-submit]", createdRow);
         await Assertions.Expect(createdRow).ToBeVisibleAsync(Slow);
 
-        // Open the agent's Details dialog from its roster row.
-        await page.Locator($"tr:has-text(\"{name}\")").Locator("[data-testid=agent-details]").ClickAsync();
+        // Open the agent's Details dialog from its roster row (retry until it appears — parallel-boot race).
+        await page.ClickUntilVisibleAsync($"tr:has-text(\"{name}\") [data-testid=agent-details]", page.Locator(".mud-dialog"));
         await Assertions.Expect(page.Locator(".mud-dialog")).ToBeVisibleAsync(Slow);
 
         // The Research Desk debate degrades to "not configured" when the AI key is absent (test env),

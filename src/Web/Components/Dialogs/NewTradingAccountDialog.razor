@@ -8,7 +8,7 @@
         <MudForm @ref="_form">
             <MudNumericField @bind-Value="_account" Label="Account #" Class="mb-2" />
             <MudTextField @bind-Value="_broker" Label="Broker" Required="true" RequiredError="Broker is required" Class="mb-2" />
-            <MudSwitch @bind-Value="_live" Label="Live" Color="Color.Warning" />
+            <MudSwitch @bind-Value="_live" Label="@(_live ? "Live" : "Demo")" Color="Color.Primary" UncheckedColor="Color.Warning" />
         </MudForm>
     </DialogContent>
     <DialogActions>

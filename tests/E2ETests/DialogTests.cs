@@ -95,6 +95,37 @@ public sealed class DialogTests(AppFixture app)
         await SubmitAsync(taDialog, "Add");
 
         await Assertions.Expect(page.GetByText($"Broker-{Suffix}")).ToBeVisibleAsync(Slow);
+        // Type column shows Demo for a non-live account (the Live toggle defaults off).
+        var accountRow = page.Locator($"tr:has-text('Broker-{Suffix}')");
+        await Assertions.Expect(accountRow.GetByText("Demo")).ToBeVisibleAsync(Slow);
+    }
+
+    [Fact]
+    public async Task Accounts_live_toggle_marks_account_type_live()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await GotoAsync(page, "/accounts");
+
+        var username = $"cidlive-{Suffix}";
+        var cidDialog = await OpenDialogAsync(page, "New cID Account");
+        var cidInputs = cidDialog.Locator("input");
+        await cidInputs.Nth(0).FillAsync(username);
+        await cidInputs.Nth(1).FillAsync("cid_password_123");
+        await SubmitAsync(cidDialog, "Add");
+        await Assertions.Expect(page.GetByText(username)).ToBeVisibleAsync(Slow);
+
+        var broker = $"RealBroker-{Suffix}";
+        var taDialog = await OpenDialogAsync(page, "New Trading Account");
+        var taInputs = taDialog.Locator("input");
+        await taInputs.Nth(0).FillAsync((200000 + Convert.ToInt32(Suffix, 16) % 700000).ToString());
+        await taInputs.Nth(1).FillAsync(broker);
+        // Flip the Live toggle on before submitting.
+        await taDialog.Locator("label.mud-switch").ClickAsync();
+        await SubmitAsync(taDialog, "Add");
+
+        await Assertions.Expect(page.GetByText(broker)).ToBeVisibleAsync(Slow);
+        var accountRow = page.Locator($"tr:has-text('{broker}')");
+        await Assertions.Expect(accountRow.GetByText("Live", new() { Exact = true })).ToBeVisibleAsync(Slow);
     }
 
     [Fact]

@@ -60,6 +60,31 @@ public class CtidHttpTests(PostgresFixture fixture) : IClassFixture<PostgresFixt
     }
 
     [Fact]
+    public async Task Account_view_round_trips_live_and_demo_flag()
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+
+        (await client.PostAsJsonAsync("/api/ctids/", new { Username = "flagtrader", Password = "cid-pass" }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        var list = await (await client.GetAsync("/api/ctids/")).Content.ReadFromJsonAsync<JsonElement>();
+        var id = list.EnumerateArray().Single(c => c.GetProperty("username").GetString() == "flagtrader")
+            .GetProperty("id").GetGuid();
+
+        (await client.PostAsJsonAsync($"/api/ctids/{id}/accounts",
+            new { AccountNumber = 7001L, Broker = "Pepperstone", IsLive = true, Label = (string?)null }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        (await client.PostAsJsonAsync($"/api/ctids/{id}/accounts",
+            new { AccountNumber = 7002L, Broker = "Pepperstone", IsLive = false, Label = (string?)null }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var accounts = await (await client.GetAsync($"/api/ctids/{id}/accounts")).Content.ReadFromJsonAsync<JsonElement>();
+        var byNumber = accounts.EnumerateArray().ToDictionary(a => a.GetProperty("accountNumber").GetInt64());
+        byNumber[7001L].GetProperty("isLive").GetBoolean().Should().BeTrue();
+        byNumber[7002L].GetProperty("isLive").GetBoolean().Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Update_and_delete_of_a_missing_cid_are_not_found()
     {
         await using var app = CreateApp();

@@ -17,6 +17,18 @@ public sealed class AccountLinkingTests
         account.CtidTraderAccountId.Should().BeNull();
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void AddTradingAccount_preserves_live_demo_flag(bool isLive)
+    {
+        var cid = CTraderIdAccount.Create(UserId.New(), "trader", []);
+
+        var account = cid.AddTradingAccount(123456, "Broker", isLive, label: null, BrokerAllowlist.Unrestricted);
+
+        account.IsLive.Should().Be(isLive);
+    }
+
     [Fact]
     public void LinkOpenApi_adds_flag_without_dropping_cid()
     {

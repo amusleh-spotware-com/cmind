@@ -14,11 +14,11 @@
 
 <MudTable Items="_items" Dense="true" Class="mt-2" Breakpoint="Breakpoint.Sm">
     <HeaderContent>
-        <MudTh>Account</MudTh><MudTh>Broker</MudTh><MudTh>Live</MudTh><MudTh>Linked via</MudTh><MudTh /></HeaderContent>
+        <MudTh>Account</MudTh><MudTh>Broker</MudTh><MudTh>Type</MudTh><MudTh>Linked via</MudTh><MudTh /></HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Account">@context.accountNumber</MudTd>
         <MudTd DataLabel="Broker">@context.broker</MudTd>
-        <MudTd DataLabel="Live">@context.isLive</MudTd>
+        <MudTd DataLabel="Type">@((bool)context.isLive ? "Live" : "Demo")</MudTd>
         <MudTd DataLabel="Linked via">
             @if ((bool)context.linkedViaCid)
             {

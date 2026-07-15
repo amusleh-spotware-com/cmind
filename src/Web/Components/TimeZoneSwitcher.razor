@@ -10,8 +10,9 @@
 
 <MudAutocomplete T="SupportedTimeZones.TimeZoneOption" Dense="true" ResetValueOnEmptyText="true"
                  Label="@L["timezone.select"]" data-testid="timezone-switcher"
-                 SearchFunc="Search" ToStringFunc="@(o => o.DisplayName)"
-                 Value="_selected" ValueChanged="SwitchTo" Clearable="false">
+                 SearchFunc="Search" ToStringFunc="@(o => o.DisplayName)" MaxItems="null"
+                 OpenOnFocus="true" CoerceText="true" Clearable="false"
+                 Value="_selected" ValueChanged="SwitchTo">
     <ItemTemplate Context="option">
         <MudText Typo="Typo.body2" data-testid="@($"timezone-option-{option.Id}")">@option.DisplayName</MudText>
     </ItemTemplate>
@@ -29,7 +30,10 @@
     private Task<IEnumerable<SupportedTimeZones.TimeZoneOption>> Search(string? value, CancellationToken ct)
     {
         var all = SupportedTimeZones.All;
-        if (string.IsNullOrWhiteSpace(value))
+        // On open, MudAutocomplete seeds the search text with the current selection's display name; treat that
+        // (and empty) as "show the full list" so the picker always offers every zone, not just the current one.
+        if (string.IsNullOrWhiteSpace(value)
+            || string.Equals(value, _selected.DisplayName, StringComparison.OrdinalIgnoreCase))
             return Task.FromResult<IEnumerable<SupportedTimeZones.TimeZoneOption>>(all);
         var matches = all.Where(o =>
             o.DisplayName.Contains(value, StringComparison.OrdinalIgnoreCase)

@@ -4,9 +4,9 @@ using Xunit;
 
 namespace E2ETests;
 
-// Drives the real time-zone UI: the settings Time-zone section + switcher are present, choosing a zone via
-// the /set-timezone endpoint persists across a reload (cookie + re-issued claim), and the settings panel
-// reflects the current zone. Each test resets the zone to UTC so it never leaks into other specs.
+// Drives the real time-zone UI: the switcher lists EVERY zone (not just the current one), selecting a zone
+// through the switcher changes and persists it, and the section is reachable on a phone. Each test resets the
+// zone to UTC so it never leaks into other specs.
 [Collection(AppCollection.Name)]
 public sealed class TimeZoneTests(AppFixture app)
 {
@@ -16,10 +16,18 @@ public sealed class TimeZoneTests(AppFixture app)
 
     private static async Task OpenTimeZonePanelAsync(IPage page)
     {
-        // On a phone the nav drawer is collapsed; open it so the Settings nav item is clickable.
+        // Wait for the app shell to mount (it may still be rendering right after a full reload) before
+        // deciding whether the drawer needs opening.
         var settingsNav = page.Locator("[data-testid=nav-settings]");
-        if (!await settingsNav.IsVisibleAsync())
+        await settingsNav.WaitForAsync(new() { State = WaitForSelectorState.Attached });
+        // On a phone the nav drawer starts collapsed (temporary variant); a single toggle may only flip its
+        // internal state, so click until the Settings item is actually visible (a few attempts, then give up).
+        for (var attempt = 0; attempt < 4 && !await settingsNav.IsVisibleAsync(); attempt++)
+        {
             await page.Locator("[data-testid=nav-drawer-toggle]").ClickAsync();
+            try { await settingsNav.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 3000 }); }
+            catch (TimeoutException) { /* retry */ }
+        }
         await settingsNav.WaitForAsync(new() { State = WaitForSelectorState.Visible });
         await settingsNav.ClickAsync();
         await page.Locator("[data-testid=settings-section-timezone]")
@@ -30,7 +38,7 @@ public sealed class TimeZoneTests(AppFixture app)
     }
 
     [Fact]
-    public async Task Settings_timezone_section_and_switcher_are_present()
+    public async Task Switcher_lists_every_time_zone_not_just_the_current_one()
     {
         var page = await app.NewAuthedPageAsync();
         try
@@ -38,28 +46,43 @@ public sealed class TimeZoneTests(AppFixture app)
             await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.Load });
             await OpenTimeZonePanelAsync(page);
 
-            (await page.Locator("[data-testid=settings-timezone-panel]").IsVisibleAsync())
-                .Should().BeTrue("the settings dialog must expose a Time-zone section");
-            (await page.Locator("[data-testid=timezone-switcher]").CountAsync())
-                .Should().BeGreaterThan(0, "the Time-zone section must expose the switcher");
+            // Open the autocomplete and assert it offers the whole zone database — the regression that shipped
+            // showed only the single current zone because the search seeded itself with the current selection.
+            await page.Locator("[data-testid=settings-timezone-panel] input").ClickAsync();
+            await page.Locator("[data-testid^='timezone-option-']").First
+                .WaitForAsync(new() { State = WaitForSelectorState.Visible });
+            (await page.Locator("[data-testid^='timezone-option-']").CountAsync())
+                .Should().BeGreaterThan(50, "the switcher must list every zone, not only the current one");
         }
         finally { await SetZoneAsync(page, "UTC"); }
     }
 
     [Fact]
-    public async Task Choosing_a_zone_persists_across_a_reload_and_shows_in_settings()
+    public async Task Selecting_a_zone_in_the_switcher_changes_and_persists_it()
     {
         var page = await app.NewAuthedPageAsync();
         try
         {
-            await SetZoneAsync(page, "Asia/Tokyo");
-
-            // Persists across a plain reload via the time-zone cookie + re-issued claim.
             await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.Load });
             await OpenTimeZonePanelAsync(page);
 
-            (await page.Locator("[data-testid=timezone-current]").InnerTextAsync())
-                .Should().Contain("Asia/Tokyo", "the settings panel must reflect the chosen zone after a reload");
+            // Drive the real control: type to filter, pick a specific zone, and assert it actually took effect.
+            var input = page.Locator("[data-testid=settings-timezone-panel] input");
+            await input.ClickAsync();
+            await input.FillAsync("Tokyo");
+            var option = page.Locator("[data-testid='timezone-option-Asia/Tokyo']");
+            await option.WaitForAsync(new() { State = WaitForSelectorState.Visible });
+            // Selecting force-reloads the page (the circuit can't change zone live); wait for that reload to
+            // tear the dialog down, then assert the choice actually took effect — the zone cookie now holds it.
+            await option.ClickAsync();
+            await page.Locator("[data-testid=settings-timezone-panel]")
+                .WaitForAsync(new() { State = WaitForSelectorState.Detached });
+
+            var cookies = await page.Context.CookiesAsync();
+            var zoneCookie = cookies.FirstOrDefault(c => c.Name == ".Cmind.TimeZone");
+            zoneCookie.Should().NotBeNull("picking a zone in the switcher must persist it");
+            Uri.UnescapeDataString(zoneCookie!.Value).Should().Be("Asia/Tokyo",
+                "the switcher selection must change the user's zone to the picked one");
         }
         finally { await SetZoneAsync(page, "UTC"); }
     }

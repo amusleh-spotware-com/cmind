@@ -55,6 +55,12 @@ Census gates make omissions fail the build, not depend on a reviewer:
   with no smoke coverage (add the route, or exclude it with a reason in `RouteCoverageTests`).
 - **Every interactive UI control** (button, dialog, toggle, form) is driven by an E2E that asserts the
   observable outcome — not just that the page rendered.
+- **Every selection/list control** (dropdown, autocomplete, radio group, picker) is E2E-driven to assert
+  it **presents all the options it should** (assert a count / a specific expected option is listed) **and**
+  that choosing a **non-default** one takes effect — never assert only that the control is *present*.
+  Back it with a unit gate on the option **source** when it is generated (e.g. `SupportedTimeZonesTests`
+  asserts the zone list is the full DB, not one entry). This exists because the time-zone switcher shipped
+  listing only the current zone: the E2E checked presence, not that it offered every zone.
 - **Every minimal-API route** has an integration or E2E test hitting it authenticated.
 - **Mandate guards** (`ArchitectureGuardTests`, `NoHardcodedUiTextTests`, `ResourceParityTests`,
   `WhiteLabelCatalogParityTests`) stay green — they are the machine-enforced CLAUDE.md.

@@ -11,7 +11,7 @@ namespace Web.Endpoints;
 
 public record StartRequest(
     Guid CBotId, Guid TradingAccountId, string Symbol, string Timeframe,
-    Guid ParamSetId, string DockerImageTag, string Type,
+    Guid? ParamSetId, string DockerImageTag, string Type,
     string? BacktestSettingsJson);
 
 public static class InstanceEndpoints
@@ -98,15 +98,24 @@ public static class InstanceEndpoints
 
             var cbotId = CBotId.From(req.CBotId);
             var accountId = TradingAccountId.From(req.TradingAccountId);
-            var paramSetId = ParamSetId.From(req.ParamSetId);
 
             var cbot = await db.CBots.FirstOrDefaultAsync(c => c.Id == cbotId && c.UserId == uid);
             if (cbot is null) return Results.BadRequest("cbot not found");
             var acct = await db.TradingAccounts.Include(t => t.CTid)
                 .FirstOrDefaultAsync(t => t.Id == accountId && t.CTid.UserId == uid);
             if (acct is null) return Results.BadRequest("account not found");
-            var paramSet = await db.ParamSets.FirstOrDefaultAsync(p => p.Id == paramSetId && p.UserId == uid);
-            if (paramSet is null) return Results.BadRequest("paramset not found");
+
+            // A parameter set is optional: none ⇒ run with the cBot's default parameter values (empty
+            // cbotset). When supplied it must belong to the caller.
+            ParamSetId? paramSetId = null;
+            var paramJson = "{}";
+            if (req.ParamSetId is { } psid)
+            {
+                var paramSet = await db.ParamSets.FirstOrDefaultAsync(p => p.Id == ParamSetId.From(psid) && p.UserId == uid);
+                if (paramSet is null) return Results.BadRequest("paramset not found");
+                paramSetId = paramSet.Id;
+                paramJson = paramSet.JsonContent;
+            }
 
             var kind = req.Type;
             var node = await scheduler.PickNodeAsync(kind, default);
@@ -129,7 +138,7 @@ public static class InstanceEndpoints
             starting.AttachNode(node);
 
             var algo = protector.Unprotect(cbot.EncryptedAlgo, EncryptionPurposes.CbotAlgo);
-            var containerId = await factory.For(node).StartAsync(starting, algo, paramSet.JsonContent, default);
+            var containerId = await factory.For(node).StartAsync(starting, algo, paramJson, default);
 
             // Transition to Running by replacing entity (TPH discriminator cannot change)
             Instance running = starting switch

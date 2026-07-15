@@ -72,6 +72,17 @@ public class BacktestInstanceTransitionTests
     }
 
     [Fact]
+    public void Create_starting_without_a_param_set_is_allowed_and_carries_the_account()
+    {
+        var accountId = TradingAccountId.New();
+        var starting = BacktestInstance.CreateStarting(UserId.New(), CBotId.New(), NodeId.New(),
+            new DockerImageTag("latest"), new Symbol("EURUSD"), new Timeframe("h1"), "{}", accountId, paramSetId: null);
+
+        starting.ParamSetId.Should().BeNull("a backtest with no parameter set uses the cBot's default values");
+        starting.TradingAccountId.Should().Be(accountId);
+    }
+
+    [Fact]
     public void Create_failed_produces_a_terminal_failed_backtest()
     {
         var failed = BacktestInstance.CreateFailed(UserId.New(), CBotId.New(), NodeId.New(),

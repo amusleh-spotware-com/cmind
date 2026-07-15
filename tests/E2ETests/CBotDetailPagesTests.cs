@@ -145,6 +145,32 @@ public sealed class CBotDetailPagesTests(AppFixture app)
             .Should().BeFalse("opening the run dialog must not crash the circuit");
     }
 
+    // Regression: the Run/Backtest dialogs make the parameter set optional, so /api/instances/ receives a
+    // null ParamSetId. That must not crash the endpoint (it used to 500 from the JSON binder). Drive it
+    // through the real, authenticated app API and assert no server error.
+    [Fact]
+    public async Task Start_instance_with_no_param_set_does_not_500()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var res = await page.APIRequest.PostAsync(app.BaseUrl + "/api/instances/", new()
+        {
+            DataObject = new
+            {
+                CBotId = Guid.NewGuid(),
+                TradingAccountId = Guid.NewGuid(),
+                Symbol = "EURUSD",
+                Timeframe = "h1",
+                ParamSetId = (Guid?)null,
+                DockerImageTag = "latest",
+                Type = "Run",
+                BacktestSettingsJson = (string?)null
+            }
+        });
+
+        res.Status.Should().BeLessThan(500,
+            "a null parameter set must be handled, not crash /api/instances with a 500");
+    }
+
     private static async Task<string> CreateProjectAsync(IPage page, string name, string language)
     {
         await page.GotoAsync("/cbots");

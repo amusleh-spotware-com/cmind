@@ -45,3 +45,19 @@ protected override void OnTick()
 ```
 
 Daha fazla: [Backtest Bütünlüğü →](./backtest-integrity.md)
+
+## Kod düzenleyiciden çalıştırma
+
+Kod düzenleyicide **Çalıştır**'a tıklamak, kör ve sabit kodlanmış bir çalıştırma başlatmak yerine bir iletişim kutusu açar:
+
+- **İşlem hesabı** (gerekli) — cBot'un bağlanacağı cTrader hesabı.
+- **Parametre kümesi** (isteğe bağlı) — mevcut bir küme seçin veya cBot'un **varsayılan parametre değerleriyle** çalıştırmak için boş bırakın. Seçicinin yanındaki **+** düğmesi, satır içinde yeni bir parametre kümesi oluşturur (aşağıya bakın) ve onu seçer.
+- **Sembol / Zaman dilimi** varsayılan olarak `EURUSD` / `h1`'dir ve değiştirilebilir; **İptal** veya **Çalıştır**.
+
+**Çalıştır** ile düzenleyici mevcut kaynağı kaydeder ve derler, seçilen hesapta seçilen parametrelerle örneği başlatır, ardından canlı konteyner günlüklerini izler. (Günlük akışı, oturum açmış kullanıcının kimlik doğrulama çerezini SignalR hub'ı `/hubs/logs`'a iletir; böylece `Invalid negotiation response received` hatasıyla başarısız olmak yerine bağlanır.)
+
+## Parametre kümeleri
+
+Bir **parametre kümesi**, her parametre adını bir skaler değere eşleyen düz bir JSON nesnesi olarak saklanan, adlandırılmış ve yeniden kullanılabilir cBot parametre geçersiz kılmaları kümesidir, örn. `{"Period": 14, "Label": "trend"}`. Çalıştırma/backtest sırasında cTrader `params.cbotset` dosyasına (`{ "Parameters": { … } }`) dönüştürülür. Bir kümeyi cBot'un **Parametre kümeleri** iletişim kutusundan ham JSON olarak veya Çalıştır iletişim kutusundan satır içinde oluşturabilir/düzenleyebilirsiniz.
+
+JSON kaydederken **doğrulanır**: değerlerinin tümü skaler (dize / sayı / bool) olan tek bir düz nesne olmalıdır. Nesne olmayan bir kök, bir dizi, iç içe bir nesne, bir `null` değer veya hatalı biçimlendirilmiş JSON reddedilir (iletişim kutusunda net bir hata, API'de `400 Bad Request`). Boş bir nesne `{}` izinlidir ve "geçersiz kılma yok" anlamına gelir.

@@ -37,7 +37,7 @@ public class ParamSetHttpTests(PostgresFixture fixture) : IClassFixture<Postgres
         using var form = new MultipartFormDataContent
         {
             { new ByteArrayContent([1, 2, 3]), "file", "bot.algo" },
-            { new StringContent("Host"), "name" },
+            { new StringContent($"Host-{Guid.NewGuid():N}"), "name" },
         };
         var upload = await client.PostAsync("/api/cbots/upload", form);
         upload.EnsureSuccessStatusCode();
@@ -76,6 +76,23 @@ public class ParamSetHttpTests(PostgresFixture fixture) : IClassFixture<Postgres
         (await client.PostAsJsonAsync("/api/paramsets/",
             new { CBotId = Guid.NewGuid(), Name = "x", JsonContent = "" }))
             .StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Theory]
+    [InlineData("[1,2,3]")]                          // array root
+    [InlineData("{\"Parameters\":{\"Period\":14}}")] // nested object value
+    [InlineData("{\"tags\":[1,2]}")]                  // array value
+    [InlineData("42")]                                // primitive root
+    public async Task Create_rejects_a_non_flat_param_object(string json)
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+        var cbotId = await UploadCBotAsync(client);
+
+        var res = await client.PostAsJsonAsync("/api/paramsets/",
+            new { CBotId = cbotId, Name = "bad", JsonContent = json });
+        res.StatusCode.Should().Be(HttpStatusCode.BadRequest,
+            "a parameter set must be a flat name→scalar-value object");
     }
 
     [Fact]

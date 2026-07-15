@@ -86,6 +86,30 @@ public class RunInstanceTransitionTests
     }
 
     [Fact]
+    public void Create_starting_carries_the_chosen_account_and_param_set_across_to_running()
+    {
+        var accountId = TradingAccountId.New();
+        var paramSetId = ParamSetId.New();
+        var starting = RunInstance.CreateStarting(UserId.New(), CBotId.New(), NodeId.New(),
+            new DockerImageTag("latest"), new Symbol("EURUSD"), new Timeframe("h1"), accountId, paramSetId);
+
+        starting.TradingAccountId.Should().Be(accountId);
+        starting.ParamSetId.Should().Be(paramSetId);
+
+        var running = starting.ToRunning("container-1", Now);
+        running.TradingAccountId.Should().Be(accountId, "the selected account must survive the state transition");
+        running.ParamSetId.Should().Be(paramSetId, "the selected parameter set must survive the state transition");
+    }
+
+    [Fact]
+    public void Create_starting_without_an_account_or_param_set_is_allowed()
+    {
+        var starting = NewStarting();
+        starting.TradingAccountId.Should().BeNull();
+        starting.ParamSetId.Should().BeNull("a run with no parameter set uses the cBot's default parameter values");
+    }
+
+    [Fact]
     public void Create_failed_produces_a_terminal_failed_instance()
     {
         var failed = RunInstance.CreateFailed(UserId.New(), CBotId.New(), NodeId.New(),

@@ -44,3 +44,19 @@ Eseguire o backtestare un cBot necessita di un account di trading cTrader a cui 
 aggiungi uno sotto **Trading accounts**, i pulsanti **Run New cBot** / **Backtest New cBot** sono
 disabilitati (con una tooltip) e la pagina mostra un prompt che linka al setup dell'account — non ricevi
 più un raw errore `stream connect failed` da un bot senza account.
+
+## Eseguire dall'editor di codice
+
+Fare clic su **Esegui** nell'editor di codice apre una finestra di dialogo invece di avviare un'esecuzione cieca e cablata:
+
+- **Conto di trading** (obbligatorio) — il conto cTrader a cui si connette il cBot.
+- **Set di parametri** (facoltativo) — scegli un set esistente oppure lascialo vuoto per eseguire con i **valori dei parametri predefiniti** del cBot. Un pulsante **+** accanto al selettore crea un nuovo set di parametri in linea (vedi sotto) e lo seleziona.
+- **Simbolo / Timeframe** sono per impostazione predefinita `EURUSD` / `h1` e modificabili; **Annulla** o **Esegui**.
+
+All'**Esecuzione** l'editor salva e compila il codice sorgente corrente, avvia l'istanza sul conto scelto con i parametri scelti, quindi segue i log del container in tempo reale. (Il flusso di log inoltra il cookie di autenticazione dell'utente connesso all'hub SignalR `/hubs/logs`, così si connette invece di fallire con `Invalid negotiation response received`.)
+
+## Set di parametri
+
+Un **set di parametri** è un insieme denominato e riutilizzabile di override dei parametri del cBot, memorizzato come oggetto JSON piatto che associa ogni nome di parametro a un valore scalare, ad es. `{"Period": 14, "Label": "trend"}`. Al momento dell'esecuzione/backtest viene trasformato nel file cTrader `params.cbotset` (`{ "Parameters": { … } }`). Puoi creare/modificare un set come JSON grezzo dalla finestra di dialogo **Set di parametri** del cBot o in linea dalla finestra di dialogo Esegui.
+
+Il JSON viene **validato** al salvataggio: deve essere un singolo oggetto piatto i cui valori siano tutti scalari (stringa / numero / bool). Una radice non-oggetto, un array, un oggetto annidato, un valore `null` o JSON malformato viene rifiutato (errore chiaro nella finestra di dialogo, `400 Bad Request` nell'API). Un oggetto vuoto `{}` è consentito e significa «nessun override».

@@ -44,3 +44,19 @@ Executar ou fazer backtest de um cBot precisa de uma conta de trading cTrader pa
 **Contas de trading**, os botoes **Executar Novo cBot** / **Fazer Backtest de Novo cBot** estao desabilitados (com um
 tooltip) e a pagina mostra um aviso linkando para configuracao de conta — voce nao encontra mais um
 erro `stream connect failed` bruto de um bot sem conta.
+
+## Executar a partir do editor de código
+
+Clicar em **Executar** no editor de código abre uma caixa de diálogo em vez de disparar uma execução cega e fixa:
+
+- **Conta de trading** (obrigatória) — a conta cTrader à qual o cBot se conecta.
+- **Conjunto de parâmetros** (opcional) — escolha um conjunto existente ou deixe vazio para executar com os **valores de parâmetros padrão** do cBot. Um botão **+** ao lado do seletor cria um novo conjunto de parâmetros inline (veja abaixo) e o seleciona.
+- **Símbolo / Timeframe** são por padrão `EURUSD` / `h1` e podem ser alterados; **Cancelar** ou **Executar**.
+
+Ao **Executar**, o editor salva e compila o código-fonte atual, inicia a instância na conta escolhida com os parâmetros escolhidos e então acompanha os logs do contêiner ao vivo. (O fluxo de logs encaminha o cookie de autenticação do usuário conectado ao hub SignalR `/hubs/logs`, de modo que ele se conecta em vez de falhar com `Invalid negotiation response received`.)
+
+## Conjuntos de parâmetros
+
+Um **conjunto de parâmetros** é um conjunto nomeado e reutilizável de substituições de parâmetros do cBot, armazenado como um objeto JSON plano que mapeia cada nome de parâmetro para um valor escalar, por ex. `{"Period": 14, "Label": "trend"}`. No momento da execução/backtest, ele é convertido no arquivo `params.cbotset` do cTrader (`{ "Parameters": { … } }`). Você pode criar/editar um conjunto como JSON bruto na caixa de diálogo **Conjuntos de parâmetros** do cBot ou inline na caixa de diálogo Executar.
+
+O JSON é **validado** ao salvar: deve ser um único objeto plano cujos valores sejam todos escalares (string / número / bool). Uma raiz não-objeto, um array, um objeto aninhado, um valor `null` ou JSON malformado é rejeitado (erro claro na caixa de diálogo, `400 Bad Request` na API). Um objeto vazio `{}` é permitido e significa "sem substituições".

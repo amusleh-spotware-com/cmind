@@ -37,3 +37,19 @@ l'argument positionnel JSON `params.cbotset` ; `run` rejette `--data-dir` (backt
 
 La capacité d'exécution s'étend en ajoutant des agents nœud (auto-enregistrement + pulsation). Voir
 [découverte de nœud](../operations/node-discovery.md) et [mise à l'échelle](../deployment/scaling.md).
+
+## Exécuter depuis l'éditeur de code
+
+Cliquer sur **Exécuter** dans l'éditeur de code ouvre une boîte de dialogue au lieu de lancer une exécution aveugle et codée en dur :
+
+- **Compte de trading** (obligatoire) — le compte cTrader auquel le cBot se connecte.
+- **Jeu de paramètres** (facultatif) — choisissez un jeu existant, ou laissez vide pour exécuter avec les **valeurs de paramètres par défaut** du cBot. Un bouton **+** à côté du sélecteur crée un nouveau jeu de paramètres en ligne (voir ci-dessous) et le sélectionne.
+- **Symbole / Unité de temps** sont par défaut `EURUSD` / `h1` et modifiables ; **Annuler** ou **Exécuter**.
+
+Lors de l'**Exécution**, l'éditeur enregistre et compile le code source actuel, démarre l'instance sur le compte choisi avec les paramètres choisis, puis suit les logs du conteneur en direct. (Le flux de logs transmet le cookie d'authentification de l'utilisateur connecté au hub SignalR `/hubs/logs`, de sorte qu'il se connecte au lieu d'échouer avec `Invalid negotiation response received`.)
+
+## Jeux de paramètres
+
+Un **jeu de paramètres** est un ensemble nommé et réutilisable de remplacements de paramètres du cBot, stocké sous forme d'objet JSON plat associant chaque nom de paramètre à une valeur scalaire, p. ex. `{"Period": 14, "Label": "trend"}`. Au moment de l'exécution/du backtest, il est converti en fichier cTrader `params.cbotset` (`{ "Parameters": { … } }`). Vous pouvez créer/modifier un jeu en JSON brut depuis la boîte de dialogue **Jeux de paramètres** du cBot ou en ligne depuis la boîte de dialogue Exécuter.
+
+Le JSON est **validé** à l'enregistrement : il doit être un objet plat unique dont toutes les valeurs sont scalaires (chaîne / nombre / booléen). Une racine non-objet, un tableau, un objet imbriqué, une valeur `null` ou un JSON mal formé est rejeté (erreur claire dans la boîte de dialogue, `400 Bad Request` côté API). Un objet vide `{}` est autorisé et signifie « aucun remplacement ».

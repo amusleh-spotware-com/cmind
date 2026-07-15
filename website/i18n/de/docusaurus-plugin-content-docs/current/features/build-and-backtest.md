@@ -37,3 +37,19 @@ Backtests benötigen `--data-mode` (Standard `m1`), Datumsangaben als `dd/MM/yyy
 
 Die Ausführungskapazität wird durch Hinzufügen von Node-Agenten erhöht (Self-Registration + Heartbeat). Siehe
 [Node-Erkennung](../operations/node-discovery.md) und [Skalierung](../deployment/scaling.md).
+
+## Aus dem Code-Editor ausführen
+
+Ein Klick auf **Ausführen** im Code-Editor öffnet einen Dialog, statt einen blinden, fest verdrahteten Lauf zu starten:
+
+- **Trading-Konto** (erforderlich) – das cTrader-Konto, mit dem sich der cBot verbindet.
+- **Parametersatz** (optional) – einen vorhandenen Satz wählen oder leer lassen, um mit den **Standard-Parameterwerten** des cBots zu laufen. Eine **+**-Schaltfläche neben der Auswahl erstellt inline einen neuen Parametersatz (siehe unten) und wählt ihn aus.
+- **Symbol / Zeitrahmen** sind standardmäßig `EURUSD` / `h1` und änderbar; **Abbrechen** oder **Ausführen**.
+
+Bei **Ausführen** speichert und baut der Editor den aktuellen Quellcode, startet die Instanz auf dem gewählten Konto mit den gewählten Parametern und verfolgt dann die Live-Container-Logs. (Der Log-Stream leitet das Auth-Cookie des angemeldeten Benutzers an den SignalR-Hub `/hubs/logs` weiter, sodass er sich verbindet, statt mit `Invalid negotiation response received` zu scheitern.)
+
+## Parametersätze
+
+Ein **Parametersatz** ist ein benannter, wiederverwendbarer Satz von cBot-Parameter-Überschreibungen, gespeichert als flaches JSON-Objekt, das jeden Parameternamen auf einen skalaren Wert abbildet, z. B. `{"Period": 14, "Label": "trend"}`. Beim Ausführen/Backtesten wird daraus die cTrader-Datei `params.cbotset` (`{ "Parameters": { … } }`) erzeugt. Sie können einen Satz als reines JSON über den Dialog **Parametersätze** des cBots oder inline aus dem Ausführen-Dialog erstellen/bearbeiten.
+
+Das JSON wird beim Speichern **validiert**: Es muss ein einzelnes flaches Objekt sein, dessen Werte alle Skalare sind (String / Zahl / Bool). Ein Nicht-Objekt-Root, ein Array, ein verschachteltes Objekt, ein `null`-Wert oder fehlerhaftes JSON wird abgelehnt (klarer Fehler im Dialog, `400 Bad Request` an der API). Ein leeres Objekt `{}` ist erlaubt und bedeutet „keine Überschreibungen".

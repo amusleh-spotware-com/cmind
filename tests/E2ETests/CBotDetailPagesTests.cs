@@ -114,6 +114,37 @@ public sealed class CBotDetailPagesTests(AppFixture app)
             .Should().BeFalse("quick-run must not crash the circuit");
     }
 
+    // The editor's Run action must open the run dialog (pick a trading account + optional parameter set),
+    // not fire a blind hard-coded run. Asserts the dialog renders with the account selector, the Run/Cancel
+    // actions, and the inline "new parameter set" control — and that it never crashes the circuit.
+    [Fact]
+    public async Task Builder_editor_run_opens_the_account_and_paramset_dialog()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var projectId = await CreateProjectAsync(page, $"run-dlg-{Suffix}", "C#");
+
+        await page.GotoAsync($"/builder/{projectId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await Assertions.Expect(page.Locator(".monaco-editor").First).ToBeVisibleAsync(Slow);
+
+        var run = page.Locator("button:has-text('Run')").First;
+        var dialog = page.Locator(".mud-dialog").Last;
+        for (var attempt = 0; attempt < 15; attempt++)
+        {
+            try { await run.ClickAsync(new() { Timeout = 2000 }); }
+            catch (PlaywrightException) { /* stale after reconnect — retry */ }
+            try { await dialog.WaitForAsync(new() { Timeout = 2000, State = WaitForSelectorState.Visible }); break; }
+            catch (TimeoutException) { }
+        }
+
+        await Assertions.Expect(dialog.GetByText("Trading account")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(dialog.Locator("[data-testid=run-submit]")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(dialog.Locator("[data-testid=run-new-paramset]")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(dialog.Locator("button:has-text('Cancel')")).ToBeVisibleAsync(Slow);
+        (await page.Locator(".blazor-error-ui").IsVisibleAsync())
+            .Should().BeFalse("opening the run dialog must not crash the circuit");
+    }
+
     private static async Task<string> CreateProjectAsync(IPage page, string name, string language)
     {
         await page.GotoAsync("/cbots");

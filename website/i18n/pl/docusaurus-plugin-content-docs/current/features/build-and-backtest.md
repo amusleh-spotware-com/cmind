@@ -37,3 +37,19 @@ Backtesty potrzebują `--data-mode` (domyślnie `m1`), daty jako `dd/MM/yyyy HH:
 
 Capacity egzekucji skaluje się przez dodanie node agents (self-register + heartbeat). Zobacz
 [node discovery](../operations/node-discovery.md) i [scaling](../deployment/scaling.md).
+
+## Uruchamianie z edytora kodu
+
+Kliknięcie **Uruchom** w edytorze kodu otwiera okno dialogowe zamiast uruchamiać ślepe, zakodowane na stałe uruchomienie:
+
+- **Konto handlowe** (wymagane) — konto cTrader, z którym łączy się cBot.
+- **Zestaw parametrów** (opcjonalnie) — wybierz istniejący zestaw lub pozostaw puste, aby uruchomić z **domyślnymi wartościami parametrów** cBota. Przycisk **+** obok selektora tworzy nowy zestaw parametrów w miejscu (patrz niżej) i go wybiera.
+- **Symbol / Interwał** domyślnie `EURUSD` / `h1` i można je zmienić; **Anuluj** lub **Uruchom**.
+
+Po **Uruchom** edytor zapisuje i kompiluje bieżący kod źródłowy, uruchamia instancję na wybranym koncie z wybranymi parametrami, a następnie śledzi na żywo logi kontenera. (Strumień logów przekazuje ciasteczko uwierzytelniania zalogowanego użytkownika do huba SignalR `/hubs/logs`, dzięki czemu łączy się, zamiast kończyć błędem `Invalid negotiation response received`.)
+
+## Zestawy parametrów
+
+**Zestaw parametrów** to nazwany, wielokrotnego użytku zestaw nadpisań parametrów cBota, przechowywany jako płaski obiekt JSON mapujący każdą nazwę parametru na wartość skalarną, np. `{"Period": 14, "Label": "trend"}`. W czasie uruchomienia/backtestu jest przekształcany w plik cTrader `params.cbotset` (`{ "Parameters": { … } }`). Zestaw można utworzyć/edytować jako surowy JSON z okna **Zestawy parametrów** cBota lub w miejscu z okna Uruchom.
+
+JSON jest **walidowany** przy zapisie: musi być pojedynczym płaskim obiektem, którego wszystkie wartości są skalarne (ciąg / liczba / bool). Korzeń niebędący obiektem, tablica, zagnieżdżony obiekt, wartość `null` lub nieprawidłowy JSON są odrzucane (czytelny błąd w oknie, `400 Bad Request` w API). Pusty obiekt `{}` jest dozwolony i oznacza „brak nadpisań".

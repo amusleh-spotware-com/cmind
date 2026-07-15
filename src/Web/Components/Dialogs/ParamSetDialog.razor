@@ -14,6 +14,13 @@
             }
             <MudTextField @bind-Value="_name" Label="Name" Required="true" RequiredError="Name is required" Class="mb-2" Immediate="true" />
             <MudTextField @bind-Value="_json" Label="JSON" Lines="8" Variant="Variant.Outlined" />
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                A flat JSON object mapping each parameter name to a value, e.g. <code>{"Period": 14, "Label": "trend"}</code>.
+            </MudText>
+            @if (_jsonError is not null)
+            {
+                <MudText Color="Color.Error" Typo="Typo.caption" data-testid="paramset-json-error">@_jsonError</MudText>
+            }
         </MudForm>
     </DialogContent>
     <DialogActions>
@@ -35,6 +42,7 @@
     private string _name = "";
     private string _json = "{}";
     private Guid? _cbotId;
+    private string? _jsonError;
 
     protected override void OnInitialized()
     {
@@ -48,6 +56,12 @@
         if (_form is not null) await _form.Validate();
         if (string.IsNullOrWhiteSpace(_name)) return;
         if (!IsEdit && _cbotId is null) return;
+        if (!Core.ParamSetJson.IsValidSchema(_json))
+        {
+            _jsonError = "Parameters must be a flat JSON object mapping each parameter name to a scalar value (no nested objects or arrays).";
+            return;
+        }
+        _jsonError = null;
         Dialog.Close(DialogResult.Ok(new ParamSetDialogResult(_cbotId, _name.Trim(), _json)));
     }
 

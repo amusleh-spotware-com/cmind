@@ -6,6 +6,7 @@
 @using Core.Options
 @using Microsoft.Extensions.Options
 @using Microsoft.AspNetCore.SignalR.Client
+@using Web.Hubs
 @using ApexCharts
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inject HttpClient Http
@@ -14,6 +15,7 @@
 @inject IEconomicCalendar Calendar
 @inject IFeatureGate Gate
 @inject IOptionsMonitor<AppOptions> Options
+@inject LogHubConnectionFactory HubFactory
 @implements IAsyncDisposable
 
 <PageTitle>Instance</PageTitle>
@@ -94,7 +96,7 @@
 
         try
         {
-            _hub = new HubConnectionBuilder().WithUrl(Nav.ToAbsoluteUri("/hubs/logs")).Build();
+            _hub = HubFactory.Create();
             await _hub.StartAsync();
         }
         catch

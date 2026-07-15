@@ -62,7 +62,7 @@ public sealed class CBotRealRunBacktestTests(AppFixture app, ITestOutputHelper o
 
         var paramSet = await api.PostAsync(Url("/api/paramsets/"), new()
         {
-            DataObject = new { CBotId = cbotId, Name = "default", JsonContent = "{\"Parameters\":{}}" }
+            DataObject = new { CBotId = cbotId, Name = "default", JsonContent = "{}" }
         });
         Assert.True(paramSet.Ok, $"create paramset failed: {paramSet.Status}");
         var paramSetId = (await GetJsonAsync(api, "/api/paramsets/")).EnumerateArray()

@@ -88,3 +88,19 @@ di akun tersebut menggunakan pengaturan yang sama.
   bukan data pasar nyata — tidak ada risiko finansial, deterministik, replayable.
 - `Instance` menggunakan TPH (Table Per Hierarchy) — state transition mengganti entity (ID berubah
   dari starting→running→terminal), container ID tetap stabil dan dibawa.
+
+## Menjalankan dari editor kode
+
+Mengklik **Jalankan** di editor kode membuka dialog alih-alih memicu eksekusi buta yang dikodekan secara kaku:
+
+- **Akun trading** (wajib) — akun cTrader tempat cBot terhubung.
+- **Set parameter** (opsional) — pilih set yang ada, atau biarkan kosong untuk menjalankan dengan **nilai parameter default** cBot. Tombol **+** di samping pemilih membuat set parameter baru secara inline (lihat di bawah) dan memilihnya.
+- **Simbol / Kerangka waktu** secara default `EURUSD` / `h1` dan dapat diubah; **Batal** atau **Jalankan**.
+
+Saat **Jalankan**, editor menyimpan dan membangun kode sumber saat ini, memulai instance pada akun yang dipilih dengan parameter yang dipilih, lalu mengikuti log kontainer secara langsung. (Aliran log meneruskan cookie autentikasi pengguna yang masuk ke hub SignalR `/hubs/logs`, sehingga terhubung alih-alih gagal dengan `Invalid negotiation response received`.)
+
+## Set parameter
+
+**Set parameter** adalah kumpulan penggantian parameter cBot yang diberi nama dan dapat digunakan kembali, disimpan sebagai objek JSON datar yang memetakan setiap nama parameter ke nilai skalar, mis. `{"Period": 14, "Label": "trend"}`. Saat menjalankan/backtest, ia diubah menjadi file cTrader `params.cbotset` (`{ "Parameters": { … } }`). Anda dapat membuat/mengedit set sebagai JSON mentah dari dialog **Set parameter** cBot atau secara inline dari dialog Jalankan.
+
+JSON **divalidasi** saat menyimpan: harus berupa satu objek datar yang semua nilainya skalar (string / angka / bool). Akar non-objek, larik, objek bersarang, nilai `null`, atau JSON yang salah format akan ditolak (kesalahan yang jelas di dialog, `400 Bad Request` di API). Objek kosong `{}` diperbolehkan dan berarti "tanpa penggantian".

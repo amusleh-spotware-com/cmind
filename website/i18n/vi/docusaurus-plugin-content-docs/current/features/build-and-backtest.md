@@ -37,3 +37,19 @@ Backtests cần `--data-mode` (mặc định `m1`), dates as `dd/MM/yyyy HH:mm`,
 
 Execution capacity scale by adding node agents (self-register + heartbeat). Xem
 [node discovery](../operations/node-discovery.md) và [scaling](../deployment/scaling.md).
+
+## Chạy từ trình soạn thảo mã
+
+Nhấp vào **Chạy** trong trình soạn thảo mã sẽ mở một hộp thoại thay vì kích hoạt một lần chạy mù, mã hóa cứng:
+
+- **Tài khoản giao dịch** (bắt buộc) — tài khoản cTrader mà cBot kết nối tới.
+- **Bộ tham số** (tùy chọn) — chọn một bộ hiện có, hoặc để trống để chạy với **giá trị tham số mặc định** của cBot. Nút **+** bên cạnh bộ chọn tạo một bộ tham số mới ngay tại chỗ (xem bên dưới) và chọn nó.
+- **Ký hiệu / Khung thời gian** mặc định là `EURUSD` / `h1` và có thể thay đổi; **Hủy** hoặc **Chạy**.
+
+Khi **Chạy**, trình soạn thảo lưu và biên dịch mã nguồn hiện tại, khởi động phiên bản trên tài khoản đã chọn với các tham số đã chọn, sau đó theo dõi nhật ký vùng chứa trực tiếp. (Luồng nhật ký chuyển tiếp cookie xác thực của người dùng đã đăng nhập tới hub SignalR `/hubs/logs`, nên nó kết nối thay vì thất bại với `Invalid negotiation response received`.)
+
+## Bộ tham số
+
+**Bộ tham số** là một tập hợp có tên, có thể tái sử dụng các ghi đè tham số cBot, được lưu dưới dạng đối tượng JSON phẳng ánh xạ mỗi tên tham số tới một giá trị vô hướng, ví dụ `{"Period": 14, "Label": "trend"}`. Khi chạy/backtest, nó được chuyển thành tệp cTrader `params.cbotset` (`{ "Parameters": { … } }`). Bạn có thể tạo/chỉnh sửa một bộ dưới dạng JSON thô từ hộp thoại **Bộ tham số** của cBot hoặc ngay tại chỗ từ hộp thoại Chạy.
+
+JSON được **xác thực** khi lưu: nó phải là một đối tượng phẳng duy nhất mà tất cả các giá trị đều là vô hướng (chuỗi / số / bool). Gốc không phải đối tượng, một mảng, một đối tượng lồng nhau, một giá trị `null`, hoặc JSON không đúng định dạng sẽ bị từ chối (lỗi rõ ràng trong hộp thoại, `400 Bad Request` tại API). Một đối tượng rỗng `{}` được cho phép và có nghĩa là "không ghi đè".

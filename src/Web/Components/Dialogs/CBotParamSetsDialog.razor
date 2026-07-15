@@ -1,6 +1,5 @@
 ﻿@* Manages the parameter sets belonging to a single cBot. Opened from a cBot row. *@
 @using System.Net.Http.Json
-@using System.Text.Json
 @using Web.Json
 @inject HttpClient Http
 @inject ISnackbar Snack
@@ -87,7 +86,11 @@
 
     private async Task Save(Guid? id, string name, string json)
     {
-        if (!IsNonEmptyJson(json)) { Snack.Add("Content cannot be empty", Severity.Error); return; }
+        if (!Core.ParamSetJson.IsValidSchema(json))
+        {
+            Snack.Add("Parameters must be a flat JSON object mapping each parameter name to a scalar value", Severity.Error);
+            return;
+        }
         var url = id is null ? "/api/paramsets" : $"/api/paramsets/{id}";
         var method = id is null ? HttpMethod.Post : HttpMethod.Put;
         var req = new HttpRequestMessage(method, url)
@@ -106,22 +109,6 @@
         if (ok != true) return;
         await Http.DeleteAsync($"/api/paramsets/{id}");
         await Load();
-    }
-
-    private static bool IsNonEmptyJson(string content)
-    {
-        if (string.IsNullOrWhiteSpace(content)) return false;
-        try
-        {
-            using var doc = JsonDocument.Parse(content);
-            return doc.RootElement.ValueKind switch
-            {
-                JsonValueKind.Object => doc.RootElement.EnumerateObject().Any(),
-                JsonValueKind.Array => doc.RootElement.EnumerateArray().Any(),
-                _ => true
-            };
-        }
-        catch { return false; }
     }
 
     private void Close() => Dialog.Close();

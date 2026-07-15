@@ -11,6 +11,7 @@ namespace Web.Endpoints;
 public record CreateProjectRequest(string Name, int Language);
 public record BuildRequest(string? Code, string? ProjectFile);
 public record ProjectFilesRequest(Dictionary<string, string> Files);
+public record QuickRunRequest(Guid? TradingAccountId, Guid? ParamSetId, string? Symbol, string? Timeframe, string? DockerImageTag);
 
 public static class BuilderEndpoints
 {
@@ -46,6 +47,9 @@ public static class BuilderEndpoints
             var pid = CBotSourceProjectId.From(id);
             var p = await db.CBotSourceProjects.FirstOrDefaultAsync(x => x.Id == pid && x.UserId == uid);
             if (p is null) return Results.NotFound();
+            // The compiled cBot linked to this source project (if any) — the editor's Run dialog needs it to
+            // load the cBot's parameter sets. It only exists after the project has been built once.
+            var linkedCBot = await db.CBots.FirstOrDefaultAsync(c => c.SourceProjectId == p.Id);
             return Results.Ok(new
             {
                 p.Id,
@@ -53,7 +57,8 @@ public static class BuilderEndpoints
                 Language = p.LanguageName,
                 p.LastBuildAt,
                 p.LastBuildSucceeded,
-                p.LastBuildLog
+                p.LastBuildLog,
+                CBotId = linkedCBot?.Id
             });
         });
 
@@ -132,14 +137,35 @@ public static class BuilderEndpoints
             return Results.Ok(new { success = result.Success, log = result.Log });
         });
 
-        g.MapPost("/projects/{id:guid}/quick-run", async (Guid id, DataContext db, ICurrentUser u,
-            CBotBuilder builder, IContainerDispatcherFactory factory, ISecretProtector protector,
+        g.MapPost("/projects/{id:guid}/quick-run", async (Guid id, QuickRunRequest? req, DataContext db,
+            ICurrentUser u, CBotBuilder builder, IContainerDispatcherFactory factory, ISecretProtector protector,
             INodeScheduler scheduler, TimeProvider timeProvider) =>
         {
             var uid = u.UserId!.Value;
             var pid = CBotSourceProjectId.From(id);
             var p = await db.CBotSourceProjects.FirstOrDefaultAsync(x => x.Id == pid && x.UserId == uid);
             if (p is null) return Results.NotFound();
+
+            // Resolve the optional trading account + parameter set the Run dialog picked. Both must belong to
+            // the caller. No parameter set ⇒ run with the cBot's default parameter values (empty cbotset).
+            TradingAccountId? accountId = null;
+            if (req?.TradingAccountId is { } aid)
+            {
+                var acct = await db.TradingAccounts.Include(t => t.CTid)
+                    .FirstOrDefaultAsync(t => t.Id == TradingAccountId.From(aid) && t.CTid.UserId == uid);
+                if (acct is null) return Results.BadRequest("account not found");
+                accountId = acct.Id;
+            }
+            ParamSetId? paramSetId = null;
+            var paramJson = "{}";
+            if (req?.ParamSetId is { } psid)
+            {
+                var ps = await db.ParamSets.FirstOrDefaultAsync(x => x.Id == ParamSetId.From(psid) && x.UserId == uid);
+                if (ps is null) return Results.BadRequest("paramset not found");
+                paramSetId = ps.Id;
+                paramJson = ps.JsonContent;
+            }
+
             var br = await builder.BuildAsync(p, uid, default);
             if (!br.Success || br.AlgoBytes is null)
                 return Results.Ok(new { success = false, output = br.Log, instanceId = (Guid?)null });
@@ -147,9 +173,16 @@ public static class BuilderEndpoints
             var node = await scheduler.PickNodeAsync("Run", default);
             if (node is null) return Results.Conflict("no node available");
 
-            var cbot = await db.CBots.FirstAsync(c => c.SourceProjectId == p.Id);
-            var starting = RunInstance.CreateStarting(uid, cbot.Id, node.Id, DockerImageTag.Latest,
-                new Symbol("EURUSD"), new Timeframe("h1"));
+            // A successful build always creates/links the cBot for this source project, but guard the lookup
+            // so a missing link degrades to a clean run-log message instead of crashing the endpoint.
+            var cbot = await db.CBots.FirstOrDefaultAsync(c => c.SourceProjectId == p.Id);
+            if (cbot is null)
+                return Results.Ok(new { success = false, output = "cBot not linked — build the project first", instanceId = (Guid?)null });
+            var symbol = new Symbol(string.IsNullOrWhiteSpace(req?.Symbol) ? "EURUSD" : req.Symbol!);
+            var timeframe = new Timeframe(string.IsNullOrWhiteSpace(req?.Timeframe) ? "h1" : req.Timeframe!);
+            var imageTag = new DockerImageTag(string.IsNullOrWhiteSpace(req?.DockerImageTag) ? "latest" : req.DockerImageTag!);
+            var starting = RunInstance.CreateStarting(uid, cbot.Id, node.Id, imageTag, symbol, timeframe,
+                accountId, paramSetId);
             db.Instances.Add(starting);
             await db.SaveChangesAsync();
             starting.AttachNode(node);
@@ -157,7 +190,7 @@ public static class BuilderEndpoints
             string containerId;
             try
             {
-                containerId = await factory.For(node).StartAsync(starting, br.AlgoBytes, "{}", default);
+                containerId = await factory.For(node).StartAsync(starting, br.AlgoBytes, paramJson, default);
             }
             catch (Exception ex)
             {

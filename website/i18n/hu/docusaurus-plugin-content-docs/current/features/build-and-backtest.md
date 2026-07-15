@@ -74,3 +74,19 @@ Minden befejezett backtest automatikusan elérhető az **Integrity Lab**-ban, ah
 - **[Backtest Integrity Lab](./backtest-integrity.md)**
 - **[Strategy Health](./strategy-health.md)**
 - **[Position Sizing](./position-sizing.md)**
+
+## Futtatás a kódszerkesztőből
+
+A kódszerkesztőben a **Futtatás** gombra kattintva egy párbeszédablak nyílik meg a vak, rögzített futtatás helyett:
+
+- **Kereskedési számla** (kötelező) — a cTrader-számla, amelyhez a cBot csatlakozik.
+- **Paraméterkészlet** (opcionális) — válasszon meglévő készletet, vagy hagyja üresen a cBot **alapértelmezett paraméterértékeivel** való futtatáshoz. A választó melletti **+** gomb helyben új paraméterkészletet hoz létre (lásd lent), és kiválasztja azt.
+- **Szimbólum / Időkeret** alapértelmezetten `EURUSD` / `h1`, és módosítható; **Mégse** vagy **Futtatás**.
+
+**Futtatáskor** a szerkesztő menti és lefordítja az aktuális forráskódot, elindítja a példányt a kiválasztott számlán a kiválasztott paraméterekkel, majd élőben követi a konténer naplóit. (A naplófolyam továbbítja a bejelentkezett felhasználó hitelesítési sütijét a `/hubs/logs` SignalR-hubnak, így csatlakozik ahelyett, hogy `Invalid negotiation response received` hibával hiúsulna meg.)
+
+## Paraméterkészletek
+
+A **paraméterkészlet** a cBot paraméter-felülbírálásainak elnevezett, újrafelhasználható halmaza, amelyet lapos JSON-objektumként tárolunk, amely minden paraméternevet egy skalárértékhez rendel, pl. `{"Period": 14, "Label": "trend"}`. Futtatáskor/backtesteléskor a cTrader `params.cbotset` fájllá (`{ "Parameters": { … } }`) alakul. A készletet nyers JSON-ként a cBot **Paraméterkészletek** párbeszédablakából vagy helyben a Futtatás párbeszédablakból hozhatja létre/szerkesztheti.
+
+A JSON mentéskor **érvényesítésre** kerül: egyetlen lapos objektumnak kell lennie, amelynek minden értéke skalár (szöveg / szám / bool). A nem objektum gyökér, tömb, beágyazott objektum, `null` érték vagy hibás JSON elutasításra kerül (érthető hiba a párbeszédablakban, `400 Bad Request` az API-nál). Az üres objektum `{}` engedélyezett, és azt jelenti, hogy „nincs felülbírálás".

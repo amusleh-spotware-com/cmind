@@ -47,7 +47,8 @@ public static class ParamSetEndpoints
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             if (string.IsNullOrWhiteSpace(req.Name)) return Results.BadRequest("name is required");
-            if (!IsNonEmptyJson(req.JsonContent)) return Results.BadRequest("content cannot be empty");
+            if (!ParamSetJson.IsValidSchema(req.JsonContent))
+                return Results.BadRequest("parameters must be a flat JSON object mapping each parameter name to a scalar value");
             db.ParamSets.Add(ParamSet.Create(uid, CBotId.From(req.CBotId), req.Name, req.JsonContent));
             await db.SaveChangesAsync();
             return Results.Ok();
@@ -60,7 +61,8 @@ public static class ParamSetEndpoints
             var p = await db.ParamSets.FirstOrDefaultAsync(x => x.Id == pid && x.UserId == uid);
             if (p is null) return Results.NotFound();
             if (string.IsNullOrWhiteSpace(req.Name)) return Results.BadRequest("name is required");
-            if (!IsNonEmptyJson(req.JsonContent)) return Results.BadRequest("content cannot be empty");
+            if (!ParamSetJson.IsValidSchema(req.JsonContent))
+                return Results.BadRequest("parameters must be a flat JSON object mapping each parameter name to a scalar value");
             p.Update(req.Name, req.JsonContent);
             await db.SaveChangesAsync();
             return Results.Ok();
@@ -78,22 +80,5 @@ public static class ParamSetEndpoints
         });
 
         return app;
-    }
-
-    private static bool IsNonEmptyJson(string content)
-    {
-        if (string.IsNullOrWhiteSpace(content)) return false;
-        System.Text.Json.JsonDocument doc;
-        try { doc = System.Text.Json.JsonDocument.Parse(content); }
-        catch { return false; }
-        using (doc)
-        {
-            return doc.RootElement.ValueKind switch
-            {
-                System.Text.Json.JsonValueKind.Object => doc.RootElement.EnumerateObject().Any(),
-                System.Text.Json.JsonValueKind.Array => doc.RootElement.EnumerateArray().Any(),
-                _ => true
-            };
-        }
     }
 }

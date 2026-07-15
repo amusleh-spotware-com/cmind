@@ -37,3 +37,19 @@ Backtesty potřebují `--data-mode` (default `m1`), datumy jako `dd/MM/yyyy HH:m
 
 Execution capacity scale přidáváním node agentů (samo-registrace + heartbeat). Viz
 [node discovery](../operations/node-discovery.md) a [scaling](../deployment/scaling.md).
+
+## Spuštění z editoru kódu
+
+Kliknutí na **Spustit** v editoru kódu otevře dialog místo slepého, napevno zakódovaného spuštění:
+
+- **Obchodní účet** (povinné) — účet cTrader, ke kterému se cBot připojuje.
+- **Sada parametrů** (volitelné) — vyberte existující sadu, nebo ponechte prázdné pro spuštění s **výchozími hodnotami parametrů** cBota. Tlačítko **+** vedle výběru vytvoří novou sadu parametrů přímo zde (viz níže) a vybere ji.
+- **Symbol / Časový rámec** jsou výchozí `EURUSD` / `h1` a lze je změnit; **Zrušit** nebo **Spustit**.
+
+Při **Spustit** editor uloží a sestaví aktuální zdrojový kód, spustí instanci na zvoleném účtu se zvolenými parametry a poté sleduje živé logy kontejneru. (Proud logů přeposílá autentizační cookie přihlášeného uživatele do SignalR hubu `/hubs/logs`, takže se připojí místo selhání s `Invalid negotiation response received`.)
+
+## Sady parametrů
+
+**Sada parametrů** je pojmenovaná, opakovaně použitelná sada přepisů parametrů cBota, uložená jako plochý objekt JSON mapující každý název parametru na skalární hodnotu, např. `{"Period": 14, "Label": "trend"}`. Při spuštění/backtestu je převedena na soubor cTrader `params.cbotset` (`{ "Parameters": { … } }`). Sadu lze vytvořit/upravit jako čisté JSON z dialogu **Sady parametrů** cBota nebo přímo z dialogu Spustit.
+
+JSON je při uložení **validován**: musí to být jediný plochý objekt, jehož všechny hodnoty jsou skalární (řetězec / číslo / bool). Kořen, který není objekt, pole, vnořený objekt, hodnota `null` nebo poškozené JSON jsou odmítnuty (jasná chyba v dialogu, `400 Bad Request` v API). Prázdný objekt `{}` je povolen a znamená „žádné přepisy".

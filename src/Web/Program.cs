@@ -146,6 +146,7 @@ builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddScoped<Web.Time.IUserTimeZone, Web.Time.UserTimeZone>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<CookieForwardingHandler>();
+builder.Services.AddScoped<Web.Hubs.LogHubConnectionFactory>();
 builder.Services.AddHttpClient("self")
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseCookies = false })
     .AddHttpMessageHandler<CookieForwardingHandler>();

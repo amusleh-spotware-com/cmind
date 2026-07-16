@@ -1,0 +1,55 @@
+﻿@* Runs the Backtest Integrity Lab on a completed backtest instance's stored report and shows the verdict.
+   Opened from the backtest list row and the instance detail view; the opening control is disabled unless
+   the backtest completed with a JSON report, so the fetch only ever hits an available report. *@
+@using System.Net.Http.Json
+@using Web.Components.Quant
+@inject HttpClient Http
+@inject IStringLocalizer<Ui> L
+
+<MudDialog>
+    <DialogContent>
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" data-testid="integrity-dialog-loading" />
+        }
+        else if (_result is { } r)
+        {
+            <IntegrityResultView Result="r" />
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Warning" data-testid="integrity-dialog-error">@L["integrity.loadError"]</MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close" data-testid="integrity-dialog-close">@L["common.close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+    [Parameter] public Guid InstanceId { get; set; }
+
+    private bool _loading = true;
+    private IntegrityResult? _result;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"/api/quant/integrity/backtest/{InstanceId}", new { });
+            if (response.IsSuccessStatusCode)
+                _result = await response.Content.ReadFromJsonAsync<IntegrityResult>();
+        }
+        catch
+        {
+            _result = null;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void Close() => Dialog.Close();
+}

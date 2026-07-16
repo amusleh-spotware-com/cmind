@@ -48,6 +48,21 @@ here. Full UI contract: [website/docs/ui-guidelines.md](website/docs/ui-guidelin
   lambdas included (`v => $"{v?.Count ?? 0}"`, don't leave the deref). A green `dotnet build` is not
   enough; analyzer/inspection findings are real errors.
 
+## MudBlazor gotchas (each cost a debug loop)
+
+- **`MudSelect` shows the raw VALUE (a Guid) for a value set in code**, not the item text — a prefilled
+  edit dialog then displays a bare id. Fix: set **`ToStringFunc`** mapping value→label (see
+  `EditInstanceDialog`). It only affects the closed display; the options still render their child content.
+- **`MudSelect`'s `data-testid` lands on its hidden `<input>`**, whose `value` attribute is the ToStringFunc
+  display text (not the bound value, not element text). So in E2E assert it with `InputValueAsync()` /
+  `ToHaveValueAsync`, **not** `ToContainText`/`InnerText`; and to open the popover click the visible
+  `.mud-input-control`, not the hidden input.
+- A dialog shown via `Dialogs.ShowAsync<T>("Title", …)` renders the **ShowAsync title**, not the
+  component's `TitleContent` — don't select the dialog in E2E by its `TitleContent` text; use a
+  `data-testid` inside it.
+- `Slow` (a `LocatorAssertionsToBeVisibleOptions`) is **not** accepted by `ToBeEnabledAsync` /
+  `ToBeHiddenAsync` — each assertion has its own options type; pass `new() { Timeout = … }`.
+
 ## E2E — blocking (`tests/E2ETests`, Playwright)
 
 - Every new page/dialog/action/nav entry/endpoint-a-page-calls ships a Playwright test driving the

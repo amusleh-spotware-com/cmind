@@ -16,8 +16,12 @@ public sealed class BrandIdentityTests(AppFixture app)
         var response = await page.GotoAsync("/favicon.svg");
         response!.Status.Should().Be(200);
         var body = await response.TextAsync();
-        body.Should().Contain("A18 18", "the simple c-arc mark");
+        // Assert brand-stable traits (a mint SVG mark), not an exact arc — so a logo tweak that keeps the
+        // brand doesn't break this. The app↔docs favicon byte-identity is enforced by
+        // ArchitectureGuardTests.App_and_docs_favicon_are_byte_identical.
+        body.Should().Contain("<svg", "the favicon is an SVG mark");
         body.Should().Contain("#26C281", "mint accent");
+        body.Should().NotContain("A18 18", "the previous simple c-arc mark must be gone");
         body.Should().NotContain("36 30", "the old robot-head rect must be gone");
     }
 

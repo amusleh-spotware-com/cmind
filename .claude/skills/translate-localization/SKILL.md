@@ -50,8 +50,13 @@ Sources of truth — keep in sync:
 Do **not** translate all 22 languages inline on the main thread — it burns the main context and is
 slow. Instead:
 
-1. **Prepare the base.** Finalize the English source first (the new/changed `en` keys, or the English
-   doc). Nothing translates until English is locked.
+1. **Prepare the base — and BATCH.** Finalize the English source first; nothing translates until English
+   is locked. A full doc's 22-locale fan-out is expensive (22 sub-agents × the whole doc), so **do NOT
+   re-translate after every small English edit** — make ALL the English changes for the feature-area,
+   then translate the doc **once** at the end. The docs structural-parity gate only checks heading levels,
+   so a **prose-only** English change won't fail the build; batch those and re-translate at feature end.
+   Each sub-agent prompt MUST include the **explicit list of headings in order** (a doc with 13 headings
+   → say "13 headings, this order: …") — without it agents silently drop/merge sections.
 2. **Fan out.** Spawn **one sub-agent per target locale** (22 of them) — run them in parallel /
    background where possible. Each sub-agent handles exactly one language end-to-end:
    - UI: add/update that culture's keys in `tools/i18n/ui-translations.json`.
@@ -67,6 +72,9 @@ slow. Instead:
    - Preserve technical/ubiquitous-language terms (cBot, backtest, ParamSet, Node, cTrader) — don't
      invent synonyms; keep product names untranslated.
    - RTL (`ar`): translate normally; direction is handled by config.
+   - **One agent per locale, never two for the same file. WAIT for every agent to finish before you
+     commit** — a slow agent that lands after your commit leaves a stray uncommitted change (and can
+     overwrite a file you already fixed). Re-run the parity gate after the last agent, then commit once.
 5. **Reconcile + verify on the main thread** after fan-out:
    - `pwsh tools/i18n/gen-resx.ps1` (regenerate resx)
    - `cd website && npm run i18n:check` (docs parity)

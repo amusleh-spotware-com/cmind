@@ -302,15 +302,59 @@ Architecture facts you can't read off the code — the rest lives in nested `CLA
   `POST /api/nodes/register`; upsert `CtraderCliNode` **by name** (stable across IP changes).
 - **Instance state = TPH; a transition replaces the entity** (discriminator can't change) → instance
   **id changes** starting→running→terminal. Container id is stable and carried over; the HTTP agent is
-  keyed by container id for status/report/stop/logs.
-- cTrader Console backtest CLI (verified): requires `--data-mode` (default `m1`), dates
-  `dd/MM/yyyy HH:mm`, `params.cbotset` is JSON passed positionally; `run` rejects `--data-dir`. Pollers
-  reconcile self-exited containers (`--exit-on-stop`); exit 0/null = Stopped, non-zero = Failed. See
-  `ContainerCommandHelpers`.
+  keyed by container id for status/report/stop/logs. **`LineageId` is the ONE stable key across the whole
+  lifecycle** — persist/compare/poll by it, never by the mutating id. Any UI that links to an instance
+  (a "view" button, a poll) MUST carry the `LineageId` (`/instance/{id}?lineage=…`) and fall back to
+  `GET /api/instances/current?lineageId=…` when the direct id 404s — otherwise clicking a just-finished
+  backtest shows "instance not found" (its id changed in the background). This exact bug has now bitten
+  three times (lineage mix, stale-id view, run/backtest confusion); a raw id link is the trap.
+- **cTrader Console CLI — verified facts (discover, don't guess; re-probe with the commands below):**
+  `docker run --rm ghcr.io/spotware/ctrader-console backtest --help` (usage/flags),
+  `… periods` (the full timeframe list), and grep the image DLL for an enum
+  (`--entrypoint bash … grep -oaE "BacktestingDataMode[.= ]?[A-Za-z]+" *.dll`). Findings this session:
+  backtest accepts `--start --end --data-mode --data-file [--balance] [--commission] [--spread]
+  [--report] [--report-json] --ctid --pwd-file --account --symbol --period [--environment-variables]`;
+  `run` has no window/report flags. **Three data modes only: `tick` / `m1` / `open`** (enum M1/Ticks/
+  OpenPrices). **Period names are case-sensitive** (`m1`/`h1` lowercase, `D1`/`W1`/`Month1`/Renko/Range/
+  Heikin capitalised) — the `Timeframe` VO must NOT lowercase. Dates `dd/MM/yyyy HH:mm`; `params.cbotset`
+  is JSON positional; `run` rejects `--data-dir`. **A 0-balance OR a zero-result backtest (no trades / no
+  market data in the range) makes cTrader's OWN report writer emit an empty report (`"Equity":,`) and
+  crash with `Message expected` — an upstream bug we can't fix.** So always send a non-zero `--balance`,
+  and translate that crash into an actionable failure reason (`DescribeMissingReport`), never a raw stack.
+  Pollers reconcile self-exited containers (`--exit-on-stop`); exit 0/null = Stopped, non-zero = Failed.
+  See `ContainerCommandHelpers`.
 - **AI is fully gated on `AppOptions.Ai.ApiKey`** — unset → every feature returns `AiResult.Fail`, app
   runs unchanged (no key needed for build/test/E2E). `IAiClient` calls Anthropic over **raw HTTP**
   (typed `HttpClient`), deliberately not the SDK. `AiFeatureService` is the single orchestrator shared
   by Web endpoints, MCP `AiTools`, and `AiRiskGuard`.
+
+## Traps that cost time — session-hardened (read before repeating the pattern)
+
+Each of these burned real tokens/time in a past session. They are not style — they are the fast path.
+
+- **Batch English docs, translate ONCE.** The docs i18n fan-out is the single biggest token sink (22
+  Haiku sub-agents × a full doc each). Editing one doc six times = six 22-locale re-translations. So:
+  finalize ALL English changes for a feature-area first, then translate the doc **once** at the end. The
+  structural gate only checks heading levels, so a **prose-only** English tweak won't fail the build —
+  batch those and re-translate at feature end, not per-commit. When you do fan out: give **every** agent
+  the explicit heading list (Malay silently dropped sections without it), one agent per locale, never two
+  for the same file, and **wait for all agents to finish before committing** (a late agent overwrites a
+  committed file → a stray uncommitted change).
+- **A running Web locks the build output.** `dotnet run`/an IDE-debug Web holds `bin/**/*.dll`, so a
+  Web/Nodes build fails with `MSB3027 … locked by Web (PID …)`. Kill the stray process
+  (`taskkill //F //PID <pid>`) before rebuilding; the PID is in the error.
+- **E2E fixture-boot saturation is not a test bug.** Running Playwright suites back-to-back exhausts the
+  machine; `AppFixture.InitializeAsync` then times out on the login nav and every test in that collection
+  **fast-fails in 5–35 ms** (vs a real failure's seconds). Tell: it passes in isolation. Run E2E in small
+  `--filter` slices, cool down between runs, and don't re-run the whole suite to "confirm".
+- **`UnitTests` references Core + Nodes only — NOT Web.** A pure test that touches a `Web.*` type
+  (e.g. `Web.Json.BacktestSettings`) belongs in `IntegrationTests` (which references Web); it will not
+  compile in `UnitTests` (`CS0246`).
+- **A new `.razor` with hard-coded strings fails `NoHardcodedUiTextTests`** unless localized or added to
+  `tests/UnitTests/Localization/pending-localization.txt`. Run that gate before committing a new component
+  — don't discover it a commit later.
+- **Don't guess external-tool CLI flags — discover them** (see the cTrader CLI facts above). A wrong flag
+  can break every backtest; probing the image once is cheaper than a bad guess shipped.
 
 ## Deliberately not done
 

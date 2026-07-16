@@ -1,0 +1,37 @@
+﻿@* Reusable Backtest Integrity report renderer: the Robust/Fragile/Overfit verdict, the statistics table
+   and the plain-language rationale. Shared by the Integrity page and the backtest-instance integrity
+   dialog so the result looks identical wherever the check is run. *@
+@inject IStringLocalizer<Ui> L
+
+<MudAlert Severity="@VerdictSeverity(Result.verdict)" Class="mb-3" data-testid="integrity-verdict">
+    <b>@Result.verdict</b>
+</MudAlert>
+<MudSimpleTable Dense="true" Hover="true">
+    <tbody>
+        <tr><td>@L["integrity.row.sharpe"]</td><td>@Result.sharpe.ToString("0.000")</td></tr>
+        <tr><td>@L["integrity.row.annualized"]</td><td>@Result.annualizedSharpe.ToString("0.00")</td></tr>
+        <tr><td>@L["integrity.row.psr"]</td><td>@((Result.probabilisticSharpe * 100).ToString("0.0"))%</td></tr>
+        <tr><td>@L["integrity.row.dsr"]</td><td>@((Result.deflatedSharpe * 100).ToString("0.0"))%</td></tr>
+        <tr><td>@L["integrity.row.tstat"]</td><td>@Result.tStatistic.ToString("0.00")</td></tr>
+        <tr><td>@L["integrity.row.skew"]</td><td>@Result.skewness.ToString("0.00")</td></tr>
+        <tr><td>@L["integrity.row.kurtosis"]</td><td>@Result.kurtosis.ToString("0.00")</td></tr>
+        <tr><td>@L["integrity.row.observations"]</td><td>@Result.observations</td></tr>
+        <tr><td>@L["integrity.row.trials"]</td><td>@Result.trials</td></tr>
+        @if (Result.probabilityOfBacktestOverfitting is { } pbo)
+        {
+            <tr><td>@L["integrity.row.pbo"]</td><td>@((pbo * 100).ToString("0.0"))%</td></tr>
+        }
+    </tbody>
+</MudSimpleTable>
+<MudText Typo="Typo.body2" Class="mt-3" data-testid="integrity-rationale">@Result.rationale</MudText>
+
+@code {
+    [Parameter, EditorRequired] public IntegrityResult Result { get; set; } = default!;
+
+    private static Severity VerdictSeverity(string verdict) => verdict switch
+    {
+        "Robust" => Severity.Success,
+        "Overfit" => Severity.Error,
+        _ => Severity.Warning
+    };
+}

@@ -57,8 +57,13 @@ backtest as a backtest). Clicking Stop shows a "Stopping…" notice and disables
 resolves, and a newly created run appears in the list immediately — no page reload.
 
 Console logs are **persisted when an instance terminates** — for a run (on Stop) and for a
-**backtest** (on completion) alike — so the last run's logs stay viewable on the detail page and
-downloadable via the **Download logs** icon even after the container is gone.
+**backtest** (on completion) alike — so the last run's logs stay viewable on the detail page and,
+via the log toolbar, **copied to the clipboard** (Copy logs icon) or **downloaded** (Download logs
+icon) even after the container is gone. Both act on the instance's full console log, not just the
+on-screen tail.
+
+An **uploaded** `.algo` was never built here, so its **Last Build** column on the cBots page is left
+blank (it shows a build time only for cBots you build in the browser).
 
 ## Run from the code editor
 

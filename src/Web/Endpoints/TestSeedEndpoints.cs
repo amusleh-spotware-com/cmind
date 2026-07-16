@@ -59,6 +59,7 @@ public static class TestSeedEndpoints
                     uid, cbot.Id, node.Id, tag, symbol, timeframe, null))
                 .ToRunning("seed-bt", now.AddMinutes(-30))
                 .ToCompleted(now.AddMinutes(-5), SampleReportJson);
+            completed.CaptureConsoleLog("seed backtest console line 1\nseed backtest console line 2");
             completed.ClearDomainEvents(); // seeding: no node/side-effect dispatch on the transitions
             db.Instances.Add(completed);
             await db.SaveChangesAsync(ct);

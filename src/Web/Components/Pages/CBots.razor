@@ -82,7 +82,9 @@ else
                     </MudTooltip>
                 }
             </MudTd>
-            <MudTd DataLabel="Last Build">@FormatTs(context.LastBuildAt)</MudTd>
+            @* An uploaded .algo was never built here, so it has no build time — leave the cell blank rather
+               than rendering a default/epoch date. *@
+            <MudTd DataLabel="Last Build">@(context.IsUpload ? "" : FormatTs(context.LastBuildAt))</MudTd>
             <MudTd DataLabel="Status">@BuildStatusChip(context)</MudTd>
             <MudTd>
                 <MudTooltip Text="Build">

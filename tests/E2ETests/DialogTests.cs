@@ -258,6 +258,32 @@ public sealed class DialogTests(AppFixture app)
         (await paramsDialog.GetByText(pname).CountAsync()).Should().Be(1, "the duplicate name must not create a second set");
     }
 
+    // An uploaded .algo was never built here, so its Last Build cell must be blank — not a default/epoch
+    // "0001-01-01 00:00" date.
+    [Fact]
+    public async Task Uploaded_cbot_shows_a_blank_last_build_cell()
+    {
+        var page = await app.NewAuthedPageAsync();
+
+        var cbotName = $"upl-{Suffix}";
+        await GotoAsync(page, "/cbots");
+        var cbotRow = page.GetByText(cbotName).First;
+        await page.RunUntilVisibleAsync(() => page.SetInputFilesAsync("#cbotFile", new FilePayload
+        {
+            Name = $"{cbotName}.algo",
+            MimeType = "application/octet-stream",
+            Buffer = "dummy-algo-content"u8.ToArray()
+        }), cbotRow);
+        await Assertions.Expect(cbotRow).ToBeVisibleAsync(Slow);
+
+        // The row must not render a default/epoch "0001-01-01" date anywhere, and the Last Build cell is blank.
+        var row = page.Locator($"tr:has-text('{cbotName}')").First;
+        (await row.InnerTextAsync()).Should().NotContain("0001", "an uploaded cBot must not show a 0001 build date");
+        var cell = page.Locator($"tr:has-text('{cbotName}') td[data-label='Last Build']").First;
+        await Assertions.Expect(cell).ToBeVisibleAsync(Slow);
+        (await cell.InnerTextAsync()).Trim().Should().BeEmpty("an uploaded cBot has no build, so its Last Build cell is blank");
+    }
+
     [Fact]
     public async Task Run_new_button_opens_dialog_with_fields()
     {

@@ -97,6 +97,11 @@
             <MudSpacer />
             <MudSwitch T="bool" @bind-Value="_autoScroll" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Small"
                        Label="Auto-scroll" data-testid="logs-autoscroll" />
+            <MudTooltip Text="@(_logs.Count > 0 ? "Copy logs" : "No logs yet")">
+                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="MudBlazor.Size.Small"
+                               Disabled="@(_logs.Count == 0)" OnClick="CopyLogsAsync"
+                               aria-label="Copy logs" data-testid="instance-detail-logs-copy" />
+            </MudTooltip>
             <MudTooltip Text="@(_logs.Count > 0 ? "Download logs" : "No logs yet")">
                 <MudIconButton Icon="@Icons.Material.Filled.Download" Size="MudBlazor.Size.Small"
                                Disabled="@(_logs.Count == 0)" OnClick="DownloadLogsAsync"
@@ -247,6 +252,23 @@
         {
             var text = await Http.GetStringAsync($"/api/instances/{_currentId}/logs");
             await JS.InvokeVoidAsync("appDownloadText", $"instance-{_currentId:N}.log", text);
+        }
+        catch
+        {
+            Snack.Add("No logs available for this instance", Severity.Warning);
+        }
+    }
+
+    // Copies the instance's full console log (the same persisted/tailed output the download uses, not just the
+    // on-screen tail) to the clipboard.
+    private async Task CopyLogsAsync()
+    {
+        try
+        {
+            var text = await Http.GetStringAsync($"/api/instances/{_currentId}/logs");
+            if (string.IsNullOrEmpty(text)) { Snack.Add("No logs available for this instance", Severity.Warning); return; }
+            await JS.InvokeVoidAsync("copyToClipboard", text);
+            Snack.Add("Logs copied to clipboard", Severity.Success);
         }
         catch
         {

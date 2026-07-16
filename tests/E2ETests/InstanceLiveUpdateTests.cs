@@ -67,6 +67,26 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
             .ToBeVisibleAsync(new() { Timeout = 30000 });
     }
 
+    // The detail page's Copy logs button must copy the instance's full console log to the clipboard.
+    [Fact]
+    public async Task Copy_logs_button_copies_the_console_log_to_the_clipboard()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await page.Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"]);
+        var (completedBacktestId, _) = await SeedAsync(page);
+
+        await page.GotoAsync($"/instance/{completedBacktestId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        var copy = page.Locator("[data-testid=instance-detail-logs-copy]");
+        await Assertions.Expect(copy).ToBeEnabledAsync(new() { Timeout = 30000 });
+        await copy.ClickAsync();
+
+        await Assertions.Expect(page.Locator(".mud-snackbar:has-text('copied')")).ToBeVisibleAsync(Slow);
+        var clip = await page.EvaluateAsync<string>("() => navigator.clipboard.readText()");
+        clip.Should().Contain("seed backtest console line 1", "the full console log is placed on the clipboard");
+    }
+
     // The browser tab title must identify the specific instance (cBot name + symbol), so a live-run tab and a
     // backtest tab are distinguishable — not a generic "Instance".
     [Fact]

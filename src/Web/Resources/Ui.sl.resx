@@ -4,6 +4,17 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="integrity.row.sharpe" xml:space="preserve"><value>Sharpe (na obdobje)</value></data>
+  <data name="integrity.row.annualized" xml:space="preserve"><value>Letni Sharpe</value></data>
+  <data name="integrity.row.psr" xml:space="preserve"><value>Verjetnostni Sharpe</value></data>
+  <data name="integrity.row.dsr" xml:space="preserve"><value>Deflacionirani Sharpe</value></data>
+  <data name="integrity.row.tstat" xml:space="preserve"><value>t-statistika</value></data>
+  <data name="integrity.row.skew" xml:space="preserve"><value>Asimetrija</value></data>
+  <data name="integrity.row.kurtosis" xml:space="preserve"><value>Sploščenost</value></data>
+  <data name="integrity.row.observations" xml:space="preserve"><value>Opazovanja</value></data>
+  <data name="integrity.row.trials" xml:space="preserve"><value>Poskusi</value></data>
+  <data name="integrity.row.pbo" xml:space="preserve"><value>Verjetnost prevelikega prileganja backtesta</value></data>
+  <data name="integrity.loadError" xml:space="preserve"><value>Preverjanja celovitosti za ta backtest ni bilo mogoče izvesti.</value></data>
   <data name="common.retry" xml:space="preserve"><value>Poskusi znova</value></data>
   <data name="common.close" xml:space="preserve"><value>Zapri</value></data>
   <data name="common.cancel" xml:space="preserve"><value>Prekliči</value></data>
@@ -25,7 +36,7 @@
   <data name="nav.run" xml:space="preserve"><value>Zaženi</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>
   <data name="nav.optimize" xml:space="preserve"><value>Optimiziraj</value></data>
-  <data name="nav.integrity" xml:space="preserve"><value>Celovitost</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Backtest Celovitost</value></data>
   <data name="nav.positionSizing" xml:space="preserve"><value>Velikost pozicije</value></data>
   <data name="nav.strategyHealth" xml:space="preserve"><value>Zdravje strategije</value></data>
   <data name="nav.regimeLab" xml:space="preserve"><value>Laboratorij režimov</value></data>

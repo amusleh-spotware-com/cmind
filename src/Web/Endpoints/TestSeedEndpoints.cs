@@ -19,8 +19,27 @@ public static class TestSeedEndpoints
     // Config gate — dev-only, never a production route. Read in Program.cs alongside IsDevelopment().
     public const string EnabledKey = "App:TestSeed:Enabled";
 
+    // Carries an equityHistory curve (parsed by ContainerCommandHelpers.ParseEquityCurve) so the seeded
+    // backtest drives the detail equity chart AND the Backtest Integrity Lab (which derives a return series
+    // from the curve) end to end without Docker.
     private const string SampleReportJson =
-        """{"netProfit":1234.5,"maxDrawdown":210.0,"totalTrades":87,"winRate":0.56,"profitFactor":1.4,"sharpe":1.1}""";
+        """
+        {"netProfit":1234.5,"maxDrawdown":210.0,"totalTrades":87,"winRate":0.56,"profitFactor":1.4,"sharpe":1.1,
+         "equityHistory":[
+           {"time":"2024-01-01T00:00:00Z","equity":10000.0},
+           {"time":"2024-02-01T00:00:00Z","equity":10120.0},
+           {"time":"2024-03-01T00:00:00Z","equity":10080.0},
+           {"time":"2024-04-01T00:00:00Z","equity":10210.0},
+           {"time":"2024-05-01T00:00:00Z","equity":10190.0},
+           {"time":"2024-06-01T00:00:00Z","equity":10320.0},
+           {"time":"2024-07-01T00:00:00Z","equity":10280.0},
+           {"time":"2024-08-01T00:00:00Z","equity":10450.0},
+           {"time":"2024-09-01T00:00:00Z","equity":10410.0},
+           {"time":"2024-10-01T00:00:00Z","equity":10560.0},
+           {"time":"2024-11-01T00:00:00Z","equity":10520.0},
+           {"time":"2024-12-01T00:00:00Z","equity":10700.0}
+         ]}
+        """;
 
     public static IEndpointRouteBuilder MapTestSeedEndpoints(this IEndpointRouteBuilder app)
     {

@@ -1,76 +1,53 @@
 ---
-description: "Backtest Integrity Lab — deterministic, fund-grade overfitting statistics (Probabilistic & Deflated Sharpe, t-stat) that turn a raw backtest into a Robust / Fragile / Overfit verdict, correcting for how many configurations you tried."
+description: "回测完整性实验室 — 确定性的机构级过度拟合统计数据（概率Sharpe比率和偏差Sharpe比率、t统计量），可将原始回测转化为稳健/脆弱/过度拟合的判决，并根据您尝试的配置数量进行校正。"
 ---
 
-# Backtest Integrity Lab
+# 回测完整性实验室
 
-Retail platforms show you a backtest's Sharpe or net profit and stop there. Institutions never trust a
-raw backtest — they ask whether the result survives **correction for selection bias and the number of
-configurations tried**. The Backtest Integrity Lab brings that check to cMind. It is **deterministic
-math** (no AI, no external calls), so the verdict is reproducible and every number is explainable.
+零售平台向您展示回测的Sharpe值或净利润，仅此而已。机构从不相信原始回测 — 它们会问结果是否能抵御**选择偏差的校正和尝试的配置数量**。回测完整性实验室将此检查引入cMind。这是**确定性的数学**（无AI，无外部调用），因此判决是可重复的，每个数字都可以解释。
 
-Open it at **cBots → Integrity** (`/quant/integrity`).
+在**cBots → Integrity**（`/quant/integrity`）打开它。
 
-## What it computes
+## 计算的内容
 
-Given a return series (or an equity/balance curve) and the number of parameter sets you tried to arrive
-at it, the analyzer reports:
+给定收益序列（或权益/余额曲线）以及您为了得到该序列而尝试的参数集数量，分析器报告：
 
-- **Sharpe ratio** — per-period and annualized (square-root-of-time).
-- **Probabilistic Sharpe Ratio (PSR)** — the confidence that the *true* Sharpe beats the benchmark,
-  accounting for track-record length, skewness and kurtosis (Bailey & López de Prado, 2012). A short or
-  fat-tailed record lowers it.
-- **Deflated Sharpe Ratio (DSR)** — PSR measured against a **deflated benchmark**: the Sharpe you would
-  expect from the *best of N random trials* under the null (the False Strategy Theorem). The more
-  configurations you tried, the higher the bar — this is what catches overfitting.
-- **t-statistic** of the mean return. Following Harvey, Liu & Zhu, a genuine edge should clear **t ≥ 3.0**,
-  not the textbook 2.0.
-- **Skewness / kurtosis** of the returns, which feed the PSR/DSR corrections.
+- **Sharpe比率** — 每个周期和年化（时间平方根）。
+- **概率Sharpe比率（PSR）** — 真实Sharpe击败基准的置信度，考虑了交易记录长度、偏度和峰度（Bailey & López de Prado，2012）。较短或厚尾的记录会降低它。
+- **偏差Sharpe比率（DSR）** — 针对**偏差基准**测量的PSR：在原假设下，从N次随机试验的最佳结果中获得的Sharpe（错误策略定理）。您尝试的配置越多，标准越高 — 这就是捕捉过度拟合的方法。
+- **t统计量**平均收益。遵循Harvey、Liu & Zhu的观点，真正的优势应该达到**t ≥ 3.0**，而不是教科书上的2.0。
+- 收益的**偏度/峰度**，可输入PSR/DSR校正。
 
-## The verdict
+## 判决
 
-| Verdict | Meaning | Rule |
+| 判决 | 含义 | 规则 |
 |---|---|---|
-| **Robust** | The edge survives the trials you ran. | DSR ≥ 95% **and** PSR ≥ 95% **and** \|t\| ≥ 3.0 |
-| **Fragile** | Statistically alive but not convincingly so — do not size up on this alone. | between the two |
-| **Overfit** | Most likely an artefact of selection bias, not a real edge. | DSR < 90% |
+| **稳健** | 优势经得起您运行的试验。 | DSR ≥ 95% **且** PSR ≥ 95% **且** \|t\| ≥ 3.0 |
+| **脆弱** | 统计上存活但不够令人信服 — 仅凭此不要增加仓位。 | 两者之间 |
+| **过度拟合** | 最可能是选择偏差的产物，而不是真正的优势。 | DSR < 90% |
 
-Every result carries a plain-English rationale so the "why" is never hidden.
+每个结果都带有纯英文的基本原理，所以"为什么"永远不会被隐藏。
 
-## Probability of Backtest Overfitting (across trials)
+## 回测过度拟合的概率（跨试验）
 
-Feeding a trial *count* is good; feeding the **actual out-of-sample series of every configuration you
-tried** is better. Paste them into the optional **trial grid** (one series per line) and cMind runs
-**Combinatorially-Symmetric Cross-Validation** (Bailey, Borwein, López de Prado & Zhu, 2015): it splits
-the observations into groups, and for every way of choosing half as in-sample it picks the in-sample
-best configuration and checks whether that winner lands in the bottom half **out-of-sample**. The
-**Probability of Backtest Overfitting (PBO)** is the fraction of splits where the winner failed to
-generalize. A PBO near 0 means the best configuration is genuinely best; a PBO of 0.5 or more means your
-selection process is picking noise — the verdict becomes **Overfit** regardless of how good the winner
-looked.
+输入试验*计数*不错；输入您尝试的每个配置的**实际样本外序列**更好。将它们粘贴到可选的**试验网格**（每行一个序列），cMind运行**组合对称交叉验证**（Bailey、Borwein、López de Prado & Zhu，2015）：它将观察值分成组，对于选择一半作为样本内的每种方式，它选择样本内最佳配置并检查该赢家是否在样本外的下半部分着陆。**回测过度拟合的概率（PBO）**是赢家未能泛化的分割比例。PBO接近0意味着最佳配置确实是最佳的；PBO为0.5或更高意味着您的选择过程在选择噪音 — 无论赢家看起来多好，判决都变成**过度拟合**。
 
 ```http
 POST /api/quant/pbo
 { "trials": [[...], [...], ...] }
 ```
 
-When the native cTrader Console optimizer lands, cMind will feed its full trial surface here
-automatically.
+当原生cTrader Console优化器推出时，cMind将在此自动提供其完整的试验表面。
 
-## Trials — the number that matters
+## 试验 — 重要的数字
 
-`Trials` is **how many parameter sets you tested** before picking this one. Testing one strategy and
-testing ten thousand and keeping the best are wildly different things: the second manufactures a
-high in-sample Sharpe by chance. Feeding the honest trial count is the whole point — it raises the
-deflation and can move a "great" backtest to **Overfit**. When the native cTrader Console optimizer
-lands, cMind feeds it the sweep's real grid size automatically.
+`Trials`是**您在选择此配置前测试的参数集数量**。测试一个策略和测试一万个并保留最佳结果是完全不同的事情：第二个通过机会制造高样本内Sharpe。输入诚实的试验计数是核心目标 — 它提高了偏差，可以将"伟大"的回测转移到**过度拟合**。当原生cTrader Console优化器推出时，cMind自动向其提供扫描的实际网格大小。
 
-## Inputs
+## 输入
 
-- **Periodic returns** — one number per period (e.g. `0.01` = +1%). At least two.
-- **Equity / balance curve** — cMind derives the consecutive simple returns for you.
-- Or run it straight on a completed backtest: `POST /api/quant/integrity/backtest/{instanceId}` reads the
-  stored report's equity curve.
+- **周期性收益** — 每个周期一个数字（例如`0.01` = +1%）。至少两个。该字段在您输入时进行验证：它计算有效数字，标记任何非数字的标记，仅在至少存在两个干净值后才启用**分析**（一旦有两个四个或以上数字的序列准备好，试验网格就启用**评估过度拟合**）。
+- **权益/余额曲线** — cMind为您推导连续的简单收益。
+- **直接来自回测运行 — 无复制粘贴。**每个完成的回测在**回测**列表行和其实例详细视图上公开一个盾牌**检查回测完整性**图标；一键运行实验室对该运行的存储权益曲线进行分析，并在对话框中显示判决。该图标在回测完成并生成报告之前被禁用，因此它永远不会是一个死的控件。在幕后，这是`POST /api/quant/integrity/backtest/{instanceId}`，它读取存储的报告的权益曲线。
 
 ## API
 
@@ -79,14 +56,8 @@ POST /api/quant/integrity
 { "returns": [0.006, 0.004, 0.006, ...], "trials": 250 }
 ```
 
-Returns the verdict, all metrics, and the rationale. `POST /api/quant/integrity/backtest/{id}` runs the
-same analysis on a completed backtest you own.
+返回判决、所有指标和基本原理。`POST /api/quant/integrity/backtest/{id}`对您拥有的完成的回测运行相同的分析。
 
-## Why it is reliable
+## 为什么它是可靠的
 
-The statistics are pure functions in the domain core (`Core.Quant`) with zero infrastructure
-dependencies — they cannot be taken down by a network blip, and they are pinned by golden-vector unit
-tests against the published formulas. The normal CDF/inverse are closed-form approximations
-(Abramowitz-Stegun / Acklam), so the same inputs always yield the same verdict.
-
-<!-- [ZH-HANS] Translation needed -->
+这些统计数据是域核心中的纯函数（`Core.Quant`），零基础设施依赖 — 它们不能被网络故障击倒，并且它们由针对已发布公式的金向量单元测试固定。正常的CDF/逆是闭式近似（Abramowitz-Stegun / Acklam），因此相同的输入总是产生相同的判决。

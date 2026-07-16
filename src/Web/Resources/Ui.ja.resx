@@ -4,6 +4,17 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="integrity.row.sharpe" xml:space="preserve"><value>シャープ（期間あたり）</value></data>
+  <data name="integrity.row.annualized" xml:space="preserve"><value>年率シャープ</value></data>
+  <data name="integrity.row.psr" xml:space="preserve"><value>確率的シャープ</value></data>
+  <data name="integrity.row.dsr" xml:space="preserve"><value>デフレート済みシャープ</value></data>
+  <data name="integrity.row.tstat" xml:space="preserve"><value>t統計量</value></data>
+  <data name="integrity.row.skew" xml:space="preserve"><value>歪度</value></data>
+  <data name="integrity.row.kurtosis" xml:space="preserve"><value>尖度</value></data>
+  <data name="integrity.row.observations" xml:space="preserve"><value>観測数</value></data>
+  <data name="integrity.row.trials" xml:space="preserve"><value>試行回数</value></data>
+  <data name="integrity.row.pbo" xml:space="preserve"><value>バックテスト過剰適合の確率</value></data>
+  <data name="integrity.loadError" xml:space="preserve"><value>このバックテストの整合性チェックを実行できませんでした。</value></data>
   <data name="common.retry" xml:space="preserve"><value>再試行</value></data>
   <data name="common.close" xml:space="preserve"><value>閉じる</value></data>
   <data name="common.cancel" xml:space="preserve"><value>キャンセル</value></data>
@@ -25,7 +36,7 @@
   <data name="nav.run" xml:space="preserve"><value>実行</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>バックテスト</value></data>
   <data name="nav.optimize" xml:space="preserve"><value>最適化</value></data>
-  <data name="nav.integrity" xml:space="preserve"><value>整合性</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Backtest 整合性</value></data>
   <data name="nav.positionSizing" xml:space="preserve"><value>ポジションサイズ</value></data>
   <data name="nav.strategyHealth" xml:space="preserve"><value>戦略の健全性</value></data>
   <data name="nav.regimeLab" xml:space="preserve"><value>レジームラボ</value></data>

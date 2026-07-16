@@ -139,9 +139,14 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
    (`EncryptionPurposes`); strings live in `Core/Constants/`; config via
    `IOptionsMonitor<AppOptions>` (never `cfg["Key"]`); log via source-generated `LogMessages` (never
    `ILogger.LogInformation(...)`). Never commit/log/store a secret in plaintext.
-7. **UI = dialogs, mobile-first, branded.** Every add/create/edit action opens a MudBlazor dialog —
-   never an inline page form. Author for a 360px phone; no horizontal scroll 320–1920px; design
-   tokens only. → `src/Web/CLAUDE.md` + [website/website/docs/ui-guidelines.md](website/website/docs/ui-guidelines.md).
+7. **UI = dialogs, mobile-first, branded, proper controls.** Every add/create/edit action opens a
+   MudBlazor dialog — never an inline page form. Author for a 360px phone; no horizontal scroll
+   320–1920px; design tokens only. **Structured input uses proper validated controls — never a raw text
+   box a user types a delimited number/value blob into.** Numbers/money/percent/dates/enums/multi-value
+   data get `MudNumericField`/`MudDatePicker`/`MudSelect`/an editable add-remove typed-row list/a table
+   (one field per value), or are loaded from existing domain data (e.g. score a completed backtest
+   directly). Free-text `MudTextField` is only for real free text (names, notes, search). Nobody wants to
+   type a blob. → `src/Web/CLAUDE.md` + [website/website/docs/ui-guidelines.md](website/website/docs/ui-guidelines.md).
 8. **Docs in the same commit.** Every feature has `website/website/docs/features/*.md` (canonical — the
    published Docusaurus site; the top-level `docs/` copies are redirect stubs); behavior change →
    update its doc (and `website/docs/deployment`/`operations` when relevant). Not "done" until the

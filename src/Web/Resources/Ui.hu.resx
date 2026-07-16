@@ -4,6 +4,17 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="integrity.row.sharpe" xml:space="preserve"><value>Sharpe (periódusonként)</value></data>
+  <data name="integrity.row.annualized" xml:space="preserve"><value>Évesített Sharpe</value></data>
+  <data name="integrity.row.psr" xml:space="preserve"><value>Valószínűségi Sharpe</value></data>
+  <data name="integrity.row.dsr" xml:space="preserve"><value>Deflált Sharpe</value></data>
+  <data name="integrity.row.tstat" xml:space="preserve"><value>t-statisztika</value></data>
+  <data name="integrity.row.skew" xml:space="preserve"><value>Ferdeség</value></data>
+  <data name="integrity.row.kurtosis" xml:space="preserve"><value>Csúcsosság</value></data>
+  <data name="integrity.row.observations" xml:space="preserve"><value>Megfigyelések</value></data>
+  <data name="integrity.row.trials" xml:space="preserve"><value>Próbák</value></data>
+  <data name="integrity.row.pbo" xml:space="preserve"><value>A backteszt túlillesztésének valószínűsége</value></data>
+  <data name="integrity.loadError" xml:space="preserve"><value>Nem sikerült lefuttatni az integritásellenőrzést ezen a backteszten.</value></data>
   <data name="common.retry" xml:space="preserve"><value>Újra</value></data>
   <data name="common.close" xml:space="preserve"><value>Bezárás</value></data>
   <data name="common.cancel" xml:space="preserve"><value>Mégse</value></data>
@@ -25,7 +36,7 @@
   <data name="nav.run" xml:space="preserve"><value>Futtatás</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>Backteszt</value></data>
   <data name="nav.optimize" xml:space="preserve"><value>Optimalizálás</value></data>
-  <data name="nav.integrity" xml:space="preserve"><value>Integritás</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Backtest Integritás</value></data>
   <data name="nav.positionSizing" xml:space="preserve"><value>Pozícióméret</value></data>
   <data name="nav.strategyHealth" xml:space="preserve"><value>Stratégia állapota</value></data>
   <data name="nav.regimeLab" xml:space="preserve"><value>Rezsimlabor</value></data>

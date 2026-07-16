@@ -111,7 +111,6 @@ sk	features/two-factor-auth.md
 sl	deployment/scaling.md
 sl	features/agent-studio.md
 sl	features/ai.md
-sl	features/backtest-integrity.md
 sl	features/copy-execution-transparency.md
 sl	features/copy-notifications.md
 sl	features/copy-performance-fees.md
@@ -123,7 +122,6 @@ sl	features/strategy-health.md
 sl	features/time-zone.md
 sl	features/trading-journal.md
 sl	testing/stress-testing.md
-sl	ui-guidelines.md
 sr	deployment/local.md
 sr	features/README.md
 sr	features/copy-trading.md
@@ -149,7 +147,6 @@ tr	features/mcp.md
 tr	features/time-zone.md
 tr	features/trading-journal.md
 tr	testing/stress-testing.md
-tr	ui-guidelines.md
 vi	features/agent-studio.md
 vi	features/ai.md
 vi	features/economic-calendar.md

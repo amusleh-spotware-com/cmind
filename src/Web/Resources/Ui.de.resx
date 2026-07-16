@@ -4,6 +4,17 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="integrity.row.sharpe" xml:space="preserve"><value>Sharpe (pro Periode)</value></data>
+  <data name="integrity.row.annualized" xml:space="preserve"><value>Annualisierter Sharpe</value></data>
+  <data name="integrity.row.psr" xml:space="preserve"><value>Probabilistischer Sharpe</value></data>
+  <data name="integrity.row.dsr" xml:space="preserve"><value>Deflationierter Sharpe</value></data>
+  <data name="integrity.row.tstat" xml:space="preserve"><value>t-Statistik</value></data>
+  <data name="integrity.row.skew" xml:space="preserve"><value>Schiefe</value></data>
+  <data name="integrity.row.kurtosis" xml:space="preserve"><value>Kurtosis</value></data>
+  <data name="integrity.row.observations" xml:space="preserve"><value>Beobachtungen</value></data>
+  <data name="integrity.row.trials" xml:space="preserve"><value>Versuche</value></data>
+  <data name="integrity.row.pbo" xml:space="preserve"><value>Wahrscheinlichkeit einer Backtest-Überanpassung</value></data>
+  <data name="integrity.loadError" xml:space="preserve"><value>Die Integritätsprüfung für diesen Backtest konnte nicht ausgeführt werden.</value></data>
   <data name="common.retry" xml:space="preserve"><value>Wiederholen</value></data>
   <data name="common.close" xml:space="preserve"><value>Schließen</value></data>
   <data name="common.cancel" xml:space="preserve"><value>Abbrechen</value></data>
@@ -25,7 +36,7 @@
   <data name="nav.run" xml:space="preserve"><value>Ausführen</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>
   <data name="nav.optimize" xml:space="preserve"><value>Optimieren</value></data>
-  <data name="nav.integrity" xml:space="preserve"><value>Integrität</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Backtest Integrität</value></data>
   <data name="nav.positionSizing" xml:space="preserve"><value>Positionsgröße</value></data>
   <data name="nav.strategyHealth" xml:space="preserve"><value>Strategie-Zustand</value></data>
   <data name="nav.regimeLab" xml:space="preserve"><value>Regime-Labor</value></data>

@@ -19,6 +19,14 @@ here. Full UI contract: [website/docs/ui-guidelines.md](website/docs/ui-guidelin
   `var(--app-*)` tokens (from `Branding/BrandingCss.cs`); they flow from white-label `BrandingOptions`.
 - **Tables → cards on phones:** every `MudTable` sets `Breakpoint="Breakpoint.Sm"`; every `MudTd` has a
   `DataLabel` (template: `Components/Pages/Nodes.razor`).
+- **Proper controls for structured input — never a raw text box for numbers/lists.** Numbers, money,
+  percent, dates, enums and multi-value data use the right validated control (`MudNumericField`,
+  `MudDatePicker`, `MudSelect`, an editable add/remove row list of typed fields, a table) — one field per
+  value. A free-text `MudTextField` the user types a comma/space/newline blob into (then you `.Split`/parse)
+  is **forbidden**: unvalidated, error-prone, hostile on mobile. Multi-value = an editable typed-row list, or
+  load it from existing domain data (e.g. score a completed backtest directly instead of re-typing its
+  numbers). `MudTextField` is only for genuine free text (names, notes, search). Full rule:
+  [ui-guidelines §3](../../website/docs/ui-guidelines.md).
 - **Every control gets `<HelpTip Text="…" />`** (`Components/HelpTip.razor`); text sourced from `docs/`,
   updated in the same commit.
 - **Guard the load / recover the boundary:** a gated API returns 404; guard page loads and reset the

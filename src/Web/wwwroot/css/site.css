@@ -507,6 +507,15 @@ html, body {
 .app-help-tip:hover,
 .app-help-tip:focus-visible { color: var(--app-primary); outline: none; }
 
+/* Cap tooltip width and wrap long text so it can never run off-screen (was overflowing the
+   viewport on help tips near the layout edges). Applies to every MudTooltip app-wide. */
+.mud-tooltip {
+    max-width: min(320px, calc(100vw - 24px));
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: start;
+}
+
 /* ---- Auth split-screen (login) -------------------------------------------- */
 
 .app-auth {

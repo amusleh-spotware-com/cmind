@@ -4,6 +4,17 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="integrity.row.sharpe" xml:space="preserve"><value>ชาร์ป (ต่อช่วง)</value></data>
+  <data name="integrity.row.annualized" xml:space="preserve"><value>ชาร์ปแบบรายปี</value></data>
+  <data name="integrity.row.psr" xml:space="preserve"><value>ชาร์ปเชิงความน่าจะเป็น</value></data>
+  <data name="integrity.row.dsr" xml:space="preserve"><value>ชาร์ปแบบดีเฟลต</value></data>
+  <data name="integrity.row.tstat" xml:space="preserve"><value>สถิติ t</value></data>
+  <data name="integrity.row.skew" xml:space="preserve"><value>ความเบ้</value></data>
+  <data name="integrity.row.kurtosis" xml:space="preserve"><value>ความโด่ง</value></data>
+  <data name="integrity.row.observations" xml:space="preserve"><value>จำนวนการสังเกต</value></data>
+  <data name="integrity.row.trials" xml:space="preserve"><value>จำนวนครั้งที่ทดลอง</value></data>
+  <data name="integrity.row.pbo" xml:space="preserve"><value>ความน่าจะเป็นของการโอเวอร์ฟิตแบ็กเทสต์</value></data>
+  <data name="integrity.loadError" xml:space="preserve"><value>ไม่สามารถเรียกใช้การตรวจสอบความสมบูรณ์ของแบ็กเทสต์นี้ได้</value></data>
   <data name="common.retry" xml:space="preserve"><value>ลองอีกครั้ง</value></data>
   <data name="common.close" xml:space="preserve"><value>ปิด</value></data>
   <data name="common.cancel" xml:space="preserve"><value>ยกเลิก</value></data>
@@ -25,7 +36,7 @@
   <data name="nav.run" xml:space="preserve"><value>เรียกใช้</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>แบ็กเทสต์</value></data>
   <data name="nav.optimize" xml:space="preserve"><value>เพิ่มประสิทธิภาพ</value></data>
-  <data name="nav.integrity" xml:space="preserve"><value>ความสมบูรณ์</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Backtest ความสมบูรณ์</value></data>
   <data name="nav.positionSizing" xml:space="preserve"><value>ขนาดสถานะ</value></data>
   <data name="nav.strategyHealth" xml:space="preserve"><value>สุขภาพกลยุทธ์</value></data>
   <data name="nav.regimeLab" xml:space="preserve"><value>แล็บเรจีม</value></data>

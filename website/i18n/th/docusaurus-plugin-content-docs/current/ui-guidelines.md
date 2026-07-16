@@ -1,73 +1,103 @@
 ---
-description: "Binding สำหรับ piece UI ทุก ๆ ใหม่หรือเปลี่ยน ในแอป นี้ (Blazor pages dialogs components) นี่คือ source truth referenced โดย CLAUDE.md ถ้า rule block คุณ stop และ ask — ไม่ ship UI ที่ violates มัน Rooted ใน plans/ui-overhaul.md"
+description: "ข้อบังคับสำหรับทุกส่วนใหม่หรือเปลี่ยนแปลงของ UI ในแอปพลิเคชันนี้ (หน้า Blazor, ไดอะล็อก, คอมโพเนนต์) นี่คือแหล่งข้อมูลดั้งเดิมที่อ้างอิงโดย CLAUDE.md หากกฎ…"
 ---
 
-# UI Design Guidelines — MANDATORY
+# คำแนะนำการออกแบบ UI — บังคับใช้
 
-Binding สำหรับ **every** ใหม่หรือเปลี่ยน piece UI ในแอป นี้ (Blazor pages dialogs components) นี่คือ source truth referenced โดย `CLAUDE.md` ถ้า rule block คุณ stop และ ask — ไม่ ship UI ที่ violates มัน Rooted ใน `plans/ui-overhaul.md`
+ข้อบังคับสำหรับ **ทุก** ส่วนใหม่หรือเปลี่ยนแปลงของ UI ในแอปพลิเคชันนี้ (หน้า Blazor, ไดอะล็อก, คอมโพเนนต์)
+นี่คือแหล่งข้อมูลดั้งเดิมที่อ้างอิงโดย `CLAUDE.md` หากกฎขัดขวางคุณ ให้หยุดและถามคำถาม — อย่าส่งมอบ UI ที่ละเมิดกฎนั้น มีรากฐานมาจาก `plans/ui-overhaul.md`
 
-## 1. Mobile-first ทั้งหมด
+## 1. Mobile-first เสมอ
 
-- **Author สำหรับ 360–430px phone first** แล้ว enhance ขึ้น ด้วย `min-width` media queries / MudBlazor breakpoint props ไม่เคย desktop-first ด้วย `max-width` overrides
-- **ไม่มี horizontal scroll ที่ width ใด ๆ 320–1920px** ถ้า content กว้างกว่า viewport มัน bug
-- Touch targets ≥ **44px** (`var(--app-touch-target)`) Text inputs ≥ 16px font (stops iOS zoom-on-focus)
-- Respect notches: use `env(safe-area-inset-*)`; viewport แล้ว sets `viewport-fit=cover`
-- Honour `prefers-reduced-motion` — ไม่มี essential info conveyed ด้วย animation เท่านั้น
+- **เขียนโค้ดสำหรับโทรศัพท์ 360–430px ก่อน** จากนั้นเพิ่มเติมขึ้นไปด้วย `min-width` media queries / prop MudBlazor
+  breakpoint ไม่ใช่ desktop-first โดยใช้ `max-width` overrides
+- **ไม่มีการเลื่อนแนวนอนในทุกความกว้าง 320–1920px** หากเนื้อหากว้างกว่า viewport จะถือว่าเป็นข้อบกพร่อง
+- เป้าหมายการสัมผัส ≥ **44px** (`var(--app-touch-target)`) ฟอนต์ข้อความอินพุต ≥ 16px (ป้องกัน iOS zoom-on-focus)
+- เคารพ notches: ใช้ `env(safe-area-inset-*)`; viewport ได้ตั้งค่า `viewport-fit=cover` แล้ว
+- เคารพ `prefers-reduced-motion` — ไม่มีข้อมูลที่จำเป็นที่ถ่ายทำโดยแอนิเมชันเท่านั้น
 
-## 2. Design tokens — ไม่มี hard-coded values
+## 2. Design tokens — ไม่มีค่าคงที่ยากเข้า
 
-- ทั้ง colour/radius/spacing มาจาก **design tokens**: MudBlazor theme (`Web/Components/Theme.cs`) + CSS custom properties ปล่อย โดย `Web/Branding/BrandingCss.cs` (`var(--app-primary)` `--app-surface` `--app-border` `--app-text*` `--app-radius` …)
-- **ไม่เคย hard-code hex colour radius หรือ brand string ในใด ๆ component หรือ CSS rule** อ่าน token Tokens ไหล จาก white-label `BrandingOptions` ดังนั้น reseller palette ต้อง reach UI ของคุณ ฟรี
-- ใหม่ brand-affecting value → เพิ่ม token + branding field; ไม่ inline มัน
+- สีทั้งหมด/radius/spacing มาจาก **design tokens**: MudBlazor theme (`Web/Components/Theme.cs`) +
+  CSS custom properties ที่ปล่อยออกมาจาก `Web/Branding/BrandingCss.cs` (`var(--app-primary)`,
+  `--app-surface`, `--app-border`, `--app-text*`, `--app-radius`, …)
+- **ไม่ใช้รหัสสีฮex, radius หรือสตริง brand ไว้ในคอมโพเนนต์หรือกฎ CSS** อ่านโทเค็น
+  Tokens ไหลมาจาก white-label `BrandingOptions` ดังนั้นจานสีของผู้ขายต้องเข้าถึง UI ของคุณได้ฟรี
+- ค่าใหม่ที่ส่งผลต่อแบรนด์ → เพิ่มโทเค็น + เขตข้อมูล branding; อย่าฝังมันไว้
 
 ## 3. Responsive layout & data
 
-- **Tables collapse เป็น cards บน phones** ทุก ๆ `MudTable` sets `Breakpoint="Breakpoint.Sm"` และ ทุก ๆ `MudTd` มี `DataLabel` ไม่มี raw wide table บน mobile (Template: `Components/Pages/Nodes.razor`)
-- Grids: `MudItem xs="12" sm="6" md="4"` — full-width บน phone multi-column ขึ้น
-- Forms single-column บน mobile; large tap targets; `inputmode`/`autocomplete` บน inputs; numeric/decimal inputmode สำหรับ money/percent
-- Provide **loading empty และ error** states บน list/detail ทั้งหมด — sized สำหรับ mobile
-- mobile **bottom navigation** (`Components/Layout/BottomNav.razor`) คือ primary phone nav; grouped drawer คือ full menu เพิ่ม high-traffic destinations ที่นั่น; keep มัน ≤5 items
+- **ตารางยุบเป็นการ์ดบนโทรศัพท์** ทุก `MudTable` ตั้งค่า `Breakpoint="Breakpoint.Sm"` และทุก
+  `MudTd` มี `DataLabel` ไม่มีตารางกว้างดั้งเดิมบนมือถือ (แม่แบบ: `Components/Pages/Nodes.razor`)
+- กริด: `MudItem xs="12" sm="6" md="4"` — ความกว้างเต็มบนโทรศัพท์, หลายคอลัมน์ขึ้น
+- ฟอร์มแนวตั้งเดียวบนมือถือ; tap targets ขนาดใหญ่; `inputmode`/`autocomplete` บนอินพุต; numeric/decimal
+  inputmode สำหรับเงิน/เปอร์เซ็นต์
+- **ใช้คอนโทรลที่เหมาะสมสำหรับอินพุตที่มีโครงสร้าง — ไม่ใช่กล่องข้อความดั้งเดิมสำหรับตัวเลขหรือรายการ** เก็บตัวเลข,
+  เงิน, เปอร์เซ็นต์, วันที่, enum และข้อมูลค่าหลายค่าใด ๆ ด้วยคอนโทรลที่ถูกต้อง (`MudNumericField`,
+  `MudDatePicker`, `MudSelect`, รายการแถวที่แก้ไขได้เพิ่ม/ลบ หรือตาราง) แต่ละเขตข้อมูล
+  ได้รับการตรวจสอบความถูกต้องแยกต่างหาก `MudTextField` ฟรีข้อความเดียวที่ผู้ใช้ต้องพิมพ์ blob ที่คั่นด้วยเครื่องหมายจุลภาค/ช่องว่าง/ขึ้นบรรทัด
+  จากนั้นคุณจะแยก — **ห้ามใช้**: ติดตั้งที่ไม่มีการตรวจสอบ และไม่เป็นมิตรกับโทรศัพท์ **ไม่มีใครต้องการพิมพ์ blob** อินพุตค่าหลายค่า
+  คือรายการแถวแก้ไขได้ (เพิ่ม /
+  ลบ) หรือโหลดจากข้อมูลโดเมนที่มีอยู่ (เช่น เรียกใช้การตรวจสอบโดยตรงจากการ backtest ที่เสร็จสิ้น
+  แทนที่จะป้อนตัวเลขใหม่) `MudTextField` ธรรมชาติ ใช้เฉพาะกับข้อความฟรีแท้ — ชื่อ, หมายเหตุ,
+  ค้นหา, คำอธิบาย
+- จัดเตรียม **โหลด, ว่าง, และข้อผิดพลาด** สถานะในทุกรายการ/รายละเอียด — ขนาดสำหรับมือถือ
+- การนำทาง **ด้านล่างของมือถือ** (`Components/Layout/BottomNav.razor`) คือการนำทางโทรศัพท์หลัก; ลิ้นชักแบบจัดกลุ่มคือเมนูเต็ม เพิ่มจุดหมายปลายทาง high-traffic ที่นั่น; เก็บไว้ ≤5 รายการ
 
 ## 4. Dialogs (create/edit)
 
-- ทั้ง add/create/edit/new actions ใช้ **MudBlazor dialog** (`IDialogService.ShowAsync<TDialog>`) ไม่เคย inline page form Dialogs อยู่ใน `Web/Components/Dialogs/` expose `[Parameter]`s ส่งกลับ nested `public sealed record …Result(...)` List row actions (start/stop/delete) stay inline เป็น icon buttons
-- บน phones dialogs ควร **full-screen / full-width** และ keyboard-aware
+- การดำเนินการเพิ่ม/สร้าง/แก้ไข/ใหม่ทั้งหมดใช้ **MudBlazor dialog** (`IDialogService.ShowAsync<TDialog>`), ไม่ใช่
+  แบบฟอร์มหน้าแบบ inline Dialogs อาศัยอยู่ใน `Web/Components/Dialogs/` เปิดเผย `[Parameter]`s, กลับมา nested
+  `public sealed record …Result(...)` การดำเนินการแถวรายการ (เริ่ม/หยุด/ลบ) อยู่แบบ inline เป็นปุ่มไอคอน
+- บนโทรศัพท์ ไดอะล็อกควร **เต็มหน้าจอ / ความกว้างเต็ม** และรู้จักแป้นพิมพ์
 
-## 5. Inline help — ทุก ๆ control
+## 5. Inline help — ทุกคอนโทรล
 
-- ทุก ๆ non-obvious option select switch หรือ action ได้ **`<HelpTip Text="…" />`** (`Components/HelpTip.razor`) — hover บน desktop **tap บน mobile** Source text จาก `docs/` ดังนั้น guidance stay ใน sync ด้วย behaviour; update ทั้งสอง ใน commit เดียว
+- ทุกตัวเลือก, เลือก, สวิตช์, หรือการดำเนินการที่ไม่ชัดเจนจะได้รับ **`<HelpTip Text="…" />`**
+  (`Components/HelpTip.razor`) — hover บน desktop, **แตะบนมือถือ** ใช้ข้อความจาก `docs/` เพื่อให้
+  คำแนะนำอยู่ในการซิงค์กับพฤติกรรม; อัปเดตทั้งสองในการ commit เดียวกัน
 
 ## 6. White-label
 
-- Product name logo description support/company colours favicon ทั้งหมด มาจาก `BrandingOptions` Reference พวกเขา (`IBrandingThemeProvider` / `IOptionsMonitor<AppOptions>`) ไม่เคย literal "cMind" หรือ brand colour PWA manifest icons theme-color และ login hero ทั้งหมด branded
+- ชื่อผลิตภัณฑ์, โลโก้, คำอธิบาย, การสนับสนุน/บริษัท, สี, favicon ทั้งหมดมาจาก `BrandingOptions`
+  อ้างอิงจากพวกมัน (`IBrandingThemeProvider` / `IOptionsMonitor<AppOptions>`), ไม่ใช่ "cMind" ตามตัวอักษรหรือ
+  สีแบรนด์ manifest PWA, ไอคอน, theme-color, และ login hero ล้วนมีแบรนด์
 
 ## 7. PWA
 
-- app ใช้ installable keep manifest endpoint (`/manifest.webmanifest`) branded icons present (192/512/maskable + apple-touch) service worker app-shell-only (ไม่เคย touching Blazor circuit/`_framework`/hubs) และ offline page working ใหม่ static route → keep manifest `scope`
-- Blazor Server ต้อง live SignalR circuit → **installable + app-shell** ไม่มี full offline ไม่ promise offline interactivity
+- แอปสามารถติดตั้งได้ เก็บปลายจุด manifest (`/manifest.webmanifest`) ไว้ที่มีแบรนด์, ไอคอนอยู่
+  (192/512/maskable + apple-touch), service worker app-shell-only (ไม่มีการสัมผัส Blazor
+  circuit/`_framework`/hubs), และหน้าออนไลน์ทำงาน เส้นทางแบบ static ใหม่ → ให้ manifest `scope`
+- Blazor Server ต้องการวงจร SignalR ที่ใช้งานจริง → **ติดตั้งได้ + app-shell**, ไม่ใช่ offline เต็มรูปแบบ อย่า
+  สัญญา interactivity offline
 
 ## 8. Accessibility
 
-- Labels บน inputs `aria-*` บน custom controls visible focus logical focus order เพราะ theme white-labelable verify **contrast** ต้านแบบธรรมชาติ active theme ไม่ fixed palette
+- ป้ายกำกับบนอินพุต, `aria-*` บนคอนโทรลแบบกำหนดเอง, focus ที่มองเห็นได้, ลำดับ focus ตรรกะ เพราะ theme
+  ปรับแต่งได้ตามไว ตรวจสอบ **contrast** กับ theme ที่ใช้งาน ไม่ใช่จาน palette ที่คงที่
 
-## 9. E2E — ไม่มี UI ships untested (blocking)
+## 9. E2E — ไม่มี UI ส่งมอบโดยไม่ได้ทดสอบ (blocking)
 
-ทุก ๆ user-facing เปลี่ยน ships Playwright E2E ใน `tests/E2ETests` driven เหมือน real user **บน mobile device emulation** บวก desktop:
+ทุกการเปลี่ยนแปลงที่หันหน้าไปยังผู้ใช้จัดส่ง Playwright E2E ใน `tests/E2ETests`, ขับเคลื่อนเหมือนผู้ใช้จริง, **บน mobile
+device emulation** บวก desktop:
 
-- ใหม่ route → เพิ่มมัน `PageSmokeTests` **และ** `MobileLayoutTests` (renders bottom nav ไม่มี error UI)
-- Convert table/page → เพิ่ม route ของมัน เป็น mobile **no-overflow** set
-- ใหม่ flow → realistic mobile journey (create/edit/save round-trip) **และ** unhappy path (invalid input empty list permission-denied per role)
-- ใหม่ help tip → assert มันเปิด บน tap (`HelpTipTests` pattern)
+- เส้นทางใหม่ → เพิ่มไปที่ `PageSmokeTests` **และ** `MobileLayoutTests` (แสดงผล, bottom nav, ไม่มี UI ข้อผิดพลาด)
+- แปลงตาราง/หน้า → เพิ่มเส้นทางไปที่มือถือ **no-overflow** set
+- ไหลใหม่ → การเดินทาง mobile ที่สมจริง (create/edit/save round-trip) **และ** unhappy path
+  (อินพุตไม่ถูกต้อง, รายการว่าง, permission-denied ต่อบทบาท)
+- ปลายเปลี่ยนความช่วยเหลือ → ยืนยันว่ามันเปิดบน tap (`HelpTipTests` pattern)
 - ใช้ `AppFixture.NewAuthedMobilePageAsync` / `NewAnonymousMobilePageAsync` (device emulation)
-- `dotnet test` green ก่อน "done" Emulated WebKit ≠ mobile Safari — real-device gating เป็น release step แยก
+- `dotnet test` สีเขียวก่อน "done" Emulated WebKit ≠ mobile Safari — real-device gating เป็นขั้นตอนการปล่อยแยกต่างหาก
 
-## 10. Definition ของ done (UI)
+## 10. Definition of done (UI)
 
-- [ ] Mobile-first; ไม่มี horizontal overflow 320–1920px; touch targets ≥44px
-- [ ] เพียง design tokens — zero hard-coded colours/radii/brand strings
-- [ ] Tables → cards บน phone (`DataLabel` + `Breakpoint.Sm`); loading/empty/error states present
-- [ ] Create/edit ผ่าน dialog; full-screen บน mobile
-- [ ] ทุก ๆ control มี `HelpTip` sourced จาก docs
-- [ ] White-label + PWA respected
-- [ ] Mobile + desktop E2E added (smoke no-overflow journey unhappy path); `dotnet test` green
-- [ ] Rider `get_file_problems` + `dotnet format analyzers` clean บน touched files
+- [ ] Mobile-first; ไม่มี overflow แนวนอน 320–1920px; touch targets ≥44px
+- [ ] Design tokens เท่านั้น — ศูนย์สีคง/radii/brand strings ยากเข้า
+- [ ] ตาราง → การ์ดบนโทรศัพท์ (`DataLabel` + `Breakpoint.Sm`); โหลด/ว่าง/สถานะข้อผิดพลาดอยู่
+- [ ] อินพุตที่มีโครงสร้างใช้คอนโทรลที่ถูกต้องที่ตรวจสอบความถูกต้อง (numeric/date/select/editable row list) — ไม่มี raw
+      text box ที่ผู้ใช้พิมพ์ตัวเลข/ค่า blob ที่คั่นไว้ในนั้น
+- [ ] สร้าง/แก้ไขผ่าน dialog; เต็มหน้าจออนมือถือ
+- [ ] ทุกคอนโทรลมี `HelpTip` ที่มาจากเอกสาร
+- [ ] White-label + PWA ถูกเคารพ
+- [ ] E2E มือถือ + desktop เพิ่ม (smoke, no-overflow, journey, unhappy path); `dotnet test` สีเขียว
+- [ ] Rider `get_file_problems` + `dotnet format analyzers` สะอาดบนไฟล์ที่สัมผัส

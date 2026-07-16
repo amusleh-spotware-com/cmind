@@ -4,6 +4,17 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="integrity.row.sharpe" xml:space="preserve"><value>夏普（每期）</value></data>
+  <data name="integrity.row.annualized" xml:space="preserve"><value>年化夏普</value></data>
+  <data name="integrity.row.psr" xml:space="preserve"><value>概率夏普</value></data>
+  <data name="integrity.row.dsr" xml:space="preserve"><value>紧缩夏普</value></data>
+  <data name="integrity.row.tstat" xml:space="preserve"><value>t 统计量</value></data>
+  <data name="integrity.row.skew" xml:space="preserve"><value>偏度</value></data>
+  <data name="integrity.row.kurtosis" xml:space="preserve"><value>峰度</value></data>
+  <data name="integrity.row.observations" xml:space="preserve"><value>观测数</value></data>
+  <data name="integrity.row.trials" xml:space="preserve"><value>试验次数</value></data>
+  <data name="integrity.row.pbo" xml:space="preserve"><value>回测过拟合概率</value></data>
+  <data name="integrity.loadError" xml:space="preserve"><value>无法对此回测运行完整性检查。</value></data>
   <data name="common.retry" xml:space="preserve"><value>重试</value></data>
   <data name="common.close" xml:space="preserve"><value>关闭</value></data>
   <data name="common.cancel" xml:space="preserve"><value>取消</value></data>
@@ -25,7 +36,7 @@
   <data name="nav.run" xml:space="preserve"><value>运行</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>回测</value></data>
   <data name="nav.optimize" xml:space="preserve"><value>优化</value></data>
-  <data name="nav.integrity" xml:space="preserve"><value>完整性</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Backtest 完整性</value></data>
   <data name="nav.positionSizing" xml:space="preserve"><value>仓位规模</value></data>
   <data name="nav.strategyHealth" xml:space="preserve"><value>策略健康度</value></data>
   <data name="nav.regimeLab" xml:space="preserve"><value>市场状态实验室</value></data>

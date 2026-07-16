@@ -1,73 +1,90 @@
 ---
-description: "이 앱의 모든 새로운 또는 변경된 UI 부분에 대한 바인딩(Blazor 페이지, 대화, 컴포넌트). 이것은 CLAUDE.md에서 참조되는 진실의 소스입니다."
+description: "이 앱의 모든 새로운 또는 변경된 UI 부분(Blazor 페이지, 대화 상자, 컴포넌트)에 대한 바인딩입니다. 이것은 CLAUDE.md에서 참조하는 신뢰할 수 있는 소스입니다. 규칙이 당신을 막으면, 멈추고 물어보세요 — 규칙을 위반하는 UI를 배포하지 마세요. plans/ui-overhaul.md에 기반합니다."
 ---
 
 # UI 설계 가이드라인 — 필수
 
-**모든** 이 앱의 새로운 또는 변경된 UI 부분에 대한 바인딩(Blazor 페이지, 대화, 컴포넌트). 이것은 `CLAUDE.md`에서 참조되는 진실의 소스입니다. 규칙이 당신을 막으면, 멈추고 묻으세요 — 그것을 위반하는 UI를 배포하지 마세요. `plans/ui-overhaul.md`에 뿌리 내림.
+이 앱의 **모든** 새로운 또는 변경된 UI 부분(Blazor 페이지, 대화 상자, 컴포넌트)을 위한 바인딩입니다.
+이것은 `CLAUDE.md`에서 참조하는 신뢰할 수 있는 소스입니다. 규칙이 당신을 막으면, 멈추고 물어보세요 — 규칙을 위반하는 UI를 배포하지 마세요. `plans/ui-overhaul.md`에 기반합니다.
 
 ## 1. 모바일 우선, 항상
 
-- **모바일 360–430px에서 먼저 작성하고**, `min-width` 미디어 쿼리 / MudBlazor 중단점 props로 위쪽을 강화합니다. 절대 `max-width` 재정의를 가진 데스크톱 우선이 아닙니다.
-- **너비 320–1920px의 어디서나 수평 스크롤 없음.** 콘텐츠가 뷰포트보다 너비가 넓으면, 그것은 버그입니다.
-- 터치 대상 ≥ **44px** (`var(--app-touch-target)`). 텍스트 입력 ≥ 16px 폰트(iOS 포커스 온 줌을 멈춤).
-- notches 존경: `env(safe-area-inset-*)`를 사용하세요; 뷰포트는 이미 `viewport-fit=cover`를 설정합니다.
-- `prefers-reduced-motion` 명예 — 동작으로 전달된 필수 정보 없음.
+- **먼저 360–430px 휴대폰용으로 작성**한 다음, `min-width` 미디어 쿼리 / MudBlazor
+  중단점 소품으로 위로 향상합니다. `max-width` 재정의로 데스크톱 우선을 절대 사용하지 마세요.
+- **320–1920px의 모든 너비에서 가로 스크롤 없음.** 콘텐츠가 뷰포트보다 넓으면 버그입니다.
+- 터치 대상 ≥ **44px** (`var(--app-touch-target)`). 텍스트 입력 ≥ 16px 글꼴 (iOS 초점 시 확대 방지).
+- 노치를 존중하세요: `env(safe-area-inset-*)`를 사용하세요. 뷰포트는 이미 `viewport-fit=cover`를 설정합니다.
+- `prefers-reduced-motion`을 존중하세요 — 중요한 정보가 애니메이션으로만 전달되지 않습니다.
 
 ## 2. 설계 토큰 — 하드코딩된 값 없음
 
-- 모든 색상/반경/간격은 **설계 토큰**에서 나옵니다: MudBlazor 테마(`Web/Components/Theme.cs`) + `Web/Branding/BrandingCss.cs`에 의해 내보내진 CSS 사용자 정의 프로퍼티(`var(--app-primary)`, `--app-surface`, `--app-border`, `--app-text*`, `--app-radius`, …).
-- **컴포넌트나 CSS 규칙에 hex 색상, 반경, 또는 브랜드 문자열을 절대 하드코딩하지 마세요.** 토큰을 읽으세요. 토큰은 화이트라벨 `BrandingOptions`에서 흐르므로, 리셀러의 팔레트는 당신의 UI에 무료로 도달해야 합니다.
-- 새로운 브랜드 영향 값 → 토큰 + 브랜딩 필드를 추가하세요; 인라인하지 마세요.
+- 모든 색상/반경/간격은 **설계 토큰**에서 나옵니다: MudBlazor 테마 (`Web/Components/Theme.cs`) +
+  `Web/Branding/BrandingCss.cs`에서 내보낸 CSS 사용자 정의 속성 (`var(--app-primary)`,
+  `--app-surface`, `--app-border`, `--app-text*`, `--app-radius`, …).
+- **컴포넌트나 CSS 규칙에 16진 색상, 반경 또는 브랜드 문자열을 절대 하드코딩하지 마세요.** 토큰을 읽으세요.
+  토큰은 화이트 레이블 `BrandingOptions`에서 흘러나오므로 재판매인의 팔레트가 무료로 UI에 도달해야 합니다.
+- 새로운 브랜드 영향 값 → 토큰 + 브랜딩 필드를 추가하세요. 인라인으로 하지 마세요.
 
 ## 3. 반응형 레이아웃 & 데이터
 
-- **테이블은 휴대폰에서 카드로 축소됩니다.** 모든 `MudTable`은 `Breakpoint="Breakpoint.Sm"`를 설정하고 모든 `MudTd`는 `DataLabel`을 가집니다. 모바일에 raw 넓은 테이블 없음. (템플릿: `Components/Pages/Nodes.razor`.)
-- 그리드: `MudItem xs="12" sm="6" md="4"` — 휴대폰에서 전체 너비, 다중 열 위쪽.
-- 모바일에서 양식 단일 열; 큰 탭 대상; 입력에 `inputmode`/`autocomplete`; money/percent에 대한 numeric/decimal inputmode.
-- 모든 리스트/상세에서 **로딩, 빈, 에러** 상태를 제공하세요 — 모바일을 위해 사이즈. 
-- 모바일 **bottom navigation** (`Components/Layout/BottomNav.razor`)은 주요 휴대폰 nav입니다; 그룹화된 drawer는 전체 메뉴입니다. 높은 트래픽 대상을 거기 추가하세요; ≤5개 항목을 유지하세요.
+- **표는 휴대폰에서 카드로 축소합니다.** 모든 `MudTable`는 `Breakpoint="Breakpoint.Sm"`을 설정하고 모든
+  `MudTd`는 `DataLabel`을 가집니다. 모바일에서 날 것의 넓은 테이블이 없습니다. (템플릿: `Components/Pages/Nodes.razor`.)
+- 그리드: `MudItem xs="12" sm="6" md="4"` — 휴대폰에서 전체 너비, 위로 다중 열.
+- 모바일에서 단일 열 양식; 큰 탭 대상; 입력에서 `inputmode`/`autocomplete`; 금액/백분율에 대해 숫자/십진수 inputmode.
+- **구조화된 입력을 위한 적절한 유효성 검사 컨트롤 — 숫자 또는 목록용 원시 텍스트 상자 절대 금지.** 올바른 컨트롤 (`MudNumericField`,
+  `MudDatePicker`, `MudSelect`, 입력 가능한 행의 추가/제거 목록, 또는 표)을 사용하여 숫자, 금액, 백분율, 날짜, 열거형 및 다중 값 데이터를 수집합니다. 각 필드는
+  개별적으로 유효성을 검사합니다. 사용자가 쉼표/공백/줄 바꿈으로 구분된 blob을 입력해야 하는 단일 자유 텍스트 `MudTextField` — 그런 다음 구문 분석 — **금지됨**: 오류가 발생하기 쉽고, 유효성을 검사하지 않으며, 휴대폰에서 적대적입니다. **아무도 blob을 입력하고 싶지 않습니다.** 다중 값 입력은 입력 가능한 행의 목록(추가/제거)이거나 기존 도메인 데이터에서 로드됩니다(예: 완료된 백테스트에서 직접 확인 실행 대신 숫자 다시 입력). 일반 `MudTextField`는 진정한 자유 텍스트 전용입니다 — 이름, 메모, 검색, 설명.
+- 모든 목록/세부 사항에 **로딩, 비어 있음, 오류** 상태를 제공하세요 — 모바일용 크기.
+- 모바일 **하단 네비게이션** (`Components/Layout/BottomNav.razor`)은 기본 휴대폰 네비게이션입니다. 그룹화된 서랍은 전체 메뉴입니다. 높은 트래픽 목적지를 추가하세요. ≤5개 항목으로 유지하세요.
 
-## 4. 대화 (생성/편집)
+## 4. 대화 상자 (만들기/편집)
 
-- 모든 추가/생성/편집/신규 작업은 **MudBlazor 대화**(`IDialogService.ShowAsync<TDialog>`)를 사용합니다, 절대 인라인 페이지 양식이 아닙니다. 대화는 `Web/Components/Dialogs/`에 있고, `[Parameter]`s를 노출하고, 중첩된 `public sealed record …Result(...)`을 반환합니다. 리스트 행 작업(시작/중지/삭제)은 인라인 아이콘 버튼으로 유지됩니다.
-- 휴대폰에서, 대화는 **전체 화면 / 전체 너비** 및 키보드 인식이어야 합니다.
+- 모든 추가/만들기/편집/새로운 작업은 **MudBlazor 대화 상자** (`IDialogService.ShowAsync<TDialog>`)를 사용합니다. 인라인 페이지 양식은 절대 금지입니다. 대화 상자는 `Web/Components/Dialogs/`에 있고, `[Parameter]`를 노출하고, 중첩된 `public sealed record …Result(...)`을 반환합니다. 목록 행 작업 (시작/중지/삭제)은 인라인 아이콘 버튼으로 유지합니다.
+- 휴대폰에서 대화 상자는 **전체 화면 / 전체 너비**여야 하고 키보드를 인식해야 합니다.
 
-## 5. 인라인 도움 — 모든 제어
+## 5. 인라인 도움말 — 모든 컨트롤
 
-- 모든 명확하지 않은 옵션, 선택, 스위치, 또는 작업은 **`<HelpTip Text="…" />`** (`Components/HelpTip.razor`)을 가져옵니다 — 데스크톱에서 hover, 모바일에서 **tap**. 문서에서 텍스트를 소싱하세요 지도가 행동과 동기 유지되도록; 동일한 커밋에서 모두 업데이트하세요.
+- 모든 자명하지 않은 옵션, 선택, 스위치 또는 작업은 **`<HelpTip Text="…" />`**
+  (`Components/HelpTip.razor`)을 가집니다 — 데스크톱에서 마우스를 올리고, **모바일에서 탭하세요**. `docs/`에서 텍스트를 찾아서 지침이 동작과 동기화되도록 유지하세요. 같은 커밋에서 둘 다 업데이트하세요.
 
-## 6. 화이트라벨
+## 6. 화이트 레이블
 
-- 제품 이름, 로고, 설명, 지원/회사, 색상, 파비콘 모두 `BrandingOptions`에서 나옵니다. 그것들을 참조하세요(`IBrandingThemeProvider` / `IOptionsMonitor<AppOptions>`), 절대 리터럴 "cMind" 또는 브랜드 색상이 아닙니다. PWA 매니페스트, 아이콘, 테마 색상, 로그인 hero는 모두 브랜드입니다.
+- 제품 이름, 로고, 설명, 지원/회사, 색상, 파비콘은 모두 `BrandingOptions`에서 나옵니다.
+  참조하세요 (`IBrandingThemeProvider` / `IOptionsMonitor<AppOptions>`). 리터럴 "cMind" 또는 브랜드 색상은 절대 아닙니다. PWA 매니페스트, 아이콘, 테마 색상, 로그인 히어로는 모두 브랜드되어 있습니다.
 
 ## 7. PWA
 
-- 앱은 설치 가능합니다. 매니페스트 엔드포인트(`/manifest.webmanifest`)를 브랜드로 유지하세요, 아이콘 현재(192/512/maskable + apple-touch), service worker app-shell-only(절대 Blazor circuit/`_framework`/hubs 터칭), 그리고 오프라인 페이지 작동. 새로운 정적 경로 → 매니페스트 `scope`를 유지하세요.
-- Blazor Server는 실시간 SignalR circuit이 필요합니다 → **설치 가능 + app-shell**, 전체 오프라인이 아닙니다. 오프라인 상호작용을 약속하지 마세요.
+- 앱을 설치할 수 있습니다. 매니페스트 엔드포인트 (`/manifest.webmanifest`)를 브랜드된 상태로 유지하고, 아이콘을 제공하세요
+  (192/512/마스크형 + apple-touch), 서비스 워커 앱 셸 전용 (Blazor
+  circuit/`_framework`/hubs를 절대 건드리지 않음), 오프라인 페이지를 작동하게 하세요. 새 정적 경로 → 매니페스트 `scope` 유지하세요.
+- Blazor Server는 라이브 SignalR 회로가 필요합니다 → **설치 가능 + 앱 셸**, 완전 오프라인이 아닙니다. 오프라인 상호 작용성을 약속하지 마세요.
 
 ## 8. 접근성
 
-- 입력에 레이블, 사용자 정의 제어에 `aria-*`, 가시적 포커스, 논리적 포커스 순서. 테마는 화이트라벨 가능하기 때문에, 고정된 팔레트가 아닌 활성 테마에 대해 **대비**를 검증하세요.
+- 입력에 레이블, 사용자 정의 컨트롤에 `aria-*`, 보이는 초점, 논리적 초점 순서. 테마가 화이트 레이블 가능하기 때문에, 고정 팔레트가 아닌 활성 테마에 대해 **대비**를 확인하세요.
 
-## 9. E2E — 테스트되지 않은 UI는 배포되지 않습니다(차단)
+## 9. E2E — 미테스트 UI는 배포되지 않습니다 (차단)
 
-모든 사용자 대면 변경은 `tests/E2ETests`에서 Playwright E2E를 배포하고, 실제 사용자처럼 구동되며, **모바일 장치 에뮬레이션** 더하기 데스크톱에서:
+모든 사용자 관련 변경은 `tests/E2ETests`에서 Playwright E2E를 배포하고, 실제 사용자처럼 운영되며, **모바일
+장치 에뮬레이션**과 데스크톱에서:
 
-- 새로운 경로 → `PageSmokeTests` **그리고** `MobileLayoutTests`에 추가하세요(렌더링, bottom nav, 에러 UI 없음).
-- 테이블/페이지 변환 → 모바일 **no-overflow** 세트에 그 경로를 추가하세요.
-- 새로운 흐름 → 현실적인 모바일 여정(생성/편집/저장 왕복) **그리고** unhappy path(잘못된 입력, 빈 리스트, 역할별 permission-denied).
-- 새로운 help tip → tap에서 그것이 열리는지 주장하세요(`HelpTipTests` 패턴).
-- `AppFixture.NewAuthedMobilePageAsync` / `NewAnonymousMobilePageAsync`(장치 에뮬레이션)를 사용하세요.
-- `dotnet test` "완료"되기 전에 녹색. 에뮬레이트된 WebKit ≠ 모바일 Safari — 실제 장치 게이팅은 별도의 릴리스 단계입니다.
+- 새 경로 → `PageSmokeTests` **및** `MobileLayoutTests`에 추가하세요 (렌더링, 하단 네비게이션, UI 오류 없음).
+- 테이블/페이지 변환 → 모바일 **오버플로우 없음** 집합에 경로를 추가하세요.
+- 새 흐름 → 현실적인 모바일 여정 (만들기/편집/저장 왕복) **및** 불행한 경로
+  (잘못된 입력, 빈 목록, 역할당 권한 거부).
+- 새 도움말 팁 → 탭에서 열리는지 확인하세요 (`HelpTipTests` 패턴).
+- `AppFixture.NewAuthedMobilePageAsync` / `NewAnonymousMobilePageAsync` 사용하세요 (장치 에뮬레이션).
+- "완료"하기 전에 `dotnet test` 녹색. 에뮬레이션된 WebKit ≠ 모바일 Safari — 실제 장치 게이팅은 별도의
+  릴리스 단계입니다.
 
-## 10. 정의 완료 (UI)
+## 10. 완료 정의 (UI)
 
-- [ ] 모바일 우선; 수평 오버플로우 없음 320–1920px; 터치 대상 ≥44px.
-- [ ] 오직 설계 토큰 — 0개의 하드코딩된 색상/반경/브랜드 문자열.
-- [ ] 테이블 → 휴대폰의 카드(`DataLabel` + `Breakpoint.Sm`); 로딩/빈/에러 상태 현재.
-- [ ] 대화를 통해 생성/편집; 모바일에서 전체 화면.
-- [ ] 모든 제어는 문서에서 소싱된 `HelpTip`을 가집니다.
-- [ ] 화이트라벨 + PWA 존경.
-- [ ] 모바일 + 데스크톱 E2E 추가(연기, no-overflow, 여정, unhappy path); `dotnet test` 녹색.
-- [ ] Rider `get_file_problems` + `dotnet format analyzers` 터치된 파일에서 깨끗함.
+- [ ] 모바일 우선; 320–1920px에서 가로 오버플로우 없음; 터치 대상 ≥44px.
+- [ ] 설계 토큰만 — 0개의 하드코딩된 색상/반경/브랜드 문자열.
+- [ ] 표 → 휴대폰에서 카드로 (`DataLabel` + `Breakpoint.Sm`); 로딩/빈/오류 상태가 존재합니다.
+- [ ] 구조화된 입력은 올바른 유효성 검사 컨트롤을 사용합니다 (숫자/날짜/선택/입력 가능한 행 목록) — 사용자가 구분된 숫자/값 blob을 입력하는 날 것의 텍스트 상자는 없습니다.
+- [ ] 대화 상자를 통해 만들기/편집; 모바일에서 전체 화면.
+- [ ] 모든 컨트롤은 문서에서 얻은 `HelpTip`을 가집니다.
+- [ ] 화이트 레이블 + PWA 존중.
+- [ ] 모바일 + 데스크톱 E2E 추가됨 (연기, 오버플로우 없음, 여정, 불행한 경로); `dotnet test` 녹색.
+- [ ] Rider `get_file_problems` + `dotnet format analyzers` 정리되어 있습니다 터치된 파일에.

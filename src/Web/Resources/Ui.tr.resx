@@ -4,6 +4,17 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="integrity.row.sharpe" xml:space="preserve"><value>Sharpe (dönem başına)</value></data>
+  <data name="integrity.row.annualized" xml:space="preserve"><value>Yıllıklandırılmış Sharpe</value></data>
+  <data name="integrity.row.psr" xml:space="preserve"><value>Olasılıksal Sharpe</value></data>
+  <data name="integrity.row.dsr" xml:space="preserve"><value>Deflate edilmiş Sharpe</value></data>
+  <data name="integrity.row.tstat" xml:space="preserve"><value>t-istatistiği</value></data>
+  <data name="integrity.row.skew" xml:space="preserve"><value>Çarpıklık</value></data>
+  <data name="integrity.row.kurtosis" xml:space="preserve"><value>Basıklık</value></data>
+  <data name="integrity.row.observations" xml:space="preserve"><value>Gözlemler</value></data>
+  <data name="integrity.row.trials" xml:space="preserve"><value>Denemeler</value></data>
+  <data name="integrity.row.pbo" xml:space="preserve"><value>Geriye dönük test aşırı uyum olasılığı</value></data>
+  <data name="integrity.loadError" xml:space="preserve"><value>Bu geriye dönük testte bütünlük kontrolü çalıştırılamadı.</value></data>
   <data name="common.retry" xml:space="preserve"><value>Yeniden dene</value></data>
   <data name="common.close" xml:space="preserve"><value>Kapat</value></data>
   <data name="common.cancel" xml:space="preserve"><value>İptal</value></data>
@@ -25,7 +36,7 @@
   <data name="nav.run" xml:space="preserve"><value>Çalıştır</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>
   <data name="nav.optimize" xml:space="preserve"><value>Optimize et</value></data>
-  <data name="nav.integrity" xml:space="preserve"><value>Bütünlük</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Backtest Bütünlük</value></data>
   <data name="nav.positionSizing" xml:space="preserve"><value>Pozisyon büyüklüğü</value></data>
   <data name="nav.strategyHealth" xml:space="preserve"><value>Strateji sağlığı</value></data>
   <data name="nav.regimeLab" xml:space="preserve"><value>Rejim laboratuvarı</value></data>

@@ -1,94 +1,104 @@
 ---
-description: "Binding untuk setiap piece baru atau berubah dari UI dalam aplikasi ini (halaman Blazor, dialog, komponen). Ini adalah sumber kebenaran yang direferensikan oleh CLAUDE.md. Jika…"
+description: "Panduan wajib untuk setiap bagian UI baru atau berubah di aplikasi ini (halaman Blazor, dialog, komponen). Ini adalah sumber kebenaran yang dirujuk oleh CLAUDE.md. Jika suatu aturan menghalangi Anda, berhenti dan tanyakan — jangan kirimkan UI yang melanggarnya. Berasal dari plans/ui-overhaul.md."
 ---
 
-# Pedoman Desain UI — MANDATORY
+# Pedoman Desain UI — WAJIB
 
-Binding untuk **setiap** piece baru atau berubah dari UI dalam aplikasi ini (halaman Blazor, dialog, komponen).
-Ini adalah sumber kebenaran yang direferensikan oleh `CLAUDE.md`. Jika aturan memblokir Anda, hentikan dan tanya — jangan
-kirim UI yang melanggarnya. Berakar dalam `plans/ui-overhaul.md`.
+Panduan **wajib** untuk **setiap** bagian UI baru atau berubah di aplikasi ini (halaman Blazor, dialog, komponen).
+Ini adalah sumber kebenaran yang dirujuk oleh `CLAUDE.md`. Jika suatu aturan menghalangi Anda, berhenti dan tanyakan — jangan
+kirimkan UI yang melanggarnya. Berasal dari `plans/ui-overhaul.md`.
 
 ## 1. Mobile-first, selalu
 
-- **Tulis untuk telepon 360–430px pertama**, lalu tingkatkan dengan media query `min-width` / prop breakpoint MudBlazor. Jangan pernah desktop-first dengan override `max-width`.
-- **Tidak ada horizontal scroll pada lebar apa pun 320–1920px.** Jika konten lebih lebar dari viewport, itu adalah bug.
-- Touch target ≥ **44px** (`var(--app-touch-target)`). Input teks ≥ 16px font (menghentikan iOS zoom-on-focus).
+- **Buat untuk telepon 360–430px terlebih dahulu**, kemudian tingkatkan ke atas dengan media query `min-width` / properti breakpoint MudBlazor. Jangan pernah desktop-first dengan override `max-width`.
+- **Tidak ada scroll horizontal pada lebar apa pun 320–1920px.** Jika konten lebih lebar dari viewport, itu adalah bug.
+- Target sentuh ≥ **44px** (`var(--app-touch-target)`). Input teks ≥ 16px font (menghindari iOS zoom-on-focus).
 - Hormati notch: gunakan `env(safe-area-inset-*)`; viewport sudah menetapkan `viewport-fit=cover`.
-- Hormati `prefers-reduced-motion` — tidak ada info penting yang hanya disampaikan oleh animasi.
+- Hormati `prefers-reduced-motion` — tidak ada informasi penting yang hanya disampaikan melalui animasi.
 
-## 2. Design token — tanpa hard-coded value
+## 2. Token desain — tanpa nilai hard-coded
 
-- Semua warna/radius/spacing berasal dari **design token**: tema MudBlazor (`Web/Components/Theme.cs`) +
-  CSS custom property yang dipancarkan oleh `Web/Branding/BrandingCss.cs` (`var(--app-primary)`,
+- Semua warna/radius/spacing berasal dari **token desain**: tema MudBlazor (`Web/Components/Theme.cs`) +
+  properti custom CSS yang dipancarkan oleh `Web/Branding/BrandingCss.cs` (`var(--app-primary)`,
   `--app-surface`, `--app-border`, `--app-text*`, `--app-radius`, …).
-- **Jangan pernah hard-code warna hex, radius, atau string brand dalam komponen atau aturan CSS.** Baca token.
-  Token mengalir dari white-label `BrandingOptions`, jadi palet reseller harus menjangkau UI Anda secara gratis.
-- Nilai brand-affecting baru → tambahkan token + branding field; jangan inline-kan.
+- **Jangan pernah hard-code warna hex, radius, atau string brand di komponen atau aturan CSS.** Baca token.
+  Token mengalir dari `BrandingOptions` white-label, jadi palet reseller harus mencapai UI Anda secara gratis.
+- Nilai baru yang mempengaruhi brand → tambahkan token + bidang branding; jangan inline-kan.
 
-## 3. Tata letak responsif & data
+## 3. Layout responsif & data
 
-- **Tabel runtuh menjadi kartu di telepon.** Setiap `MudTable` menetapkan `Breakpoint="Breakpoint.Sm"` dan setiap
-  `MudTd` memiliki `DataLabel`. Tidak ada tabel lebar mentah di mobile. (Template: `Components/Pages/Nodes.razor`.)
-- Grid: `MudItem xs="12" sm="6" md="4"` — full-width di telepon, multi-kolom ke atas.
-- Form single-column di mobile; target tap besar; `inputmode`/`autocomplete` pada input; numeric/decimal
-  inputmode untuk money/percent.
-- Sediakan **loading, empty, dan error** state pada setiap list/detail — berukuran untuk mobile.
-- **Bottom navigation** mobile (`Components/Layout/BottomNav.razor`) adalah nav telepon utama; drawer grouped
-  adalah menu penuh. Tambahkan high-traffic destination di sana; simpan ≤5 item.
+- **Tabel runtuh menjadi kartu di ponsel.** Setiap `MudTable` menetapkan `Breakpoint="Breakpoint.Sm"` dan setiap
+  `MudTd` memiliki `DataLabel`. Tidak ada tabel lebar mentah di perangkat mobile. (Template: `Components/Pages/Nodes.razor`.)
+- Grid: `MudItem xs="12" sm="6" md="4"` — lebar penuh di ponsel, multi-kolom ke atas.
+- Formulir single-column di mobile; target tap besar; `inputmode`/`autocomplete` pada input; inputmode numeric/decimal
+  untuk uang/persen.
+- **Kontrol yang tepat untuk input terstruktur — jangan pernah kotak teks mentah untuk angka atau daftar.** Kumpulkan angka,
+  uang, persentase, tanggal, enum dan data multi-nilai apa pun dengan kontrol yang tepat (`MudNumericField`,
+  `MudDatePicker`, `MudSelect`, daftar baris yang dapat diedit dengan tipe add/remove, atau tabel), setiap bidang
+  divalidasi secara individual. Satu `MudTextField` teks bebas yang harus diketik pengguna dengan blob yang dipisahkan koma/spasi/baris baru
+  — yang kemudian Anda parse — adalah **terlarang**: itu mudah terjadi kesalahan, tidak divalidasi, dan bermusuhan
+  di ponsel. **Tidak ada yang ingin mengetik blob.** Input multi-nilai adalah daftar baris yang dapat diedit dari tipe (add/remove),
+  atau dimuat dari data domain yang ada (misalnya jalankan pemeriksaan langsung dari backtest yang selesai
+  daripada memasukkan kembali angkanya). `MudTextField` biasa hanya untuk teks bebas asli — nama, catatan,
+  pencarian, deskripsi.
+- Sediakan state **loading, empty, dan error** pada setiap daftar/detail — berukuran untuk mobile.
+- **Bottom navigation** ponsel (`Components/Layout/BottomNav.razor`) adalah navigasi telepon utama; drawer
+  yang dikelompokkan adalah menu lengkap. Tambahkan tujuan lalu lintas tinggi di sana; pertahankan ≤5 item.
 
 ## 4. Dialog (create/edit)
 
-- Semua add/create/edit/new action menggunakan **dialog MudBlazor** (`IDialogService.ShowAsync<TDialog>`), jangan
-  form halaman inline. Dialog hidup di `Web/Components/Dialogs/`, expose `[Parameter]`s, kembalikan nested
-  `public sealed record …Result(...)`. List row action (start/stop/delete) tetap inline sebagai icon button.
-- Di telepon, dialog harus **full-screen / full-width** dan keyboard-aware.
+- Semua tindakan add/create/edit/new menggunakan **dialog MudBlazor** (`IDialogService.ShowAsync<TDialog>`), bukan
+  formulir halaman inline. Dialog hidup di `Web/Components/Dialogs/`, mengekspos `[Parameter]`s, mengembalikan nested
+  `public sealed record …Result(...)`. Tindakan baris daftar (start/stop/delete) tetap inline sebagai tombol ikon.
+- Di ponsel, dialog harus **full-screen / full-width** dan aware keyboard.
 
-## 5. Inline help — setiap control
+## 5. Bantuan inline — setiap kontrol
 
-- Setiap opsi non-obvious, select, switch, atau action mendapat **`<HelpTip Text="…" />`**
-  (`Components/HelpTip.razor`) — hover di desktop, **tap di mobile**. Source teks dari `docs/` sehingga
-  guidance tetap sinkron dengan perilaku; update keduanya dalam commit yang sama.
+- Setiap opsi, pilih, switch, atau tindakan yang tidak jelas mendapatkan **`<HelpTip Text="…" />`**
+  (`Components/HelpTip.razor`) — hover di desktop, **tap di mobile**. Sumber teks dari `docs/` jadi
+  panduan tetap sinkron dengan perilaku; perbarui keduanya dalam commit yang sama.
 
 ## 6. White-label
 
-- Nama produk, logo, deskripsi, support/company, warna, favicon semuanya berasal dari `BrandingOptions`.
-  Referensi mereka (`IBrandingThemeProvider` / `IOptionsMonitor<AppOptions>`), jangan pernah literal "cMind" atau
-  warna brand. Manifest PWA, icon, theme-color, dan login hero semuanya bermerek.
+- Nama produk, logo, deskripsi, dukungan/perusahaan, warna, favicon semua berasal dari `BrandingOptions`.
+  Referensikan mereka (`IBrandingThemeProvider` / `IOptionsMonitor<AppOptions>`), bukan literal "cMind" atau
+  warna brand. Manifes PWA, ikon, theme-color, dan hero login semuanya branded.
 
 ## 7. PWA
 
-- Aplikasi dapat diinstal. Jaga endpoint manifest (`/manifest.webmanifest`) bermerek, icon hadir
-  (192/512/maskable + apple-touch), service worker app-shell-only (tidak pernah menyentuh circuit Blazor/
-  `_framework`/hubs), dan halaman offline bekerja. Rute statis baru → jaga scope manifest.
-- Blazor Server memerlukan circuit SignalR live → **installable + app-shell**, bukan offline penuh. Jangan
-  janji interaktivitas offline.
+- Aplikasi dapat diinstal. Jaga endpoint manifes (`/manifest.webmanifest`) branded, ikon ada
+  (192/512/maskable + apple-touch), service worker app-shell-only (tidak pernah menyentuh sirkuit Blazor/`_framework`/hubs), dan halaman offline bekerja. Rute statis baru → pertahankan manifes `scope`.
+- Blazor Server membutuhkan sirkuit SignalR langsung → **dapat diinstal + app-shell**, bukan offline penuh. Jangan
+  janjikan interaktivitas offline.
 
 ## 8. Aksesibilitas
 
-- Label pada input, `aria-*` pada kontrol kustom, focus terlihat, urutan focus logis. Karena tema
-  dapat di-white-label, verifikasi **kontras** terhadap tema aktif, bukan palet fixed.
+- Label pada input, `aria-*` pada kontrol khusus, fokus terlihat, urutan fokus logis. Karena tema adalah
+  white-labelable, verifikasi **kontras** terhadap tema aktif, bukan palet tetap.
 
-## 9. E2E — tidak ada UI yang dikirim tanpa diuji (blocking)
+## 9. E2E — tidak ada UI yang dikirim tanpa pengujian (blocking)
 
-Setiap perubahan user-facing dikirim Playwright E2E di `tests/E2ETests`, didorong seperti pengguna nyata, **pada
-emulasi device mobile** plus desktop:
+Setiap perubahan yang dihadapi pengguna mengirim Playwright E2E di `tests/E2ETests`, didorong seperti pengguna nyata, **pada emulasi
+perangkat mobile** plus desktop:
 
-- Rute baru → tambahkan ke `PageSmokeTests` **dan** `MobileLayoutTests` (renders, bottom nav, tidak ada error UI).
-- Konversi tabel/halaman → tambahkan rute-nya ke set **no-overflow** mobile.
-- Aliran baru → perjalanan mobile realistis (create/edit/save round-trip) **dan** unhappy path
-  (input tidak valid, list kosong, permission-denied per role).
-- Help tip baru → assert itu terbuka on tap (`HelpTipTests` pattern).
-- Gunakan `AppFixture.NewAuthedMobilePageAsync` / `NewAnonymousMobilePageAsync` (device emulation).
-- `dotnet test` hijau sebelum "done". Emulated WebKit ≠ mobile Safari — real-device gating adalah
-  langkah rilis terpisah.
+- Rute baru → tambahkan ke `PageSmokeTests` **dan** `MobileLayoutTests` (render, bottom nav, tidak ada UI error).
+- Konversi tabel/halaman → tambahkan rutnya ke set **no-overflow** mobile.
+- Alur baru → perjalanan mobile yang realistis (putaran create/edit/save) **dan** jalur yang tidak bahagia
+  (input tidak valid, daftar kosong, izin-ditolak per peran).
+- Tip bantuan baru → pastikan itu terbuka saat mengetuk (`HelpTipTests` pattern).
+- Gunakan `AppFixture.NewAuthedMobilePageAsync` / `NewAnonymousMobilePageAsync` (emulasi perangkat).
+- `dotnet test` green sebelum "done". WebKit yang diemulasi ≠ mobile Safari — gating perangkat nyata adalah langkah
+  rilis terpisah.
 
-## 10. Definisi Done (UI)
+## 10. Definisi selesai (UI)
 
-- [ ] Mobile-first; tidak ada horizontal overflow 320–1920px; touch target ≥44px.
-- [ ] Hanya design token — nol hard-coded warna/radii/string brand.
-- [ ] Tabel → card di telepon (`DataLabel` + `Breakpoint.Sm`); loading/empty/error state hadir.
+- [ ] Mobile-first; tidak ada overflow horizontal 320–1920px; target sentuh ≥44px.
+- [ ] Hanya token desain — nol warna hard-coded/radii/string brand.
+- [ ] Tabel → kartu di ponsel (`DataLabel` + `Breakpoint.Sm`); loading/empty/error state hadir.
+- [ ] Input terstruktur menggunakan kontrol yang divalidasi dengan benar (numeric/date/select/editable row list) — tidak ada kotak
+      teks mentah yang diketik pengguna dengan blob nilai/angka yang dibatasi.
 - [ ] Create/edit melalui dialog; full-screen di mobile.
-- [ ] Setiap kontrol memiliki `HelpTip` yang sourced dari docs.
+- [ ] Setiap kontrol memiliki `HelpTip` bersumber dari docs.
 - [ ] White-label + PWA dihormati.
-- [ ] Mobile + desktop E2E ditambahkan (smoke, no-overflow, journey, unhappy path); `dotnet test` hijau.
+- [ ] E2E mobile + desktop ditambahkan (smoke, no-overflow, journey, unhappy path); `dotnet test` green.
 - [ ] Rider `get_file_problems` + `dotnet format analyzers` bersih pada file yang disentuh.

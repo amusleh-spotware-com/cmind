@@ -1,54 +1,53 @@
 ---
-title: Backtest Integritas Lab
-description: Determinisztikus, fund-grade tuloptimalizalas statisztikak (Probabilistic & Deflated Sharpe, t-stat), amelyek egy nyers backtestet Robust / Fragile / Overfit iteletre forditanak, korrigalva a probalt konfiguraciok szamara.
+description: "Backtest Integrity Lab — determinisztikus, intézményi szintű overfitting-statisztika (Probabilisztikus és Deflált Sharpe, t-statisztika), amely egy nyers backtestet Robusztus / Törékenye / Túlillesztett ítéletre alakít, korrigálva a megpróbált konfigurációk számát."
 ---
 
-# Backtest Integritas Lab
+# Backtest Integrity Lab
 
-A retail platformok megmutatjak a backtest Sharpe-jat vagy net profit-jat es ott abbahagyjak. Az intézmények soha nem bíznak egy nyers backtestben - megkérdezik, hogy az eredmény túlélja-e **a szelekciós bias korrekcióját és a kipróbált konfigurációk számát**. A Backtest Integritas Lab ezt a vizsgálatot hozza a cMind-hez. Ez **determinisztikus matek** (nincs AI, nincs külső hívás), igy az ítélet reprodukálható és minden szám magyarázható.
+A kereskedelmi platformok megjelenítenek egy backtest Sharpe-ját vagy nettó nyereségét, és megállnak. Az intézmények soha nem bíznak egy nyers backtestben — azt kérdezik, hogy az eredmény túléli-e a **szelekcióbias és a megpróbált konfigurációk számának korrekciót**. A Backtest Integrity Lab ezt az ellenőrzést hozza el a cMind-be. Ez **determinisztikus matematika** (nincs AI, nincs külső hívások), így az ítélet reprodukálható és minden szám magyarázható.
 
-Nyisd meg a **cBots → Integritas** (`/quant/integrity`)-nál.
+Nyissa meg a **cBots → Integrity** (`/quant/integrity`) oldalon.
 
-## Mit szamit
+## Amit kiszámít
 
-Egy hozamsorozat (vagy egy equity/egyenleg görbe) és a paraméterkészletek száma, amit kipróbáltál, hogy eljuss hozzá, az analyzer jelenti:
+Egy hozamsort (vagy egy equity/balance görbét) és a megpróbált paraméterkészletek számát figyelembe véve, az analizátor jelentést készít:
 
-- **Sharpe ratio** - per-időszak és évesített (négyzetgyök-of-time).
-- **Probabilistic Sharpe Ratio (PSR)** - a bizalom, hogy az *igazi* Sharpe túlszárnyalja a benchmarkot, figyelembe véve a nyomvonal hosszát, aszimmetriát és Kurtosis-t (Bailey & López de Prado, 2012). Egy rövid vagy vastag-farkú rekord alacsonyabbra csökkenti.
-- **Deflated Sharpe Ratio (DSR)** - PSR a **deflált benchmark ellen mérve**: az a Sharpe, amit az *N véletlenszerű próba legjobbjától* várnál a null alatt (a False Strategy Theorem). Minél több konfigurációt próbáltál ki, annál magasabb a mérce - ez az, ami az overfittinget elkapja.
-- **t-statistic** az átlagos hozamból. Harvey, Liu & Zhu követve, egy valódi élőnek t ≥ 3.0-at kell tisztáznia, nem a tankönyvi 2.0-t.
-- **Aszimmetria / kurtosis** a hozamoknak, amelyek a PSR/DSR korrekciókat táplálják.
+- **Sharpe-arány** — periódusenkénti és éves szintű (az idő négyzetgyöke).
+- **Probabilisztikus Sharpe-arány (PSR)** — annak az esélye, hogy a *valódi* Sharpe meghaladja a benchmarkot, figyelembe véve a track-record hosszát, a ferdességet és a lapítottságot (Bailey & López de Prado, 2012). Egy rövid vagy vastag farok csökkenti.
+- **Deflált Sharpe-arány (DSR)** — PSR mérve egy **deflált benchmark** ellen: a Sharpe, amely az *N véletlen próbálkozás legjobbjából* esperálható a nulla hipotézis alatt (a False Strategy Theorem). Minél több konfigurációt próbálsz, annál magasabb az érték — ez az, ami az overfittinget eltéríti.
+- **t-statisztika** az átlagos hozamból. Harvey, Liu & Zhu követésével egy valódi edge-nek **t ≥ 3.0**-t kell meghaladnia, nem a tankönyv 2.0-t.
+- **Ferdség / Lapítottság** a hozamokból, amely PSR/DSR korrekciókat táplál.
 
-## Az itélet
+## Az ítélet
 
-| Itélet | Jelentés | Szabály |
+| Ítélet | Jelentés | Szabály |
 |---|---|---|
-| **Robust** | Az élő túlélte a futtatott próbákat. | DSR ≥ 95% **es** PSR ≥ 95% **es** |t| ≥ 3.0 |
-| **Fragile** | Statisztikailag életben de nem meggyőzően - ne méretezz fel ezen egyedül. | a kettő között |
-| **Overfit** | Valószínűleg a szelekciós bias artifaktuma, nem valódi élő. | DSR < 90% |
+| **Robusztus** | Az edge túléli a megpróbált próbálkozásokat. | DSR ≥ 95% **és** PSR ≥ 95% **és** \|t\| ≥ 3.0 |
+| **Törékenye** | Statisztikailag élő, de nem meggyőzően — ne méretezze fel erre egyedül. | a kettő között |
+| **Túlillesztett** | Legvalószínűbb, hogy a szelekcióbias műterméke, nem valódi edge. | DSR < 90% |
 
-Minden eredmény magában foglal egy egyszerű angol nyelvű indoklást, így a "miért" soha nincs elrejtve.
+Minden eredmény egy egyszerű angol nyelvű indoklást tartalmaz, így a "miért" soha nem rejtett.
 
-## A Backtest Overfitting Valószínűsége (próbák felett)
+## Backtest Túlillesztésének Valószínűsége (próbálkozások között)
 
-Egy próba *szám* etetése jó; a ** tényleges out-of-sample sorozat minden kipróbált konfigurációhoz** etetése jobb. Illeszd be őket az opcionalis **trial grid**-be (egy sorozat per sor) és a cMind futtatja a **Combinatorially-Symmetric Cross-Validation**-t (Bailey, Borwein, López de Prado & Zhu, 2015): felosztja a megfigyeléseket csoportokra, és minden módját annak, hogy felet válasszon in-sample-ként, kiválasztja az in-sample legjobb konfigurációt és ellenőrzi, hogy ez a győztes a bottom fele **out-of-sample**-re esik-e. A **Probability of Backtest Overfitting (PBO)** a split-ek azon hányada, ahol a győztes nem általánosított. Egy PBO közel 0 azt jelenti, hogy a legjobb konfiguráció tényleg a legjobb; egy PBO 0.5 vagy több azt jelenti, hogy a kiválasztási folyamatod zajt választ - az ítélet **Overfit** lesz, függetlenül attól, mennyire jól nézett ki a győztes.
+Egy próbálkozás *száma* táplálása jó; a **megpróbált minden konfiguráció tényleges out-of-sample sorozatát** táplálni még jobb. Illessze be azokat az opcionális **trial grid**-be (egy sorozat soronként) és a cMind futtatja a **Kombinatorikusan-Szimmetrikus Kereszt-Validációt** (Bailey, Borwein, López de Prado & Zhu, 2015): felosztja a megfigyeléseket csoportokra, és a felét in-sampleként kiválasztott minden módszer esetén az in-sample legjobb konfigurációt választja és ellenőrzi, hogy az győztes az out-of-sample alsó felében landol-e. A **Backtest Túlillesztésének Valószínűsége (PBO)** azoknak az osztásoknak a hányada, ahol a győztes nem általánosított. A PBO közel 0-hoz azt jelenti, hogy a legjobb konfiguráció valóban a legjobb; a 0,5 vagy nagyobb PBO azt jelenti, hogy a kiválasztási folyamata zajt választ — az ítélet **Túlillesztett** lesz, függetlenül attól, hogy milyen jó volt a nyertes.
 
 ```http
 POST /api/quant/pbo
 { "trials": [[...], [...], ...] }
 ```
 
-Amikor a natív cTrader Console optimizer landol, a cMind itt automatikusan eteti a teljes trial felületet.
+Amikor a natív cTrader Console optimizer megérkezik, a cMind automatikusan ide táplálja a teljes próbálkozási felületét.
 
-## Próba - a szám, ami számít
+## Próbálkozások — a szám, amely számít
 
-`Trials` az, **hány paraméterkészletet tesztáltél**, mielőtt ezt választottad. Egy stratégia tesztelése és tíz ezernyi tesztelése és a legjobb megtartása radikálisan különböző dolgok: a második véletlenszerűen gyárt egy magas in-sample Sharpe-t. Az őszinte próba szám etetése a lényeg - felemeli a defláció és átviheti az "remek" backtestet **Overfit**-be. Amikor a natív cTrader Console optimizer landol, a cMind automatikusan eteti a sweep valós grid méretét.
+A `Trials` a **hány paraméter-készletet tesztelt** mielőtt ezt kiválasztotta. Egy stratégia tesztelése és tízezer tesztelése és a legjobb megtartása drámaian különbözik: az utóbbi véletlenül keltesz egy magas in-sample Sharpe-t. Az őszinte próbálkozási szám táplálása az egész lényeg — megemeli a deflációt és egy "kiváló" backtestet **Túlillesztett**-re mozgathat. Amikor a natív cTrader Console optimizer megérkezik, a cMind automatikusan táplálja azt a sweep valódi rács-méretét.
 
 ## Bemenetek
 
-- **Periodikus hozamok** - egy szám per időszak (pl. `0.01` = +1%). Legalább kettő.
-- **Equity / egyenleg görbe** - a cMind lehozza a konzekutív egyszerű hozamokat helyetted.
-- Vagy futtasd közvetlenül egy befejezett backtest-en: `POST /api/quant/integrity/backtest/{instanceId}` beolvassa a tárolt jelentés equity görbéjét.
+- **Periodikus hozamok** — egy szám periódusenkénti (pl. `0.01` = +1%). Legalább kettő. A mező az Ön gépelésének megfelelően érvényesíti: számolja a valid számokat, megjelöli azokat a tokeneket, amelyek nem szám, és csak akkor engedélyezi az **Analyze**-t, ha legalább két tiszta érték jelen van (a próbálkozási grid akkor engedélyezi az **Assess overfitting**-et, ha két, négy vagy több szám sorozata kész).
+- **Equity / balance görbe** — a cMind az egymást követő egyszerű hozamokat levezetette.
+- **Közvetlenül egy backtest futásból — nincs copy-paste.** Minden befejezett backtest egy pajzs **Check backtest integrity** ikont mutat a **Backtest** lista sorában és annak instance detail nézetében; egy kattintás futtatja a Lab-ot az adott futás tárolt equity görbéjén és egy párbeszédablakban megjeleníti az ítéletet. Az ikon le van tiltva, amíg a backtest nem fejeződik be és nem készít jelentést, így soha nem egy inert vezérlő. Ezt a `POST /api/quant/integrity/backtest/{instanceId}` alatt működik, amely a tárolt jelentés equity görbéjét olvassa.
 
 ## API
 
@@ -57,8 +56,8 @@ POST /api/quant/integrity
 { "returns": [0.006, 0.004, 0.006, ...], "trials": 250 }
 ```
 
-Visszaadja az ítéletet, minden metrikát és az indoklást. `POST /api/quant/integrity/backtest/{id}` ugyanazt az elemzést futtatja egy befejezett backtest-en, amit birtokolsz.
+Visszaadja az ítéletet, az összes metrikát és az indoklást. A `POST /api/quant/integrity/backtest/{id}` ugyanezt az elemzést futtatja egy befejezett backtesten, amely az Önöé.
 
-## Miért megbizható
+## Miért megbízható
 
-A statisztikák tiszta függvények a domain magban (`Core.Quant`) null infrastruktúra függőséggel - nem tudja őket hálózati blip lehozni, és arany-vektor unit tesztek vannak a publikált formulák ellen. A normál CDF/inverz closed-form közelítések (Abramowitz-Stegun / Acklam), igy ugyanazok a bemenetek mindig ugyanazt az ítéletet adják.
+A statisztika tiszta függvények a domain mag-ban (`Core.Quant`) nulla infrastruktúra-függőséggel — nem podem lecsuktatva egy hálózati akadályban, és rögzítve vannak a golden-vector egységtesztekkel a közzétett képletekkel szemben. A normál CDF/inverz zárt formájú közelítések (Abramowitz-Stegun / Acklam), így ugyanazok a bemenetek mindig ugyanazt az ítéletet adják.

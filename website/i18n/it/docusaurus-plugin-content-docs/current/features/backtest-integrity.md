@@ -1,77 +1,53 @@
 ---
-description: "Backtest Integrity Lab — statistiche di overfitting deterministiche, di livello istituzionale (Probabilistic & Deflated Sharpe, t-stat) che trasformano un raw backtest in un verdetto Robust / Fragile / Overfit, correggendo per quante configurazioni hai provato."
+description: "Backtest Integrity Lab — statistiche di overfitting di qualità istituzionale, deterministica (Probabilistic & Deflated Sharpe, t-stat) che trasformano un backtest grezzo in un verdetto Robusto / Fragile / Overfitting, corregendo il numero di configurazioni che hai provato."
 ---
 
 # Backtest Integrity Lab
 
-Le piattaforme retail ti mostrano lo Sharpe o il net profit di un backtest e si fermano lì. Le istituzioni
-non si fidano mai di un raw backtest — chiedono se il risultato sopravvive alla **correzione per selection
-bias e il numero di configurazioni provate**. Il Backtest Integrity Lab porta quel controllo in cMind.
-È **matematica deterministica** (no AI, no chiamate esterne), quindi il verdetto è riproducibile e ogni
-numero è spiegabile.
+Le piattaforme retail ti mostrano uno Sharpe o un profitto netto del backtest e si fermano lì. Le istituzioni non si fidano mai di un backtest grezzo — chiedono se il risultato resiste **alla correzione per bias di selezione e al numero di configurazioni provate**. Il Backtest Integrity Lab porta questo controllo a cMind. È **matematica deterministica** (nessuna IA, nessuna chiamata esterna), quindi il verdetto è riproducibile e ogni numero è spiegabile.
 
 Aprilo su **cBots → Integrity** (`/quant/integrity`).
 
 ## Cosa calcola
 
-Data una serie di rendimenti (o una equity/balance curve) e il numero di param set che hai provato per
-arrivarci, l'analizzatore riporta:
+Data una serie di rendimenti (o una curva di equity/bilancio) e il numero di set di parametri che hai provato per arrivarci, l'analizzatore riporta:
 
-- **Sharpe ratio** — per-period e annualizzato (square-root-of-time).
-- **Probabilistic Sharpe Ratio (PSR)** — la confidenza che il *vero* Sharpe batta il benchmark,
-  tenendo conto della lunghezza della track record, skewness e kurtosis (Bailey & López de Prado, 2012).
-  Una record corta o fat-tailed lo abbassa.
-- **Deflated Sharpe Ratio (DSR)** — PSR misurato contro un **deflated benchmark**: lo Sharpe che
-  ti aspetteresti dal *miglior di N trial random* sotto il null (il False Strategy Theorem). Più
-  configurazioni hai provato, più alta è la soglia — questo è ciò che cattura l'overfitting.
-- **t-statistic** del rendimento medio. Seguendo Harvey, Liu & Zhu, un edge genuino dovrebbe superare **t ≥ 3.0**,
-  non il textbook 2.0.
+- **Sharpe ratio** — per periodo e annualizzato (radice quadrata del tempo).
+- **Probabilistic Sharpe Ratio (PSR)** — la confidenza che lo Sharpe *vero* batta il benchmark, considerando la lunghezza dello storico, l'asimmetria e la curtosi (Bailey & López de Prado, 2012). Uno storico breve o con code grasse lo abbassa.
+- **Deflated Sharpe Ratio (DSR)** — PSR misurato rispetto a un **benchmark deflazionato**: lo Sharpe che ti aspetteresti dal *migliore dei N trial casuali* sotto l'ipotesi nulla (il False Strategy Theorem). Più configurazioni hai provato, più alta la soglia — questo è ciò che cattura l'overfitting.
+- **t-statistic** della media dei rendimenti. Seguendo Harvey, Liu & Zhu, un vero edge dovrebbe superare **t ≥ 3.0**, non il classico 2.0.
 - **Skewness / kurtosis** dei rendimenti, che alimentano le correzioni PSR/DSR.
 
 ## Il verdetto
 
 | Verdetto | Significato | Regola |
 |---|---|---|
-| **Robust** | L'edge sopravvive ai trial che hai eseguito. | DSR ≥ 95% **and** PSR ≥ 95% **and** |t| ≥ 3.0 |
-| **Fragile** | Statisticamente vivo ma non convincente — non sizing up da solo. | tra i due |
-| **Overfit** | Molto probabilmente un artefatto del selection bias, non un edge reale. | DSR < 90% |
+| **Robusto** | L'edge resiste ai trial che hai eseguito. | DSR ≥ 95% **e** PSR ≥ 95% **e** \|t\| ≥ 3.0 |
+| **Fragile** | Statisticamente vivo ma non in modo convincente — non aumentare la dimensione basandoti solo su questo. | tra i due |
+| **Overfitting** | Molto probabilmente un artefatto del bias di selezione, non un vero edge. | DSR < 90% |
 
-Ogni risultato porta una rationale in inglese semplice così il "perché" non è mai nascosto.
+Ogni risultato porta una spiegazione in linguaggio semplice in modo che il "perché" non sia mai nascosto.
 
-## Probability of Backtest Overfitting (across trials)
+## Probabilità di Backtest Overfitting (tra i trial)
 
-Dare un *count* dei trial è buono; dare l'**effettiva serie out-of-sample di ogni configurazione che hai
-provato** è meglio. Incollali nell'opzionale **trial grid** (una serie per riga) e cMind esegue
-**Combinatorially-Symmetric Cross-Validation** (Bailey, Borwein, López de Prado & Zhu, 2015): divide
-le osservazioni in gruppi, e per ogni modo di scegliere metà come in-sample sceglie la configurazione
-in-sample migliore e verifica se quel vincitore finisce nel bottom half **out-of-sample**. La
-**Probability of Backtest Overfitting (PBO)** è la frazione di split dove il vincitore non è riuscito a
-generalizzare. Un PBO vicino a 0 significa che la configurazione migliore è genuinamente la migliore; un
-PBO di 0.5 o più significa che il tuo processo di selezione sta scegliendo rumore — il verdetto diventa
-**Overfit** indipendentemente da quanto buono sembrava il vincitore.
+Fornire un *numero* di trial è buono; fornire la **serie out-of-sample effettiva di ogni configurazione che hai provato** è meglio. Incollale nella griglia di trial opzionale (una serie per riga) e cMind esegue **Combinatorially-Symmetric Cross-Validation** (Bailey, Borwein, López de Prado & Zhu, 2015): divide le osservazioni in gruppi, e per ogni modo di scegliere metà come in-sample seleziona la migliore configurazione in-sample e verifica se il vincitore finisce nella metà inferiore **out-of-sample**. La **Probability of Backtest Overfitting (PBO)** è la frazione di split dove il vincitore non è riuscito a generalizzare. Una PBO vicina a 0 significa che la migliore configurazione è veramente la migliore; una PBO di 0.5 o più significa che il tuo processo di selezione sta selezionando rumore — il verdetto diventa **Overfitting** indipendentemente da quanto bene appariva il vincitore.
 
 ```http
 POST /api/quant/pbo
 { "trials": [[...], [...], ...] }
 ```
 
-Quando l'optimizer nativo cTrader Console atterrerà, cMind alimenterà qui automaticamente la sua
-superficie trial completa.
+Quando l'optimizer nativo di cTrader Console arriverà, cMind alimenterà automaticamente la sua intera superficie di trial qui.
 
 ## Trial — il numero che conta
 
-`Trials` è **quanti param set hai testato** prima di scegliere questo. Testare una strategia e testare
-diecimila e tenere la migliore sono cose enormemente diverse: la seconda fabbrica uno Sharpe in-sample
-alto per caso. Alimentare l'onesto trial count è il punto centrale — alza la deflation e può spostare
-un "grande" backtest a **Overfit**. Quando l'optimizer nativo cTrader Console atterrerà, cMind lo
-alimenta automaticamente con la dimensione reale della griglia dello sweep.
+`Trials` è **quanti set di parametri hai testato** prima di scegliere questo. Testare una strategia e testarne diecimila e mantenere la migliore sono cose selvaggiamente diverse: la seconda produce uno Sharpe in-sample alto per caso. Fornire il numero di trial onesto è l'intero punto — aumenta la deflazione e può spostare un backtest "eccellente" a **Overfitting**. Quando l'optimizer nativo di cTrader Console arriverà, cMind alimenta automaticamente la dimensione della griglia effettiva dello sweep.
 
 ## Input
 
-- **Periodic returns** — un numero per periodo (es. `0.01` = +1%). Almeno due.
-- **Equity / balance curve** — cMind ricava i rendimenti semplici consecutivi per te.
-- Oppure eseguilo direttamente su un backtest completato: `POST /api/quant/integrity/backtest/{instanceId}`
-  legge l'equity curve del report memorizzato.
+- **Periodic returns** — un numero per periodo (es. `0.01` = +1%). Almeno due. Il campo si valida mentre digiti: conta i numeri validi, contrassegna qualsiasi token che non sia un numero, e abilita **Analyze** solo una volta che sono presenti almeno due valori puliti (la griglia di trial abilita **Assess overfitting** una volta che sono pronte due serie di quattro o più numeri ciascuna).
+- **Equity / balance curve** — cMind deriva i rendimenti semplici consecutivi per te.
+- **Direttamente da un backtest run — nessun copia-incolla.** Ogni backtest completato espone un'icona shield **Check backtest integrity** sulla riga dell'elenco **Backtest** e nella vista di dettaglio della sua istanza; un clic esegue il Lab sulla curva di equity memorizzata di quel run e mostra il verdetto in una finestra di dialogo. L'icona è disabilitata finché il backtest non è completato e non ha prodotto un report, quindi non è mai un controllo morto. Dietro le quinte questo è `POST /api/quant/integrity/backtest/{instanceId}`, che legge la curva di equity del report memorizzato.
 
 ## API
 
@@ -80,12 +56,8 @@ POST /api/quant/integrity
 { "returns": [0.006, 0.004, 0.006, ...], "trials": 250 }
 ```
 
-Restituisce il verdetto, tutte le metriche e la rationale. `POST /api/quant/integrity/backtest/{id}` esegue
-la stessa analisi su un backtest completato che possiedi.
+Restituisce il verdetto, tutte le metriche e la spiegazione. `POST /api/quant/integrity/backtest/{id}` esegue la stessa analisi su un backtest completato che possiedi.
 
 ## Perché è affidabile
 
-Le statistiche sono funzioni pure nel domain core (`Core.Quant`) con zero dipendenze infrastructure
-— non possono essere buttate giù da un blip di rete, e sono pinned da golden-vector unit
-test contro le formule pubblicate. Le closed-form approximation del normal CDF/inverse
-(Abramowitz-Stegun / Acklam), così gli stessi input producono sempre lo stesso verdetto.
+Le statistiche sono funzioni pure nel dominio core (`Core.Quant`) senza dipendenze di infrastruttura — non possono essere abbattute da un problema di rete, e sono ancorate da test unitari golden-vector rispetto alle formule pubblicate. La CDF normale/inversa sono approssimazioni in forma chiusa (Abramowitz-Stegun / Acklam), quindi gli stessi input producono sempre lo stesso verdetto.

@@ -4,6 +4,17 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="integrity.row.sharpe" xml:space="preserve"><value>Шарп (по периоду)</value></data>
+  <data name="integrity.row.annualized" xml:space="preserve"><value>Годишњи Шарп</value></data>
+  <data name="integrity.row.psr" xml:space="preserve"><value>Вероватносни Шарп</value></data>
+  <data name="integrity.row.dsr" xml:space="preserve"><value>Дефлатирани Шарп</value></data>
+  <data name="integrity.row.tstat" xml:space="preserve"><value>t-статистика</value></data>
+  <data name="integrity.row.skew" xml:space="preserve"><value>Асиметрија</value></data>
+  <data name="integrity.row.kurtosis" xml:space="preserve"><value>Спљоштеност</value></data>
+  <data name="integrity.row.observations" xml:space="preserve"><value>Опсервације</value></data>
+  <data name="integrity.row.trials" xml:space="preserve"><value>Покушаји</value></data>
+  <data name="integrity.row.pbo" xml:space="preserve"><value>Вероватноћа преприлагођавања бектеста</value></data>
+  <data name="integrity.loadError" xml:space="preserve"><value>Провера интегритета овог бектеста није могла да се покрене.</value></data>
   <data name="common.retry" xml:space="preserve"><value>Покушај поново</value></data>
   <data name="common.close" xml:space="preserve"><value>Затвори</value></data>
   <data name="common.cancel" xml:space="preserve"><value>Откажи</value></data>
@@ -25,7 +36,7 @@
   <data name="nav.run" xml:space="preserve"><value>Покрени</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>Бектест</value></data>
   <data name="nav.optimize" xml:space="preserve"><value>Оптимизуј</value></data>
-  <data name="nav.integrity" xml:space="preserve"><value>Интегритет</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Backtest Интегритет</value></data>
   <data name="nav.positionSizing" xml:space="preserve"><value>Величина позиције</value></data>
   <data name="nav.strategyHealth" xml:space="preserve"><value>Здравље стратегије</value></data>
   <data name="nav.regimeLab" xml:space="preserve"><value>Лабораторија режима</value></data>

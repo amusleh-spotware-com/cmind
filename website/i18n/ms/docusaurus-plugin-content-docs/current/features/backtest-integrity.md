@@ -1,67 +1,53 @@
 ---
-description: "Makmal Integriti Backtest — statistik overfitting gred-Institusi yang deterministik (Probabilistic & Deflated Sharpe, t-stat) yang mengubah backtest mentah kepada verdict Robust / Rapuh / Overfit, membetulkan untuk berapa banyak konfigurasi yang anda cuba."
+description: "Makmal Integriti Backtest — statistik overfitting berkualitas dana yang deterministik (Probabilistic & Deflated Sharpe, t-stat) yang mengubah backtest mentah menjadi verdit Robust / Rapuh / Overfit, membetulkan untuk berapa banyak konfigurasi yang anda cuba."
 ---
 
 # Makmal Integriti Backtest
 
-Platform runcit menunjukkan kepada anda Sharpe atau keuntungan bersih backtest dan berhenti di situ. Institusi tidak pernah mempercayai backtest mentah — mereka bertanya sama ada keputusan itu bertahan **pembetulan untuk pincang pemilihan dan bilangan konfigurasi yang dicuba**. Makmal Integriti Backtest membawa pemeriksaan itu ke cMind. Ia ialah **matematik deterministik** (tiada AI, tiada panggilan luaran), jadi verdict boleh dihasilkan semula dan setiap nombor boleh diterangkan.
+Platform ritel menunjukkan anda Sharpe backtest atau keuntungan bersih dan berhenti di sana. Institusi tidak pernah mempercayai backtest mentah — mereka bertanya sama ada hasilnya bertahan **perbetulkan untuk berat sebelah pemilihan dan bilangan konfigurasi yang dicuba**. Makmal Integriti Backtest membawa pemeriksaan itu ke cMind. Ia adalah **matematik deterministik** (tiada AI, tiada panggilan luaran), jadi verdit boleh dihasilkan semula dan setiap nombor boleh dijelaskan.
 
-Bukanya di **cBots → Integrity** (`/quant/integrity`).
+Bukanya di **cBots → Integriti** (`/quant/integrity`).
 
-## Apa yang dikira
+## Apa yang ia hitung
 
-Diberikan siri pulangan (atau lengkung ekuiti/imbangan) dan bilangan set parameter yang anda cuba untuk sampai
-kepadanya, penganalisis melaporkan:
+Memandangkan siri pulangan (atau lengkung ekuiti/baki) dan bilangan set parameter yang anda cuba untuk sampai padanya, penganalisis melaporkan:
 
-- **Nisbah Sharpe** — setiap tempoh dan tahunan (punktal-punca masa).
-- **Probabilistic Sharpe Ratio (PSR)** — keyakinan bahawa Sharpe *sebenar* mengatasi penanda aras,
-  memandangkan panjang rekod trek, kepencongan dan kutosis (Bailey & López de Prado, 2012). Rekod pendek atau
-  berekor gemuk menurunkannya.
-- **Deflated Sharpe Ratio (DSR)** — PSR diukur terhadap **penanda aras yang diturunkan**: Sharpe yang anda jangkakan dari *terbaik daripada N percubaan rawak* di bawah null (False Strategy Theorem). Lebih banyak
-  konfigurasi yang anda cuba, semakin tinggi palang — ini yang menangkap overfitting.
-- **t-statistic** bagi pulangan purata. Mengikuti Harvey, Liu & Zhu, kelebihan sebenar harus jelas **t ≥ 3.0**,
-  bukan 2.0 buku teks.
-- **Kepencongan / kutosis** pulangan, yang dimasukkan ke pembetulan PSR/DSR.
+- **Nisbah Sharpe** — bagi setiap tempoh dan tahunan (punca-kuasa-dua masa).
+- **Nisbah Sharpe Probabilistik (PSR)** — kepercayaan bahawa *benar* Sharpe mengalahkan penanda aras, mengambil kira panjang jejak, kecondongan dan kurtosis (Bailey & López de Prado, 2012). Rekod pendek atau berekor gemuk membuatnya lebih rendah.
+- **Nisbah Sharpe Deflated (DSR)** — PSR diukur terhadap **penanda aras yang deflated**: Sharpe yang anda harapkan daripada *terbaik N ujian rawak* di bawah nol (Teorem Strategi Palsu). Lebih banyak konfigurasi yang anda cuba, semakin tinggi palang — ini adalah apa yang menangkap overfitting.
+- **t-statistik** bagi pulangan purata. Mengikuti Harvey, Liu & Zhu, tepi tulen harus membersihkan **t ≥ 3.0**, bukan buku teks 2.0.
+- **Kecondongan / kurtosis** pulangan, yang memberi makan pembetulan PSR/DSR.
 
-## Verdict
+## Verdit
 
-| Verdict | Makna | Peraturan |
+| Verdit | Makna | Peraturan |
 |---|---|---|
-| **Robust** | Kelebihan itu bertahan percubaan yang anda jalankan. | DSR ≥ 95% **dan** PSR ≥ 95% **dan** |t| ≥ 3.0 |
-| **Rapuh** | Masih hidup secara statistik tetapi tidak meyakinkan — jangan besarkan berdasarkan ini sahaja. | antara kedua-duanya |
-| **Overfit** | Kemungkinan besar artifak pincang pemilihan, bukan kelebihan sebenar. | DSR < 90% |
+| **Teguh** | Tepi bertahan ujian yang anda jalankan. | DSR ≥ 95% **dan** PSR ≥ 95% **dan** \|t\| ≥ 3.0 |
+| **Rapuh** | Secara statistik hidup tetapi tidak meyakinkan — jangan saiz naik pada sini sahaja. | antara kedua |
+| **Overfit** | Kemungkinan besar artefak berat sebelah pemilihan, bukan tepi sebenar. | DSR < 90% |
 
-Setiap keputusan membawa justifikasi teks biasa supaya "kenapa" tidak pernah disembunyikan.
+Setiap hasil membawa rasional bahasa Inggeris biasa supaya "mengapa" tidak pernah disembunyikan.
 
-## Kebarangkalian Backtest Overfitting (merentasi percubaan)
+## Kebarangkalian Backtest Overfitting (merentasi ujian)
 
-Memberi bilangan percubaan adalah baik; memberi **seri di luar sampel sebenar setiap konfigurasi yang anda
-cuba** adalah lebih baik. Tampal ke dalam **grid percubaan** pilihan (satu seri setiap baris) dan cMind menjalankan
-**Combinatorially-Symmetric Cross-Validation** (Bailey, Borwein, López de Prado & Zhu, 2015): ia memecahkan
-pemerhatian kepada kumpulan, dan untuk setiap cara memilih separuh sebagai dalam-contoh ia memilih konfigurasi
-terbaik dalam-contoh dan semak sama ada pemenang itu mendarat di bahagian bawah **luar-contoh**. **Kebarangkalian Backtest Overfitting (PBO)** ialah pecahan belahan di mana pemenang gagal generalise. PBO hampir 0 bermakna konfigurasi terbaik memang terbaik; PBO 0.5 atau lebih bermakna proses pemilihan anda memilih bunyi — verdict menjadi **Overfit** walau betapa bagusnya pemenang kelihatan.
+Memberi suatu kiraan ujian *bilangan* adalah bagus; memberi **siri out-of-sample sebenar setiap konfigurasi yang anda cuba** adalah lebih baik. Tampalkan mereka ke **grid ujian** pilihan (satu siri bagi setiap baris) dan cMind menjalankan **Pengesahan Silang Simetri Kombinatorik** (Bailey, Borwein, López de Prado & Zhu, 2015): ia membahagikan pemerhatian kepada kumpulan, dan untuk setiap cara memilih separuh sebagai dalam sampel ia memilih konfigurasi terbaik dalam sampel dan menyemak sama ada pemenang itu mendarat di separuh bawah **out-of-sample**. **Kebarangkalian Backtest Overfitting (PBO)** adalah pecahan pemisahan di mana pemenang gagal untuk umum. PBO berhampiran 0 bermakna konfigurasi terbaik adalah benar-benar terbaik; PBO 0.5 atau lebih bermakna proses pemilihan anda memilih hingar — verdit menjadi **Overfit** tanpa mengira betapa baik pemenangnya kelihatan.
 
 ```http
 POST /api/quant/pbo
 { "trials": [[...], [...], ...] }
 ```
 
-Apabila pengoptimum cTrader Console asli mendarat, cMind akan memberi makan permukaan percubaan penuh di sini
-secara automatik.
+Apabila pengoptimal Console cTrader asli tiba, cMind akan memberi permukaan ujian penuhnya ke sini secara automatik.
 
-## Percubaan — nombor yang penting
+## Ujian — bilangan yang penting
 
-`Trials` ialah **berapa banyak set parameter yang anda uji** sebelum memilih ini. Menguji satu strategi dan
-menguji sepuluh ribu dan menyimpan yang terbaik adalah perkara yang sangat berbeza: yang kedua menghasilkan
-Sharpe dalam-contoh tinggi secara kebetulan. Memberi bilangan percubaan yang jujur adalah intinya — ia meninggikan
-penurunan dan boleh menggerakkan backtest "bagus" ke **Overfit**. Apabila pengoptimum cTrader Console asli mendarat,
-cMind memberinya saiz grid sebenar pengesyoran secara automatik.
+`Trials` adalah **berapa banyak set parameter yang anda uji** sebelum memilih yang ini. Menguji satu strategi dan menguji sepuluh ribu dan menyimpan yang terbaik adalah perkara yang sangat berbeza: yang kedua mengeluarkan Sharpe dalam sampel tinggi secara kebetulan. Memberi kiraan ujian yang jujur adalah keseluruhan poin — ia meningkatkan pesonggangan dan boleh menggerakkan backtest "hebat" ke **Overfit**. Apabila pengoptimal Console cTrader asli tiba, cMind memberinya saiz grid sebenar sapuan secara automatik.
 
 ## Input
 
-- **Pulangan berkala** — satu nombor setiap tempoh (cth `0.01` = +1%). Sekurang-kurangnya dua.
-- **Lengkung ekuiti / imbangan** — cMind menerbitkan pulangan mudah berturut-turut untuk anda.
-- Atau jalankannya terus pada backtest yang lengkap: `POST /api/quant/integrity/backtest/{instanceId}` membaca lengkung ekuiti laporan tersimpan.
+- **Pulangan berkala** — satu nombor bagi setiap tempoh (cth. `0.01` = +1%). Sekurang-kurangnya dua. Medan mengesahkan semasa anda menaip: ia mengira nombor yang sah, bendera mana-mana token yang bukan nombor, dan hanya membolehkan **Analisis** sekali sekurang-kurangnya dua nilai bersih hadir (grid ujian membolehkan **Nilai overfitting** sekali dua siri empat-tambah nombor setiap satu sedia).
+- **Lengkung ekuiti / baki** — cMind memperoleh pulangan mudah berturut-turut untuk anda.
+- **Lurus dari larian backtest — tiada salinan-tampal.** Setiap backtest selesai mendedahkan perisai **Periksa integriti backtest** ikon pada baris **Backtest** dan pada paparan perincian contoh; satu klik menjalankan Makmal pada lengkung ekuiti tersimpan larian itu dan menunjukkan verdit dalam dialog. Ikon dilumpuhkan sehingga backtest selesai dan menghasilkan laporan, jadi ia tidak pernah kawalan mati. Di bawah tudung ini adalah `POST /api/quant/integrity/backtest/{instanceId}`, yang membaca lengkung ekuiti laporan tersimpan.
 
 ## API
 
@@ -70,9 +56,8 @@ POST /api/quant/integrity
 { "returns": [0.006, 0.004, 0.006, ...], "trials": 250 }
 ```
 
-Mengembalikan verdict, semua metrik, dan justifikasi. `POST /api/quant/integrity/backtest/{id}` menjalankan analisis yang sama pada backtest lengkap yang anda miliki.
+Mengembalikan verdit, semua metrik, dan rasional. `POST /api/quant/integrity/backtest/{id}` menjalankan analisis yang sama pada backtest selesai yang anda miliki.
 
 ## Mengapa ia boleh dipercayai
 
-Statistik ialah fungsi murni dalam domain teras (`Core.Quant`) dengan sifar kebergantungan infrastruktur — ia tidak boleh ditutup oleh gangguan rangkaian, dan ia dipancangkan oleh ujian unit vektor emas terhadap formula yang diterbitkan. Fungsi taburan normal / songsang (Abramowitz-Stegun / Acklam) adalah penghampiran bentuk tertutup,
-jadi input yang sama sentiasa menghasilkan verdict yang sama.
+Statistik adalah fungsi tulen dalam inti domain (`Core.Quant`) dengan sifar kebergantungan infrastruktur — mereka tidak boleh diambil turun oleh kegagalan rangkaian, dan mereka disematkan oleh ujian unit vektor emas terhadap formula yang diterbitkan. CDF normal/songsang adalah anggaran bentuk tertutup (Abramowitz-Stegun / Acklam), jadi input yang sama sentiasa menghasilkan verdit yang sama.

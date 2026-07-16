@@ -1,73 +1,105 @@
 ---
-description: "Обавезујуће за **сваки** нови или измењен комад UI у ова апликација (Blazor странице, дијалози, компоненте). Ово је извор истине референциран од CLAUDE.md. Ако а…"
+description: "Обавеза за сваки нови или измењени део корисничког интерфејса у овој апликацији (Blazor странице, дијалози, компоненте). Ово је референтни извор на који се…"
 ---
 
-# UI Дизајн Смерниће — ОБАВЕЗУЈУЋЕ
+# UI Смернице за дизајн — ОБАВЕЗА
 
-Обавезујуће за **сваки** нови или измењен комад UI у ова апликација (Blazor странице, дијалози, компоненте). Ово је извор истине референциран од `CLAUDE.md`. Ако правило те блокира, стани и питај — не доставља UI који то крши. Укорењена у `plans/ui-overhaul.md`.
+Обавеза за **сваки** нови или измењени део корисничког интерфејса у овој апликацији (Blazor странице, дијалози, компоненте).
+Ово је референтни извор на који се позива `CLAUDE.md`. Ако нека правила вас спречавају, zaustavite se и питајте — не достављајте
+UI који је крши. Засновано на `plans/ui-overhaul.md`.
 
-## 1. Mobile-first, увек
+## 1. Мобилни приступ на првом месту
 
-- **Аутор за 360–430px телефон прво**, затим побољшати горе са `min-width` медиј упити / MudBlazor breakpoint пропс. Никад desktop-first са `max-width` преписује.
-- **Без хоризонталног скрола на било коју ширину 320–1920px.** Ако је садржај шири од viewport, то је грешка.
-- Допирни циљеви ≥ **44px** (`var(--app-touch-target)`). Текст уноси ≥ 16px фонт (зауставља iOS zoom-on-focus).
-- Уважити заседе: користи `env(safe-area-inset-*)`; viewport већ постави `viewport-fit=cover`.
-- Честитајте `prefers-reduced-motion` — нема суштинских инфо преносена само од анимације.
+- **Развијајте за телефон од 360–430px прво**, а затим побољшавајте са `min-width` media упитима / MudBlazor
+  svojstvima за прелом. Никада прво за desktop са `max-width` преписивањем.
+- **Без хоризонталног клизања на било којојширини 320–1920px.** Ако је садржај шири од приказаног прозора, то је грешка.
+- Циљне површине за додир ≥ **44px** (`var(--app-touch-target)`). Текстуални уноси ≥ 16px фонт (zaustavља iOS зумирање на фокус).
+- Поштујте заседе: користите `env(safe-area-inset-*)`; приказни прозор већ postavlja `viewport-fit=cover`.
+- Уважите `prefers-reduced-motion` — нема битних информација преносених само анимацијом.
 
-## 2. Дизајн токени — без hard-coded вредности
+## 2. Токени дизајна — без hard-codirane вредности
 
-- Све боја/radius/spacing долазе од **дизајн токени**: MudBlazor тема (`Web/Components/Theme.cs`) + CSS custom својства емитована од `Web/Branding/BrandingCss.cs` (`var(--app-primary)`, `--app-surface`, `--app-border`, `--app-text*`, `--app-radius`, …).
-- **Никад hard-code hex боја, радијус, или brand ниска у компоненти или CSS правило.** Читај токен. Токени ток од white-label `BrandingOptions`, тако reseller палета мора достићи твоја UI за слободно.
-- Нови brand-affecting вредност → додајте токен + branding поље; немој га inline.
+- Све боје / радијус / размаци долазе од **токена дизајна**: MudBlazor тема (`Web/Components/Theme.cs`) +
+  CSS svojstava која emituje `Web/Branding/BrandingCss.cs` (`var(--app-primary)`,
+  `--app-surface`, `--app-border`, `--app-text*`, `--app-radius`, …).
+- **Никада не hard-kodirajte heksadecimalnu бoју, радијус или марку у компоненту или CSS правило.** Pročitajte токен.
+  Токени теку из white-label `BrandingOptions`, па палета preprodavca мора доћи до вашег интерфејса бесплатно.
+- Нова вредност која утиче на марку → додајте токен + поље за branding; немојте је исписати.
 
-## 3. Одзивна расподела & подаци
+## 3. Одзивни распоред и подаци
 
-- **Столови пропадају картама на телефонима.** Сваки `MudTable` постави `Breakpoint="Breakpoint.Sm"` и сваки `MudTd` има `DataLabel`. Без сирова широка табела на мобилну. (Шаблон: `Components/Pages/Nodes.razor`.)
-- Гридови: `MudItem xs="12" sm="6" md="4"` — пуна-ширина на телефону, multi-column горе.
-- Форме једна-колона на мобилну; велики допирни циљеви; `inputmode`/`autocomplete` на уносима; numeric/decimal inputmode за новца/проценти.
-- Пружити **учитавање, празно, и грешка** стања на сваки листа/детаљ — величина за мобилну.
-- Мобилна **дно навигација** (`Components/Layout/BottomNav.razor`) је примарна телефон nav; груписана фиока је пуна мени. Додајте high-traffic одредишта тамо; задржи то ≤5 предметима.
+- **Табеле се сажимају у картице на телефонима.** Свака `MudTable` postavlja `Breakpoint="Breakpoint.Sm"` и свака
+  `MudTd` има `DataLabel`. Нема широке табеле на мобилном. (Шаблон: `Components/Pages/Nodes.razor`.)
+- Мреже: `MudItem xs="12" sm="6" md="4"` — пуне ширине на телефону, више колона наниже.
+- Обрасци са једном колоном на мобилном; велике циљне површине за додир; `inputmode`/`autocomplete` на unositima; numerički / decimalni
+  inputmode за новац / проценат.
+- **Одговарајуће контроле за структурирани унос — никада сирова текстуална кутија за бројеве или листе.** Прикупљајте бројеве,
+  новац, проценте, датуме, enum вредности и све податке са више вредности одговарајућом контролом (`MudNumericField`,
+  `MudDatePicker`, `MudSelect`, editable листу за додавање / уклањање реда типизираних поља, или табелу), свако поље
+  појединачно валидирано. Једна слободна `MudTextField` коју корисник мора унети са запетом / размаком / новим редом
+  раздељеним blob-ом — шта потом анализирате — је **забрањена**: то је склонo greškama, неваљдиривано и непријатно
+  на телефону. **Никоме се не свиђа куцање у blob.** Унос са више вредности је editable листа типизираних редова (додај /
+  уклони), или се учитава из постојећих domain-ских podataka (нпр. pokrenite проверу директно из завршеног backtest-а
+  уместо да поново уносите његове бројеве). Обичан `MudTextField` је само за прави слободан tekst — имена, napomene,
+  pretraga, opisi.
+- Пружите **учитавање, prazne и greške** стања на свакој листи / detaljima — величина за мобилни.
+- Мобилна **доња навигација** (`Components/Layout/BottomNav.razor`) је примарна телефонска навигација; grupisana
+  развлачила је пуни мени. Додајте често-коришћена одредишта; чувајте ≤5 stavki.
 
-## 4. Дијалози (create/edit)
+## 4. Дијалози (прави/измена)
 
-- Сви додај/направи/уреди/ново акције користе **MudBlazor дијалог** (`IDialogService.ShowAsync<TDialog>`), никад inline страна форма. Дијалози живе у `Web/Components/Dialogs/`, излажу `[Parameter]`s, враћа угнеждена `public sealed record …Result(...)`. Листа ред акције (почни/стани/избриши) остају inline као icon дугмади.
-- На телефонима, дијалози би требало бити **пуна-екран / пуна-ширина** и keyboard-aware.
+- Све akcije додавања / kreiranja / измене / nove користе **MudBlazor дијалог** (`IDialogService.ShowAsync<TDialog>`), никада
+  исписан образац странице. Дијалози живе у `Web/Components/Dialogs/`, izlažu `[Parameter]`s, враћају угнеждену
+  `public sealed record …Result(...)`. Akcije редова листе (počni / zaustavi / izbriši) остају исписане као икона дугмади.
+- На телефонима, дијалози би требали бити **целоекрански / пуне ширине** и свесни tastature.
 
-## 5. Inline помоћ — сваки контрола
+## 5. Уграђена помоћ — свака контрола
 
-- Свака non-obvious опција, избори, прекидач, или акција добија **`<HelpTip Text="…" />`** (`Components/HelpTip.razor`) — hover на desktop, **тап на мобилну**. Извор текст од `docs/` тако водство остаје у sync са понашањем; ажурирај обоје у исто комита.
+- Свака nejasna опција, izbor, switch, или акција добија **`<HelpTip Text="…" />`**
+  (`Components/HelpTip.razor`) — lebdjenje на desktop-у, **додир на мобилном**. Извор tekst из `docs/` па
+  водиче остају усklађени са ponašanjem; ажурирајте ба у istoj obavezi.
 
 ## 6. White-label
 
-- Производ име, logo, опис, подршка/компанија, боја, favicon сви долазе од `BrandingOptions`. Референцирај их (`IBrandingThemeProvider` / `IOptionsMonitor<AppOptions>`), никад литерал "cMind" или brand боја. PWA манифест, иконе, theme-color, и логин хероја су сви branded.
+- Назив производа, logo, opis, podrška / kompanija, боје, favicon су све iz `BrandingOptions`.
+  Referencujte ih (`IBrandingThemeProvider` / `IOptionsMonitor<AppOptions>`), никада doslovno "cMind" или боје марке.
+  PWA manifest, ikone, theme-color i prijava heroja су све markirani.
 
 ## 7. PWA
 
-- Апликација је инсталабилна. Задржи манифест крајњу тачку (`/manifest.webmanifest`) branded, иконе присутна (192/512/maskable + apple-touch), service радник app-shell-only (никад дотицања Blazor цирктуа/`_framework`/hubs), и offline страна радна. Нови статички маршрут → задржи манифест `scope`.
-- Blazor Server требају live SignalR цирктуа → **инсталабилна + app-shell**, не пуна offline. Не обећавај offline интерактивност.
+- Апликација је инсталабилна. Чувајте endpoint manifestа (`/manifest.webmanifest`) markiranu, ikone prisutne
+  (192/512/maskable + apple-touch), service worker samo app-shell (nikada ne dodiče Blazor
+  circuit/`_framework`/hubs), i offline stranicu koja radi. Nova statička ruta → čuvajte manifest `scope`.
+- Blazor Server trebaju živ SignalR circuit → **instalabilan + app-shell**, ne potpuni offline. Nemojte obećavati offline interaktivnost.
 
 ## 8. Приступачност
 
-- Етикете на уносима, `aria-*` на прилагођена контрола, видљива фокус, логички фокус ред. Јер је тема white-labelable, верифику **контраст** против активна тема, не фиксна палета.
+- Oznake на unosima, `aria-*` na prilagođenim kontrolama, vidljiv fokus, logički redosled fokusa. Pošto je tema
+  white-labelable, proverite **kontrast** prema aktivnoj temi, ne fiksnoj paleti.
 
-## 9. E2E — не UI доставља untested (блокирање)
+## 9. E2E — нема UI која се достављају netestirana (блокира)
 
-Сваки user-facing промена доставља Playwright E2E у `tests/E2ETests`, вождена као прави корисник, **на мобилни device емулација** плус desktop:
+Свака promenjena korisniku иrelevantan koristi Playwright E2E у `tests/E2ETests`, voženja kao pravi korisnik, **na emulaciji mobilnog
+uređaja** плус desktop:
 
-- Нови маршрут → додајте то `PageSmokeTests` **и** `MobileLayoutTests` (чини, дно nav, не грешка UI).
-- Конвертуј табела/страна → додајте њене маршрут мобилни **без-overflow** скуп.
-- Нови ток → реалистичан мобилни путовање (create/edit/save round-trip) **и** unhappy путања (невалиди унос, празна листа, permission-denied per улога).
-- Нови помоћ савет → потврди то отварање на тап (`HelpTipTests` шаблон).
-- Користи `AppFixture.NewAuthedMobilePageAsync` / `NewAnonymousMobilePageAsync` (device емулација).
-- `dotnet test` зелена пре "done". Емулирана WebKit ≠ мобилна Safari — real-device врата је одвојена издање корак.
+- Nova ruta → dodajte je `PageSmokeTests` **i** `MobileLayoutTests` (čini, donja nav, nema greške UI-ja).
+- Pretvori tabelu / stranicu → dodajte njenu rutu mоbilnom **no-overflow** skupu.
+- Novi tok → realistično mobilno putovanje (kreiraj / izmeni / sačuvan krug) **i** nesrečna putanja
+  (nevaljdan unos, prazna lista, dozvola-odbijena po ulozi).
+- Nova savetnička pomoć → tvrdi da se otvara na dodir (`HelpTipTests` šablon).
+- Koristite `AppFixture.NewAuthedMobilePageAsync` / `NewAnonymousMobilePageAsync` (emulacija uređaja).
+- `dotnet test` zeleno pre nego što "završite". Emilovani WebKit ≠ mobilni Safari — gating pravog uređaja je poseban
+  korak izdanja.
 
-## 10. Дефиниција од done (UI)
+## 10. Дефиниција завршетка (UI)
 
-- [ ] Mobile-first; без хоризонталног overflow 320–1920px; допирни циљеви ≥44px.
-- [ ] Само дизајн токени — нула hard-coded боја/радиј/brand нискама.
-- [ ] Столови → картама на телефону (`DataLabel` + `Breakpoint.Sm`); учитавање/празно/грешка стања присутна.
-- [ ] Create/edit via дијалог; пуна-екран на мобилну.
-- [ ] Сваки контрола има `HelpTip` извор од док.
-- [ ] White-label + PWA уважена.
-- [ ] Мобилна + desktop E2E додана (smoke, без-overflow, путовање, unhappy путања); `dotnet test` зелена.
-- [ ] Rider `get_file_problems` + `dotnet format analyzers` чисто на додирни датотека.
+- [ ] Мобилни прво; без хоризонталног прелаза 320–1920px; циљне површине за додир ≥44px.
+- [ ] Само токени дизајна — нула hard-codirane боје / радијуса / марки stringova.
+- [ ] Табеле → картице на телефону (`DataLabel` + `Breakpoint.Sm`); учитавање / prazne / greške стања присутна.
+- [ ] Структурирани унос користи одговарајуће валидиране контроле (numerička / datum / izbor / editable red lista) — nema sirove
+      текстуалне кутије коју корисник куца у раздељени број / вредност blob.
+- [ ] Kreiraj / izmeni putem диjалога; целоекрански на мобилном.
+- [ ] Свака контрола има `HelpTip` nabavljen iz dokaza.
+- [ ] White-label + PWA poštovani.
+- [ ] Мобилна + desktop E2E dodata (dima, no-overflow, путовање, nesrečna putanja); `dotnet test` zeleno.
+- [ ] Rider `get_file_problems` + `dotnet format analyzers` čiste na dodirnutim datotekama.

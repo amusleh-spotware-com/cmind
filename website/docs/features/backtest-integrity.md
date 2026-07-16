@@ -67,10 +67,16 @@ lands, cMind feeds it the sweep's real grid size automatically.
 
 ## Inputs
 
-- **Periodic returns** — one number per period (e.g. `0.01` = +1%). At least two.
+- **Periodic returns** — one number per period (e.g. `0.01` = +1%). At least two. The field validates as
+  you type: it counts the valid numbers, flags any token that is not a number, and only enables **Analyze**
+  once at least two clean values are present (the trial grid enables **Assess overfitting** once two series
+  of four-plus numbers each are ready).
 - **Equity / balance curve** — cMind derives the consecutive simple returns for you.
-- Or run it straight on a completed backtest: `POST /api/quant/integrity/backtest/{instanceId}` reads the
-  stored report's equity curve.
+- **Straight from a backtest run — no copy-paste.** Every completed backtest exposes a shield **Check
+  backtest integrity** icon on the **Backtest** list row and on its instance detail view; one click runs
+  the Lab on that run's stored equity curve and shows the verdict in a dialog. The icon is disabled until
+  the backtest has completed and produced a report, so it is never a dead control. Under the hood this is
+  `POST /api/quant/integrity/backtest/{instanceId}`, which reads the stored report's equity curve.
 
 ## API
 

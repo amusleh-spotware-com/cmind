@@ -1,74 +1,53 @@
 ---
-description: "Backtest Integrity Lab — deterministyczne, fund-grade statystyki overfitting (Probabilistic & Deflated Sharpe, t-stat) które zamieniają surowy backtest w Robust / Fragile / Overfit verdict, korygując ile konfiguracji spróbowałeś."
+description: "Backtest Integrity Lab — deterministyczne, instytucjonalne statystyki przepełnienia (Probabilistic & Deflated Sharpe, t-stat) które zamieniają surowy backtest na werdykt Robust / Fragile / Overfit, korygując liczbę testowanych konfiguracji."
 ---
 
 # Backtest Integrity Lab
 
-Platformy detaliczne pokazują Ci Sharpe lub zysk netto backtestu i tu się kończą. Instytucje nigdy nie ufają
-surowemu backtest — pytają czy wynik przetrwa **korekcję bias wyboru i liczbę spróbowanych konfiguracji**. Backtest Integrity Lab
-przynosi tę kontrolę do cMind. To **deterministyczne math** (nie AI, nie zewnętrzne wywołania), więc
-verdict jest powtarzalny i każda liczba jest wyjaśnialna.
+Platformy detaliczne pokazują Sharpe'a lub czysty zysk z backtestu i na tym się kończą. Instytucje nigdy nie ufają surowym backtestom — pytają czy wynik przetrwa **korektę na błąd selekcji i liczbę testowanych konfiguracji**. Backtest Integrity Lab przynosi to sprawdzenie do cMind. To jest **deterministyczna matematyka** (bez AI, bez zewnętrznych wywołań), więc werdykt jest powtarzalny i każda liczba jest wyjaśnialna.
 
-Otwórz na **cBots → Integrity** (`/quant/integrity`).
+Otwórz go w **cBots → Integrity** (`/quant/integrity`).
 
 ## Co oblicza
 
-Biorąc serię zwrotów (lub krzywą equity/balance) i liczbę param setów którą spróbowałeś aby do tego dojść, analizator
-raportuje:
+Biorąc serię zwrotów (lub krzywę kapitału/salda) oraz liczbę zestawów parametrów, które testowałeś, aby do niego dojść, analizator raportuje:
 
-- **Sharpe ratio** — per-period i annualizowany (square-root-of-time).
-- **Probabilistic Sharpe Ratio (PSR)** — pewność że *prawdziwy* Sharpe bije benchmark,
-  biorąc pod uwagę długość track-record, skewness i kurtosis (Bailey & López de Prado, 2012). Krótki lub
-  fat-tailed record go obniża.
-- **Deflated Sharpe Ratio (DSR)** — PSR zmierzony przeciw **deflated benchmark**: Sharpe które
-  spodziewałbyś się z *best of N random trials* pod null (the False Strategy Theorem). Im więcej
-  konfiguracji spróbowałeś, tym wyższy bar — to co łapie overfitting.
-- **t-statistic** średniej zwrotu. Idąc za Harvey, Liu & Zhu, rzeczywista edge powinna przejść **t ≥ 3.0**,
-  nie textbook 2.0.
-- **Skewness / kurtosis** zwrotów, które zasilają korekcje PSR/DSR.
+- **Wskaźnik Sharpe'a** — na okres i annualizowany (pierwiastek-czasu).
+- **Probabilistic Sharpe Ratio (PSR)** — pewność, że *prawdziwy* Sharpe bije benchmark, uwzględniając długość historii, skośność i kurtozę (Bailey & López de Prado, 2012). Krótka lub gruba historia obniża go.
+- **Deflated Sharpe Ratio (DSR)** — PSR zmierzony względem **zdeflatowanego benchmarku**: Sharpe'a, którego spodziewałbyś się z *najlepszego z N losowych prób* pod nullą (False Strategy Theorem). Im więcej konfiguracji testowałeś, tym wyższa poprzeczka — to co łapie przepełnienie.
+- **t-statystyka** średniej zwrotu. Zgodnie z Harvey, Liu & Zhu, prawdziwa krawędź powinna pokonać **t ≥ 3.0**, a nie podręcznik 2.0.
+- **Skośność / kurtoza** zwrotów, które zasilają korekty PSR/DSR.
 
-## Verdict
+## Werdykt
 
-| Verdict | Znaczenie | Reguła |
+| Werdykt | Znaczenie | Reguła |
 |---|---|---|
-| **Robust** | Edge przetrwa trial'e które uruchomiłeś. | DSR ≥ 95% **i** PSR ≥ 95% **i** \|t\| ≥ 3.0 |
-| **Fragile** | Statystycznie żywy ale nie przekonywająco — nie sizuj w górę na tym samym. | między nimi |
-| **Overfit** | Najprawdopodobniej artifact bias wyboru, nie rzeczywista edge. | DSR < 90% |
+| **Robust** | Krawędź przetrwa testy które uruchomiłeś. | DSR ≥ 95% **and** PSR ≥ 95% **and** \|t\| ≥ 3.0 |
+| **Fragile** | Statystycznie żywa ale nie przekonująco — nie skaluj na podstawie tego samego. | między dwoma |
+| **Overfit** | Najprawdopodobniej artefakt błędu selekcji, a nie prawdziwa krawędź. | DSR < 90% |
 
-Każdy wynik nosi plain-English rationale więc "dlaczego" nigdy nie jest ukryte.
+Każdy rezultat nosi wyraźne wyjaśnienie w języku angielskim, więc "dlaczego" nigdy nie jest ukryte.
 
-## Probability of Backtest Overfitting (między trial'ami)
+## Probability of Backtest Overfitting (across trials)
 
-Zasilanie trial *count* jest dobre; zasilanie **rzeczywistej out-of-sample serii każdej konfiguracji którą
-spróbowałeś** jest lepsze. Wklej je do opcjonalnej **trial grid** (jeden series per line) i cMind uruchamia
-**Combinatorially-Symmetric Cross-Validation** (Bailey, Borwein, López de Prado & Zhu, 2015): dzieli
-obserwacje w grupy, i dla każdego sposobu wyboru połowy as in-sample bierze in-sample
-best configuration i sprawdza czy ten zwycięzca ląduje w bottom half **out-of-sample**. **Probability of Backtest Overfitting (PBO)** jest frakcją splitów gdzie zwycięzca nie uogólnił. PBO blisko 0 znaczy best configuration
-jest rzeczywiście best; PBO 0.5 lub więcej znaczy Twój selection process podnosi noise — verdict staje się
-**Overfit** niezależnie od jak dobry zwycięzca wyglądał.
+Podanie liczby prób *count* jest dobre; podanie **rzeczywistej serii out-of-sample każdej konfiguracji którą testowałeś** jest lepsze. Wklej je w opcjonalną **siatkę prób** (jedna seria na linię) i cMind uruchamia **Combinatorially-Symmetric Cross-Validation** (Bailey, Borwein, López de Prado & Zhu, 2015): dzieli obserwacje na grupy i dla każdego sposobu wyboru połowy jako in-sample wybiera in-sample najlepszą konfigurację i sprawdza czy ta zwycięzca ląduje w dolnej połowie **out-of-sample**. **Probability of Backtest Overfitting (PBO)** to frakcja podziałów gdzie zwycięzca nie uogólnił się. PBO bliskie 0 oznacza że najlepsza konfiguracja jest naprawdę najlepsza; PBO 0.5 lub więcej oznacza że proces selekcji wybiera szum — werdykt staje się **Overfit** niezależnie od tego jak dobry wyglądał zwycięzca.
 
 ```http
 POST /api/quant/pbo
 { "trials": [[...], [...], ...] }
 ```
 
-Gdy native cTrader Console optimizer przyjedzie, cMind zasilać będzie jego pełną trial surface tutaj
-automatycznie.
+Gdy natywny optimizer cTrader Console pojawi się, cMind automatycznie zasilić go tutaj pełną powierzchnią prób.
 
-## Trials — liczba która liczy
+## Trials — the number that matters
 
-`Trials` to **ile param setów testowałeś** zanim wybrałeś ten. Testowanie jednej strategii i
-testowanie dziesięciu tysięcy i utrzymywanie best to całkowicie inne rzeczy: drugi
-manufactures wysoką in-sample Sharpe przez przypadek. Zasilanie uczciwym trial count to całe pointu — podnosi
-deflation i może przenieść "great" backtest do **Overfit**. Gdy native cTrader Console optimizer
-przyjedzie, cMind zasilać będzie mu real grid size automatycznie.
+`Trials` to **ile zestawów parametrów testowałeś** przed wybraniem tego. Testowanie jednej strategii i testowanie dziesięciu tysięcy i utrzymanie najlepszego to zupełnie różne rzeczy: drugi produkuje wysokiego in-sample Sharpe'a przypadkowo. Podanie uczciwej liczby prób to całe znaczenie — podnosi deflatę i może przesunąć "wspaniały" backtest do **Overfit**. Gdy natywny optimizer cTrader Console pojawi się, cMind automatycznie zasilać go rzeczywistą wielkością gridu.
 
-## Wpisy
+## Inputs
 
-- **Periodic returns** — jedna liczba per period (np. `0.01` = +1%). Co najmniej dwa.
-- **Equity / balance curve** — cMind derives to dla Ciebie consecutive simple returns.
-- Lub uruchamia to bezpośrednio na ukończonym backtest: `POST /api/quant/integrity/backtest/{instanceId}` czyta
-  stored report's equity curve.
+- **Periodic returns** — jedna liczba na okres (np. `0.01` = +1%). Co najmniej dwa. Pole sprawdza się podczas pisania: liczy ważne liczby, flaguje każdy token który nie jest liczbą i tylko włącza **Analyze** gdy co najmniej dwie czystych wartości są obecne (siatka prób włącza **Assess overfitting** gdy dwie serie czterech lub więcej liczb każda są gotowe).
+- **Equity / balance curve** — cMind wyprowadza kolejne proste zwroty dla ciebie.
+- **Straight from a backtest run — no copy-paste.** Każdy ukończony backtest udostępnia tarczę **Check backtest integrity** ikonę na liście **Backtest** i na widoku szczegółów instancji; jeden klik uruchamia Lab na przechowywane krzywej kapitału tego przebiegu i pokazuje werdykt w dialogu. Ikona jest wyłączona dopóki backtest się nie ukończy i nie wyprodukuje raportu, więc nigdy nie jest martwą kontrolą. Pod maską to jest `POST /api/quant/integrity/backtest/{instanceId}`, która czyta przechowywane krzywę kapitału raportu.
 
 ## API
 
@@ -77,12 +56,8 @@ POST /api/quant/integrity
 { "returns": [0.006, 0.004, 0.006, ...], "trials": 250 }
 ```
 
-Zwraca verdict, wszystkie metryki i rationale. `POST /api/quant/integrity/backtest/{id}` uruchamia
-tę samą analizę na ukończonym backtest którym posiadasz.
+Zwraca werdykt, wszystkie metryki i uzasadnienie. `POST /api/quant/integrity/backtest/{id}` uruchamia tę samą analizę na ukończonym backteście którym posiadasz.
 
-## Dlaczego jest niezawodny
+## Why it is reliable
 
-Statystyki są czystymi funkcjami w domain core (`Core.Quant`) z zerem infrastruktury
-zależności — nie mogą być zabrane przez network blip, i są pinned przez golden-vector unit
-testy przeciwko opublikowanym formulom. Normalny CDF/inverse to closed-form approximations
-(Abramowitz-Stegun / Acklam), więc te same wpisy zawsze przynosą ten sam verdict.
+Statystyki to czyste funkcje w domenie core (`Core.Quant`) z zerową zależnością infrastruktury — nie mogą być przecięte przez zawirowania sieci i są przypięte przez testy jednostkowe golden-vector względem opublikowanych formuł. Normalna CDF/inverse to zamknięte przybliżenia formy (Abramowitz-Stegun / Acklam), więc te same wejścia zawsze dają ten sam werdykt.

@@ -1,77 +1,103 @@
 ---
-description: "Binding for every new or changed piece of UI in this app (Blazor pages, dialogs, components). This is the source of truth referenced by CLAUDE.md. If a…"
+description: "Δεσμευτικό για κάθε νέο ή τροποποιημένο τμήμα διεπαφής σε αυτήν την εφαρμογή (σελίδες Blazor, διάλογοι, συστατικά). Αυτή είναι η πηγή αλήθειας που αναφέρεται στο `CLAUDE.md`. Εάν ένας κανόνας σας εμποδίζει, σταματήστε και κάντε ερώτηση — μην αποστείλετε διεπαφή που τον παραβιάζει. Ριζωμένο στο `plans/ui-overhaul.md`."
 ---
 
 # UI Design Guidelines — MANDATORY
 
-Binding για **κάθε** new ή changed piece του UI σε αυτή την app (Blazor pages, dialogs, components).
-Αυτό είναι source of truth που referenced από `CLAUDE.md`. Αν rule blocks σας, σταματήστε και ρωτήστε — μην
-ship UI που παραβιάζει αυτό. Rooted σε `plans/ui-overhaul.md`.
+Δεσμευτικό για **κάθε** νέο ή τροποποιημένο τμήμα διεπαφής σε αυτήν την εφαρμογή (σελίδες Blazor, διάλογοι, συστατικά).
+Αυτή είναι η πηγή αλήθειας που αναφέρεται στο `CLAUDE.md`. Εάν ένας κανόνας σας εμποδίζει, σταματήστε και κάντε ερώτηση — μην
+αποστείλετε διεπαφή που τον παραβιάζει. Ριζωμένο στο `plans/ui-overhaul.md`.
 
-## 1. Mobile-first, πάντα
+## 1. Mobile-first, always
 
-- **Author για 360–430px phone πρώτα**, τότε enhance upward με `min-width` media queries / MudBlazor
-  breakpoint props. Ποτέ desktop-first με `max-width` overrides.
-- **Χωρίς horizontal scroll σε οποιοδήποτε width 320–1920px.** Αν content είναι wider από viewport, είναι bug.
-- Touch targets ≥ **44px** (`var(--app-touch-target)`). Text inputs ≥ 16px font (stops iOS zoom-on-focus).
-- Respect notches: χρησιμοποιήστε `env(safe-area-inset-*)`; viewport ήδη set `viewport-fit=cover`.
-- Honour `prefers-reduced-motion` — χωρίς essential info conveyed μόνο με animation.
+- **Σχεδιάστε για ένα τηλέφωνο 360–430px πρώτα**, μετά βελτιώστε προς τα πάνω με `min-width` ερωτήματα μέσων / ιδιότητες σημείων διακοπής MudBlazor. Ποτέ desktop-first με `max-width` παρακάμψεις.
+- **Χωρίς οριζόντια κύλιση σε κανένα πλάτος 320–1920px.** Εάν το περιεχόμενο είναι ευρύτερο από την προβολή, είναι ένα σφάλμα.
+- Στόχοι αφής ≥ **44px** (`var(--app-touch-target)`). Εισροές κειμένου ≥ 16px γραμματοσειρά (σταματά το iOS zoom-on-focus).
+- Σεβαστείτε τα notches: χρησιμοποιήστε `env(safe-area-inset-*)`; η προβολή ήδη ορίζει `viewport-fit=cover`.
+- Τιμήστε `prefers-reduced-motion` — κανένα βασικό πληροφορία που μεταφέρεται μόνο μέσω κινούμενης εικόνας.
 
-## 2. Design tokens — χωρίς hard-coded values
+## 2. Design tokens — no hard-coded values
 
-- Όλα colour/radius/spacing έρχονται από **design tokens**: MudBlazor theme (`Web/Components/Theme.cs`) +
-  CSS custom properties emitted από `Web/Branding/BrandingCss.cs` (`var(--app-primary)`,
+- Όλα τα χρώματα/ακτίνα/απόσταση προέρχονται από **σημάδια σχεδιασμού**: θέμα MudBlazor (`Web/Components/Theme.cs`) +
+  τις ιδιότητες CSS που εκπέμπονται από `Web/Branding/BrandingCss.cs` (`var(--app-primary)`,
   `--app-surface`, `--app-border`, `--app-text*`, `--app-radius`, …).
-- **Ποτέ hard-code hex colour, radius, ή brand string σε component ή CSS rule.** Read token.
-  Τα Tokens flow από white-label `BrandingOptions`, ώστε reseller's palette πρέπει reach UI σας.
-- Νέο brand-affecting value → add token + branding field; μην inline.
+- **Ποτέ μην κωδικοποιήσετε σκληρά ένα χρώμα hex, ακτίνα ή συμβολοσειρά ήδη σε ένα συστατικό ή κανόνα CSS.** Διαβάστε ένα σημάδι.
+  Τα σημάδια ρέουν από λευκό-label `BrandingOptions`, επομένως η παλέτα ενός αντιπροσώπου πρέπει να φτάσει στη διεπαφή σας δωρεάν.
+- Νέα τιμή που επηρεάζει το ήδη → προσθέστε ένα σημάδι + πεδίο ήδη; μην το inline.
 
 ## 3. Responsive layout & data
 
-- **Tables collapse σε cards σε phones.** Κάθε `MudTable` sets `Breakpoint="Breakpoint.Sm"` και κάθε
-  `MudTd` έχει `DataLabel`. Χωρίς raw wide table σε mobile.
-- Grids: `MudItem xs="12" sm="6" md="4"` — full-width σε phone, multi-column upward.
-- Forms single-column σε mobile; large tap targets; `inputmode`/`autocomplete` σε inputs.
-- Provide **loading, empty, και error** states σε κάθε list/detail.
-- Το mobile **bottom navigation** είναι primary phone nav; grouped drawer είναι full menu.
+- **Οι πίνακες καταρρέουν σε κάρτες στα τηλέφωνα.** Κάθε `MudTable` ορίζει `Breakpoint="Breakpoint.Sm"` και κάθε
+  `MudTd` έχει ένα `DataLabel`. Χωρίς πίνακα ακατέργαστο ευρύ σε κινητό. (Πρότυπο: `Components/Pages/Nodes.razor`.)
+- Πλέγματα: `MudItem xs="12" sm="6" md="4"` — πλήρες πλάτος στο τηλέφωνο, πολλαπλές στήλες προς τα πάνω.
+- Φόρμες μιας στήλης στο κινητό; μεγάλοι στόχοι εισχώρησης; `inputmode`/`autocomplete` σε εισροές; αριθμητικό/δεκαδικό
+  inputmode για χρήμα/ποσοστό.
+- **Σωστά στοιχεία ελέγχου για δομημένη εισροή — ποτέ ένα ακατέργαστο πλαίσιο κειμένου για αριθμούς ή λίστες.** Συγκεντρώστε αριθμούς,
+  χρήμα, ποσοστά, ημερομηνίες, enums και οποιαδήποτε δεδομένα πολλαπλών τιμών με το σωστό στοιχείο ελέγχου (`MudNumericField`,
+  `MudDatePicker`, `MudSelect`, μια αξιοποιήσιμη λίστα προσθήκης/αφαίρεσης σειρών τυπικών πεδίων, ή ένας πίνακας), κάθε πεδίο
+  επιμέρους που επικυρώνεται. Ένα ενιαίο ελεύθερο κείμενο `MudTextField` που ο χρήστης πρέπει να πληκτρολογήσει ένα κόμμα/διάστημα/newline
+  διαχωρισμένο blob σε — το οποίο στη συνέχεια αναλύετε — είναι **απαγορευμένο**: είναι επιρρεπές σε σφάλματα, ανύπεγον, και εχθρικό
+  σε ένα τηλέφωνο. **Κανείς δεν θέλει να πληκτρολογήσει ένα blob.** Εισροή πολλαπλών τιμών είναι μια αξιοποιήσιμη λίστα σειρών τύπου (προσθήκη /
+  αφαίρεση), ή φορτώνεται από υπάρχοντα δεδομένα τομέα (π.χ. εκτελέστε τον έλεγχο κατευθείαν από ένα ολοκληρωμένο backtest
+  παρά την επανεισαγωγή των αριθμών του). Το απλό `MudTextField` είναι μόνο για το αληθινό ελεύθερο κείμενο — ονόματα, σημειώσεις,
+  αναζήτηση, περιγραφές.
+- Παρέχετε **φόρτωση, κενή και σφάλμα** κράτη σε κάθε λίστα/λεπτομέρεια — μέγεθος για κινητό.
+- Η κινητή **κάτω πλοήγηση** (`Components/Layout/BottomNav.razor`) είναι η πρωτεύουσα πλοήγηση τηλεφώνου· το
+  ομαδοποιημένο συρόμενο δοχείο είναι το πλήρες μενού. Προσθέστε υψηλής κίνησης προορισμούς εκεί; κρατήστε το ≤5 στοιχεία.
 
 ## 4. Dialogs (create/edit)
 
-- Όλα add/create/edit actions χρησιμοποιούν **MudBlazor dialog** (`IDialogService.ShowAsync<TDialog>`), ποτέ
-  inline page form. Dialogs ζουν σε `Web/Components/Dialogs/`, expose `[Parameter]`s, return nested
-  `public sealed record …Result(...)`. List row actions stay inline ως icon buttons.
-- Σε phones, dialogs θα πρέπει να είναι **full-screen / full-width** και keyboard-aware.
+- Όλες οι ενέργειες προσθήκης/δημιουργίας/επεξεργασίας/νέας χρησιμοποιούν ένα **διάλογο MudBlazor** (`IDialogService.ShowAsync<TDialog>`), ποτέ
+  μια inline σελίδα φόρμας. Οι διάλογοι ζουν στο `Web/Components/Dialogs/`, εκθέτουν `[Parameter]`s, επιστρέφουν ένα ένθετο
+  `public sealed record …Result(...)`. Οι ενέργειες σειράς λίστας (εκκίνηση/διακοπή/διαγραφή) παραμένουν inline ως κουμπιά εικονιδίων.
+- Στα τηλέφωνα, οι διάλογοι πρέπει να είναι **πλήρης-οθόνη / πλήρες πλάτος** και συνειδητοί του πληκτρολογίου.
 
-## 5. Inline help — κάθε control
+## 5. Inline help — every control
 
-- Κάθε non-obvious option, select, switch, ή action παίρνει **`<HelpTip Text="…" />`**
-  (`Components/HelpTip.razor`) — hover σε desktop, **tap σε mobile**. Source το text από `docs/`.
+- Κάθε μη προφανής επιλογή, επιλογή, διακόπτης ή ενέργεια παίρνει ένα **`<HelpTip Text="…" />`**
+  (`Components/HelpTip.razor`) — αιώρηση στη Σμύρνη, **εξέδρα στο κινητό**. Πηγή το κείμενο από `docs/` έτσι ώστε
+  η καθοδήγηση παραμένει σε σύγχρονο με τη συμπεριφορά; ενημερώστε και τα δύο στο ίδιο commit.
 
 ## 6. White-label
 
-- Product name, logo, description, colours, favicon όλα έρχονται από `BrandingOptions`.
-  Reference τα, ποτέ literal "cMind" ή brand colour.
+- Όνομα προϊόντος, λογότυπο, περιγραφή, υποστήριξη/εταιρεία, χρώματα, favicon προέρχονται από `BrandingOptions`.
+  Τα αναφέρουν (`IBrandingThemeProvider` / `IOptionsMonitor<AppOptions>`), ποτέ κυριολεκτικό "cMind" ή ένα
+  χρώμα ήδη. Το PWA manifest, τα εικονίδια, theme-color και ο ήρωας σύνδεσης όλα είναι branded.
 
 ## 7. PWA
 
-- Το app είναι installable. Keep manifest endpoint branded, icons present, service worker app-shell-only.
-- Blazor Server χρειάζεται live SignalR circuit → **installable + app-shell**, όχι πλήρης offline.
+- Η εφαρμογή είναι εγκαταστάσιμη. Κρατήστε το τέλος ουσίας (`/manifest.webmanifest`) branded, εικονίδια παρόντα
+  (192/512/maskable + apple-touch), ο εργάτης υπηρεσίας τμήμα εφαρμογής-μόνο (ποτέ αγγίζοντας το κύκλωμα Blazor/`_framework`/hubs), και η offline σελίδα εργάζεται. Νέα στατική διαδρομή → κρατήστε το manifest `scope`.
+- Το Blazor Server χρειάζεται ένα ζωντανό κύκλωμα SignalR → **εγκαταστάσιμο + τμήμα εφαρμογής**, όχι πλήρες offline. Μην υπόσχεστε offline δραστηριότητα.
 
 ## 8. Accessibility
 
-- Labels σε inputs, `aria-*` σε custom controls, visible focus, logical focus order. Verify **contrast**.
+- Ετικέτες σε εισροές, `aria-*` σε προσαρμοσμένα στοιχεία ελέγχου, ορατή εστίαση, λογική σειρά εστίασης. Επειδή το θέμα είναι
+  λευκό-label, επαληθεύστε τη **αντίθεση** ενάντια στο ενεργό θέμα, όχι μια σταθερή παλέτα.
 
-## 9. E2E — χωρίς UI ships untested (blocking)
+## 9. E2E — no UI ships untested (blocking)
 
-Κάθε user-facing change ships Playwright E2E σε `tests/E2ETests`, driven όπως real user, **σε mobile
-device emulation** plus desktop. Νέα route → add σε PageSmokeTests + MobileLayoutTests.
+Κάθε αλλαγή που αντιμετωπίζει τον χρήστη αποστέλλει E2E Playwright στο `tests/E2ETests`, που υδατοδοτήθηκε σαν πραγματικό χρήστη, **σε κινητή
+προσομοίωση συσκευής** συν σε Σμύρνη:
+
+- Νέα διαδρομή → προσθέστε την σε `PageSmokeTests` **και** `MobileLayoutTests` (αποδόσεις, κάτω nav, χωρίς σφάλμα UI).
+- Μετατροπή πίνακα/σελίδας → προσθέστε τη διαδρομή του σε κινητό **όχι-υπερχείλιση** σύνολο.
+- Νέα ροή → ένα ρεαλιστικό κινητό ταξίδι (δημιουργία/επεξεργασία/αποθήκευση γύρος) **και** ένα δυστυχές μονοπάτι
+  (άκυρη εισροή, κενή λίστα, άδεια-άρνηση ανά ρόλο).
+- Νέα συμβουλή βοήθειας → βεβαιωθείτε ότι ανοίγει σε tap (`HelpTipTests` μοτίβο).
+- Χρησιμοποιήστε `AppFixture.NewAuthedMobilePageAsync` / `NewAnonymousMobilePageAsync` (προσομοίωση συσκευής).
+- `dotnet test` πράσινο πριν από το "done". Προσομοίωση WebKit ≠ κινητή Safari — δοχείο πραγματικής συσκευής είναι ένα ξεχωριστό
+  βήμα αναφοράς.
 
 ## 10. Definition of done (UI)
 
-- [ ] Mobile-first; χωρίς horizontal overflow 320–1920px; touch targets ≥44px.
-- [ ] Μόνο design tokens — zero hard-coded colours/radii/brand strings.
-- [ ] Tables → cards σε phone; loading/empty/error states present.
-- [ ] Create/edit μέσω dialog; full-screen σε mobile.
-- [ ] Κάθε control έχει HelpTip sourced από docs.
-- [ ] White-label + PWA respected.
-- [ ] Mobile + desktop E2E added; dotnet test green.
+- [ ] Mobile-first; καμία οριζόντια υπερχείλιση 320–1920px; αγγίξιμοι στόχοι ≥44px.
+- [ ] Μόνο σημάδια σχεδιασμού — μηδέν σκληρό κωδικοποιημένο χρώματα/ακτίνα/brand συμβολοσειρές.
+- [ ] Πίνακες → κάρτες στο τηλέφωνο (`DataLabel` + `Breakpoint.Sm`); κατάστατα φόρτωσης/κενή/σφάλμα παρόντα.
+- [ ] Δομημένη εισροή χρησιμοποιεί σωστά επικυρωμένα στοιχεία ελέγχου (αριθμητικό/ημερομηνία/επιλογή/αξιοποιήσιμη σειρά λίστας) — χωρίς ακατέργαστο
+      κείμενο πλαίσιο που ο χρήστης πληκτρολογεί μια διοριστική αριθμό/τιμή blob σε.
+- [ ] Δημιουργία/επεξεργασία μέσω διαλόγου; πλήρης-οθόνη στο κινητό.
+- [ ] Κάθε στοιχείο ελέγχου έχει ένα `HelpTip` που προέρχεται από τα έγγραφα.
+- [ ] White-label + PWA σεβαστεί.
+- [ ] E2E κινητό + Σμύρνη προστέθηκε (καπνός, όχι-υπερχείλιση, ταξίδι, δυστυχές μονοπάτι); `dotnet test` πράσινο.
+- [ ] Rider `get_file_problems` + `dotnet format analyzers` καθαρό σε ακουμπημένα αρχεία.

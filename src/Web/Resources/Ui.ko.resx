@@ -4,6 +4,17 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="integrity.row.sharpe" xml:space="preserve"><value>샤프 (기간당)</value></data>
+  <data name="integrity.row.annualized" xml:space="preserve"><value>연율화 샤프</value></data>
+  <data name="integrity.row.psr" xml:space="preserve"><value>확률적 샤프</value></data>
+  <data name="integrity.row.dsr" xml:space="preserve"><value>디플레이션 샤프</value></data>
+  <data name="integrity.row.tstat" xml:space="preserve"><value>t-통계량</value></data>
+  <data name="integrity.row.skew" xml:space="preserve"><value>왜도</value></data>
+  <data name="integrity.row.kurtosis" xml:space="preserve"><value>첨도</value></data>
+  <data name="integrity.row.observations" xml:space="preserve"><value>관측치</value></data>
+  <data name="integrity.row.trials" xml:space="preserve"><value>시행</value></data>
+  <data name="integrity.row.pbo" xml:space="preserve"><value>백테스트 과적합 확률</value></data>
+  <data name="integrity.loadError" xml:space="preserve"><value>이 백테스트에 대한 무결성 검사를 실행할 수 없습니다.</value></data>
   <data name="common.retry" xml:space="preserve"><value>다시 시도</value></data>
   <data name="common.close" xml:space="preserve"><value>닫기</value></data>
   <data name="common.cancel" xml:space="preserve"><value>취소</value></data>
@@ -25,7 +36,7 @@
   <data name="nav.run" xml:space="preserve"><value>실행</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>백테스트</value></data>
   <data name="nav.optimize" xml:space="preserve"><value>최적화</value></data>
-  <data name="nav.integrity" xml:space="preserve"><value>무결성</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Backtest 무결성</value></data>
   <data name="nav.positionSizing" xml:space="preserve"><value>포지션 크기</value></data>
   <data name="nav.strategyHealth" xml:space="preserve"><value>전략 상태</value></data>
   <data name="nav.regimeLab" xml:space="preserve"><value>레짐 랩</value></data>

@@ -33,6 +33,15 @@ ship UI that violates it. Rooted in `plans/ui-overhaul.md`.
 - Grids: `MudItem xs="12" sm="6" md="4"` — full-width on phone, multi-column upward.
 - Forms single-column on mobile; large tap targets; `inputmode`/`autocomplete` on inputs; numeric/decimal
   inputmode for money/percent.
+- **Proper controls for structured input — never a raw text box for numbers or lists.** Collect numbers,
+  money, percentages, dates, enums and any multi-value data with the right control (`MudNumericField`,
+  `MudDatePicker`, `MudSelect`, an editable add/remove row list of typed fields, or a table), each field
+  individually validated. A single free-text `MudTextField` that the user must type a comma/space/newline
+  separated blob into — which you then parse — is **forbidden**: it is error-prone, unvalidated, and hostile
+  on a phone. **Nobody wants to type a blob.** Multi-value input is an editable list of typed rows (add /
+  remove), or is loaded from existing domain data (e.g. run the check straight off a completed backtest
+  rather than re-entering its numbers). Plain `MudTextField` is only for genuine free text — names, notes,
+  search, descriptions.
 - Provide **loading, empty, and error** states on every list/detail — sized for mobile.
 - The mobile **bottom navigation** (`Components/Layout/BottomNav.razor`) is the primary phone nav; the
   grouped drawer is the full menu. Add high-traffic destinations there; keep it ≤5 items.
@@ -88,6 +97,8 @@ device emulation** plus desktop:
 - [ ] Mobile-first; no horizontal overflow 320–1920px; touch targets ≥44px.
 - [ ] Only design tokens — zero hard-coded colours/radii/brand strings.
 - [ ] Tables → cards on phone (`DataLabel` + `Breakpoint.Sm`); loading/empty/error states present.
+- [ ] Structured input uses proper validated controls (numeric/date/select/editable row list) — no raw
+      text box that the user types a delimited number/value blob into.
 - [ ] Create/edit via dialog; full-screen on mobile.
 - [ ] Every control has a `HelpTip` sourced from docs.
 - [ ] White-label + PWA respected.

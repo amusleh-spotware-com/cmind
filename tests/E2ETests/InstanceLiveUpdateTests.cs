@@ -168,6 +168,52 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
             .Should().BeFalse("a run has no backtest report");
     }
 
+    // The Backtest Integrity Lab is reachable from a completed backtest's detail view: the shield icon is
+    // enabled, opens a dialog and renders the Robust/Fragile/Overfit verdict from the run's equity curve.
+    // A run instance is not a backtest, so it offers no integrity control.
+    [Fact]
+    public async Task Backtest_detail_offers_an_integrity_check_that_shows_a_verdict()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var (completedBacktestId, runningRunId) = await SeedAsync(page);
+
+        await page.GotoAsync($"/instance/{completedBacktestId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        var integrity = page.Locator("[data-testid=instance-detail-integrity]");
+        await Assertions.Expect(integrity).ToBeEnabledAsync(new() { Timeout = 30000 });
+        await integrity.ClickAsync();
+
+        // The dialog runs the check server-side and renders the verdict.
+        await Assertions.Expect(page.Locator("[data-testid=integrity-verdict]")).ToBeVisibleAsync(Slow);
+
+        // A running RUN instance is not a backtest → no integrity control.
+        await page.GotoAsync($"/instance/{runningRunId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await Assertions.Expect(page.Locator("[data-testid=instance-detail-stop]")).ToBeVisibleAsync(Slow);
+        (await page.Locator("[data-testid=instance-detail-integrity]").IsVisibleAsync())
+            .Should().BeFalse("a run has no backtest report to check for integrity");
+    }
+
+    // The same integrity check is one tap from the backtest list row — mobile-emulated to prove it works on a
+    // phone: the shield icon opens the dialog and shows the verdict.
+    [Fact]
+    public async Task Backtest_list_row_opens_the_integrity_verdict_on_mobile()
+    {
+        var page = await app.NewAuthedMobilePageAsync();
+        await SeedAsync(page);
+
+        await page.GotoAsync("/backtest", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        // The completed backtest row's integrity icon is enabled (a report exists); open it.
+        var integrity = page.Locator("[data-testid=instance-integrity]:not([disabled])").First;
+        await Assertions.Expect(integrity).ToBeVisibleAsync(Slow);
+        await integrity.ClickAsync();
+
+        await Assertions.Expect(page.Locator("[data-testid=integrity-verdict]")).ToBeVisibleAsync(Slow);
+    }
+
     // The detail page's Copy logs button must copy the instance's full console log to the clipboard.
     [Fact]
     public async Task Copy_logs_button_copies_the_console_log_to_the_clipboard()

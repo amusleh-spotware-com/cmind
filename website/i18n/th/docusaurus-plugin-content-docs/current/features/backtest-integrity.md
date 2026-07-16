@@ -1,75 +1,53 @@
 ---
-description: "Backtest Integrity Lab — deterministic, fund-grade overfitting statistics (Probabilistic & Deflated Sharpe, t-stat) that turn a raw backtest into a Robust / Fragile / Overfit verdict, correcting for how many configurations you tried."
+description: "Backtest Integrity Lab — สถิติการ overfitting ระดับ fund ที่กำหนดได้ (Probabilistic & Deflated Sharpe, t-stat) ที่เปลี่ยนการ backtest แบบธรรมชาติให้เป็นคำพิพากษา Robust / Fragile / Overfit โดยแก้ไขสำหรับจำนวนการกำหนดค่าที่คุณลองแล้ว"
 ---
 
 # Backtest Integrity Lab
 
-Retail platforms แสดง backtest's Sharpe หรือ net profit และหยุดที่นั่น Institutions ไม่มีวันไว้วางใจ
-raw backtest — พวกเขาถามว่า ผลลัพธ์ยังคงอยู่ **correction สำหรับ selection bias และ number ของ
-configurations ที่พยายาม** Backtest Integrity Lab นำการตรวจสอบนั้น ไป cMind มันเป็น **deterministic
-math** (ไม่มี AI ไม่มี external calls) ดังนั้น verdict เป็น reproducible และ ทุกตัวเลข explainable
+แพลตฟอร์มข้อมูลปลีกแสดงค่า Sharpe หรือกำไรสุทธิของ backtest และหยุดตรงนั้น สถาบันไม่เคยเชื่อ backtest แบบธรรมชาติ — พวกเขาถามว่าผลลัพธ์นั้นรอดชีวิตหรือไม่ **การแก้ไขสำหรับการเลือกอคติและจำนวนของการกำหนดค่าที่พยายาม**. Backtest Integrity Lab นำการตรวจสอบนั้นมาที่ cMind. มันคือ **คณิตศาสตร์ที่กำหนดได้** (ไม่มี AI, ไม่มีการโทรภายนอก) ดังนั้นคำพิพากษาจึงสามารถทำซ้ำได้และตัวเลขทุกตัวสามารถอธิบายได้.
 
-เปิดที่ **cBots → Integrity** (`/quant/integrity`)
+เปิดที่ **cBots → Integrity** (`/quant/integrity`).
 
 ## What it computes
 
-Given return series (หรือ equity/balance curve) และ number ของ parameter sets ที่คุณพยายาม arrive
-ที่มัน analyzer รายงาน:
+ให้ชุดของอัตราผลตอบแทน (หรือเส้นโค้งส่วนของผู้ถือหุ้น/ยอดคงเหลือ) และจำนวนของชุดพารามิเตอร์ที่คุณพยายามเพื่อให้ได้มาซึ่งมัน ตัววิเคราะห์จะรายงาน:
 
-- **Sharpe ratio** — per-period และ annualized (square-root-of-time)
-- **Probabilistic Sharpe Ratio (PSR)** — confidence ที่ *true* Sharpe beats benchmark
-  accounting สำหรับ track-record length skewness และ kurtosis (Bailey & López de Prado 2012) short หรือ
-  fat-tailed record ลด มัน
-- **Deflated Sharpe Ratio (DSR)** — PSR วัด against a **deflated benchmark**: Sharpe ที่คุณคาดหวัง
-  จาก *best ของ N random trials* ภายใต้ null (the False Strategy Theorem) more
-  configurations ที่คุณพยายาม higher bar — นี่คือสิ่งที่ catches overfitting
-- **t-statistic** ของ mean return ตาม Harvey Liu & Zhu genuine edge ควร clear **t ≥ 3.0**
-  ไม่ใช่ textbook 2.0
-- **Skewness / kurtosis** ของ returns ซึ่ง feed PSR/DSR corrections
+- **Sharpe ratio** — ต่องวดเวลาและต่อปี (square-root-of-time).
+- **Probabilistic Sharpe Ratio (PSR)** — ความเชื่อมั่นว่า *true* Sharpe เอาชนะเกณฑ์มาตรฐาน โดยคำนึงถึงความยาวของบันทึกประวัติ ความเบ้ และความเบื้องต้น (Bailey & López de Prado, 2012). บันทึกที่สั้นหรือมีหางอ้วนจะทำให้มันลดลง.
+- **Deflated Sharpe Ratio (DSR)** — PSR วัดเทียบกับ **เกณฑ์มาตรฐานที่ยบ**: Sharpe ที่คุณคาดว่าจะได้รับจาก *ดีที่สุดของ N ทดลองแบบสุ่ม* ภายใต้ null (False Strategy Theorem). ยิ่งมีการกำหนดค่าที่คุณลองมากเท่าไหร่ บาร์ก็ยิ่งสูงขึ้น — นี่คือสิ่งที่จับ overfitting.
+- **t-statistic** ของอัตราผลตอบแทนเฉลี่ย. ตามที่ Harvey, Liu & Zhu กล่าว ข้อได้เปรียบที่แท้จริงควรมีค่าใหญ่ **t ≥ 3.0** ไม่ใช่ 2.0 ตามหนังสือเรียน.
+- **Skewness / kurtosis** ของผลตอบแทน ซึ่งเสริม PSR/DSR การแก้ไข.
 
 ## The verdict
 
 | Verdict | Meaning | Rule |
 |---|---|---|
-| **Robust** | edge ยังคงอยู่ trials ที่คุณเรียกใช้ | DSR ≥ 95% **และ** PSR ≥ 95% **และ** \|t\| ≥ 3.0 |
-| **Fragile** | Statistically alive แต่ไม่ convincingly so — อย่า size up on this alone | between the two |
-| **Overfit** | Most likely artifact ของ selection bias ไม่ใช่ real edge | DSR < 90% |
+| **Robust** | ข้อได้เปรียบรอดชีวิตการทดลองที่คุณรัน. | DSR ≥ 95% **and** PSR ≥ 95% **and** \|t\| ≥ 3.0 |
+| **Fragile** | มีความสามารถทางสถิติแต่ไม่น่าเชื่อถือพอ — อย่าโตขึ้นด้วยเพียงอย่างนี้เท่านั้น. | between the two |
+| **Overfit** | น่าจะเป็นสิ่งประดิษฐ์ของการเลือกอคติ ไม่ใช่ข้อได้เปรียบที่แท้จริง. | DSR < 90% |
 
-ทุก result carries plain-English rationale ดังนั้น "why" ไม่เคยซ่อน
+ผลลัพธ์ทั้งหมดมาพร้อมกับเหตุผลในภาษาอังกฤษธรรมชาติเพื่อให้ "เหตุใด" ไม่เคยซ่อนอยู่.
 
-## Probability ของ Backtest Overfitting (ข้าม trials)
+## Probability of Backtest Overfitting (across trials)
 
-Feeding trial *count* ดี; feeding **actual out-of-sample series ของ ทุก configuration ที่คุณ
-พยายาม** ดีกว่า Paste พวกเขา ไปยัง optional **trial grid** (one series per line) และ cMind runs
-**Combinatorially-Symmetric Cross-Validation** (Bailey Borwein López de Prado & Zhu 2015): มันแยก
-observations ไป groups และ สำหรับ ทุกวิธี ของการเลือก half เป็น in-sample มันเลือก in-sample
-best configuration และ checks ว่า winner นั้น lands ใน bottom half **out-of-sample** **Probability ของ
-Backtest Overfitting (PBO)** fraction ของ splits ที่ winner failed ไป generalize PBO near 0 หมายถึง
-best configuration genuinely best; PBO ของ 0.5 หรือ more หมายถึง selection process ของคุณ picking noise —
-verdict กลาย **Overfit** regardless ของ how good winner ดู
+การป้อนจำนวนการทดลอง *count* นั้นดี การป้อน **ชุดของข้อมูลนอกตัวอย่างจากการกำหนดค่าทุกการกำหนดค่าที่คุณลองมา** จะดีกว่า. วางลงในตารางการทดลอง **trial grid** ที่เป็นทางเลือก (ชุดหนึ่งต่อบรรทัด) และ cMind รัน **Combinatorially-Symmetric Cross-Validation** (Bailey, Borwein, López de Prado & Zhu, 2015): มันแบ่งการสังเกตออกเป็นกลุ่ม และสำหรับการเลือกครึ่งหนึ่งในตัวอย่างในแต่ละวิธี มันเลือกการกำหนดค่าที่ดีที่สุดในตัวอย่างและตรวจสอบว่าผู้ชนะนั้นลงจอดในครึ่งล่างหรือไม่ **นอกตัวอย่าง**. **Probability of Backtest Overfitting (PBO)** คือส่วนของการแบ่งที่ผู้ชนะไม่สามารถทำให้ทั่วไปได้. PBO ใกล้เคียง 0 หมายความว่าการกำหนดค่าที่ดีที่สุดนั้นเป็นสิ่งที่ดีที่สุดจริง ๆ; PBO 0.5 หรือมากกว่านั้นหมายความว่ากระบวนการเลือกของคุณกำลังเลือกสัญญาณรบกวน — คำพิพากษาจึงกลาย **Overfit** ไม่ว่าผู้ชนะจะดูดีแค่ไหน.
 
 ```http
 POST /api/quant/pbo
 { "trials": [[...], [...], ...] }
 ```
 
-เมื่อ native cTrader Console optimizer lands cMind จะ feed full trial surface ของมัน ที่นี่
-อัตโนมัติ
+เมื่อ optimizer ของ cTrader Console แบบดั้งเดิมถึงมา cMind จะป้อนพื้นผิวการทดลองแบบเต็มของมันที่นี่โดยอัตโนมัติ.
 
-## Trials — the number ที่ matters
+## Trials — the number that matters
 
-`Trials` คือ **how many parameter sets ที่คุณ tested** ก่อน picking this one Testing one strategy และ
-testing ten thousand และ keeping best wildly different things: second manufactures high in-sample Sharpe by
-chance Feeding honest trial count คือ whole point — มันเพิ่ม deflation และ สามารถย้าย "great" backtest ไป
-**Overfit** เมื่อ native cTrader Console optimizer lands cMind feeds sweep ของมัน real grid size
-อัตโนมัติ
+`Trials` คือ **จำนวนชุดพารามิเตอร์ที่คุณทดสอบ** ก่อนที่จะเลือกชุดนี้. การทดสอบกลยุทธ์หนึ่งและการทดสอบสิบพันและการเก็บรักษาที่ดีที่สุดนั้นแตกต่างกันอย่างมาก: อันที่สองสร้าง Sharpe ในตัวอย่างสูงโดยบังเอิญ. การป้อนจำนวนการทดลองที่ซื่อสัตย์นั้นเป็นประเด็นทั้งหมด — มันเพิ่มการยบ และสามารถย้ายการ backtest "ยอดเยี่ยม" ไปยัง **Overfit**. เมื่อ optimizer ของ cTrader Console แบบดั้งเดิมถึงมา cMind จะป้อนขนาดกริดจริงของการกวาดโลกของมันโดยอัตโนมัติ.
 
 ## Inputs
 
-- **Periodic returns** — one number per period (เช่น `0.01` = +1%) อย่างน้อย two
-- **Equity / balance curve** — cMind derives consecutive simple returns สำหรับคุณ
-- หรือ run มัน straight on completed backtest: `POST /api/quant/integrity/backtest/{instanceId}` reads
-  stored report's equity curve
+- **Periodic returns** — ตัวเลขหนึ่งต่องวดเวลา (เช่น `0.01` = +1%). อย่างน้อยสอง. ฟิลด์จะตรวจสอบความถูกต้องเมื่อคุณพิมพ์: จะนับตัวเลขที่ถูกต้อง ธงโทเค็นใด ๆ ที่ไม่ใช่ตัวเลข และจะเปิดใช้งาน **Analyze** เท่านั้นหลังจากมีค่าที่สะอาดอย่างน้อยสองค่า (ตารางการทดลองเปิดใช้งาน **Assess overfitting** เมื่อชุดสองชุดจำนวนบวกสี่บวกแต่ละชุดพร้อม).
+- **Equity / balance curve** — cMind ได้มาจากผลตอบแทนธรรมชาติแบบต่อเนื่องสำหรับคุณ.
+- **Straight from a backtest run — no copy-paste.** backtest ที่เสร็จสิ้นทุก ๆ ตัวแสดงเกะเก้า **Check backtest integrity** ไอคอนในแถว **Backtest** list และในมุมมองรายละเอียดอินสแตนซ์ของมัน; คลิกเดียวรันแลบจากเส้นโค้งส่วนของผู้ถือหุ้นที่จัดเก็บของการรันนั้นและแสดงคำพิพากษาในการสนทนา. ไอคอนจะปิดใช้งานจนกว่า backtest จะเสร็จสิ้นและสร้างรายงาน ดังนั้นจึงไม่เคยเป็นการควบคุมที่ตายแล้ว. ภายใต้หลังคา นี่คือ `POST /api/quant/integrity/backtest/{instanceId}` ซึ่งอ่านเส้นโค้งส่วนของผู้ถือหุ้นของรายงานที่จัดเก็บ.
 
 ## API
 
@@ -78,12 +56,8 @@ POST /api/quant/integrity
 { "returns": [0.006, 0.004, 0.006, ...], "trials": 250 }
 ```
 
-Returns verdict ทั้งหมด metrics และ rationale `POST /api/quant/integrity/backtest/{id}` runs
-analysis เดียวกัน on completed backtest ที่คุณเป็นเจ้าของ
+ส่งกลับคำพิพากษา เมตริกทั้งหมด และเหตุผล. `POST /api/quant/integrity/backtest/{id}` รันการวิเคราะห์เดียวกันบน backtest ที่เสร็จสิ้นซึ่งคุณเป็นเจ้าของ.
 
-## Why มันเป็น reliable
+## Why it is reliable
 
-statistics เป็น pure functions ใน domain core (`Core.Quant`) ที่มี zero infrastructure
-dependencies — พวกเขา ไม่สามารถ ถูกถาย ลง โดย network blip และ พวกเขา pinned โดย golden-vector
-unit tests against published formulas normal CDF/inverse เป็น closed-form approximations
-(Abramowitz-Stegun / Acklam) ดังนั้น inputs เดียวกัน เสมอ yield verdict เดียวกัน
+สถิติเป็นฟังก์ชันบริสุทธิ์ในแกนโดเมน (`Core.Quant`) ที่มีการพึ่งพิงโครงสร้างพื้นฐานเป็นศูนย์ — พวกเขาไม่สามารถถูกดึงลงมาด้วยความผันผวนของเครือข่าย และพวกเขาได้รับการตรึง ด้วยทดสอบหน่วยเวกเตอร์ทองคำต่อสูตรที่เผยแพร่. ซีดีเอฟปกติ/ผกผันเป็นการประมาณแบบปิด (Abramowitz-Stegun / Acklam) ดังนั้นอินพุตเดียวกันจะให้คำพิพากษาเดียวกันเสมอ.

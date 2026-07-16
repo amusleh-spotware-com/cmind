@@ -4,6 +4,17 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="integrity.row.sharpe" xml:space="preserve"><value>Шарп (за период)</value></data>
+  <data name="integrity.row.annualized" xml:space="preserve"><value>Годовой Шарп</value></data>
+  <data name="integrity.row.psr" xml:space="preserve"><value>Вероятностный Шарп</value></data>
+  <data name="integrity.row.dsr" xml:space="preserve"><value>Дефлированный Шарп</value></data>
+  <data name="integrity.row.tstat" xml:space="preserve"><value>t-статистика</value></data>
+  <data name="integrity.row.skew" xml:space="preserve"><value>Асимметрия</value></data>
+  <data name="integrity.row.kurtosis" xml:space="preserve"><value>Эксцесс</value></data>
+  <data name="integrity.row.observations" xml:space="preserve"><value>Наблюдения</value></data>
+  <data name="integrity.row.trials" xml:space="preserve"><value>Попытки</value></data>
+  <data name="integrity.row.pbo" xml:space="preserve"><value>Вероятность переобучения бэктеста</value></data>
+  <data name="integrity.loadError" xml:space="preserve"><value>Не удалось выполнить проверку целостности для этого бэктеста.</value></data>
   <data name="common.retry" xml:space="preserve"><value>Повторить</value></data>
   <data name="common.close" xml:space="preserve"><value>Закрыть</value></data>
   <data name="common.cancel" xml:space="preserve"><value>Отмена</value></data>
@@ -25,7 +36,7 @@
   <data name="nav.run" xml:space="preserve"><value>Запустить</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>Бэктест</value></data>
   <data name="nav.optimize" xml:space="preserve"><value>Оптимизировать</value></data>
-  <data name="nav.integrity" xml:space="preserve"><value>Целостность</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Backtest Целостность</value></data>
   <data name="nav.positionSizing" xml:space="preserve"><value>Размер позиции</value></data>
   <data name="nav.strategyHealth" xml:space="preserve"><value>Здоровье стратегии</value></data>
   <data name="nav.regimeLab" xml:space="preserve"><value>Лаборатория режимов</value></data>

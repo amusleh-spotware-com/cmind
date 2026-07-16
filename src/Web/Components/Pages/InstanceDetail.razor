@@ -57,6 +57,24 @@
                                OnClick="EditAsync" aria-label="Edit instance" data-testid="instance-detail-edit" />
             </MudTooltip>
         }
+        @if (_isBacktest)
+        {
+            <MudTooltip Text="@(HasReportJson ? "Download JSON report" : "Report available only for a completed backtest")">
+                <MudIconButton Icon="@Icons.Material.Filled.DataObject"
+                               Disabled="@(!HasReportJson)" OnClick="@(() => DownloadReportAsync("json"))"
+                               aria-label="Download JSON report" data-testid="instance-detail-report-json" />
+            </MudTooltip>
+            <MudTooltip Text="@(HasReportHtml ? "Download HTML report" : "Report available only for a completed backtest")">
+                <MudIconButton Icon="@Icons.Material.Filled.Html"
+                               Disabled="@(!HasReportHtml)" OnClick="@(() => DownloadReportAsync("html"))"
+                               aria-label="Download HTML report" data-testid="instance-detail-report-html" />
+            </MudTooltip>
+            <MudTooltip Text="@(HasReportJson ? "Check backtest integrity" : "Integrity check needs a completed backtest report")">
+                <MudIconButton Icon="@Icons.Material.Filled.VerifiedUser" Color="MudBlazor.Color.Primary"
+                               Disabled="@(!HasReportJson)" OnClick="OpenIntegrityAsync"
+                               aria-label="Check backtest integrity" data-testid="instance-detail-integrity" />
+            </MudTooltip>
+        }
     </MudStack>
 
     @if (_loaded && _detail is null)
@@ -113,19 +131,6 @@
                                Disabled="@(_logs.Count == 0)" OnClick="DownloadLogsAsync"
                                aria-label="Download logs" data-testid="instance-detail-logs-download" />
             </MudTooltip>
-            @if (_isBacktest)
-            {
-                <MudTooltip Text="@(HasReportJson ? "Download JSON report" : "Report available only for a completed backtest")">
-                    <MudIconButton Icon="@Icons.Material.Filled.DataObject" Size="MudBlazor.Size.Small"
-                                   Disabled="@(!HasReportJson)" OnClick="@(() => DownloadReportAsync("json"))"
-                                   aria-label="Download JSON report" data-testid="instance-detail-report-json" />
-                </MudTooltip>
-                <MudTooltip Text="@(HasReportHtml ? "Download HTML report" : "Report available only for a completed backtest")">
-                    <MudIconButton Icon="@Icons.Material.Filled.Html" Size="MudBlazor.Size.Small"
-                                   Disabled="@(!HasReportHtml)" OnClick="@(() => DownloadReportAsync("html"))"
-                                   aria-label="Download HTML report" data-testid="instance-detail-report-html" />
-                </MudTooltip>
-            }
         </MudStack>
 
         <MudPaper id="@LogsElementId" Class="instance-logs pa-2">
@@ -293,6 +298,15 @@
         {
             Snack.Add("No logs available for this instance", Severity.Warning);
         }
+    }
+
+    // Runs the Backtest Integrity Lab on this backtest's stored report and shows the verdict in a dialog.
+    // The icon is disabled unless a JSON report exists, so this only ever opens for an analysable backtest.
+    private Task OpenIntegrityAsync()
+    {
+        var parameters = new DialogParameters<IntegrityResultDialog> { { x => x.InstanceId, _currentId } };
+        return Dialogs.ShowAsync<IntegrityResultDialog>("Backtest integrity", parameters,
+            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
     }
 
     // Downloads the persisted backtest report (json/html). The button is disabled unless the backtest

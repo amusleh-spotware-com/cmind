@@ -24,10 +24,16 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, relative, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DOCS_DIR = join(ROOT, 'docs');
 const BASELINE_FILE = join(ROOT, 'scripts', 'i18n-drift-baseline.txt');
+// Content-freshness manifest: per English doc, the hash of the English source AND of each locale's
+// translation as they were when last synced (`npm run i18n:sync`). If the English hash no longer matches,
+// the English prose changed and the translations are stale — the gate FAILS until they are re-synced. This
+// closes the gap where a prose-only English edit (no heading change) shipped without touching translations.
+const MANIFEST_FILE = join(ROOT, 'scripts', 'i18n-source-manifest.json');
 
 // Non-default locales — must mirror docusaurus.config.ts i18n.locales minus the defaultLocale ("en").
 const LOCALES = [
@@ -71,6 +77,13 @@ function headingLevels(filePath) {
   return levels;
 }
 
+// Hash of a file's CONTENT, normalized so line-ending / trailing-whitespace noise never trips the gate.
+// Shared verbatim with scripts/i18n-sync-manifest.mjs — keep the two in sync.
+export function contentHash(filePath) {
+  const norm = readFileSync(filePath, 'utf8').replace(/\r\n/g, '\n').replace(/\s+$/, '') + '\n';
+  return createHash('sha256').update(norm).digest('hex');
+}
+
 const key = (locale, rel) => `${locale}\t${rel}`;
 
 const docs = walk(DOCS_DIR).map((p) => relative(DOCS_DIR, p).split('\\').join('/'));
@@ -93,6 +106,18 @@ for (const locale of LOCALES) {
 if (process.argv.includes('--list-drift')) {
   console.log([...currentDrift].sort().join('\n'));
   process.exit(0);
+}
+
+// ---- Content freshness: English prose changed → translations must be re-synced. --------------------
+const manifest = existsSync(MANIFEST_FILE) ? JSON.parse(readFileSync(MANIFEST_FILE, 'utf8')) : null;
+const staleContent = [];   // rels whose English content changed since the last sync
+const unbaselined = [];    // rels absent from the manifest (new doc never synced)
+if (manifest) {
+  for (const rel of docs) {
+    const recorded = manifest[rel];
+    if (!recorded) { unbaselined.push(rel); continue; }
+    if (recorded.en !== contentHash(join(DOCS_DIR, rel))) staleContent.push(rel);
+  }
 }
 
 const baseline = new Set(
@@ -139,7 +164,24 @@ if (resolvedBaseline.length) {
   }
 }
 
+if (!manifest) {
+  failed = true;
+  console.error('\n✗ Content-freshness manifest missing (scripts/i18n-source-manifest.json). Run: npm run i18n:sync');
+} else {
+  if (unbaselined.length) {
+    failed = true;
+    console.error(`\n✗ ${unbaselined.length} doc(s) are not in the content manifest — translate them into all locales, then run \`npm run i18n:sync\`:`);
+    for (const rel of (summaryOnly ? unbaselined.slice(0, 20) : unbaselined)) console.error(`    - ${rel}`);
+  }
+  if (staleContent.length) {
+    failed = true;
+    console.error(`\n✗ ${staleContent.length} doc(s) had their English content changed without re-syncing translations — re-translate them into ALL ${LOCALES.length} locales, then run \`npm run i18n:sync\` (a prose-only edit is NOT exempt):`);
+    for (const rel of (summaryOnly ? staleContent.slice(0, 20) : staleContent)) console.error(`    - ${rel}`);
+  }
+}
+
 if (!failed) {
+  console.log(`content freshness: ${docs.length} docs match the manifest (English unchanged since last sync).`);
   console.log('✓ Every doc is translated; structural drift matches the (shrink-only) baseline exactly.');
   process.exit(0);
 }

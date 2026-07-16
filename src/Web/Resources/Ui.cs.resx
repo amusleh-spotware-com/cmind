@@ -4,6 +4,17 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="integrity.row.sharpe" xml:space="preserve"><value>Sharpe (za období)</value></data>
+  <data name="integrity.row.annualized" xml:space="preserve"><value>Anualizovaný Sharpe</value></data>
+  <data name="integrity.row.psr" xml:space="preserve"><value>Pravděpodobnostní Sharpe</value></data>
+  <data name="integrity.row.dsr" xml:space="preserve"><value>Deflovaný Sharpe</value></data>
+  <data name="integrity.row.tstat" xml:space="preserve"><value>t-statistika</value></data>
+  <data name="integrity.row.skew" xml:space="preserve"><value>Šikmost</value></data>
+  <data name="integrity.row.kurtosis" xml:space="preserve"><value>Špičatost</value></data>
+  <data name="integrity.row.observations" xml:space="preserve"><value>Pozorování</value></data>
+  <data name="integrity.row.trials" xml:space="preserve"><value>Pokusy</value></data>
+  <data name="integrity.row.pbo" xml:space="preserve"><value>Pravděpodobnost přeučení backtestu</value></data>
+  <data name="integrity.loadError" xml:space="preserve"><value>Kontrolu integrity tohoto backtestu se nepodařilo spustit.</value></data>
   <data name="common.retry" xml:space="preserve"><value>Zkusit znovu</value></data>
   <data name="common.close" xml:space="preserve"><value>Zavřít</value></data>
   <data name="common.cancel" xml:space="preserve"><value>Zrušit</value></data>
@@ -25,7 +36,7 @@
   <data name="nav.run" xml:space="preserve"><value>Spustit</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>
   <data name="nav.optimize" xml:space="preserve"><value>Optimalizovat</value></data>
-  <data name="nav.integrity" xml:space="preserve"><value>Integrita</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Backtest Integrita</value></data>
   <data name="nav.positionSizing" xml:space="preserve"><value>Velikost pozice</value></data>
   <data name="nav.strategyHealth" xml:space="preserve"><value>Zdraví strategie</value></data>
   <data name="nav.regimeLab" xml:space="preserve"><value>Laboratoř režimů</value></data>

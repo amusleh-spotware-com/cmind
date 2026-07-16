@@ -1,73 +1,53 @@
 ---
-description: "Backtest Integrity Lab — determinističke, fund-grade statistike preprilagođavanja (Probabilistic & Deflated Sharpe, t-stat) koje pretvaraju sirovi backtest u Robust / Fragile / Overfit presudu, ispravljajući za broj konfiguracija koje ste probali."
+description: "Laboratorija za integritet backtesta — determinističke, korporativne statistike preoptimizovanja (Probabilistički i deflatirani Sharpe, t-statistika) koje pretvore sirovi backtest u verdikt Robustan / Krhak / Preoptimizovan, ispravljajući se za broj konfiguracija koje ste pokušali."
 ---
 
-# Backtest Integrity Lab
+# Laboratorija za integritet backtesta
 
-Retail platforme vam pokazuju backtest Sharpe ili neto profit i tu stanu. Institucije nikad ne veruju sirovom
-backtest-u — pitaju da li rezultat preživljava **korekciju za selection bias i broj
-konfiguracija probanih**. Backtest Integrity Lab donosi tu proveru u cMind. To je **deterministička
-matematika** (nema AI, nema eksternih poziva), tako da je presuda reproduktivna i svaki broj je objašnjiv.
+Maloprodajne platforme vam prikazuju Sharpe omjer ili neto dobit backtesta i tu stanu. Institucije nikada ne vjeruju u sirovi backtest — pitaju da li rezultat preživi **ispravku za pristranost selekcije i broj pokušanih konfiguracija**. Laboratorija za integritet backtesta donosi tu provjeru u cMind. To je **deterministička matematika** (bez AI-ja, bez vanjskih poziva), tako da je verdikt reproducibilan i svaki broj je objašnjiv.
 
-Otvorite ga na **cBots → Integrity** (`/quant/integrity`).
+Otvorite je na **cBots → Integrity** (`/quant/integrity`).
 
-## Šta računa
+## Šta se izračunava
 
-S obzirom na return series (ili equity/balance curve) i broj parameter sets koje ste probali da dođete
-do njega, analyzer raportuje:
+Datom seriji povrata (ili krivuljom vlasničkog kapitala/saldo) i broja skupova parametara koje ste pokušali da dosegnete, analizator izvještava:
 
-- **Sharpe ratio** — per-period i annualized (square-root-of-time).
-- **Probabilistic Sharpe Ratio (PSR)** — poverenje da *true* Sharpe beats benchmark,
-  uzimajući u obzir dužinu track record-a, skewness i kurtosis (Bailey & López de Prado, 2012). Kratak ili
-  fat-tailed record ga smanjuje.
-- **Deflated Sharpe Ratio (DSR)** — PSR meren naspram **deflated benchmark-a**: Sharpe koji biste očekivali od *najboljeg od N random trials* pod null (False Strategy Theorem). Što više
-  konfiguracija ste probali, to je veća prečka — ovo hvata overfitting.
-- **t-statistic** srednjeg return-a. Following Harvey, Liu & Zhu, genuin edge treba da clearing **t ≥ 3.0**,
-  ne textbook 2.0.
-- **Skewness / kurtosis** returns-a, koji utiču na PSR/DSR korekcije.
+- **Sharpe omjer** — po periodu i anualizovan (kvadratni korijen vremena).
+- **Probabilistički Sharpe omjer (PSR)** — pouzdanost da *pravi* Sharpe nadmaši mjeru, uzimajući u obzir dužinu iskustva, asimetriju i kurtozis (Bailey & López de Prado, 2012). Kraće ili debele-repe iskustvo ga snižava.
+- **Deflatiran Sharpe omjer (DSR)** — PSR izmjeren prema **deflatirani mjeri**: Sharpe koji biste očekivali od *najboljih N slučajnih pokušaja* pod nultom hipotezom (Teorem o lažnoj strategiji). Što više konfiguracija pokušate, to je viši standard — ovo je ono što hvata preoptimizovanje.
+- **t-statistika** prosječnog povrata. Slijedeći Harveya, Liu-ja i Zhu-ja, pravi edge trebao bi da prođe **t ≥ 3,0**, ne udžbenik 2,0.
+- **Asimetrija / kurtozis** povrata, koji hrane PSR/DSR korekcije.
 
-## Presuda
+## Verdikt
 
-| Presuda | Značenje | Pravilo |
+| Verdikt | Značenje | Pravilo |
 |---|---|---|
-| **Robust** | Edge preživljava probe koje ste pokrenuli. | DSR ≥ 95% **i** PSR ≥ 95% **i** |t| ≥ 3.0 |
-| **Fragile** | Statistički živ ali ne ubedljivo — ne povećavajte veličinu na osnovu samo ovoga. | između dva |
-| **Overfit** | Verovatno artefakt selection bias-a, ne genuin edge. | DSR < 90% |
+| **Robustan** | Edge preživa pokušaje koje ste pokrenuli. | DSR ≥ 95% **i** PSR ≥ 95% **i** \|t\| ≥ 3,0 |
+| **Krhak** | Statistički živ, ali ne uvjerljivo — ne povećavajte veličinu samo na osnovu ovoga. | između dva |
+| **Preoptimizovan** | Najvjerovatnije artefakt pristranosti selekcije, ne pravi edge. | DSR < 90% |
 
-Svaki rezultat nosi plain-English obrazloženje tako da je „zašto" nikad skriveno.
+Svaki rezultat nosi obrazloženje na jasnom engleskom jeziku kako "zašto" nikada ne bi trebalo biti skriveno.
 
-## Probability of Backtest Overfitting (kroz trials)
+## Vjerojatnost preoptimizovanja backtesta (kroz pokušaje)
 
-Unošenje *count* trial-a je dobro; unošenje *stvarnog out-of-sample series-a svake konfiguracije koju ste
-probali* je bolje. Nalepite ih u opcioni **trial grid** (jedan series po liniji) i cMind pokreće
-**Combinatorially-Symmetric Cross-Validation** (Bailey, Borwein, López de Prado & Zhu, 2015): deli
-opservacije u grupe, i za svaki način izbora polovine kao in-sample bira najbolju in-sample
-konfiguraciju i proverava da li taj pobednik pada u donju polovinu **out-of-sample**. **Probability of
-Backtest Overfitting (PBO)** je frakcija split-ova gde pobednik nije uspeo da generalizuje. PBO blizu 0
-znači da je najbolja konfiguracija genuino najbolja; PBO od 0.5 ili više znači da vaš proces
-selekcije bira šum — presuda postaje **Overfit** bez obzira koliko je pobednik dobro izgledao.
+Hranjenjem broja pokušaja je dobro; hranjenjem **stvarne out-of-sample serije svakog pokušaja koji ste pokušali** je bolje. Zalijepite ih u opcionalno **polje za pokušaje** (jedna serija po liniji) i cMind pokreće **Kombinatorijalno-simetrična unakrsna validacija** (Bailey, Borwein, López de Prado & Zhu, 2015): dijeli opservacije u grupe, i za svaki način odabira polovice kao in-sample bira in-sample najbolju konfiguraciju i provjerava da li taj pobjednika pada u donju polovicu **out-of-sample**. **Vjerojatnost preoptimizovanja backtesta (PBO)** je frakcija razdijela gdje pobjednika nije uspio da se generalizira. PBO blizu 0 znači da je najbolja konfiguracija zaista najbolja; PBO od 0,5 ili više znači da vaš proces selekcije bira buku — verdikt postaje **Preoptimizovan** bez obzira na to kako je dobra izgledala pobjednika.
 
 ```http
 POST /api/quant/pbo
 { "trials": [[...], [...], ...] }
 ```
 
-Kada native cTrader Console optimizer bude dostupan, cMind će ovde automatski ubaciti njegovu punu trial površinu.
+Kada nativni cTrader Console optimizator dođe, cMind će automatski hraniti njegovog punog pokušaja ovdje.
 
-## Trials — broj koji je bitan
+## Pokušaji — broj koji je bitan
 
-`Trials` je **koliko parameter sets-a ste testirali** pre nego što ste izabrali ovaj. Testiranje jedne strategije i
-testiranje deset hiljada i zadržavanje najbolje su dramatično različite stvari: drugo proizvodi
-visok in-sample Sharpe slučajno. Unošenje iskrenog trial count-a je poenta — podiže
-deflation i može premestiti „odličan" backtest u **Overfit**. Kada native cTrader Console optimizer
-bude dostupan, cMind će automatski ubaciti pravu veličinu sweep-a.
+`Trials` je **koliko ste skupova parametara testirali** prije nego što ste odabrali ovaj. Testiranje jedne strategije i testiranje deset hiljada i čuvanje najbolje su divlje različite stvari: druga proizvodi visok in-sample Sharpe slučajno. Hranjenjem činjenidnog broja pokušaja je cijela poenta — to podiže deflaciju i može premjestiti "odličan" backtest u **Preoptimizovan**. Kada nativni cTrader Console optimizator dođe, cMind ga hrani stvarnom veličinom grida pokušaja automatski.
 
 ## Ulazi
 
-- **Periodic returns** — jedan broj po periodu (npr. `0.01` = +1%). Najmanje dva.
-- **Equity / balance curve** — cMind izvodi uzastopne simple returns za vas.
-- Ili pokrenite direktno na završenom backtest-u: `POST /api/quant/integrity/backtest/{instanceId}` čita
-  equity curve iz sačuvanog izveštaja.
+- **Periodični povrati** — jedan broj po periodu (npr. `0,01` = +1%). Najmanje dva. Polje se validira dok tipkate: broji važeće brojeve, označava bilo koji token koji nije broj, i omogućava **Analize** samo kada su prisutne najmanje dvije čiste vrijednosti (polje za pokušaje omogućava **Procijeni preoptimizovanje** kada su dostupne dvije serije od četiri ili više brojeva svaka).
+- **Krivulja vlasničkog kapitala / bilansa** — cMind vam izvođa uzastopne jednostavne povrate.
+- **Direktno iz backtesta — bez kopiranja-lijepljenja.** Svaki završeni backtest izlaže štit **Provjeri integritet backtesta** ikona na listu **Backtest** i na prikazu detaljne instance; jedan klik pokreće laboratoriju na skladištenoj krivulji vlasničkog kapitala tog pokretanja i prikazuje verdikt u dijaloškom okviru. Ikona je onemogućena dok se backtest ne završi i ne proizvede izvještaj, tako da to nikada nije mrtva kontrola. Ispod haube ovo je `POST /api/quant/integrity/backtest/{instanceId}`, koji čita krivulju vlasničkog kapitala pohrantenog izvještaja.
 
 ## API
 
@@ -76,12 +56,8 @@ POST /api/quant/integrity
 { "returns": [0.006, 0.004, 0.006, ...], "trials": 250 }
 ```
 
-Vraća presudu, sve metrike, i obrazloženje. `POST /api/quant/integrity/backtest/{id}` pokreće istu
-analizu na završenom backtest-u koji posedujete.
+Vraća verdikt, sve metrike i obrazloženje. `POST /api/quant/integrity/backtest/{id}` pokreće istu analizu na završenom backtestmu koji posjedujete.
 
 ## Zašto je pouzdano
 
-Statistika su čiste funkcije u domen core-u (`Core.Quant`) bez infrastrukturnih
-zavisnosti — ne mogu biti srušene mrežnim blipom, i prikačene su golden-vector unit
-test-ovima nasuprot objavljenim formulama. Normal CDF/inverse su closed-form aproksimacije
-(Abramowitz-Stegun / Acklam), tako da isti input-i uvek daju istu presudu.
+Statistika su čiste funkcije u domeni jezgre (`Core.Quant`) sa nultim zavisnostima od infrastrukture — ne mogu biti izbačene mrežnom kvarom, i učvršćene su vektorima jedinstvenih testova sa zlatnim vektorima protiv objavljenih formula. Normalni CDF/inverz su aproksimacije zatvorene forme (Abramowitz-Stegun / Acklam), tako da isti ulazi uvijek daju isti verdikt.

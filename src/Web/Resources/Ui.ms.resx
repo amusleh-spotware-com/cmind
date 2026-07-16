@@ -4,6 +4,17 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="integrity.row.sharpe" xml:space="preserve"><value>Sharpe (setiap tempoh)</value></data>
+  <data name="integrity.row.annualized" xml:space="preserve"><value>Sharpe tahunan</value></data>
+  <data name="integrity.row.psr" xml:space="preserve"><value>Sharpe probabilistik</value></data>
+  <data name="integrity.row.dsr" xml:space="preserve"><value>Sharpe susut nilai</value></data>
+  <data name="integrity.row.tstat" xml:space="preserve"><value>statistik t</value></data>
+  <data name="integrity.row.skew" xml:space="preserve"><value>Kepencongan</value></data>
+  <data name="integrity.row.kurtosis" xml:space="preserve"><value>Kurtosis</value></data>
+  <data name="integrity.row.observations" xml:space="preserve"><value>Pemerhatian</value></data>
+  <data name="integrity.row.trials" xml:space="preserve"><value>Percubaan</value></data>
+  <data name="integrity.row.pbo" xml:space="preserve"><value>Kebarangkalian overfitting backtest</value></data>
+  <data name="integrity.loadError" xml:space="preserve"><value>Tidak dapat menjalankan pemeriksaan integriti pada backtest ini.</value></data>
   <data name="common.retry" xml:space="preserve"><value>Cuba semula</value></data>
   <data name="common.close" xml:space="preserve"><value>Tutup</value></data>
   <data name="common.cancel" xml:space="preserve"><value>Batal</value></data>
@@ -25,7 +36,7 @@
   <data name="nav.run" xml:space="preserve"><value>Jalankan</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>
   <data name="nav.optimize" xml:space="preserve"><value>Optimumkan</value></data>
-  <data name="nav.integrity" xml:space="preserve"><value>Integriti</value></data>
+  <data name="nav.integrity" xml:space="preserve"><value>Backtest Integriti</value></data>
   <data name="nav.positionSizing" xml:space="preserve"><value>Saiz posisi</value></data>
   <data name="nav.strategyHealth" xml:space="preserve"><value>Kesihatan strategi</value></data>
   <data name="nav.regimeLab" xml:space="preserve"><value>Makmal rejim</value></data>

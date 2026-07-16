@@ -161,7 +161,24 @@ public class AppFixture : IAsyncLifetime
             {
                 var r = await http.PostAsJsonAsync("/api/auth/login",
                     new { Email = OwnerEmail, Password = OwnerPassword, RememberMe = true });
-                if (r.StatusCode == HttpStatusCode.OK) return;
+                if (r.StatusCode == HttpStatusCode.OK)
+                {
+                    // Warm the post-login landing route ("/", the heavy dashboard: Razor SSR + ApexCharts +
+                    // a live SignalR circuit) with the freshly-issued auth cookie, so its FIRST server render
+                    // is JIT-compiled here — before the browser logs in and navigates there. Otherwise that
+                    // cold first render can exceed the navigation timeout and flake fixture init (seen when a
+                    // collection runs solo right after a rebuild). Best-effort: readiness never blocks on it.
+                    try
+                    {
+                        using var warm = new HttpRequestMessage(HttpMethod.Get, "/");
+                        if (r.Headers.TryGetValues("Set-Cookie", out var cookies)
+                            && cookies.FirstOrDefault() is { } cookie)
+                            warm.Headers.Add("Cookie", cookie.Split(';')[0]);
+                        await http.SendAsync(warm);
+                    }
+                    catch { /* best-effort dashboard warm-up */ }
+                    return;
+                }
             }
             catch { /* not up yet */ }
             await Task.Delay(1000);
@@ -240,7 +257,12 @@ public class AppFixture : IAsyncLifetime
         await page.FillAsync("input[name=Email]", OwnerEmail);
         await page.FillAsync("input[name=Password]", OwnerPassword);
         await page.ClickAsync("button.app-login-button");
-        await page.WaitForURLAsync($"{BaseUrl}/");
+        // Wait only for the navigation to "/" to COMMIT, not for the full Load event. The auth cookie is
+        // set on the login redirect (before "/" is fetched), so a committed navigation is enough to capture
+        // the storage state — and it avoids depending on the heavy dashboard ("/" has ApexCharts + a live
+        // SignalR circuit) finishing Load, which on a cold post-build start could exceed the nav timeout and
+        // flake fixture init (observed: a collection run solo right after a rebuild timing out here).
+        await page.WaitForURLAsync($"{BaseUrl}/", new() { WaitUntil = WaitUntilState.Commit });
         var state = await context.StorageStateAsync();
         await context.DisposeAsync();
         return state;

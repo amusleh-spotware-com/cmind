@@ -205,6 +205,18 @@ public sealed class CBotDetailPagesTests(AppFixture app)
         res.Status.Should().BeLessThan(500, "the logs endpoint must handle a missing instance without a 500");
     }
 
+    // The detail page polls /api/instances/current to follow an instance across its TPH transitions; the
+    // endpoint must be reachable and degrade cleanly (404 for an unknown lineage), never a 500.
+    [Fact]
+    public async Task Instance_current_endpoint_is_reachable_and_never_500s()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var createdAt = Uri.EscapeDataString(DateTimeOffset.UtcNow.ToString("O"));
+        var res = await page.APIRequest.GetAsync(
+            app.BaseUrl + $"/api/instances/current?cbotId={Guid.NewGuid()}&createdAt={createdAt}");
+        res.Status.Should().BeLessThan(500, "the current-lineage endpoint must handle an unknown lineage without a 500");
+    }
+
     private static async Task<string> CreateProjectAsync(IPage page, string name, string language)
     {
         await page.GotoAsync("/cbots");

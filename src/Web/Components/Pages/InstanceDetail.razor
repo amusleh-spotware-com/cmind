@@ -71,7 +71,7 @@
         @if (_isBacktest && _equity.Count > 0)
         {
             <div class="flex-none instance-chart">
-                <ApexChart TItem="EquityPoint" Title="Equity curve">
+                <ApexChart TItem="EquityPoint" Title="Equity curve" Options="_chartOptions" Height="220">
                     <ApexPointSeries TItem="EquityPoint" Items="_equity" Name="Equity"
                                      XValue="@(p => p.Ts)" YValue="@(p => (decimal)p.Value)" SeriesType="SeriesType.Line" />
                 </ApexChart>
@@ -136,6 +136,43 @@
     private List<EquityPoint> _equity = new();
     private List<CalendarEventView> _calendarEvents = new();
     private HubConnection? _hub;
+    // The instance id changes on every TPH transition; track the current one plus a stable lineage key
+    // (cBot + CreatedAt is preserved across transitions) so the page can follow the instance as it runs.
+    private Guid _currentId;
+    private Guid? _lineageCbotId;
+    private DateTimeOffset? _lineageCreatedAt;
+    private CancellationTokenSource? _pollCts;
+    private readonly ApexChartOptions<EquityPoint> _chartOptions = new();
+
+    // Configure the equity chart before first render (see DashActivityChart for the ApexCharts init gotcha):
+    // a fixed height and a compact, integer Y axis with few ticks so the axis labels stay narrow and the
+    // chart never needs its own scrollbars.
+    protected override void OnInitialized()
+    {
+        _chartOptions.Chart = new Chart
+        {
+            Toolbar = new Toolbar { Show = false },
+            Background = "transparent",
+            Animations = new Animations { Enabled = false },
+            FontFamily = "Inter, sans-serif"
+        };
+        _chartOptions.Theme = new ApexCharts.Theme { Mode = Mode.Dark };
+        _chartOptions.Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 };
+        _chartOptions.DataLabels = new DataLabels { Enabled = false };
+        _chartOptions.Xaxis = new XAxis { Type = XAxisType.Datetime };
+        _chartOptions.Yaxis =
+        [
+            new YAxis
+            {
+                DecimalsInFloat = 0,
+                TickAmount = 5,
+                Labels = new YAxisLabels
+                {
+                    Formatter = "function (val) { return val == null ? '' : Math.round(val).toLocaleString(); }"
+                }
+            }
+        ];
+    }
 
     private bool IsActive => _detail is not null
         && ((string)_detail.status) is "Running" or "Starting" or "Stopping";
@@ -160,10 +197,10 @@
         StateHasChanged();
         try
         {
-            var r = await Http.PostAsync($"/api/instances/{Id}/stop", null);
+            var r = await Http.PostAsync($"/api/instances/{_currentId}/stop", null);
             Snack.Add(r.IsSuccessStatusCode ? "Instance stopped" : "Stop failed",
                 r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
-            try { _detail = await Http.GetDynamicAsync($"/api/instances/{Id}"); } catch { /* keep prior */ }
+            await RefreshFromCurrentAsync();
         }
         finally { _stopping = false; }
     }
@@ -175,7 +212,7 @@
         StateHasChanged();
         try
         {
-            var r = await Http.PostAsync($"/api/instances/{Id}/start", null);
+            var r = await Http.PostAsync($"/api/instances/{_currentId}/start", null);
             if (!r.IsSuccessStatusCode) { Snack.Add("Start failed", Severity.Error); return; }
             Snack.Add("Instance started", Severity.Success);
             // Restart creates a NEW instance — navigate to it.
@@ -191,8 +228,8 @@
     {
         try
         {
-            var text = await Http.GetStringAsync($"/api/instances/{Id}/logs");
-            await JS.InvokeVoidAsync("appDownloadText", $"instance-{Id:N}.log", text);
+            var text = await Http.GetStringAsync($"/api/instances/{_currentId}/logs");
+            await JS.InvokeVoidAsync("appDownloadText", $"instance-{_currentId:N}.log", text);
         }
         catch
         {
@@ -210,32 +247,53 @@
 
     protected override async Task OnInitializedAsync()
     {
-        try { _detail = await Http.GetDynamicAsync($"/api/instances/{Id}"); }
-        catch { _detail = null; }
+        dynamic? detail = null;
+        try { detail = await Http.GetDynamicAsync($"/api/instances/{Id}"); }
+        catch { detail = null; }
         _loaded = true;
-        if (_detail is null) return;
-        _isBacktest = (string)_detail.kind == "Backtest";
-        if (_isBacktest && _detail?.equity is not null)
-        {
-            foreach (var p in _detail.equity)
-                _equity.Add(new EquityPoint(((DateTimeOffset)p.timestamp).UtcDateTime, (double)p.value));
-        }
+        if (detail is null) return;
+        ApplyDetail(detail);
 
         await LoadCalendarOverlayAsync();
 
         // For a terminal instance the container is gone, so seed the persisted console log (last run) — it
         // stays viewable and downloadable. An active instance streams its logs live below instead.
-        if (!IsActive)
-        {
-            try
-            {
-                var persisted = await Http.GetStringAsync($"/api/instances/{Id}/logs");
-                if (!string.IsNullOrEmpty(persisted))
-                    _logs = persisted.Replace("\r\n", "\n").Split('\n').TakeLast(500).ToList();
-            }
-            catch { /* no persisted logs for this instance */ }
-        }
+        if (!IsActive) await SeedPersistedLogsAsync();
 
+        await StartLogStreamAsync();
+        StartPolling();
+    }
+
+    // Applies a fetched instance-detail payload: current id, kind, lineage key (captured once) and the
+    // equity curve (re-parsed so a backtest's chart appears once it completes).
+    private void ApplyDetail(dynamic detail)
+    {
+        _detail = detail;
+        _currentId = (Guid)detail.id;
+        _isBacktest = (string)detail.kind == "Backtest";
+        _lineageCbotId ??= (Guid)detail.cBotId;
+        _lineageCreatedAt ??= (DateTimeOffset)detail.createdAt;
+
+        var points = new List<EquityPoint>();
+        if (_isBacktest && detail.equity is not null)
+            foreach (var p in detail.equity)
+                points.Add(new EquityPoint(((DateTimeOffset)p.timestamp).UtcDateTime, (double)p.value));
+        _equity = points;
+    }
+
+    private async Task SeedPersistedLogsAsync()
+    {
+        try
+        {
+            var persisted = await Http.GetStringAsync($"/api/instances/{_currentId}/logs");
+            if (!string.IsNullOrEmpty(persisted))
+                _logs = persisted.Replace("\r\n", "\n").Split('\n').TakeLast(500).ToList();
+        }
+        catch { /* no persisted logs for this instance */ }
+    }
+
+    private async Task StartLogStreamAsync()
+    {
         try
         {
             _hub = HubFactory.Create();
@@ -247,9 +305,9 @@
             return;
         }
 
-        var stream = _hub.StreamAsync<string>("Tail", Id);
-        // Stream errors (a terminal instance whose container is gone, a docker error, a dropped
-        // connection) must never bubble out of this background task and tear down the Blazor circuit.
+        var stream = _hub.StreamAsync<string>("Tail", _currentId);
+        // Stream errors (a terminal instance whose container is gone, a docker error, a dropped connection)
+        // must never bubble out of this background task and tear down the Blazor circuit.
         _ = Task.Run(async () =>
         {
             try
@@ -272,6 +330,58 @@
             catch { /* log stream ended or failed — nothing to tail */ }
         });
     }
+
+    // Follow the instance across TPH transitions: poll the lineage until it reaches a terminal state, then
+    // stop. Keeps the status chip, Stop/Start button and equity curve current without a manual refresh.
+    private void StartPolling()
+    {
+        _pollCts = new CancellationTokenSource();
+        var ct = _pollCts.Token;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                while (!ct.IsCancellationRequested && !IsTerminalStatus
+                       && _lineageCbotId is { } cbid && _lineageCreatedAt is { } cat)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(4), ct);
+                    dynamic? current = null;
+                    try { current = await Http.GetDynamicAsync(CurrentUrl(cbid, cat)); }
+                    catch { current = null; }
+                    if (current is null) continue;
+                    var wasActive = IsActive;
+                    await InvokeAsync(async () =>
+                    {
+                        ApplyDetail(current);
+                        await LoadCalendarOverlayAsync();
+                        if (wasActive && IsTerminalStatus) await SeedPersistedLogsAsync();
+                        StateHasChanged();
+                    });
+                }
+            }
+            catch (OperationCanceledException) { /* disposed */ }
+            catch { /* transient — polling ends */ }
+        });
+    }
+
+    private async Task RefreshFromCurrentAsync()
+    {
+        if (_lineageCbotId is not { } cbid || _lineageCreatedAt is not { } cat) return;
+        try
+        {
+            var wasActive = IsActive;
+            var current = await Http.GetDynamicAsync(CurrentUrl(cbid, cat));
+            if (current is not null)
+            {
+                ApplyDetail(current);
+                if (wasActive && IsTerminalStatus) await SeedPersistedLogsAsync();
+            }
+        }
+        catch { /* keep prior state */ }
+    }
+
+    private static string CurrentUrl(Guid cbotId, DateTimeOffset createdAt) =>
+        $"/api/instances/current?cbotId={cbotId}&createdAt={Uri.EscapeDataString(createdAt.ToString("O"))}";
 
     // Point-in-time-correct economic-event overlay: the high-impact releases affecting the backtested
     // symbol that fell inside the backtest window (no look-ahead — asOf is the window end).
@@ -303,5 +413,10 @@
         _ => MudBlazor.Color.Default
     };
 
-    public async ValueTask DisposeAsync() { if (_hub is not null) await _hub.DisposeAsync(); }
+    public async ValueTask DisposeAsync()
+    {
+        try { _pollCts?.Cancel(); } catch { /* already disposed */ }
+        _pollCts?.Dispose();
+        if (_hub is not null) await _hub.DisposeAsync();
+    }
 }

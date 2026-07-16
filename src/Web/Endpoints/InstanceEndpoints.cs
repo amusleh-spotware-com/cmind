@@ -76,20 +76,33 @@ public static class InstanceEndpoints
                 return Results.Forbid();
             }
 
-            var equity = i is CompletedBacktestInstance completed
-                ? ContainerCommandHelpers.ParseEquityCurve(completed.ReportJson)
-                    .Select(p => new { p.Timestamp, p.Value })
-                : null;
+            return Results.Ok(BuildDetail(i));
+        });
 
-            return Results.Ok(new
+        // Resolve the CURRENT state of an instance lineage. A TPH transition replaces the entity (its id
+        // changes) while preserving CreatedAt, so a detail page keyed on one id goes stale; polling this by
+        // (cBot, createdAt) follows the lineage across Starting → Running → Stopped/Completed/Failed.
+        g.MapGet("/current", async (Guid cbotId, DateTimeOffset createdAt, DataContext db, ICurrentUser u) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var cid = CBotId.From(cbotId);
+            var i = await db.Instances.AsNoTracking()
+                .Where(x => x.CBotId == cid && x.CreatedAt == createdAt)
+                .OrderByDescending(x => x.UpdatedAt)
+                .FirstOrDefaultAsync();
+            if (i is null) return Results.NotFound();
+            if (u.IsInRole("Viewer"))
             {
-                i.Id,
-                Kind = i.KindName,
-                Status = i.StatusName,
-                i.Symbol,
-                i.Timeframe,
-                Equity = equity
-            });
+                var viewer = await db.Users.OfType<ViewerUser>().FirstOrDefaultAsync(x => x.Id == uid);
+                if (viewer is null) return Results.Unauthorized();
+                if (!viewer.SeeAllInstances && !await db.ViewerGrants.AnyAsync(v => v.ViewerId == uid && v.InstanceId == i.Id))
+                    return Results.Forbid();
+            }
+            else if (u.IsInRole("User") && i.UserId != uid)
+            {
+                return Results.Forbid();
+            }
+            return Results.Ok(BuildDetail(i));
         });
 
         g.MapPost("/", async (StartRequest req, DataContext db, ICurrentUser u,
@@ -329,6 +342,24 @@ public static class InstanceEndpoints
         });
 
         return app;
+    }
+
+    private static object BuildDetail(Instance i)
+    {
+        var equity = i is CompletedBacktestInstance completed
+            ? ContainerCommandHelpers.ParseEquityCurve(completed.ReportJson).Select(p => new { p.Timestamp, p.Value })
+            : null;
+        return new
+        {
+            i.Id,
+            Kind = i.KindName,
+            Status = i.StatusName,
+            i.Symbol,
+            i.Timeframe,
+            Equity = equity,
+            i.CreatedAt,
+            i.CBotId
+        };
     }
 
     private const int MaxLogChars = 200_000;

@@ -57,52 +57,32 @@ Przesłany `.algo` nigdy nie został tutaj zbudowany, więc jego kolumna **Last 
 
 **Zatrzymana** instancja (uruchomienie lub test wstecz) ma kontrolę **Edit** — ikonę na jej wierszu na liście **i** obok Start/Stop na stronie szczegółów — która otwiera dialog **wstępnie wypełniony** jego bieżącą konfiguracją. Możesz zmienić **konto handlowe, symbol, timeframe, zestaw parametrów i tag obrazu** (i, dla testu wstecz, **okno i wszystkie powyższe ustawienia testu wstecz**), a następnie **Zapisz i uruchom** ponownie uruchamia go z nowymi ustawieniami (zastępując zatrzymaną instancję). Kontrola jest **wyłączona, gdy instancja jest aktywna** — tylko zatrzymana instancja może być edytowana.
 
-## Run from the code editor
+## Uruchomienie z edytora kodu
 
-Clicking **Run** in the code editor opens a dialog instead of firing a blind, hard-coded run:
+Kliknięcie **Run** w edytorze kodu otwiera dialog zamiast bezumyślnego, ustalonego uruchomienia:
 
-- **Trading account** (required) — the cTrader account the cBot connects to.
-- **Parameter set** (optional) — pick an existing set, or leave it empty to run with the cBot's
-  **default parameter values**. A **+** button next to the selector creates a new parameter set
-  inline (see below) and selects it.
-- **Symbol / Timeframe** default to `EURUSD` / `h1` and can be changed; **Cancel** or **Run**.
+- **Konto handlowe** (wymagane) — konto cTradera, do którego podłącza się cBot.
+- **Zestaw parametrów** (opcjonalnie) — wybierz istniejący zestaw lub zostaw pusty, aby uruchomić z **domyślnymi wartościami parametrów** cBota. Przycisk **+** obok selektora tworzy nowy zestaw parametrów wbudowany (patrz poniżej) i go wybiera.
+- **Symbol / Timeframe** domyślnie przyjmują `EURUSD` / `h1` i mogą być zmieniane; **Anuluj** lub **Run**.
 
-On **Run** the editor saves + builds the current source, starts the instance on the chosen account
-with the chosen parameters, then tails the live container logs. (The log stream forwards the
-signed-in user's auth cookie to the `/hubs/logs` SignalR hub, so it connects instead of failing with
-`Invalid negotiation response received`.)
+Na **Run** edytor zapisuje + buduje bieżące źródło, uruchamia instancję na wybranym koncie z wybranymi parametrami, a następnie śledzi dzienniki kontenera na żywo. (Strumień dziennika przekazuje plik cookie uwierzytelnienia zalogowanego użytkownika do concentratora SignalR `/hubs/logs`, dzięki czemu się podłącza zamiast ulegać awarii z `Invalid negotiation response received`.)
 
-## Parameter sets
+## Zestawy parametrów
 
-A **parameter set** is a named, reusable set of cBot parameter overrides stored as a flat JSON
-object mapping each parameter name to a scalar value, e.g. `{"Period": 14, "Label": "trend"}`. At
-run/backtest time it is turned into the cTrader `params.cbotset` file
-(`{ "Parameters": { … } }`). You can create/edit a set as raw JSON from the cBot's **Parameter
-sets** dialog or inline from the Run dialog.
+**Zestaw parametrów** to nazwany, wielokrotnego użytku zestaw zmian parametrów cBota przechowywany jako płaski obiekt JSON mapujący każdą nazwę parametru na wartość skalarną, np. `{"Period": 14, "Label": "trend"}`. W momencie uruchomienia/testu wstecz jest przekształcany w plik cTradera `params.cbotset` (`{ "Parameters": { … } }`). Możesz utworzyć/edytować zestaw jako surowy JSON z dialogu **Parameter sets** cBota lub wbudowany z dialogu Run.
 
-Every parameter set **belongs to a cBot**: the New Parameter Set dialog lists all your cBots and you
-**must pick one** — creation is blocked until a cBot is selected. A set's **name is unique per cBot**:
-creating or renaming a set to a name another set of the same cBot already uses is rejected (a clear
-error in the dialog, `409 Conflict` at the API). The same name may be reused on a **different** cBot.
+Każdy zestaw parametrów **należy do cBota**: dialog Nowy zestaw parametrów wyświetla wszystkie Twoje cBoty i **musisz wybrać jeden** — tworzenie jest blokowane do czasu wybrania cBota. **Nazwa zestawu jest unikalna dla cBota**: utworzenie lub zmiana nazwy zestawu na nazwę, którą już ma inny zestaw tego samego cBota, jest odrzucane (wyraźny błąd w dialogu, `409 Conflict` w interfejsie API). Ta sama nazwa może być ponownie użyta na **innym** cBocie.
 
-The JSON is **validated** on save: it must be a single flat object whose values are all scalars
-(string / number / bool). A non-object root, an array, a nested object, a `null` value, or malformed
-JSON is rejected (a clear error in the dialog, `400 Bad Request` at the API). An empty object `{}`
-is allowed and means "no overrides".
+JSON jest **sprawdzany** przy zapisie: musi to być pojedynczy płaski obiekt, którego wartości są wszystkimi skalarami (ciąg / liczba / bool). Główny element inny niż obiekt, tablica, zagnieżdżony obiekt, wartość `null` lub źle sformułowany JSON jest odrzucany (wyraźny błąd w dialogu, `400 Bad Request` w interfejsie API). Pusty obiekt `{}` jest dozwolony i oznacza "brak zmian".
 
-## cTrader Console CLI notes
+## Notatki dotyczące wiersza poleceń konsoli cTradera
 
-Backtests need `--data-mode` (default `m1`), dates as `dd/MM/yyyy HH:mm`, and
-`params.cbotset` JSON positional arg; `run` reject `--data-dir` (backtest-only). See
-`ContainerCommandHelpers`.
+Testy wstecz wymagają `--data-mode` (domyślnie `m1`), dat jako `dd/MM/yyyy HH:mm` i argumentu pozycyjnego JSON `params.cbotset`; `run` odrzuca `--data-dir` (tylko test wstecz). Patrz `ContainerCommandHelpers`.
 
-## Nodes & scale
+## Węzły i skalowanie
 
-Execution capacity scale by adding node agents (self-register + heartbeat). See
-[node discovery](../operations/node-discovery.md) and [scaling](../deployment/scaling.md).
-## A trading account is required
+Zdolność wykonawcza skaluje się przez dodawanie agentów węzłów (samorejestracja + puls). Patrz [odkrywanie węzłów](../operations/node-discovery.md) i [skalowanie](../deployment/scaling.md).
 
-Running or backtesting a cBot needs a cTrader trading account to connect to. Until you add one under
-**Trading accounts**, the **Run New cBot** / **Backtest New cBot** buttons are disabled (with a
-tooltip) and the page shows a prompt linking to account setup — you no longer hit a raw
-`stream connect failed` error from a bot with no account.
+## Wymagane jest konto handlowe
+
+Uruchomienie lub testowanie wstecz cBota wymaga konta handlowego cTradera, do którego się podłączy. Dopóki nie dodasz jednego w **Kontach handlowych**, przyciski **Uruchom nowy cBot** / **Testuj wstecz nowy cBot** są wyłączone (z podpowiedzią) i strona wyświetla monit łączący do konfiguracji konta — nie trafisz już na surowy błąd `stream connect failed` z cBota bez konta.

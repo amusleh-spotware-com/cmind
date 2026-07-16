@@ -15,6 +15,11 @@
   <data name="integrity.row.trials" xml:space="preserve"><value>Pokusy</value></data>
   <data name="integrity.row.pbo" xml:space="preserve"><value>Pravdepodobnosť pretrénovania backtestu</value></data>
   <data name="integrity.loadError" xml:space="preserve"><value>Kontrolu integrity tohto backtestu sa nepodarilo spustiť.</value></data>
+  <data name="health.loadError" xml:space="preserve"><value>Nepodarilo sa spustiť kontrolu zdravia stratégie na tomto backteste.</value></data>
+  <data name="health.row.earlierSharpe" xml:space="preserve"><value>Skorší Sharpe</value></data>
+  <data name="health.row.recentSharpe" xml:space="preserve"><value>Nedávny Sharpe</value></data>
+  <data name="health.row.changePoint" xml:space="preserve"><value>Bod zmeny pri pozorovaní</value></data>
+  <data name="health.row.observations" xml:space="preserve"><value>Pozorovania</value></data>
   <data name="common.retry" xml:space="preserve"><value>Skúsiť znova</value></data>
   <data name="common.close" xml:space="preserve"><value>Zavrieť</value></data>
   <data name="common.cancel" xml:space="preserve"><value>Zrušiť</value></data>
@@ -32,6 +37,7 @@
   <data name="layout.pageError" xml:space="preserve"><value>Na tejto stránke sa vyskytla chyba.</value></data>
   <data name="nav.dashboard" xml:space="preserve"><value>Prehľad</value></data>
   <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.group.tools" xml:space="preserve"><value>Nástroje</value></data>
   <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
   <data name="nav.run" xml:space="preserve"><value>Spustiť</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>

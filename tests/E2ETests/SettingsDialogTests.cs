@@ -64,4 +64,28 @@ public sealed class SettingsDialogTests(AppFixture app)
         await page.GetByRole(AriaRole.Button, new() { Name = "Close settings" }).ClickAsync();
         await dialog.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 8000 });
     }
+
+    [Fact]
+    public async Task Time_zone_section_does_not_scroll_horizontally()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        await page.Locator("[data-testid=nav-settings]").ClickAsync();
+        var dialog = page.Locator("[data-testid=settings-dialog]");
+        await dialog.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
+
+        await page.Locator("[data-testid=settings-section-timezone]").ClickAsync();
+        await page.Locator("[data-testid=settings-timezone-panel]")
+            .WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 8000 });
+
+        // The full-width time-zone autocomplete used to push the windowed dialog wide, giving it a
+        // horizontal scrollbar; the content panel must contain itself now.
+        var fits = await page.EvaluateAsync<bool>(
+            "() => { const c = document.querySelector('.mud-dialog-content'); return !!c && c.scrollWidth <= c.clientWidth + 1; }");
+        fits.Should().BeTrue("the time-zone settings panel must not scroll horizontally");
+
+        (await page.Locator("[data-testid=page-error]").IsVisibleAsync()).Should().BeFalse();
+    }
 }

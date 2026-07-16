@@ -39,4 +39,24 @@ public sealed class NavMenuTests(AppFixture app)
         (await page.Locator("a[href='/ai/optimize']").CountAsync()).Should().Be(1, "AI Optimize");
         (await page.Locator("a[href='/copy-trading']").CountAsync()).Should().BeGreaterThan(0);
     }
+
+    [Fact]
+    public async Task Tools_group_holds_the_quant_analytics_pages()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        // The quant analytics pages now live under a dedicated "Tools" group, moved out of cBots. Assert
+        // structurally (the links are inside the Tools group and no longer under cBots) — independent of the
+        // collapse-animation timing.
+        var toolsGroup = page.Locator(".mud-nav-group:has(button:has-text('Tools'))");
+        (await toolsGroup.Locator("a[href='/quant/integrity']").CountAsync()).Should().Be(1);
+        (await toolsGroup.Locator("a[href='/quant/sizing']").CountAsync()).Should().Be(1);
+        (await toolsGroup.Locator("a[href='/quant/execution']").CountAsync()).Should().Be(1);
+
+        var cbotsGroup = page.Locator(".mud-nav-group:has(button:has-text('cBots'))");
+        (await cbotsGroup.Locator("a[href='/quant/integrity']").CountAsync())
+            .Should().Be(0, "the quant pages moved from cBots to Tools");
+    }
 }

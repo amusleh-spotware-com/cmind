@@ -15,6 +15,11 @@
   <data name="integrity.row.trials" xml:space="preserve"><value>Denemeler</value></data>
   <data name="integrity.row.pbo" xml:space="preserve"><value>Geriye dönük test aşırı uyum olasılığı</value></data>
   <data name="integrity.loadError" xml:space="preserve"><value>Bu geriye dönük testte bütünlük kontrolü çalıştırılamadı.</value></data>
+  <data name="health.loadError" xml:space="preserve"><value>Bu backtest için strateji sağlığı kontrolü çalıştırılamadı.</value></data>
+  <data name="health.row.earlierSharpe" xml:space="preserve"><value>Daha Önceki Sharpe</value></data>
+  <data name="health.row.recentSharpe" xml:space="preserve"><value>Son Sharpe</value></data>
+  <data name="health.row.changePoint" xml:space="preserve"><value>Gözlemdeki değişim noktası</value></data>
+  <data name="health.row.observations" xml:space="preserve"><value>Gözlemler</value></data>
   <data name="common.retry" xml:space="preserve"><value>Yeniden dene</value></data>
   <data name="common.close" xml:space="preserve"><value>Kapat</value></data>
   <data name="common.cancel" xml:space="preserve"><value>İptal</value></data>
@@ -32,6 +37,7 @@
   <data name="layout.pageError" xml:space="preserve"><value>Bu sayfada bir hata oluştu.</value></data>
   <data name="nav.dashboard" xml:space="preserve"><value>Pano</value></data>
   <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.group.tools" xml:space="preserve"><value>Araçlar</value></data>
   <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
   <data name="nav.run" xml:space="preserve"><value>Çalıştır</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>

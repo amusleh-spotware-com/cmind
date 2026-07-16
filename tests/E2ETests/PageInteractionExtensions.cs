@@ -30,6 +30,25 @@ internal static class PageInteractionExtensions
         await page.ClickAsync(clickSelector, options);
     }
 
+    // Same interactive-circuit race, but the observable is a control becoming ENABLED (a disabled action
+    // toggling on once valid input lands). A field fill issued before the circuit is connected is dropped,
+    // so the disabled→enabled transition never happens; re-apply the fill action until the control enables.
+    public static async Task RunUntilEnabledAsync(this IPage page, Func<Task> action, ILocator expected,
+        int attempts = 15)
+    {
+        for (var attempt = 0; attempt < attempts; attempt++)
+        {
+            await action();
+            try
+            {
+                await Assertions.Expect(expected).ToBeEnabledAsync(new() { Timeout = 2000 });
+                return;
+            }
+            catch (PlaywrightException) { /* circuit not interactive / fill not yet applied — retry */ }
+        }
+        await action();
+    }
+
     // Same race, but for a multi-step trigger (e.g. flip a mode toggle THEN click analyze): re-run the whole
     // action each attempt so a first step dropped before the circuit was interactive is re-applied, not just
     // the final click. Without this, a lost toggle click leaves the page computing in the wrong mode and the

@@ -15,6 +15,11 @@
   <data name="integrity.row.trials" xml:space="preserve"><value>Покушаји</value></data>
   <data name="integrity.row.pbo" xml:space="preserve"><value>Вероватноћа преприлагођавања бектеста</value></data>
   <data name="integrity.loadError" xml:space="preserve"><value>Провера интегритета овог бектеста није могла да се покрене.</value></data>
+  <data name="health.loadError" xml:space="preserve"><value>Провера здравља стратегије овог бектеста није могла да се покрене.</value></data>
+  <data name="health.row.earlierSharpe" xml:space="preserve"><value>Ранији Sharpe</value></data>
+  <data name="health.row.recentSharpe" xml:space="preserve"><value>Недавни Sharpe</value></data>
+  <data name="health.row.changePoint" xml:space="preserve"><value>Тачка промене код опажања</value></data>
+  <data name="health.row.observations" xml:space="preserve"><value>Опажања</value></data>
   <data name="common.retry" xml:space="preserve"><value>Покушај поново</value></data>
   <data name="common.close" xml:space="preserve"><value>Затвори</value></data>
   <data name="common.cancel" xml:space="preserve"><value>Откажи</value></data>
@@ -32,6 +37,7 @@
   <data name="layout.pageError" xml:space="preserve"><value>Дошло је до грешке на овој страници.</value></data>
   <data name="nav.dashboard" xml:space="preserve"><value>Контролна табла</value></data>
   <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.group.tools" xml:space="preserve"><value>Алатке</value></data>
   <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
   <data name="nav.run" xml:space="preserve"><value>Покрени</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>Бектест</value></data>

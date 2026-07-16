@@ -15,6 +15,11 @@
   <data name="integrity.row.trials" xml:space="preserve"><value>Próby</value></data>
   <data name="integrity.row.pbo" xml:space="preserve"><value>Prawdopodobieństwo przeuczenia backtestu</value></data>
   <data name="integrity.loadError" xml:space="preserve"><value>Nie udało się uruchomić kontroli integralności dla tego backtestu.</value></data>
+  <data name="health.loadError" xml:space="preserve"><value>Nie udało się uruchomić sprawdzenia kondycji strategii na tym backteście.</value></data>
+  <data name="health.row.earlierSharpe" xml:space="preserve"><value>Wcześniejszy Sharpe</value></data>
+  <data name="health.row.recentSharpe" xml:space="preserve"><value>Ostatni Sharpe</value></data>
+  <data name="health.row.changePoint" xml:space="preserve"><value>Punkt zmiany na obserwacji</value></data>
+  <data name="health.row.observations" xml:space="preserve"><value>Obserwacje</value></data>
   <data name="common.retry" xml:space="preserve"><value>Ponów</value></data>
   <data name="common.close" xml:space="preserve"><value>Zamknij</value></data>
   <data name="common.cancel" xml:space="preserve"><value>Anuluj</value></data>
@@ -32,6 +37,7 @@
   <data name="layout.pageError" xml:space="preserve"><value>Na tej stronie wystąpił błąd.</value></data>
   <data name="nav.dashboard" xml:space="preserve"><value>Pulpit</value></data>
   <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.group.tools" xml:space="preserve"><value>Narzędzia</value></data>
   <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
   <data name="nav.run" xml:space="preserve"><value>Uruchom</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>

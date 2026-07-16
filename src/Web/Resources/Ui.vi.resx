@@ -15,6 +15,11 @@
   <data name="integrity.row.trials" xml:space="preserve"><value>Số lần thử</value></data>
   <data name="integrity.row.pbo" xml:space="preserve"><value>Xác suất khớp quá mức của backtest</value></data>
   <data name="integrity.loadError" xml:space="preserve"><value>Không thể chạy kiểm tra tính toàn vẹn trên backtest này.</value></data>
+  <data name="health.loadError" xml:space="preserve"><value>Không thể chạy kiểm tra sức khỏe chiến lược trên backtest này.</value></data>
+  <data name="health.row.earlierSharpe" xml:space="preserve"><value>Sharpe trước đó</value></data>
+  <data name="health.row.recentSharpe" xml:space="preserve"><value>Sharpe gần đây</value></data>
+  <data name="health.row.changePoint" xml:space="preserve"><value>Điểm thay đổi tại quan sát</value></data>
+  <data name="health.row.observations" xml:space="preserve"><value>Số quan sát</value></data>
   <data name="common.retry" xml:space="preserve"><value>Thử lại</value></data>
   <data name="common.close" xml:space="preserve"><value>Đóng</value></data>
   <data name="common.cancel" xml:space="preserve"><value>Hủy</value></data>
@@ -32,6 +37,7 @@
   <data name="layout.pageError" xml:space="preserve"><value>Đã xảy ra lỗi trên trang này.</value></data>
   <data name="nav.dashboard" xml:space="preserve"><value>Bảng điều khiển</value></data>
   <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.group.tools" xml:space="preserve"><value>Công cụ</value></data>
   <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
   <data name="nav.run" xml:space="preserve"><value>Chạy</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>

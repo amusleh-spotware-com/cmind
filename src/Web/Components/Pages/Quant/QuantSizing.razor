@@ -15,23 +15,50 @@
 <MudGrid>
     <MudItem xs="12" md="5">
         <MudPaper Class="pa-4" Elevation="1">
-            <MudTextField @bind-Value="_series" Label="Returns or equity curve"
-                          Lines="6" Variant="Variant.Outlined"
-                          HelperText="Comma/space/newline separated numbers." />
-            <MudRadioGroup @bind-Value="_mode" Class="mt-2">
-                <MudRadio Value="@("returns")" Color="Color.Primary">Periodic returns</MudRadio>
-                <MudRadio Value="@("equity")" Color="Color.Primary">Equity / balance curve</MudRadio>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+                <MudText Typo="Typo.subtitle1">Return / equity series</MudText>
+                <HelpTip Text="Enter one value per period in the numeric fields — no pasting. Add or remove rows as needed. Toggle the mode if your values are an equity/balance curve rather than periodic returns." />
+            </MudStack>
+            <MudRadioGroup @bind-Value="_mode" Class="mb-2">
+                <MudRadio Value="@("returns")" Color="Color.Primary" Dense="true">Periodic returns (e.g. 0.01 = +1%)</MudRadio>
+                <MudRadio Value="@("equity")" Color="Color.Primary" Dense="true">Equity / balance curve</MudRadio>
             </MudRadioGroup>
+
+            @for (var i = 0; i < _values.Count; i++)
+            {
+                var index = i;
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="width:26px">@(index + 1)</MudText>
+                    <MudNumericField T="double?" @bind-Value="_values[index]" Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" Immediate="true" Class="flex-grow-1"
+                                     data-testid="@($"series-value-{index}")" aria-label="@($"Value {index + 1}")" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Color="Color.Error"
+                                   Disabled="@(_values.Count <= 2)" aria-label="Remove value"
+                                   OnClick="@(() => RemoveValue(index))" data-testid="@($"series-remove-{index}")" />
+                </MudStack>
+            }
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-1 mb-2">
+                <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="AddValue"
+                           data-testid="series-add">Add value</MudButton>
+                <MudText Typo="Typo.caption" data-testid="series-count"
+                         Color="@(SeriesValidCount >= 2 ? Color.Success : Color.Default)">
+                    @($"{SeriesValidCount} value(s)" + (SeriesValidCount < 2 ? " — need at least 2" : ""))
+                </MudText>
+            </MudStack>
+
             <MudNumericField @bind-Value="_targetVolPct" Label="Target volatility (% per year)" Min="0.1" Max="500"
-                             Variant="Variant.Outlined" Class="mt-2" />
+                             Step="0.5" Variant="Variant.Outlined" Immediate="true" Class="mt-2"
+                             Error="@(!TargetVolValid)" ErrorText="Enter a target volatility between 0.1% and 500%." />
             <MudNumericField @bind-Value="_kelly" Label="Kelly fraction" Min="0.01" Max="1"
-                             Variant="Variant.Outlined" Class="mt-2"
+                             Step="0.05" Variant="Variant.Outlined" Immediate="true" Class="mt-2"
+                             Error="@(!KellyValid)" ErrorText="Enter a Kelly fraction between 0.01 and 1."
                              HelperText="Fraction of full Kelly (0.5 = half-Kelly, the common safe choice)." />
             <MudNumericField @bind-Value="_leverageCap" Label="Leverage cap (×)" Min="0.1" Max="100"
-                             Variant="Variant.Outlined" Class="mt-2" />
+                             Step="0.5" Variant="Variant.Outlined" Immediate="true" Class="mt-2"
+                             Error="@(!LeverageValid)" ErrorText="Enter a leverage cap between 0.1× and 100×." />
             <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
                        StartIcon="@Icons.Material.Filled.Balance" OnClick="Calculate"
-                       Disabled="_loading" data-testid="sizing-calculate">
+                       Disabled="@(_loading || SeriesValidCount < 2 || !InputsValid)" data-testid="sizing-calculate">
                 Recommend size
             </MudButton>
         </MudPaper>
@@ -69,7 +96,8 @@
 </MudGrid>
 
 @code {
-    private string _series = "";
+    // Structured numeric input — one field per period, never a free-text blob. null = an empty row.
+    private readonly List<double?> _values = [null, null];
     private string _mode = "returns";
     private double _targetVolPct = 10;
     private double _kelly = 0.5;
@@ -78,12 +106,26 @@
     private SizingResult? _result;
     private readonly CancellationTokenSource _cts = new();
 
+    private int SeriesValidCount => _values.Count(v => v is not null);
+    private bool TargetVolValid => _targetVolPct is >= 0.1 and <= 500;
+    private bool KellyValid => _kelly is >= 0.01 and <= 1;
+    private bool LeverageValid => _leverageCap is >= 0.1 and <= 100;
+    private bool InputsValid => TargetVolValid && KellyValid && LeverageValid;
+
+    private void AddValue() => _values.Add(null);
+    private void RemoveValue(int index) { if (_values.Count > 2) _values.RemoveAt(index); }
+
     private async Task Calculate()
     {
-        var numbers = Parse(_series);
+        var numbers = _values.Where(v => v is not null).Select(v => v!.Value).ToArray();
         if (numbers.Length < 2)
         {
-            Snack.Add("Enter at least two numbers.", Severity.Warning);
+            Snack.Add("Enter at least two values.", Severity.Warning);
+            return;
+        }
+        if (!InputsValid)
+        {
+            Snack.Add("Check the target volatility, Kelly fraction and leverage cap.", Severity.Warning);
             return;
         }
 
@@ -121,17 +163,6 @@
     {
         _cts.Cancel();
         _cts.Dispose();
-    }
-
-    private static double[] Parse(string text)
-    {
-        if (string.IsNullOrWhiteSpace(text)) return [];
-        var tokens = text.Split([',', ' ', '\n', '\r', '\t', ';'], StringSplitOptions.RemoveEmptyEntries);
-        var values = new List<double>(tokens.Length);
-        foreach (var token in tokens)
-            if (double.TryParse(token, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var v))
-                values.Add(v);
-        return values.ToArray();
     }
 
     private sealed record SizingResult(

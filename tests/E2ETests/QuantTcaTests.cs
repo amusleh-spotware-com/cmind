@@ -8,6 +8,15 @@ public sealed class QuantTcaTests(AppFixture app)
 {
     private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 30000 };
 
+    // Fills the first two structured fill rows (price + quantity) — no free-text entry.
+    private static async Task FillTwoFillsAsync(IPage page)
+    {
+        await page.FillAsync("[data-testid=fill-price-0]", "1.1010");
+        await page.FillAsync("[data-testid=fill-qty-0]", "100");
+        await page.FillAsync("[data-testid=fill-price-1]", "1.1020");
+        await page.FillAsync("[data-testid=fill-qty-1]", "100");
+    }
+
     [Fact]
     public async Task Analyze_reports_slippage()
     {
@@ -18,7 +27,7 @@ public sealed class QuantTcaTests(AppFixture app)
         var result = page.Locator("[data-testid=tca-result]");
         await page.RunUntilVisibleAsync(async () =>
         {
-            await page.GetByLabel("Fills (price, quantity per line)").FillAsync("1.1010, 100\n1.1020, 100");
+            await FillTwoFillsAsync(page);
             await page.ClickAsync("[data-testid=tca-analyze]");
         }, result);
 
@@ -27,21 +36,36 @@ public sealed class QuantTcaTests(AppFixture app)
     }
 
     [Fact]
-    public async Task Negative_fill_quantity_is_rejected_with_a_validation_message()
+    public async Task Analyze_is_disabled_until_a_valid_fill_is_entered()
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/quant/tca");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        // A warning snackbar appears and no result is computed (negative quantity rejected client-side).
-        var warning = page.Locator(".mud-snackbar.mud-alert-filled-warning");
-        await page.RunUntilVisibleAsync(async () =>
-        {
-            await page.GetByLabel("Fills (price, quantity per line)").FillAsync("1.1005, -100");
-            await page.ClickAsync("[data-testid=tca-analyze]");
-        }, warning);
+        // The two default fill rows are empty → no ready fills → the action is disabled.
+        var analyze = page.Locator("[data-testid=tca-analyze]");
+        await Assertions.Expect(analyze).ToBeDisabledAsync(new() { Timeout = 30000 });
 
-        await Assertions.Expect(warning).ToBeVisibleAsync(Slow);
+        await page.RunUntilEnabledAsync(async () =>
+        {
+            await page.FillAsync("[data-testid=fill-price-0]", "1.1010");
+            await page.FillAsync("[data-testid=fill-qty-0]", "100");
+        }, analyze);
+        await Assertions.Expect(analyze).ToBeEnabledAsync(new() { Timeout = 30000 });
+    }
+
+    [Fact]
+    public async Task Non_positive_quantity_keeps_the_action_disabled()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/quant/tca");
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        // A price with a non-positive quantity is not a ready fill; the Min=0 field also clamps a negative.
+        await page.FillAsync("[data-testid=fill-price-0]", "1.1005");
+        await page.FillAsync("[data-testid=fill-qty-0]", "-100");
+
+        await Assertions.Expect(page.Locator("[data-testid=tca-analyze]")).ToBeDisabledAsync(new() { Timeout = 30000 });
         await Assertions.Expect(page.Locator("[data-testid=tca-result]")).Not.ToBeVisibleAsync();
     }
 
@@ -52,7 +76,7 @@ public sealed class QuantTcaTests(AppFixture app)
         await page.GotoAsync("/quant/tca");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        await page.GetByLabel("Fills (price, quantity per line)").FillAsync("1.1010, 100\n1.1020, 100");
+        await FillTwoFillsAsync(page);
         await page.ClickAsync("[data-testid=tca-analyze]");
         await page.GotoAsync("/");
 

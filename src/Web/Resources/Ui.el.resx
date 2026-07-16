@@ -15,6 +15,11 @@
   <data name="integrity.row.trials" xml:space="preserve"><value>Δοκιμές</value></data>
   <data name="integrity.row.pbo" xml:space="preserve"><value>Πιθανότητα υπερπροσαρμογής backtest</value></data>
   <data name="integrity.loadError" xml:space="preserve"><value>Δεν ήταν δυνατή η εκτέλεση του ελέγχου ακεραιότητας σε αυτό το backtest.</value></data>
+  <data name="health.loadError" xml:space="preserve"><value>Δεν ήταν δυνατή η εκτέλεση του ελέγχου strategy-health σε αυτό το backtest.</value></data>
+  <data name="health.row.earlierSharpe" xml:space="preserve"><value>Προηγούμενο Sharpe</value></data>
+  <data name="health.row.recentSharpe" xml:space="preserve"><value>Πρόσφατο Sharpe</value></data>
+  <data name="health.row.changePoint" xml:space="preserve"><value>Σημείο αλλαγής στην παρατήρηση</value></data>
+  <data name="health.row.observations" xml:space="preserve"><value>Παρατηρήσεις</value></data>
   <data name="common.retry" xml:space="preserve"><value>Επανάληψη</value></data>
   <data name="common.close" xml:space="preserve"><value>Κλείσιμο</value></data>
   <data name="common.cancel" xml:space="preserve"><value>Άκυρο</value></data>
@@ -32,6 +37,7 @@
   <data name="layout.pageError" xml:space="preserve"><value>Παρουσιάστηκε σφάλμα σε αυτήν τη σελίδα.</value></data>
   <data name="nav.dashboard" xml:space="preserve"><value>Πίνακας ελέγχου</value></data>
   <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.group.tools" xml:space="preserve"><value>Εργαλεία</value></data>
   <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
   <data name="nav.run" xml:space="preserve"><value>Εκτέλεση</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>

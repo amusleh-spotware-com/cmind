@@ -15,6 +15,11 @@
   <data name="integrity.row.trials" xml:space="preserve"><value>시행</value></data>
   <data name="integrity.row.pbo" xml:space="preserve"><value>백테스트 과적합 확률</value></data>
   <data name="integrity.loadError" xml:space="preserve"><value>이 백테스트에 대한 무결성 검사를 실행할 수 없습니다.</value></data>
+  <data name="health.loadError" xml:space="preserve"><value>이 백테스트에서 전략 상태 검사를 실행할 수 없습니다.</value></data>
+  <data name="health.row.earlierSharpe" xml:space="preserve"><value>이전 Sharpe</value></data>
+  <data name="health.row.recentSharpe" xml:space="preserve"><value>최근 Sharpe</value></data>
+  <data name="health.row.changePoint" xml:space="preserve"><value>변곡점(관측치)</value></data>
+  <data name="health.row.observations" xml:space="preserve"><value>관측치</value></data>
   <data name="common.retry" xml:space="preserve"><value>다시 시도</value></data>
   <data name="common.close" xml:space="preserve"><value>닫기</value></data>
   <data name="common.cancel" xml:space="preserve"><value>취소</value></data>
@@ -32,6 +37,7 @@
   <data name="layout.pageError" xml:space="preserve"><value>이 페이지에서 오류가 발생했습니다.</value></data>
   <data name="nav.dashboard" xml:space="preserve"><value>대시보드</value></data>
   <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.group.tools" xml:space="preserve"><value>도구</value></data>
   <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
   <data name="nav.run" xml:space="preserve"><value>실행</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>백테스트</value></data>

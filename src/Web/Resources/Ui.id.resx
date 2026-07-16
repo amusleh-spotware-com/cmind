@@ -15,6 +15,11 @@
   <data name="integrity.row.trials" xml:space="preserve"><value>Percobaan</value></data>
   <data name="integrity.row.pbo" xml:space="preserve"><value>Probabilitas overfitting backtest</value></data>
   <data name="integrity.loadError" xml:space="preserve"><value>Tidak dapat menjalankan pemeriksaan integritas pada backtest ini.</value></data>
+  <data name="health.loadError" xml:space="preserve"><value>Tidak dapat menjalankan pemeriksaan strategy-health pada backtest ini.</value></data>
+  <data name="health.row.earlierSharpe" xml:space="preserve"><value>Sharpe Sebelumnya</value></data>
+  <data name="health.row.recentSharpe" xml:space="preserve"><value>Sharpe Terbaru</value></data>
+  <data name="health.row.changePoint" xml:space="preserve"><value>Change-point pada observasi</value></data>
+  <data name="health.row.observations" xml:space="preserve"><value>Observasi</value></data>
   <data name="common.retry" xml:space="preserve"><value>Coba lagi</value></data>
   <data name="common.close" xml:space="preserve"><value>Tutup</value></data>
   <data name="common.cancel" xml:space="preserve"><value>Batal</value></data>
@@ -32,6 +37,7 @@
   <data name="layout.pageError" xml:space="preserve"><value>Terjadi kesalahan pada halaman ini.</value></data>
   <data name="nav.dashboard" xml:space="preserve"><value>Dasbor</value></data>
   <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.group.tools" xml:space="preserve"><value>Alat</value></data>
   <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
   <data name="nav.run" xml:space="preserve"><value>Jalankan</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>

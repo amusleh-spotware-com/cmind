@@ -10,15 +10,25 @@ public sealed class QuantRegimesTests(AppFixture app)
 {
     private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 30000 };
 
+    // Fills the structured numeric series controls (adding rows beyond the six defaults) — no free-text entry.
+    private static async Task FillSeriesAsync(IPage page, double[] values)
+    {
+        for (var i = 6; i < values.Length; i++)
+            await page.ClickAsync("[data-testid=series-add]");
+        for (var i = 0; i < values.Length; i++)
+            await page.FillAsync($"[data-testid=series-value-{i}]",
+                values[i].ToString("0.####", CultureInfo.InvariantCulture));
+    }
+
     [Fact]
     public async Task Analyze_renders_a_regime_breakdown()
     {
         // Calm first half, turbulent second half.
-        var series = string.Join(", ", Enumerable.Range(0, 60).Select(i =>
+        double[] series = [.. Enumerable.Range(0, 30).Select(i =>
         {
-            var jitter = i < 30 ? 0.0005 : 0.02;
-            return (i % 2 == 0 ? jitter : -jitter).ToString("0.0000", CultureInfo.InvariantCulture);
-        }));
+            var jitter = i < 15 ? 0.0005 : 0.02;
+            return i % 2 == 0 ? jitter : -jitter;
+        })];
 
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/quant/regimes");
@@ -27,7 +37,7 @@ public sealed class QuantRegimesTests(AppFixture app)
         var result = page.Locator("[data-testid=regimes-result]");
         await page.RunUntilVisibleAsync(async () =>
         {
-            await page.GetByLabel("Returns or equity curve").FillAsync(series);
+            await FillSeriesAsync(page, series);
             await page.ClickAsync("[data-testid=regimes-analyze]");
         }, result);
 
@@ -39,11 +49,11 @@ public sealed class QuantRegimesTests(AppFixture app)
     public async Task Equity_curve_mode_renders_a_regime_breakdown()
     {
         // Calm-then-turbulent equity curve → derived returns produce the regime table.
-        var equity = string.Join(", ", Enumerable.Range(0, 60).Select(i =>
+        double[] equity = [.. Enumerable.Range(0, 30).Select(i =>
         {
-            var step = i < 30 ? 2.0 : (i % 2 == 0 ? 30.0 : -30.0);
-            return (1000.0 + (i * 2) + step).ToString("0.0", CultureInfo.InvariantCulture);
-        }));
+            var step = i < 15 ? 2.0 : (i % 2 == 0 ? 30.0 : -30.0);
+            return 1000.0 + (i * 2) + step;
+        })];
 
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/quant/regimes");
@@ -52,8 +62,8 @@ public sealed class QuantRegimesTests(AppFixture app)
         var result = page.Locator("[data-testid=regimes-result]");
         await page.RunUntilVisibleAsync(async () =>
         {
-            await page.GetByLabel("Returns or equity curve").FillAsync(equity);
             await page.GetByText("Equity / balance curve").ClickAsync();
+            await FillSeriesAsync(page, equity);
             await page.ClickAsync("[data-testid=regimes-analyze]");
         }, result);
 

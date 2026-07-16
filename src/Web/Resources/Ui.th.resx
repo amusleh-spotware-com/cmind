@@ -15,6 +15,11 @@
   <data name="integrity.row.trials" xml:space="preserve"><value>จำนวนครั้งที่ทดลอง</value></data>
   <data name="integrity.row.pbo" xml:space="preserve"><value>ความน่าจะเป็นของการโอเวอร์ฟิตแบ็กเทสต์</value></data>
   <data name="integrity.loadError" xml:space="preserve"><value>ไม่สามารถเรียกใช้การตรวจสอบความสมบูรณ์ของแบ็กเทสต์นี้ได้</value></data>
+  <data name="health.loadError" xml:space="preserve"><value>ไม่สามารถเรียกใช้การตรวจสอบสุขภาพกลยุทธ์ในแบ็กเทสต์นี้ได้</value></data>
+  <data name="health.row.earlierSharpe" xml:space="preserve"><value>Sharpe ก่อนหน้า</value></data>
+  <data name="health.row.recentSharpe" xml:space="preserve"><value>Sharpe ล่าสุด</value></data>
+  <data name="health.row.changePoint" xml:space="preserve"><value>จุดเปลี่ยนแปลงที่การสังเกต</value></data>
+  <data name="health.row.observations" xml:space="preserve"><value>จำนวนการสังเกต</value></data>
   <data name="common.retry" xml:space="preserve"><value>ลองอีกครั้ง</value></data>
   <data name="common.close" xml:space="preserve"><value>ปิด</value></data>
   <data name="common.cancel" xml:space="preserve"><value>ยกเลิก</value></data>
@@ -32,6 +37,7 @@
   <data name="layout.pageError" xml:space="preserve"><value>เกิดข้อผิดพลาดในหน้านี้</value></data>
   <data name="nav.dashboard" xml:space="preserve"><value>แดชบอร์ด</value></data>
   <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.group.tools" xml:space="preserve"><value>เครื่องมือ</value></data>
   <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
   <data name="nav.run" xml:space="preserve"><value>เรียกใช้</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>แบ็กเทสต์</value></data>

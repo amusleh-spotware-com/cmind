@@ -17,17 +17,43 @@
     <MudItem xs="12" md="5">
         <MudPaper Class="pa-4" Elevation="1">
             <MudNumericField @bind-Value="_arrival" Label="Arrival (decision) price" Min="0"
-                             Variant="Variant.Outlined" />
+                             Step="0.0001" Variant="Variant.Outlined" Immediate="true" Format="0.#####"
+                             Error="@(!ArrivalValid)" ErrorText="Enter an arrival price greater than 0." />
             <MudSelect @bind-Value="_side" Label="Side" Variant="Variant.Outlined" Class="mt-2">
                 <MudSelectItem Value="@("Buy")">Buy</MudSelectItem>
                 <MudSelectItem Value="@("Sell")">Sell</MudSelectItem>
             </MudSelect>
-            <MudTextField @bind-Value="_fills" Label="Fills (price, quantity per line)"
-                          Lines="5" Variant="Variant.Outlined" Class="mt-2"
-                          HelperText="One fill per line: price then quantity, e.g. '1.1005, 100'." />
+
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-3 mb-1">
+                <MudText Typo="Typo.subtitle1">Fills</MudText>
+                <HelpTip Text="Enter each execution fill as a price and a quantity in the numeric fields — one row per fill, no pasting. Add or remove rows as needed; both price and quantity must be greater than 0." />
+            </MudStack>
+            @for (var i = 0; i < _fills.Count; i++)
+            {
+                var index = i;
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+                    <MudNumericField T="double?" @bind-Value="_fills[index].Price" Label="Price" Min="0"
+                                     Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" Class="flex-grow-1"
+                                     data-testid="@($"fill-price-{index}")" aria-label="@($"Fill {index + 1} price")" />
+                    <MudNumericField T="double?" @bind-Value="_fills[index].Quantity" Label="Quantity" Min="0"
+                                     Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" Class="flex-grow-1"
+                                     data-testid="@($"fill-qty-{index}")" aria-label="@($"Fill {index + 1} quantity")" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Color="Color.Error"
+                                   Disabled="@(_fills.Count <= 1)" aria-label="Remove fill"
+                                   OnClick="@(() => RemoveFill(index))" data-testid="@($"fill-remove-{index}")" />
+                </MudStack>
+            }
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-1">
+                <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="AddFill"
+                           data-testid="fill-add">Add fill</MudButton>
+                <MudText Typo="Typo.caption" data-testid="fill-count"
+                         Color="@(ReadyFillCount >= 1 ? Color.Success : Color.Default)">
+                    @($"{ReadyFillCount} fill(s)" + (ReadyFillCount < 1 ? " — add at least one" : ""))
+                </MudText>
+            </MudStack>
             <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
                        StartIcon="@Icons.Material.Filled.Receipt" OnClick="Analyze"
-                       Disabled="_loading" data-testid="tca-analyze">
+                       Disabled="@(_loading || !ArrivalValid || ReadyFillCount < 1)" data-testid="tca-analyze">
                 Analyze cost
             </MudButton>
         </MudPaper>
@@ -65,22 +91,32 @@
 @code {
     private double _arrival = 1.1000;
     private string _side = "Buy";
-    private string _fills = "";
+    // Structured numeric input — one price/quantity row per fill, never a free-text blob.
+    private readonly List<FillRow> _fills = [new(), new()];
     private bool _loading;
     private TcaResult? _result;
     private readonly CancellationTokenSource _cts = new();
 
+    private bool ArrivalValid => _arrival > 0;
+    private int ReadyFillCount => _fills.Count(f => f.Price is > 0 && f.Quantity is > 0);
+
+    private void AddFill() => _fills.Add(new FillRow());
+    private void RemoveFill(int index) { if (_fills.Count > 1) _fills.RemoveAt(index); }
+
     private async Task Analyze()
     {
-        var parsed = ParseFills(_fills);
-        if (parsed.HasNonPositive)
+        var fills = _fills
+            .Where(f => f.Price is > 0 && f.Quantity is > 0)
+            .Select(f => new { Price = f.Price!.Value, Quantity = f.Quantity!.Value })
+            .ToArray();
+        if (fills.Length == 0)
         {
             Snack.Add(L["quant.tca.fill_positive"], Severity.Warning);
             return;
         }
-        if (parsed.Fills.Count == 0)
+        if (!ArrivalValid)
         {
-            Snack.Add("Enter at least one fill (price, quantity).", Severity.Warning);
+            Snack.Add("Enter an arrival price greater than 0.", Severity.Warning);
             return;
         }
 
@@ -89,7 +125,7 @@
         try
         {
             var response = await Http.PostAsJsonAsync("/api/quant/tca",
-                new { ArrivalPrice = _arrival, Side = _side, Fills = parsed.Fills }, _cts.Token);
+                new { ArrivalPrice = _arrival, Side = _side, Fills = fills }, _cts.Token);
             if (_cts.IsCancellationRequested) return;
             if (response.IsSuccessStatusCode)
                 _result = await response.Content.ReadFromJsonAsync<TcaResult>(_cts.Token);
@@ -113,29 +149,12 @@
         _cts.Dispose();
     }
 
-    // Parses "price, quantity" lines. Flags a non-positive price or quantity so the caller can reject the
-    // whole input with a clear validation message rather than silently sending nonsensical fills.
-    private static ParsedFills ParseFills(string text)
+    private sealed class FillRow
     {
-        var result = new List<TcaFill>();
-        var hasNonPositive = false;
-        if (string.IsNullOrWhiteSpace(text)) return new ParsedFills(result, false);
-        foreach (var line in text.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries))
-        {
-            var parts = line.Split([',', ' ', '\t', ';'], StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length < 2) continue;
-            if (double.TryParse(parts[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var price)
-                && double.TryParse(parts[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var qty))
-            {
-                if (!(price > 0) || !(qty > 0)) { hasNonPositive = true; continue; }
-                result.Add(new TcaFill(price, qty));
-            }
-        }
-        return new ParsedFills(result, hasNonPositive);
+        public double? Price { get; set; }
+        public double? Quantity { get; set; }
     }
 
-    private sealed record ParsedFills(List<TcaFill> Fills, bool HasNonPositive);
-    private sealed record TcaFill(double Price, double Quantity);
     private sealed record TcaResult(
         double arrivalPrice, double averageFillPrice, double filledQuantity, string side,
         double slippageBps, double implementationShortfall, string rationale);

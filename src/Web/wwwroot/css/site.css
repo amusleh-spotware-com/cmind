@@ -350,7 +350,12 @@ html, body {
     min-width: 0;
     padding: 8px 8px 8px 24px;
     overflow-y: auto;
+    /* A full-width MudAutocomplete (time-zone picker) could push a few px past the panel and give the
+       whole settings dialog a horizontal scrollbar; contain it so no width 320–1920px scrolls sideways. */
+    overflow-x: hidden;
 }
+/* Inputs inside the settings panel must be free to shrink with the panel, never force it wider. */
+.app-settings-content .mud-input-control { max-width: 100%; }
 .app-settings-active {
     background: color-mix(in srgb, var(--app-primary) 14%, transparent);
     border-radius: var(--app-radius);

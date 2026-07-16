@@ -10,5 +10,7 @@
 
 @code {
     [Parameter, EditorRequired] public string Text { get; set; } = string.Empty;
-    [Parameter] public Placement Placement { get; set; } = Placement.Top;
+    // Default to Bottom: many help tips sit in a page header right under the app bar, where a Top-placed
+    // tooltip has no room and MudBlazor can clamp it off-screen (looked like "hovering does nothing").
+    [Parameter] public Placement Placement { get; set; } = Placement.Bottom;
 }

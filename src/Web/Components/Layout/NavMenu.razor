@@ -36,14 +36,20 @@
                 {
                     <MudNavLink Href="/backtest" Icon="@Icons.Material.Filled.History">@L["nav.backtest"]</MudNavLink>
                     <MudNavLink Href="/optimize" Icon="@Icons.Material.Filled.Tune">@L["nav.optimize"]</MudNavLink>
-                    <MudNavLink Href="/quant/integrity" Icon="@Icons.Material.Filled.VerifiedUser">@L["nav.integrity"]</MudNavLink>
-                    <MudNavLink Href="/quant/sizing" Icon="@Icons.Material.Filled.Balance">@L["nav.positionSizing"]</MudNavLink>
-                    <MudNavLink Href="/quant/health" Icon="@Icons.Material.Filled.MonitorHeart">@L["nav.strategyHealth"]</MudNavLink>
-                    <MudNavLink Href="/quant/regimes" Icon="@Icons.Material.Filled.Layers">@L["nav.regimeLab"]</MudNavLink>
-                    <MudNavLink Href="/quant/tca" Icon="@Icons.Material.Filled.Receipt">@L["nav.executionCost"]</MudNavLink>
-                    <MudNavLink Href="/quant/positioning" Icon="@Icons.Material.Filled.SwapVert">@L["nav.contrarianPositioning"]</MudNavLink>
-                    <MudNavLink Href="/quant/execution" Icon="@Icons.Material.Filled.ViewWeek">@L["nav.executionSchedule"]</MudNavLink>
                 }
+            </MudNavGroup>
+        }
+
+        @if (Gate.IsEnabled(FeatureFlag.Backtesting))
+        {
+            <MudNavGroup Title="@L["nav.group.tools"]" Icon="@Icons.Material.Filled.Build" Expanded="false">
+                <MudNavLink Href="/quant/integrity" Icon="@Icons.Material.Filled.VerifiedUser">@L["nav.integrity"]</MudNavLink>
+                <MudNavLink Href="/quant/sizing" Icon="@Icons.Material.Filled.Balance">@L["nav.positionSizing"]</MudNavLink>
+                <MudNavLink Href="/quant/health" Icon="@Icons.Material.Filled.MonitorHeart">@L["nav.strategyHealth"]</MudNavLink>
+                <MudNavLink Href="/quant/regimes" Icon="@Icons.Material.Filled.Layers">@L["nav.regimeLab"]</MudNavLink>
+                <MudNavLink Href="/quant/tca" Icon="@Icons.Material.Filled.Receipt">@L["nav.executionCost"]</MudNavLink>
+                <MudNavLink Href="/quant/positioning" Icon="@Icons.Material.Filled.SwapVert">@L["nav.contrarianPositioning"]</MudNavLink>
+                <MudNavLink Href="/quant/execution" Icon="@Icons.Material.Filled.ViewWeek">@L["nav.executionSchedule"]</MudNavLink>
             </MudNavGroup>
         }
 

@@ -15,6 +15,11 @@
   <data name="integrity.row.trials" xml:space="preserve"><value>Prove</value></data>
   <data name="integrity.row.pbo" xml:space="preserve"><value>Probabilità di overfitting del backtest</value></data>
   <data name="integrity.loadError" xml:space="preserve"><value>Impossibile eseguire il controllo di integrità su questo backtest.</value></data>
+  <data name="health.loadError" xml:space="preserve"><value>Impossibile eseguire il controllo di salute della strategia su questo backtest.</value></data>
+  <data name="health.row.earlierSharpe" xml:space="preserve"><value>Sharpe precedente</value></data>
+  <data name="health.row.recentSharpe" xml:space="preserve"><value>Sharpe recente</value></data>
+  <data name="health.row.changePoint" xml:space="preserve"><value>Change-point all'osservazione</value></data>
+  <data name="health.row.observations" xml:space="preserve"><value>Osservazioni</value></data>
   <data name="common.retry" xml:space="preserve"><value>Riprova</value></data>
   <data name="common.close" xml:space="preserve"><value>Chiudi</value></data>
   <data name="common.cancel" xml:space="preserve"><value>Annulla</value></data>
@@ -32,6 +37,7 @@
   <data name="layout.pageError" xml:space="preserve"><value>Si è verificato un errore in questa pagina.</value></data>
   <data name="nav.dashboard" xml:space="preserve"><value>Dashboard</value></data>
   <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.group.tools" xml:space="preserve"><value>Strumenti</value></data>
   <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
   <data name="nav.run" xml:space="preserve"><value>Esegui</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>Backtest</value></data>
@@ -75,7 +81,7 @@
   <data name="settings.section.legal" xml:space="preserve"><value>Note legali e privacy</value></data>
   <data name="settings.section.language" xml:space="preserve"><value>Lingua</value></data>
   <data name="language.title" xml:space="preserve"><value>Lingua</value></data>
-  <data name="language.description" xml:space="preserve"><value>Scegli la lingua dell'interfaccia. La tua scelta viene salvata nel profilo e applicata in tutta l'app.</value></data>
+  <data name="language.description" xml:space="preserve"><value>Scegli la lingua dell’interfaccia. La tua scelta viene salvata nel profilo e applicata in tutta l’app.</value></data>
   <data name="language.current" xml:space="preserve"><value>Lingua attuale</value></data>
   <data name="settings.section.timezone" xml:space="preserve"><value>Fuso orario</value></data>
   <data name="timezone.title" xml:space="preserve"><value>Fuso orario</value></data>

@@ -15,6 +15,11 @@
   <data name="integrity.row.trials" xml:space="preserve"><value>试验次数</value></data>
   <data name="integrity.row.pbo" xml:space="preserve"><value>回测过拟合概率</value></data>
   <data name="integrity.loadError" xml:space="preserve"><value>无法对此回测运行完整性检查。</value></data>
+  <data name="health.loadError" xml:space="preserve"><value>无法对此回测运行策略健康检查。</value></data>
+  <data name="health.row.earlierSharpe" xml:space="preserve"><value>早期Sharpe</value></data>
+  <data name="health.row.recentSharpe" xml:space="preserve"><value>最近Sharpe</value></data>
+  <data name="health.row.changePoint" xml:space="preserve"><value>观测点的变点</value></data>
+  <data name="health.row.observations" xml:space="preserve"><value>观测</value></data>
   <data name="common.retry" xml:space="preserve"><value>重试</value></data>
   <data name="common.close" xml:space="preserve"><value>关闭</value></data>
   <data name="common.cancel" xml:space="preserve"><value>取消</value></data>
@@ -32,6 +37,7 @@
   <data name="layout.pageError" xml:space="preserve"><value>此页面出现问题。</value></data>
   <data name="nav.dashboard" xml:space="preserve"><value>仪表板</value></data>
   <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.group.tools" xml:space="preserve"><value>工具</value></data>
   <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
   <data name="nav.run" xml:space="preserve"><value>运行</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>回测</value></data>

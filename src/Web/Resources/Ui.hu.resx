@@ -15,6 +15,11 @@
   <data name="integrity.row.trials" xml:space="preserve"><value>Próbák</value></data>
   <data name="integrity.row.pbo" xml:space="preserve"><value>A backteszt túlillesztésének valószínűsége</value></data>
   <data name="integrity.loadError" xml:space="preserve"><value>Nem sikerült lefuttatni az integritásellenőrzést ezen a backteszten.</value></data>
+  <data name="health.loadError" xml:space="preserve"><value>Nem sikerült lefuttatni a stratégia-egészség ellenőrzést ezen a backteszten.</value></data>
+  <data name="health.row.earlierSharpe" xml:space="preserve"><value>Korábbi Sharpe</value></data>
+  <data name="health.row.recentSharpe" xml:space="preserve"><value>Újabb Sharpe</value></data>
+  <data name="health.row.changePoint" xml:space="preserve"><value>Változáspont a megfigyelésnél</value></data>
+  <data name="health.row.observations" xml:space="preserve"><value>Megfigyelések</value></data>
   <data name="common.retry" xml:space="preserve"><value>Újra</value></data>
   <data name="common.close" xml:space="preserve"><value>Bezárás</value></data>
   <data name="common.cancel" xml:space="preserve"><value>Mégse</value></data>
@@ -32,6 +37,7 @@
   <data name="layout.pageError" xml:space="preserve"><value>Hiba történt ezen az oldalon.</value></data>
   <data name="nav.dashboard" xml:space="preserve"><value>Irányítópult</value></data>
   <data name="nav.group.cbots" xml:space="preserve"><value>cBots</value></data>
+  <data name="nav.group.tools" xml:space="preserve"><value>Eszközök</value></data>
   <data name="nav.cbots" xml:space="preserve"><value>cBots</value></data>
   <data name="nav.run" xml:space="preserve"><value>Futtatás</value></data>
   <data name="nav.backtest" xml:space="preserve"><value>Backteszt</value></data>

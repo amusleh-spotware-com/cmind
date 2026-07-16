@@ -59,4 +59,15 @@ public class StrategyHealthMonitorTests
         var r = _monitor.Assess(TwoPhase(40, 0.01, 0.002, 0.0, 0.02));
         r.Rationale.Should().Contain("Sharpe");
     }
+
+    // The backtest-instance health button scores a stored equity curve via ReturnSeries.FromEquityCurve;
+    // a steadily rising curve derives a healthy edge with a defined verdict (not Unknown).
+    [Fact]
+    public void Equity_curve_path_scores_a_defined_verdict()
+    {
+        var equity = Enumerable.Range(0, 24).Select(i => 10000.0 * Math.Pow(1.01, i)).ToArray();
+        var r = _monitor.Assess(ReturnSeries.FromEquityCurve(equity));
+        r.Health.Should().NotBe(StrategyHealth.Unknown);
+        r.Observations.Should().Be(23);
+    }
 }

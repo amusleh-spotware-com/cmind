@@ -26,6 +26,12 @@ Given a return series (or equity curve, oldest first), it:
 | **Decayed** | The edge has effectively disappeared in the recent window — consider pausing. |
 | **Unknown** | Not enough history to judge. |
 
+- **Straight from a backtest run — no copy-paste.** Every completed backtest exposes a heart **Check
+  strategy health** icon on the **Backtest** list row and on its instance detail view; one click runs the
+  monitor on that run's stored equity curve and shows the verdict in a dialog. The icon is disabled until
+  the backtest has completed and produced a report, so it is never a dead control. Under the hood this is
+  `POST /api/quant/health/backtest/{instanceId}`, which reads the stored report's equity curve.
+
 ```http
 POST /api/quant/health
 { "returns": [...] }   // or { "equity": [...] }

@@ -1,39 +1,35 @@
 ---
-description: "Strategy Health & Alpha Decay — deterministyczne decay detection które compares strategy's recent Sharpe do jego earlier record i locates biggest mean-shift (CUSUM change-point), returning Healthy / Degrading / Decayed verdict."
+description: "Kondycja strategii i rozpływ alfa — deterministyczne wykrywanie rozpływu porównujące ostatnie Sharpe'a strategii z jej wcześniejszym rekordem i lokalizujące największą zmianę średniej (CUSUM change-point), zwracające werdykt Healthy / Degrading / Decayed."
 ---
 
-# Strategy Health & Alpha Decay
+# Kondycja strategii a rozpływ alfa
 
-Każdy edge decays — research to blunt że half-life z quant strategy collapsed z years
-do months, więc *adaptation beats discovery*. Strategy Health monitor tells Ci, z strategy's own
-return history, czy edge to wciąż tam.
+Każda przewaga się rozpływa — badania są jasne, że półperiod rozpadu strategii quant skurczył się z lat do miesięcy, dlatego *adaptacja bije odkrycie*. Monitor Kondycji strategii mówi ci, z samej historii zwrotów strategii, czy przewaga wciąż istnieje.
 
 Otwórz **cBots → Strategy Health** (`/quant/health`).
 
 ## Co robi
 
-Biorąc return series (lub equity curve, oldest first), to:
+Mając serię zwrotów (lub krzywą kapitału, od najstarszej), wykonuje:
 
-- splits history do **earlier** i **recent** half i compares ich Sharpe ratios;
-- runs **CUSUM change-point** scan do locate observation gdzie mean most clearly shifted (regime
-  break), reported tylko gdy deviation to statistically notable;
-- returns verdict:
+- dzieli historię na wcześniejszą i ostatnią połowę i porównuje ich współczynniki Sharpe'a;
+- uruchamia skan **CUSUM change-point** w celu zlokalizowania obserwacji, w której średnia najbardziej wyraźnie się przesunęła (zmiana reżimu), zgłaszana tylko gdy odchylenie jest statystycznie godne uwagi;
+- zwraca werdykt:
 
-| Verdict | Znaczenie |
+| Werdykt | Znaczenie |
 |---|---|
-| **Healthy** | Recent performance to w line z (lub lepszy niż) earlier record. |
-| **Degrading** | Recent Sharpe to materially weaker niż earlier record — watch closely. |
-| **Decayed** | Edge effectively disappeared w recent window — consider pausing. |
-| **Unknown** | Nie enough history do judge. |
+| **Healthy** | Ostatnia wydajność jest zgodna z (lub lepsza niż) wcześniejszy rekord. |
+| **Degrading** | Ostatni Sharpe jest zauważalnie słabszy niż wcześniejszy rekord — obserwuj uważnie. |
+| **Decayed** | Przewaga skutecznie zniknęła w ostatnim oknie — rozważ wstrzymanie. |
+| **Unknown** | Brak wystarczającej historii do oceny. |
+
+- **Bezpośrednio z przebiegu backtestu — bez kopiowania i wklejania.** Każdy ukończony backtest ekspozycji ikony serca **Sprawdź kondycję strategii** na wierszu listy **Backtest** i na widoku szczegółów jego instancji; jedno kliknięcie uruchamia monitor na przechowywane krzywej kapitału tego przebiegu i pokazuje werdykt w oknie dialogowym. Ikona jest wyłączona, dopóki backtest się nie ukończy i nie wyprodukuje raportu, więc nigdy nie jest martwą kontrolką. Pod maską to jest `POST /api/quant/health/backtest/{instanceId}`, która odczytuje przechowywane krzywej kapitału z raportu.
 
 ```http
 POST /api/quant/health
-{ "returns": [...] }   // lub { "equity": [...] }
+{ "returns": [...] }   // or { "equity": [...] }
 ```
 
-## Dlaczego jest niezawodny
+## Dlaczego jest niezawodna
 
-To to pure, deterministyczne domain code (`Core.Health`) z żadną infrastrukturą dependency i no external
-calls — unit-tested dla decayed, degrading, healthy i too-short cases i dla change-point
-localization. To to manual companion do always-on health checks że back autonomous agents:
-same statistics drive circuit breaker że de-risks live strategy którego edge to fading.
+Jest czystym, deterministycznym kodem domeny (`Core.Health`) bez zależności infrastruktury i bez zewnętrznych wywołań — testowany dla przypadków rozpłynięcia, degradacji, zdrowia i zbyt krótkiej historii oraz dla lokalizacji change-pointu. Jest ręcznym towarzyszem zawsze włączonych sprawdzeń kondycji wspierających autonomicznych agentów: ta sama statystyka napędza wyłącznik obwodu, który zmniejsza ryzyko strategii na żywo, której przewaga zanika.

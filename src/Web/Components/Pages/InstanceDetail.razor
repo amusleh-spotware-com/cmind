@@ -74,6 +74,11 @@
                                Disabled="@(!HasReportJson)" OnClick="OpenIntegrityAsync"
                                aria-label="Check backtest integrity" data-testid="instance-detail-integrity" />
             </MudTooltip>
+            <MudTooltip Text="@(HasReportJson ? "Check strategy health" : "Strategy health needs a completed backtest report")">
+                <MudIconButton Icon="@Icons.Material.Filled.MonitorHeart" Color="MudBlazor.Color.Primary"
+                               Disabled="@(!HasReportJson)" OnClick="OpenHealthAsync"
+                               aria-label="Check strategy health" data-testid="instance-detail-health" />
+            </MudTooltip>
         }
     </MudStack>
 
@@ -306,6 +311,15 @@
     {
         var parameters = new DialogParameters<IntegrityResultDialog> { { x => x.InstanceId, _currentId } };
         return Dialogs.ShowAsync<IntegrityResultDialog>("Backtest integrity", parameters,
+            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
+    }
+
+    // Runs the Strategy Health & Alpha Decay check on this backtest's stored report and shows the verdict in a
+    // dialog. The icon is disabled unless a JSON report exists, so this only ever opens for an analysable backtest.
+    private Task OpenHealthAsync()
+    {
+        var parameters = new DialogParameters<HealthResultDialog> { { x => x.InstanceId, _currentId } };
+        return Dialogs.ShowAsync<HealthResultDialog>("Strategy health", parameters,
             new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
     }
 

@@ -63,7 +63,6 @@ id	features/mcp.md
 id	features/open-api-shared-app.md
 id	features/position-sizing.md
 id	features/regime-lab.md
-id	features/strategy-health.md
 id	features/time-zone.md
 id	features/token-lifecycle.md
 id	features/trading-journal.md
@@ -118,7 +117,6 @@ sl	features/copy-trading.md
 sl	features/economic-calendar.md
 sl	features/execution-tca.md
 sl	features/prop-firm.md
-sl	features/strategy-health.md
 sl	features/time-zone.md
 sl	features/trading-journal.md
 sl	testing/stress-testing.md

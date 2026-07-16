@@ -1,37 +1,37 @@
 ---
-description: "Kesihatan Strategi & Pereputan Alpha — pengesanan pereputan deterministik yang membandingkan Sharpe baru-baru ini strateginya dengan rekod sebelumnya dan mencari anjakan min terbesar (CUSUM change-point), mengembalikan verdict Sihat / Merosot / Reput."
+description: "Strategy Health & Alpha Decay — pengesanan pereputan yang deterministik yang membandingkan Sharpe terbaru strategi dengan rekod awalnya dan mencari peralihan min terbesar (titik perubahan CUSUM), mengembalikan vonis Healthy / Degrading / Decayed."
 ---
 
-# Kesihatan Strategi & Pereputan Alpha
+# Strategy Health & Alpha Decay
 
-Setiap kelebihan merosot — penyelidikan nyata bahawa separuh hayat strategi kuant telah merosot dari tahun ke bulan, jadi *penyesuaian mengatasi penemuan*. Monitor Kesihatan Strategi memberitahu anda, dari sejarah pulangan strateginya sendiri, sama ada kelebihannya masih ada.
+Setiap kelebihan merepot — penyelidikan adalah terang bahawa separuh hayat strategi kuant telah runtuh dari tahun
+ke bulan, jadi *adaptasi mengalahkan penemuan*. Pemantau Strategy Health memberitahu anda, daripada sejarah pulangan strategi sendiri, sama ada kelebihan masih ada.
 
 Buka **cBots → Strategy Health** (`/quant/health`).
 
 ## Apa yang dilakukannya
 
-Diberikan siri pulangan (atau lengkung ekuiti, terlama dulu), ia:
+Diberikan siri pulangan (atau kurva ekuiti, tertua dahulu), ia:
 
-- memecahkan sejarah kepada bahagian **lebih awal** dan **terkini** dan membandingkan nisbah Sharpe mereka;
-- menjalankan imbasan **CUSUM change-point** untuk mencari pemerhatian di mana min paling jelas beralih (rehat rejim),
-  dilaporkan hanya apabila sisihan itu ketara secara statistik;
-- mengembalikan verdict:
+- membahagi sejarah kepada separuh **awal** dan **terbaru** dan membandingkan nisbah Sharpe mereka;
+- menjalankan imbasan **titik perubahan CUSUM** untuk mencari pemerhatian di mana min paling jelas berubah (pemecahan rejim), dilaporkan hanya apabila sisihan ketara secara statistik;
+- mengembalikan vonis:
 
-| Verdict | Makna |
+| Vonis | Maksud |
 |---|---|
-| **Sihat** | Prestasi terkini sepadan dengan (atau lebih baik daripada) rekod sebelumnya. |
-| **Merosot** | Sharpe terkini lebih lemah daripada rekod sebelumnya — pantau dengan rapat. |
-| **Reput** | Kelebihan itu telah berkesan hilang dalam jendela terkini — pertimbangkan untuk memberhentikan. |
-| **Tidak Diketahui** | Tidak cukup sejarah untuk menilai. |
+| **Healthy** | Prestasi terbaru selaras dengan (atau lebih baik daripada) rekod awal. |
+| **Degrading** | Sharpe terbaru jauh lebih lemah daripada rekod awal — pantau dengan rapi. |
+| **Decayed** | Kelebihan telah hilang secara berkesan dalam tetingkap terbaru — pertimbangkan untuk berhenti. |
+| **Unknown** | Tidak cukup sejarah untuk menilai. |
+
+- **Terus daripada larian ujian — tanpa salin-tampal.** Setiap ujian yang lengkap mendedahkan jantung ikon **Check strategy health** pada baris senarai **Backtest** dan pada paparan perincian sampelnya; satu klik menjalankan pemantau pada kurva ekuiti tersimpan larian itu dan menunjukkan vonis dalam dialog. Ikon dilumpuhkan sehingga ujian selesai dan menghasilkan laporan, jadi ia tidak pernah menjadi kawalan mati. Di sebalik tabir ini adalah `POST /api/quant/health/backtest/{instanceId}`, yang membaca kurva ekuiti laporan tersimpan.
 
 ```http
 POST /api/quant/health
-{ "returns": [...] }   // atau { "equity": [...] }
+{ "returns": [...] }   // or { "equity": [...] }
 ```
 
 ## Mengapa ia boleh dipercayai
 
-Ia ialah kod domain murni, deterministik (`Core.Health`) dengan tiada kebergantungan infrastruktur dan tiada
-panggilan luaran — diuji unit untuk kes reput, merosot, sihat dan terlalu-pendek dan untuk lokalisasi change-point.
-Ia adalah teman manual kepada semakan kesihatan yang sentiasa hidup yang menyokong ejen autonomic:
-statistik yang sama memandu litar pemutus yang mengurangkan risiko strategi langsung yang kelebihannya semakin pudar.
+Ia adalah kod domain tulen, deterministik (`Core.Health`) tanpa pergantungan infrastruktur dan tiada panggilan luaran — diuji unit untuk kes yang merepot, merosot, sihat dan terlalu singkat serta untuk lokalisasi titik perubahan. Ia adalah rakan manual kepada pemeriksaan kesihatan yang sentiasa hidup yang menyokong ejen otonomi:
+statistik yang sama mendorong pemutus litar yang mengurangkan risiko strategi langsung yang kelebihannya semakin pudar.

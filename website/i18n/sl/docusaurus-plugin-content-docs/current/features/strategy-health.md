@@ -1,31 +1,35 @@
 ---
-description: "Strategija zdravje & alfa padec — deterministična padec zaznamenovanje, ki primerjava a strategija-ov nedavne Sharpe na njegovanja prej zaznamenovanje in locira na največji srednja-shift (CUSUM sprememba-točka), vrače a Zdravo / Slabja / Decayed sodbo."
+description: "Zdravje strategije in razpad alfa — deterministična zaznava razpada, ki primerja nedavni Sharpe strategije s starejšim zapisom in locira največji premik povprečja (CUSUM sprememba točke), ki vrne Healthy / Degrading / Decayed vrdnost."
 ---
 
-# Strategija zdravje & alfa padec
+# Zdravje strategije in razpad alfa
 
-Vsak rob pada — na raziskava je topa, ki je na pol-živeti od a quant strategija je sesulo iz leta
-do mesece, zato *prilagoditev udari odkritje*. Na Strategija zdravje monitor pove ti, iz a strategija-ov lastne
-povračilo zgodovina, ali na rob je še tam.
+Vsak rob se razpada — raziskava je jasna, da se polovični čas strategije kvantitativnega trgovanja je skrčil od let na mesece, zato se *adaptacija bolj izplača kot odkrivanje*. Monitor zdravja strategije vam pove neposredno iz zgodovine donosov strategije, ali je ta rob še vedno prisoten.
 
-Odprite **cBots → Strategija zdravje** (`/quant/health`).
+Odprite **cBots → Strategy Health** (`/quant/health`).
 
-## Kaj naredi
+## Kaj počne
 
-Glede na a povračilo niz (ali kapitala krivulja, najstarejši prvi), ga:
+Glede na vrsto donosov (ali krivuljo kapitala, od najstarejšega naprej) to počne:
 
-- deli zgodovina v a **prej** in a **nedavne** pol in primerjava njihove Sharpe razmerji;
-- teče a **CUSUM sprememba-točka** pregleda za locira na opažanja kje na srednja najbolj jasno shifts (a
-  režim zlom), poročan samo ko na odklon je statistično bistveno;
-- vrne a sodba:
+- deli zgodovino na **starejšo** in **nedavno** polovico ter primerja njuni Sharpe razmerji;
+- požene **CUSUM spremembo točke** skeniranja, da locira opazovanje, kjer se je povprečje najbolj jasno spremenilo (režimski preobrat), poročano samo, ko je odstopanje statistično opazno;
+- vrne vrdnost:
 
-| Sodba | Pomen |
+| Vrdnost | Pomen |
 |---|---|
-| **Zdravo** | Nedavni zmogljivost je v zanko z (ali bolje kot) na prej zaznamenovanje. |
-| **Slabja** | Nedavne Sharpe je bistveno slabše kot na prej zaznamenovanje — pazi blizu. |
-| **Decayed** | Na rob je učinkovito izginila v na nedavne okna — razmisli ustavljanja. |
-| **Neznano** | Ne dovolj zgodovina za sojenje. |
+| **Healthy** | Nedavna uspešnost je v skladu z (ali boljša od) starejšim zapisom. |
+| **Degrading** | Nedavni Sharpe je materijalno šibkejši kot starejši zapis — pozorno spremljajte. |
+| **Decayed** | Rob je praktično izginil v nedavnem oknu — razmislite o premoru. |
+| **Unknown** | Premalo zgodovine za oceno. |
+
+- **Neposredno iz backtesta — brez kopiranja in lepljenja.** Vsak zaključeni backtest razkrije ikono **Preverite zdravje strategije** na vrstici seznama **Backtest** in v njegovem detaljnem pogledu primerka; en klik zažene monitor na shranjeni krivulji kapitala te vožnje in prikaže vrdnost v dialogu. Ikona je onemogočena, dokler se backtest ni zaključil in je ustvaril poročilo, zato nikoli ni neopustljiv nadzor. V ozadju je to `POST /api/quant/health/backtest/{instanceId}`, ki bere shranjeno krivuljo kapitala poročila.
 
 ```http
 POST /api/quant/health
+{ "returns": [...] }   // or { "equity": [...] }
 ```
+
+## Zakaj je zanesljivo
+
+Je čist, determinističen domenski kod (`Core.Health`) brez odvisnosti infrastrukture in brez zunanjih klicev — enočno preizkušen za razpadene, degradirane, zdrave primere in primere s prekratek zgodovino ter za lokalizacijo spremembe točke. Je ročni sopotnik k vedno vključenim preveroam zdravja, ki podpirajo avtonomne agente: enaka statistika poganja prekidač, ki zmanjšuje tveganje aktivne strategije, katere rob bledí.

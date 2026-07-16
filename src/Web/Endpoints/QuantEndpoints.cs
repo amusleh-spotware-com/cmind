@@ -164,16 +164,33 @@ public static class QuantEndpoints
             try
             {
                 var series = BuildSeries(req.Returns, req.Equity);
-                var report = monitor.Assess(series);
-                return Results.Ok(new
-                {
-                    health = report.Health.ToString(),
-                    earlierSharpe = report.EarlierSharpe,
-                    recentSharpe = report.RecentSharpe,
-                    changePointIndex = report.ChangePointIndex,
-                    observations = report.Observations,
-                    rationale = report.Rationale
-                });
+                return Results.Ok(HealthResponse.From(monitor.Assess(series)));
+            }
+            catch (DomainException ex)
+            {
+                return Results.BadRequest(new { error = ex.Code });
+            }
+        });
+
+        g.MapPost("/health/backtest/{id:guid}", async (
+            Guid id, DataContext db, ICurrentUser u,
+            Core.Health.IStrategyHealthMonitor monitor, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var iid = InstanceId.From(id);
+            var row = await db.Instances.OfType<CompletedBacktestInstance>()
+                .Where(i => i.Id == iid && i.UserId == uid)
+                .Select(i => new { i.ReportJson })
+                .FirstOrDefaultAsync(ct);
+            if (row is null) return Results.NotFound();
+            if (string.IsNullOrWhiteSpace(row.ReportJson))
+                return Results.BadRequest(new { error = "no backtest report available" });
+
+            var equity = ContainerCommandHelpers.ParseEquityCurve(row.ReportJson).Select(p => p.Value).ToList();
+            try
+            {
+                var series = ReturnSeries.FromEquityCurve(equity);
+                return Results.Ok(HealthResponse.From(monitor.Assess(series)));
             }
             catch (DomainException ex)
             {
@@ -251,6 +268,23 @@ public sealed record IntegrityRequest(
     double[]? Returns, double[]? Equity, int? Trials, double? BenchmarkSharpe, double? PeriodsPerYear);
 
 public sealed record IntegrityBacktestRequest(int? Trials);
+
+public sealed record HealthResponse(
+    string health,
+    double earlierSharpe,
+    double recentSharpe,
+    int? changePointIndex,
+    int observations,
+    string rationale)
+{
+    public static HealthResponse From(Core.Health.StrategyHealthReport r) => new(
+        r.Health.ToString(),
+        r.EarlierSharpe,
+        r.RecentSharpe,
+        r.ChangePointIndex,
+        r.Observations,
+        r.Rationale);
+}
 
 public sealed record PboRequest(double[][]? Trials, int? Slices);
 

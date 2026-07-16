@@ -1,39 +1,35 @@
 ---
-description: "Strateji Sağlığı ve Alfa Çürümesi — bir stratejinin son Sharpe'ını daha önceki kaydıyla karşılaştıran ve en büyük ortalama-kaymayı (CUSUM değişim-noktası) bulan deterministik çürüme tespiti, Sağlıklı / Bozuluyor / Çürümüş bir kararı döndürür."
+description: "Strateji Sağlığı & Alfa Azalması — bir stratejinin son Sharpe değerini daha önceki performansıyla karşılaştıran ve en büyük ortalama kaymasını bulan (CUSUM değişim noktası) belirleyici azalma algılaması, Healthy / Degrading / Decayed verdikti döndürür."
 ---
 
-# Strateji Sağlığı ve Alfa Çürümesi
+# Strateji Sağlığı & Alfa Azalması
 
-Her avantaj çürür — araştırma, bir nicel stratejinin yarı-ömrünün yıllardan aylara çöktüğü konusunda
-açıktır, bu yüzden *adaptasyon, keşiften üstündür*. Strateji Sağlığı monitörü, bir stratejinin kendi getiri
-geçmişinden, avantajın hâlâ orada olup olmadığını size söyler.
+Her kenar azalır — araştırma, nicel bir stratejinin yarı ömrünün yıllardan aylara düştüğü konusunda açıktır, bu yüzden *uyarlama keşiften daha iyidir*. Strateji Sağlığı monitörü, bir stratejinin kendi getiri geçmişinden, kenarın hala orada olup olmadığını size söyler.
 
 **cBots → Strategy Health** (`/quant/health`) sayfasını açın.
 
 ## Ne yapar
 
-Bir getiri serisi (veya özkaynak eğrisi, en eski önce) verildiğinde:
+Verilen bir getiri serisi (veya hisse senedi eğrisi, en eski önce) için:
 
-- geçmişi bir **daha önceki** ve bir **son** yarıya böler ve Sharpe oranlarını karşılaştırır;
-- ortalamanın en açık şekilde kaydığı gözlemi (bir rejim kırılması) bulmak için bir **CUSUM değişim-noktası**
-  taraması çalıştırır, yalnızca sapma istatistiksel olarak dikkate değer olduğunda raporlanır;
-- bir karar döndürür:
+- geçmişi bir **daha erken** ve bir **son** yarısına böler ve Sharpe oranlarını karşılaştırır;
+- ortalama en açık şekilde kaydığı gözlemi (rejim değişikliği) bulunacak şekilde **CUSUM değişim noktası** taraması çalıştırır, yalnızca sapma istatistiksel olarak dikkate değer olduğunda raporlanır;
+- bir verdikt döndürür:
 
-| Karar | Anlamı |
+| Verdikt | Anlamı |
 |---|---|
-| **Sağlıklı** | Son performans, daha önceki kayıtla uyumlu (veya daha iyi). |
-| **Bozuluyor** | Son Sharpe, daha önceki kayıttan önemli ölçüde zayıf — yakından izleyin. |
-| **Çürümüş** | Avantaj, son pencerede etkili biçimde kayboldu — duraklatmayı düşünün. |
-| **Bilinmiyor** | Yargılamak için yeterli geçmiş yok. |
+| **Healthy** | Son performans, daha önceki kayıtla uyum içinde veya daha iyidir. |
+| **Degrading** | Son Sharpe, daha önceki kayıttan önemli ölçüde daha zayıftır — yakından izleyin. |
+| **Decayed** | Kenar etkili bir şekilde son pencerede kaybolmuştur — duraklatmayı düşünün. |
+| **Unknown** | Hükme varmak için yeterli geçmiş yoktur. |
+
+- **Bir backtest çalışmasından doğrudan — kopyala-yapıştır yok.** Tamamlanan her backtest, **Backtest** liste satırında ve örnek detay görünümünde bir kalp **Strateji sağlığını denetle** simgesini ortaya çıkarır; bir tıkla, monitörü o çalışmanın saklı hisse senedi eğrisinde çalıştırır ve verdikti bir diyalogda gösterir. Simge, backtest tamamlanıp bir rapor üretilinceye kadar devre dışıdır, bu yüzden hiçbir zaman ölü bir kontrol değildir. Kaputun altında bu `POST /api/quant/health/backtest/{instanceId}` şeklindedir, saklı raporun hisse senedi eğrisini okur.
 
 ```http
 POST /api/quant/health
-{ "returns": [...] }   // veya { "equity": [...] }
+{ "returns": [...] }   // or { "equity": [...] }
 ```
 
-## Neden güvenilir
+## Neden güvenilirdir
 
-Altyapı bağımlılığı ve dış çağrısı olmayan saf, deterministik alan kodudur (`Core.Health`) — çürümüş,
-bozulan, sağlıklı ve çok-kısa durumlar için ve değişim-noktası konumlandırması için birim testlidir. Otonom
-ajanları destekleyen her-zaman-açık sağlık kontrollerinin manuel arkadaşıdır: aynı istatistikler, avantajı
-solan canlı bir stratejinin riskini azaltan devre kesiciyi yönlendirir.
+Altyapı bağımlılığı veya harici çağrı olmayan saf, belirleyici etki alanı kodudur (`Core.Health`) — azalmış, azalan, sağlıklı ve çok kısa durumlar ve değişim noktası yerelleştirmesi için birim testli. Bu, otonomus ajanların arkasında yer alan her zaman açık sağlık kontrollerine manuel bir arkadaştır: aynı istatistikler, kenarı solmakta olan canlı bir stratejinin riskini azaltan devre kesiciyi yönlendirir.

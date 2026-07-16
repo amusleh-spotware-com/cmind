@@ -1,33 +1,35 @@
 ---
-description: "Sức khỏe Chiến lược & Suy thoái Alpha — phát hiện suy thoái tất định so sánh Sharpe gần đây của chiến lược với bản ghi trước đó và xác định điểm dịch chuyển trung bình lớn nhất (CUSUM change-point), trả về phán quyết Khỏe mạnh / Đang suy giảm / Đã suy thoái."
+description: "Strategy Health & Alpha Decay — phát hiện suy giảm xác định so sánh Sharpe gần đây của chiến lược với kỷ lục trước đó và xác định điểm dịch chuyển trung bình lớn nhất (CUSUM change-point), trả về phán quyết Healthy / Degrading / Decayed / Unknown."
 ---
 
-# Sức khỏe Chiến lược & Suy thoái Alpha
+# Strategy Health & Alpha Decay
 
-Mọi lợi thế đều suy thoái — nghiên cứu đã chỉ rõ rằng thời gian bán rã của một chiến lược định lượng đã thu hẹp từ nhiều năm xuống còn nhiều tháng, vì vậy *thích ứng thắng khám phá*. Màn hình Sức khỏe Chiến lược cho bạn biết, từ chính lịch sử lợi nhuận của chiến lược, liệu lợi thế còn tồn tại hay không.
+Mọi lợi thế đều suy giảm — nghiên cứu rõ ràng cho thấy thời gian bán rã của một chiến lược quant đã sụt giảm từ nhiều năm xuống còn nhiều tháng, vì vậy *thích ứng vượt qua khám phá*. Màn hình Strategy Health cho bạn biết, từ chính lịch sử lợi nhuận của chiến lược, liệu lợi thế vẫn còn đó hay không.
 
 Mở **cBots → Strategy Health** (`/quant/health`).
 
-## Nó làm gì
+## What it does
 
-Cho một chuỗi lợi nhuận (hoặc đường cong equity, cũ nhất trước), nó:
+Cho một chuỗi lợi nhuận (hoặc đường cong tài sản, từ cũ nhất đến mới nhất), nó:
 
-- chia lịch sử thành **nửa trước** và **nửa gần đây** và so sánh tỷ số Sharpe của chúng;
-- chạy quét **CUSUM change-point** để xác định quan sát mà mean dịch chuyển rõ ràng nhất (một regime break), chỉ báo cáo khi độ lệch có ý nghĩa thống kê;
+- chia lịch sử thành một nửa **trước đó** và một nửa **gần đây** và so sánh tỷ lệ Sharpe của chúng;
+- chạy quét **CUSUM change-point** để xác định quan sát nơi trung bình rõ ràng nhất đã thay đổi (một sự phá vỡ chế độ), được báo cáo chỉ khi độ lệch đáng chú ý về mặt thống kê;
 - trả về một phán quyết:
 
 | Phán quyết | Ý nghĩa |
 |---|---|
-| **Khỏe mạnh** | Hiệu suất gần đây tương xứng (hoặc tốt hơn) với bản ghi trước đó. |
-| **Đang suy giảm** | Sharpe gần đây yếu hơn đáng kể so với bản ghi trước đó — theo dõi sát. |
-| **Đã suy thoái** | Lợi thế đã thực sự biến mất trong cửa sổ gần đây — cân nhắc tạm dừng. |
-| **Không xác định** | Không đủ lịch sử để đánh giá. |
+| **Healthy** | Hiệu suất gần đây phù hợp với (hoặc tốt hơn) kỷ lục trước đó. |
+| **Degrading** | Sharpe gần đây yếu hơn đáng kể so với kỷ lục trước đó — hãy theo dõi chặt chẽ. |
+| **Decayed** | Lợi thế đã biến mất hiệu quả trong cửa sổ gần đây — hãy cân nhắc tạm dừng. |
+| **Unknown** | Không đủ lịch sử để phán xét. |
+
+- **Trực tiếp từ một lần chạy backtest — không sao chép dán.** Mỗi backtest hoàn thành đều đưa ra một biểu tượng **Kiểm tra sức khỏe chiến lược** trên hàng danh sách **Backtest** và trên chế độ xem chi tiết phiên bản của nó; một cú nhấp chuột chạy màn hình trên đường cong tài sản được lưu trữ của lần chạy đó và hiển thị phán quyết trong một hộp thoại. Biểu tượng bị vô hiệu hóa cho đến khi backtest hoàn thành và tạo ra báo cáo, vì vậy nó không bao giờ là một điều khiển không hoạt động. Ở dưới nền tảng, đây là `POST /api/quant/health/backtest/{instanceId}`, đọc đường cong tài sản của báo cáo được lưu trữ.
 
 ```http
 POST /api/quant/health
 { "returns": [...] }   // or { "equity": [...] }
 ```
 
-## Tại sao nó đáng tin cậy
+## Why it is reliable
 
-Đây là mã miền tất định thuần (`Core.Health`) không phụ thuộc hạ tầng và không có lệnh gọi bên ngoài — được unit-test cho các trường hợp suy thoái, suy giảm, khỏe mạnh và quá ngắn cùng với việc xác định vị trí change-point. Nó là phần bổ sung thủ công cho các kiểm tra sức khỏe luôn bật hỗ trợ các tác nhân tự trị: cùng các thống kê đó cung cấp năng lượng cho circuit breaker giảm rủi ro cho chiến lược đang chạy mà lợi thế đang phai dần.
+Nó là mã miền tinh khiết, xác định (`Core.Health`) không có phụ thuộc cơ sở hạ tầng và không có cuộc gọi bên ngoài — được kiểm tra đơn vị cho các trường hợp decayed, degrading, healthy và quá ngắn và để xác định vị trí điểm thay đổi. Nó là người bạn đi kèm thủ công để kiểm tra sức khỏe luôn bật hỗ trợ các tác nhân tự chủ: những thống kê tương tự lái xe bộ ngắt mạch vượt trội hóa một chiến lược trực tiếp mà lợi thế đang phai.

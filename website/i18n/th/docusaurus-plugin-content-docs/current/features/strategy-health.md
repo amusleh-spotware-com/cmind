@@ -1,30 +1,29 @@
 ---
-description: "Strategy Health & Alpha Decay — deterministic decay detection ที่เปรียบเทียบ recent Sharpe ของ strategy กับ record ก่อนหน้าและหา mean-shift ที่ใหญ่ที่สุด (CUSUM change-point), คืน Healthy / Degrading / Decayed verdict"
+description: "Strategy Health & Alpha Decay — การตรวจจับการลดลงของการทำงานแบบกำหนดได้ที่เปรียบเทียบ Sharpe ล่าสุดของกลยุทธ์กับบันทึกก่อนหน้าและค้นหาการเปลี่ยนแปลงค่าเฉลี่ยที่ยิ่งใหญ่ที่สุด (CUSUM change-point) โดยส่งคืน Healthy / Degrading / Decayed / Unknown"
 ---
 
 # Strategy Health & Alpha Decay
 
-ทุก edge decays — research ชี้ว่า half-life ของ quant strategy ลดจากปีเป็นเดือน
-ดังนั้น *adaptation beats discovery* Strategy Health monitor บอกคุณจาก strategy's
-return history ของตัวเองว่า edge ยังอยู่หรือไม่
+ทุก edge ลดลง — การวิจัยชี้ให้เห็นว่า half-life ของกลยุทธ์ quant ลดลงจากปีเป็นเดือน ดังนั้น *การปรับตัวเอาชนะการค้นพบ* Strategy Health monitor บอกคุณจากประวัติผลตอบแทนของกลยุทธ์ของคุณเองว่า edge ยังคงอยู่หรือไม่
 
 เปิด **cBots → Strategy Health** (`/quant/health`)
 
 ## สิ่งที่มันทำ
 
-กำหนด return series (หรือ equity curve, เก่าสุดก่อน), มัน:
+ให้กำหนด return series (หรือ equity curve โดยเรียงจากเก่าสุดก่อน) มันจะ:
 
-- แยก history เป็น **earlier** และ **recent** halves และเปรียบเทียบ Sharpe ratios ของพวกเขา
-- run **CUSUM change-point** scan เพื่อหาว่า observation ไหน mean เปลี่ยนชัดเจนที่สุด
-  (regime break), reported เฉพาะเมื่อ deviation เป็น statistically notable
-- คืน verdict:
+- แยกประวัติเป็นครึ่ง **earlier** และ **recent** จากนั้นเปรียบเทียบ Sharpe ratios ของพวกเขา
+- ทำการสแกน **CUSUM change-point** เพื่อค้นหาจุดสังเกตที่ค่าเฉลี่ยเปลี่ยนแปลงชัดเจนที่สุด (regime break) โดยรายงานเฉพาะเมื่อการเบี่ยงเบนมีความสำคัญทางสถิติ
+- ส่งคืน verdict:
 
 | Verdict | ความหมาย |
 |---|---|
-| **Healthy** | Recent performance สอดคล้องกับ (หรือดีกว่า) record ก่อนหน้า |
-| **Degrading** | Recent Sharpe อ่อนกว่า material กับ record ก่อนหน้า — watch closely |
-| **Decayed** | Edge ได้หายไปอย่าง effective ใน recent window —พิจารณาหยุด |
-| **Unknown** | ไม่มี history เพียงพอที่จะตัดสิน |
+| **Healthy** | ประสิทธิภาพล่าสุดสอดคล้องกับ (หรือดีกว่า) บันทึกก่อนหน้า |
+| **Degrading** | Sharpe ล่าสุดอ่อนแอลงอย่างมากเมื่อเทียบกับบันทึกก่อนหน้า — ดูแลอย่างใกล้ชิด |
+| **Decayed** | Edge หายไปอย่างมีประสิทธิผลในช่วงเวลาล่าสุด — พิจารณาการหยุดชั่วคราว |
+| **Unknown** | ไม่มีประวัติเพียงพอที่จะตัดสิน |
+
+- **โดยตรงจาก backtest run — ไม่ต้องคัดลอกวาง** ทุก backtest ที่เสร็จสมบูรณ์จะแสดง icon **Check strategy health** บนแถว backtest list และในมุมมองรายละเอียด instance ของมัน คลิกหนึ่งครั้งจะเรียกใช้ monitor กับ equity curve ที่จัดเก็บของ run นั้น และแสดง verdict ในกล่องโต้ตอบ Icon ถูกปิดการใช้งานจนกว่า backtest จะเสร็จสมบูรณ์และสร้างรายงาน ดังนั้นจึงไม่เป็น control ที่ตายแล้ว ด้านใต้ฉากนี้คือ `POST /api/quant/health/backtest/{instanceId}` ซึ่งอ่าน equity curve จาก report ที่เก็บไว้
 
 ```http
 POST /api/quant/health
@@ -33,8 +32,4 @@ POST /api/quant/health
 
 ## ทำไมมันถึงเชื่อถือได้
 
-มันเป็น pure, deterministic domain code (`Core.Health`) ไม่มี infrastructure
-dependency และไม่มี external calls — unit-tested สำหรับ decayed, degrading, healthy และ
-too-short cases และสำหรับ change-point localization มันเป็น companion ด้วยตนเองกับ
-always-on health checks ที่ back autonomous agents: statistics เดียวกันขับเคลื่อน
-circuit breaker ที่ de-risks live strategy ที่ edge fading
+มันเป็น code โดเมนที่บริสุทธิ์และกำหนดได้ (`Core.Health`) ไม่มีการพึ่งพาโครงสร้างพื้นฐาน และไม่มีการเรียกภายนอก — ได้รับการทดสอบหน่วยสำหรับกรณี decayed, degrading, healthy และ too-short และสำหรับการเลียนแบบ change-point มันเป็น companion ด้วยตนเองสำหรับการตรวจสอบสุขภาพที่ always-on ซึ่งสนับสนุน autonomous agents สถิติเดียวกันนี้ขับเคลื่อน circuit breaker ที่ลดความเสี่ยงของกลยุทธ์สด ซึ่ง edge กำลังจางลง

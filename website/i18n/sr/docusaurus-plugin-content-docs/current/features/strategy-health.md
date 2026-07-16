@@ -1,39 +1,35 @@
 ---
-description: "Strategy Health & Alpha Decay — deterministička detekcija decay-a koja upoređuje Sharpe strategije u skorijem periodu sa njenim ranijim rekordom i locira najveći mean-shift (CUSUM change-point), vraćajući Healthy / Degrading / Decayed presudu."
+description: "Strategy Health & Alpha Decay — детерминистичка детекција пропадања која упоређује скорашњи Sharpe од стратегије са њеним ранијим записом и локализује највећу промену средње вредности (CUSUM change-point), враћајући верзију Healthy / Degrading / Decayed."
 ---
 
 # Strategy Health & Alpha Decay
 
-Svaki edge decay-uje — istraživanje je direktno da je half-life kvant strategije kolabriralo sa godina
-na mesece, tako da *adaptacija pobeđuje otkriće*. Strategy Health monitor vam govori, iz strategijine sopstvene
-istorije return-a, da li je edge još tu.
+Сваки edge пропада — истраживање је јасно да је полувек квантне стратегије пропао са година на месеце, па *адаптација надбија откривање*. Strategy Health монитор вам говори, из саме историје приноса стратегије, да ли је edge још увек присутан.
 
-Otvorite **cBots → Strategy Health** (`/quant/health`).
+Отворите **cBots → Strategy Health** (`/quant/health`).
 
-## Šta radi
+## What it does
 
-S obzirom na return series (ili equity curve, najstariji prvo), on:
+Дата серија приноса (или крива капитала, најстарија прва), она:
 
-- deli istoriju na **raniji** i **skoriji** polovinu i upoređuje njihove Sharpe ratios;
-- pokreće **CUSUM change-point** sken da locira opservaciju gde se srednja najjasnije pomerala (a
-  regime break), prijavljenu samo kada je devijacija statistički primetna;
-- vraća presudu:
+- дели историју на **ранију** и **скорашњу** половину и упоређује њихове Sharpe рационе;
+- покреће **CUSUM change-point** скан да локализује опажање где се средња вредност највећим делом пременила (режимски преломи), пријављено само када је одступање статистички значајно;
+- враћа верзију:
 
-| Presuda | Značenje |
+| Верзија | Значење |
 |---|---|
-| **Healthy** | Skorija performansa je u skladu sa (ili bolja od) ranijeg rekorda. |
-| **Degrading** | Skorija Sharpe je materijalno slabija od ranijeg rekorda — pažljivo pratite. |
-| **Decayed** | Edge je efektivno nestao u skorijem prozoru — razmislite o pauziranju. |
-| **Unknown** | Nedovoljno istorije za prosudbu. |
+| **Healthy** | Скорашња перформанса је у складу са (или боља него) ранијим записом. |
+| **Degrading** | Скорашњи Sharpe је материјално слабији од ранијег записа — пажљиво посматрајте. |
+| **Decayed** | Edge је ефективно нестао у скорашњем прозору — размотрите паузирање. |
+| **Unknown** | Нема довољне историје за просуђивање. |
+
+- **Директно од покретања backtesta — без копирања и налепљивања.** Сваки завршени backtest изложава срцу **Check strategy health** икону на реду листе **Backtest** и на детаљном приказу његове инстанце; једним кликом покрећете монитор на криву капитала те стратегије и приказујете верзију у дијалогу. Икона је онемогућена док backtest није завршен и произведен извештај, па никада није неживотан контролер. Позади кулиса ово је `POST /api/quant/health/backtest/{instanceId}`, која чита криву капитала чуваног извештаја.
 
 ```http
 POST /api/quant/health
-{ "returns": [...] }   // ili { "equity": [...] }
+{ "returns": [...] }   // or { "equity": [...] }
 ```
 
-## Zašto je pouzdano
+## Why it is reliable
 
-To je čista, deterministička domen kod (`Core.Health`) bez infrastrukturnih zavisnosti i bez eksternih
-poziva — unit-testiran za decayed, degrading, healthy i too-short slučajeve i za change-point
-lokalizaciju. To je manuelni pratilac always-on health checks koji backup-uju autonomne agente:
- iste statistike pokreću circuit breaker koji de-riskuje live strategiju čiji edge bledi.
+То је чистан, детерминистичан код домена (`Core.Health`) без зависности инфраструктуре и без екстерних позива — унит-тестовано за случајеве пропадања, деградирања, здравља и недовољне дужине и за локализацију change-point-а. То је ручни пратилац увек укљученим проверама здравља које подупиру аутономне агенте: исте статистике покрећу раскидач који смањује ризик од живе стратегије чији edge нестаје.

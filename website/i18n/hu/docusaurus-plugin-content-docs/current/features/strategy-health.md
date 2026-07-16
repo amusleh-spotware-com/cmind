@@ -1,27 +1,35 @@
 ---
-title: Stratégia Egeszseg
-description: "Automatizalt strategi review - azonositja a gyakori cBot hibe mintakat (entry timing, risk reward, drawdown) es javaslatok a fejlesztesre."
+description: "Stratégia Egészsége & Alfa Csökkenés — determinisztikus csökkenésdetektálás, amely összehasonlítja egy stratégia legújabb Sharpe-értékét a korábbi rekorddal és megtalálja a legnagyobb átlageltolódást (CUSUM változáspont), majd egy Egészséges / Romlódó / Elhalványult ítéletet ad vissza."
 ---
 
-# Stratégia Egeszseg
+# Stratégia Egészsége & Alfa Csökkenés
 
-Automatizált stratégia áttekintés - azonosítja a gyakori cBot hiba mintákat (belépés időzítés, kockázat/nyereség arány, drawdown) és javaslatok a fejlesztésre.
+Minden előny csökken — a kutatás egyértelműen azt mutatja, hogy a kvantitatív stratégia félélettartama évekről hónapokra romlott, így az *adaptáció felülmúlja a felfedezést*. A Stratégia Egészsége Monitor azt mondja meg a stratégia saját hozam előzménye alapján, hogy az előny még fennáll-e.
 
-Open **cBots → Strategy Health** (`/quant/health`).
+Nyissa meg a **cBots → Stratégia Egészsége** (`/quant/health`) oldalt.
 
-## What it checks
+## Mit csinál
 
-From a completed backtest instance it computes:
+Egy hozamsor (vagy részvénygörbe, a legrégebbi először) alapján:
 
-- **Win rate, average R:R** — the basics, done deterministically from the instance result.
-- **Drawdown profile** — max drawdown, average drawdown depth, recovery time.
-- **Entry timing** — does the strategy tend to enter near the high/low of the bar? (a common mistake).
-- **Risk rules** — was SL/TP hit first most often? (means the TP is unrealistic).
+- az előzményt egy **korábbi** és egy **újabb** felére osztja és összehasonlítja a Sharpe-rációikat;
+- futtat egy **CUSUM változáspontot** keresve, hogy megtalálja azt a megfigyelést, ahol az átlag a legnyilvánvalóbban eltolódott (egy rezsimváltás), amely csak akkor kerül jelentésre, ha az eltérés statisztikailag figyelemre méltó;
+- egy ítéletet ad vissza:
+
+| Ítélet | Jelentés |
+|---|---|
+| **Egészséges** | A közelmúltbeli teljesítmény összhangban van a korábbi rekorddal, vagy jobb annál. |
+| **Romlódó** | Az újabb Sharpe-érték lényegesen gyengébb, mint a korábbi rekord — gondosan figyelemmel kísérje. |
+| **Elhalványult** | Az előny gyakorlatilag eltűnt az újabb időszakban — fontolja meg a szüneteltetést. |
+| **Ismeretlen** | Nincs elegendő előzmény az ítélethez. |
+
+- **Közvetlenül egy backtest futásból — másolás-beillesztés nélkül.** Minden befejezett backtest egy szív **Stratégia egészsége ellenőrzése** ikont tesz elérhetővé a **Backtest** lista során és a példány részletei nézeten; egy kattintás futtatja a Monitort a futás tárolt részvénygörbéjén és megjeleníti az ítéletet egy párbeszédben. Az ikon addig van letiltva, amíg a backtest nem fejeződik be és nem ad ki jelentést, így soha nem egy üres vezérlő. A háttérben ez a `POST /api/quant/health/backtest/{instanceId}`, amely a tárolt jelentés részvénygörbéjét olvassa.
 
 ```http
-GET /api/quant/health/{instanceId}
+POST /api/quant/health
+{ "returns": [...] }   // vagy { "equity": [...] }
 ```
 
-## Why it is reliable
+## Miért megbízható
 
-Pure deterministic domain code (`Core.Quant.StrategyHealth`) with no infrastructure dependency — unit-tested for each check, boundary conditions, and empty instance path. Advisory by default: the findings are recommendations, never an automatic action.
+Ez tiszta, determinisztikus tartományi kód (`Core.Health`) infrastruktúra-függőség nélkül és külső hívások nélkül — tesztelve a csökkent, romlódó, egészséges és túl rövid esetek és a változáspont-lokalizáció tekintetében. Ez az autonóm ügynököket támogató mindig bekapcsolt egészségségellenőrzések kézi kiegészítése: ugyanezek a statisztikák hajtják a körforgalmi szünetet, amely kockázattalanítja az élő stratégiát, amelynek előnye elhalványul.

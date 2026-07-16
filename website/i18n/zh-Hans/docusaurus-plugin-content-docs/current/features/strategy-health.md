@@ -1,41 +1,35 @@
 ---
-description: "Strategy Health & Alpha Decay — deterministic decay detection that compares a strategy's recent Sharpe to its earlier record and locates the biggest mean-shift (CUSUM change-point), returning a Healthy / Degrading / Decayed verdict."
+description: "策略健康与alpha衰减 — 确定性衰减检测，比较策略的最近Sharpe与其早期记录，并定位最大平均值偏移（CUSUM变点），返回Healthy / Degrading / Decayed判决。"
 ---
 
-# Strategy Health & Alpha Decay
+# 策略健康与Alpha衰减
 
-Every edge decays — the research is blunt that the half-life of a quant strategy has collapsed from years
-to months, so *adaptation beats discovery*. The Strategy Health monitor tells you, from a strategy's own
-return history, whether the edge is still there.
+每种优势都会衰减 — 研究表明量化策略的半衰期已从数年缩短到数月，因此*适应力胜过发现力*。策略健康监测器根据策略自身的回报历史告诉你，这个优势是否仍然存在。
 
-Open **cBots → Strategy Health** (`/quant/health`).
+打开**cBots → Strategy Health**（`/quant/health`）。
 
-## What it does
+## 它的作用
 
-Given a return series (or equity curve, oldest first), it:
+给定一个回报序列（或权益曲线，从最早的开始），它：
 
-- splits the history into an **earlier** and a **recent** half and compares their Sharpe ratios;
-- runs a **CUSUM change-point** scan to locate the observation where the mean most clearly shifted (a
-  regime break), reported only when the deviation is statistically notable;
-- returns a verdict:
+- 将历史分为**早期**和**最近**两个时期并比较它们的Sharpe比率；
+- 运行**CUSUM变点**扫描定位平均值最明显偏移的观测点（体制转折），仅在偏差具有统计学意义时才报告；
+- 返回一个判决：
 
-| Verdict | Meaning |
+| 判决 | 含义 |
 |---|---|
-| **Healthy** | Recent performance is in line with (or better than) the earlier record. |
-| **Degrading** | Recent Sharpe is materially weaker than the earlier record — watch closely. |
-| **Decayed** | The edge has effectively disappeared in the recent window — consider pausing. |
-| **Unknown** | Not enough history to judge. |
+| **Healthy** | 最近表现与早期记录相一致或更好。 |
+| **Degrading** | 最近Sharpe明显弱于早期记录 — 密切关注。 |
+| **Decayed** | 该优势在最近窗口中已经基本消失 — 考虑暂停。 |
+| **Unknown** | 历史数据不足以判断。 |
+
+- **直接来自回测运行 — 无需复制粘贴。** 每个已完成的回测在**Backtest**列表行和其实例详情视图上都会展示一个**Check strategy health**图标；点击一下即可在该运行存储的权益曲线上运行监测器，并在对话框中显示判决。该图标在回测完成并生成报告之前是禁用的，因此它永远不是死控件。底层是`POST /api/quant/health/backtest/{instanceId}`，它读取存储报告的权益曲线。
 
 ```http
 POST /api/quant/health
 { "returns": [...] }   // or { "equity": [...] }
 ```
 
-## Why it is reliable
+## 为什么它可靠
 
-It is pure, deterministic domain code (`Core.Health`) with no infrastructure dependency and no external
-calls — unit-tested for the decayed, degrading, healthy and too-short cases and for change-point
-localization. It is the manual companion to the always-on health checks that back the autonomous agents:
-the same statistics drive the circuit breaker that de-risks a live strategy whose edge is fading.
-
-<!-- [ZH-HANS] Translation needed -->
+它是纯粹的确定性域代码（`Core.Health`），没有基础设施依赖和外部调用 — 经过单元测试验证衰减、降级、健康和历史数据过短的情况，以及变点定位。它是手动配套工具，与支持自主代理的始终运行的健康检查相配合：相同的统计数据驱动电路断路器，该断路器对边界衰落的实时策略进行去风险处理。

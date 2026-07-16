@@ -43,6 +43,11 @@
                                    Disabled="@(!(bool)context.hasReportJson)"
                                    OnClick="@(() => Integrity((Guid)context.id))" data-testid="instance-integrity" />
                 </MudTooltip>
+                <MudTooltip Text="@((bool)context.hasReportJson ? "Check strategy health" : "Strategy health needs a completed backtest report")">
+                    <MudIconButton Icon="@Icons.Material.Filled.MonitorHeart" Size="Size.Small" aria-label="Check strategy health"
+                                   Disabled="@(!(bool)context.hasReportJson)"
+                                   OnClick="@(() => Health((Guid)context.id))" data-testid="instance-health" />
+                </MudTooltip>
             }
             @if (IsActive((string)context.status))
             {
@@ -132,6 +137,16 @@
     {
         var parameters = new DialogParameters<IntegrityResultDialog> { { x => x.InstanceId, id } };
         return Dialogs.ShowAsync<IntegrityResultDialog>("Backtest integrity", parameters,
+            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
+    }
+
+    // Runs the Strategy Health & Alpha Decay check on this completed backtest's stored report and shows the
+    // verdict in a dialog. The icon is disabled unless a JSON report exists, so this only ever opens for an
+    // analysable backtest.
+    private Task Health(Guid id)
+    {
+        var parameters = new DialogParameters<HealthResultDialog> { { x => x.InstanceId, id } };
+        return Dialogs.ShowAsync<HealthResultDialog>("Strategy health", parameters,
             new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
     }
 

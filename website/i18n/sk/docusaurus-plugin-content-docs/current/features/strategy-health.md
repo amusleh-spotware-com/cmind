@@ -1,39 +1,35 @@
 ---
-description: "Strategy Health & Alpha Decay — deterministická detekcia decay, ktorá porovnáva recent Sharpe stratégie s jej skorším záznamom a lokalizuje najväčší mean-shift (CUSUM change-point), vracia verdikt Healthy / Degrading / Decayed."
+description: "Strategy Health & Alpha Decay — deterministická detekcia rozpadu, ktorá porovnáva nedávny Sharpe stratégie s jej staršou históriou a lokalizuje najväčšiu zmenu priemeru (CUSUM bod zmeny), vracia Healthy / Degrading / Decayed verdict."
 ---
 
 # Strategy Health & Alpha Decay
 
-Každá výhoda decayuje — výskum je nekompromisný, že half-life kvantovej stratégie sa skrátila z rokov na
-mesiace, takže *adaptácia poráža objav*. Strategy Health monitor vám hovorí, z vlastnej histórie výnosov stratégie,
-či je výhoda stále tam.
+Každá výhoda sa rozpadá — výskum jasne ukazuje, že polčas rozpadu kvantitatívnej stratégie sa skrátil z rokov na mesiace, takže *adaptácia poráža objavovanie*. Monitor Strategy Health vám hovorí, priamo z vlastnej histórie návratov stratégie, či je výhoda stále prítomná.
 
 Otvorte **cBots → Strategy Health** (`/quant/health`).
 
-## Čo to robí
+## What it does
 
-Pri danej sérii výnosov (alebo equity curve, najstaršie prvé),:
+Vzhľadom na sériu návratov (alebo krivku kapitálu, najstarší ako prvý):
 
-- rozdeľuje históriu na ** skoršiu** a **nedávnu** polovicu a porovnáva ich Sharpe ratio;
-- spúšťa **CUSUM change-point** sken pre lokalizáciu pozorovania, kde sa mean najjasnejšie posunul (a
-  regime break), reportované iba ak je odchýlka štatisticky pozoruhodná;
-- vracia verdikt:
+- rozdelí históriu na **staršiu** a **nedávnu** polovicu a porovná ich Sharpe koeficienty;
+- spustí **CUSUM scan bodu zmeny** na lokalizáciu pozorovania, kde sa priemer najjasnejšie posunul (zmena režimu), nahlásený iba keď je odchýlka štatisticky výrazná;
+- vracia verdict:
 
-| Verdikt | Význam |
+| Verdict | Meaning |
 |---|---|
-| **Healthy** | Nedávna výkonnosť je v línii so (alebo lepšia ako) skorší záznam. |
-| **Degrading** | Nedávny Sharpe je citeľne slabší ako skorší záznam — sledujte pozorne. |
-| **Decayed** | Výhoda efektívne zmizla v nedávnom okne — zvážte pozastavenie. |
-| **Unknown** | Nedostatok histórie na súdenie. |
+| **Healthy** | Nedávny výkon je v súlade s (alebo lepší ako) staršia história. |
+| **Degrading** | Nedávny Sharpe je podstatne slabší ako staršia história — sledujte pozorne. |
+| **Decayed** | Výhoda sa v nedávnom okne efektívne stratila — zvážte pozastavenie. |
+| **Unknown** | Nie je dostatok histórie na posúdenie. |
+
+- **Priamo z backtestovania — bez kopírovania a prilepenia.** Každý ukončený backtest odhaľuje srdce **Check strategy health** ikonu na riadku zoznamu **Backtest** a na jeho pohľade podrobností inštancie; jeden klik spustí monitor na uložená krivke kapitálu tohto spustenia a zobrazí verdict v dialógu. Ikona je zakázaná, kým backtest nie je dokončený a nevytvoril správu, takže nikdy nie je zbytočný ovládací prvok. Pod kapotou je to `POST /api/quant/health/backtest/{instanceId}`, ktorý číta krivku kapitálu uloženej správy.
 
 ```http
 POST /api/quant/health
-{ "returns": [...] }   // alebo { "equity": [...] }
+{ "returns": [...] }   // or { "equity": [...] }
 ```
 
-## Prečo je spoľahlivý
+## Why it is reliable
 
-Čistý, deterministický doménový kód (`Core.Health`) bez infraštruktúrnej závislosti a bez externých
-volaní — unit-testovaný pre decayed, degrading, healthy a príliš krátke prípady a pre change-point
-lokalizáciu. Je manuálnym sprievodcom k always-on health checks, ktoré backupujú autonómnych agentov:
-rovnaké štatistiky hýbu ističom, ktorý de-riskuje live stratégiu, ktorej výhoda mizne.
+Je to čisty, deterministický doménový kód (`Core.Health`) bez infraštrukturnej závislosti a bez externých volaní — jednotkovo testovaný pre prípady rozpadu, zhoršovania, zdravia a príliš krátkej histórie a pre lokalizáciu bodu zmeny. Je to ručný dopĺňajúci prvok ku vždy zapnutým kontrolám zdravia, ktoré zálohu autonómnych agentov: rovnaké štatistiky pohybujú automatickým vypínačom, ktorý znižuje riziko živej stratégie, ktorej výhoda sa stráca.

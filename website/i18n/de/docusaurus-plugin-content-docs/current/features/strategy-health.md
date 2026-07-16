@@ -1,33 +1,35 @@
 ---
-description: "Strategie-Gesundheit & Alpha-Verfall — deterministische Verfalls-Erkennung, die den aktuellen Sharpe einer Strategie mit seiner früheren Bilanz vergleicht und die größte Mittelwert-Verschiebung (CUSUM-Change-Point) lokalisiert, die ein Healthy / Degrading / Decayed-Urteil zurückgibt."
+description: "Strategy Health & Alpha Decay — deterministische Decay-Erkennung, die den neuesten Sharpe einer Strategie mit ihrer früheren Bilanz vergleicht und die größte Mittelwertverschiebung (CUSUM Change-Point) lokalisiert, um ein Urteil Healthy / Degrading / Decayed zurückzugeben."
 ---
 
-# Strategie-Gesundheit & Alpha-Verfall
+# Strategy Health & Alpha Decay
 
-Jede Edge zerfällt — die Forschung ist direkt, dass die Halbwertzeit einer quantitativen Strategie von Jahren zu Monaten kollabiert ist, also *Anpassung schlägt Entdeckung*. Der Strategie-Gesundheits-Monitor sagt Ihnen, aus einer Strategie's eigen Rückgaben-Geschichte, ob die Edge noch da ist.
+Jeder Edge zerfällt – die Forschung ist deutlich, dass sich die Halbwertszeit einer Quant-Strategie von Jahren auf Monate verkürzt hat, daher *schlägt Anpassung Entdeckung*. Der Strategy-Health-Monitor zeigt dir anhand der Renditehistorie einer Strategie, ob der Edge noch vorhanden ist.
 
-Öffnen Sie **cBots → Strategy Health** (`/quant/health`).
+Öffne **cBots → Strategy Health** (`/quant/health`).
 
 ## Was es tut
 
-Gegeben eine Rückgaben-Serie (oder Eigenkapital-Kurve, älteste zuerst), tut sie:
+Gegeben eine Renditeserie (oder Eigenkapitalkurve, chronologisch), funktioniert es so:
 
-- teilt die Geschichte in eine **frühere** und eine **aktuelle** Hälfte und vergleicht ihre Sharpe-Verhältnisse;
-- führt einen **CUSUM-Change-Point**-Scan durch, um die Beobachtung zu lokalisieren, wo der Mittelwert sich am deutlichsten verschoben hat (ein Regime-Bruch), berichtet nur wenn die Abweichung statistisch bemerkenswert ist;
+- teilt die Historie in eine **frühere** und eine **neuere** Hälfte auf und vergleicht deren Sharpe-Verhältnisse;
+- führt einen **CUSUM-Change-Point-Scan** durch, um die Beobachtung zu lokalisieren, bei der sich der Mittelwert am deutlichsten verschoben hat (ein Regime-Wechsel), berichtet nur, wenn die Abweichung statistisch bemerkenswert ist;
 - gibt ein Urteil zurück:
 
 | Urteil | Bedeutung |
 |---|---|
-| **Healthy** | Die aktuelle Leistung ist in line mit (oder besser als) der frühere Bilanz. |
-| **Degrading** | Der aktuelle Sharpe ist wesentlich schwächer als der frühere Bilanz — beobachten Sie eng. |
-| **Decayed** | Die Edge ist effektiv in der aktuellen Fenster verschwunden — erwägen Sie, zu pausieren. |
-| **Unknown** | Nicht genug Geschichte zum Beurteilen. |
+| **Healthy** | Die aktuelle Leistung steht im Einklang mit (oder ist besser als) der früheren Bilanz. |
+| **Degrading** | Der neuere Sharpe ist wesentlich schwächer als der frühere Wert – beobachte genau. |
+| **Decayed** | Der Edge ist im neueren Zeitfenster faktisch verschwunden – ziehe ein Pausieren in Betracht. |
+| **Unknown** | Nicht genug Historie zum Bewerten. |
+
+- **Direkt aus einem Backtest-Durchlauf – ohne Copy-Paste.** Jeder abgeschlossene Backtest zeigt ein Herz-Symbol **Check strategy health** auf der **Backtest**-Listen-Zeile und in seiner Instanz-Detail-Ansicht an; ein Klick führt den Monitor auf der gespeicherten Eigenkapitalkurve des Durchlaufs aus und zeigt das Urteil in einem Dialog. Das Symbol ist deaktiviert, bis der Backtest abgeschlossen ist und einen Bericht erzeugt hat, daher ist es nie eine tote Steuerung. Dahinter steht `POST /api/quant/health/backtest/{instanceId}`, das die Eigenkapitalkurve des gespeicherten Berichts ausliest.
 
 ```http
 POST /api/quant/health
-{ "returns": [...] }   // oder { "equity": [...] }
+{ "returns": [...] }   // or { "equity": [...] }
 ```
 
 ## Warum es zuverlässig ist
 
-Es ist reiner, deterministischer Domänen-Code (`Core.Health`) mit keiner Infrastruktur-Abhängigkeit und keinen externen Calls — Unit-getestet für die abgelösten, verschlechterten, gesunden und zu-kurzen Fälle und für Change-Point-Lokalisierung. Es ist der manuelle Begleiter zu den immer-an Gesundheits-Checks, die die autonomen Agenten unterstützen: die gleichen Statistiken treiben den Leistungsschalter an, der eine Live-Strategie deren Edge verblasst, de-risked.
+Es ist reiner, deterministischer Domain-Code (`Core.Health`) ohne Infrastruktur-Abhängigkeit und ohne externe Aufrufe – getestet für die Fälle Decayed, Degrading, Healthy und zu-kurze-Historie sowie für Change-Point-Lokalisierung. Es ist der manuelle Begleiter zu den immer aktiven Health-Checks, die die autonomen Agenten sichern: die gleiche Statistik treibt den Circuit Breaker an, der eine Live-Strategie entwässert, deren Edge schwächer wird.

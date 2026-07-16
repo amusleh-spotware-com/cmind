@@ -73,16 +73,18 @@ public class InstanceRestartHttpTests(PostgresFixture fixture) : IClassFixture<P
     }
 
     [Fact]
-    public async Task Restart_a_stopped_run_launches_a_new_instance()
+    public async Task Restart_a_stopped_run_replaces_it_with_a_new_running_instance()
     {
         await using var app = CreateApp();
         var client = await LoginAsync(app);
 
         Guid stoppedId;
+        string cbotName;
         var (db, uid, protector) = await ScopeAsync(app);
         await using (db)
         {
             var (cbot, node, accountId) = SeedCommon(db, uid, protector);
+            cbotName = cbot.Name;
             var stopped = ((StartingRunInstance)RunInstance.CreateStarting(uid, cbot.Id, node.Id,
                     new DockerImageTag("latest"), new Symbol("EURUSD"), new Timeframe("h1"), accountId))
                 .ToRunning("c1", Now).ToStopped(Now.AddMinutes(1));
@@ -94,24 +96,29 @@ public class InstanceRestartHttpTests(PostgresFixture fixture) : IClassFixture<P
         var res = await client.PostAsync($"/api/instances/{stoppedId}/start", null);
         res.StatusCode.Should().Be(HttpStatusCode.OK);
         var newId = (await res.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
-        newId.Should().NotBe(stoppedId, "restart creates a fresh instance");
+        newId.Should().NotBe(stoppedId);
 
         var list = await (await client.GetAsync("/api/instances/")).Content.ReadFromJsonAsync<JsonElement>();
-        var runs = list.EnumerateArray().Count(r => r.GetProperty("kind").GetString() == "Run");
-        runs.Should().BeGreaterThanOrEqualTo(2, "the original stopped run and the newly started one both exist");
+        var rows = list.EnumerateArray().Where(r => r.GetProperty("cBot").GetString() == cbotName).ToList();
+        rows.Should().ContainSingle("the restart replaces the old instance rather than duplicating it");
+        rows[0].GetProperty("id").GetGuid().Should().Be(newId);
+        rows[0].GetProperty("status").GetString().Should().Be("Running",
+            "the launch succeeded — proving the trading account (and thus --pwd-file) was loaded");
     }
 
     [Fact]
-    public async Task Restart_a_completed_backtest_launches_a_new_backtest()
+    public async Task Restart_a_completed_backtest_replaces_it_with_a_new_running_backtest()
     {
         await using var app = CreateApp();
         var client = await LoginAsync(app);
 
         Guid completedId;
+        string cbotName;
         var (db, uid, protector) = await ScopeAsync(app);
         await using (db)
         {
             var (cbot, node, accountId) = SeedCommon(db, uid, protector);
+            cbotName = cbot.Name;
             var completed = ((StartingBacktestInstance)BacktestInstance.CreateStarting(uid, cbot.Id, node.Id,
                     new DockerImageTag("latest"), new Symbol("EURUSD"), new Timeframe("h1"), "{}", accountId))
                 .ToRunning("c1", Now).ToCompleted(Now.AddMinutes(1));
@@ -122,10 +129,15 @@ public class InstanceRestartHttpTests(PostgresFixture fixture) : IClassFixture<P
 
         var res = await client.PostAsync($"/api/instances/{completedId}/start", null);
         res.StatusCode.Should().Be(HttpStatusCode.OK);
+        var newId = (await res.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+        newId.Should().NotBe(completedId);
 
         var list = await (await client.GetAsync("/api/instances/")).Content.ReadFromJsonAsync<JsonElement>();
-        list.EnumerateArray().Count(r => r.GetProperty("kind").GetString() == "Backtest")
-            .Should().BeGreaterThanOrEqualTo(2, "the original completed backtest and the restarted one both exist");
+        var rows = list.EnumerateArray().Where(r => r.GetProperty("cBot").GetString() == cbotName).ToList();
+        rows.Should().ContainSingle("the restart replaces the old backtest rather than duplicating it");
+        rows[0].GetProperty("kind").GetString().Should().Be("Backtest");
+        rows[0].GetProperty("status").GetString().Should().Be("Running",
+            "the backtest launched successfully — proving the trading account (and thus --pwd-file) was loaded");
     }
 
     [Fact]
@@ -185,8 +197,15 @@ public class InstanceRestartHttpTests(PostgresFixture fixture) : IClassFixture<P
 
     private sealed class FakeDispatcher : IContainerDispatcher
     {
-        public Task<string> StartAsync(Instance instance, byte[] algoBytes, string paramJson, CancellationToken ct) =>
-            Task.FromResult("container-restarted");
+        public Task<string> StartAsync(Instance instance, byte[] algoBytes, string paramJson, CancellationToken ct)
+        {
+            // Mirror the real dispatcher's requirement: to pass --ctid/--pwd-file/--account to the CLI the
+            // TradingAccount navigation (with its cID) must be populated. If the restart forgot to load it,
+            // fail — this is the regression guard for the "Should be specified parameter: --pwd-file" bug.
+            if (instance.TradingAccountId is not null && (instance.TradingAccount is null || instance.TradingAccount.CTid is null))
+                throw new InvalidOperationException("TradingAccount navigation was not loaded");
+            return Task.FromResult("container-restarted");
+        }
 
         public Task StopAsync(Instance instance, CancellationToken ct) => Task.CompletedTask;
 

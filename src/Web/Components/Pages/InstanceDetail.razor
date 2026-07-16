@@ -58,7 +58,7 @@
         <MudAlert Severity="Severity.Warning" Class="mb-3" data-testid="instance-not-found">
             @L["instance.notFound"]
             <MudButton Class="ms-2" Size="MudBlazor.Size.Small" Variant="Variant.Filled" Color="MudBlazor.Color.Primary"
-                       Href="/run" data-testid="instance-back">@L["instance.back"]</MudButton>
+                       OnClick="Back" data-testid="instance-back">@L["instance.back"]</MudButton>
         </MudAlert>
     }
 
@@ -145,7 +145,13 @@
 
     public record EquityPoint(DateTime Ts, double Value);
 
-    private void Back() => Nav.NavigateTo(_isBacktest ? "/backtest" : "/run");
+    private async Task Back()
+    {
+        // When the instance loaded, route to the matching list; when it is missing/transitioned (kind
+        // unknown), go back to wherever the user came from (run or backtest list) instead of always /run.
+        if (_detail is not null) Nav.NavigateTo(_isBacktest ? "/backtest" : "/run");
+        else await JS.InvokeVoidAsync("history.back");
+    }
 
     private async Task StopAsync()
     {

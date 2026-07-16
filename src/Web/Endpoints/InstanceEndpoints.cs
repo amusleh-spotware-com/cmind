@@ -224,6 +224,13 @@ public static class InstanceEndpoints
             var cbot = await db.CBots.FirstOrDefaultAsync(c => c.Id == i.CBotId && c.UserId == uid);
             if (cbot is null) return Results.BadRequest("cbot not found");
 
+            // Load the trading account (with its cID) into the context so EF relationship fixup populates the
+            // new instance's TradingAccount navigation — the dispatcher needs it to pass --ctid/--pwd-file/
+            // --account to the cTrader CLI (otherwise the container errors "Should be specified parameter:
+            // --pwd-file").
+            if (i.TradingAccountId is { } accountId)
+                await db.TradingAccounts.Include(t => t.CTid).FirstOrDefaultAsync(t => t.Id == accountId);
+
             var paramJson = "{}";
             if (i.ParamSetId is { } psid)
             {
@@ -243,6 +250,9 @@ public static class InstanceEndpoints
                     backtest.BacktestSettingsJson, i.TradingAccountId, i.ParamSetId)
                 : RunInstance.CreateStarting(uid, i.CBotId, node.Id, imageTag, symbol, timeframe,
                     i.TradingAccountId, i.ParamSetId);
+            // Replace the old terminal instance rather than leaving a duplicate — a restart re-launches "the
+            // same" instance in the list.
+            db.Instances.Remove(i);
             db.Instances.Add(starting);
             await db.SaveChangesAsync();
             starting.AttachNode(node);

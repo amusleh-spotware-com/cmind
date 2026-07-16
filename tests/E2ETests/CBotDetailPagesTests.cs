@@ -171,12 +171,17 @@ public sealed class CBotDetailPagesTests(AppFixture app)
             "a null parameter set must be handled, not crash /api/instances with a 500");
     }
 
-    // The instance detail page has a Back button (rendered even on the not-found path) that returns to the
-    // Run list — navigating there and back must never crash the circuit.
+    // The instance detail page has a Back button (rendered even on the not-found path). For a missing /
+    // already-transitioned instance (kind unknown) it returns the user to wherever they came from — so a
+    // user who reached it from the backtest list goes back to backtests, not always /run. Navigating there
+    // and back must never crash the circuit.
     [Fact]
-    public async Task Instance_detail_back_button_returns_to_the_run_list()
+    public async Task Instance_detail_back_button_returns_to_the_originating_list()
     {
         var page = await app.NewAuthedPageAsync();
+        // Arrive from the Backtest list, then open a missing instance; Back must return to /backtest.
+        await page.GotoAsync("/backtest", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
         var missingId = "00000000-0000-0000-0000-0000000000bb";
         await page.GotoAsync($"/instance/{missingId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
@@ -184,8 +189,8 @@ public sealed class CBotDetailPagesTests(AppFixture app)
         var back = page.Locator("[data-testid=instance-back-btn]");
         await Assertions.Expect(back).ToBeVisibleAsync(Slow);
         await back.ClickAsync();
-        await page.WaitForURLAsync("**/run", new() { Timeout = 15000 });
-        page.Url.Should().EndWith("/run");
+        await page.WaitForURLAsync("**/backtest", new() { Timeout = 15000 });
+        page.Url.Should().EndWith("/backtest", "Back returns to the list the user came from, not always /run");
         (await page.Locator(".blazor-error-ui").IsVisibleAsync())
             .Should().BeFalse("navigating back from the instance page must not crash the circuit");
     }

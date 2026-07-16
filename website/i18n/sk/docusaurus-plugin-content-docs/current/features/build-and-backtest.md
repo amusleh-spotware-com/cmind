@@ -1,140 +1,153 @@
 ---
-description: "Zostavujte, spúšťajte a testujte cTrader cBots (C# aj Python, obe na .NET) z editorov v prehliadači s podporou Monaco, spúšťajte na oficiálnom obraze ghcr.io/spotware/ctrader-console."
+description: "Vytváranie, spustenie a backtesting cTrader cBots (C# a Python, obe .NET) z in-browser Monaco IDE, spustenie na oficiálnom obrázku ghcr.io/spotware/ctrader-console."
 ---
 
-# Zostavovanie a backtesting cBotov
+# Vytváranie a backtesting cBots
 
-Zostavujte, spúšťajte a testujte cTrader cBots (C# **a** Python, obe na .NET) z editorov v prehliadači
-s podporou Monaco, spúšťajte na oficiálnom obraze `ghcr.io/spotware/ctrader-console`.
+Vytváranie, spustenie a backtesting cTrader cBots (C# **a** Python, obe .NET) z in-browser Monaco
+IDE, spustenie na oficiálnom obrázku `ghcr.io/spotware/ctrader-console`.
 
-## Zostavovanie
+## Vytváranie
 
-- **Builder** stránka hostuje editor Monaco; `CBotBuilder` kompiluje projekt pomocou
-  `dotnet build` **v dočasnom kontajneri** (`AppOptions.BuildImage`, pracovný adresár pripojený
-  na `/work`), takže nedôveryhodný MSBuild používateľa nemôže dosiahnuť hostiteľa. NuGet restore je uložený
-  v cache prostredníctvom zdieľaného zväzku v rámci zostavovacích procesov. Webový hostiteľ potrebuje prístup k soketom Docker.
-- Šablóny na začatie pre C# a Python sa nachádzajú v `src/Nodes/Builder/Templates/`.
+- **Stránka Builder** hostí Monaco editor; `CBotBuilder` kompiluje projekt pomocou
+  `dotnet build` **v jednorazovom kontajneri** (`AppOptions.BuildImage`, pracovný adresár bind-mount
+  na `/work`), aby nedôveryhodné MSBuild ciele hostitela nemohli dosiahnuť. NuGet obnovenie je uložené
+  v medzipamäti medzi zostaveniami prostredníctvom zdieľaného zväzku. Webový hostiteľ potrebuje prístup k soketu Docker.
+- Startovné šablóny C# a Python sa nachádzajú v `src/Nodes/Builder/Templates/`.
 
-## Spúšťanie a backtesting
+## Spustenie a backtesting
 
-- **Instances** = TPH stavová hierarchia (`Run`/`Backtest` × `Pending`/`Scheduled`/`Starting`/
-  `Running`/`Stopping`/`Stopped`/`Failed`). Prechod stavu nahrádza entitu (zmena id),
+- **Inštancie** = TPH hierarchia stavov (`Run`/`Backtest` × `Pending`/`Scheduled`/`Starting`/
+  `Running`/`Stopping`/`Stopped`/`Failed`). Prechod nahrádza entitu (zmena id),
   id kontajnera sa prenáša.
-- `NodeScheduler` vyberie menej zaťažený oprávnený uzol; `ContainerDispatcherFactory` smeruje na
-  vzdialený HTTP agent uzla alebo lokálny Docker dispečer.
-- Polléry dokončenia zosúladzia ukončené kontajnery (backtestové kontajnery sa automaticky ukončia cez
-  `--exit-on-stop`); správa prítomná → vykonaná (uloží `ReportJson`), chýbajúca → zlyhala.
-- Živé konzoľové logy sa streamujú do prehliadača cez SignalR; backtestové krivky kapitálu sa analyzujú zo
-  správy a vykreslujú do grafu.
+- `NodeScheduler` vyberie najmenej zaťažený oprávnený uzol; `ContainerDispatcherFactory` smeruje na
+  vzdialený uzol HTTP agent alebo lokálny dispečer Docker.
+- Pollovacie služby dokončenia zosúladzia ukončené kontajnery (backtestovací kontajnery sú sami ukončené prostredníctvom
+  `--exit-on-stop`); správa prítomná → dokončená (uloženie `ReportJson`), chýbajúca → zlyhala.
+- Živé protokoly kontajnera sú streamované do prehliadača cez SignalR; backtestovací krivky vlastného kapitálu sú analyzované zo
+  správy a zobrazené v grafe.
 
-## Backtestové trhové údaje sú uložené v cache podľa účtu
+## Backtestovací trhové údaje sú uložené v medzipamäti podľa účtu
 
-cTrader Console stiahne historické údaje tick/bar do svojho `--data-dir`. Tento adresár je
-**stabilná, trvalá cache indexovaná podľa obchodného účtu** (jeho čísla účtu) — pripojená z disku uzla na jeho vlastnú cestu kontajnera (`/mnt/data`), **samostatné, neprepletené pripojenie** z
-adresára práce jednotlivej inštancie. Preto každý backtest na tom istom účte **znovu použije** už stiahnuté údaje
-namiesto ich stiahnutia pri každom spustení. (Skôr mal
-dátový adresár umiestnenie pod adresárom práce jednotlivej inštancie, ktorého id sa mení pri každom spustení, čo núti čerstvé
-stiahnutie pri každom backteste.) Dočasný adresár práce jednotlivej inštancie stále obsahuje algo, parametre, heslo
-a správu; zdieľaná cache dát sa počíta pri použití backtestových dát uzla a vymaže sa akciou čistenia uzla.
+Konzola cTrader sťahuje historické údaje tick/bar do svojho `--data-dir`. Tento adresár je
+**stabilná, trvalá medzipamäť klúčovaná na obchodnom účte** (jeho číslo účtu) — bind-mounted z
+disku uzla na jeho vlastnú cestu kontajnera (`/mnt/data`), **samostatný, nevnorený mount** od
+adresára per-inštancia. Takže každý backtest na rovnakom účte **opätovne používa** už stiahnuté údaje
+namiesto ich opätovného stiahnutia pri každom spustení. (Skôr bol
+dátový adresár umiestnený v adresári per-inštancia, ktorého id sa mení pri každom spustení, čo nútilo stiahnutie
+pri každom backteste.) Dočasný adresár per-inštancia stále obsahuje algoritmus, parametre, heslo
+a správu; zdieľaná medzipamäť údajov sa počíta do backtestovacieho užitia údajov uzla a je vymazaná akcií
+čištenia uzla.
 
 ## Nastavenia backtestingu
 
-Dialóg **Backtest** sprístupňuje nastavenia backtestingu cTrader Console, ktoré je možné nastaviť používateľom, takže nikdy nemusíte
+Dialógové **Backtest** zverejňuje nastavenia backtestingu konzoly cTrader, ktoré môže užívateľ nastavovať, takže nikdy nemusíte
 dotýkať sa príkazového riadka:
 
-- **Symbol / Timeframe** — timeframe je **rozbaľovacia ponuka každej cTrader periódy** (`t1`…`t1000`,
-  `m1`…`m45`, `h1`…`h12`, `D1`/`D2`/`D3`, `W1`, `Month1` a Renko/Range/Heikin periódy), v
-  kánickej kapitalizácii konzoly, takže vždy vyberiete platnú `--period`.
-- **From / To** — backtestové okno (`--start` / `--end`).
-- **Data mode** — jeden z troch režimov cTrader (`--data-mode`): **Tick data** (`tick`, presná),
-  **m1 bars** (`m1`, rýchla), alebo **Open prices only** (`open`, najrýchlejšia).
-- **Starting balance** — na výchozí 10000 (`--balance`). **Nulový zůstatek neumožní žádné obchody a cTrader
-  emituje prázdnu správu, na ktorej potom havaruje** ("Message expected"), takže sa vždy pošle nenulový zůstatek.
-- **Commission** a **Spread** — `--commission` / `--spread` (spread v pipoch).
+- **Symbol / Timeframe** — časový rámec je **rozbaľovací zoznam všetkých období cTrader** (`t1`…`t1000`,
+  `m1`…`m45`, `h1`…`h12`, `D1`/`D2`/`D3`, `W1`, `Month1` a Renko/Range/Heikin obdobia), v
+  kvázikanonickej pravopise konzoly, aby ste vždy vybrali platnú `--period`.
+- **From / To** — okno backtestingu (`--start` / `--end`).
+- **Dátový režim** — jeden z troch režimov cTrader (`--data-mode`): **Tick data** (`tick`, presné),
+  **m1 bars** (`m1`, rýchle) alebo **Iba otváracie ceny** (`open`, najrýchlejšie).
+- **Počiatočný zostatok** — predvolené `10000` (`--balance`). **Nulový zostatok umiestnenie neprevádzkuje a nechá
+  cTrader vykázať prázdnu správu a potom sa zrúti** ("Message expected"), takže je vždy odoslaný nenulový zostatok.
+- **Komisia** — `--commission`.
+- **Spread** — `--spread`, **numerické pole v pipoch, ktoré nemôže klesnúť pod 0**. Sú **skryté v režime Tick
+  data**, kde cTrader odvodzuje rozptyl z tick údajov samotných (nie je odoslaný žiadny `--spread`).
 
-Dátový adresár (`--data-file` / `--data-dir`) spravuje samotná aplikácia (cache podľa účtu, pozri
-vyššie), nie je sprístupnená v dialógu.
+Dátový adresár (`--data-file` / `--data-dir`) je spravovaný samotnou aplikáciou (medzipamäť per-účet, viď
+vyššie), nie je vystavený v dialógu.
 
-## Stránka detail inštancie
+:::note cTrader sa zrúti na prázdnom backteste
+Ak backtest vyprodukuje **žiadne výsledky** — žiadne obchody alebo žiadne trhové údaje pre zvolené dátumy/symbol —
+vlastný zapisovateľ správ konzoly cTrader vyhodí `Message expected` a skončí bez správy. Aplikácia to nemôže
+opraviť v tomto úlohe nadradenom chybe, ale detekuje to a označí inštanciu **Failed** s akčným dôvodom
+("no backtest results for the selected range…") namiesto hrubého stack trace. Vyberte si širší rozsah dátumov
+ktorý má dostupné trhové údaje a skúste znova.
+:::
 
-Otvorenie inštancie (`/instance/{id}`) zobrazí jej živý stav, logy a — v prípade backtestingu — krivku kapitálu.
-**Titul karty prehliadača** odráža konkrétnu inštanciu (**meno cBotu · typ · symbol**, napr.
-`TrendBot · Backtest · EURUSD`), aby bola nezabudnuteľná karta spusteného behu a karta backtestingu
-na prvý pohľad rozlíšiteľná. Run a backtest toho istého cBotu sú sledované ako odlišné **lineáže** (stabilné lineáž id
-prenášané cez zmeny stavov), takže stránka sleduje presne jednu inštanciu a nikdy necamí zmiešavať údaje z behu s backtestom.
+## Stránka s podrobnosťami inštancie
+
+Otvorenie inštancie (`/instance/{id}`) zobrazuje jej živý stav, protokoly a — pre backtest — krivku vlastného kapitálu.
+**Názov karty prehliadača** odráža špecifickú inštanciu (**názov cBotu · druh · symbol**, napr.
+`TrendBot · Backtest · EURUSD`), aby bola na prvý pohľad rozlíšená karta živého spustenia a karta backteste.
+Spustenie a backtest rovnakého cBotu sú sledované ako odlišné **lineáže** (stabilné id lineáže prenášané
+cez prechody stavov), takže stránka nasleduje presne jednu inštanciu a nikdy nemieša údaje spustenia s
+backtestom.
 
 ## Ovládacie prvky životného cyklu inštancie
 
-Každý riadok inštancie (a jeho stránka detail) má ovládacie prvky správneho stavu. **Aktívna** inštancia zobrazuje
-**Stop**; **terminálna** (Stopped / Completed / Failed) zobrazuje **Start (▶)** na jej opätovné spustenie s
-tým istým cBotom, účtom, symbolom, timefrámom, súborom parametrov a obrazom (spustenie sa restartuje ako spustenie, backtest ako backtest). Kliknutie na Stop zobrazuje "Stopping…" upozornenie a deaktivuje ikonu, kým sa
-nevyrieši, a novo vytvorený spoj sa okamžite objaví v zozname — bez obnovy stránky.
+Každý riadok inštancie (a jeho stránka s podrobnosťami) má ovládacie prvky správneho stavu. Aktívna **aktívna** inštancia zobrazuje
+**Stop**; **terminálna** (`Stopped` / `Completed` / `Failed`) zobrazuje **Start (▶)** na spustenie
+s rovnakým cBotom, účtom, symbolom, časovým rámcom, sadou parametrov a obrázkom (spustenie sa restartuje ako spustenie, backtest
+ako backtest). Kliknutie na Stop zobrazí oznámenie "Stopping…" a zakáže ikonu, kým sa to nevyrieši, a novo vytvorené spustenie
+sa okamžite objaví v zozname — bez opätovného načítania stránky.
 
-Konzoľové logy sú **trvalé, keď inštancia končí** — pre spustenie (na Stop) a pre
-**backtest** (po dokončení) — takže logy posledného spustenia zostanú viditeľné na stránke detail a,
-cez panel nástrojov logu, **skopírované do schránky** (Kopírovať logy ikona) alebo **stiahnuté** (Stiahnúť logy
-ikona) aj po zmiznutí kontajnera. Obe pôsobia na úplný konzoľový log inštancie, nie len na
-viditeľný chvost.
+Protokoly konzoly sú **uchovávané, keď sa inštancia ukončí** — pre spustenie (na Stop) a pre
+**backtest** (po dokončení) — takže protokoly posledného spustenia zostávajú prezerateľné na stránke s podrobnosťami a
+prostredníctvom panela nástrojov protokolu sa **kopírujú do schránky** (ikona Copy logs) alebo **sťahujú** (ikona Download logs)
+dokonca aj po zmiznutí kontajnera. Obidve pôsobia na úplný protokol konzoly inštancie, nie len na viditeľný chvost.
 
-**Nahraný** `.algo` nikdy nebol zostavený tu, takže jeho **Last Build** stĺpec na stránke cBotov sa necháva
-prázdny (zobrazuje čas zostavenia iba pre cBoty, ktoré ste zostavili v prehliadači).
+Nahraný `.algo` nikdy nebol tu vytvárený, takže jeho stĺpec **Last Build** na stránke cBots je prázdny
+(zobrazuje čas zostavenia iba pre cBots, ktoré tu vytvárate v prehliadači).
 
-## Úprava a opätovné spustenie zastavené inštancie
+## Úprava a opätovné spustenie zastavnej inštancie
 
-**Zastavená** inštancia (spustenie alebo backtest) má ovládací prvok **Edit** — ikona na jej riadku v zozname **a**
-vedľa Start/Stop na jej stránke detail — ktorá otvára dialóg **prefilled** s jej aktuálnou konfiguráciou.
-Môžete zmeniť **obchodný účet, symbol, timeframe, súbor parametrov a značku obrazu** (a pre
-backtest, **okno a všetky backtestové nastavenia** vyššie), potom **Save & start** jej opätovné spustenie s
-novými nastaveniami (nahradí zastavenú inštanciu). Ovládací prvok je **deaktivovaný, kým je inštancia aktívna** —
-iba zastavená inštancia môže byť upravená.
+**Zastavená** inštancia (spustenie alebo backtest) má ovládací prvok **Úprava** — ikonu na jej riadku v zozname **a**
+vedľa Start/Stop na jej stránke s podrobnosťami — ktorá otvorí dialóg **prefilled** s jeho aktuálnou konfigurácií.
+Môžete zmeniť **obchodný účet, symbol, časový rámec, sadu parametrov a značku obrázku** (a pre backtest
+**okno a všetky nastavenia backtestingu** vyššie), potom **Uložiť a spustiť** ho znovu spustí s
+novými nastaveniami (nahradenie zastavnej inštancie). Ovládací prvok je **zakázaný, keď je inštancia aktívna** —
+iba zastavená inštancia sa môže upravovať.
 
 ## Spustenie z editora kódu
 
-Kliknutie na **Run** v editore kódu otvára dialóg namiesto slepého, pevne kódovaného spustenia:
+Kliknutie na **Run** v editore kódu otvorí dialóg namiesto spustenia slepo, pevného spustenia:
 
-- **Trading account** (povinné) — obchodný účet cTrader, ku ktorému sa cBot pripája.
-- **Parameter set** (voliteľné) — zvoľte existujúci súbor alebo nechajte ho prázdny na spustenie s cBotom
-  **default values parametrov**. Tlačidlo **+** vedľa selektora vytvorí nový súbor parametrov
-  inline (pozri nižšie) a vyberie ho.
-- **Symbol / Timeframe** majú východzí `EURUSD` / `h1` a môžu sa zmeniť; **Cancel** alebo **Run**.
+- **Obchodný účet** (povinný) — účet cTrader, ku ktorému sa cBot pripája.
+- **Sada parametrov** (voliteľné) — vyberte existujúcu sadu alebo ju ponechajte prázdnu na spustenie s **predvolenými
+  hodnotami parametrov** cBotu. Tlačidlo **+** vedľa selektora vytvorí novú sadu parametrov
+  vloženú (pozri nižšie) a vyberie ju.
+- **Symbol / Timeframe** sa predvolené `EURUSD` / `h1` a je možné ich zmeniť; **Zrušiť** alebo **Spustiť**.
 
-Na **Run** editor uloží + kompiluje aktuálny zdroj, spustí inštanciu na zvolenom účte
-so zvolenými parametrami, potom si sleduje živé konzoľové logy. (Log stream prenáša cookie autentifikácie
-prihláseného používateľa na hub `/hubs/logs` SignalR, takže sa pripája namiesto zlyhania s
+Na **Spustenie** editor uloží a skompiluje aktuálny zdroj, spustí inštanciu na zvolenom účte
+so zvolenými parametrami a potom sleduje živé protokoly kontajnera. (Tok protokolu presmeroví cookie autentifikácie prihláseneho
+používateľa do centra `/hubs/logs` SignalR, aby sa pripojil namiesto zlyhania s
 `Invalid negotiation response received`.)
 
-## Súbory parametrov
+## Sady parametrov
 
-**Súbor parametrov** je pomenovaný, opakovaně použiteľný súbor prepísania parametrov cBotu uložený ako plochý JSON
-objekt mapujúci názvy jednotlivých parametrov na skalárnu hodnotu, napr. `{"Period": 14, "Label": "trend"}`. V
-čase spustenia/backtestingu sa pretvára na súbor cTrader `params.cbotset`
-(`{ "Parameters": { … } }`). Môžete vytvoriť/upraviť súbor ako hrubý JSON z dialógu **Parameter
-sets** cBotu alebo inline z dialógu Run.
+**Sada parametrov** je pomenovaná, opätovne použiteľná sada prepísaní parametrov cBotu uložená ako plochý JSON
+objekt mapujúci každý názov parametra na skalárnu hodnotu, napr. `{"Period": 14, "Label": "trend"}`. V
+čase spustenia/backtestingu sa zmení na súbor cTrader `params.cbotset`
+(`{ "Parameters": { … } }`). Môžete vytvoriť/upraviť sadu ako neobrázku JSON z **Parameter
+sets** dialógu cBotu alebo vloženého z dialógu Run.
 
-Každý súbor parametrov **patrí cBotu**: dialóg New Parameter Set uvádza všetky vaše cBoty a vy
-**musíte vybrať jeden** — vytvorenie je zablokované, kým nie je vybraný cBot. **Názov** súboru je jedinečný na cBot:
-vytvorenie alebo premenovanie súboru na názov, ktorý už iný súbor toho istého cBotu používa, sa odmietne (jasná
-chyba v dialógu, `409 Conflict` v API). Rovnaký názov možno opätovne použiť na **iný** cBot.
+Každá sada parametrov **patrí cBotu**: dialóg New Parameter Set uvádza všetky vaše cBots a musíte
+**vybrať jeden** — vytvorenie je zablokované, kým nie je vybraný cBot. Názov sady je **jedinečný na cBot**:
+vytvorenie alebo premenovanie sady na názov, ktorý už používa iná sada rovnakého cBotu, je odmietnuté (jasná
+chyba v dialógu, `409 Conflict` v API). Rovnaký názov sa môže opätovne použiť na **inom** cBote.
 
-JSON je **oveľovaný** pri uložení: musí byť jeden plochý objekt, ktorého hodnoty sú všetky skalárne
-(string / number / bool). Nekódy objekt root, pole, vnorený objekt, `null` hodnota alebo malformovaný
-JSON sa odmietne (jasná chyba v dialógu, `400 Bad Request` v API). Prázdny objekt `{}`
-je povolený a znamená "žiadne prepísania".
+JSON je **validovaný** pri uložení: musí to byť jeden plochý objekt, ktorého hodnoty sú všetky skalárne
+(string / number / bool). Neobjem root, pole, vnorený objekt, hodnota `null` alebo malformed
+JSON je odmietnutý (jasná chyba v dialógu, `400 Bad Request` v API). Prázdny objekt `{}`
+je povolený a znamená "bez prepísaní".
 
-## Poznámky k CLI cTrader Console
+## Poznámky k CLI konzoly cTrader
 
-Backtesty potrebujú `--data-mode` (východzí `m1`), dátumy ako `dd/MM/yyyy HH:mm` a
-`params.cbotset` JSON pozičný argument; `run` odmietne `--data-dir` (iba backtest). Pozrite
+Backtesty potrebujú `--data-mode` (predvolené `m1`), dátumy ako `dd/MM/yyyy HH:mm` a
+`params.cbotset` JSON poziční argument; `run` odmietajú `--data-dir` (iba backtest). Pozri
 `ContainerCommandHelpers`.
 
-## Uzly a škálování
+## Uzly a rozšírenie
 
-Kapacita vykonávania sa zvyšuje pridávaním agentov uzla (samoregulácia + tep). Pozrite
+Kapacita vykonávania sa rozširuje pridávaním agentov uzlov (samá registrácia a pulz). Pozri
 [node discovery](../operations/node-discovery.md) a [scaling](../deployment/scaling.md).
 
 ## Obchodný účet je povinný
 
-Spustenie alebo backtesting cBotu potrebuje obchodný účet cTrader, aby sa mohol pripojiť. Kým nepridáte
-jeden v časti **Trading accounts**, sú tlačidlá **Run New cBot** / **Backtest New cBot** zákázané (s
-tooltip) a stránka zobrazuje výzvu s odkazom na nastavenie účtu — už sa nenachádzate v situácii hrubej
-`stream connect failed` chyby od bota bez účtu.
+Spustenie alebo backtesting cBotu vyžaduje obchodný účet cTrader, aby sa naň pripájal. Kým neho pridáte pod
+**Obchodné účty**, tlačidlá **Run New cBot** / **Backtest New cBot** sú zakázané (s
+tooltip) a stránka zobrazuje výzvu s odkazom na nastavenie účtu — už viac nenarazíte na surový
+`stream connect failed` chybu z bota bez účtu.

@@ -1,81 +1,150 @@
 ---
-description: "Izgradi, pokreni, testira sa istorijom cTrader cBots (C# i Python, oba .NET) iz ugrađenog Monaco IDE-a, pokreće se na zvaničnoj ghcr.io/spotware/ctrader-console slici."
+description: "Gradite, pokrenite, testirajte cTrader cBots (C# i Python, oba .NET) iz pregledačkog Monaco IDE-a, pokrenite na zvaničnoj ghcr.io/spotware/ctrader-console slici."
 ---
 
-# Izgradi i testira cBots
+# Gradnja i testiranje cBots-a
 
-Izgradi, pokreni, testira sa istorijom cTrader cBots (C# **i** Python, oba .NET) iz ugrađenog Monaco IDE-a, pokreće se na zvaničnoj `ghcr.io/spotware/ctrader-console` slici.
+Gradite, pokrenite, testirajte cTrader cBots (C# **i** Python, oba .NET) iz pregledačkog Monaco
+IDE-a, pokrenite na zvaničnoj `ghcr.io/spotware/ctrader-console` slici.
 
-## Izgradnja
+## Gradnja
 
-- Stranica **Builder** hostira Monaco editor; `CBotBuilder` kompajlira projekat sa `dotnet build` **u privremenom kontejneru** (`AppOptions.BuildImage`, radni direktorijum bind-montiran na `/work`), tako da nepouzdan korisnikov MSBuild ne dostiže domaćina. NuGet restauracija je keširana između izgradnji preko deljene zapremine. Veb domaćin treba pristup Docker soketu.
-- C# i Python starter šabloni se nalaze u `src/Nodes/Builder/Templates/`.
+- **Builder** stranica hostuje Monaco editor; `CBotBuilder` kompajlira projekat sa
+  `dotnet build` **u jednokratnom kontejneru** (`AppOptions.BuildImage`, radni direktorijum bind-mount
+  na `/work`), tako da nepouzdani korisnik MSBuild ne može dosegnuti domaćina. NuGet restauracija keširana
+  između gradnji preko deljene zapremine. Web domaćin mora da ima pristup Docker socketu.
+- C# + Python starter šablone žive u `src/Nodes/Builder/Templates/`.
 
-## Pokreni i testira sa istorijom
+## Pokretanje i testiranje
 
-- **Instances** = TPH hijerarhija stanja (`Run`/`Backtest` × `Pending`/`Scheduled`/`Starting`/`Running`/`Stopping`/`Stopped`/`Failed`). Prelazak zameni entitet (promena ID-a), container ID se prenosi.
-- `NodeScheduler` bira najmanje opterećeni dozvoljeni čvor; `ContainerDispatcherFactory` rutira na HTTP agent udaljenog čvora ili lokalni Docker dispatcher.
-- Polleři završetka usklađuju izašle kontejnere (backtest kontejneri se sami izlaze preko `--exit-on-stop`); izveštaj prisutan → završen (čuva `ReportJson`), nedostaje → neuspešan.
-- Živi container logovi se streame u preglednik preko SignalR; backtest krive kapitala se raščlanjuju iz izveštaja i grafikuju.
+- **Instanse** = TPH hierarhija stanja (`Run`/`Backtest` × `Pending`/`Scheduled`/`Starting`/
+  `Running`/`Stopping`/`Stopped`/`Failed`). Prelazak zamenjuje entitet (promena ID-a),
+  ID kontejnera se prenosi.
+- `NodeScheduler` bira najmanje opterećeni kvalifikovani čvor; `ContainerDispatcherFactory` rute
+  do udaljenog čvora HTTP agenta ili lokalnog Docker dispečera.
+- Pollers-i završetka usklađuju izlazne kontejnere (backtest kontejneri se sami izlaze preko
+  `--exit-on-stop`); izveštaj prisutan → završen (skladišti `ReportJson`), odsutan → neuspešan.
+- Direktni logovi kontejnera se prenose pregledniku preko SignalR; backtest krive kapitala analizirane iz
+  izveštaja + grafikovane.
 
-## Backtest tržišni podaci su keširani po računu
+## Backtest tržišni podaci se keširaju po računu
 
-cTrader Console preuzima istorijske tick/bar podatke u svoj `--data-dir`. Taj direktorijum je **stabilna, trajna keš ključana na trading računu** (njegov broj računa) — bind-montiran sa diska čvora na njegovoj putanji kontejnera (`/mnt/data`), **odvojena, ne-ugniježđena montaža** od direktorijuma rada po instanci. Dakle, svaki backtest na istom računu **ponovno koristi** već preuzete podatke umesto ponovnog preuzimanja. (Ranije je data dir živeo pod direktorijumom rada po instanci, čiji se ID menja sa svakim pokretanjem, što je forsiralo svež preuzimanje svakog backtesta.) Efemeralni direktorijum rada po instanci i dalje drži algoritam, parametre, lozinku i izveštaj; deljeni data keš se računa u upotrebi backtest-data čvora i briše akcijom čišćenja čvora.
+cTrader Console preuzima istorijske tick/bar podatke u svoj `--data-dir`. Taj direktorijum je
+**stabilna, trajna keš ključana na trgovački račun** (njegovo broju računa) — bind-mountana sa
+diska čvora na njegovoj sopstvenoj putanji kontejnera (`/mnt/data`), **odvojena, neugnježdena mount** od
+direktorijuma za rad po instanci. Zato se svaki backtest na istom računu **ponovno koristi** već preuzeti podaci
+umesto ponovnog preuzimanja pri svakom pokretanju. (Ranije je direktorijum podataka živeo ispod direktorijuma rada po instanci, čiji se ID menja sa svakim pokretanjem, što je forsiralo novo
+preuzimanje sa svakim backtestom.) Efemeralni direktorijum rada po instanci i dalje sadrži algoritam, parametre, lozinku
+i izveštaj; deljena keš podataka se računa u korišćenju backtest-podataka čvora i briše pomoću
+akcije čvor-čist.
 
 ## Postavke backtesta
 
-**Backtest** dijalog izlaže korisnikove podložne postavke backtesta cTrader Console-a, tako da nikada ne morate da dodirnete komandnu liniju:
+Dijalog **Backtest** izlažu korisniku podesive cTrader Console backtest postavke, tako da nikad ne morate
+dodirivati komandnu liniju:
 
-- **Symbol / Timeframe** — vremenski okvir je **padajući meni svakog cTrader perioda** (`t1`…`t1000`, `m1`…`m45`, `h1`…`h12`, `D1`/`D2`/`D3`, `W1`, `Month1`, i Renko/Range/Heikin periodi), u kanoničkom formatiranju konzole, tako da uvek birate važi `--period`.
-- **From / To** — prozor backtesta (`--start` / `--end`).
-- **Data mode** — jedan od tri cTrader moda (`--data-mode`): **Tick data** (`tick`, tačan), **m1 bars** (`m1`, brz), ili **Open prices only** (`open`, najbrži).
-- **Starting balance** — podrazumevano `10000` (`--balance`). A **0 bilans ne plasira nikakve poslove i čini cTrader da emituje prazan izveštaj koji zatim pada na rušenju** ("Message expected"), tako da se uvek šalje nenula bilans.
-- **Commission** i **Spread** — `--commission` / `--spread` (spread u pipima).
+- **Simbol / Vremenski okvir** — vremenski okvir je **padajuća lista svakog cTrader perioda** (`t1`…`t1000`,
+  `m1`…`m45`, `h1`…`h12`, `D1`/`D2`/`D3`, `W1`, `Month1` i Renko/Range/Heikin periodi), u
+  konzoli kanonskom pravu, tako da uvek birate validan `--period`.
+- **Od / Do** — backtest prozor (`--start` / `--end`).
+- **Režim podataka** — jedan od tri cTrader režima (`--data-mode`): **Tick podaci** (`tick`, tačan),
+  **m1 šipke** (`m1`, brz), ili **Samo otvarajuće cene** (`open`, najbrži).
+- **Početni saldo** — zadano `10000` (`--balance`). **Saldo od 0 ne postavlja nikakve trgovine i čini
+  da cTrader emituje prazan izveštaj koji tada pada** ("Poruka očekivana"), tako da se uvek šalje saldo različit od nule.
+- **Provisija** — `--commission`.
+- **Spread** — `--spread`, **numeričko polje u pipima koje ne može biti ispod 0**. Ono je **skriveno u Tick
+  režimu podataka**, gde cTrader izvlači spread iz samih tick podataka (nije poslata `--spread`).
 
-Direktorijum podataka (`--data-file` / `--data-dir`) upravlja sam aplikacija (keš po računu, pogledaj gore), nije izložen u dijalogu.
+Direktorijum podataka (`--data-file` / `--data-dir`) upravlja ga sama aplikacija (po-račun keš, videti
+gore), nije izložen u dijalogu.
 
-## Stranica detalja instance
+:::note cTrader pada na praznoj backtestu
+Ako backtest ne proizvede **nikakve rezultate** — nikakve trgovine ili nikakvi tržišni podaci za izabrane datume/simbol —
+cTrader Console-a sops pisca izveštaja baca `Poruka očekivana` i izlazi bez izveštaja. Aplikacija ne može
+popraviti taj upstream bug, ali ga detektuje i označava instancu **Neuspešnom** sa jasom razlogom
+("nema backtest rezultata za izabrani raspon…") umesto neobrađene greške u stack trace-u. Izaberite širi opseg datuma
+koji sadrži dostupne tržišne podatke i pokušajte ponovo.
+:::
 
-Otvaranjem instance (`/instance/{id}`) prikazuje se njen živi status, logovi i — za backtest — kriva kapitala. **Naslov kartice pregledača** odražava specifičnu instancu (**ime cBot-a · vrsta · simbol**, npr. `TrendBot · Backtest · EURUSD`), tako da se kartica pokretanja i kartica backtesta mogu razlikovati na prvi pogled. Pokretanje i backtest istog cBot-a se prate kao zasebne **linije** (stabilan ID linije prenesen kroz prelaze stanja), tako da stranica prati tačno jednu instancu i nikada ne meša podatke pokretanja sa backtestom.
+## Stranica detalja instanse
+
+Otvaranje instance (`/instance/{id}`) prikazuje njen direktan status, logove i — za backtest — krivu kapitala.
+**Naslov kartice pregledača** odražava specifičnu instancu (**naziv cBot-a · vrsta · simbol**, npr.
+`TrendBot · Backtest · EURUSD`) tako da se kartica direktnog pokretanja i kartica backtesta lako razlikuju na prvi pogled.
+Pokretanje i backtest ista cBota se prate kao zasebne **linije** (stabilna ID linija preneta
+preko prelaza stanja), tako da stranica prati tačno jednu instancu i nikad ne mesra podatke pokretanja sa backtestom.
 
 ## Kontrole životnog ciklusa instance
 
-Svaki red instance (i njegova stranica detalja) ima kontrole ispravne stanja. **Aktivna** instanca prikazuje **Stop**; **terminalna** (Stopped / Completed / Failed) prikazuje **Start (▶)** za ponovno pokretanje sa istim cBot-om, računom, simbolom, vremenskim okvirom, skupom parametara i slikom (pokretanje se restartuje kao pokretanje, backtest kao backtest). Klikom na Stop prikazuje se obaveštenje "Stopping…" i onemogućava ikonu dok se ne razreši, i novo kreirano pokretanje se pojavljuje na listi odmah — bez osvežavanja stranice.
+Svaki red instance (i njegova stranica detalja) ima kontrole kako je prikladna stanju. Aktivna **instansa** prikazuje
+**Stop**; terminalna (Zaustavljeno / Završeno / Neuspešno) prikazuje **Pokretanje (▶)** da je ponovo pokrene sa
+istim cBotom, računom, simbolom, vremenskim okvirom, setom parametara i slikom (pokretanje se pokreće kao pokretanje, backtest kao backtest). Klik na Stop prikazuje obaveštenje "Zaustavljanje…" i onemogućava ikonu dok se ne razriješi, a novo kreirano pokretanje se pojavljuje u listi odmah — bez osvežavanja stranice.
 
-Logovi konzole su **održavani kada se instanca završi** — za pokretanje (na Stop) i za **backtest** (pri završetku) — tako da logovi poslednjeg pokretanja ostaju vidljivi na stranici detalja i, preko alatne trake logovanja, **kopirani u privremenu memoriju** (Kopuj logs ikona) ili **preuzeti** (Preuzmi logs ikona) čak i nakon što je kontejner otišao. Oba deluju na punu logovanje konzole instance, a ne samo na vidljivi rep.
+Logovi konzole su **trajno sačuvani kada se instanca okončava** — za pokretanje (na Stop) i za
+**backtest** (na završetku) — tako da se logovi poslednjeg pokretanja ostaju vidljivi na stranici detalja i,
+preko alatne trake logova, **kopiran u privremenu memoriju** (Kopiranje ikone logova) ili **preuzet** (Preuzimanje logova
+ikone) čak i nakon što je kontejner otišao. Oba deluje na puni konzolu log instance, ne samo na
+vidljiv rep.
 
-**Otpremljeni** `.algo` nikada nije izgrađen ovde, tako da njegov **Last Build** kolona na stranici cBots je ostavljena prazna (prikazuje vreme izgradnje samo za cBots koje gradite u pregledniku).
+Učitana `.algo` nikad nije izgrađena ovde, tako da je njena **Zadnja gradnja** kolona na stranici cBots-a ostavljena
+prazna (prikazuje vreme gradnje samo za cBots koje gradite u pregledniku).
 
-## Uredi i ponovno pokreni zaustavljenu instancu
+## Uređivanje i ponovno pokretanje zaustavljene instance
 
-**Zaustavljena** instanca (pokretanje ili backtest) ima kontrolu **Edit** — ikona na njenom redu na listi **i** pored Start/Stop-a na njenoj stranici detalja — koja otvara dijalog **preispunjen** sa njenom trenutnom konfiguracijom. Možete promeniti **trading račun, simbol, vremenski okvir, skup parametara i oznaku slike** (i, za backtest, **prozor i sve postavke backtesta** gore), zatim **Save & start** ga ponovno pokreće sa novim postavkama (zamenjujući zaustavljenu instancu). Kontrola je **onemogućena dok je instanca aktivna** — samo zaustavljena instanca može biti uređena.
+Zaustavljena **instansa** (pokretanje ili backtest) ima kontrolu **Uređivanja** — ikonu na svom redu u listi **i**
+pored Pokretanja/Zaustavljanja na stranici detalja — što otvara dijalog **prethodno popunjen** sa njenom trenutnom konfiguracijom.
+Možete promeniti **trgovački račun, simbol, vremenski okvir, set parametara i tag slike** (i, za
+backtest, **prozor i sve backtest postavke** gore), zatim **Sačuvaj i započni** ga ponovno pokreće sa
+novim postavkama (zamenom zaustavljene instance). Kontrola je **onemogućena dok je instanca aktivna** —
+samo zaustavljena instanca može biti uređena.
 
-## Pokreni iz koda editora
+## Pokretanje iz editora koda
 
-Klikom na **Run** u editoru koda otvara se dijalog umesto aktiviranja slepe, hard-code pokretanja:
+Klikom na **Pokretanje** u editoru koda otvara se dijalog umesto neslomljivo pokretanja:
 
-- **Trading account** (obavezno) — cTrader račun kojem se cBot povezuje.
-- **Parameter set** (opciono) — odaberi postojeći skup, ili ga ostavi prazan da pokrenete sa cBot-ovim **podrazumevanim vrednostima parametara**. Dugme **+** pored selektora kreira novi skup parametara u letnjem (pogledaj dole) i selektuje ga.
-- **Symbol / Timeframe** podrazumevano su `EURUSD` / `h1` i mogu biti promenjeni; **Cancel** ili **Run**.
+- **Trgovački račun** (obavezno) — cTrader račun kojem se cBot povezuje.
+- **Set parametara** (opciono) — izaberite postojeći set ili ga ostavite prazno da pokrenete sa cBotom
+  **zadanim vrednostima parametara**. Dugme **+** pored selektora kreira novi set parametara
+  u samoj liniji (videti ispod) i ga bira.
+- **Simbol / Vremenski okvir** zadano `EURUSD` / `h1` i mogu se promeniti; **Otkaži** ili **Pokretanje**.
 
-Na **Run** editor čuva + gradi trenutni izvor, pokreće instancu na odabranom računu sa odabranim parametrima, zatim šalje žive logove kontejnera. (Tok logovanja prosleđuje auttentifikacioni kolačić prijavljenog korisnika na hub SignalR `/hubs/logs`, tako da se povezuje umesto pada sa `Invalid negotiation response received`.)
+Na **Pokretanje** editor čuva + gradi trenutni izvor, startuje instancu na izabranom računu
+sa izabranim parametrima, zatim prati direktne logove kontejnera. (Tok logova šalje kolačić
+prijavljenog korisnika u `/hubs/logs` SignalR hub, tako da se povezuje umesto da ne uspe sa
+`Nevalidan odgovor pregovora primljen`.)
 
 ## Skupovi parametara
 
-**Parameter set** je nazvan, ponovno korišćeni skup prepravki parametara cBot-a pohranjen kao ravan JSON objekat mapira svaki naziv parametra na skalarnu vrednost, npr. `{"Period": 14, "Label": "trend"}`. U vreme pokretanja/backtesta pretvara se u cTrader `params.cbotset` datoteku (`{ "Parameters": { … } }`). Možete kreirate/urediti skup kao raw JSON iz dijaloga **Parameter sets** cBot-a ili u letnjem iz dijaloga Run.
+**Set parametara** je naveden, ponovno korišćen set cBot preloga parametara sačuvan kao ravan JSON
+objekat mapiranje svakog imena parametra na skalarnu vrednost, npr. `{"Period": 14, "Label": "trend"}`. Pri
+pokretanju/backtest vremenu se pretvara u cTrader `params.cbotset` fajl
+(`{ "Parameters": { … } }`). Možete kreirate/urediti set kao sirovi JSON iz cBotovog dijaloga **Skupova parametara**
+ili u samoj liniji iz dijaloga Pokretanja.
 
-Svaki skup parametara **pripada cBot-u**: dijalog New Parameter Set navodi sve vaše cBots i **morate da odaberete jedan** — kreiranje je blokirano dok nije odabran cBot. Ime skupa **je jedinstveno po cBot-u**: kreiranje ili preimenovanje skupa na ime koji je već upotrebljen na istom cBot-u je odbijeno (jasna greška u dijalogu, `409 Conflict` na API-u). Isto ime može biti ponovno upotrebljeno na **drugačijem** cBot-u.
+Svaki set parametara **pripada cBotu**: dijalog Novi set parametara navodi sve vaše cBots i vi
+**morате izabrati jedan** — kreiranja je blokirano dok se cBot ne izabere. Ime seta **je jedinstveno po cBotu**:
+pravljenje ili preimenovanje seta na ime koje drugi set istog cBot-a već koristi je odbijeno (jasna
+greška u dijalogu, `409 Konflikt` na API-ju). Isto ime se može ponovo koristiti na **drugom** cBotu.
 
-JSON je **validiran** pri čuvanju: mora biti jedan ravan objekat čije su vrednosti sve skalarne (string / broj / bool). Ne-objekatni koren, niz, ugniježđeni objekat, `null` vrednost, ili loše formirani JSON je odbijen (jasna greška u dijalogu, `400 Bad Request` na API-u). Prazan objekat `{}` je dozvoljeno i znači "bez prepravki".
+JSON je **validiran** na čuvanju: mora biti jedan ravan objekat čije vrednosti su sve skalarne
+(string / broj / bool). Neobjektivna glavna vrijednost, niz, ugnježdeni objekat, `null` vrijednost ili masovljivi
+JSON je odbijen (jasna greška u dijalogu, `400 Loš zahtev` na API-ju). Prazan objekat `{}`
+je dozvoljen i znači "bez preloga".
 
-## Napomene CLI-ja cTrader-a
+## Napomene CLI-ja cTrader Console
 
-Backtestovi trebaju `--data-mode` (podrazumevano `m1`), datume kao `dd/MM/yyyy HH:mm`, i `params.cbotset` JSON pozicioni arg; `run` odbija `--data-dir` (samo backtest). Pogledaj `ContainerCommandHelpers`.
+Backtesti trebaju `--data-mode` (zadano `m1`), datume kao `dd/MM/yyyy HH:mm`, i
+`params.cbotset` JSON pozicioni arg; `run` odbija `--data-dir` (samo backtest). Videti
+`ContainerCommandHelpers`.
 
-## Čvorovi i razmera
+## Čvorovi i skala
 
-Kapacitet izvršavanja se skalira dodavanjem čvornih agenata (samoregistracija + otkucaj). Pogledaj [čvor otkrivanja](../operations/node-discovery.md) i [skaliranje](../deployment/scaling.md).
+Kapacitet izvršavanja se skalira dodavanjem čvora agenata (samoreg + srčane frekvencije). Videti
+[otkrivanje čvorova](../operations/node-discovery.md) i [skaliranje](../deployment/scaling.md).
 
-## Trader je obavezan
+## Obavezan je trgovački račun
 
-Pokretanje ili testiranje sa istorijom cBot-a zahteva cTrader trading račun da bi se povezao. Dok ne dodate jedan pod **Trading accounts**, dugmići **Run New cBot** / **Backtest New cBot** su onemogućeni (sa savetu) i stranica prikazuje obaveštenje koje se povezuje sa postavljanjem računa — više ne odlazite u sirov `stream connect failed` greški od bota bez računa.
+Pokretanje ili testiranje cBot-a zahteva cTrader trgovački račun za povezivanje. Dok ne dodate jedan pod
+**Trgovački računi**, dugmići **Pokretanje novog cBot-a** / **Testiranje novog cBot-a** su onemogućeni (sa
+alatnom linijom) i stranica prikazuje brzo pozivnu konekciju do postave računa — više ne dobijate neobrađenu
+`stream connect failed` grešku od bota bez računa.

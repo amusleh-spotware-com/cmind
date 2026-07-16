@@ -1,153 +1,86 @@
 ---
-description: "Xây dựng, chạy, backtest cBots cTrader (C# và Python, cả hai .NET) từ Monaco IDE trong trình duyệt, chạy trên hình ảnh chính thức ghcr.io/spotware/ctrader-console."
+description: "Xây dựng, chạy, backtest cBots cTrader (C# và Python, cả .NET) từ trình soạn thảo Monaco trong trình duyệt, chạy trên hình ảnh chính thức ghcr.io/spotware/ctrader-console."
 ---
 
 # Xây dựng & backtest cBots
 
-Xây dựng, chạy, backtest cBots cTrader (C# **và** Python, cả hai .NET) từ Monaco IDE trong
-trình duyệt, chạy trên hình ảnh chính thức `ghcr.io/spotware/ctrader-console`.
+Xây dựng, chạy, backtest cBots cTrader (C# **và** Python, cả .NET) từ trình soạn thảo Monaco trong trình duyệt, chạy trên hình ảnh chính thức `ghcr.io/spotware/ctrader-console`.
 
 ## Xây dựng
 
-- Trang **Builder** lưu trữ trình chỉnh sửa Monaco; `CBotBuilder` biên dịch dự án với `dotnet build`
-  **trong vùng chứa tạm thời** (`AppOptions.BuildImage`, thư mục làm việc được gắn kết tại `/work`),
-  do đó các mục tiêu MSBuild của người dùng không đáng tin cậy không đạt đến máy chủ. Khôi phục NuGet
-  được lưu trong bộ nhớ cache trên các bản dựng thông qua một tập hợp được chia sẻ. Máy chủ Web cần
-  quyền truy cập vào ổ cắm Docker.
-- Mẫu bắt đầu C# + Python nằm trong `src/Nodes/Builder/Templates/`.
+- Trang **Builder** lưu trữ trình soạn thảo Monaco; `CBotBuilder` biên dịch dự án với `dotnet build` **trong container tạm thời** (`AppOptions.BuildImage`, thư mục làm việc được gắn tại `/work`), do đó các mục tiêu MSBuild của người dùng không đáng tin cậy không thể truy cập máy chủ. Khôi phục NuGet được lưu trong bộ nhớ cache trên các lần dựng thông qua tập hợp được chia sẻ. Máy chủ Web cần quyền truy cập vào ổ cắm Docker.
+- Các mẫu bắt đầu C# + Python nằm trong `src/Nodes/Builder/Templates/`.
 
 ## Chạy & backtest
 
-- **Instances** = phân cấp trạng thái TPH (`Run`/`Backtest` × `Pending`/`Scheduled`/`Starting`/
-  `Running`/`Stopping`/`Stopped`/`Failed`). Quá trình chuyển đổi thay thế thực thể (thay đổi id),
-  id vùng chứa được mang theo.
-- `NodeScheduler` chọn nút đủ điều kiện có tải nhất ít; `ContainerDispatcherFactory` định tuyến đến
-  đại lý HTTP nút từ xa hoặc bộ điều phối Docker cục bộ.
-- Các bộ khảo sát hoàn thành sẽ điều hòa các vùng chứa đã thoát (các vùng chứa backtest tự thoát
-  thông qua `--exit-on-stop`); báo cáo hiện diện → hoàn thành (lưu trữ `ReportJson`), mất → không
-  thành công.
-- Nhật ký vùng chứa trực tiếp truyền phát đến trình duyệt qua SignalR; đường cong vốn backtest được
-  phân tích cú pháp từ báo cáo + được vẽ biểu đồ.
+- **Instances** = phân cấp trạng thái TPH (`Run`/`Backtest` × `Pending`/`Scheduled`/`Starting`/`Running`/`Stopping`/`Stopped`/`Failed`). Quá trình chuyển đổi thay thế thực thể (thay đổi id), id container được mang theo.
+- `NodeScheduler` chọn nút đủ điều kiện ít tải nhất; `ContainerDispatcherFactory` định tuyến đến agent HTTP nút từ xa hoặc bộ điều phối Docker cục bộ.
+- Các bộ khảo sát hoàn thành điều hòa các container đã thoát (các container backtest tự thoát qua `--exit-on-stop`); báo cáo hiện diện → hoàn thành (lưu `ReportJson`), mất → thất bại.
+- Nhật ký container trực tiếp truyền phát đến trình duyệt qua SignalR; đường cong vốn backtest được phân tích từ báo cáo + được vẽ biểu đồ.
 
-## Dữ liệu thị trường Backtest được lưu trong bộ nhớ cache trên mỗi tài khoản
+## Dữ liệu thị trường backtest được lưu trong bộ nhớ cache trên mỗi tài khoản
 
-cTrader Console tải xuống dữ liệu tick/bar lịch sử vào `--data-dir` của nó. Thư mục đó là **bộ nhớ
-cache ổn định, liên tục được khóa trên tài khoản giao dịch** (số tài khoản của nó) — được gắn kết từ
-đĩa của nó tại đường dẫn vùng chứa của nó (`/mnt/data`), **một kết nối riêng biệt, không lồng nhau**
-từ thư mục làm việc cho mỗi phiên bản. Vì vậy, mọi backtest trên cùng một tài khoản **sẽ sử dụng lại**
-dữ liệu đã tải xuống thay vì tải xuống lại nó ở mỗi lần chạy. (Trước đó, thư mục dữ liệu nằm trong
-thư mục làm việc cho mỗi phiên bản, có id thay đổi ở mỗi lần chạy, điều này buộc phải tải xuống lại
-ở mỗi lần backtest.) Thư mục làm việc tạm thời cho mỗi phiên bản vẫn chứa algo, params, mật khẩu
-và báo cáo; bộ nhớ cache dữ liệu được chia sẻ được tính trong việc sử dụng dữ liệu backtest của nó
-và được xóa bởi hành động làm sạch nút.
+cTrader Console tải xuống dữ liệu tick/bar lịch sử vào `--data-dir` của nó. Thư mục đó là **bộ nhớ cache ổn định, liên tục được khóa trên tài khoản giao dịch** (số tài khoản của nó) — được gắn từ đĩa của nút tại đường dẫn container của nó (`/mnt/data`), một **gắn riêng, không lồng nhau** từ thư mục làm việc trên mỗi instance. Vì vậy, mỗi backtest trên cùng tài khoản **tái sử dụng** dữ liệu đã tải xuống thay vì tải xuống lại ở mỗi lần chạy. (Trước đó thư mục dữ liệu nằm dưới thư mục làm việc trên mỗi instance, có id thay đổi ở mỗi lần chạy, buộc phải tải xuống mới mỗi lần backtest.) Thư mục làm việc dung tích của mỗi instance vẫn chứa algo, params, mật khẩu và báo cáo; bộ nhớ cache dữ liệu được chia sẻ được tính trong mức sử dụng dữ liệu backtest của nút và được xóa bởi hành động làm sạch nút.
 
-## Cài đặt Backtest
+## Cài đặt backtest
 
-Hộp thoại **Backtest** hiển thị cài đặt backtest cTrader Console có thể điều chỉnh bởi người dùng,
-do đó bạn không bao giờ phải chạm vào dòng lệnh:
+Hộp thoại **Backtest** hiển thị cài đặt backtest cTrader Console có thể điều chỉnh bởi người dùng, do đó bạn không bao giờ phải chạm vào dòng lệnh:
 
-- **Symbol / Timeframe** — timeframe là **danh sách thả xuống của mỗi khoảng thời gian cTrader**
-  (`t1`…`t1000`, `m1`…`m45`, `h1`…`h12`, `D1`/`D2`/`D3`, `W1`, `Month1` và các khoảng thời gian
-  Renko/Range/Heikin), trong cách viết chữ hoa chính tắc của bảng điều khiển, do đó bạn luôn chọn
-  một `--period` hợp lệ.
+- **Symbol / Timeframe** — timeframe là **danh sách thả xuống của mỗi khoảng thời gian cTrader** (`t1`…`t1000`, `m1`…`m45`, `h1`…`h12`, `D1`/`D2`/`D3`, `W1`, `Month1` và các khoảng thời gian Renko/Range/Heikin), trong cách viết chữ hoa chính tắc của bảng điều khiển, do đó bạn luôn chọn một `--period` hợp lệ.
 - **From / To** — cửa sổ backtest (`--start` / `--end`).
-- **Data mode** — một trong ba chế độ cTrader (`--data-mode`): **Tick data** (`tick`, chính xác),
-  **m1 bars** (`m1`, nhanh), hoặc **Open prices only** (`open`, nhanh nhất).
-- **Starting balance** — mặc định là `10000` (`--balance`). Một **số dư bằng 0 không đặt các giao dịch
-  và khiến cTrader phát ra một báo cáo trống sau đó nó sẽ sập** ("Message expected"), do đó, số dư
-  khác không luôn được gửi.
-- **Commission** và **Spread** — `--commission` / `--spread` (spread trong pips).
+- **Data mode** — một trong ba chế độ cTrader (`--data-mode`): **Tick data** (`tick`, chính xác), **m1 bars** (`m1`, nhanh), hoặc **Open prices only** (`open`, nhanh nhất).
+- **Starting balance** — mặc định là `10000` (`--balance`). Một **số dư 0 không thực hiện giao dịch và khiến cTrader phát ra báo cáo trống, sau đó bị sập** ("Message expected"), do đó luôn gửi số dư khác 0.
+- **Commission** — `--commission`.
+- **Spread** — `--spread`, một **trường số trong pips không thể dưới 0**. Nó **ẩn trong chế độ Tick data**, nơi cTrader lấy spread từ chính dữ liệu tick (không gửi `--spread`).
 
-Thư mục dữ liệu (`--data-file` / `--data-dir`) được quản lý bởi chính ứng dụng (bộ nhớ cache cho
-mỗi tài khoản, xem trên), không được hiển thị trong hộp thoại.
+Thư mục dữ liệu (`--data-file` / `--data-dir`) được quản lý bởi chính ứng dụng (bộ nhớ cache mỗi tài khoản, xem trên), không được hiển thị trong hộp thoại.
 
-## Trang chi tiết phiên bản
+:::note cTrader sập trên một backtest trống
+Nếu một backtest tạo ra **không kết quả** — không có giao dịch, hoặc không có dữ liệu thị trường cho ngày/ký hiệu đã chọn — trình ghi báo cáo riêng của cTrader Console ném `Message expected` và thoát mà không có báo cáo. Ứng dụng không thể sửa lỗi thượng nguồn đó, nhưng nó phát hiện và đánh dấu instance **Failed** với lý do hành động ("không có kết quả backtest cho phạm vi đã chọn…") thay vì dấu vết ngăn xếp thô. Chọn phạm vi ngày rộng hơn có dữ liệu thị trường có sẵn và thử lại.
+:::
 
-Mở một phiên bản (`/instance/{id}`) để hiển thị trạng thái trực tiếp, nhật ký của nó và — đối với
-một backtest — đường cong vốn của nó. **Tiêu đề tab trình duyệt** phản ánh phiên bản cụ thể
-(**tên cBot · loại · biểu tượng**, ví dụ: `TrendBot · Backtest · EURUSD`) do đó một tab chạy trực tiếp
-và một tab backtest có thể phân biệt được trong thoáng chốc. Một chạy và một backtest của cùng một cBot
-được theo dõi như các **dòng dõi** riêng biệt (một id dòng dõi ổn định được mang theo các chuyển đổi
-trạng thái), do đó trang theo dõi chính xác một phiên bản và không bao giờ trộn dữ liệu chạy với một
-backtest.
+## Trang chi tiết instance
 
-## Các điều khiển vòng đời của phiên bản
+Mở một instance (`/instance/{id}`) hiển thị trạng thái trực tiếp, nhật ký của nó và — đối với backtest — đường cong vốn. **Tiêu đề thẻ trình duyệt** phản ánh instance cụ thể (**tên cBot · kind · symbol**, ví dụ: `TrendBot · Backtest · EURUSD`) vì vậy tab chạy trực tiếp và tab backtest có thể phân biệt ngay được. Một chạy và một backtest của cùng cBot được theo dõi là **lineages** riêng biệt (một id lineage ổn định được mang qua các chuyển đổi trạng thái), do đó trang theo dõi chính xác một instance và không bao giờ trộn dữ liệu chạy với dữ liệu backtest.
 
-Mỗi hàng phiên bản (và trang chi tiết của nó) có các điều khiển đúng trạng thái. Một phiên bản
-**hoạt động** hiển thị **Stop**; một phiên bản **terminal** (Stopped / Completed / Failed) hiển thị
-**Start (▶)** để khởi chạy lại nó với cùng một cBot, tài khoản, biểu tượng, timeframe, bộ tham số
-và hình ảnh (một lần chạy khởi động lại dưới dạng chạy, một backtest dưới dạng backtest). Nhấp vào
-Stop sẽ hiển thị thông báo "Stopping…" và tắt biểu tượng cho đến khi nó giải quyết, và một lần chạy
-mới được tạo sẽ xuất hiện trong danh sách ngay lập tức — không cần tải lại trang.
+## Điều khiển vòng đời instance
 
-Nhật ký bảng điều khiển được **tồn tại khi một phiên bản kết thúc** — cho một lần chạy (trên Stop)
-và cho một **backtest** (khi hoàn thành) như nhau — do đó, nhật ký của lần chạy cuối cùng vẫn có thể
-xem được trên trang chi tiết và, thông qua thanh công cụ nhật ký, **sao chép vào bộ nhớ tạm**
-(biểu tượng Sao chép nhật ký) hoặc **tải xuống** (biểu tượng Tải xuống nhật ký) thậm chí sau khi vùng
-chứa biến mất. Cả hai đều hoạt động trên toàn bộ nhật ký bảng điều khiển của phiên bản, không chỉ
-là phần đuôi trên màn hình.
+Mỗi hàng instance (và trang chi tiết của nó) có các điều khiển chính xác trạng thái. Một instance **hoạt động** hiển thị **Stop**; một instance **terminal** (Stopped / Completed / Failed) hiển thị **Start (▶)** để khởi chạy lại nó với cùng cBot, tài khoản, symbol, timeframe, ParamSet và image (một lần chạy khởi động lại dưới dạng chạy, một backtest dưới dạng backtest). Nhấp vào Stop hiển thị thông báo "Stopping…" và vô hiệu hóa biểu tượng cho đến khi giải quyết, và một lần chạy mới tạo xuất hiện trong danh sách ngay lập tức — không cần tải lại trang.
 
-Một `.algo` được **tải lên** chưa bao giờ được xây dựng ở đây, vì vậy cột **Last Build** của nó trên
-trang cBots được để trống (nó chỉ hiển thị một thời gian xây dựng cho các cBot bạn xây dựng trong
-trình duyệt).
+Nhật ký bảng điều khiển được **lưu khi một instance kết thúc** — cho một lần chạy (trên Stop) và cho **backtest** (khi hoàn thành) — do đó nhật ký của lần chạy cuối cùng vẫn có thể xem trên trang chi tiết và, thông qua thanh công cụ nhật ký, **sao chép vào bộ nhớ tạm** (biểu tượng Sao chép nhật ký) hoặc **tải xuống** (biểu tượng Tải xuống nhật ký) ngay cả sau khi container biến mất. Cả hai hoạt động trên toàn bộ nhật ký bảng điều khiển của instance, không chỉ phần đuôi trên màn hình.
 
-## Chỉnh sửa & chạy lại một phiên bản đã dừng
+Một `.algo` được **tải lên** chưa bao giờ được xây dựng ở đây, do đó cột **Last Build** của nó trên trang cBots được để trống (nó chỉ hiển thị thời gian dựng cho các cBot bạn dựng trong trình duyệt).
 
-Một phiên bản **đã dừng** (chạy hoặc backtest) có một điều khiển **Edit** — một biểu tượng trên hàng
-của nó trong danh sách **và** bên cạnh Start/Stop trên trang chi tiết của nó — mở một hộp thoại
-**được điền sẵn** với cấu hình hiện tại của nó. Bạn có thể thay đổi **tài khoản giao dịch, biểu tượng,
-timeframe, bộ tham số và thẻ hình ảnh** (và, đối với một backtest, **cửa sổ và tất cả cài đặt backtest**
-ở trên), sau đó **Save & start** khởi chạy lại nó với cài đặt mới (thay thế phiên bản đã dừng). Điều
-khiển này **bị tắt khi phiên bản hoạt động** — chỉ một phiên bản đã dừng mới có thể được chỉnh sửa.
+## Chỉnh sửa & chạy lại một instance đã dừng
 
-## Chạy từ trình chỉnh sửa mã
+Một instance **đã dừng** (chạy hoặc backtest) có điều khiển **Edit** — một biểu tượng trên hàng của nó trong danh sách **và** bên cạnh Start/Stop trên trang chi tiết của nó — mở hộp thoại **được điền sẵn** với cấu hình hiện tại của nó. Bạn có thể thay đổi **tài khoản giao dịch, symbol, timeframe, ParamSet và image tag** (và, đối với backtest, **cửa sổ và tất cả cài đặt backtest** trên), sau đó **Save & start** khởi chạy lại nó với cài đặt mới (thay thế instance đã dừng). Điều khiển này **bị vô hiệu hóa khi instance hoạt động** — chỉ instance đã dừng mới có thể được chỉnh sửa.
 
-Nhấp vào **Run** trong trình chỉnh sửa mã sẽ mở một hộp thoại thay vì kích hoạt một lần chạy mù,
-được mã hóa cứng:
+## Chạy từ trình soạn thảo mã
 
-- **Trading account** (bắt buộc) — tài khoản cTrader mà cBot kết nối với.
-- **Parameter set** (tùy chọn) — chọn một bộ hiện có, hoặc để nó trống để chạy với **các giá trị
-  tham số mặc định của cBot**. Nút **+** bên cạnh bộ chọn tạo một bộ tham số mới inline (xem bên
-  dưới) và chọn nó.
-- **Symbol / Timeframe** mặc định là `EURUSD` / `h1` và có thể được thay đổi; **Cancel** hoặc **Run**.
+Nhấp **Run** trong trình soạn thảo mã mở hộp thoại thay vì kích hoạt lần chạy mù, được mã hóa cứng:
 
-Khi **Run**, trình chỉnh sửa lưu + xây dựng nguồn hiện tại, khởi động phiên bản trên tài khoản được
-chọn với các tham số đã chọn, sau đó theo dõi nhật ký vùng chứa trực tiếp. (Luồng nhật ký chuyển
-tiếp cookie xác thực của người dùng đã đăng nhập tới trung tâm SignalR `/hubs/logs`, do đó nó kết nối
-thay vì không thành công với `Invalid negotiation response received`.)
+- **Trading account** (bắt buộc) — tài khoản cTrader mà cBot kết nối.
+- **Parameter set** (tùy chọn) — chọn tập hợp hiện có, hoặc để trống để chạy với **giá trị tham số mặc định của cBot**. Nút **+** bên cạnh bộ chọn tạo ParamSet mới nội tuyến (xem bên dưới) và chọn nó.
+- **Symbol / Timeframe** mặc định là `EURUSD` / `h1` và có thể thay đổi; **Cancel** hoặc **Run**.
+
+Khi **Run**, trình soạn thảo lưu + dựng nguồn hiện tại, bắt đầu instance trên tài khoản đã chọn với các tham số đã chọn, sau đó xem nhật ký container trực tiếp. (Luồng nhật ký chuyển tiếp cookie xác thực của người dùng đã đăng nhập đến hub SignalR `/hubs/logs`, do đó nó kết nối thay vì thất bại với `Invalid negotiation response received`.)
 
 ## Bộ tham số
 
-Một **parameter set** là một bộ ghi đè tham số cBot có tên, có thể sử dụng lại được lưu trữ dưới
-dạng một đối tượng JSON phẳng ánh xạ từng tên tham số thành một giá trị vô hướng, ví dụ:
-`{"Period": 14, "Label": "trend"}`. Tại thời điểm chạy/backtest, nó được chuyển thành tệp
-`params.cbotset` của cTrader (`{ "Parameters": { … } }`). Bạn có thể tạo/chỉnh sửa một bộ dưới
-dạng JSON thô từ hộp thoại **Parameter sets** của cBot hoặc inline từ hộp thoại Run.
+Một **parameter set** là tập hợp ghi đè tham số cBot có tên, tái sử dụng được lưu dưới dạng đối tượng JSON phẳng ánh xạ mỗi tên tham số đến giá trị vô hướng, ví dụ: `{"Period": 14, "Label": "trend"}`. Tại thời điểm chạy/backtest nó trở thành tệp cTrader `params.cbotset` (`{ "Parameters": { … } }`). Bạn có thể tạo/chỉnh sửa tập hợp dưới dạng JSON thô từ hộp thoại **Parameter sets** của cBot hoặc nội tuyến từ hộp thoại Run.
 
-Mỗi bộ tham số **thuộc về một cBot**: hộp thoại Bộ tham số mới liệt kê tất cả các cBot của bạn và
-bạn **phải chọn một** — việc tạo bị chặn cho đến khi chọn một cBot. **Tên của một bộ là duy nhất cho
-mỗi cBot**: việc tạo hoặc đổi tên một bộ thành một tên mà một bộ khác của cùng một cBot đã sử dụng
-sẽ bị từ chối (một lỗi rõ ràng trong hộp thoại, `409 Conflict` tại API). Tên tương tự có thể được
-sử dụng lại trên một **cBot khác**.
+Mỗi ParamSet **thuộc về một cBot**: hộp thoại New Parameter Set liệt kê tất cả cBots của bạn và bạn **phải chọn một** — tạo bị chặn cho đến khi chọn cBot. **Tên của tập hợp là duy nhất mỗi cBot**: tạo hoặc đổi tên tập hợp thành tên mà tập hợp khác của cùng cBot đã sử dụng bị từ chối (lỗi rõ ràng trong hộp thoại, `409 Conflict` tại API). Tên tương tự có thể được tái sử dụng trên **cBot khác**.
 
-JSON được **xác thực** khi lưu: nó phải là một đối tượng phẳng duy nhất có các giá trị là tất cả
-các vô hướng (chuỗi / số / bool). Một gốc không phải đối tượng, một mảng, một đối tượng lồng nhau,
-một giá trị `null`, hoặc JSON không được định dạng sẽ bị từ chối (một lỗi rõ ràng trong hộp thoại,
-`400 Bad Request` tại API). Một đối tượng trống `{}` được cho phép và có nghĩa là "không có ghi đè".
+JSON được **xác thực** khi lưu: nó phải là đối tượng phẳng duy nhất có các giá trị là tất cả vô hướng (string / number / bool). Gốc không phải đối tượng, mảng, đối tượng lồng nhau, giá trị `null`, hoặc JSON không được định dạng sẽ bị từ chối (lỗi rõ ràng trong hộp thoại, `400 Bad Request` tại API). Đối tượng trống `{}` được cho phép và có nghĩa là "không có ghi đè".
 
-## Ghi chú CLI cTrader Console
+## Ghi chú CLI Bảng điều khiển cTrader
 
-Backtests cần `--data-mode` (mặc định `m1`), ngày làm `dd/MM/yyyy HH:mm`, và đối số vị trí
-`params.cbotset` JSON; `run` từ chối `--data-dir` (chỉ backtest). Xem `ContainerCommandHelpers`.
+Backtests cần `--data-mode` (mặc định `m1`), ngày là `dd/MM/yyyy HH:mm`, và `params.cbotset` JSON đối số vị trí; `run` từ chối `--data-dir` (chỉ backtest). Xem `ContainerCommandHelpers`.
 
-## Nút & tỷ lệ
+## Nodes & scale
 
-Dung lượng thực thi tỷ lệ bằng cách thêm các đại lý nút (tự đăng ký + heartbeat). Xem
-[node discovery](../operations/node-discovery.md) và [scaling](../deployment/scaling.md).
+Dung lượng thực thi mở rộng bằng cách thêm agent nodes (tự đăng ký + heartbeat). Xem [node discovery](../operations/node-discovery.md) và [scaling](../deployment/scaling.md).
 
 ## Yêu cầu tài khoản giao dịch
 
-Chạy hoặc backtest một cBot cần một tài khoản giao dịch cTrader để kết nối. Cho đến khi bạn thêm
-một trong phần **Trading accounts**, các nút **Run New cBot** / **Backtest New cBot** bị vô hiệu
-hóa (có chú thích công cụ) và trang hiển thị lời nhắc liên kết đến thiết lập tài khoản — bạn
-không còn gặp lỗi `stream connect failed` từ một bot không có tài khoản.
+Chạy hoặc backtest cBot cần tài khoản giao dịch cTrader để kết nối. Cho đến khi bạn thêm một tài khoản trong **Trading accounts**, các nút **Run New cBot** / **Backtest New cBot** bị vô hiệu hóa (có tooltip) và trang hiển thị lời nhắc liên kết đến thiết lập tài khoản — bạn không còn gặp lỗi `stream connect failed` thô từ bot không có tài khoản.

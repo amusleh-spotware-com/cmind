@@ -111,6 +111,15 @@ public readonly record struct InstanceId(Guid Value) : IStronglyTypedId<Instance
     public override string ToString() => Value.ToString();
 }
 
+// Stable, unique identity for one instance lineage — preserved across the TPH state transitions that change
+// an instance's Id, so it uniquely follows a single run/backtest from Starting to its terminal state.
+public readonly record struct InstanceLineageId(Guid Value) : IStronglyTypedId<InstanceLineageId>
+{
+    public static InstanceLineageId New() => new(Guid.NewGuid());
+    public static InstanceLineageId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct McpApiKeyId(Guid Value) : IStronglyTypedId<McpApiKeyId>
 {
     public static McpApiKeyId New() => new(Guid.NewGuid());

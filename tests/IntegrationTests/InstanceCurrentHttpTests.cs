@@ -38,8 +38,7 @@ public class InstanceCurrentHttpTests(PostgresFixture fixture) : IClassFixture<P
         return client;
     }
 
-    private static string CurrentUrl(Guid cbotId, DateTimeOffset createdAt) =>
-        $"/api/instances/current?cbotId={cbotId}&createdAt={Uri.EscapeDataString(createdAt.ToString("O"))}";
+    private static string CurrentUrl(Guid lineageId) => $"/api/instances/current?lineageId={lineageId}";
 
     [Fact]
     public async Task Current_follows_the_instance_across_a_transition_to_a_new_id()
@@ -63,13 +62,11 @@ public class InstanceCurrentHttpTests(PostgresFixture fixture) : IClassFixture<P
             runningId = running.Id.Value;
         }
 
-        // The lineage key (cBot + createdAt) is read from the detail exactly as the browser would — matching
-        // the persisted (microsecond-precision) CreatedAt value.
+        // The lineage id is read from the detail exactly as the browser would.
         var detail = await (await client.GetAsync($"/api/instances/{runningId}")).Content.ReadFromJsonAsync<JsonElement>();
-        var cbotId = detail.GetProperty("cBotId").GetGuid();
-        var createdAt = detail.GetProperty("createdAt").GetDateTimeOffset();
+        var lineageId = detail.GetProperty("lineageId").GetGuid();
 
-        var cur1 = await client.GetAsync(CurrentUrl(cbotId, createdAt));
+        var cur1 = await client.GetAsync(CurrentUrl(lineageId));
         cur1.StatusCode.Should().Be(HttpStatusCode.OK);
         var body1 = await cur1.Content.ReadFromJsonAsync<JsonElement>();
         body1.GetProperty("status").GetString().Should().Be("Running");
@@ -89,7 +86,7 @@ public class InstanceCurrentHttpTests(PostgresFixture fixture) : IClassFixture<P
         }
         stoppedId.Should().NotBe(runningId);
 
-        var cur2 = await client.GetAsync(CurrentUrl(cbotId, createdAt));
+        var cur2 = await client.GetAsync(CurrentUrl(lineageId));
         cur2.StatusCode.Should().Be(HttpStatusCode.OK);
         var body2 = await cur2.Content.ReadFromJsonAsync<JsonElement>();
         body2.GetProperty("status").GetString().Should().Be("Stopped",
@@ -103,6 +100,6 @@ public class InstanceCurrentHttpTests(PostgresFixture fixture) : IClassFixture<P
         await using var app = CreateApp();
         var client = await LoginAsync(app);
 
-        (await client.GetAsync(CurrentUrl(Guid.NewGuid(), Now))).StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await client.GetAsync(CurrentUrl(Guid.NewGuid()))).StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 }

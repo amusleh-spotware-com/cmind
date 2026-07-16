@@ -140,8 +140,7 @@
     // The instance id changes on every TPH transition; track the current one plus a stable lineage key
     // (cBot + CreatedAt is preserved across transitions) so the page can follow the instance as it runs.
     private Guid _currentId;
-    private Guid? _lineageCbotId;
-    private DateTimeOffset? _lineageCreatedAt;
+    private Guid? _lineageId;
     private CancellationTokenSource? _pollCts;
     private readonly ApexChartOptions<EquityPoint> _chartOptions = new();
 
@@ -293,8 +292,7 @@
         _logs = new();
         _equity = new();
         _calendarEvents = new();
-        _lineageCbotId = null;
-        _lineageCreatedAt = null;
+        _lineageId = null;
         _currentId = default;
     }
 
@@ -305,8 +303,7 @@
         _detail = detail;
         _currentId = (Guid)detail.id;
         _isBacktest = (string)detail.kind == "Backtest";
-        _lineageCbotId ??= (Guid)detail.cBotId;
-        _lineageCreatedAt ??= (DateTimeOffset)detail.createdAt;
+        _lineageId ??= (Guid)detail.lineageId;
 
         var points = new List<EquityPoint>();
         if (_isBacktest && detail.equity is not null)
@@ -375,17 +372,18 @@
         {
             try
             {
-                while (!ct.IsCancellationRequested && !IsTerminalStatus
-                       && _lineageCbotId is { } cbid && _lineageCreatedAt is { } cat)
+                while (!ct.IsCancellationRequested && !IsTerminalStatus && _lineageId is { } lid)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(4), ct);
                     dynamic? current = null;
-                    try { current = await Http.GetDynamicAsync(CurrentUrl(cbid, cat)); }
+                    try { current = await Http.GetDynamicAsync(CurrentUrl(lid)); }
                     catch { current = null; }
-                    if (current is null) continue;
+                    if (ct.IsCancellationRequested || current is null) continue;
                     var wasActive = IsActive;
                     await InvokeAsync(async () =>
                     {
+                        // Guard against a stale/reused poll applying another instance's data.
+                        if (ct.IsCancellationRequested || !MatchesLineage(current)) return;
                         ApplyDetail(current);
                         await LoadCalendarOverlayAsync();
                         if (wasActive && IsTerminalStatus) await SeedPersistedLogsAsync();
@@ -400,12 +398,12 @@
 
     private async Task RefreshFromCurrentAsync()
     {
-        if (_lineageCbotId is not { } cbid || _lineageCreatedAt is not { } cat) return;
+        if (_lineageId is not { } lid) return;
         try
         {
             var wasActive = IsActive;
-            var current = await Http.GetDynamicAsync(CurrentUrl(cbid, cat));
-            if (current is not null)
+            var current = await Http.GetDynamicAsync(CurrentUrl(lid));
+            if (current is not null && MatchesLineage(current))
             {
                 ApplyDetail(current);
                 if (wasActive && IsTerminalStatus) await SeedPersistedLogsAsync();
@@ -414,8 +412,11 @@
         catch { /* keep prior state */ }
     }
 
-    private static string CurrentUrl(Guid cbotId, DateTimeOffset createdAt) =>
-        $"/api/instances/current?cbotId={cbotId}&createdAt={Uri.EscapeDataString(createdAt.ToString("O"))}";
+    // Only apply a payload that is for THIS instance's lineage — never let a leaked/racing poll paint a
+    // different instance (e.g. a backtest of the same cBot) onto this page.
+    private bool MatchesLineage(dynamic detail) => _lineageId is { } l && (Guid)detail.lineageId == l;
+
+    private static string CurrentUrl(Guid lineageId) => $"/api/instances/current?lineageId={lineageId}";
 
     // Point-in-time-correct economic-event overlay: the high-impact releases affecting the backtested
     // symbol that fell inside the backtest window (no look-ahead — asOf is the window end).

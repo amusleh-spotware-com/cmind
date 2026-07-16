@@ -80,16 +80,14 @@ public static class InstanceEndpoints
         });
 
         // Resolve the CURRENT state of an instance lineage. A TPH transition replaces the entity (its id
-        // changes) while preserving CreatedAt, so a detail page keyed on one id goes stale; polling this by
-        // (cBot, createdAt) follows the lineage across Starting → Running → Stopped/Completed/Failed.
-        g.MapGet("/current", async (Guid cbotId, DateTimeOffset createdAt, DataContext db, ICurrentUser u) =>
+        // changes) but carries LineageId across, so polling by the unique LineageId follows exactly one
+        // instance across Starting → Running → Stopped/Completed/Failed — a run and a backtest of the same
+        // cBot are distinct lineages and can never be confused.
+        g.MapGet("/current", async (Guid lineageId, DataContext db, ICurrentUser u) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
-            var cid = CBotId.From(cbotId);
-            var i = await db.Instances.AsNoTracking()
-                .Where(x => x.CBotId == cid && x.CreatedAt == createdAt)
-                .OrderByDescending(x => x.UpdatedAt)
-                .FirstOrDefaultAsync();
+            var lid = InstanceLineageId.From(lineageId);
+            var i = await db.Instances.AsNoTracking().FirstOrDefaultAsync(x => x.LineageId == lid);
             if (i is null) return Results.NotFound();
             if (u.IsInRole("Viewer"))
             {
@@ -357,8 +355,7 @@ public static class InstanceEndpoints
             i.Symbol,
             i.Timeframe,
             Equity = equity,
-            i.CreatedAt,
-            i.CBotId
+            i.LineageId
         };
     }
 

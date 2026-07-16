@@ -839,6 +839,12 @@ public abstract class Instance : AuditedEntity<InstanceId>
     // last run's logs remain readable/downloadable after the container is gone. Null until captured.
     public string? ConsoleLog { get; internal set; }
 
+    // A stable, unique identifier for this instance's lineage: a TPH transition replaces the entity (its Id
+    // changes) but carries LineageId across, so it uniquely follows ONE instance (one run, one backtest)
+    // from Starting through to its terminal state — unlike (CBotId, CreatedAt) which a run and a backtest of
+    // the same cBot could share. Generated once at creation; preserved by CopyExecutionState.
+    public InstanceLineageId LineageId { get; internal set; } = InstanceLineageId.New();
+
     public abstract string KindName { get; }
     public abstract string StatusName { get; }
     public abstract bool IsTerminal { get; }
@@ -868,6 +874,7 @@ public abstract class Instance : AuditedEntity<InstanceId>
         target.ParamSetId = source.ParamSetId;
         target.DataDirSubPath = source.DataDirSubPath;
         target.ConsoleLog = source.ConsoleLog;
+        target.LineageId = source.LineageId;
     }
 }
 

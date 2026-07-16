@@ -13,6 +13,19 @@ public sealed class ArchitectureGuardTests
 {
     private static readonly string RepoRoot = FindRepoRoot();
     private static readonly string SrcRoot = Path.Combine(RepoRoot, "src");
+    private static readonly string CoreRoot = Path.Combine(SrcRoot, "Core");
+
+    // Opt-out ratchet (mandate #12): raw-Guid identity properties still allowed on Core types, each with a
+    // reason. These are append-only fact-log rows (not aggregates) and one polymorphic audit reference — no
+    // single strong Id type fits. The set may ONLY shrink: never add an entry to green a build.
+    private static readonly HashSet<string> RawGuidIdentityAllowList =
+    [
+        "CopyExecution.ProfileId",      // append-only transparency fact-log row, not an aggregate
+        "CopyNotification.ProfileId",   // append-only notification fact-log row, not an aggregate
+        "CopyFeeAccrual.ProfileId",     // append-only fee-accrual fact-log row, not an aggregate
+        "CopyFeeAccrual.DestinationId", // fee-accrual destination reference on the same fact-log row
+        "AuditLog.EntityId",            // polymorphic audit target (any aggregate type) — no single strong Id fits
+    ];
 
     // Standalone agent processes that ship without the Core source-generated LogMessages catalog.
     private static readonly string[] DirectLoggingExemptProjects = ["CtraderCliNode", "CopyEngine", "CopyAgent"];
@@ -68,6 +81,64 @@ public sealed class ArchitectureGuardTests
 
         offenders.Should().BeEmpty(
             "use source-generated LogMessages, not ILogger.Log* directly (mandate #6):\n{0}",
+            string.Join("\n", offenders));
+    }
+
+    // Mandate #1 (strong IDs): an identity-typed property on a Core type uses a strongly-typed Id
+    // (IStronglyTypedId<T> — CBotId, InstanceLineageId, …), never a raw Guid. A raw Guid identity is how a
+    // run and a backtest silently got mixed (the LineageId lineage bug); a strong Id makes that a compile
+    // error. New raw-Guid identity properties are forbidden — extend StrongIds.cs instead.
+    [Fact]
+    public void Core_identity_properties_are_strongly_typed_not_raw_guid()
+    {
+        var propPattern = new Regex(@"public\s+Guid\??\s+(\w*Id)\b\s*\{");
+        var typePattern = new Regex(@"\b(?:class|record|struct|interface)\s+(\w+)");
+
+        List<string> offenders = [];
+        foreach (var file in Directory.EnumerateFiles(CoreRoot, "*.cs", SearchOption.AllDirectories))
+        {
+            if (file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") ||
+                file.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}"))
+            {
+                continue;
+            }
+
+            var currentType = "?";
+            var lineNumber = 0;
+            foreach (var line in File.ReadLines(file))
+            {
+                lineNumber++;
+                var trimmed = line.TrimStart();
+                if (trimmed.StartsWith("//", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var typeMatch = typePattern.Match(line);
+                if (typeMatch.Success)
+                {
+                    currentType = typeMatch.Groups[1].Value;
+                }
+
+                var propMatch = propPattern.Match(line);
+                if (!propMatch.Success)
+                {
+                    continue;
+                }
+
+                var qualified = $"{currentType}.{propMatch.Groups[1].Value}";
+                if (RawGuidIdentityAllowList.Contains(qualified))
+                {
+                    continue;
+                }
+
+                offenders.Add($"  {Path.GetRelativePath(CoreRoot, file)}:{lineNumber} {qualified}");
+            }
+        }
+
+        offenders.Should().BeEmpty(
+            "Core identity properties must be strongly-typed Ids, not raw Guid (mandate #1) — extend "
+            + "StrongIds.cs; add to the opt-out ratchet only with a written reason:\n{0}",
             string.Join("\n", offenders));
     }
 

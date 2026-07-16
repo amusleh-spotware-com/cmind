@@ -92,6 +92,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<ParamSetId>().HaveConversion<StrongIdConverter<ParamSetId>>();
         configurationBuilder.Properties<NodeId>().HaveConversion<StrongIdConverter<NodeId>>();
         configurationBuilder.Properties<InstanceId>().HaveConversion<StrongIdConverter<InstanceId>>();
+        configurationBuilder.Properties<InstanceLineageId>().HaveConversion<StrongIdConverter<InstanceLineageId>>();
         configurationBuilder.Properties<McpApiKeyId>().HaveConversion<StrongIdConverter<McpApiKeyId>>();
         configurationBuilder.Properties<AgentMandateId>().HaveConversion<StrongIdConverter<AgentMandateId>>();
         configurationBuilder.Properties<AgentProposalId>().HaveConversion<StrongIdConverter<AgentProposalId>>();

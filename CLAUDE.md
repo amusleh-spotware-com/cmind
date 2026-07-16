@@ -86,8 +86,16 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
    invariants. Reference other aggregates by **strong ID**, not navigation property. One
    `SaveChanges` mutates **one** aggregate; cross-aggregate flows use domain events. Wrap primitives
    crossing a domain boundary in a value object. `src/Core` compiles with **zero** infra deps.
-   Invariant violations throw a Core `DomainException`, not a framework exception. → `ddd-dotnet`
-   skill + `src/Core/CLAUDE.md`.
+   Invariant violations throw a Core `DomainException`, not a framework exception. **Strong IDs
+   everywhere — a raw `Guid`/`long` identity is forbidden.** Every entity id and every id reference is
+   a strongly-typed id (`IStronglyTypedId<T>` in `StrongIds.cs` — `CBotId`, `InstanceId`,
+   `InstanceLineageId`, …); never pass, store, compare, or expose a bare `Guid` as an identity. A raw
+   `Guid` is how a run and a backtest silently mixed (the `InstanceLineageId` lineage bug) — a strong
+   id makes that a compile error. Need a new id kind → add a record-struct to `StrongIds.cs` + register
+   its `StrongIdConverter` in `DataContext` (**never** widen a signature to raw `Guid`). Enforced by
+   `ArchitectureGuardTests.Core_identity_properties_are_strongly_typed_not_raw_guid` (opt-out ratchet:
+   the few append-only fact-log rows still on raw `Guid` are listed with a reason and the list may only
+   shrink). → `ddd-dotnet` skill + `src/Core/CLAUDE.md`.
 2. **Three test tiers, every change.** Unit **and** integration **and** E2E — whichever the change
    can be exercised at, it ships, in the same commit. Unit asserts invariants/transitions (not
    getters); integration hits real Postgres (Testcontainers); E2E drives the real UI (Playwright,

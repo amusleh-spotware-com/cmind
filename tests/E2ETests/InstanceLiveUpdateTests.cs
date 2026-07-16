@@ -67,6 +67,28 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
             .ToBeVisibleAsync(new() { Timeout = 30000 });
     }
 
+    // Regression: staying on a run's page must not, after a poll cycle, switch to a DIFFERENT instance
+    // (e.g. a completed backtest of the same cBot). The live poll must only ever apply data for this exact
+    // instance lineage.
+    [Fact]
+    public async Task Staying_on_a_run_page_does_not_switch_to_another_instance_of_the_same_cbot()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var (_, runningRunId) = await SeedAsync(page);
+
+        await page.GotoAsync($"/instance/{runningRunId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await Assertions.Expect(page.Locator("[data-testid=instance-detail-stop]")).ToBeVisibleAsync(Slow);
+
+        // Let several 4s poll cycles run.
+        await page.WaitForTimeoutAsync(10000);
+
+        (await page.Locator("[data-testid=instance-detail-stop]").IsVisibleAsync())
+            .Should().BeTrue("the run page must keep showing the running run after polling");
+        (await page.Locator("[data-testid=instance-detail-start]").IsVisibleAsync())
+            .Should().BeFalse("the page must not switch to a terminal (backtest) instance of the same cBot");
+    }
+
     // Regression: Blazor reuses the InstanceDetail component when navigating /instance/{A} -> /instance/{B}
     // (only the Id param changes). A stale lineage/poll made a live-run page suddenly show the previous
     // backtest's data + equity. Reproduced here with an in-app (SPA) navigation, which reuses the component

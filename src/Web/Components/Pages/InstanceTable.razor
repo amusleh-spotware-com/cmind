@@ -26,6 +26,19 @@
                                Disabled="@(!(bool)context.hasLogs)"
                                OnClick="@(() => DownloadLogs((Guid)context.id))" data-testid="instance-logs-download" />
             </MudTooltip>
+            @if (Type == "Backtest")
+            {
+                <MudTooltip Text="@((bool)context.hasReportJson ? "Download JSON report" : "Report available only for a completed backtest")">
+                    <MudIconButton Icon="@Icons.Material.Filled.DataObject" Size="Size.Small" aria-label="Download JSON report"
+                                   Disabled="@(!(bool)context.hasReportJson)"
+                                   OnClick="@(() => DownloadReport((Guid)context.id, "json"))" data-testid="instance-report-json" />
+                </MudTooltip>
+                <MudTooltip Text="@((bool)context.hasReportHtml ? "Download HTML report" : "Report available only for a completed backtest")">
+                    <MudIconButton Icon="@Icons.Material.Filled.Html" Size="Size.Small" aria-label="Download HTML report"
+                                   Disabled="@(!(bool)context.hasReportHtml)"
+                                   OnClick="@(() => DownloadReport((Guid)context.id, "html"))" data-testid="instance-report-html" />
+                </MudTooltip>
+            }
             @if (IsActive((string)context.status))
             {
                 <MudTooltip Text="@(_stopping.Contains((Guid)context.id) ? "Stopping…" : "Stop instance")">
@@ -118,6 +131,21 @@
             Snack.Add("No logs available for this instance", Severity.Warning);
         }
     }
+    // Downloads the persisted backtest report (json/html). Disabled in the UI unless the backtest completed
+    // with a report, so this only ever hits an available file.
+    private async Task DownloadReport(Guid id, string ext)
+    {
+        try
+        {
+            var text = await Http.GetStringAsync($"/api/instances/{id}/report.{ext}");
+            await JS.InvokeVoidAsync("appDownloadText", $"backtest-{id:N}.{ext}", text);
+        }
+        catch
+        {
+            Snack.Add("No report available for this instance", Severity.Warning);
+        }
+    }
+
     private async Task Stop(Guid id)
     {
         // Immediately notify + disable the Stop icon for this row until the request resolves.

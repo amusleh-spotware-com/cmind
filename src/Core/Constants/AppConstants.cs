@@ -171,6 +171,7 @@ public static class NodeAgentRoutes
 
     public static string Status(string containerId) => $"/api/containers/{containerId}/status";
     public static string Report(string containerId) => $"/api/containers/{containerId}/report";
+    public static string ReportHtml(string containerId) => $"/api/containers/{containerId}/report-html";
     public static string Stop(string containerId) => $"/api/containers/{containerId}/stop";
     public static string Logs(string containerId) => $"/api/containers/{containerId}/logs";
 }

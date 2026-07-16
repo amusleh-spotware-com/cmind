@@ -113,6 +113,19 @@
                                Disabled="@(_logs.Count == 0)" OnClick="DownloadLogsAsync"
                                aria-label="Download logs" data-testid="instance-detail-logs-download" />
             </MudTooltip>
+            @if (_isBacktest)
+            {
+                <MudTooltip Text="@(HasReportJson ? "Download JSON report" : "Report available only for a completed backtest")">
+                    <MudIconButton Icon="@Icons.Material.Filled.DataObject" Size="MudBlazor.Size.Small"
+                                   Disabled="@(!HasReportJson)" OnClick="@(() => DownloadReportAsync("json"))"
+                                   aria-label="Download JSON report" data-testid="instance-detail-report-json" />
+                </MudTooltip>
+                <MudTooltip Text="@(HasReportHtml ? "Download HTML report" : "Report available only for a completed backtest")">
+                    <MudIconButton Icon="@Icons.Material.Filled.Html" Size="MudBlazor.Size.Small"
+                                   Disabled="@(!HasReportHtml)" OnClick="@(() => DownloadReportAsync("html"))"
+                                   aria-label="Download HTML report" data-testid="instance-detail-report-html" />
+                </MudTooltip>
+            }
         </MudStack>
 
         <MudPaper id="@LogsElementId" Class="instance-logs pa-2">
@@ -205,6 +218,9 @@
     private bool IsActive => _detail is not null
         && ((string)_detail.status) is "Running" or "Starting" or "Stopping";
 
+    private bool HasReportJson => _detail is not null && (bool)_detail.hasReportJson;
+    private bool HasReportHtml => _detail is not null && (bool)_detail.hasReportHtml;
+
     private bool IsTerminalStatus => _detail is not null
         && ((string)_detail.status) is "Stopped" or "Completed" or "Failed";
 
@@ -273,6 +289,21 @@
         catch
         {
             Snack.Add("No logs available for this instance", Severity.Warning);
+        }
+    }
+
+    // Downloads the persisted backtest report (json/html). The button is disabled unless the backtest
+    // completed with a report, so this only ever fetches an available file.
+    private async Task DownloadReportAsync(string ext)
+    {
+        try
+        {
+            var text = await Http.GetStringAsync($"/api/instances/{_currentId}/report.{ext}");
+            await JS.InvokeVoidAsync("appDownloadText", $"backtest-{_currentId:N}.{ext}", text);
+        }
+        catch
+        {
+            Snack.Add("No report available for this instance", Severity.Warning);
         }
     }
 

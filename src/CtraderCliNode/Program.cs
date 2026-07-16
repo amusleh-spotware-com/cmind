@@ -119,6 +119,12 @@ api.MapGet("/containers/{containerId}/report", async (string containerId, Docker
     return report is null ? Results.NotFound() : Results.Text(report, "application/json");
 });
 
+api.MapGet("/containers/{containerId}/report-html", async (string containerId, DockerService docker, CancellationToken ct) =>
+{
+    var report = await docker.ReadReportHtmlAsync(containerId, ct);
+    return report is null ? Results.NotFound() : Results.Text(report, "text/html");
+});
+
 api.MapPost("/containers/{containerId}/stop", async (string containerId, DockerService docker, CancellationToken ct) =>
 {
     await docker.StopAsync(containerId, ct);

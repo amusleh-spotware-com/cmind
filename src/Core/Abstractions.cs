@@ -52,6 +52,9 @@ public interface IContainerDispatcher
     /// <summary>Exit code of the (stopped) container, or null when it cannot be determined.</summary>
     Task<int?> GetExitCodeAsync(Instance instance, CancellationToken ct);
     Task<string?> ReadReportAsync(Instance instance, CancellationToken ct);
+
+    /// <summary>The full HTML backtest report, or null when the container produced none / is gone.</summary>
+    Task<string?> ReadReportHtmlAsync(Instance instance, CancellationToken ct);
 }
 
 public interface IContainerDispatcherFactory

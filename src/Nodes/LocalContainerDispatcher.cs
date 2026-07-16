@@ -167,6 +167,14 @@ public sealed class LocalContainerDispatcher(
         return await File.ReadAllTextAsync(path, ct);
     }
 
+    public async Task<string?> ReadReportHtmlAsync(Instance instance, CancellationToken ct)
+    {
+        if (instance.DataDirSubPath is not { } workDir) return null;
+        var path = Path.Combine(workDir, FilePaths.ReportHtmlFile);
+        if (!File.Exists(path)) return null;
+        return await File.ReadAllTextAsync(path, ct);
+    }
+
     public Task<long> GetBacktestDataSizeAsync(Node node, CancellationToken ct)
     {
         if (node is not LocalNode) return Task.FromResult(0L);

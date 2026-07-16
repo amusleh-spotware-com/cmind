@@ -91,8 +91,9 @@ public sealed class BacktestCompletionPoller(
             await CaptureConsoleLogAsync(factory, instance, ct);
 
             var reportJson = await TryReadReportAsync(factory, instance, ct);
+            var reportHtml = await TryReadReportHtmlAsync(factory, instance, ct);
             Instance terminal = reportJson is not null
-                ? instance.ToCompleted(now, reportJson, instance.DataDirSubPath)
+                ? instance.ToCompleted(now, reportJson, instance.DataDirSubPath, reportHtml)
                 : instance.ToFailed(DescribeMissingReport(instance.ConsoleLog), now);
             db.Instances.Remove(instance);
             db.Instances.Add(terminal);
@@ -110,6 +111,13 @@ public sealed class BacktestCompletionPoller(
         IContainerDispatcherFactory factory, Instance instance, CancellationToken ct)
     {
         try { return await factory.For(instance).ReadReportAsync(instance, ct); }
+        catch { return null; }
+    }
+
+    private static async Task<string?> TryReadReportHtmlAsync(
+        IContainerDispatcherFactory factory, Instance instance, CancellationToken ct)
+    {
+        try { return await factory.For(instance).ReadReportHtmlAsync(instance, ct); }
         catch { return null; }
     }
 

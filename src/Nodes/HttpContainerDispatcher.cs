@@ -96,6 +96,17 @@ public sealed class HttpContainerDispatcher(
         return await response.Content.ReadAsStringAsync(ct);
     }
 
+    public async Task<string?> ReadReportHtmlAsync(Instance instance, CancellationToken ct)
+    {
+        if (instance.Node is not CtraderCliNode node) return null;
+        if (ContainerCommandHelpers.GetContainerId(instance) is not { } containerId) return null;
+        using var client = CreateClient(node, ReadClientName);
+        using var response = await client.GetAsync(NodeAgentRoutes.ReportHtml(containerId), ct);
+        if (response.StatusCode == HttpStatusCode.NotFound) return null;
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsStringAsync(ct);
+    }
+
     public async IAsyncEnumerable<string> TailLogsAsync(Instance instance, [EnumeratorCancellation] CancellationToken ct)
     {
         if (instance.Node is not CtraderCliNode node) yield break;

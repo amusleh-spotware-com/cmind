@@ -68,7 +68,8 @@ public static class TestSeedEndpoints
                     uid, cbot.Id, node.Id, tag, symbol, timeframe,
                     """{"from":"2024-01-01","to":"2024-02-01","balance":"10000"}""", account.Id, paramSet.Id))
                 .ToRunning("seed-bt", now.AddMinutes(-30))
-                .ToCompleted(now.AddMinutes(-5), SampleReportJson);
+                .ToCompleted(now.AddMinutes(-5), SampleReportJson,
+                    reportHtml: "<html><body><h1>Seed backtest report</h1></body></html>");
             completed.CaptureConsoleLog("seed backtest console line 1\nseed backtest console line 2");
             completed.ClearDomainEvents(); // seeding: no node/side-effect dispatch on the transitions
             db.Instances.Add(completed);

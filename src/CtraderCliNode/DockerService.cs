@@ -107,6 +107,15 @@ public sealed class DockerService(IOptionsMonitor<NodeAgentOptions> options, ILo
         return await File.ReadAllTextAsync(path, ct);
     }
 
+    public async Task<string?> ReadReportHtmlAsync(string containerId, CancellationToken ct)
+    {
+        var workDir = await WorkDirForContainerAsync(containerId, ct);
+        if (workDir is null) return null;
+        var path = Path.Combine(workDir, FilePaths.ReportHtmlFile);
+        if (!File.Exists(path)) return null;
+        return await File.ReadAllTextAsync(path, ct);
+    }
+
     public async Task StopAsync(string containerId, CancellationToken ct)
     {
         var opts = options.CurrentValue;

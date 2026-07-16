@@ -1118,7 +1118,7 @@ public sealed class RunningBacktestInstance : BacktestInstance
     public override bool IsActive => true;
 
     public CompletedBacktestInstance ToCompleted(DateTimeOffset stoppedAt, string? reportJson = null,
-        string? resultJsonPath = null)
+        string? resultJsonPath = null, string? reportHtml = null)
     {
         var completed = new CompletedBacktestInstance
         {
@@ -1126,6 +1126,7 @@ public sealed class RunningBacktestInstance : BacktestInstance
             StartedAt = StartedAt,
             StoppedAt = stoppedAt,
             ReportJson = reportJson,
+            ReportHtml = reportHtml,
             ResultJsonPath = resultJsonPath
         };
         CopyBacktestState(this, completed);
@@ -1150,6 +1151,9 @@ public sealed class CompletedBacktestInstance : BacktestInstance
     public DateTimeOffset StoppedAt { get; internal set; }
     public string? ResultJsonPath { get; internal set; }
     public string? ReportJson { get; internal set; }
+    // The full cTrader HTML backtest report, persisted so the last run's report stays downloadable after
+    // the container is gone (parity with ReportJson).
+    public string? ReportHtml { get; internal set; }
     public override string StatusName => "Completed";
     public override bool IsTerminal => true;
     public override bool IsActive => false;

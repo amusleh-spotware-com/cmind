@@ -120,6 +120,31 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
             "the account selector must show the number, not a raw Guid");
     }
 
+    // A completed backtest's detail page offers JSON/HTML report downloads; a run never does.
+    [Fact]
+    public async Task Backtest_detail_report_buttons_download_and_are_absent_for_a_run()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var (completedBacktestId, runningRunId) = await SeedAsync(page);
+
+        await page.GotoAsync($"/instance/{completedBacktestId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        var jsonBtn = page.Locator("[data-testid=instance-detail-report-json]");
+        await Assertions.Expect(jsonBtn).ToBeEnabledAsync(new() { Timeout = 30000 });
+        await Assertions.Expect(page.Locator("[data-testid=instance-detail-report-html]")).ToBeEnabledAsync(new() { Timeout = 30000 });
+
+        var download = await page.RunAndWaitForDownloadAsync(async () => await jsonBtn.ClickAsync());
+        download.SuggestedFilename.Should().EndWith(".json");
+
+        // A running RUN instance offers no report buttons (backtest-only).
+        await page.GotoAsync($"/instance/{runningRunId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await Assertions.Expect(page.Locator("[data-testid=instance-detail-stop]")).ToBeVisibleAsync(Slow);
+        (await page.Locator("[data-testid=instance-detail-report-json]").IsVisibleAsync())
+            .Should().BeFalse("a run has no backtest report");
+    }
+
     // The detail page's Copy logs button must copy the instance's full console log to the clipboard.
     [Fact]
     public async Task Copy_logs_button_copies_the_console_log_to_the_clipboard()

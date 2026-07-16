@@ -91,6 +91,12 @@ via the log toolbar, **copied to the clipboard** (Copy logs icon) or **downloade
 icon) even after the container is gone. Both act on the instance's full console log, not just the
 on-screen tail.
 
+A **completed backtest** also persists its **cTrader report** in both formats — the raw **JSON**
+(the same one the equity curve and AI analysis read) and the full **HTML** report. Both are
+downloadable from the backtest row **and** the detail page via dedicated icons. Only the **last run's**
+reports are kept, and the icons are **disabled** for any backtest that is not-started, running or
+failed (and are never shown for a run instance) — only a completed backtest has a report to download.
+
 An **uploaded** `.algo` was never built here, so its **Last Build** column on the cBots page is left
 blank (it shows a build time only for cBots you build in the browser).
 

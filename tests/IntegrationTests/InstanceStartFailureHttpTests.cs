@@ -121,5 +121,6 @@ public class InstanceStartFailureHttpTests(PostgresFixture fixture) : IClassFixt
         public Task<bool?> IsRunningAsync(Instance instance, CancellationToken ct) => Task.FromResult<bool?>(null);
         public Task<int?> GetExitCodeAsync(Instance instance, CancellationToken ct) => Task.FromResult<int?>(null);
         public Task<string?> ReadReportAsync(Instance instance, CancellationToken ct) => Task.FromResult<string?>(null);
+        public Task<string?> ReadReportHtmlAsync(Instance instance, CancellationToken ct) => Task.FromResult<string?>(null);
     }
 }

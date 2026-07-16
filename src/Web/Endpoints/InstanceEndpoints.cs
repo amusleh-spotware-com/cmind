@@ -59,7 +59,10 @@ public static class InstanceEndpoints
                 StoppedAt = GetStoppedAt(i),
                 // Logs are downloadable when they were persisted at termination, or the instance is still
                 // live on a node (a snapshot can be tailed on demand).
-                HasLogs = i.ConsoleLog is not null || (i.IsActive && i.NodeId is not null)
+                HasLogs = i.ConsoleLog is not null || (i.IsActive && i.NodeId is not null),
+                // Backtest reports are downloadable only for a COMPLETED backtest that produced them.
+                HasReportJson = i is CompletedBacktestInstance rj && rj.ReportJson != null,
+                HasReportHtml = i is CompletedBacktestInstance rh && rh.ReportHtml != null
             });
             return Results.Ok(rows);
         });
@@ -418,6 +421,25 @@ public static class InstanceEndpoints
             return Results.File(System.Text.Encoding.UTF8.GetBytes(text), "text/plain", $"instance-{id:N}.log");
         });
 
+        // Download the persisted JSON / HTML backtest report. Only a COMPLETED backtest that produced the
+        // report has it — every other state (not-started / running / failed, or a run instance) is a 404,
+        // which is how the UI keeps the download buttons disabled.
+        g.MapGet("/{id:guid}/report.json", async (Guid id, DataContext db, ICurrentUser u) =>
+        {
+            var (i, denied) = await LoadForReadAsync(id, db, u);
+            if (denied is not null) return denied;
+            if (i is not CompletedBacktestInstance { ReportJson: { } json }) return Results.NotFound("no report");
+            return Results.File(System.Text.Encoding.UTF8.GetBytes(json), "application/json", $"backtest-{id:N}.json");
+        });
+
+        g.MapGet("/{id:guid}/report.html", async (Guid id, DataContext db, ICurrentUser u) =>
+        {
+            var (i, denied) = await LoadForReadAsync(id, db, u);
+            if (denied is not null) return denied;
+            if (i is not CompletedBacktestInstance { ReportHtml: { } html }) return Results.NotFound("no report");
+            return Results.File(System.Text.Encoding.UTF8.GetBytes(html), "text/html", $"backtest-{id:N}.html");
+        });
+
         g.MapDelete("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
@@ -433,6 +455,29 @@ public static class InstanceEndpoints
         });
 
         return app;
+    }
+
+    // Loads an instance for a read-only download, enforcing the same access rules as the detail/logs
+    // endpoints: owner/admin see all, a User sees only their own, a Viewer sees granted instances.
+    private static async Task<(Instance? instance, IResult? denied)> LoadForReadAsync(
+        Guid id, DataContext db, ICurrentUser u)
+    {
+        if (u.UserId is not { } uid) return (null, Results.Unauthorized());
+        var iid = InstanceId.From(id);
+        var i = await db.Instances.FirstOrDefaultAsync(x => x.Id == iid);
+        if (i is null) return (null, Results.NotFound());
+        if (u.IsInRole("Viewer"))
+        {
+            var viewer = await db.Users.OfType<ViewerUser>().FirstOrDefaultAsync(x => x.Id == uid);
+            if (viewer is null) return (null, Results.Unauthorized());
+            if (!viewer.SeeAllInstances && !await db.ViewerGrants.AnyAsync(v => v.ViewerId == uid && v.InstanceId == iid))
+                return (null, Results.Forbid());
+        }
+        else if (u.IsInRole("User") && i.UserId != uid)
+        {
+            return (null, Results.Forbid());
+        }
+        return (i, null);
     }
 
     private static object BuildDetail(Instance i)
@@ -455,6 +500,8 @@ public static class InstanceEndpoints
             ParamSetId = i.ParamSetId,
             i.DockerImageTag,
             BacktestSettingsJson = i is BacktestInstance bt ? bt.BacktestSettingsJson : null,
+            HasReportJson = i is CompletedBacktestInstance rj && rj.ReportJson != null,
+            HasReportHtml = i is CompletedBacktestInstance rh && rh.ReportHtml != null,
             Equity = equity,
             i.LineageId
         };

@@ -126,6 +126,7 @@
 @code {
     [Parameter] public Guid Id { get; set; }
     private const string LogsElementId = "instance-detail-logs";
+    private Guid _loadedId;
     private dynamic? _detail;
     private bool _loaded;
     private bool _isBacktest;
@@ -245,8 +246,16 @@
         _ => MudBlazor.Color.Info
     };
 
-    protected override async Task OnInitializedAsync()
+    // Blazor REUSES this component when navigating /instance/{A} -> /instance/{B} (same @page, only the Id
+    // parameter changes) — OnInitializedAsync does NOT re-run. So load/reset here, keyed on Id, otherwise a
+    // stale lineage + the previous instance's poll paint the old instance's data (e.g. a backtest's equity)
+    // onto the new page.
+    protected override async Task OnParametersSetAsync()
     {
+        if (Id == _loadedId) return;
+        _loadedId = Id;
+        await TeardownAsync();
+
         dynamic? detail = null;
         try { detail = await Http.GetDynamicAsync($"/api/instances/{Id}"); }
         catch { detail = null; }
@@ -262,6 +271,31 @@
 
         await StartLogStreamAsync();
         StartPolling();
+    }
+
+    // Tears down the current instance's poll, log stream and all per-instance state so a reused component
+    // never mixes two instances.
+    private async Task TeardownAsync()
+    {
+        try { _pollCts?.Cancel(); } catch { /* already disposed */ }
+        _pollCts?.Dispose();
+        _pollCts = null;
+        if (_hub is not null)
+        {
+            try { await _hub.DisposeAsync(); } catch { /* best effort */ }
+            _hub = null;
+        }
+        _detail = null;
+        _loaded = false;
+        _isBacktest = false;
+        _stopping = false;
+        _startingInstance = false;
+        _logs = new();
+        _equity = new();
+        _calendarEvents = new();
+        _lineageCbotId = null;
+        _lineageCreatedAt = null;
+        _currentId = default;
     }
 
     // Applies a fetched instance-detail payload: current id, kind, lineage key (captured once) and the

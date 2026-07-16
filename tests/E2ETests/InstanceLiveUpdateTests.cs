@@ -13,12 +13,15 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
 {
     private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 30000 };
 
-    private static async Task<Guid> SeedRunningInstanceAsync(IPage page)
+    private static async Task<Guid> SeedRunningInstanceAsync(IPage page) => (await SeedAsync(page)).Running;
+
+    private static async Task<(Guid CompletedBacktest, Guid Running)> SeedAsync(IPage page)
     {
         var response = await page.APIRequest.PostAsync("/api/testseed/ai-portfolio", new() { DataObject = new { } });
         response.Ok.Should().BeTrue($"seed failed: {response.Status} {await response.TextAsync()}");
         using var doc = JsonDocument.Parse(await response.TextAsync());
-        return doc.RootElement.GetProperty("runningInstanceId").GetGuid();
+        return (doc.RootElement.GetProperty("completedInstanceId").GetGuid(),
+                doc.RootElement.GetProperty("runningInstanceId").GetGuid());
     }
 
     [Fact]
@@ -62,5 +65,41 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
         // no manual refresh.
         await Assertions.Expect(page.Locator("[data-testid=instance-detail-start]"))
             .ToBeVisibleAsync(new() { Timeout = 30000 });
+    }
+
+    // Regression: Blazor reuses the InstanceDetail component when navigating /instance/{A} -> /instance/{B}
+    // (only the Id param changes). A stale lineage/poll made a live-run page suddenly show the previous
+    // backtest's data + equity. Reproduced here with an in-app (SPA) navigation, which reuses the component
+    // — a full page load (GotoAsync) would mount a fresh component and hide the bug.
+    [Fact]
+    public async Task Spa_navigation_between_instances_does_not_leak_the_previous_instance_data()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var (completedBacktestId, runningRunId) = await SeedAsync(page);
+
+        // Open the completed backtest first (terminal → shows the Start control).
+        await page.GotoAsync($"/instance/{completedBacktestId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await Assertions.Expect(page.Locator("[data-testid=instance-detail-start]")).ToBeVisibleAsync(Slow);
+
+        // Marker to confirm the next navigation is client-side (window survives SPA nav, is wiped by a full
+        // reload) — otherwise a full reload would remount a fresh component and mask the reuse bug.
+        await page.EvaluateAsync("() => { window.__spaMarker = true; }");
+
+        // Client-side (Blazor-intercepted) navigation to the running run — reuses the component.
+        await page.EvaluateAsync(
+            "(href) => { const a = document.createElement('a'); a.href = href; a.setAttribute('data-testid','spa-link'); a.textContent = 'go'; a.style.cssText = 'position:fixed;top:0;left:0;z-index:99999;padding:8px;background:#fff;'; document.body.appendChild(a); }",
+            $"/instance/{runningRunId}");
+        // Force the click: the page keeps re-rendering from the live poll, so Playwright's stability wait
+        // can never settle; Blazor still intercepts the click event and navigates client-side.
+        await page.ClickAsync("[data-testid=spa-link]", new() { Force = true });
+        await page.WaitForURLAsync($"**/instance/{runningRunId}");
+        (await page.EvaluateAsync<bool>("() => window.__spaMarker === true"))
+            .Should().BeTrue("the navigation must be client-side (component reuse) — the case that triggers the leak");
+
+        // The page must now reflect the RUNNING run (Stop control), not the previous backtest (Start).
+        await Assertions.Expect(page.Locator("[data-testid=instance-detail-stop]")).ToBeVisibleAsync(Slow);
+        (await page.Locator("[data-testid=instance-detail-start]").IsVisibleAsync())
+            .Should().BeFalse("the reused page must not still show the previous (backtest) instance's controls");
     }
 }

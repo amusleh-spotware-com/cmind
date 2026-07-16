@@ -18,6 +18,22 @@ public sealed class BacktestCompletionPoller(
 {
     private const string ContainerExitedReason = "Container exited without producing a report";
     private const string BacktestTimedOutReason = "Backtest exceeded maximum allowed duration";
+    // cTrader Console's own report writer throws "Message expected" and emits an empty report
+    // (`"Equity":,`) when a backtest yields no equity curve — no trades OR no market data in the range.
+    // We can't fix cTrader, so translate that raw crash into an actionable failure reason.
+    private const string NoBacktestResultReason =
+        "cTrader produced no backtest results for the selected range — no trades, or no market data for "
+        + "those dates/symbol. Pick a wider date range that has available market data and retry.";
+
+    // Chooses the failure reason for a backtest that exited without a readable report: the specific
+    // no-result message when cTrader's report writer crashed on an empty report, else the generic one.
+    // Pure so it is unit-tested without a container.
+    internal static string DescribeMissingReport(string? consoleLog) =>
+        !string.IsNullOrEmpty(consoleLog)
+        && (consoleLog.Contains("Message expected", StringComparison.Ordinal)
+            || consoleLog.Contains("\"Equity\":,", StringComparison.Ordinal))
+            ? NoBacktestResultReason
+            : ContainerExitedReason;
 
     // A running backtest is overdue once it has run longer than the configured maximum. Pure so the
     // timeout boundary is unit-tested without a DB or container.
@@ -77,7 +93,7 @@ public sealed class BacktestCompletionPoller(
             var reportJson = await TryReadReportAsync(factory, instance, ct);
             Instance terminal = reportJson is not null
                 ? instance.ToCompleted(now, reportJson, instance.DataDirSubPath)
-                : instance.ToFailed(ContainerExitedReason, now);
+                : instance.ToFailed(DescribeMissingReport(instance.ConsoleLog), now);
             db.Instances.Remove(instance);
             db.Instances.Add(terminal);
 

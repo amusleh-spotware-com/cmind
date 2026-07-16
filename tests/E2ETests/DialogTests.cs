@@ -299,6 +299,26 @@ public sealed class DialogTests(AppFixture app)
         await SubmitAsync(dialog, "Cancel");
     }
 
+    // In tick data mode cTrader derives the spread from the tick data, so the Spread field is hidden.
+    [Fact]
+    public async Task Backtest_dialog_hides_spread_in_tick_data_mode()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await SeedTradingAccountAsync(page);
+        await GotoAsync(page, "/backtest");
+
+        var dialog = await OpenDialogAsync(page, "Backtest New cBot");
+        // Default data mode is m1 → the Spread field is shown.
+        await Assertions.Expect(page.Locator("[data-testid=backtest-spread]")).ToBeVisibleAsync(Slow);
+
+        // Switch data mode to Tick data → the Spread field disappears.
+        await dialog.Locator(".mud-input-control:has([data-testid=backtest-datamode])").First.ClickAsync();
+        await page.Locator(".mud-list-item:has-text('Tick data')").First.ClickAsync();
+        await Assertions.Expect(page.Locator("[data-testid=backtest-spread]")).ToBeHiddenAsync(new() { Timeout = 30000 });
+
+        await SubmitAsync(dialog, "Cancel");
+    }
+
     [Fact]
     public async Task Backtest_new_button_opens_dialog_with_fields()
     {

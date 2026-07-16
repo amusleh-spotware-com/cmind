@@ -53,10 +53,20 @@ touch a command line:
 - **Starting balance** — defaults to `10000` (`--balance`). A **0 balance places no trades and makes
   cTrader emit an empty report it then crashes on** ("Message expected"), so a non-zero balance is
   always sent.
-- **Commission** and **Spread** — `--commission` / `--spread` (spread in pips).
+- **Commission** — `--commission`.
+- **Spread** — `--spread`, a **numeric field in pips that cannot go below 0**. It is **hidden in Tick
+  data mode**, where cTrader derives the spread from the tick data itself (no `--spread` is sent).
 
 The data directory (`--data-file` / `--data-dir`) is managed by the app itself (a per-account cache, see
 above), not exposed in the dialog.
+
+:::note cTrader crashes on an empty backtest
+If a backtest produces **no results** — no trades, or no market data for the chosen dates/symbol —
+cTrader Console's own report writer throws `Message expected` and exits without a report. The app can't
+fix that upstream bug, but it detects it and marks the instance **Failed** with an actionable reason
+("no backtest results for the selected range…") instead of a raw stack trace. Pick a wider date range
+that has available market data and retry.
+:::
 
 ## Instance detail page
 

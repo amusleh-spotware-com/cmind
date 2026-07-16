@@ -19,7 +19,8 @@ public static class BacktestSettings
         settings["dataMode"] = Blank(dataMode) ? DefaultDataMode : dataMode!.Trim();
         settings["balance"] = Blank(balance) ? DefaultBalance : balance!.Trim();
         settings["commission"] = Blank(commission) ? "0" : commission!.Trim();
-        settings["spread"] = Blank(spread) ? "0" : spread!.Trim();
+        // Spread omitted (e.g. in tick data mode) ⇒ no --spread; cTrader derives it from the tick data.
+        if (!Blank(spread)) settings["spread"] = spread!.Trim();
         return JsonSerializer.Serialize(settings);
     }
 

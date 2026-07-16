@@ -35,7 +35,8 @@
                 <MudSelectItem T="string" Value="@("open")">Open prices only (fastest)</MudSelectItem>
             </MudSelect>
             <MudTextField @bind-Value="_balance" Label="Starting balance" Class="mb-2" data-testid="backtest-balance" />
-            <MudTextField @bind-Value="_commission" Label="Commission" Class="mb-2" data-testid="backtest-commission" />
+            <MudNumericField T="double" @bind-Value="_commission" Label="Commission" Min="0" Step="0.1"
+                             Class="mb-2" data-testid="backtest-commission" />
             @if (_dataMode != "tick")
             {
                 <MudNumericField T="double" @bind-Value="_spread" Label="Spread (pips)" Min="0" Step="0.1"
@@ -60,8 +61,8 @@
     private dynamic[] _cbots = [], _accts = [], _paramsets = [];
     private Guid? _cbotId, _acctId, _psId;
     private string _symbol = "EURUSD", _timeframe = "h1", _image = "latest";
-    private string _dataMode = "m1", _balance = "10000", _commission = "0";
-    private double _spread;
+    private string _dataMode = "m1", _balance = "10000";
+    private double _commission, _spread;
     private DateTime? _from, _to;
     private string? _dateError;
 
@@ -110,8 +111,9 @@
         }
         _dateError = null;
         // In tick data mode cTrader derives the spread from the tick data, so send no spread.
-        var spread = _dataMode == "tick" ? null : _spread.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        var settingsJson = BacktestSettings.ToJson(_from, _to, _dataMode, _balance, _commission, spread);
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        var spread = _dataMode == "tick" ? null : _spread.ToString(inv);
+        var settingsJson = BacktestSettings.ToJson(_from, _to, _dataMode, _balance, _commission.ToString(inv), spread);
         Dialog.Close(DialogResult.Ok(new BacktestDialogResult(
             _cbotId, _acctId, _symbol.Trim(), _timeframe.Trim(), _psId, _image.Trim(), settingsJson)));
     }

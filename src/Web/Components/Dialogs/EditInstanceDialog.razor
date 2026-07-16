@@ -32,7 +32,8 @@
                     <MudSelectItem T="string" Value="@("open")">Open prices only (fastest)</MudSelectItem>
                 </MudSelect>
                 <MudTextField @bind-Value="_balance" Label="Starting balance" Class="mb-2" data-testid="edit-balance" />
-                <MudTextField @bind-Value="_commission" Label="Commission" Class="mb-2" data-testid="edit-commission" />
+                <MudNumericField T="double" @bind-Value="_commission" Label="Commission" Min="0" Step="0.1"
+                                 Class="mb-2" data-testid="edit-commission" />
                 @if (_dataMode != "tick")
                 {
                     <MudNumericField T="double" @bind-Value="_spread" Label="Spread (pips)" Min="0" Step="0.1"
@@ -66,8 +67,8 @@
     private Guid? _acctId, _psId, _cbotId;
     private bool _isBacktest;
     private string _symbol = "EURUSD", _timeframe = "h1", _image = "latest";
-    private string _balance = BacktestSettings.DefaultBalance, _commission = "0";
-    private double _spread;
+    private string _balance = BacktestSettings.DefaultBalance;
+    private double _commission, _spread;
     private string _dataMode = BacktestSettings.DefaultDataMode;
     private DateTime? _from, _to;
     private string? _dateError;
@@ -110,7 +111,10 @@
                     case "from": if (DateTime.TryParse(p.Value.GetString(), out var f)) _from = f; break;
                     case "to": if (DateTime.TryParse(p.Value.GetString(), out var t)) _to = t; break;
                     case "balance": _balance = ValueString(p.Value); break;
-                    case "commission": _commission = ValueString(p.Value); break;
+                    case "commission":
+                        _ = double.TryParse(ValueString(p.Value), System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture, out _commission);
+                        break;
                     case "spread":
                         _ = double.TryParse(ValueString(p.Value), System.Globalization.NumberStyles.Any,
                             System.Globalization.CultureInfo.InvariantCulture, out _spread);
@@ -163,8 +167,9 @@
                 return;
             }
             _dateError = null;
-            var spread = _dataMode == "tick" ? null : _spread.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            backtestJson = BacktestSettings.ToJson(_from, _to, _dataMode, _balance, _commission, spread);
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            var spread = _dataMode == "tick" ? null : _spread.ToString(inv);
+            backtestJson = BacktestSettings.ToJson(_from, _to, _dataMode, _balance, _commission.ToString(inv), spread);
         }
 
         var body = new

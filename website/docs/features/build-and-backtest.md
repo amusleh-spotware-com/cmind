@@ -83,6 +83,11 @@ run/backtest time it is turned into the cTrader `params.cbotset` file
 (`{ "Parameters": { … } }`). You can create/edit a set as raw JSON from the cBot's **Parameter
 sets** dialog or inline from the Run dialog.
 
+Every parameter set **belongs to a cBot**: the New Parameter Set dialog lists all your cBots and you
+**must pick one** — creation is blocked until a cBot is selected. A set's **name is unique per cBot**:
+creating or renaming a set to a name another set of the same cBot already uses is rejected (a clear
+error in the dialog, `409 Conflict` at the API). The same name may be reused on a **different** cBot.
+
 The JSON is **validated** on save: it must be a single flat object whose values are all scalars
 (string / number / bool). A non-object root, an array, a nested object, a `null` value, or malformed
 JSON is rejected (a clear error in the dialog, `400 Bad Request` at the API). An empty object `{}`

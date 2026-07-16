@@ -96,6 +96,65 @@ public class ParamSetHttpTests(PostgresFixture fixture) : IClassFixture<Postgres
     }
 
     [Fact]
+    public async Task Create_rejects_a_duplicate_name_for_the_same_cbot_but_allows_it_for_another()
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+        var cbotA = await UploadCBotAsync(client);
+        var cbotB = await UploadCBotAsync(client);
+
+        (await client.PostAsJsonAsync("/api/paramsets/",
+            new { CBotId = cbotA, Name = "default", JsonContent = "{}" }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // Same name, same cBot → rejected (names are unique per cBot).
+        var dup = await client.PostAsJsonAsync("/api/paramsets/",
+            new { CBotId = cbotA, Name = "default", JsonContent = "{\"x\":1}" });
+        dup.StatusCode.Should().Be(HttpStatusCode.Conflict);
+
+        // A leading/trailing-space variant is the same name after trim → still rejected.
+        (await client.PostAsJsonAsync("/api/paramsets/",
+            new { CBotId = cbotA, Name = "  default  ", JsonContent = "{}" }))
+            .StatusCode.Should().Be(HttpStatusCode.Conflict);
+
+        // A different-case variant is the same name → still rejected (names are case-insensitive per cBot).
+        (await client.PostAsJsonAsync("/api/paramsets/",
+            new { CBotId = cbotA, Name = "DEFAULT", JsonContent = "{}" }))
+            .StatusCode.Should().Be(HttpStatusCode.Conflict);
+
+        // Same name on a DIFFERENT cBot is fine.
+        (await client.PostAsJsonAsync("/api/paramsets/",
+            new { CBotId = cbotB, Name = "default", JsonContent = "{}" }))
+            .StatusCode.Should().Be(HttpStatusCode.OK, "names are unique per cBot, not globally");
+    }
+
+    [Fact]
+    public async Task Update_rejects_renaming_onto_another_sets_name_for_the_same_cbot()
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+        var cbotId = await UploadCBotAsync(client);
+
+        (await client.PostAsJsonAsync("/api/paramsets/",
+            new { CBotId = cbotId, Name = "one", JsonContent = "{}" })).EnsureSuccessStatusCode();
+        (await client.PostAsJsonAsync("/api/paramsets/",
+            new { CBotId = cbotId, Name = "two", JsonContent = "{}" })).EnsureSuccessStatusCode();
+
+        var list = await (await client.GetAsync($"/api/paramsets/?cbotId={cbotId}")).Content.ReadFromJsonAsync<JsonElement>();
+        var twoId = list.EnumerateArray().Single(p => p.GetProperty("name").GetString() == "two").GetProperty("id").GetGuid();
+
+        // Rename "two" → "one" collides with the existing set.
+        var rename = await client.PutAsJsonAsync($"/api/paramsets/{twoId}",
+            new { CBotId = cbotId, Name = "one", JsonContent = "{}" });
+        rename.StatusCode.Should().Be(HttpStatusCode.Conflict);
+
+        // Renaming a set to its OWN name (no-op) is allowed.
+        (await client.PutAsJsonAsync($"/api/paramsets/{twoId}",
+            new { CBotId = cbotId, Name = "two", JsonContent = "{\"y\":2}" }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
     public async Task Fetching_a_missing_param_set_is_not_found()
     {
         await using var app = CreateApp();

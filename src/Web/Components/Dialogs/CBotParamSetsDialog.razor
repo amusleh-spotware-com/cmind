@@ -55,7 +55,7 @@
     {
         var res = await ShowDialogAsync(null, null);
         if (res is null) return;
-        await Save(null, res.Name, res.Json);
+        await Save(null, res.CBotId ?? CBotId, res.Name, res.Json);
     }
 
     private async Task Edit(Guid id)
@@ -64,7 +64,7 @@
         if (p is null) return;
         var res = await ShowDialogAsync((string?)p.name ?? "", (string?)p.jsonContent ?? "{}");
         if (res is null) return;
-        await Save(id, res.Name, res.Json);
+        await Save(id, res.CBotId ?? CBotId, res.Name, res.Json);
     }
 
     private async Task<ParamSetDialog.ParamSetDialogResult?> ShowDialogAsync(string? name, string? json)
@@ -74,7 +74,6 @@
             { x => x.Name, name },
             { x => x.Json, json },
             { x => x.IsEdit, name is not null },
-            { x => x.CBots, new List<ParamSetDialog.CBotOption> { new(CBotId, CBotName) } },
             { x => x.CBotId, CBotId }
         };
         var dlg = await Dialogs.ShowAsync<ParamSetDialog>(name is null ? "New Parameter Set" : "Edit Parameter Set",
@@ -84,7 +83,7 @@
         return (ParamSetDialog.ParamSetDialogResult)res.Data!;
     }
 
-    private async Task Save(Guid? id, string name, string json)
+    private async Task Save(Guid? id, Guid cbotId, string name, string json)
     {
         if (!Core.ParamSetJson.IsValidSchema(json))
         {
@@ -95,10 +94,15 @@
         var method = id is null ? HttpMethod.Post : HttpMethod.Put;
         var req = new HttpRequestMessage(method, url)
         {
-            Content = JsonContent.Create(new { CBotId, Name = name, JsonContent = json })
+            Content = JsonContent.Create(new { CBotId = cbotId, Name = name, JsonContent = json })
         };
         var r = await Http.SendAsync(req);
-        Snack.Add(r.IsSuccessStatusCode ? "Saved" : "Failed", r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        if (r.IsSuccessStatusCode) { Snack.Add("Saved", Severity.Success); }
+        else
+        {
+            var reason = await r.Content.ReadAsStringAsync();
+            Snack.Add(string.IsNullOrWhiteSpace(reason) ? "Failed" : reason, Severity.Error);
+        }
         await Load();
     }
 

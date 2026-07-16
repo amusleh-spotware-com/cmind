@@ -46,10 +46,15 @@ public static class ParamSetEndpoints
         g.MapPost("/", async (CreateParamSetRequest req, DataContext db, ICurrentUser u) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
-            if (string.IsNullOrWhiteSpace(req.Name)) return Results.BadRequest("name is required");
+            var name = req.Name?.Trim() ?? "";
+            if (string.IsNullOrWhiteSpace(name)) return Results.BadRequest("name is required");
             if (!ParamSetJson.IsValidSchema(req.JsonContent))
                 return Results.BadRequest("parameters must be a flat JSON object mapping each parameter name to a scalar value");
-            db.ParamSets.Add(ParamSet.Create(uid, CBotId.From(req.CBotId), req.Name, req.JsonContent));
+            var cbot = CBotId.From(req.CBotId);
+            var lowered = name.ToLowerInvariant();
+            if (await db.ParamSets.AnyAsync(p => p.UserId == uid && p.CBotId == cbot && p.Name.ToLower() == lowered))
+                return Results.Conflict($"a parameter set named \"{name}\" already exists for this cBot");
+            db.ParamSets.Add(ParamSet.Create(uid, cbot, name, req.JsonContent));
             await db.SaveChangesAsync();
             return Results.Ok();
         });
@@ -60,10 +65,14 @@ public static class ParamSetEndpoints
             var pid = ParamSetId.From(id);
             var p = await db.ParamSets.FirstOrDefaultAsync(x => x.Id == pid && x.UserId == uid);
             if (p is null) return Results.NotFound();
-            if (string.IsNullOrWhiteSpace(req.Name)) return Results.BadRequest("name is required");
+            var name = req.Name?.Trim() ?? "";
+            if (string.IsNullOrWhiteSpace(name)) return Results.BadRequest("name is required");
             if (!ParamSetJson.IsValidSchema(req.JsonContent))
                 return Results.BadRequest("parameters must be a flat JSON object mapping each parameter name to a scalar value");
-            p.Update(req.Name, req.JsonContent);
+            var lowered = name.ToLowerInvariant();
+            if (await db.ParamSets.AnyAsync(x => x.UserId == uid && x.CBotId == p.CBotId && x.Name.ToLower() == lowered && x.Id != pid))
+                return Results.Conflict($"a parameter set named \"{name}\" already exists for this cBot");
+            p.Update(name, req.JsonContent);
             await db.SaveChangesAsync();
             return Results.Ok();
         });

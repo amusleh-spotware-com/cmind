@@ -191,6 +191,73 @@ public sealed class DialogTests(AppFixture app)
         await Assertions.Expect(page.GetByText(paramName)).ToBeVisibleAsync(Slow);
     }
 
+    // The New Parameter Set dialog must list the actual cBots (regression: it showed a single meaningless
+    // "cBot" entry), and a duplicate name for the same cBot must be rejected.
+    [Fact]
+    public async Task ParamSet_dialog_lists_cbots_and_rejects_a_duplicate_name()
+    {
+        var page = await app.NewAuthedPageAsync();
+
+        var cbotName = $"pscbot-{Suffix}";
+        await GotoAsync(page, "/cbots");
+        var cbotRow = page.GetByText(cbotName).First;
+        await page.RunUntilVisibleAsync(() => page.SetInputFilesAsync("#cbotFile", new FilePayload
+        {
+            Name = $"{cbotName}.algo",
+            MimeType = "application/octet-stream",
+            Buffer = "dummy-algo-content"u8.ToArray()
+        }), cbotRow);
+        await Assertions.Expect(cbotRow).ToBeVisibleAsync(Slow);
+
+        var paramsButton = page.Locator($"tr:has-text('{cbotName}') [data-testid=paramsets-btn]").First;
+        var paramsDialog = page.Locator(".mud-dialog:has-text('Parameter Sets')");
+        for (var attempt = 0; attempt < 15; attempt++)
+        {
+            await paramsButton.ClickAsync();
+            try { await paramsDialog.WaitForAsync(new() { Timeout = 2000, State = WaitForSelectorState.Visible }); break; }
+            catch (TimeoutException) { }
+            catch (PlaywrightException) { }
+        }
+
+        var newBtn = paramsDialog.Locator("[data-testid=new-paramset]");
+        var save = page.Locator(".mud-dialog button:has-text('Save')");
+        for (var attempt = 0; attempt < 15; attempt++)
+        {
+            await newBtn.ClickAsync();
+            try { await save.First.WaitForAsync(new() { Timeout = 2000, State = WaitForSelectorState.Visible }); break; }
+            catch (TimeoutException) { }
+            catch (PlaywrightException) { }
+        }
+
+        // The cBot selector lists the real cBot (proves the dropdown is populated, not a single "cBot" item).
+        // The data-testid sits on MudSelect's hidden input, so open the popover via the visible input control.
+        var editor = page.Locator(".mud-dialog:has-text('New Parameter Set')");
+        await editor.Locator(".mud-input-control").First.ClickAsync();
+        await Assertions.Expect(page.Locator($".mud-list-item:has-text('{cbotName}')").First).ToBeVisibleAsync(Slow);
+        await page.Locator($".mud-list-item:has-text('{cbotName}')").First.ClickAsync();
+
+        var pname = $"dup-{Suffix}";
+        await page.GetByLabel("Name").FillAsync(pname);
+        await page.Locator(".mud-dialog textarea").Last.FillAsync("{\"Period\":14}");
+        await save.First.ClickAsync();
+        await Assertions.Expect(paramsDialog.GetByText(pname)).ToBeVisibleAsync(Slow);
+
+        // A SECOND set with the same name for this cBot is rejected — an error shows and no duplicate row appears.
+        for (var attempt = 0; attempt < 15; attempt++)
+        {
+            await newBtn.ClickAsync();
+            try { await save.First.WaitForAsync(new() { Timeout = 2000, State = WaitForSelectorState.Visible }); break; }
+            catch (TimeoutException) { }
+            catch (PlaywrightException) { }
+        }
+        await page.GetByLabel("Name").FillAsync(pname);
+        await page.Locator(".mud-dialog textarea").Last.FillAsync("{}");
+        await save.First.ClickAsync();
+
+        await Assertions.Expect(page.Locator(".mud-snackbar:has-text('already exists')")).ToBeVisibleAsync(Slow);
+        (await paramsDialog.GetByText(pname).CountAsync()).Should().Be(1, "the duplicate name must not create a second set");
+    }
+
     [Fact]
     public async Task Run_new_button_opens_dialog_with_fields()
     {

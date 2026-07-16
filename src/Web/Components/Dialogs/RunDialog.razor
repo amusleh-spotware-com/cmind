@@ -92,7 +92,6 @@
         var parameters = new DialogParameters<ParamSetDialog>
         {
             { x => x.IsEdit, false },
-            { x => x.CBots, new List<ParamSetDialog.CBotOption> { new(cbotId, FixedCBotName ?? "cBot") } },
             { x => x.CBotId, cbotId }
         };
         var dlg = await Dialogs.ShowAsync<ParamSetDialog>("New Parameter Set", parameters,
@@ -100,16 +99,24 @@
         var res = await dlg.Result;
         if (res is null || res.Canceled) return;
         var data = (ParamSetDialog.ParamSetDialogResult)res.Data!;
-        var r = await Http.PostAsJsonAsync("/api/paramsets", new { CBotId = cbotId, data.Name, JsonContent = data.Json });
+        var targetCbot = data.CBotId ?? cbotId;
+        var r = await Http.PostAsJsonAsync("/api/paramsets", new { CBotId = targetCbot, data.Name, JsonContent = data.Json });
         if (!r.IsSuccessStatusCode)
         {
-            Snack.Add("Could not create parameter set — check the JSON is a flat name/value object", Severity.Error);
+            var reason = await r.Content.ReadAsStringAsync();
+            Snack.Add(string.IsNullOrWhiteSpace(reason)
+                ? "Could not create parameter set — check the JSON is a flat name/value object"
+                : reason, Severity.Error);
             return;
         }
         Snack.Add("Parameter set created", Severity.Success);
-        await LoadParamSets();
-        var created = _paramsets.FirstOrDefault(p => string.Equals((string)p.name, data.Name, StringComparison.Ordinal));
-        if (created is not null) _psId = (Guid)created.id;
+        // Only surface the new set in this dialog when it was created for the cBot this run targets.
+        if (targetCbot == cbotId)
+        {
+            await LoadParamSets();
+            var created = _paramsets.FirstOrDefault(p => string.Equals((string)p.name, data.Name, StringComparison.Ordinal));
+            if (created is not null) _psId = (Guid)created.id;
+        }
     }
 
     // Tolerate a gated-off/unavailable endpoint (e.g. Authoring disabled → /api/cbots 404) so opening the

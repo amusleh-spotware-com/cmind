@@ -54,3 +54,9 @@ Ob **Zaženi** urejevalnik shrani in zgradi trenutno izvorno kodo, zažene insta
 **Nabor parametrov** je poimenovan, večkrat uporaben nabor preglasitev parametrov cBota, shranjen kot ploski objekt JSON, ki vsako ime parametra preslika v skalarno vrednost, npr. `{"Period": 14, "Label": "trend"}`. Ob zagonu/backtestu se pretvori v datoteko cTrader `params.cbotset` (`{ "Parameters": { … } }`). Nabor lahko ustvarite/uredite kot čisti JSON iz pogovornega okna **Nabori parametrov** cBota ali na mestu iz pogovornega okna Zaženi.
 
 JSON se ob shranjevanju **preveri**: biti mora en sam ploski objekt, katerega vse vrednosti so skalarne (niz / število / bool). Koren, ki ni objekt, polje, gnezden objekt, vrednost `null` ali napačno oblikovan JSON se zavrne (jasna napaka v pogovornem oknu, `400 Bad Request` v API). Prazen objekt `{}` je dovoljen in pomeni »brez preglasitev«.
+
+## Upravljanje življenjskega cikla instance
+
+Vsaka vrstica instance (in njena stran s podrobnostmi) ima kontrole, ki ustrezajo stanju. **Aktivna** instanca prikazuje **Ustavi**; **terminalna** (Ustavljena / Dokončana / Neuspešna) prikazuje **Zaženi (▶)** za ponovni zagon z istim cBotom, računom, simbolom, časovnim okvirom, naborom parametrov in sliko (zagon se znova zažene kot zagon, backtest kot backtest). Klik na Ustavi prikaže obvestilo »Zaustavljanje…« in onemogoči ikono, dokler se ne razreši; na novo ustvarjeni zagon se takoj pojavi na seznamu — brez ponovnega nalaganja strani.
+
+Dnevniki konzole se **ob zaključku instance ohranijo** — tako za zagon (ob ustavitvi) kot za **backtest** (ob dokončanju) — tako da dnevniki zadnjega zagona ostanejo vidni na strani s podrobnostmi in jih je mogoče prenesti prek ikone **Prenesi dnevnike** tudi po tem, ko vsebnika ni več.

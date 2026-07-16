@@ -83,6 +83,19 @@ public class BacktestInstanceTransitionTests
     }
 
     [Fact]
+    public void Captured_console_log_survives_completion_and_failure()
+    {
+        var completed = NewStarting().ToRunning("c-1", Now);
+        completed.CaptureConsoleLog("bt line 1\nbt line 2");
+        completed.ToCompleted(Now.AddMinutes(1)).ConsoleLog.Should().Be("bt line 1\nbt line 2",
+            "a completed backtest keeps its captured console log so it stays downloadable");
+
+        var failing = NewStarting().ToRunning("c-2", Now);
+        failing.CaptureConsoleLog("boom");
+        failing.ToFailed("err", Now.AddMinutes(1)).ConsoleLog.Should().Be("boom");
+    }
+
+    [Fact]
     public void Create_failed_produces_a_terminal_failed_backtest()
     {
         var failed = BacktestInstance.CreateFailed(UserId.New(), CBotId.New(), NodeId.New(),

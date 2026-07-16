@@ -104,3 +104,9 @@ Saat **Jalankan**, editor menyimpan dan membangun kode sumber saat ini, memulai 
 **Set parameter** adalah kumpulan penggantian parameter cBot yang diberi nama dan dapat digunakan kembali, disimpan sebagai objek JSON datar yang memetakan setiap nama parameter ke nilai skalar, mis. `{"Period": 14, "Label": "trend"}`. Saat menjalankan/backtest, ia diubah menjadi file cTrader `params.cbotset` (`{ "Parameters": { … } }`). Anda dapat membuat/mengedit set sebagai JSON mentah dari dialog **Set parameter** cBot atau secara inline dari dialog Jalankan.
 
 JSON **divalidasi** saat menyimpan: harus berupa satu objek datar yang semua nilainya skalar (string / angka / bool). Akar non-objek, larik, objek bersarang, nilai `null`, atau JSON yang salah format akan ditolak (kesalahan yang jelas di dialog, `400 Bad Request` di API). Objek kosong `{}` diperbolehkan dan berarti "tanpa penggantian".
+
+## Kontrol siklus hidup instance
+
+Setiap baris instance (dan halaman detailnya) memiliki kontrol yang sesuai dengan status. Instance **aktif** menampilkan **Hentikan**; instance **terminal** (Dihentikan / Selesai / Gagal) menampilkan **Mulai (▶)** untuk meluncurkannya kembali dengan cBot, akun, simbol, kerangka waktu, set parameter, dan image yang sama (run dimulai ulang sebagai run, backtest sebagai backtest). Mengklik Hentikan menampilkan pemberitahuan "Menghentikan…" dan menonaktifkan ikon hingga selesai; run yang baru dibuat langsung muncul di daftar — tanpa memuat ulang halaman.
+
+Log konsol **dipertahankan saat instance berakhir** — baik untuk run (saat dihentikan) maupun untuk **backtest** (saat selesai) — sehingga log run terakhir tetap dapat dilihat di halaman detail dan diunduh melalui ikon **Unduh log**, bahkan setelah kontainer hilang.

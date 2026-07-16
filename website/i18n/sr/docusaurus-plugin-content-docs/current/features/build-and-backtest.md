@@ -53,3 +53,9 @@ Pri **Pokreni**, editor čuva i gradi trenutni izvorni kod, pokreće instancu na
 **Skup parametara** je imenovan, ponovo upotrebljiv skup zamena parametara cBota, sačuvan kao ravan JSON objekat koji svako ime parametra mapira na skalarnu vrednost, npr. `{"Period": 14, "Label": "trend"}`. U trenutku pokretanja/backtesta pretvara se u cTrader datoteku `params.cbotset` (`{ "Parameters": { … } }`). Skup možete kreirati/urediti kao sirovi JSON iz dijaloga **Skupovi parametara** cBota ili na licu mesta iz dijaloga Pokreni.
 
 JSON se pri čuvanju **validira**: mora biti jedan ravan objekat čije su sve vrednosti skalarne (string / broj / bool). Koren koji nije objekat, niz, ugnežđeni objekat, `null` vrednost ili neispravan JSON se odbacuje (jasna greška u dijalogu, `400 Bad Request` na API-ju). Prazan objekat `{}` je dozvoljen i znači „bez zamena".
+
+## Kontrole životnog ciklusa instance
+
+Svaki red instance (i njena stranica s detaljima) ima kontrole u skladu sa stanjem. **Aktivna** instanca prikazuje **Zaustavi**; **terminalna** (Zaustavljena / Završena / Neuspela) prikazuje **Pokreni (▶)** za ponovno pokretanje sa istim cBotom, nalogom, simbolom, vremenskim okvirom, skupom parametara i slikom (pokretanje se ponovo pokreće kao pokretanje, backtest kao backtest). Klik na Zaustavi prikazuje obaveštenje „Zaustavljanje…" i onemogućava ikonicu dok se ne završi; novokreirano pokretanje se odmah pojavljuje na listi — bez ponovnog učitavanja stranice.
+
+Logovi konzole se **čuvaju kada se instanca završi** — kako za pokretanje (pri zaustavljanju), tako i za **backtest** (pri završetku) — pa logovi poslednjeg pokretanja ostaju vidljivi na stranici s detaljima i preuzimljivi preko ikonice **Preuzmi logove** čak i nakon što kontejner nestane.

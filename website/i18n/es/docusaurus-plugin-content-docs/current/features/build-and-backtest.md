@@ -53,3 +53,9 @@ Al **Ejecutar**, el editor guarda y compila el código fuente actual, inicia la 
 Un **conjunto de parámetros** es un conjunto con nombre y reutilizable de anulaciones de parámetros del cBot, almacenado como un objeto JSON plano que asigna cada nombre de parámetro a un valor escalar, p. ej. `{"Period": 14, "Label": "trend"}`. En el momento de ejecutar/backtestear se convierte en el archivo `params.cbotset` de cTrader (`{ "Parameters": { … } }`). Puedes crear/editar un conjunto como JSON sin formato desde el diálogo **Conjuntos de parámetros** del cBot o en línea desde el diálogo Ejecutar.
 
 El JSON se **valida** al guardar: debe ser un único objeto plano cuyos valores sean todos escalares (cadena / número / booleano). Se rechaza una raíz que no sea objeto, un array, un objeto anidado, un valor `null` o un JSON mal formado (error claro en el diálogo, `400 Bad Request` en la API). Se permite un objeto vacío `{}` y significa «sin anulaciones».
+
+## Controles del ciclo de vida de la instancia
+
+Cada fila de instancia (y su página de detalle) tiene controles acordes al estado. Una instancia **activa** muestra **Detener**; una **terminal** (Detenida / Completada / Fallida) muestra **Iniciar (▶)** para relanzarla con el mismo cBot, cuenta, símbolo, marco temporal, conjunto de parámetros e imagen (una ejecución se reinicia como ejecución, un backtest como backtest). Al hacer clic en Detener se muestra un aviso «Deteniendo…» y se deshabilita el icono hasta que se resuelve; una ejecución recién creada aparece de inmediato en la lista, sin recargar la página.
+
+Los registros de consola se **conservan cuando una instancia termina** —tanto para una ejecución (al detener) como para un **backtest** (al completar)— de modo que los registros de la última ejecución permanecen visibles en la página de detalle y descargables mediante el icono **Descargar registros**, incluso después de que el contenedor desaparezca.

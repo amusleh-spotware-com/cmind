@@ -35,12 +35,20 @@
             <MudChip T="string" Size="MudBlazor.Size.Small" Color="@StatusColor((string)_detail.status)">@_detail.status</MudChip>
         }
         <MudSpacer />
-        @if (_detail is not null)
+        @if (_detail is not null && IsActive)
         {
-            <MudTooltip Text="@(IsActive ? "Stop instance" : "Instance already stopped")">
+            <MudTooltip Text="Stop instance">
                 <MudIconButton Icon="@Icons.Material.Filled.Stop" Color="MudBlazor.Color.Warning"
-                               Disabled="@(!IsActive || _stopping)" OnClick="StopAsync"
+                               Disabled="_stopping" OnClick="StopAsync"
                                aria-label="Stop instance" data-testid="instance-detail-stop" />
+            </MudTooltip>
+        }
+        else if (_detail is not null && IsTerminalStatus)
+        {
+            <MudTooltip Text="Start instance again">
+                <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Color="MudBlazor.Color.Success"
+                               Disabled="_startingInstance" OnClick="StartAsync"
+                               aria-label="Start instance" data-testid="instance-detail-start" />
             </MudTooltip>
         }
     </MudStack>
@@ -62,7 +70,7 @@
 
         @if (_isBacktest && _equity.Count > 0)
         {
-            <div class="flex-none">
+            <div class="flex-none instance-chart">
                 <ApexChart TItem="EquityPoint" Title="Equity curve">
                     <ApexPointSeries TItem="EquityPoint" Items="_equity" Name="Equity"
                                      XValue="@(p => p.Ts)" YValue="@(p => (decimal)p.Value)" SeriesType="SeriesType.Line" />
@@ -105,6 +113,8 @@
 <style>
     .instance-detail-page { display: flex; flex-direction: column; height: calc(100vh - 90px); }
     .instance-detail-page .flex-none { flex: 0 0 auto; }
+    /* Cap the equity chart so it never pushes the logs panel off-screen — it scrolls within its own box. */
+    .instance-chart { max-height: 38vh; overflow: auto; }
     .instance-logs {
         flex: 1 1 auto; min-height: 120px; overflow: auto;
         background: #0E1218; color: #E6E8EC;
@@ -121,6 +131,7 @@
     private bool _isBacktest;
     private bool _autoScroll = true;
     private bool _stopping;
+    private bool _startingInstance;
     private List<string> _logs = new();
     private List<EquityPoint> _equity = new();
     private List<CalendarEventView> _calendarEvents = new();
@@ -128,6 +139,9 @@
 
     private bool IsActive => _detail is not null
         && ((string)_detail.status) is "Running" or "Starting" or "Stopping";
+
+    private bool IsTerminalStatus => _detail is not null
+        && ((string)_detail.status) is "Stopped" or "Completed" or "Failed";
 
     public record EquityPoint(DateTime Ts, double Value);
 
@@ -147,6 +161,25 @@
         }
         finally { _stopping = false; }
     }
+
+    private async Task StartAsync()
+    {
+        _startingInstance = true;
+        Snack.Add("Starting instance…", Severity.Info);
+        StateHasChanged();
+        try
+        {
+            var r = await Http.PostAsync($"/api/instances/{Id}/start", null);
+            if (!r.IsSuccessStatusCode) { Snack.Add("Start failed", Severity.Error); return; }
+            Snack.Add("Instance started", Severity.Success);
+            // Restart creates a NEW instance — navigate to it.
+            var started = await r.Content.ReadFromJsonAsync<StartResponse>();
+            if (started is not null) Nav.NavigateTo($"/instance/{started.Id}");
+        }
+        finally { _startingInstance = false; }
+    }
+
+    private sealed record StartResponse(Guid Id);
 
     private async Task DownloadLogsAsync()
     {

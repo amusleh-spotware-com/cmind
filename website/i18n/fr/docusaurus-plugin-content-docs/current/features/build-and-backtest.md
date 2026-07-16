@@ -53,3 +53,9 @@ Lors de l'**Exécution**, l'éditeur enregistre et compile le code source actuel
 Un **jeu de paramètres** est un ensemble nommé et réutilisable de remplacements de paramètres du cBot, stocké sous forme d'objet JSON plat associant chaque nom de paramètre à une valeur scalaire, p. ex. `{"Period": 14, "Label": "trend"}`. Au moment de l'exécution/du backtest, il est converti en fichier cTrader `params.cbotset` (`{ "Parameters": { … } }`). Vous pouvez créer/modifier un jeu en JSON brut depuis la boîte de dialogue **Jeux de paramètres** du cBot ou en ligne depuis la boîte de dialogue Exécuter.
 
 Le JSON est **validé** à l'enregistrement : il doit être un objet plat unique dont toutes les valeurs sont scalaires (chaîne / nombre / booléen). Une racine non-objet, un tableau, un objet imbriqué, une valeur `null` ou un JSON mal formé est rejeté (erreur claire dans la boîte de dialogue, `400 Bad Request` côté API). Un objet vide `{}` est autorisé et signifie « aucun remplacement ».
+
+## Contrôles du cycle de vie de l'instance
+
+Chaque ligne d'instance (et sa page de détail) dispose de contrôles corrects selon l'état. Une instance **active** affiche **Arrêter** ; une instance **terminale** (Arrêtée / Terminée / Échouée) affiche **Démarrer (▶)** pour la relancer avec le même cBot, compte, symbole, unité de temps, jeu de paramètres et image (une exécution redémarre en exécution, un backtest en backtest). Cliquer sur Arrêter affiche un avis « Arrêt en cours… » et désactive l'icône jusqu'à la résolution ; une exécution nouvellement créée apparaît immédiatement dans la liste — sans recharger la page.
+
+Les logs de console sont **conservés à la fin d'une instance** — aussi bien pour une exécution (à l'arrêt) que pour un **backtest** (à la fin) — de sorte que les logs de la dernière exécution restent visibles sur la page de détail et téléchargeables via l'icône **Télécharger les logs**, même après la disparition du conteneur.

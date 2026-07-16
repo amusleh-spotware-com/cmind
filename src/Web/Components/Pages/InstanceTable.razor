@@ -26,12 +26,22 @@
                                Disabled="@(!(bool)context.hasLogs)"
                                OnClick="@(() => DownloadLogs((Guid)context.id))" data-testid="instance-logs-download" />
             </MudTooltip>
-            <MudTooltip Text="@(_stopping.Contains((Guid)context.id) ? "Stopping…" : IsActive((string)context.status) ? "Stop instance" : "Instance already stopped")">
-                <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Small" Color="Color.Warning"
-                               Disabled="@(!IsActive((string)context.status) || _stopping.Contains((Guid)context.id))"
-                               aria-label="Stop instance"
-                               OnClick="@(() => Stop((Guid)context.id))" data-testid="instance-stop" />
-            </MudTooltip>
+            @if (IsActive((string)context.status))
+            {
+                <MudTooltip Text="@(_stopping.Contains((Guid)context.id) ? "Stopping…" : "Stop instance")">
+                    <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Small" Color="Color.Warning"
+                                   Disabled="@(_stopping.Contains((Guid)context.id))" aria-label="Stop instance"
+                                   OnClick="@(() => Stop((Guid)context.id))" data-testid="instance-stop" />
+                </MudTooltip>
+            }
+            else if (IsTerminal((string)context.status))
+            {
+                <MudTooltip Text="@(_starting.Contains((Guid)context.id) ? "Starting…" : "Start instance again")">
+                    <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" Color="Color.Success"
+                                   Disabled="@(_starting.Contains((Guid)context.id))" aria-label="Start instance"
+                                   OnClick="@(() => Start((Guid)context.id))" data-testid="instance-start" />
+                </MudTooltip>
+            }
             <MudTooltip Text="@(IsActive((string)context.status) ? "Stop the instance before deleting" : "Delete instance")">
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
                                Disabled="@IsActive((string)context.status)" aria-label="Delete instance"
@@ -44,8 +54,9 @@
 @code {
     [Parameter] public string Type { get; set; } = "Run";
     private dynamic[] _items = [];
-    // Instances whose Stop request is in flight — their Stop icon is disabled until it resolves.
+    // Instances whose Stop/Start request is in flight — their control is disabled until it resolves.
     private readonly HashSet<Guid> _stopping = new();
+    private readonly HashSet<Guid> _starting = new();
 
     protected override Task OnInitializedAsync() => Load();
 
@@ -76,6 +87,9 @@
     // An instance is only stoppable while it is still executing; once terminal (Stopped/Completed/Failed)
     // the Stop control is disabled and Delete is enabled instead.
     private static bool IsActive(string status) => status is "Running" or "Starting" or "Stopping";
+
+    // Terminal instances can be re-launched with their original config via the Start (▶) control.
+    private static bool IsTerminal(string status) => status is "Stopped" or "Completed" or "Failed";
 
     private static Color StatusColor(string status) => status switch
     {
@@ -114,6 +128,25 @@
         finally
         {
             _stopping.Remove(id);
+            await Load();
+        }
+    }
+
+    private async Task Start(Guid id)
+    {
+        // Re-run a stopped/failed instance with its original config; disable the Start icon until it resolves.
+        _starting.Add(id);
+        Snack.Add("Starting instance…", Severity.Info);
+        StateHasChanged();
+        try
+        {
+            var r = await Http.PostAsync($"/api/instances/{id}/start", null);
+            Snack.Add(r.IsSuccessStatusCode ? "Instance started" : "Start failed",
+                r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        }
+        finally
+        {
+            _starting.Remove(id);
             await Load();
         }
     }

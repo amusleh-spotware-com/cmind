@@ -90,3 +90,9 @@ A kódszerkesztőben a **Futtatás** gombra kattintva egy párbeszédablak nyíl
 A **paraméterkészlet** a cBot paraméter-felülbírálásainak elnevezett, újrafelhasználható halmaza, amelyet lapos JSON-objektumként tárolunk, amely minden paraméternevet egy skalárértékhez rendel, pl. `{"Period": 14, "Label": "trend"}`. Futtatáskor/backtesteléskor a cTrader `params.cbotset` fájllá (`{ "Parameters": { … } }`) alakul. A készletet nyers JSON-ként a cBot **Paraméterkészletek** párbeszédablakából vagy helyben a Futtatás párbeszédablakból hozhatja létre/szerkesztheti.
 
 A JSON mentéskor **érvényesítésre** kerül: egyetlen lapos objektumnak kell lennie, amelynek minden értéke skalár (szöveg / szám / bool). A nem objektum gyökér, tömb, beágyazott objektum, `null` érték vagy hibás JSON elutasításra kerül (érthető hiba a párbeszédablakban, `400 Bad Request` az API-nál). Az üres objektum `{}` engedélyezett, és azt jelenti, hogy „nincs felülbírálás".
+
+## A példány életciklusának vezérlői
+
+Minden példánysor (és a részletező oldala) állapothelyes vezérlőkkel rendelkezik. Egy **aktív** példány a **Leállítás** gombot mutatja; egy **végállapotú** (Leállítva / Befejezve / Sikertelen) a **Indítás (▶)** gombot mutatja, hogy ugyanazzal a cBottal, számlával, szimbólummal, időkerettel, paraméterkészlettel és képpel újraindítsa (a futtatás futtatásként, a backteszt backtesztként indul újra). A Leállításra kattintva „Leállítás…" értesítés jelenik meg, és letiltja az ikont, amíg be nem fejeződik; az újonnan létrehozott futtatás azonnal megjelenik a listában — oldalújratöltés nélkül.
+
+A konzolnaplók **a példány befejeződésekor megőrződnek** — futtatásnál (leállításkor) és **backtesztnél** (befejezéskor) egyaránt —, így az utolsó futtatás naplói láthatók maradnak a részletező oldalon, és a **Naplók letöltése** ikonnal letölthetők, még azután is, hogy a konténer megszűnt.

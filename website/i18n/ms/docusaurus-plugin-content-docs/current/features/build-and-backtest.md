@@ -52,3 +52,9 @@ Semasa **Jalankan**, editor menyimpan dan membina kod sumber semasa, memulakan i
 **Set parameter** ialah set gantian parameter cBot yang dinamakan dan boleh guna semula, disimpan sebagai objek JSON rata yang memetakan setiap nama parameter kepada nilai skalar, cth. `{"Period": 14, "Label": "trend"}`. Semasa jalankan/backtest, ia ditukar kepada fail cTrader `params.cbotset` (`{ "Parameters": { … } }`). Anda boleh mencipta/menyunting set sebagai JSON mentah daripada dialog **Set parameter** cBot atau secara sebaris daripada dialog Jalankan.
 
 JSON **disahkan** semasa menyimpan: ia mesti satu objek rata tunggal yang semua nilainya skalar (rentetan / nombor / bool). Akar bukan objek, tatasusunan, objek bersarang, nilai `null`, atau JSON tidak sah ditolak (ralat jelas dalam dialog, `400 Bad Request` di API). Objek kosong `{}` dibenarkan dan bermaksud "tiada gantian".
+
+## Kawalan kitaran hayat instans
+
+Setiap baris instans (dan halaman butirannya) mempunyai kawalan yang betul mengikut keadaan. Instans **aktif** memaparkan **Hentikan**; instans **terminal** (Dihentikan / Selesai / Gagal) memaparkan **Mula (▶)** untuk melancarkannya semula dengan cBot, akaun, simbol, kerangka masa, set parameter dan imej yang sama (larian dimulakan semula sebagai larian, backtest sebagai backtest). Mengklik Hentikan memaparkan pemberitahuan "Menghentikan…" dan melumpuhkan ikon sehingga selesai; larian yang baharu dicipta muncul dalam senarai serta-merta — tanpa memuat semula halaman.
+
+Log konsol **dikekalkan apabila instans tamat** — untuk larian (semasa dihentikan) dan untuk **backtest** (semasa selesai) — jadi log larian terakhir kekal boleh dilihat pada halaman butiran dan boleh dimuat turun melalui ikon **Muat turun log**, walaupun selepas kontena hilang.

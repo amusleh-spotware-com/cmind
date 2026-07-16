@@ -252,6 +252,11 @@ public sealed class DialogTests(AppFixture app)
 
         // The instance row shows in the table without a manual page reload.
         await Assertions.Expect(page.GetByText(cbotName).First).ToBeVisibleAsync(new() { Timeout = 60000 });
+
+        // The run failed to launch (bogus image) → it is terminal, so the row offers a Start (re-run) control
+        // instead of Stop.
+        var row = page.Locator($"tr:has-text('{cbotName}')").First;
+        await Assertions.Expect(row.Locator("[data-testid=instance-start]")).ToBeVisibleAsync(new() { Timeout = 60000 });
     }
 
     private static async Task SelectMudOptionAsync(IPage page, ILocator dialog, string label, string optionText)

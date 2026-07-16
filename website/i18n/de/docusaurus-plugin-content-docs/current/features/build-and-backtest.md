@@ -53,3 +53,9 @@ Bei **Ausführen** speichert und baut der Editor den aktuellen Quellcode, starte
 Ein **Parametersatz** ist ein benannter, wiederverwendbarer Satz von cBot-Parameter-Überschreibungen, gespeichert als flaches JSON-Objekt, das jeden Parameternamen auf einen skalaren Wert abbildet, z. B. `{"Period": 14, "Label": "trend"}`. Beim Ausführen/Backtesten wird daraus die cTrader-Datei `params.cbotset` (`{ "Parameters": { … } }`) erzeugt. Sie können einen Satz als reines JSON über den Dialog **Parametersätze** des cBots oder inline aus dem Ausführen-Dialog erstellen/bearbeiten.
 
 Das JSON wird beim Speichern **validiert**: Es muss ein einzelnes flaches Objekt sein, dessen Werte alle Skalare sind (String / Zahl / Bool). Ein Nicht-Objekt-Root, ein Array, ein verschachteltes Objekt, ein `null`-Wert oder fehlerhaftes JSON wird abgelehnt (klarer Fehler im Dialog, `400 Bad Request` an der API). Ein leeres Objekt `{}` ist erlaubt und bedeutet „keine Überschreibungen".
+
+## Steuerung des Instanz-Lebenszyklus
+
+Jede Instanzzeile (und ihre Detailseite) hat zustandskorrekte Steuerelemente. Eine **aktive** Instanz zeigt **Stopp**; eine **terminale** (Gestoppt / Abgeschlossen / Fehlgeschlagen) zeigt **Start (▶)**, um sie mit demselben cBot, Konto, Symbol, Zeitrahmen, Parametersatz und Image erneut zu starten (ein Lauf startet als Lauf, ein Backtest als Backtest). Ein Klick auf Stopp zeigt einen Hinweis „Wird gestoppt…" und deaktiviert das Symbol, bis er abgeschlossen ist; ein neu erstellter Lauf erscheint sofort in der Liste – ohne Neuladen der Seite.
+
+Konsolenprotokolle werden **beim Beenden einer Instanz gespeichert** – sowohl für einen Lauf (beim Stoppen) als auch für einen **Backtest** (beim Abschluss) – sodass die Protokolle des letzten Laufs auf der Detailseite sichtbar und über das Symbol **Protokolle herunterladen** herunterladbar bleiben, auch nachdem der Container weg ist.

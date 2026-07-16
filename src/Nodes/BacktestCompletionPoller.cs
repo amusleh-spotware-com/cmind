@@ -54,6 +54,7 @@ public sealed class BacktestCompletionPoller(
             // forever. Force-stop and fail it once it has outrun the max duration.
             if (IsOverdue(instance.StartedAt, now, maxDuration))
             {
+                await CaptureConsoleLogAsync(factory, instance, ct);
                 try { await factory.For(instance).StopAsync(instance, ct); }
                 catch (Exception ex) { log.BacktestStatusCheckFailed(instance.Id.Value, ex); }
                 log.BacktestTimedOut(instance.Id.Value);
@@ -68,6 +69,10 @@ public sealed class BacktestCompletionPoller(
             try { isRunning = await factory.For(instance).IsRunningAsync(instance, ct); }
             catch (Exception ex) { log.BacktestStatusCheckFailed(instance.Id.Value, ex); continue; }
             if (isRunning != false) continue;
+
+            // Capture the exited container's console output before transitioning, so the completed/failed
+            // backtest's logs stay viewable and downloadable (parity with a run's persisted logs).
+            await CaptureConsoleLogAsync(factory, instance, ct);
 
             var reportJson = await TryReadReportAsync(factory, instance, ct);
             Instance terminal = reportJson is not null
@@ -90,6 +95,30 @@ public sealed class BacktestCompletionPoller(
     {
         try { return await factory.For(instance).ReadReportAsync(instance, ct); }
         catch { return null; }
+    }
+
+    private const int MaxLogChars = 200_000;
+
+    // Tails a bounded snapshot of the (exited) container's console output and stores it on the instance so it
+    // survives the container being removed. Best-effort — never throws into the poll loop.
+    private static async Task CaptureConsoleLogAsync(
+        IContainerDispatcherFactory factory, Instance instance, CancellationToken ct)
+    {
+        var builder = new System.Text.StringBuilder();
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        cts.CancelAfter(TimeSpan.FromSeconds(3));
+        try
+        {
+            await foreach (var line in factory.For(instance).TailLogsAsync(instance, cts.Token))
+            {
+                builder.AppendLine(line);
+                if (builder.Length >= MaxLogChars) break;
+            }
+        }
+        catch (OperationCanceledException) { /* budget reached */ }
+        catch { /* logs unavailable */ }
+
+        if (builder.Length > 0) instance.CaptureConsoleLog(builder.ToString());
     }
 
 }

@@ -60,3 +60,9 @@ All'**Esecuzione** l'editor salva e compila il codice sorgente corrente, avvia l
 Un **set di parametri** è un insieme denominato e riutilizzabile di override dei parametri del cBot, memorizzato come oggetto JSON piatto che associa ogni nome di parametro a un valore scalare, ad es. `{"Period": 14, "Label": "trend"}`. Al momento dell'esecuzione/backtest viene trasformato nel file cTrader `params.cbotset` (`{ "Parameters": { … } }`). Puoi creare/modificare un set come JSON grezzo dalla finestra di dialogo **Set di parametri** del cBot o in linea dalla finestra di dialogo Esegui.
 
 Il JSON viene **validato** al salvataggio: deve essere un singolo oggetto piatto i cui valori siano tutti scalari (stringa / numero / bool). Una radice non-oggetto, un array, un oggetto annidato, un valore `null` o JSON malformato viene rifiutato (errore chiaro nella finestra di dialogo, `400 Bad Request` nell'API). Un oggetto vuoto `{}` è consentito e significa «nessun override».
+
+## Controlli del ciclo di vita dell'istanza
+
+Ogni riga di istanza (e la sua pagina di dettaglio) ha controlli corretti in base allo stato. Un'istanza **attiva** mostra **Arresta**; una **terminale** (Arrestata / Completata / Fallita) mostra **Avvia (▶)** per rilanciarla con lo stesso cBot, conto, simbolo, timeframe, set di parametri e immagine (un'esecuzione riparte come esecuzione, un backtest come backtest). Facendo clic su Arresta compare un avviso «Arresto in corso…» e l'icona viene disabilitata finché non si risolve; un'esecuzione appena creata compare subito nell'elenco, senza ricaricare la pagina.
+
+I log della console vengono **conservati quando un'istanza termina** — sia per un'esecuzione (all'arresto) sia per un **backtest** (al completamento) — così i log dell'ultima esecuzione restano visibili nella pagina di dettaglio e scaricabili tramite l'icona **Scarica log**, anche dopo che il container è sparito.

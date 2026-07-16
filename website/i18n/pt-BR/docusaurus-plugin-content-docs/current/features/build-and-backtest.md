@@ -60,3 +60,9 @@ Ao **Executar**, o editor salva e compila o código-fonte atual, inicia a instâ
 Um **conjunto de parâmetros** é um conjunto nomeado e reutilizável de substituições de parâmetros do cBot, armazenado como um objeto JSON plano que mapeia cada nome de parâmetro para um valor escalar, por ex. `{"Period": 14, "Label": "trend"}`. No momento da execução/backtest, ele é convertido no arquivo `params.cbotset` do cTrader (`{ "Parameters": { … } }`). Você pode criar/editar um conjunto como JSON bruto na caixa de diálogo **Conjuntos de parâmetros** do cBot ou inline na caixa de diálogo Executar.
 
 O JSON é **validado** ao salvar: deve ser um único objeto plano cujos valores sejam todos escalares (string / número / bool). Uma raiz não-objeto, um array, um objeto aninhado, um valor `null` ou JSON malformado é rejeitado (erro claro na caixa de diálogo, `400 Bad Request` na API). Um objeto vazio `{}` é permitido e significa "sem substituições".
+
+## Controles do ciclo de vida da instância
+
+Cada linha de instância (e sua página de detalhes) tem controles corretos conforme o estado. Uma instância **ativa** mostra **Parar**; uma **terminal** (Parada / Concluída / Falhou) mostra **Iniciar (▶)** para relançá-la com o mesmo cBot, conta, símbolo, timeframe, conjunto de parâmetros e imagem (uma execução reinicia como execução, um backtest como backtest). Clicar em Parar mostra um aviso "Parando…" e desabilita o ícone até resolver; uma execução recém-criada aparece imediatamente na lista, sem recarregar a página.
+
+Os logs do console são **persistidos quando uma instância termina** — tanto para uma execução (ao parar) quanto para um **backtest** (ao concluir) — de modo que os logs da última execução permanecem visíveis na página de detalhes e baixáveis pelo ícone **Baixar logs**, mesmo depois que o contêiner some.

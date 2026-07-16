@@ -206,6 +206,76 @@ public static class InstanceEndpoints
             return Results.Ok();
         });
 
+        // Restart a terminal instance (run or backtest): launches a fresh instance of the same kind with the
+        // same cBot / account / symbol / timeframe / parameter set / image (and backtest settings) as the
+        // stopped/completed/failed one.
+        g.MapPost("/{id:guid}/start", async (Guid id, DataContext db, ICurrentUser u,
+            INodeScheduler scheduler, IContainerDispatcherFactory factory, ISecretProtector protector,
+            TimeProvider timeProvider) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            if (u.IsInRole("Viewer")) return Results.Forbid();
+            var iid = InstanceId.From(id);
+            var i = await db.Instances.FirstOrDefaultAsync(x => x.Id == iid);
+            if (i is null) return Results.NotFound();
+            if (u.IsInRole("User") && i.UserId != uid) return Results.Forbid();
+            if (!i.IsTerminal) return Results.Conflict("instance is not stopped");
+
+            var cbot = await db.CBots.FirstOrDefaultAsync(c => c.Id == i.CBotId && c.UserId == uid);
+            if (cbot is null) return Results.BadRequest("cbot not found");
+
+            var paramJson = "{}";
+            if (i.ParamSetId is { } psid)
+            {
+                var paramSet = await db.ParamSets.FirstOrDefaultAsync(p => p.Id == psid && p.UserId == uid);
+                if (paramSet is not null) paramJson = paramSet.JsonContent;
+            }
+
+            var kind = i is BacktestInstance ? "Backtest" : "Run";
+            var node = await scheduler.PickNodeAsync(kind, default);
+            if (node is null) return Results.Conflict("no node available");
+
+            var imageTag = new DockerImageTag(i.DockerImageTag);
+            var symbol = new Symbol(i.Symbol ?? "EURUSD");
+            var timeframe = new Timeframe(i.Timeframe ?? "h1");
+            Instance starting = i is BacktestInstance backtest
+                ? BacktestInstance.CreateStarting(uid, i.CBotId, node.Id, imageTag, symbol, timeframe,
+                    backtest.BacktestSettingsJson, i.TradingAccountId, i.ParamSetId)
+                : RunInstance.CreateStarting(uid, i.CBotId, node.Id, imageTag, symbol, timeframe,
+                    i.TradingAccountId, i.ParamSetId);
+            db.Instances.Add(starting);
+            await db.SaveChangesAsync();
+            starting.AttachNode(node);
+
+            var algo = protector.Unprotect(cbot.EncryptedAlgo, EncryptionPurposes.CbotAlgo);
+            string containerId;
+            try
+            {
+                containerId = await factory.For(node).StartAsync(starting, algo, paramJson, default);
+            }
+            catch (Exception ex)
+            {
+                Instance failedInstance = starting is BacktestInstance failedBacktest
+                    ? failedBacktest.ToFailed(ex.Message, timeProvider.GetUtcNow())
+                    : ((RunInstance)starting).ToFailed(ex.Message, timeProvider.GetUtcNow());
+                db.Instances.Remove(starting);
+                db.Instances.Add(failedInstance);
+                await db.SaveChangesAsync();
+                return Results.Ok(new { failedInstance.Id });
+            }
+
+            Instance running = starting switch
+            {
+                StartingBacktestInstance sb => sb.ToRunning(containerId, timeProvider.GetUtcNow()),
+                StartingRunInstance sr => sr.ToRunning(containerId, timeProvider.GetUtcNow()),
+                _ => throw new InvalidOperationException()
+            };
+            db.Instances.Remove(starting);
+            db.Instances.Add(running);
+            await db.SaveChangesAsync();
+            return Results.Ok(new { running.Id });
+        });
+
         g.MapGet("/{id:guid}/logs", async (Guid id, DataContext db, ICurrentUser u,
             IContainerDispatcherFactory factory) =>
         {

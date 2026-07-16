@@ -27,6 +27,18 @@ IDE, run on official `ghcr.io/spotware/ctrader-console` image.
 - Live container logs stream to browser over SignalR; backtest equity curves parsed from
   report + charted.
 
+## Instance lifecycle controls
+
+Each instance row (and its detail page) has state-correct controls. An **active** instance shows
+**Stop**; a **terminal** one (Stopped / Completed / Failed) shows **Start (▶)** to re-launch it with
+the same cBot, account, symbol, timeframe, parameter set and image (a run restarts as a run, a
+backtest as a backtest). Clicking Stop shows a "Stopping…" notice and disables the icon until it
+resolves, and a newly created run appears in the list immediately — no page reload.
+
+Console logs are **persisted when an instance terminates** — for a run (on Stop) and for a
+**backtest** (on completion) alike — so the last run's logs stay viewable on the detail page and
+downloadable via the **Download logs** icon even after the container is gone.
+
 ## Run from the code editor
 
 Clicking **Run** in the code editor opens a dialog instead of firing a blind, hard-coded run:

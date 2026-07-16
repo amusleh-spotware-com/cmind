@@ -53,3 +53,9 @@ Po **Uruchom** edytor zapisuje i kompiluje bieżący kod źródłowy, uruchamia 
 **Zestaw parametrów** to nazwany, wielokrotnego użytku zestaw nadpisań parametrów cBota, przechowywany jako płaski obiekt JSON mapujący każdą nazwę parametru na wartość skalarną, np. `{"Period": 14, "Label": "trend"}`. W czasie uruchomienia/backtestu jest przekształcany w plik cTrader `params.cbotset` (`{ "Parameters": { … } }`). Zestaw można utworzyć/edytować jako surowy JSON z okna **Zestawy parametrów** cBota lub w miejscu z okna Uruchom.
 
 JSON jest **walidowany** przy zapisie: musi być pojedynczym płaskim obiektem, którego wszystkie wartości są skalarne (ciąg / liczba / bool). Korzeń niebędący obiektem, tablica, zagnieżdżony obiekt, wartość `null` lub nieprawidłowy JSON są odrzucane (czytelny błąd w oknie, `400 Bad Request` w API). Pusty obiekt `{}` jest dozwolony i oznacza „brak nadpisań".
+
+## Sterowanie cyklem życia instancji
+
+Każdy wiersz instancji (i jej strona szczegółów) ma elementy sterujące zgodne ze stanem. **Aktywna** instancja pokazuje **Zatrzymaj**; **terminalna** (Zatrzymana / Ukończona / Nieudana) pokazuje **Uruchom (▶)**, aby uruchomić ją ponownie z tym samym cBotem, kontem, symbolem, interwałem, zestawem parametrów i obrazem (uruchomienie startuje jako uruchomienie, backtest jako backtest). Kliknięcie Zatrzymaj pokazuje komunikat „Zatrzymywanie…" i wyłącza ikonę do czasu zakończenia; nowo utworzone uruchomienie pojawia się na liście natychmiast — bez przeładowania strony.
+
+Logi konsoli są **zachowywane, gdy instancja się kończy** — zarówno dla uruchomienia (przy zatrzymaniu), jak i dla **backtestu** (po ukończeniu) — dzięki czemu logi ostatniego uruchomienia pozostają widoczne na stronie szczegółów i możliwe do pobrania za pomocą ikony **Pobierz logi**, nawet po zniknięciu kontenera.

@@ -58,6 +58,29 @@ public sealed class CBotLifecycleTests(AppFixture app)
         await Assertions.Expect(result.First).ToBeVisibleAsync(new() { Timeout = 400000 });
     }
 
+    [Fact]
+    public async Task Search_filters_cbots_by_name()
+    {
+        var name = $"search-{Guid.NewGuid():N}"[..20];
+        var page = await app.NewAuthedPageAsync();
+        await CreateProjectAsync(page, name, "C#");
+
+        await page.GotoAsync("/cbots");
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        var row = page.Locator($".cbots-list a:has-text('{name}')");
+        await Assertions.Expect(row.First).ToBeVisibleAsync(Slow);
+
+        var search = page.GetByPlaceholder("Search cBots by name");
+        await search.FillAsync(name);
+        await Assertions.Expect(row.First).ToBeVisibleAsync(Slow);
+
+        // A non-matching query hides every row and shows the empty-search notice.
+        await search.FillAsync($"nomatch-{Guid.NewGuid():N}");
+        await Assertions.Expect(page.Locator("text=No cBots match").First).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(row.First).ToBeHiddenAsync();
+    }
+
     private static async Task CreateProjectAsync(IPage page, string name, string language)
     {
         await page.GotoAsync("/cbots");

@@ -48,7 +48,22 @@ else if (_projects.Length == 0)
 }
 else
 {
-    <MudTable T="CBotRow" Items="_projects" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="1"
+    <MudTextField T="string" @bind-Value="_search" @bind-Value:after="OnSearchChanged"
+                  Placeholder="Search cBots by name" Immediate="true" Clearable="true"
+                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                  IconSize="Size.Small" Variant="Variant.Outlined" Margin="Margin.Dense"
+                  Class="mb-3" data-testid="cbots-search" />
+
+    @if (Filtered.Length == 0)
+    {
+        <MudPaper Class="pa-6" Style="text-align:center;">
+            <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Class="mb-2" />
+            <MudText Typo="Typo.body1">No cBots match "@_search".</MudText>
+        </MudPaper>
+    }
+    else
+    {
+    <MudTable T="CBotRow" Items="Filtered" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="1"
               Class="cbots-list" MultiSelection="true" SelectOnRowClick="false" @bind-SelectedItems="_selected">
         <HeaderContent>
             <MudTh>Name</MudTh>
@@ -111,6 +126,7 @@ else
             </MudTd>
         </RowTemplate>
     </MudTable>
+    }
 }
 
 <style>
@@ -122,8 +138,20 @@ else
 @code {
     private CBotRow[] _projects = [];
     private HashSet<CBotRow> _selected = new();
+    private string _search = "";
     private bool _loading = true;
     private bool _busy;
+
+    private CBotRow[] Filtered =>
+        string.IsNullOrWhiteSpace(_search)
+            ? _projects
+            : _projects.Where(r => r.Name.Contains(_search.Trim(), StringComparison.OrdinalIgnoreCase)).ToArray();
+
+    private void OnSearchChanged()
+    {
+        // Drop any selection that is no longer visible so the delete-count reflects the filtered view.
+        _selected.RemoveWhere(r => !Filtered.Contains(r));
+    }
 
     private TimeZoneInfo _zone = TimeZoneInfo.Utc;
 

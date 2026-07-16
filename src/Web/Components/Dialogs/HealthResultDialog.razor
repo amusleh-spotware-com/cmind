@@ -1,0 +1,55 @@
+﻿@* Runs the Strategy Health &amp; Alpha Decay check on a completed backtest instance's stored report and shows
+   the verdict. Opened from the backtest list row and the instance detail view; the opening control is
+   disabled unless the backtest completed with a JSON report, so the fetch only ever hits an available report. *@
+@using System.Net.Http.Json
+@using Web.Components.Quant
+@inject HttpClient Http
+@inject IStringLocalizer<Ui> L
+
+<MudDialog>
+    <DialogContent>
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" data-testid="health-dialog-loading" />
+        }
+        else if (_result is { } r)
+        {
+            <HealthResultView Result="r" />
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Warning" data-testid="health-dialog-error">@L["health.loadError"]</MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close" data-testid="health-dialog-close">@L["common.close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+    [Parameter] public Guid InstanceId { get; set; }
+
+    private bool _loading = true;
+    private HealthResult? _result;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"/api/quant/health/backtest/{InstanceId}", new { });
+            if (response.IsSuccessStatusCode)
+                _result = await response.Content.ReadFromJsonAsync<HealthResult>();
+        }
+        catch
+        {
+            _result = null;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void Close() => Dialog.Close();
+}

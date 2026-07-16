@@ -1,0 +1,32 @@
+﻿@* Reusable Strategy Health report renderer: the Healthy/Degrading/Decayed verdict, the Sharpe/change-point
+   statistics and the plain-language rationale. Shared by the Strategy Health page and the backtest-instance
+   health dialog so the result looks identical wherever the check is run. *@
+@inject IStringLocalizer<Ui> L
+
+<MudAlert Severity="@HealthSeverity(Result.health)" Class="mb-3" data-testid="health-verdict">
+    <b>@Result.health</b>
+</MudAlert>
+<MudSimpleTable Dense="true" Hover="true">
+    <tbody>
+        <tr><td>@L["health.row.earlierSharpe"]</td><td>@Result.earlierSharpe.ToString("0.000")</td></tr>
+        <tr><td>@L["health.row.recentSharpe"]</td><td>@Result.recentSharpe.ToString("0.000")</td></tr>
+        @if (Result.changePointIndex is { } cp)
+        {
+            <tr><td>@L["health.row.changePoint"]</td><td>@cp</td></tr>
+        }
+        <tr><td>@L["health.row.observations"]</td><td>@Result.observations</td></tr>
+    </tbody>
+</MudSimpleTable>
+<MudText Typo="Typo.body2" Class="mt-3" data-testid="health-rationale">@Result.rationale</MudText>
+
+@code {
+    [Parameter, EditorRequired] public HealthResult Result { get; set; } = default!;
+
+    private static Severity HealthSeverity(string health) => health switch
+    {
+        "Healthy" => Severity.Success,
+        "Decayed" => Severity.Error,
+        "Degrading" => Severity.Warning,
+        _ => Severity.Info
+    };
+}

@@ -1,143 +1,143 @@
 ---
-description: "Crea, esegui, esegui backtest di cBot cTrader (C# e Python, entrambi .NET) dall'IDE Monaco integrato nel browser, eseguito su immagine ghcr.io/spotware/ctrader-console ufficiale."
+description: "Compila, esegui, sottoponi a backtest i cBot cTrader (C# e Python, entrambi .NET) dall'IDE Monaco integrato nel browser, esegui sull'immagine ufficiale ghcr.io/spotware/ctrader-console."
 ---
 
-# Build & backtest cBots
+# Compilazione e backtest dei cBot
 
-Crea, esegui, esegui backtest di cBot cTrader (C# **e** Python, entrambi .NET) dall'IDE Monaco
-integrato nel browser, eseguito su immagine ufficiale `ghcr.io/spotware/ctrader-console`.
+Compila, esegui, sottoponi a backtest i cBot cTrader (C# **e** Python, entrambi .NET) dall'IDE Monaco
+integrato nel browser, esegui sull'immagine ufficiale `ghcr.io/spotware/ctrader-console`.
 
-## Build
+## Compilazione
 
-- **Builder** page ospita l'editor Monaco; `CBotBuilder` compila il progetto con
-  `dotnet build` **in un container temporaneo** (`AppOptions.BuildImage`, work dir bind-mount
-  in `/work`), così i target MSBuild non attendibili non raggiungono l'host. Il restore di NuGet è memorizzato nella cache
-  tra i build tramite volume condiviso. Il web host ha bisogno dell'accesso al socket Docker.
-- I template di avvio C# + Python si trovano in `src/Nodes/Builder/Templates/`.
+- La pagina **Builder** ospita l'editor Monaco; `CBotBuilder` compila il progetto con
+  `dotnet build` **in un contenitore usa e getta** (`AppOptions.BuildImage`, directory di lavoro montata
+  a `/work`), quindi le destinazioni MSBuild dell'utente non attendibile non raggiungono l'host. Il ripristino NuGet è memorizzato nella cache
+  tra le compilazioni tramite volume condiviso. L'host Web ha bisogno dell'accesso al socket Docker.
+- I modelli di avvio C# + Python si trovano in `src/Nodes/Builder/Templates/`.
 
-## Run & backtest
+## Esecuzione e backtest
 
 - **Instances** = gerarchia di stato TPH (`Run`/`Backtest` × `Pending`/`Scheduled`/`Starting`/
-  `Running`/`Stopping`/`Stopped`/`Failed`). La transizione sostituisce l'entità (cambio di id),
-  l'id del container è conservato.
-- `NodeScheduler` sceglie il nodo idoneo meno carico; `ContainerDispatcherFactory` indirizza
-  all'agente HTTP del nodo remoto o al dispatcher Docker locale.
-- I poller di completamento riconciliano i container chiusi (i container di backtest si chiudono autonomamente tramite
-  `--exit-on-stop`); report presente → completato (memorizza `ReportJson`), assente → non riuscito.
-- I log del container live si trasmettono al browser su SignalR; le curve di equità del backtest sono analizzate dal
-  report e tracciate su grafici.
+  `Running`/`Stopping`/`Stopped`/`Failed`). La transizione sostituisce l'entità (cambio id),
+  l'id del contenitore viene trasportato.
+- `NodeScheduler` seleziona il nodo eleggibile meno carico; `ContainerDispatcherFactory` instrada a
+  un agente HTTP del nodo remoto o al dispatcher Docker locale.
+- I poller di completamento riconciliano i contenitori usciti (i contenitori di backtest escono automaticamente tramite
+  `--exit-on-stop`); report presente → completato (memorizza `ReportJson`), mancante → fallito.
+- I log dei contenitori in tempo reale vengono trasmessi al browser tramite SignalR; le curve di equità del backtest vengono analizzate dal
+  report e tracciate.
 
-## Backtest market data is cached per account
+## I dati di mercato per il backtest sono memorizzati nella cache per conto
 
-Il cTrader Console scarica i dati storici tick/bar nella sua `--data-dir`. Quella directory è una
-**cache stabile e persistente basata sull'account di trading** (il suo numero di account) — bind-mount dal
-disco del nodo al suo percorso container (`/mnt/data`), un **mount separato e non annidato** dalla
-directory di lavoro per istanza. Quindi ogni backtest sullo stesso account **riusa** i dati già scaricati
-invece di scaricarli di nuovo ad ogni esecuzione. (In precedenza
-la directory dei dati si trovava nella directory di lavoro per istanza, il cui id cambia ad ogni esecuzione, che forzava un
-download fresh ad ogni backtest.) La directory di lavoro per istanza effimera conserva ancora l'algo, i parametri, la password
-e il report; la cache di dati condivisa viene conteggiata nell'utilizzo dei dati di backtest di un nodo e cancellata dall'azione
+La console cTrader scarica i dati storici di tick/bar nella sua `--data-dir`. Quella directory è una
+**cache stabile e persistente associata all'account di trading** (il suo numero di conto) — montata da bind dal
+disco del nodo sul suo percorso del contenitore (`/mnt/data`), un **mount separato e non annidato** dalla
+directory di lavoro per istanza. Quindi ogni backtest dello stesso account **riutilizza** i dati già scaricati
+invece di scaricarlo di nuovo ad ogni esecuzione. (In precedenza la
+directory dei dati si trovava sotto la directory di lavoro per istanza, il cui id cambia ad ogni esecuzione, il che ha forzato un
+scaricamento nuovo ad ogni backtest.) La directory di lavoro per istanza effimera contiene comunque l'algoritmo, i parametri, la password
+e il report; la cache dei dati condivisa viene conteggiata nell'utilizzo dei dati di backtest di un nodo e cancellata dall'azione
 node-clean.
 
-## Backtest settings
+## Impostazioni di backtest
 
-La finestra di dialogo **Backtest** espone ogni impostazione che la CLI di backtest di cTrader Console accetta, così non dovrai
-mai toccare una linea di comando:
+La finestra di dialogo **Backtest** espone le impostazioni di backtest della console cTrader regolabili dall'utente, in modo da non dovere
+mai toccare una riga di comando:
 
+- **Symbol / Timeframe** — il timeframe è un **elenco a discesa di ogni periodo cTrader** (`t1`…`t1000`,
+  `m1`…`m45`, `h1`…`h12`, `D1`/`D2`/`D3`, `W1`, `Month1` e i periodi Renko/Range/Heikin), nel
+  maiuscole canoniche della console, quindi scegli sempre un `--period` valido.
 - **From / To** — la finestra di backtest (`--start` / `--end`).
 - **Data mode** — una delle tre modalità cTrader (`--data-mode`): **Tick data** (`tick`, accurato),
-  **m1 bars** (`m1`, veloce), o **Open prices only** (`open`, più veloce).
-- **Starting balance** — predefinito a `10000` (`--balance`). Un **balance di 0 non effettua alcuno trade e fa sì che
-  cTrader emetta un report vuoto su cui poi si arresta** ("Message expected"), quindi un balance diverso da zero è
+  **m1 bars** (`m1`, veloce) o **Open prices only** (`open`, più veloce).
+- **Starting balance** — impostazione predefinita `10000` (`--balance`). Un **saldo 0 non esegue operazioni e fa
+  sì che cTrader emetta un report vuoto su cui poi si arresta in modo anomalo** ("Message expected"), quindi un saldo diverso da zero è
   sempre inviato.
-- **Commission** e **Spread** — `--commission` / `--spread` (spread in pip).
-- **Data file** (opzionale) — un percorso sul nodo a un file di dati storici (`--data-file`); lascia vuoto per
-  usare i dati scaricati/memorizzati nella cache.
-- **Expose environment variables** — un toggle che passa le variabili di ambiente dell'host al cBot
-  (il flag `--environment-variables`).
+- **Commission** e **Spread** — `--commission` / `--spread` (spread in pips).
 
-## Instance detail page
+La directory dei dati (`--data-file` / `--data-dir`) è gestita dall'app stessa (una cache per conto, vedere
+sopra), non esposta nella finestra di dialogo.
 
-L'apertura di un'istanza (`/instance/{id}`) mostra il suo stato live, i log e — per un backtest — la curva
-di equità. Il **titolo della scheda del browser** riflette l'istanza specifica (**nome cBot · tipo · simbolo**, ad es.
-`TrendBot · Backtest · EURUSD`) così una scheda di esecuzione live e una scheda di backtest sono distinguibili a colpo d'occhio.
-Un'esecuzione e un backtest dello stesso cBot sono tracciati come **lineages** distinti (un id lineage stabile conservato
-attraverso le transizioni di stato), quindi la pagina segue esattamente un'istanza e non mescola mai i dati di un'esecuzione con quelli di un
+## Pagina dei dettagli dell'istanza
+
+L'apertura di un'istanza (`/instance/{id}`) mostra il suo stato in tempo reale, i log e — per un backtest — la curva di equità
+. Il **titolo della scheda del browser** riflette l'istanza specifica (**nome del cBot · tipo · symbol**, ad es.
+`TrendBot · Backtest · EURUSD`) in modo che una scheda di esecuzione in tempo reale e una scheda di backtest siano distinguibili a prima vista.
+Un'esecuzione e un backtest dello stesso cBot vengono tracciati come **lineage** distinti (uno stable lineage id trasportato
+attraverso transizioni di stato), quindi la pagina segue esattamente un'istanza e non mescola mai i dati di un'esecuzione con quelli di un
 backtest.
 
-## Instance lifecycle controls
+## Controlli del ciclo di vita dell'istanza
 
-Ogni riga di istanza (e la sua pagina di dettaglio) ha controlli corretti per lo stato. Un'istanza **attiva** mostra
-**Stop**; una **terminale** (Stopped / Completed / Failed) mostra **Start (▶)** per rilanciarla con
-lo stesso cBot, account, simbolo, timeframe, set di parametri e immagine (un'esecuzione si riavvia come esecuzione, un
-backtest come backtest). Fare clic su Stop mostra un avviso "Stopping…" e disabilita l'icona fino a quando non si
-risolve, e un'esecuzione appena creata appare immediatamente nell'elenco — nessun ricaricamento della pagina.
+Ogni riga di istanza (e la sua pagina di dettaglio) ha controlli corretti dello stato. Un'istanza **attiva** mostra
+**Stop**; una **terminale** (Stopped / Completed / Failed) mostra **Start (▶)** per riavviarla con
+lo stesso cBot, conto, symbol, timeframe, ParamSet e immagine (un'esecuzione si riavvia come esecuzione, un
+backtest come backtest). Fare clic su Stop mostra un avviso "Stopping…" e disabilita l'icona finché non
+si risolve, e un'esecuzione appena creata appare immediatamente nell'elenco — nessun ricaricamento della pagina.
 
-I log della console sono **persistiti quando un'istanza termina** — per un'esecuzione (su Stop) e per un
-**backtest** (al completamento) allo stesso modo — così i log dell'ultima esecuzione rimangono visualizzabili sulla pagina di dettaglio e,
-tramite la barra degli strumenti del log, **copiati negli appunti** (icona Copy logs) o **scaricati** (icona Download logs)
-anche dopo che il container è scomparso. Entrambi agiscono sul log completo della console dell'istanza, non solo sulla
-coda on-screen.
+I log della console vengono **persistiti quando un'istanza si termina** — per un'esecuzione (su Stop) e per un
+**backtest** (al completamento) — in modo che i log dell'ultima esecuzione rimangono visualizzabili nella pagina di dettaglio e,
+tramite la barra degli strumenti dei log, **copiati negli appunti** (icona Copia log) o **scaricati** (icona Scarica log)
+anche dopo che il contenitore è scomparso. Entrambi agiscono sul log della console completo dell'istanza, non solo sulla
+coda visualizzata sullo schermo.
 
-Un `.algo` **caricato** non è mai stato costruito qui, quindi la colonna **Last Build** sulla pagina dei cBot è
-lasciata vuota (mostra un'ora di build solo per i cBot che crei nel browser).
+Un `.algo` **caricato** non è mai stato compilato qui, quindi la sua colonna **Last Build** nella pagina dei cBot è
+lasciata vuota (mostra un'ora di compilazione solo per i cBot che compili nel browser).
 
-## Edit & re-run a stopped instance
+## Modifica e riesecuzione di un'istanza arrestata
 
 Un'istanza **arrestata** (esecuzione o backtest) ha un controllo **Edit** — un'icona sulla sua riga nell'elenco **e**
-accanto a Start/Stop sulla sua pagina di dettaglio — che apre una finestra di dialogo **precompilata** con la sua configurazione attuale.
-Puoi cambiare l'**account di trading, il simbolo, il timeframe, il set di parametri e il tag dell'immagine** (e, per un
-backtest, la **finestra e tutte le impostazioni di backtest** sopra), quindi **Save & start** la rilancia con le
+accanto a Start/Stop nella sua pagina di dettaglio — che apre una finestra di dialogo **precompilata** con la sua configurazione corrente.
+Puoi modificare il **conto di trading, symbol, timeframe, ParamSet e tag di immagine** (e, per un
+backtest, la **finestra e tutte le impostazioni di backtest** di cui sopra), quindi **Save & start** la riavvia con le
 nuove impostazioni (sostituendo l'istanza arrestata). Il controllo è **disabilitato mentre l'istanza è attiva** —
 solo un'istanza arrestata può essere modificata.
 
-## Run from the code editor
+## Esecuzione dall'editor di codice
 
-Fare clic su **Run** nell'editor del codice apre una finestra di dialogo anziché lanciare un'esecuzione cieca e hardcoded:
+Fare clic su **Run** nell'editor di codice apre una finestra di dialogo invece di eseguire un'esecuzione cieca e hardcoded:
 
-- **Trading account** (richiesto) — l'account cTrader a cui il cBot si connette.
-- **Parameter set** (opzionale) — seleziona un set esistente, o lascialo vuoto per eseguire con i **valori di parametri predefiniti** del cBot.
-  Un pulsante **+** accanto al selettore crea un nuovo set di parametri
-  inline (vedi sotto) e lo seleziona.
-- **Symbol / Timeframe** predefiniti a `EURUSD` / `h1` e possono essere modificati; **Cancel** o **Run**.
+- **Trading account** (obbligatorio) — il conto cTrader a cui si connette il cBot.
+- **Parameter set** (facoltativo) — seleziona un set esistente o lascialo vuoto per eseguire con i **valori di parametro predefiniti** del cBot.
+  Un pulsante **+** accanto al selettore crea un nuovo ParamSet in linea (vedere di seguito) e lo seleziona.
+- **Symbol / Timeframe** default a `EURUSD` / `h1` e possono essere modificati; **Cancel** o **Run**.
 
-Su **Run** l'editor salva + compila il sorgente attuale, avvia l'istanza sull'account scelto
-con i parametri scelti, quindi traccia i log live del container. (Il flusso di log invia il cookie di autenticazione dell'utente connesso al
-hub SignalR `/hubs/logs`, così si connette anziché non riuscire con
+Su **Run** l'editor salva e compila il codice sorgente corrente, avvia l'istanza sull'account scelto
+con i parametri scelti, quindi traccia i log dei contenitori live. (Il flusso di log inoltra il
+cookie di auth dell'utente connesso all'hub SignalR `/hubs/logs`, quindi si connette invece di fallire con
 `Invalid negotiation response received`.)
 
-## Parameter sets
+## ParamSet
 
-Un **parameter set** è un set denominato e riutilizzabile di override dei parametri del cBot memorizzato come
-oggetto JSON piatto che mappa ogni nome di parametro a un valore scalare, ad es. `{"Period": 14, "Label": "trend"}`. Al
-momento dell'esecuzione/backtest viene trasformato nel file `params.cbotset` di cTrader
+Un **parameter set** è un set denominato e riutilizzabile di override dei parametri del cBot archiviati come un
+oggetto JSON flat che mappa il nome di ogni parametro a un valore scalare, ad es. `{"Period": 14, "Label": "trend"}`. Al
+tempo di esecuzione/backtest viene trasformato nel file `params.cbotset` di cTrader
 (`{ "Parameters": { … } }`). Puoi creare/modificare un set come JSON grezzo dalla finestra di dialogo **Parameter
 sets** del cBot o inline dalla finestra di dialogo Run.
 
-Ogni set di parametri **appartiene a un cBot**: la finestra di dialogo New Parameter Set elenca tutti i tuoi cBot e devi
-**sceglierne uno** — la creazione è bloccata fino a quando non è selezionato un cBot. Il **nome di un set è univoco per cBot**:
-la creazione o la ridenominazione di un set con un nome che un altro set dello stesso cBot usa già è rifiutata (un errore chiaro
-nella finestra di dialogo, `409 Conflict` all'API). Lo stesso nome può essere riutilizzato su un **cBot diverso**.
+Ogni ParamSet **appartiene a un cBot**: la finestra di dialogo New Parameter Set elenca tutti i tuoi cBot e tu
+**devi sceglierne uno** — la creazione è bloccata finché non viene selezionato un cBot. Il **nome di un set è univoco per cBot**:
+la creazione o la ridenominazione di un set con un nome che un altro set dello stesso cBot utilizza già viene rifiutata (un errore chiaro
+nella finestra di dialogo, `409 Conflict` nell'API). Lo stesso nome può essere riutilizzato su un **diverso** cBot.
 
-Il JSON è **convalidato** al salvataggio: deve essere un singolo oggetto piatto i cui valori sono tutti scalari
-(string / number / bool). Una radice non-object, un array, un oggetto annidato, un valore `null`, o JSON
-malformato è rifiutato (un errore chiaro nella finestra di dialogo, `400 Bad Request` all'API). Un oggetto vuoto `{}`
+Il JSON è **convalidato** al salvataggio: deve essere un singolo oggetto flat i cui valori sono tutti scalari
+(string / number / bool). Una radice non-object, un array, un oggetto annidato, un valore `null` o un JSON
+malformato viene rifiutato (un errore chiaro nella finestra di dialogo, `400 Bad Request` nell'API). Un oggetto vuoto `{}`
 è consentito e significa "nessun override".
 
-## cTrader Console CLI notes
+## Note sulla CLI della console cTrader
 
-I backtest richiedono `--data-mode` (predefinito `m1`), date come `dd/MM/yyyy HH:mm`, e
-argomento posizionale JSON `params.cbotset`; `run` rifiuta `--data-dir` (solo backtest). Vedi
+I backtest hanno bisogno di `--data-mode` (predefinito `m1`), date come `dd/MM/yyyy HH:mm` e
+argomento JSON posizionale `params.cbotset`; `run` rifiuta `--data-dir` (solo backtest). Vedi
 `ContainerCommandHelpers`.
 
-## Nodes & scale
+## Nodi e scalabilità
 
-La capacità di esecuzione scala aggiungendo agenti nodo (auto-registrazione + heartbeat). Vedi
+La capacità di esecuzione si scala aggiungendo agenti di nodo (auto-registrazione + heartbeat). Vedi
 [node discovery](../operations/node-discovery.md) e [scaling](../deployment/scaling.md).
+## È richiesto un conto di trading
 
-## A trading account is required
-
-Eseguire o eseguire il backtest di un cBot richiede un account di trading cTrader a cui connettersi. Fino a quando non ne aggiungi uno in
+L'esecuzione o il backtest di un cBot richiede un conto di trading cTrader a cui connettersi. Finché non ne aggiungi uno in
 **Trading accounts**, i pulsanti **Run New cBot** / **Backtest New cBot** sono disabilitati (con un
-tooltip) e la pagina mostra un prompt che collega alla configurazione dell'account — non ricevi più un errore grezzo
-`stream connect failed` da un bot senza account.
+tooltip) e la pagina mostra un prompt che collega alla configurazione dell'account — non riceverai più un errore grezzo
+`stream connect failed` da un bot senza conto.

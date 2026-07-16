@@ -68,7 +68,8 @@
     private bool _isBacktest;
     private string _symbol = "EURUSD", _timeframe = "h1", _image = "latest";
     private string _balance = BacktestSettings.DefaultBalance;
-    private double _commission, _spread;
+    private double _commission;
+    private double _spread = 1;
     private string _dataMode = BacktestSettings.DefaultDataMode;
     private DateTime? _from, _to;
     private string? _dateError;

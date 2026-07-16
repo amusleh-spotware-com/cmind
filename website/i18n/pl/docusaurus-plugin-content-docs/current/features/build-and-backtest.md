@@ -1,81 +1,108 @@
 ---
-description: "Buduj, uruchamiaj i testuj cBoty cTrader (C# i Python, oba na .NET) z przeglądarki w edytorze Monaco, uruchamiaj na oficjalnym obrazie ghcr.io/spotware/ctrader-console."
+description: "Budowanie, uruchamianie i testowanie wstecz cBotów cTradera (C# i Python, oba .NET) z wbudowanego edytora Monaco w przeglądarce, uruchamiane na oficjalnym obrazie ghcr.io/spotware/ctrader-console."
 ---
 
-# Budowanie i testowanie cBotów
+# Budowanie i testowanie wstecz cBotów
 
-Buduj, uruchamiaj i testuj cBoty cTrader (C# **i** Python, oba na .NET) z przeglądarki w edytorze Monaco, uruchamiaj na oficjalnym obrazie `ghcr.io/spotware/ctrader-console`.
+Budowanie, uruchamianie i testowanie wstecz cBotów cTradera (C# **i** Python, oba .NET) z wbudowanego edytora Monaco w przeglądarce, uruchamiane na oficjalnym obrazie `ghcr.io/spotware/ctrader-console`.
 
 ## Budowanie
 
-- Strona **Builder** obsługuje edytor Monaco; `CBotBuilder` kompiluje projekt za pomocą `dotnet build` **w kontenerii jednorazowym** (`AppOptions.BuildImage`, katalog roboczy bind-mount w `/work`), dzięki czemu niezaufane cele MSBuild użytkownika nie mogą dotrzeć do hosta. Przywracanie NuGet jest buforowane między kompilacjami za pośrednictwem udostępnionego wolumenu. Host sieciowy potrzebuje dostępu do gniazda Docker.
-- Szablony początkowe dla C# i Python znajdują się w `src/Nodes/Builder/Templates/`.
+- Strona **Builder** hostuje edytor Monaco; `CBotBuilder` kompiluje projekt za pomocą `dotnet build` **w efemerycznym kontenerze** (`AppOptions.BuildImage`, katalog roboczy montowany jako bind-mount w `/work`), aby wiarygodne obiekty docelowe MSBuild użytkownika nie mogły uzyskać dostępu do hosta. Przywracanie NuGet jest buforowane w całych kompilacjach za pośrednictwem udostępnionego wolumenu. Host sieciowy wymaga dostępu do gniazda Docker.
+- Szablony startowe C# i Python znajdują się w `src/Nodes/Builder/Templates/`.
 
-## Uruchamianie i testowanie
+## Uruchamianie i testowanie wstecz
 
-- **Instances** = hierarchia stanów TPH (`Run`/`Backtest` × `Pending`/`Scheduled`/`Starting`/`Running`/`Stopping`/`Stopped`/`Failed`). Przejście zastępuje jednostkę (zmiana id), identyfikator kontenera jest przenoszony.
+- **Instancje** = hierarchia stanów TPH (`Run`/`Backtest` × `Pending`/`Scheduled`/`Starting`/`Running`/`Stopping`/`Stopped`/`Failed`). Przejście zastępuje encję (zmiana id), id kontenera jest przeniesione.
 - `NodeScheduler` wybiera najmniej obciążony kwalifikujący się węzeł; `ContainerDispatcherFactory` kieruje do zdalnego agenta HTTP węzła lub lokalnego dyspozytora Docker.
-- Poller uzupełniania uzgadnia zakończone kontenery (kontenery testów automatycznie się zamykają przez `--exit-on-stop`); raport obecny → ukończony (przechowuje `ReportJson`), brakujący → niepowodzenie.
-- Dzienniki kontenera na żywo są przesyłane do przeglądarki przez SignalR; krzywe zysku testu są analizowane z raportu i wykreślane.
+- Detektory ukończenia uzgadniają wychodzące kontenery (kontenery testu wstecz wychodzą samoczynnie poprzez `--exit-on-stop`); raport obecny → ukończony (przechowywanie `ReportJson`), brak → nieudany.
+- Dzienniki kontenerów na żywo są przesyłane do przeglądarki przez SignalR; krzywe kapitału testu wstecz są analizowane z raportu i wykreślane.
 
-## Dane rynkowe testu są buforowane na konto
+## Dane rynkowe testu wstecz są buforowane na konto
 
-Konsola cTrader pobiera historyczne dane tick/bar do swojego katalogu `--data-dir`. Ten katalog to **stabilny, trwały bufor klucz na koncie handlowym** (numer konta) — bind-mount z dysku węzła na jego własnej ścieżce kontenera (`/mnt/data`), **osobny, zagnieżdżony mount** z katalogiem roboczym na instancję. Dzięki temu każdy backtest na tym samym koncie **ponownie wykorzystuje** już pobrane dane zamiast pobierać je ponownie za każdym razem. (Wcześniej katalog danych znajdował się pod katalogiem roboczym na instancję, którego id zmienia się z każdym uruchomieniem, co zmusiło do nowego pobrania za każdym razem.) Efemeryczny katalog roboczy na instancję nadal zawiera algorytm, parametry, hasło i raport; udostępniony bufor danych jest liczony w użykowaniu danych testowych węzła i wyczyszczony przez akcję czyszczenia węzła.
+Konsola cTradera pobiera historyczne dane tików/słupków do swojego katalogu `--data-dir`. Ten katalog jest **stabilną, trwałą pamięcią podręczną opartą na koncie handlowym** (jego numerze konta) — montowany na bind-mount z dysku węzła na jego własnej ścieżce kontenera (`/mnt/data`), **oddzielny, niezagnieżdżony montaż** z katalogiem roboczy dla instancji. Tak więc każdy test wstecz na tym samym koncie **ponownie wykorzystuje** już pobrane dane zamiast ponownego pobrania za każdym razem. (Wcześniej katalog danych znajdował się w katalogu roboczy dla instancji, którego id zmienia się za każdym razem, co wymusiło świeże pobranie każdego testu wstecz.) Efemeryczny katalog roboczy dla instancji nadal zawiera algorytm, parametry, hasło i raport; udostępniona pamięć podręczna danych jest liczona w użyciu danych testu wstecz węzła i czyszczona przez akcję czyszczenia węzła.
 
-## Ustawienia testu
+## Ustawienia testu wstecz
 
-Dialog **Backtest** ujawnia ustawienia testów cTrader Console dostrajane przez użytkownika, dzięki czemu nigdy nie musisz dotykać wiersza poleceń:
+Dialog **Backtest** ukazuje ustawienia testu wstecz konsoli cTradera dostosowywalne przez użytkownika, aby nigdy nie trzeba było dotykać wiersza poleceń:
 
-- **Symbol / Timeframe** — timeframe to **rozwijana lista każdego okresu cTrader** (`t1`…`t1000`, `m1`…`m45`, `h1`…`h12`, `D1`/`D2`/`D3`, `W1`, `Month1`, i okresy Renko/Range/Heikin), w kanonicznym pisaniu konsoli, dzięki czemu zawsze wybierasz ważny `--period`.
-- **From / To** — okno testu (`--start` / `--end`).
-- **Data mode** — jeden z trzech trybów cTrader (`--data-mode`): **Tick data** (`tick`, dokładne), **m1 bars** (`m1`, szybkie), lub **Open prices only** (`open`, najszybsze).
-- **Starting balance** — domyślnie `10000` (`--balance`). **Saldo 0 nie umieszcza żadnych transakcji i powoduje, że cTrader emituje pusty raport, na którym się sypie** ("Message expected"), więc zawsze wysyłane jest saldo niezerowe.
-- **Commission** i **Spread** — `--commission` / `--spread` (spread w pipach).
+- **Symbol / Timeframe** — timeframe to **lista rozwijana każdego okresu cTradera** (`t1`…`t1000`, `m1`…`m45`, `h1`…`h12`, `D1`/`D2`/`D3`, `W1`, `Month1` i okresy Renko/Range/Heikin), w kanonicznym obudowaniu konsoli, dzięki czemu zawsze wybierzesz prawidłowy `--period`.
+- **Od / Do** — okno testu wstecz (`--start` / `--end`).
+- **Tryb danych** — jeden z trzech trybów cTradera (`--data-mode`): **Dane tików** (`tick`, dokładne), **słupki m1** (`m1`, szybkie) lub **Tylko ceny otwarcia** (`open`, najszybsze).
+- **Saldo początkowe** — domyślnie `10000` (`--balance`). **Saldo równe 0 nie zawiera transakcji i powoduje, że cTrader emituje pusty raport, na którym następnie się zawala** ("Message expected"), więc zawsze wysyłane jest saldo niezerowe.
+- **Prowizja** — `--commission`.
+- **Spread** — `--spread`, **pole numeryczne w pipsach, które nie może być poniżej 0**. Jest **ukryte w trybie danych tików**, gdzie cTrader wyznacza spread na podstawie samych danych tików (nie wysyłane `--spread`).
 
-Katalog danych (`--data-file` / `--data-dir`) jest zarządzany przez samą aplikację (bufor na konto, patrz wyżej), a nie ujawniany w dialogu.
+Katalog danych (`--data-file` / `--data-dir`) jest zarządzany przez samą aplikację (pamięć podręczna dla każdego konta, patrz wyżej), nie ujawniany w dialogu.
+
+:::note cTrader zawala się na pustym teście wstecz
+Jeśli test wstecz produkuje **brak wyników** — żadnych transakcji lub żadnych danych rynkowych dla wybranych dat/symbolu — moduł pisania raportów konsoli cTradera wyrzuca `Message expected` i wychodzi bez raportu. Aplikacja nie może naprawić tego błędu upstream, ale go wykrywa i oznacza instancję jako **Nieudana** z przyczyn czytelną dla użytkownika ("brak wyników testu wstecz dla wybranego zakresu…") zamiast surowego śladu stosu. Wybierz szerszy zakres dat, który ma dostępne dane rynkowe i spróbuj ponownie.
+:::
 
 ## Strona szczegółów instancji
 
-Otwarcie instancji (`/instance/{id}`) pokazuje jej status na żywo, dzienniki i — dla testu — krzywą zysku. **Tytuł karty przeglądarki** odzwierciedla konkretną instancję (**nazwa cBota · rodzaj · symbol**, np. `TrendBot · Backtest · EURUSD`), dzięki czemu karta uruchomienia na żywo i karta testu są rozróżnialne na pierwszy rzut oka. Uruchomienie i test tego samego cBota są śledzone jako odrębne **linie dziedziczenia** (stabilny identyfikator linii dziedziczenia przeniesiony między przejściami stanów), dzięki czemu strona śledzi dokładnie jedną instancję i nigdy nie miesza danych uruchomienia z testem.
+Otwarcie instancji (`/instance/{id}`) pokazuje jej status na żywo, dzienniki i — dla testu wstecz — krzywą kapitału. Tytuł **karty przeglądarki** odzwierciedla konkretną instancję (**nazwa cBota · rodzaj · symbol**, np. `TrendBot · Backtest · EURUSD`), dzięki czemu karta uruchomienia na żywo i karta testu wstecz są odróżnialne na pierwszy rzut oka. Uruchomienie i test wstecz tego samego cBota są śledzone jako odrębne **linie** (stabilny id linii przeniesiony w przejściach stanów), więc strona podąża dokładnie jedną instancją i nigdy nie mieszają danych uruchomienia z testem wstecz.
 
 ## Kontrole cyklu życia instancji
 
-Każdy wiersz instancji (i jego strona szczegółów) ma kontrole odpowiadające stanowi. Instancja **aktywna** pokazuje **Stop**; **terminalna** (Stopped / Completed / Failed) pokazuje **Start (▶)**, aby ponownie ją uruchomić z tym samym cBotem, kontem, symbolem, timeframe, zestawem parametrów i obrazem (uruchomienie uruchamia się ponownie jako uruchomienie, test jako test). Kliknięcie Stop pokazuje powiadomienie "Stopping…" i wyłącza ikonę do czasu rozwiązania, a nowo utworzone uruchomienie pojawia się na liście natychmiast — bez przeładowania strony.
+Każdy wiersz instancji (i jego strona szczegółów) ma kontrole uwzględniające stan. Aktywna instancja pokazuje **Stop**; terminal (Zatrzymana / Ukończona / Nieudana) pokazuje **Start (▶)** ponownie uruchomić ją za pomocą tego samego cBota, konta, symbolu, timeframe'a, zestawu parametrów i obrazu (uruchomienie restartuje się jako uruchomienie, test wstecz jako test wstecz). Kliknięcie Stop wyświetla powiadomienie "Zatrzymywanie…" i wyłącza ikonę do czasu jej rozwiązania, a nowo utworzone uruchomienie pojawia się na liście natychmiast — bez przeładowania strony.
 
-Dzienniki konsoli są **utrwalane po zakończeniu instancji** — dla uruchomienia (po zatrzymaniu) i dla **testu** (po ukończeniu) — dzięki czemu dzienniki ostatniego uruchomienia pozostają dostępne na stronie szczegółów i, za pośrednictwem paska narzędzi dziennika, są **kopiowane do schowka** (ikona Kopiuj dzienniki) lub **pobierane** (ikona Pobierz dzienniki), nawet po usunięciu kontenera. Oba działają na pełnym dzienniku konsoli instancji, a nie tylko na widocznym ogonie.
+Dzienniki konsoli są **utrwalane po zakończeniu instancji** — zarówno dla uruchomienia (na Stop), jak i dla **testu wstecz** (po ukończeniu) — tak aby dzienniki ostatniego uruchomienia pozostają widoczne na stronie szczegółów i, poprzez pasek narzędzi dziennika, **skopiowane do schowka** (ikona Kopiuj dzienniki) lub **pobrane** (ikona Pobierz dzienniki) nawet po usunięciu kontenera. Oba działają na pełnym dzienniku konsoli instancji, a nie tylko na widocznym ogonie.
 
-Przesłany `.algo` nigdy nie został tutaj zbudowany, więc jego kolumna **Last Build** na stronie cBotów jest pozostawiona pusta (pokazuje czas kompilacji tylko dla cBotów budowanych w przeglądarce).
+**Ukończony test wstecz** również utrwala swój **raport cTradera** w obu formatach — surowy **JSON** (ten sam, którego używają krzywa kapitału i analiza AI) i pełny raport **HTML**. Oba są dostępne do pobrania z wiersza testu wstecz **i** strony szczegółów za pośrednictwem dedykowanych ikon. Tylko **raporty ostatniego uruchomienia** są przechowywane, a ikony są **wyłączone** dla dowolnego testu wstecz, który nie został uruchomiony, jest uruchomiony lub nieudany (i nigdy nie są wyświetlane dla instancji uruchomienia) — tylko ukończony test wstecz ma raport do pobrania.
+
+Przesłany `.algo` nigdy nie został tutaj zbudowany, więc jego kolumna **Last Build** na stronie cBotów jest pusta (pokazuje czas kompilacji tylko dla cBotów zbudowanych w przeglądarce).
 
 ## Edycja i ponowne uruchomienie zatrzymanej instancji
 
-**Zatrzymana** instancja (uruchomienie lub test) ma kontrolę **Edit** — ikonę na jej wierszu na liście **i** obok Start/Stop na stronie szczegółów — która otwiera dialog **wstępnie wypełniony** jego bieżącą konfiguracją. Możesz zmienić **konto handlowe, symbol, timeframe, zestaw parametrów i tag obrazu** (i, dla testu, **okno i wszystkie ustawienia testu** powyżej), a następnie **Save & start** uruchamia go ponownie z nowymi ustawieniami (zastępując zatrzymaną instancję). Kontrola jest **wyłączona, gdy instancja jest aktywna** — tylko zatrzymaną instancję można edytować.
+**Zatrzymana** instancja (uruchomienie lub test wstecz) ma kontrolę **Edit** — ikonę na jej wierszu na liście **i** obok Start/Stop na stronie szczegółów — która otwiera dialog **wstępnie wypełniony** jego bieżącą konfiguracją. Możesz zmienić **konto handlowe, symbol, timeframe, zestaw parametrów i tag obrazu** (i, dla testu wstecz, **okno i wszystkie powyższe ustawienia testu wstecz**), a następnie **Zapisz i uruchom** ponownie uruchamia go z nowymi ustawieniami (zastępując zatrzymaną instancję). Kontrola jest **wyłączona, gdy instancja jest aktywna** — tylko zatrzymana instancja może być edytowana.
 
-## Uruchamianie z edytora kodu
+## Run from the code editor
 
-Kliknięcie **Run** w edytorze kodu otwiera dialog zamiast uruchamiać ślepe, ustalone uruchomienie:
+Clicking **Run** in the code editor opens a dialog instead of firing a blind, hard-coded run:
 
-- **Trading account** (wymagane) — konto handlowe cTrader, z którym łączy się cBot.
-- **Parameter set** (opcjonalnie) — wybierz istniejący zestaw lub pozostaw pusty, aby uruchomić z **domyślnymi wartościami parametrów** cBota. Przycisk **+** obok selektora tworzy nowy zestaw parametrów bezpośrednio w miejscu (patrz poniżej) i go wybiera.
-- **Symbol / Timeframe** domyślnie do `EURUSD` / `h1` i można je zmienić; **Cancel** lub **Run**.
+- **Trading account** (required) — the cTrader account the cBot connects to.
+- **Parameter set** (optional) — pick an existing set, or leave it empty to run with the cBot's
+  **default parameter values**. A **+** button next to the selector creates a new parameter set
+  inline (see below) and selects it.
+- **Symbol / Timeframe** default to `EURUSD` / `h1` and can be changed; **Cancel** or **Run**.
 
-Po **Run** edytor zapisuje + buduje bieżące źródło, uruchamia instancję na wybranym koncie z wybranymi parametrami, a następnie śledzi dzienniki kontenera na żywo. (Strumień dziennika przekazuje ciasteczko auth zalogowanego użytkownika do centrum SignalR `/hubs/logs`, dzięki czemu połączenie się powiedzie zamiast się nie powieść z `Invalid negotiation response received`.)
+On **Run** the editor saves + builds the current source, starts the instance on the chosen account
+with the chosen parameters, then tails the live container logs. (The log stream forwards the
+signed-in user's auth cookie to the `/hubs/logs` SignalR hub, so it connects instead of failing with
+`Invalid negotiation response received`.)
 
-## Zestawy parametrów
+## Parameter sets
 
-**Zestaw parametrów** to nazwana, wielokrotnie używana seria zastąpień parametrów cBota przechowywana jako płaski obiekt JSON mapujący każdą nazwę parametru na wartość skalarną, np. `{"Period": 14, "Label": "trend"}`. W czasie uruchomienia/testu jest zamieniany w plik cTrader `params.cbotset` (`{ "Parameters": { … } }`). Możesz utworzyć/edytować zestaw jako surowy JSON z dialogu **Parameter sets** cBota lub bezpośrednio z dialogu Run.
+A **parameter set** is a named, reusable set of cBot parameter overrides stored as a flat JSON
+object mapping each parameter name to a scalar value, e.g. `{"Period": 14, "Label": "trend"}`. At
+run/backtest time it is turned into the cTrader `params.cbotset` file
+(`{ "Parameters": { … } }`). You can create/edit a set as raw JSON from the cBot's **Parameter
+sets** dialog or inline from the Run dialog.
 
-Każdy zestaw parametrów **należy do cBota**: dialog New Parameter Set wyświetla listę wszystkich twoich cBotów i musisz **wybrać jeden** — utworzenie jest blokowane do czasu wybrania cBota. **Nazwa zestawu jest unikalna na cBota**: tworzenie lub zmiana nazwy zestawu na nazwę, którą już używa inny zestaw tego samego cBota, jest odrzucane (wyraźny błąd w dialogu, `409 Conflict` w API). Ta sama nazwa może być ponownie użyta na **innym** cBocie.
+Every parameter set **belongs to a cBot**: the New Parameter Set dialog lists all your cBots and you
+**must pick one** — creation is blocked until a cBot is selected. A set's **name is unique per cBot**:
+creating or renaming a set to a name another set of the same cBot already uses is rejected (a clear
+error in the dialog, `409 Conflict` at the API). The same name may be reused on a **different** cBot.
 
-JSON jest **zatwierdzany** przy zapisywaniu: musi być pojedynczym płaskim obiektem, którego wartości są wszystkie skalarne (string / number / bool). Root nie-obiektu, tablica, zagnieżdżony obiekt, wartość `null` lub nieprawidłowy JSON jest odrzucany (wyraźny błąd w dialogu, `400 Bad Request` w API). Pusty obiekt `{}` jest dozwolony i oznacza „brak zastąpień".
+The JSON is **validated** on save: it must be a single flat object whose values are all scalars
+(string / number / bool). A non-object root, an array, a nested object, a `null` value, or malformed
+JSON is rejected (a clear error in the dialog, `400 Bad Request` at the API). An empty object `{}`
+is allowed and means "no overrides".
 
-## Notatki dotyczące wiersza poleceń cTrader Console
+## cTrader Console CLI notes
 
-Testy wymagają `--data-mode` (domyślnie `m1`), daty jako `dd/MM/yyyy HH:mm`, i JSON `params.cbotset` jako argument pozycyjny; `run` odrzuca `--data-dir` (tylko dla testu). Patrz `ContainerCommandHelpers`.
+Backtests need `--data-mode` (default `m1`), dates as `dd/MM/yyyy HH:mm`, and
+`params.cbotset` JSON positional arg; `run` reject `--data-dir` (backtest-only). See
+`ContainerCommandHelpers`.
 
-## Węzły i skala
+## Nodes & scale
 
-Pojemność wykonania skaluje się poprzez dodawanie agentów węzłów (samorejestracja + bicie serca). Patrz [odkrywanie węzłów](../operations/node-discovery.md) i [skalowanie](../deployment/scaling.md).
+Execution capacity scale by adding node agents (self-register + heartbeat). See
+[node discovery](../operations/node-discovery.md) and [scaling](../deployment/scaling.md).
+## A trading account is required
 
-## Wymagane jest konto handlowe
-
-Uruchomienie lub testowanie cBota wymaga konta handlowego cTrader, z którym się połączy. Dopóki nie dodasz go w sekcji **Trading accounts**, przyciski **Run New cBot** / **Backtest New cBot** są wyłączone (z podpowiedzią) i strona pokazuje monit łączący do konfiguracji konta — nie otrzymasz już surowego błędu `stream connect failed` z bota bez konta.
+Running or backtesting a cBot needs a cTrader trading account to connect to. Until you add one under
+**Trading accounts**, the **Run New cBot** / **Backtest New cBot** buttons are disabled (with a
+tooltip) and the page shows a prompt linking to account setup — you no longer hit a raw
+`stream connect failed` error from a bot with no account.

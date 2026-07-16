@@ -149,6 +149,9 @@
 
 @code {
     [Parameter] public Guid Id { get; set; }
+    // Optional lineage id from the list link — lets the page recover when the instance's id changed on a
+    // background TPH transition (a just-finished backtest) between the list loading and the click.
+    [Parameter, SupplyParameterFromQuery(Name = "lineage")] public Guid? Lineage { get; set; }
     private const string LogsElementId = "instance-detail-logs";
     private Guid _loadedId;
     private dynamic? _detail;
@@ -345,6 +348,14 @@
         dynamic? detail = null;
         try { detail = await Http.GetDynamicAsync($"/api/instances/{Id}"); }
         catch { detail = null; }
+        // The id may be stale (the instance transitioned to a new id in the background) — fall back to the
+        // lineage so a just-finished backtest resolves to its completed instance instead of "not found".
+        if (detail is null && Lineage is { } lin)
+        {
+            _lineageId = lin;
+            try { detail = await Http.GetDynamicAsync(CurrentUrl(lin)); }
+            catch { detail = null; }
+        }
         _loaded = true;
         if (detail is null) return;
         ApplyDetail(detail);

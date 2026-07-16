@@ -120,6 +120,29 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
             "the account selector must show the number, not a raw Guid");
     }
 
+    // Regression: opening a just-finished backtest from the list used a STALE id (the instance transitioned
+    // to a new id in the background), showing "instance not found". The list link carries the lineage id, so
+    // the detail page must recover to the current instance instead.
+    [Fact]
+    public async Task Detail_page_recovers_via_lineage_when_the_id_is_stale()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var (completedBacktestId, _) = await SeedAsync(page);
+
+        var detail = await (await page.APIRequest.GetAsync($"/api/instances/{completedBacktestId}")).TextAsync();
+        using var doc = JsonDocument.Parse(detail);
+        var lineage = doc.RootElement.GetProperty("lineageId").GetGuid();
+
+        // Navigate with a STALE (non-existent) id but the real lineage — the page must resolve the backtest.
+        await page.GotoAsync($"/instance/{Guid.NewGuid()}?lineage={lineage}",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        await Assertions.Expect(page.Locator("[data-testid=instance-detail-report-json]")).ToBeVisibleAsync(Slow);
+        (await page.Locator("[data-testid=instance-not-found]").IsVisibleAsync())
+            .Should().BeFalse("the lineage fallback must resolve the instance, not show 'not found'");
+    }
+
     // A completed backtest's detail page offers JSON/HTML report downloads; a run never does.
     [Fact]
     public async Task Backtest_detail_report_buttons_download_and_are_absent_for_a_run()

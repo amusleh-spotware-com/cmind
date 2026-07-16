@@ -49,6 +49,7 @@ public static class InstanceEndpoints
             var rows = instances.Select(i => new
             {
                 i.Id,
+                i.LineageId,
                 Kind = i.KindName,
                 Status = i.StatusName,
                 i.Symbol,

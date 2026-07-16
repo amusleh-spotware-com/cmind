@@ -19,7 +19,7 @@
         <MudTd DataLabel="">
             <MudTooltip Text="View instance">
                 <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" aria-label="View instance"
-                               OnClick="@(() => Open((Guid)context.id))" data-testid="instance-view" />
+                               OnClick="@(() => Open((Guid)context.id, (Guid)context.lineageId))" data-testid="instance-view" />
             </MudTooltip>
             <MudTooltip Text="@((bool)context.hasLogs ? "Download console logs" : "No logs available")">
                 <MudIconButton Icon="@Icons.Material.Filled.Download" Size="Size.Small" aria-label="Download console logs"
@@ -117,7 +117,9 @@
         _ => Color.Info
     };
 
-    private void Open(Guid id) => Nav.NavigateTo($"/instance/{id}");
+    // Carry the lineage id so the detail page can still resolve the instance if its id changed on a background
+    // TPH transition (e.g. a backtest that just finished) between the list loading and the click.
+    private void Open(Guid id, Guid lineageId) => Nav.NavigateTo($"/instance/{id}?lineage={lineageId}");
 
     private async Task DownloadLogs(Guid id)
     {

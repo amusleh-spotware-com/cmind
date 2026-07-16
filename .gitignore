@@ -19,9 +19,12 @@ appsettings.Development.json
 node_modules/
 wwwroot/lib/
 publish/
-# Keep local Claude Code settings/skills out of git, but track shared project slash commands.
+# Keep local Claude Code settings/skills out of git, but track shared project slash commands + skills.
 .claude/*
 !.claude/commands/
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/translate-localization/
 .local-node/
 
 # Local test secrets (never commit)

@@ -151,7 +151,9 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
    `docusaurus.config.ts` i18n.locales / `Core.Constants.SupportedCultures`) in the **same commit** — a
    new or changed doc is not "done" until it exists in all languages. The parity gate
    `npm run i18n:check` (wired into `.github/workflows/docs.yml`) **fails the docs build** on any missing
-   translation. Never leave a locale stale; never merge an English-only doc.
+   translation. Never leave a locale stale; never merge an English-only doc. **ALWAYS load and use the
+   `translate-localization` skill** to produce the translations — it fans out one sub-agent per language
+   on the cheapest/fastest model at low effort; do not translate all locales inline.
 9. **Everything user-facing is localized (no exceptions, enforced).** No literal user-facing string in a
    `.razor`, endpoint, email, or notification — inject `IStringLocalizer<Ui>` and use `@L["key"]`; add
    the key to `tools/i18n/ui-translations.json` for **every** language in `Core.Constants.SupportedCultures`
@@ -159,7 +161,9 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
    formatting uses `CurrentCulture`; wire/parse stays `CultureInfo.InvariantCulture`. RTL must render
    (`<html dir>` + MudBlazor `MudRTLProvider`). The build **fails** on a hard-coded string
    (`NoHardcodedUiTextTests`) or a missing/blank translation (`ResourceParityTests`) — a new feature is
-   born fully localized or it does not merge. → `src/Web/CLAUDE.md` + `website/docs/features/localization.md`.
+   born fully localized or it does not merge. **ALWAYS load and use the `translate-localization` skill** to
+   add every language's key — it fans out one sub-agent per language on the cheapest/fastest model at low
+   effort; do not translate all locales inline. → `src/Web/CLAUDE.md` + `website/docs/features/localization.md`.
 10. **White-label options are owner-tunable and always in sync.** Every white-label option — a property on
     a white-label options record (`BrandingOptions`, `FeaturesOptions`, `RegistrationOptions` + nested,
     `AccountsOptions`, `EmailOptions`, or the white-label subset of `OpenApiOptions`/`AiOptions`/

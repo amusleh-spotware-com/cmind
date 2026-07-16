@@ -25,6 +25,7 @@ publish/
 !.claude/skills/
 .claude/skills/*
 !.claude/skills/translate-localization/
+!.claude/skills/release/
 .local-node/
 
 # Local test secrets (never commit)

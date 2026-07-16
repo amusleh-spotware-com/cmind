@@ -29,10 +29,12 @@ public sealed class AiFeatureRealUserTests(AiLocalFixture app)
         await page.GotoAsync("/copy-trading", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
+        // "AI suggest" opens the dialog; type the risk profile in its large text box, then "Suggest".
+        await page.GetByTestId("ai-suggest").ClickAsync();
         await page.GetByTestId("ai-risk-profile").FillAsync("conservative");
 
         var recommendation = page.Locator("[data-testid=ai-recommendation]");
-        await page.ClickUntilVisibleAsync("[data-testid=ai-suggest]", recommendation);
+        await page.ClickUntilVisibleAsync("[data-testid=ai-suggest-confirm]", recommendation);
 
         await Assertions.Expect(recommendation).ToBeVisibleAsync(Slow);
         var text = await recommendation.InnerTextAsync();

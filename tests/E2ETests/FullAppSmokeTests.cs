@@ -23,7 +23,7 @@ public sealed class FullAppSmokeTests(AppFixture app, ITestOutputHelper output)
     // against the button's text; anything not on this list is left untouched so we never fire an action that
     // mutates state (Delete/Stop/Start/Run/Save/Create/Submit/Reset/Rotate/Revoke/Logout live off-list).
     private static readonly Regex DialogOpeners = new(
-        @"\b(new|add|create|edit|customize|configure|manage|filter|invite|details?|view|open|change|set up|setup|generate|connect|link|backtest new|run new)\b",
+        @"\b(new|add|create|edit|customize|configure|manage|filter|invite|details?|view|open|change|set up|setup|generate|connect|link|backtest new|run new|suggest)\b",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     // Text that means "this button acts / mutates" — never click these, even if they slip past the opener list.

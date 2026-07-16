@@ -14,20 +14,40 @@
     <MudText Typo="Typo.h5">Copy Trading</MudText>
     <HelpTip Text="Mirror a source (master) account's trades onto one or more destination (slave) accounts. Each destination controls its own sizing, direction, symbols and order handling. Start a profile to begin copying. Click a profile to manage its destinations." />
     <MudSpacer />
-    <MudTextField @bind-Value="_riskProfile" Label="Risk profile" Margin="Margin.Dense"
-                  Style="max-width:180px" data-testid="ai-risk-profile" />
     <MudButton Color="Color.Secondary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.AutoAwesome"
-               OnClick="RecommendSettings" data-testid="ai-suggest">AI suggest</MudButton>
+               OnClick="OpenRecommendDialog" data-testid="ai-suggest">AI suggest</MudButton>
     <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
                OnClick="OpenNewProfile">New Profile</MudButton>
 </MudStack>
 
-@if (!string.IsNullOrWhiteSpace(_recommendation))
-{
-    <MudAlert Severity="Severity.Info" Class="mb-3" data-testid="ai-recommendation">
-        <pre style="white-space:pre-wrap;margin:0">@_recommendation</pre>
-    </MudAlert>
-}
+<MudDialog @bind-Visible="_recommendOpen" Options="_recommendDialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Size="Size.Small" Class="mr-2" />AI copy-profile suggestion
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_riskProfile" Lines="5" Variant="Variant.Outlined" AutoGrow="true"
+                      Label="Your risk profile"
+                      Placeholder="Describe your risk appetite and the source (master) strategy — e.g. 'Conservative, low drawdown, majors only, mirror at half the master's size, always copy stop-loss'. The AI suggests safe copy-trading destination settings: sizing mode, drawdown & daily-loss limits, direction, and SL/TP copying."
+                      data-testid="ai-risk-profile" />
+        @if (_recommending)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mt-3" />
+        }
+        @if (!string.IsNullOrWhiteSpace(_recommendation))
+        {
+            <MudAlert Severity="Severity.Info" Class="mt-3" data-testid="ai-recommendation">
+                <pre style="white-space:pre-wrap;margin:0">@_recommendation</pre>
+            </MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseRecommendDialog" data-testid="ai-suggest-cancel">Cancel</MudButton>
+        <MudButton Color="Color.Secondary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AutoAwesome"
+                   OnClick="RecommendSettings" Disabled="_recommending" data-testid="ai-suggest-confirm">Suggest</MudButton>
+    </DialogActions>
+</MudDialog>
 
 <MudTable Items="_profiles" Dense="true" Breakpoint="Breakpoint.Sm" OnRowClick="@((TableRowClickEventArgs<dynamic> e) => OpenDetail((Guid)e.Item!.id, (string)e.Item!.name))">
     <HeaderContent>
@@ -61,8 +81,21 @@
     private dynamic[] _profiles = [];
     private dynamic[] _accounts = [];
 
-    private string _riskProfile = "balanced";
+    private string _riskProfile = "";
     private string _recommendation = "";
+    private bool _recommendOpen;
+    private bool _recommending;
+
+    private static readonly DialogOptions _recommendDialogOptions =
+        new() { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+
+    private void OpenRecommendDialog()
+    {
+        _recommendation = "";
+        _recommendOpen = true;
+    }
+
+    private void CloseRecommendDialog() => _recommendOpen = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -176,11 +209,20 @@
 
     private async Task RecommendSettings()
     {
-        var r = await Http.PostAsJsonAsync("/api/ai/recommend-copy-profile",
-            new { RiskProfile = _riskProfile, SourceDescription = "cTrader copy-trading master account" });
-        if (!r.IsSuccessStatusCode) { Snack.Add("AI request failed", Severity.Error); return; }
-        var result = await r.Content.ReadFromJsonAsync<AiResultDto>();
-        _recommendation = result is { success: true } ? result.text : result?.error ?? "AI unavailable";
+        _recommending = true;
+        _recommendation = "";
+        try
+        {
+            var r = await Http.PostAsJsonAsync("/api/ai/recommend-copy-profile",
+                new { RiskProfile = _riskProfile, SourceDescription = "cTrader copy-trading master account" });
+            if (!r.IsSuccessStatusCode) { Snack.Add("AI request failed", Severity.Error); return; }
+            var result = await r.Content.ReadFromJsonAsync<AiResultDto>();
+            _recommendation = result is { success: true } ? result.text : result?.error ?? "AI unavailable";
+        }
+        finally
+        {
+            _recommending = false;
+        }
     }
 
     private sealed record AiResultDto(bool success, string text, string? error);

@@ -15,10 +15,15 @@ public sealed class AiCopyRecommendTests(AppFixture app)
         await page.GotoAsync("/copy-trading");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        // AI is not configured in the test environment, so the recommender degrades to a graceful message
-        // that is rendered in the recommendation alert — proving the UI -> endpoint -> AI path is wired.
+        // "AI suggest" opens the recommendation dialog; the recommendation renders inside it after the
+        // "Suggest" action. AI is not configured in the test environment, so the recommender degrades to a
+        // graceful message rendered in the dialog's recommendation alert — proving the UI -> endpoint -> AI
+        // path is wired.
+        await page.GetByTestId("ai-suggest").ClickAsync();
+        await Assertions.Expect(page.GetByTestId("ai-risk-profile")).ToBeVisibleAsync(Slow);
+
         var recommendation = page.Locator("[data-testid=ai-recommendation]");
-        await page.ClickUntilVisibleAsync("[data-testid=ai-suggest]", recommendation);
+        await page.ClickUntilVisibleAsync("[data-testid=ai-suggest-confirm]", recommendation);
 
         await Assertions.Expect(recommendation).ToBeVisibleAsync(Slow);
         await Assertions.Expect(recommendation).ToContainTextAsync("not configured");

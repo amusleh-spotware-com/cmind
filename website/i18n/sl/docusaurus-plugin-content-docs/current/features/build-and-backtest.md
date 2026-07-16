@@ -1,138 +1,80 @@
 ---
-description: "Gradnja, pogon, backtesting cTrader cBotov (C# in Python, oboje .NET) iz brskalnika Monaco IDE, pogon na uradni sliki ghcr.io/spotware/ctrader-console."
+description: "Gradnja, zagon in backtesting cTrader cBotov (C# in Python, oba .NET) iz brskalnika Monaco IDE, zagon na uradenem ghcr.io/spotware/ctrader-console sliki."
 ---
 
-# Gradnja in backtesting cBotov
+# Build & backtest cBots
 
-Gradnja, pogon, backtesting cTrader cBotov (C# **in** Python, oboje .NET) iz brskalnika Monaco
-IDE, pogon na uradni sliki `ghcr.io/spotware/ctrader-console`.
+Gradnja, zagon in backtesting cTrader cBotov (C# **in** Python, oba .NET) iz brskalnika Monaco IDE, zagon na uradenem `ghcr.io/spotware/ctrader-console` sliki.
 
-## Gradnja
+## Build
 
-- **Builder** stran je domačin Monaco urejevalnika; `CBotBuilder` kompajlira projekt z
-  `dotnet build` **v začasnem kontejnerju** (`AppOptions.BuildImage`, delovni imenik pripet
-  na `/work`), zato se nedovoljenemu uporabnikovemu MSBuild-u ni mogoče dostopati do gostitelja. NuGet obnovljeno predpomnjenja
-  preko gradov preko skupne glasnosti. Spletni gostitelj potrebuje dostop do Docker vtičnice.
-- Začetne predloge C# + Python živijo v `src/Nodes/Builder/Templates/`.
+- **Builder** stran gosti Monaco urejevalnik; `CBotBuilder` prevede projekt z `dotnet build` **v enkratnem kontejnerju** (`AppOptions.BuildImage`, delovni direktorij pritrjen na `/work`), zato nezaupljivi MSBuild cilji uporabnika ne dosežejo gostitelja. NuGet obnovljeni predpomnilnik je deljen med gradnjami preko skupne prostornine. Spletni gostitelj potrebuje dostop do Docker vtičnice.
+- Začetne predloge C# in Python živijo v `src/Nodes/Builder/Templates/`.
 
-## Pogon in backtesting
+## Run & backtest
 
-- **Instances** = TPH hierarhija stanja (`Run`/`Backtest` × `Pending`/`Scheduled`/`Starting`/
-  `Running`/`Stopping`/`Stopped`/`Failed`). Prehod zamenja entiteto (sprememba id),
-  id kontejnerja prenesenega.
-- `NodeScheduler` izbere najmanj obremenjeno upravičeno vozlišče; `ContainerDispatcherFactory` usmeri na
-  oddaljeno vozlišče HTTP agenta ali lokalni Docker dispečer.
-- Polniki zaključka usklajijo izhojene kontejnerje (kontejnerji backtestiranja se samodejavno izstopijo prek
-  `--exit-on-stop`); poročilo prisotno → zaključeno (shrani `ReportJson`), manjka → ni uspelo.
-- Živi dnevniki kontejnerja se pretakajo do brskalnika prek SignalR; krivulje kapitala backtestiranja analizirane iz
-  poročila + prikazane v grafu.
+- **Instances** = TPH hierarhija stanj (`Run`/`Backtest` × `Pending`/`Scheduled`/`Starting`/`Running`/`Stopping`/`Stopped`/`Failed`). Prehod zamenja entiteto (sprememba ID-ja), ID kontejnerja je prenesen.
+- `NodeScheduler` izbere najmanj obremenjeno primerno vozlišče; `ContainerDispatcherFactory` usmeri na oddaljeni HTTP agent vozlišča ali lokalni Docker razpošiljalnik.
+- Zaključni pollers uskladi izstopljene kontejnerje (backtesting kontejnerji samodejna izstopajo prek `--exit-on-stop`); poročilo prisotno → zaključeno (shranjeni `ReportJson`), manjkajoče → neuspešno.
+- Živi dnevniki kontejnerja se pretakajo v brskalnik prek SignalR; backtesting krivulje kapitala so razčlenjene iz poročila in narisane.
 
-## Podatki o trgu backtestiranja so predpomninjeni po računu
+## Backtest market data is cached per account
 
-cTrader Console prenese zgodovinske podatke o kljukah/stolpcih v svoj `--data-dir`. Ta imenik je
-**stabilna, trajna predpomnilnik ključnega računa za trgovanje** (njegove številke računa) — pripet
-od disketa vozlišča na njegovi poti lastnega kontejnerja (`/mnt/data`), **ločeno, ugniježđeno priklapljanje**
-od vsakega delovnega imenika. Torej je vsak backtesting na istem računu **ponovno uporabi** že prejete podatke
-namesto ponovno prenesenih podatkov pri vsakem teku. (Prej je
-podatkovni imenik živel pod delovnim imenikom na instanco, katerega id se spremeni z vsakim tekom, kar je prisililo novo
-prenos ob vsakem backtestiranju.) Efemerni delovni imenik na instanco še vedno drži algo, parametre, geslo
-in poročilo; skupna predpomnilnik podatkov se šteje v uporabi backtestiranja vozlišča in se očisti s
-akcijo čiščenja vozlišča.
+Konzola cTrader prenese zgodovinske podatke o kljukah/brah v svoj `--data-dir`. Ta direktorij je **stabilen, trajni predpomnilnik ključen na trgovinski račun** (njegovega števila računa) — pritrjen s diska vozlišča na njegov lastni direktorij kontejnerja (`/mnt/data`), **ločen, nevgnježdeni priklop** od direktorija dela na instanco. Zato vsak backtest na istem računu **ponovno uporabi** že prenešene podatke namesto da bi jih znova prejel. (Prej je direktorij podatkov živel pod direktorjem dela na instanco, katerega ID se spremeni pri vsakem zagonu, kar je prisilo sveži prenos pri vsakem backtestiranju.) Ephemeralni direktorij dela za instanco še vedno drži algoritem, parametre, geslo in poročilo; skupni predpomnilnik podatkov se šteje v porabi backtesting-podatkov vozlišča in ga očisti dejanje čiščenja vozlišča.
 
-## Nastavitve backtestiranja
+## Backtest settings
 
-Dialog **Backtest** izpostavlja vsako nastavitev, ki jo sprejema CLI backtestiranja cTrader Console, zato nikoli
-ne moraš se dotakniti ukazne vrstice:
+Dialog **Backtest** razkrije vsako nastavitev, ki jo sprejme CLI za backtesting konzole cTrader, zato nikoli ne boste morali dotikati ukazne vrstice:
 
 - **From / To** — okno backtestiranja (`--start` / `--end`).
-- **Data mode** — `m1` (palice v 1-minutnem intervalu) ali `tick` (`--data-mode`).
-- **Starting balance** — privzeto na `10000` (`--balance`). **0 ravnotežje ne naredi nobenih trgov in naredi
-  cTrader izda prazno poročilo, ki ga nato sesuje** ("Message expected"), zato je vedno poslano ne-ničelno ravnotežje.
-- **Commission** in **Spread** (`--commission` / `--spread`, razporeditev v pipa).
-- **Advanced options** — polje s prosto obliko `name=value` na vrstico za katero koli drugo nastavitev backtestiranja cTrader
-  podpira (npr. `applyCommissionAutomatically=true`); vsaka vrstica postane `--name value` CLI argument.
+- **Data mode** — ena od treh načinov cTrader (`--data-mode`): **Tick data** (`tick`, natančno), **m1 bars** (`m1`, hitro) ali **Open prices only** (`open`, najhitreje).
+- **Starting balance** — privzeto `10000` (`--balance`). **Stanje 0 ne zloži nobenega trgovanja in naredi, da cTrader izda prazno poročilo, ki ga nato sruši** ("Message expected"), zato se vedno pošlje stanje, ki ni nič.
+- **Commission** in **Spread** — `--commission` / `--spread` (razpored v pipih).
+- **Data file** (opcijsko) — pot na strani vozlišča do zgodovinskega podatkovnega datoteke (`--data-file`); pustite prazno, da uporabite prenešene/predpomnilniške podatke.
+- **Expose environment variables** — preklop, ki prosledi spremenljivkam okolja gostitelja cBotu (zastavica `--environment-variables`).
 
-## Stran s podrobnostmi instance
+## Instance detail page
 
-Odpiranje instance (`/instance/{id}`) prikaže njen živih status, dnevnike in — za backtesting — ploščo
-krivulje kapitala. **Naslovna vrstica brskalnika** odraža specifično instanco (**cBot ime · vrsta · simbol**, npr.
-`TrendBot · Backtest · EURUSD`) tako da so zavihek živega teka in zavihek backtestiranja razlikovati na prvi pogled.
-Tek in backtesting istega cBota se sledita kot jasni **liniji** (stabilen id linaje prenesenega
-prek prehodov stanja), tako da stran sledi točno eni instanci in nikoli ne meša podatkov teka s podaci
-backtestiranja.
+Odpiranje instance (`/instance/{id}`) prikaže njeno živega stanja, dnevnike in — za backtest — krivuljo kapitala. **Naslov zavihka brskalnika** odraža specifično instanco (**ime cBota · vrsta · simbol**, npr. `TrendBot · Backtest · EURUSD`), zato sta zavihek živega teka in zavihek backtestiranja razlikljiva na prvi pogled. Tek in backtest istega cBota se spremljata kot ločeni **linijah** (stabilen ID linije, prenos prek prehodov stanja), zato stran sledi točno eni instanci in nikoli ne meša podatkov teka s podatki backtestiranja.
 
-## Kontrole v življenjskem ciklu instance
+## Instance lifecycle controls
 
-Vsaka vrstica instance (in njena stran s podrobnostmi) ima kontrole, ki so pravilne za stanje. **Aktivna** instanca prikaže
-**Stop**; **končna** (`Stopped` / `Completed` / `Failed`) prikaže **Start (▶)** za ponovno zagon s
-istim cBotom, računom, simbolom, časovnim okvirom, setom parametrov in sliko (tek se ponovno zažene kot tek, backtesting
-kot backtesting). Klik Stop prikaže obvestilo "Stopping…" in izključi ikono dokler se ne razreši, in novo ustvarjen tek se pojavi v seznamu takoj — brez osvežitve strani.
+Vsaka vrstica instance (in njena detaljska stran) ima nadzornike, prilagojene stanju. **Aktivna** instanca prikaže **Stop**; **terminalna** (Stopped / Completed / Failed) prikaže **Start (▶)** za ponovni zagon z istim cBotom, računom, simbolom, časovnim okvirom, nizom parametrov in sliko (tek se ponovno zažene kot tek, backtest kot backtest). Klik na Stop prikaže obvestilo "Stopping…" in onemogoči ikono, dokler se ne razreši, v seznamu pa se takoj pojavi novo ustvarjena tekurija — brez osvežitve strani.
 
-Dnevniki konzole so **trajni ko se instanca zaključi** — za tek (ob Stop) in za
-**backtesting** (ob zaključku) — zato dnevniki zadnjega teka ostanejo vidni na strani s podrobnostmi in,
-prek orodni vrstice dnevnika, **kopirani v odložišče** (ikona Kopiran dnevnika) ali **preneseni** (ikona Preneseni dnevnika)
-tudi ko je kontejner pošen. Oboje deluje na popolnem dnevniku konzole instance, ne samo na
-vidni rep.
+Dnevniki konzole so **trajno shranjeni, ko se instanca zaključi** — za tek (ob Stop) in za **backtest** (ob zaključku) — zato ostanejo dnevniki zadnjega zagona ogledljivi na detaljski strani in, prek orodne vrstice dnevnika, **kopirani v odložišče** (ikona Copy logs) ali **prejeti** (ikona Download logs) tudi po tem, ko je kontejner izbris. Oba delujeta na polnem dnevniku konzole instance, ne samo na zaslonski repu.
 
-Naloženega `.algo` nikoli ni bilo zgrajeno tukaj, zato je njegov stolpec **Last Build** na strani cBotov
-prazen (prikazuje čas gradnje samo za cBote, ki jih gradite v brskalniki).
+Naložena `.algo` nikoli ni bila zgradjena tukaj, zato je njen stolpec **Last Build** na strani cBots prazna (prikaže čas gradnje samo za cBote, ki jih gradite v brskalniču).
 
-## Urejanje in ponovno zaganjanje ustavljene instance
+## Edit & re-run a stopped instance
 
-**Ustavljena** instanca (tek ali backtesting) ima kontrolo **Edit** — ikono v njenem vrsti v seznamu **in**
-poleg Start/Stop na njeni strani s podrobnostmi — ki odpre dialog **prepolnjen** s svojo trenutno konfiguracijo.
-Lahko spremenite **račun za trgovanje, simbol, časovni okvir, nabor parametrov in oznako slike** (in za
-backtesting, **okno in vse nastavitve backtestiranja** zgoraj), nato **Save & start** ponovno zažene s
-novimi nastavitvami (zamenja ustavljeno instanco). Kontrola je **onemogočena medtem ko je instanca aktivna** —
-samo ustavljeno instanco je mogoče urejati.
+**Zaustavljena** instanca (tek ali backtest) ima nadzor **Edit** — ikono na njeni vrstici v seznamu **in** ob Start/Stop na njen detaljski strani — ki odpre dialog **predhodno izpolnjen** s trenutno konfiguracijo. Spremenite **trgovinski račun, simbol, časovni okvir, niz parametrov in oznako slike** (in za backtest, **okno in vse nastavitve backtestiranja** zgoraj), nato **Save & start** ga znova zažene z novimi nastavitvami (zamenja zaustavljeno instanco). Nadzor je **onemogočen, medtem ko je instanca aktivna** — samo zaustavljena instanca je lahko urejena.
 
-## Pogon iz urejevalnika kode
+## Run from the code editor
 
-Klik **Run** v urejevalniку kode odpre dialog namesto da izstrelite slepo, tvrdo programirano tekmo:
+Klik na **Run** v urejevalniku kode odpre dialog namesto da bi izvedel slepo, trdno kodirana tekurija:
 
-- **Trading account** (zahtevano) — račun cTrader, s katerim se cBot povezuje.
-- **Parameter set** (opcijsko) — izbrite obstoječi set ali ga pustite praznega za pogon z cBotom
-  **privzete vrednosti parametrov**. Gumb **+** poleg izbirnika ustvari nov nabor parametrov
-  vgrajen (poglejte spodaj) in ga izbere.
-- **Symbol / Timeframe** privzeto `EURUSD` / `h1` in se lahko spremenita; **Cancel** ali **Run**.
+- **Trading account** (obvezno) — račun cTrader, na katerega se cBot poveže.
+- **Parameter set** (opcijsko) — izberite obstoječe, ali pustite prazno, da teče z **privzetimi vrednostmi parametrov** cBota. Gumb **+** ob izbirniku ustvari nov niz parametrov vstavljen (glej spodaj) in ga izbere.
+- **Symbol / Timeframe** privzeto na `EURUSD` / `h1` in je mogoče spremeniti; **Cancel** ali **Run**.
 
-Pri **Run** urejevalnik shrani + kompajlira trenutni vir, zažene instanco na izbranem računu
-s izbranimi parametri, nato sledira živim dnevnikom kontejnerja. (Tok dnevnika posreduje varnostni piskotok
-prijavljenega uporabnika pijavici `/hubs/logs` SignalR, tako da se poveže namesto da ne uspe z
-`Invalid negotiation response received`.)
+Pri **Run** urejevalnik shrani + zgradi trenutni vir, zažene instanco na izbranem računu z izbranimi parametri, nato slednje žive dnevnike kontejnerja. (Tok dnevnika presledi piskavec avtentičnosti prijavljenega uporabnika na vozlišče SignalR `/hubs/logs`, zato se poveže namesto da bi propadel s `Invalid negotiation response received`.)
 
-## Nabori parametrov
+## Parameter sets
 
-**Parameter set** je imenovan, ponovno uporabljiv set prepisa parametra cBota, shranjen kot raven JSON
-predmet, ki vsak naziv parametra preslika na skalarno vrednost, npr. `{"Period": 14, "Label": "trend"}`. Pri
-teku/backtestiranju se pretvori v datoteko cTrader `params.cbotset`
-(`{ "Parameters": { … } }`). Lahko ustvarite/uredite nabor kot surov JSON iz dialoga cBota **Parameter
-sets** ali vgrajen iz dialoga Run.
+**Parameter set** je imenovan, ponovno uporabljiv niz nadomestkov parametrov cBota, shranjen kot ravna predmeta JSON, ki preslikovano vsak parameter ime na skalarno vrednost, npr. `{"Period": 14, "Label": "trend"}`. Med tekurijo/backtestiranjem je pretvorjen v datoteke cTrader `params.cbotset` (`{ "Parameters": { … } }`). Niz lahko ustvarite/uredite kot surovi JSON iz dialoga **Parameter sets** cBota ali vstavljeno iz dialoga Run.
 
-Vsak nabor parametrov **pripada cBoту**: dialog New Parameter Set navede vse vaše cBote in vi
-**morate izbrati enega** — ustvarjanje je blokirano, dokler ni izbran cBot. **Ime nabora je edinstveno na cBot**:
-ustvarjanje ali preimenovanje nabora v ime, ki ga že uporablja drug nabor istega cBota, je zavrnjeno (jasna
-napaka v dialogu, `409 Conflict` pri API). Isto ime se lahko ponovno uporabi na **drugem** cBoту.
+Vsak niz parametrov **pripada cBotu**: dialog New Parameter Set prikazuje vse vaše cBote in **mora izbrati enega** — ustvarjanje je blokirano, dokler ni izbran cBot. **Ime niza je edinstveno na cBot**: ustvarjanje ali preimenovanje niza na ime, ki je že uporabljal drugi niz istega cBota, je zavrnjeno (jasna napaka v dialogo, `409 Conflict` pri API-ju). Isto ime je mogoče ponovno uporabiti na **drugem** cBotu.
 
-JSON je **preverjen** ob shranjevanju: mora biti en sam raven predmet, katerega vrednosti so vse skalarne
-(niz / število / bool). Koren, ki ni predmet, niz, ugniježđeni predmet, vrednost `null` ali slabo oblikovan
-JSON je zavrnjen (jasna napaka v dialogu, `400 Bad Request` pri API). Prazen predmet `{}`
-je dovoljen in pomeni "brez prepisa".
+JSON je **preverjen** ob shranjevanju: mora biti en sam raven predmet, katerega vrednosti so vse skalarne (niz / številka / bool). Ne-predmeten koren, niz, gnježdeni predmet, vrednost `null` ali malformed JSON je zavrnjen (jasna napaka v dialogo, `400 Bad Request` pri API-ju). Prazen predmet `{}` je dovoljen in pomeni "brez nadomestkov".
 
-## Opombe CLI cTrader Console
+## cTrader Console CLI notes
 
-Backtesti potrebujejo `--data-mode` (privzeto `m1`), datume kot `dd/MM/yyyy HH:mm`, in
-`params.cbotset` JSON argument na položaju; `run` zavrne `--data-dir` (samo backtesting). Poglejte
-`ContainerCommandHelpers`.
+Backtestiranje potrebuje `--data-mode` (privzeto `m1`), datume kot `dd/MM/yyyy HH:mm` in `params.cbotset` JSON pozicijski argument; `run` zavrne `--data-dir` (samo backtesting). Glejte `ContainerCommandHelpers`.
 
-## Vozlišča in lestvica
+## Nodes & scale
 
-Zmogljivost izvedbe se povečuje z dodajanjem agentov vozlišča (samoregistracija + utrip). Oglejte si
-[odkrivanje vozlišča](../operations/node-discovery.md) in [skaliranje](../deployment/scaling.md).
+Kapaciteta izvedbe se razširi z dodajanjem vozlišč agentov (samodejna registracija + srčni utrip). Glejte [node discovery](../operations/node-discovery.md) in [scaling](../deployment/scaling.md).
 
-## Zahtevam se račun za trgovanje
+## A trading account is required
 
-Pogon ali backtesting cBota potrebuje račun za trgovanje cTrader, se poveže. Dokler ne dodate enega pod
-**Trading accounts**, sta gumba **Run New cBot** / **Backtest New cBot** onemogočena (z
-napovedjo) in stran prikaže poziv, ki se povezuje do nastavitve računa — ne boste več prejeli surove
-napake `stream connect failed` od bota brez računa.
+Zagon ali backtesting cBota potrebuje trgovinski račun cTrader za povezavo. Dokler ne dodate enega pod **Trading accounts**, sta gumba **Run New cBot** / **Backtest New cBot** onemogočena (s posameznim namigom) in stran prikazuje poziv, ki se veže na nastavitev računa — ne naletite več na suro napako `stream connect failed` iz bota brez računa.

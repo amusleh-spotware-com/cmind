@@ -39,6 +39,20 @@ download every backtest.) The ephemeral per-instance work dir still holds the al
 and report; the shared data cache is counted in a node's backtest-data usage and cleared by the
 node-clean action.
 
+## Backtest settings
+
+The **Backtest** dialog exposes every setting the cTrader Console backtest CLI accepts, so you never
+have to touch a command line:
+
+- **From / To** — the backtest window (`--start` / `--end`).
+- **Data mode** — `m1` (1-minute bars) or `tick` (`--data-mode`).
+- **Starting balance** — defaults to `10000` (`--balance`). A **0 balance places no trades and makes
+  cTrader emit an empty report it then crashes on** ("Message expected"), so a non-zero balance is
+  always sent.
+- **Commission** and **Spread** (`--commission` / `--spread`, spread in pips).
+- **Advanced options** — a free-form `name=value` per line box for any other backtest option cTrader
+  supports (e.g. `applyCommissionAutomatically=true`); each line becomes a `--name value` CLI argument.
+
 ## Instance detail page
 
 Opening an instance (`/instance/{id}`) shows its live status, logs and — for a backtest — the equity
@@ -64,6 +78,15 @@ on-screen tail.
 
 An **uploaded** `.algo` was never built here, so its **Last Build** column on the cBots page is left
 blank (it shows a build time only for cBots you build in the browser).
+
+## Edit & re-run a stopped instance
+
+A **stopped** instance (run or backtest) has an **Edit** control — an icon on its row in the list **and**
+beside Start/Stop on its detail page — that opens a dialog **prefilled** with its current configuration.
+You can change the **trading account, symbol, timeframe, parameter set and image tag** (and, for a
+backtest, the **window and all backtest settings** above), then **Save & start** re-launches it with the
+new settings (replacing the stopped instance). The control is **disabled while the instance is active** —
+only a stopped instance can be edited.
 
 ## Run from the code editor
 

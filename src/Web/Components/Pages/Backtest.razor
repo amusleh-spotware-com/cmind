@@ -52,15 +52,10 @@
         var res = await dlg.Result;
         if (res is null || res.Canceled) return;
         var data = (BacktestDialog.BacktestDialogResult)res.Data!;
-        var settings = System.Text.Json.JsonSerializer.Serialize(new
-        {
-            from = data.From?.ToString("yyyy-MM-dd"),
-            to = data.To?.ToString("yyyy-MM-dd")
-        });
         var r = await Http.PostAsJsonAsync("/api/instances/", new
         {
             data.CBotId, data.TradingAccountId, data.Symbol, data.Timeframe,
-            data.ParamSetId, DockerImageTag = data.Image, Type = "Backtest", BacktestSettingsJson = settings
+            data.ParamSetId, DockerImageTag = data.Image, Type = "Backtest", BacktestSettingsJson = data.SettingsJson
         });
         Snack.Add(r.IsSuccessStatusCode ? "Backtest queued" : "Failed",
             r.IsSuccessStatusCode ? Severity.Success : Severity.Error);

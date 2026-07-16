@@ -1,0 +1,166 @@
+@* Modal dialog for editing a STOPPED instance and re-launching it with the changed configuration.
+   Prefills from the instance's current config; returns the new instance id on confirm. *@
+@using System.Text.Json
+@using Web.Json
+@inject HttpClient Http
+@inject ISnackbar Snack
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(_isBacktest ? "Edit backtest" : "Edit run")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudSelect T="Guid?" @bind-Value="_acctId" Label="Trading account" Required="true"
+                       RequiredError="Trading account is required" Class="mb-2" data-testid="edit-account">
+                @foreach (var a in _accts) { <MudSelectItem T="Guid?" Value="@((Guid?)(Guid)a.id)">@a.accountNumber - @a.broker</MudSelectItem> }
+            </MudSelect>
+            <MudTextField @bind-Value="_symbol" Label="Symbol" Required="true" RequiredError="Symbol is required" Class="mb-2" data-testid="edit-symbol" />
+            <MudTextField @bind-Value="_timeframe" Label="Timeframe" Required="true" RequiredError="Timeframe is required" Class="mb-2" data-testid="edit-timeframe" />
+            @if (_isBacktest)
+            {
+                <MudDatePicker @bind-Date="_from" Label="From" Class="mb-2" data-testid="edit-from" />
+                <MudDatePicker @bind-Date="_to" Label="To" Class="mb-2" data-testid="edit-to" />
+                <MudSelect T="string" @bind-Value="_dataMode" Label="Data mode" Class="mb-2" data-testid="edit-datamode">
+                    <MudSelectItem T="string" Value="@("m1")">m1 (1-minute bars)</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("tick")">tick</MudSelectItem>
+                </MudSelect>
+                <MudTextField @bind-Value="_balance" Label="Starting balance" Class="mb-2" data-testid="edit-balance" />
+                <MudTextField @bind-Value="_commission" Label="Commission" Class="mb-2" data-testid="edit-commission" />
+                <MudTextField @bind-Value="_spread" Label="Spread" Class="mb-2" data-testid="edit-spread" />
+                <MudTextField @bind-Value="_advanced" Label="Advanced options (one name=value per line)" Lines="3"
+                              Variant="Variant.Outlined" Class="mb-1" data-testid="edit-advanced"
+                              HelperText="Any other cTrader backtest option, e.g. applyCommissionAutomatically=true" />
+                @if (_dateError is not null)
+                {
+                    <MudText Color="Color.Error" Typo="Typo.caption" data-testid="edit-date-error">@_dateError</MudText>
+                }
+            }
+            <MudSelect T="Guid?" @bind-Value="_psId" Label="Parameter set" Clearable="true" Class="mb-2" data-testid="edit-paramset">
+                @foreach (var p in _paramsets) { <MudSelectItem T="Guid?" Value="@((Guid?)(Guid)p.id)">@p.name</MudSelectItem> }
+            </MudSelect>
+            <MudTextField @bind-Value="_image" Label="Image tag" data-testid="edit-image" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" data-testid="edit-submit">Save &amp; start</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public Guid InstanceId { get; set; }
+
+    private MudForm? _form;
+    private dynamic[] _accts = [], _paramsets = [];
+    private Guid? _acctId, _psId, _cbotId;
+    private bool _isBacktest;
+    private string _symbol = "EURUSD", _timeframe = "h1", _image = "latest";
+    private string _balance = BacktestSettings.DefaultBalance, _commission = "0", _spread = "0", _advanced = "";
+    private string _dataMode = BacktestSettings.DefaultDataMode;
+    private DateTime? _from, _to;
+    private string? _dateError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _accts = await LoadOrEmptyAsync("/api/accounts/");
+
+        dynamic? d = null;
+        try { d = await Http.GetDynamicAsync($"/api/instances/{InstanceId}"); }
+        catch { d = null; }
+        if (d is null) return;
+
+        _isBacktest = (string)d.kind == "Backtest";
+        _cbotId = d.cbotId is null ? null : (Guid)d.cbotId;
+        _acctId = d.tradingAccountId is null ? null : (Guid)d.tradingAccountId;
+        _psId = d.paramSetId is null ? null : (Guid)d.paramSetId;
+        _symbol = (string?)d.symbol ?? "EURUSD";
+        _timeframe = (string?)d.timeframe ?? "h1";
+        _image = string.IsNullOrWhiteSpace((string?)d.dockerImageTag) ? "latest" : (string)d.dockerImageTag;
+
+        if (_isBacktest) ParseBacktestSettings((string?)d.backtestSettingsJson);
+
+        if (_cbotId is { } cbotId)
+            _paramsets = await LoadOrEmptyAsync($"/api/paramsets?cbotId={cbotId}");
+    }
+
+    // Extracts the prior backtest window + settings so the dialog opens on the instance's real config. Any
+    // key that isn't a first-class field is preserved in the Advanced box so a round-trip never loses it.
+    private void ParseBacktestSettings(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return;
+        var advanced = new List<string>();
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            foreach (var p in doc.RootElement.EnumerateObject())
+            {
+                switch (p.Name.ToLowerInvariant())
+                {
+                    case "from": if (DateTime.TryParse(p.Value.GetString(), out var f)) _from = f; break;
+                    case "to": if (DateTime.TryParse(p.Value.GetString(), out var t)) _to = t; break;
+                    case "balance": _balance = ValueString(p.Value); break;
+                    case "commission": _commission = ValueString(p.Value); break;
+                    case "spread": _spread = ValueString(p.Value); break;
+                    case "datamode" or "data-mode": _dataMode = ValueString(p.Value); break;
+                    default: advanced.Add($"{p.Name}={ValueString(p.Value)}"); break;
+                }
+            }
+        }
+        catch { /* malformed prior settings — keep defaults */ }
+        _advanced = string.Join('\n', advanced);
+    }
+
+    private static string ValueString(JsonElement e) =>
+        e.ValueKind == JsonValueKind.String ? e.GetString() ?? "" : e.ToString();
+
+    private async Task<dynamic[]> LoadOrEmptyAsync(string url)
+    {
+        try { return await Http.GetDynamicArrayAsync(url); }
+        catch { return []; }
+    }
+
+    private async Task Submit()
+    {
+        if (_form is not null) await _form.Validate();
+        if (_acctId is null || string.IsNullOrWhiteSpace(_symbol) || string.IsNullOrWhiteSpace(_timeframe)) return;
+
+        string? backtestJson = null;
+        if (_isBacktest)
+        {
+            if (_from is null || _to is null || _from >= _to)
+            {
+                _dateError = "Pick a valid From date earlier than the To date.";
+                return;
+            }
+            _dateError = null;
+            backtestJson = BacktestSettings.ToJson(_from, _to, _dataMode, _balance, _commission, _spread, _advanced);
+        }
+
+        var body = new
+        {
+            TradingAccountId = _acctId,
+            Symbol = _symbol.Trim(),
+            Timeframe = _timeframe.Trim(),
+            ParamSetId = _psId,
+            DockerImageTag = string.IsNullOrWhiteSpace(_image) ? "latest" : _image.Trim(),
+            BacktestSettingsJson = backtestJson
+        };
+        var r = await Http.PostAsJsonAsync($"/api/instances/{InstanceId}/edit", body);
+        if (!r.IsSuccessStatusCode)
+        {
+            var reason = await r.Content.ReadAsStringAsync();
+            Snack.Add(string.IsNullOrWhiteSpace(reason) ? "Could not start the edited instance" : reason, Severity.Error);
+            return;
+        }
+        var d = await r.Content.ReadFromJsonAsync<EditResponse>();
+        Snack.Add("Instance started with the new settings", Severity.Success);
+        Dialog.Close(DialogResult.Ok(d?.Id ?? Guid.Empty));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    private sealed record EditResponse(Guid Id);
+}

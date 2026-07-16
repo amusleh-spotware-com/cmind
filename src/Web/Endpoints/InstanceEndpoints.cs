@@ -14,6 +14,12 @@ public record StartRequest(
     Guid? ParamSetId, string DockerImageTag, string Type,
     string? BacktestSettingsJson);
 
+// Re-launch a stopped instance with a CHANGED configuration (same cBot + kind). Backtest window fields
+// are ignored for a run.
+public record EditInstanceRequest(
+    Guid? TradingAccountId, string Symbol, string Timeframe,
+    Guid? ParamSetId, string DockerImageTag, string? BacktestSettingsJson);
+
 public static class InstanceEndpoints
 {
     public static IEndpointRouteBuilder MapInstanceEndpoints(this IEndpointRouteBuilder app)
@@ -297,6 +303,93 @@ public static class InstanceEndpoints
             return Results.Ok(new { running.Id });
         });
 
+        // Re-launch a terminal instance (run or backtest) with a CHANGED configuration: a new account,
+        // symbol, timeframe, parameter set, image tag, and (backtest) window. Same cBot and kind. Replaces
+        // the old terminal instance, mirroring the restart endpoint but using the caller's overrides.
+        g.MapPost("/{id:guid}/edit", async (Guid id, EditInstanceRequest req, DataContext db, ICurrentUser u,
+            INodeScheduler scheduler, IContainerDispatcherFactory factory, ISecretProtector protector,
+            TimeProvider timeProvider) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            if (u.IsInRole("Viewer")) return Results.Forbid();
+            var iid = InstanceId.From(id);
+            var i = await db.Instances.FirstOrDefaultAsync(x => x.Id == iid);
+            if (i is null) return Results.NotFound();
+            if (u.IsInRole("User") && i.UserId != uid) return Results.Forbid();
+            if (!i.IsTerminal) return Results.Conflict("instance is not stopped");
+            if (string.IsNullOrWhiteSpace(req.Symbol) || string.IsNullOrWhiteSpace(req.Timeframe))
+                return Results.BadRequest("symbol and timeframe are required");
+
+            var cbot = await db.CBots.FirstOrDefaultAsync(c => c.Id == i.CBotId && c.UserId == uid);
+            if (cbot is null) return Results.BadRequest("cbot not found");
+
+            // Resolve the (changed) trading account — loaded with its cID so EF fixup populates the new
+            // instance's TradingAccount navigation for --ctid/--pwd-file/--account.
+            TradingAccountId? accountId = null;
+            if (req.TradingAccountId is { } aid)
+            {
+                var acct = await db.TradingAccounts.Include(t => t.CTid)
+                    .FirstOrDefaultAsync(t => t.Id == TradingAccountId.From(aid) && t.CTid.UserId == uid);
+                if (acct is null) return Results.BadRequest("account not found");
+                accountId = acct.Id;
+            }
+
+            ParamSetId? paramSetId = null;
+            var paramJson = "{}";
+            if (req.ParamSetId is { } psid)
+            {
+                var paramSet = await db.ParamSets.FirstOrDefaultAsync(p => p.Id == ParamSetId.From(psid) && p.UserId == uid);
+                if (paramSet is null) return Results.BadRequest("paramset not found");
+                paramSetId = paramSet.Id;
+                paramJson = paramSet.JsonContent;
+            }
+
+            var kind = i is BacktestInstance ? "Backtest" : "Run";
+            var node = await scheduler.PickNodeAsync(kind, default);
+            if (node is null) return Results.Conflict("no node available");
+
+            var imageTag = new DockerImageTag(string.IsNullOrWhiteSpace(req.DockerImageTag) ? "latest" : req.DockerImageTag);
+            var symbol = new Symbol(req.Symbol);
+            var timeframe = new Timeframe(req.Timeframe);
+            Instance starting = i is BacktestInstance
+                ? BacktestInstance.CreateStarting(uid, i.CBotId, node.Id, imageTag, symbol, timeframe,
+                    req.BacktestSettingsJson, accountId, paramSetId)
+                : RunInstance.CreateStarting(uid, i.CBotId, node.Id, imageTag, symbol, timeframe,
+                    accountId, paramSetId);
+            db.Instances.Remove(i);
+            db.Instances.Add(starting);
+            await db.SaveChangesAsync();
+            starting.AttachNode(node);
+
+            var algo = protector.Unprotect(cbot.EncryptedAlgo, EncryptionPurposes.CbotAlgo);
+            string containerId;
+            try
+            {
+                containerId = await factory.For(node).StartAsync(starting, algo, paramJson, default);
+            }
+            catch (Exception ex)
+            {
+                Instance failedInstance = starting is BacktestInstance failedBacktest
+                    ? failedBacktest.ToFailed(ex.Message, timeProvider.GetUtcNow())
+                    : ((RunInstance)starting).ToFailed(ex.Message, timeProvider.GetUtcNow());
+                db.Instances.Remove(starting);
+                db.Instances.Add(failedInstance);
+                await db.SaveChangesAsync();
+                return Results.Ok(new { failedInstance.Id });
+            }
+
+            Instance running = starting switch
+            {
+                StartingBacktestInstance sb => sb.ToRunning(containerId, timeProvider.GetUtcNow()),
+                StartingRunInstance sr => sr.ToRunning(containerId, timeProvider.GetUtcNow()),
+                _ => throw new InvalidOperationException()
+            };
+            db.Instances.Remove(starting);
+            db.Instances.Add(running);
+            await db.SaveChangesAsync();
+            return Results.Ok(new { running.Id });
+        });
+
         g.MapGet("/{id:guid}/logs", async (Guid id, DataContext db, ICurrentUser u,
             IContainerDispatcherFactory factory) =>
         {
@@ -355,6 +448,13 @@ public static class InstanceEndpoints
             i.Symbol,
             i.Timeframe,
             CbotName = i.CBot?.Name,
+            // Editable config for the Edit-instance dialog to prefill (a stopped instance can be re-launched
+            // with a changed account / symbol / timeframe / parameter set / image / backtest window).
+            CbotId = i.CBotId,
+            TradingAccountId = i.TradingAccountId,
+            ParamSetId = i.ParamSetId,
+            i.DockerImageTag,
+            BacktestSettingsJson = i is BacktestInstance bt ? bt.BacktestSettingsJson : null,
             Equity = equity,
             i.LineageId
         };

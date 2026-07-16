@@ -67,6 +67,31 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
             .ToBeVisibleAsync(new() { Timeout = 30000 });
     }
 
+    // The Edit control is only offered for a STOPPED instance (never a running one), and opens a dialog
+    // prefilled with the instance's current config.
+    [Fact]
+    public async Task Edit_control_is_offered_only_for_a_stopped_instance_and_prefills()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var (completedBacktestId, runningRunId) = await SeedAsync(page);
+
+        // Terminal backtest → Edit button visible; opens a dialog prefilled with the instance's symbol.
+        await page.GotoAsync($"/instance/{completedBacktestId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        var edit = page.Locator("[data-testid=instance-detail-edit]");
+        await Assertions.Expect(edit).ToBeVisibleAsync(Slow);
+        await edit.ClickAsync();
+        await Assertions.Expect(page.Locator("[data-testid=edit-symbol]")).ToHaveValueAsync("EURUSD", new() { Timeout = 30000 });
+        await page.Locator(".mud-dialog button:has-text('Cancel')").ClickAsync();
+
+        // Running run → no Edit button (only a stopped instance can be edited).
+        await page.GotoAsync($"/instance/{runningRunId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await Assertions.Expect(page.Locator("[data-testid=instance-detail-stop]")).ToBeVisibleAsync(Slow);
+        (await page.Locator("[data-testid=instance-detail-edit]").IsVisibleAsync())
+            .Should().BeFalse("a running instance must not offer Edit");
+    }
+
     // The detail page's Copy logs button must copy the instance's full console log to the clipboard.
     [Fact]
     public async Task Copy_logs_button_copies_the_console_log_to_the_clipboard()

@@ -141,6 +141,80 @@ public class InstanceRestartHttpTests(PostgresFixture fixture) : IClassFixture<P
     }
 
     [Fact]
+    public async Task Edit_a_stopped_backtest_relaunches_it_with_the_changed_symbol_and_settings()
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+
+        Guid completedId;
+        string cbotName;
+        Guid accountId;
+        var (db, uid, protector) = await ScopeAsync(app);
+        await using (db)
+        {
+            var (cbot, node, acctId) = SeedCommon(db, uid, protector);
+            cbotName = cbot.Name;
+            accountId = acctId.Value;
+            var completed = ((StartingBacktestInstance)BacktestInstance.CreateStarting(uid, cbot.Id, node.Id,
+                    new DockerImageTag("latest"), new Symbol("EURUSD"), new Timeframe("h1"),
+                    """{"from":"2024-01-01","to":"2024-02-01","balance":"10000"}""", acctId))
+                .ToRunning("c1", Now).ToCompleted(Now.AddMinutes(1));
+            db.Instances.Add(completed);
+            await db.SaveChangesAsync();
+            completedId = completed.Id.Value;
+        }
+
+        var res = await client.PostAsJsonAsync($"/api/instances/{completedId}/edit", new
+        {
+            TradingAccountId = accountId,
+            Symbol = "GBPUSD",
+            Timeframe = "m5",
+            ParamSetId = (Guid?)null,
+            DockerImageTag = "latest",
+            BacktestSettingsJson = """{"from":"2024-03-01","to":"2024-04-01","balance":"25000"}"""
+        });
+        res.StatusCode.Should().Be(HttpStatusCode.OK);
+        var newId = (await res.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+        newId.Should().NotBe(completedId);
+
+        var list = await (await client.GetAsync("/api/instances/")).Content.ReadFromJsonAsync<JsonElement>();
+        var rows = list.EnumerateArray().Where(r => r.GetProperty("cBot").GetString() == cbotName).ToList();
+        rows.Should().ContainSingle("editing replaces the old instance, not duplicates it");
+        rows[0].GetProperty("symbol").GetString().Should().Be("GBPUSD", "the edited symbol took effect");
+        rows[0].GetProperty("timeframe").GetString().Should().Be("m5");
+        rows[0].GetProperty("kind").GetString().Should().Be("Backtest");
+        rows[0].GetProperty("status").GetString().Should().Be("Running");
+    }
+
+    [Fact]
+    public async Task Edit_an_active_instance_is_a_conflict()
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+
+        Guid runningId;
+        Guid accountId;
+        var (db, uid, protector) = await ScopeAsync(app);
+        await using (db)
+        {
+            var (cbot, node, acctId) = SeedCommon(db, uid, protector);
+            accountId = acctId.Value;
+            var running = ((StartingRunInstance)RunInstance.CreateStarting(uid, cbot.Id, node.Id,
+                    new DockerImageTag("latest"), new Symbol("EURUSD"), new Timeframe("h1"), acctId))
+                .ToRunning("c1", Now);
+            db.Instances.Add(running);
+            await db.SaveChangesAsync();
+            runningId = running.Id.Value;
+        }
+
+        (await client.PostAsJsonAsync($"/api/instances/{runningId}/edit", new
+        {
+            TradingAccountId = accountId, Symbol = "GBPUSD", Timeframe = "m5",
+            ParamSetId = (Guid?)null, DockerImageTag = "latest", BacktestSettingsJson = (string?)null
+        })).StatusCode.Should().Be(HttpStatusCode.Conflict, "a running instance cannot be edited");
+    }
+
+    [Fact]
     public async Task Restart_an_active_instance_is_a_conflict()
     {
         await using var app = CreateApp();

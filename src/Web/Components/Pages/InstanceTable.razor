@@ -42,6 +42,11 @@
                                    OnClick="@(() => Start((Guid)context.id))" data-testid="instance-start" />
                 </MudTooltip>
             }
+            <MudTooltip Text="@(IsTerminal((string)context.status) ? "Edit & re-run with changed settings" : "Stop the instance before editing")">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Info"
+                               Disabled="@(!IsTerminal((string)context.status))" aria-label="Edit instance"
+                               OnClick="@(() => Edit((Guid)context.id))" data-testid="instance-edit" />
+            </MudTooltip>
             <MudTooltip Text="@(IsActive((string)context.status) ? "Stop the instance before deleting" : "Delete instance")">
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
                                Disabled="@IsActive((string)context.status)" aria-label="Delete instance"
@@ -149,6 +154,19 @@
             _starting.Remove(id);
             await Load();
         }
+    }
+
+    // Edit a stopped instance's config (account / symbol / timeframe / parameter set / image / backtest
+    // window + settings) and re-launch it. Only reachable from a terminal row (the icon is disabled otherwise).
+    private async Task Edit(Guid id)
+    {
+        var parameters = new DialogParameters<EditInstanceDialog> { { x => x.InstanceId, id } };
+        var dlg = await Dialogs.ShowAsync<EditInstanceDialog>("Edit instance", parameters,
+            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
+        var res = await dlg.Result;
+        if (res is null || res.Canceled) return;
+        await Load();
+        StateHasChanged();
     }
 
     private async Task Delete(Guid id)

@@ -68,6 +68,7 @@ public static class ContainerCommandHelpers
             args.Add(CliFlags.DataDir);
             args.Add(DataDir);
             var dataMode = BacktestDefaults.DataMode;
+            var sawBalance = false;
             if (!string.IsNullOrEmpty(b.BacktestSettingsJson))
             {
                 using var doc = JsonDocument.Parse(b.BacktestSettingsJson);
@@ -82,6 +83,7 @@ public static class ContainerCommandHelpers
                         if (!string.IsNullOrWhiteSpace(mode)) dataMode = mode!;
                         continue;
                     }
+                    if (lower is "balance") sawBalance = true;
                     var name = lower switch
                     {
                         "from" => "start",
@@ -99,6 +101,13 @@ public static class ContainerCommandHelpers
             }
             args.Add(CliFlags.DataMode);
             args.Add(dataMode);
+            // A 0 balance (cTrader's default) makes the backtest place no trades and emit an empty report
+            // that its report saver crashes on — always pass a non-zero balance unless one was set.
+            if (!sawBalance)
+            {
+                args.Add(CliFlags.Balance);
+                args.Add(BacktestDefaults.Balance);
+            }
             args.Add(CliFlags.ReportJson);
             args.Add($"{WorkMount}/{ReportJson}");
             args.Add(CliFlags.Report);

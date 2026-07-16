@@ -52,6 +52,38 @@ public class ContainerCommandHelpersTests
     }
 
     [Fact]
+    public void BuildConsoleArgsList_backtest_emits_a_default_non_zero_balance_when_unset()
+    {
+        var i = new StartingBacktestInstance
+        {
+            Symbol = "EURUSD", Timeframe = "h1",
+            BacktestSettingsJson = """{"from":"2024-01-01","to":"2024-02-01"}"""
+        };
+
+        var args = ContainerCommandHelpers.BuildConsoleArgsList(i, "", false);
+
+        // A 0 balance makes cTrader's report saver crash ("Message expected") — every backtest gets a balance.
+        args.Should().ContainInConsecutiveOrder("--balance", "10000");
+    }
+
+    [Fact]
+    public void BuildConsoleArgs_backtest_honors_explicit_balance_and_forwards_extra_settings()
+    {
+        var i = new StartingBacktestInstance
+        {
+            Symbol = "EURUSD", Timeframe = "h1",
+            BacktestSettingsJson = """{"from":"2024-01-01","to":"2024-02-01","balance":"50000","commission":"3","spread":"1"}"""
+        };
+
+        var args = ContainerCommandHelpers.BuildConsoleArgs(i, "", false);
+
+        args.Should().Contain("--balance 50000");
+        args.Should().NotContain("--balance 10000");
+        args.Should().Contain("--commission 3");
+        args.Should().Contain("--spread 1");
+    }
+
+    [Fact]
     public void BuildConsoleArgs_backtest_reformats_from_to_dates()
     {
         var i = new StartingBacktestInstance

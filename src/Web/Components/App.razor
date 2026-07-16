@@ -89,7 +89,34 @@
     <script src="_framework/blazor.web.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script>
-        window.copyToClipboard = (text) => navigator.clipboard.writeText(text);
+        // Copy text to the clipboard. navigator.clipboard is only defined in a SECURE context (https or
+        // localhost); on a plain-HTTP LAN deployment it is undefined, so fall back to a hidden-textarea +
+        // execCommand('copy') which works there too. Returns true on success. (This is why "Copy logs"
+        // silently did nothing when the app was served over http://<lan-ip>.)
+        window.copyToClipboard = async (text) => {
+            try {
+                if (window.isSecureContext && navigator.clipboard) {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                }
+            } catch (e) { /* fall through to the legacy path */ }
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'fixed';
+                ta.style.top = '-1000px';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                const ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                return ok;
+            } catch (e) {
+                return false;
+            }
+        };
 
         // Scroll a log/output container to its latest line (used by the auto-scroll toggle on log views).
         window.appScrollToEnd = (id) => {

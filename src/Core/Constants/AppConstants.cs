@@ -541,6 +541,7 @@ public static class CliFlags
     public const string Start = "--start";
     public const string End = "--end";
     public const string DataMode = "--data-mode";
+    public const string Balance = "--balance";
     public const string ReportJson = "--report-json";
     public const string Report = "--report";
     public const string ExitOnStop = "--exit-on-stop";
@@ -550,6 +551,10 @@ public static class BacktestDefaults
 {
     public const string DataMode = "m1";
     public const string DateFormat = "dd/MM/yyyy HH:mm";
+    // Starting balance for a backtest. cTrader Console defaults this to 0, and a 0-balance backtest can
+    // place no trades — it produces an empty report ("Equity":,) that its own report saver then crashes on
+    // ("Message expected"). So every backtest gets a sane non-zero balance unless one is set explicitly.
+    public const string Balance = "10000";
 }
 
 public static class CliCommands

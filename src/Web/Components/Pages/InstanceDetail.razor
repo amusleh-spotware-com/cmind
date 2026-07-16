@@ -8,6 +8,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using Microsoft.JSInterop
 @using Web.Hubs
+@using Web.Components.Dialogs
 @using ApexCharts
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inject HttpClient Http
@@ -19,6 +20,7 @@
 @inject IFeatureGate Gate
 @inject IOptionsMonitor<AppOptions> Options
 @inject LogHubConnectionFactory HubFactory
+@inject IDialogService Dialogs
 @implements IAsyncDisposable
 
 <PageTitle>@PageTitleText</PageTitle>
@@ -49,6 +51,10 @@
                 <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Color="MudBlazor.Color.Success"
                                Disabled="_startingInstance" OnClick="StartAsync"
                                aria-label="Start instance" data-testid="instance-detail-start" />
+            </MudTooltip>
+            <MudTooltip Text="Edit & re-run with changed settings">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="MudBlazor.Color.Info"
+                               OnClick="EditAsync" aria-label="Edit instance" data-testid="instance-detail-edit" />
             </MudTooltip>
         }
     </MudStack>
@@ -246,6 +252,17 @@
 
     private sealed record StartResponse(Guid Id);
 
+    // Edit this (terminal) instance's config and re-launch it; navigate to the new instance on success.
+    private async Task EditAsync()
+    {
+        var parameters = new DialogParameters<EditInstanceDialog> { { x => x.InstanceId, _currentId } };
+        var dlg = await Dialogs.ShowAsync<EditInstanceDialog>("Edit instance", parameters,
+            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
+        var res = await dlg.Result;
+        if (res is null || res.Canceled) return;
+        if (res.Data is Guid newId && newId != Guid.Empty) Nav.NavigateTo($"/instance/{newId}");
+    }
+
     private async Task DownloadLogsAsync()
     {
         try
@@ -267,8 +284,8 @@
         {
             var text = await Http.GetStringAsync($"/api/instances/{_currentId}/logs");
             if (string.IsNullOrEmpty(text)) { Snack.Add("No logs available for this instance", Severity.Warning); return; }
-            await JS.InvokeVoidAsync("copyToClipboard", text);
-            Snack.Add("Logs copied to clipboard", Severity.Success);
+            var ok = await JS.InvokeAsync<bool>("copyToClipboard", text);
+            Snack.Add(ok ? "Logs copied to clipboard" : "Could not copy logs to the clipboard", ok ? Severity.Success : Severity.Warning);
         }
         catch
         {

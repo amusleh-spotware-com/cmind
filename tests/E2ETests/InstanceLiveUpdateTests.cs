@@ -67,6 +67,24 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
             .ToBeVisibleAsync(new() { Timeout = 30000 });
     }
 
+    // The browser tab title must identify the specific instance (cBot name + symbol), so a live-run tab and a
+    // backtest tab are distinguishable — not a generic "Instance".
+    [Fact]
+    public async Task Instance_detail_browser_title_shows_the_cbot_name_and_symbol()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var runningId = await SeedRunningInstanceAsync(page);
+
+        await page.GotoAsync($"/instance/{runningId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await Assertions.Expect(page.Locator("[data-testid=instance-detail-stop]")).ToBeVisibleAsync(Slow);
+
+        await page.WaitForFunctionAsync("() => document.title.includes('EURUSD')");
+        var title = await page.TitleAsync();
+        title.Should().Contain("seed-bot", "the title carries the cBot name");
+        title.Should().Contain("EURUSD", "the title carries the instance symbol");
+    }
+
     // Regression: staying on a run's page must not, after a poll cycle, switch to a DIFFERENT instance
     // (e.g. a completed backtest of the same cBot). The live poll must only ever apply data for this exact
     // instance lineage.

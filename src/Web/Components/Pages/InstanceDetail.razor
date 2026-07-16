@@ -21,7 +21,7 @@
 @inject LogHubConnectionFactory HubFactory
 @implements IAsyncDisposable
 
-<PageTitle>Instance</PageTitle>
+<PageTitle>@PageTitleText</PageTitle>
 
 <div class="instance-detail-page">
     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
@@ -29,7 +29,7 @@
             <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="Back"
                            aria-label="Back" data-testid="instance-back-btn" />
         </MudTooltip>
-        <MudText Typo="Typo.h5">@(_detail is not null ? $"{_detail.symbol} — {_detail.status}" : L["instance.title"])</MudText>
+        <MudText Typo="Typo.h5">@(_detail is not null ? $"{_detail.cbotName} — {_detail.symbol}" : L["instance.title"])</MudText>
         @if (_detail is not null)
         {
             <MudChip T="string" Size="MudBlazor.Size.Small" Color="@StatusColor((string)_detail.status)">@_detail.status</MudChip>
@@ -172,6 +172,23 @@
                 }
             }
         ];
+    }
+
+    // Browser tab title: the cBot name + kind + symbol of the instance being viewed (e.g.
+    // "TrendBot · Backtest · EURUSD"), so a live-run tab and a backtest tab are distinguishable. Falls back
+    // to the generic localized title before the instance loads / when it is missing.
+    private string PageTitleText
+    {
+        get
+        {
+            if (_detail is null) return L["instance.title"];
+            string? cbot = _detail.cbotName;
+            string? kind = _detail.kind;
+            string? symbol = _detail.symbol;
+            var parts = new[] { cbot, kind, symbol }.Where(s => !string.IsNullOrWhiteSpace(s));
+            var title = string.Join(" · ", parts);
+            return string.IsNullOrWhiteSpace(title) ? L["instance.title"] : title;
+        }
     }
 
     private bool IsActive => _detail is not null

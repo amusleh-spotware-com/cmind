@@ -480,7 +480,15 @@ public static class DockerLabels
 public static class FilePaths
 {
     public const string ContainerWorkMount = "/mnt/work";
-    public const string ContainerDataDir = "/mnt/work/data";
+    // Deliberately NOT nested under /mnt/work: the shared market-data cache is a SEPARATE bind mount, so it
+    // never gets shadowed by the per-instance work-dir mount (a nested mount would depend on docker mount
+    // ordering and the parent bind source having the sub-path). This is both the cTrader `--data-dir` value
+    // and the container mount target.
+    public const string ContainerDataDir = "/mnt/data";
+    // Host directory name for the STABLE, per-account downloaded-market-data cache mounted at ContainerDataDir.
+    // Kept out of the per-instance work dir so cTrader's downloaded tick/bar data is reused across backtests
+    // instead of re-downloaded every run. The leading underscore never collides with a {guid:N} work dir.
+    public const string SharedMarketDataDirName = "_marketdata";
     public const string CbotAlgoFile = "cbot.algo";
     public const string ParamsCbotsetFile = "params.cbotset";
     public const string CtidPwdFile = "ctid.pwd";
@@ -495,6 +503,18 @@ public static class FilePaths
         System.IO.Path.Combine(System.IO.Path.GetTempPath(), "app", "local-runs");
     public const string DataRootPrefix = "/var/app/";
     public const string NodeDataDirDefault = "/var/app/data";
+
+    // Default data-cache scope when an instance/request carries no trading account (rare — backtests
+    // always have one). See SharedMarketDataDirName.
+    public const string DefaultDataScope = "_default";
+
+    /// <summary>Constrains a data-scope key (a trading account number) to a single safe path segment.</summary>
+    public static string SanitizeDataScope(string? scope)
+    {
+        if (string.IsNullOrWhiteSpace(scope)) return DefaultDataScope;
+        var cleaned = new string(scope.Where(c => char.IsLetterOrDigit(c) || c is '-' or '_').ToArray());
+        return string.IsNullOrEmpty(cleaned) ? DefaultDataScope : cleaned;
+    }
 }
 
 public static class LocalNodeDefaults

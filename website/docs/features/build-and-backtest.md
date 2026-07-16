@@ -27,6 +27,27 @@ IDE, run on official `ghcr.io/spotware/ctrader-console` image.
 - Live container logs stream to browser over SignalR; backtest equity curves parsed from
   report + charted.
 
+## Backtest market data is cached per account
+
+The cTrader Console downloads historical tick/bar data into its `--data-dir`. That directory is a
+**stable, persistent cache keyed on the trading account** (its account number) — bind-mounted from the
+node's disk at its own container path (`/mnt/data`), a **separate, non-nested mount** from the
+per-instance work dir. So every backtest on the same account **reuses** the already-downloaded data
+instead of re-downloading it each run. (Earlier the
+data dir lived under the per-instance work dir, whose id changes every run, which forced a fresh
+download every backtest.) The ephemeral per-instance work dir still holds the algo, params, password
+and report; the shared data cache is counted in a node's backtest-data usage and cleared by the
+node-clean action.
+
+## Instance detail page
+
+Opening an instance (`/instance/{id}`) shows its live status, logs and — for a backtest — the equity
+curve. The **browser tab title** reflects the specific instance (**cBot name · kind · symbol**, e.g.
+`TrendBot · Backtest · EURUSD`) so a live-run tab and a backtest tab are distinguishable at a glance.
+A run and a backtest of the same cBot are tracked as distinct **lineages** (a stable lineage id carried
+across state transitions), so the page follows exactly one instance and never mixes a run's data with a
+backtest's.
+
 ## Instance lifecycle controls
 
 Each instance row (and its detail page) has state-correct controls. An **active** instance shows

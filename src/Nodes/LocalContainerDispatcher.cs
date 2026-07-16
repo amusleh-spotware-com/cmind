@@ -17,6 +17,7 @@ public sealed class LocalContainerDispatcher(
     TimeProvider timeProvider) : IContainerDispatcher
 {
     private const string WorkMount = FilePaths.ContainerWorkMount;
+    private const string DataDir = FilePaths.ContainerDataDir;
     private const string AlgoFile = FilePaths.CbotAlgoFile;
     private const string ParamsFile = FilePaths.ParamsCbotsetFile;
     private const string PwdFile = FilePaths.CtidPwdFile;
@@ -30,7 +31,14 @@ public sealed class LocalContainerDispatcher(
             instance.UserId.Value.ToString("N"),
             instance.CBotId.Value.ToString("N"),
             instance.Id.Value.ToString("N"));
-        Directory.CreateDirectory(Path.Combine(workDir, "data"));
+        // Downloaded market data belongs to a trading account (its broker data source) and is reusable across
+        // every backtest on that account, so cache it in a STABLE per-account dir mounted at /mnt/data (a
+        // SEPARATE, non-nested mount) — NOT under the per-instance work dir (whose id changes every run, which
+        // is what forced cTrader to re-download the data on each backtest).
+        var sharedDataDir = Path.Combine(workRoot, FilePaths.SharedMarketDataDirName,
+            ContainerCommandHelpers.DataScopeFor(instance));
+        Directory.CreateDirectory(workDir);
+        Directory.CreateDirectory(sharedDataDir);
 
         await File.WriteAllBytesAsync(Path.Combine(workDir, AlgoFile), algoBytes, ct);
         var cbotset = ContainerCommandHelpers.JsonToCbotset(paramJson);
@@ -59,6 +67,7 @@ public sealed class LocalContainerDispatcher(
         dockerArgs.Append(DockerCommands.LabelFlag).Append(' ').Append(DockerLabels.Instance).Append('=').Append(instance.Id.Value).Append(' ');
         dockerArgs.Append(DockerCommands.LabelFlag).Append(' ').Append(DockerLabels.Type).Append('=').Append(instance.KindName).Append(' ');
         dockerArgs.Append(DockerCommands.VolumeFlag).Append(' ').Append('"').Append(workDir).Append('"').Append(':').Append(WorkMount).Append(' ');
+        dockerArgs.Append(DockerCommands.VolumeFlag).Append(' ').Append('"').Append(sharedDataDir).Append('"').Append(':').Append(DataDir).Append(' ');
         dockerArgs.Append(image).Append(' ').Append(cmdArgs);
 
         log.StartingContainer("local", dockerArgs.ToString());

@@ -1,4 +1,5 @@
 using Core;
+using Core.Constants;
 using FluentAssertions;
 using Nodes;
 using Xunit;
@@ -7,6 +8,30 @@ namespace UnitTests;
 
 public class ContainerCommandHelpersTests
 {
+    [Fact]
+    public void DataScopeFor_uses_default_when_instance_has_no_trading_account()
+    {
+        var i = new StartingBacktestInstance { Symbol = "EURUSD", Timeframe = "h1" };
+
+        ContainerCommandHelpers.DataScopeFor(i).Should().Be(FilePaths.DefaultDataScope,
+            "a market-data cache dir keyed on the account falls back to a default when there is no account");
+    }
+
+    [Theory]
+    [InlineData("500123", "500123")]         // a real account number is kept verbatim
+    [InlineData("", FilePaths.DefaultDataScope)]
+    [InlineData("   ", FilePaths.DefaultDataScope)]
+    [InlineData(null, FilePaths.DefaultDataScope)]
+    [InlineData("../../etc/passwd", "etcpasswd")] // path separators & dots stripped — no traversal
+    [InlineData("a b/c", "abc")]
+    public void SanitizeDataScope_constrains_to_a_single_safe_path_segment(string? input, string expected)
+    {
+        var scope = FilePaths.SanitizeDataScope(input);
+
+        scope.Should().Be(expected);
+        scope.Should().NotContain("/").And.NotContain("\\").And.NotContain("..");
+    }
+
     [Fact]
     public void BuildConsoleArgs_backtest_emits_default_data_mode_and_report_flags()
     {
@@ -19,7 +44,7 @@ public class ContainerCommandHelpersTests
         var args = ContainerCommandHelpers.BuildConsoleArgs(i, "", false);
 
         args.Should().StartWith("backtest /mnt/work/cbot.algo");
-        args.Should().Contain("--data-dir /mnt/work/data");
+        args.Should().Contain("--data-dir /mnt/data");
         args.Should().Contain("--data-mode m1");
         args.Should().Contain("--report-json /mnt/work/report.json");
         args.Should().Contain("--report /mnt/work/report.html");

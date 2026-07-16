@@ -62,7 +62,7 @@ public static class InstanceEndpoints
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             var iid = InstanceId.From(id);
-            var i = await db.Instances.AsNoTracking().FirstOrDefaultAsync(x => x.Id == iid);
+            var i = await db.Instances.AsNoTracking().Include(x => x.CBot).FirstOrDefaultAsync(x => x.Id == iid);
             if (i is null) return Results.NotFound();
             if (u.IsInRole("Viewer"))
             {
@@ -87,7 +87,7 @@ public static class InstanceEndpoints
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             var lid = InstanceLineageId.From(lineageId);
-            var i = await db.Instances.AsNoTracking().FirstOrDefaultAsync(x => x.LineageId == lid);
+            var i = await db.Instances.AsNoTracking().Include(x => x.CBot).FirstOrDefaultAsync(x => x.LineageId == lid);
             if (i is null) return Results.NotFound();
             if (u.IsInRole("Viewer"))
             {
@@ -354,6 +354,7 @@ public static class InstanceEndpoints
             Status = i.StatusName,
             i.Symbol,
             i.Timeframe,
+            CbotName = i.CBot?.Name,
             Equity = equity,
             i.LineageId
         };

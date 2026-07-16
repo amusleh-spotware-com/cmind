@@ -12,9 +12,10 @@ using Xunit;
 
 namespace IntegrationTests;
 
-// GET /api/instances/current resolves the CURRENT state of an instance lineage by (cBot, createdAt). A TPH
-// transition replaces the entity with a new id while preserving CreatedAt, so this lets the detail page
-// follow the instance from Running to its terminal state without going stale.
+// GET /api/instances/current resolves the CURRENT state of an instance lineage by its unique LineageId. A
+// TPH transition replaces the entity with a new id while preserving LineageId, so this lets the detail page
+// follow the instance from Running to its terminal state without going stale — and a run and a backtest of
+// the same cBot stay distinct lineages.
 public class InstanceCurrentHttpTests(PostgresFixture fixture) : IClassFixture<PostgresFixture>
 {
     private const string Owner = "owner@current.local";

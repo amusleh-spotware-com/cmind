@@ -7,7 +7,10 @@ public sealed record StartContainerRequest(
     string Kind,
     string Image,
     IReadOnlyList<string> Args,
-    IReadOnlyDictionary<string, string> Files);
+    IReadOnlyDictionary<string, string> Files,
+    // Stable key (the trading account number) for the shared downloaded-market-data cache dir, so every
+    // backtest on the same account reuses its data instead of re-downloading it. Null ⇒ agent default.
+    string? DataScope = null);
 
 public sealed record StartContainerResponse(string ContainerId, string WorkDir);
 

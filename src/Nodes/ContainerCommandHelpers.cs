@@ -16,6 +16,15 @@ public static class ContainerCommandHelpers
     private const string ReportHtml = FilePaths.ReportHtmlFile;
     private const string PointsKey = "points";
 
+    /// <summary>
+    /// Stable key for the shared downloaded-market-data cache directory: the trading account number, so every
+    /// backtest on that account reuses its data. Sanitized to a single safe path segment.
+    /// </summary>
+    public static string DataScopeFor(Instance i) =>
+        i.TradingAccount is { } ta
+            ? FilePaths.SanitizeDataScope(ta.AccountNumber.ToString(CultureInfo.InvariantCulture))
+            : FilePaths.DefaultDataScope;
+
     public static string? GetContainerId(Instance i) => i switch
     {
         StartingRunInstance s => s.ContainerId,

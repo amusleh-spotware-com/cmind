@@ -47,7 +47,8 @@ public sealed class HttpContainerDispatcher(
 
         var args = ContainerCommandHelpers.BuildConsoleArgsList(instance, ctid, hasParams);
         var image = $"{DockerImages.CtraderConsole}:{instance.DockerImageTag}";
-        var request = new StartContainerRequest(instance.Id.Value, instance.UserId.Value, instance.KindName, image, args, files);
+        var request = new StartContainerRequest(instance.Id.Value, instance.UserId.Value, instance.KindName,
+            image, args, files, ContainerCommandHelpers.DataScopeFor(instance));
 
         using var client = CreateClient(node, WriteClientName);
         using var response = await client.PostAsJsonAsync(NodeAgentRoutes.Start, request, ct);

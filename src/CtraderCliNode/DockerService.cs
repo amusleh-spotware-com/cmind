@@ -11,6 +11,7 @@ namespace CtraderCliNode;
 public sealed class DockerService(IOptionsMonitor<NodeAgentOptions> options, ILogger<DockerService> log)
 {
     private const string WorkMount = FilePaths.ContainerWorkMount;
+    private const string DataDir = FilePaths.ContainerDataDir;
     private const string InstanceLabel = DockerLabels.Instance;
 
     public sealed class ImageNotAllowedException(string image) : Exception($"Image not allowed: {image}");
@@ -24,6 +25,7 @@ public sealed class DockerService(IOptionsMonitor<NodeAgentOptions> options, ILo
             throw new ImageNotAllowedException(req.Image);
 
         var workDir = WorkDirFor(req.InstanceId);
+        var sharedDataDir = SharedDataDirFor(req.DataScope);
         var containerName = $"{DockerCommands.ContainerNamePrefix}{req.Kind.ToLowerInvariant()}-{req.InstanceId:N}";
 
         // Idempotency: a retried Start (resilience handler retries POST) must not wipe the
@@ -32,8 +34,11 @@ public sealed class DockerService(IOptionsMonitor<NodeAgentOptions> options, ILo
         if (await FindContainerIdByNameAsync(containerName, ct) is { } existingId)
             return new StartContainerResponse(existingId, workDir);
 
+        // The per-instance work dir is ephemeral (wiped each start); the shared per-account market-data cache
+        // is STABLE so downloaded tick/bar data is reused across backtests instead of re-downloaded.
         if (Directory.Exists(workDir)) Directory.Delete(workDir, true);
-        Directory.CreateDirectory(Path.Combine(workDir, "data"));
+        Directory.CreateDirectory(workDir);
+        Directory.CreateDirectory(sharedDataDir);
 
         foreach (var (name, base64) in req.Files)
         {
@@ -64,6 +69,7 @@ public sealed class DockerService(IOptionsMonitor<NodeAgentOptions> options, ILo
             "--label", $"{InstanceLabel}={req.InstanceId}",
             "--label", $"{DockerLabels.Type}={req.Kind}",
             "-v", $"{workDir}:{WorkMount}",
+            "-v", $"{sharedDataDir}:{DataDir}",
             req.Image
         };
         runArgs.AddRange(req.Args);
@@ -191,6 +197,12 @@ public sealed class DockerService(IOptionsMonitor<NodeAgentOptions> options, ILo
 
     private string WorkDirFor(Guid instanceId) =>
         Path.Combine(options.CurrentValue.DataRoot, instanceId.ToString("N"));
+
+    // Stable, per-account market-data cache dir (reused across backtests). The scope key is sanitized to a
+    // single safe path segment, so a bad value from the main can never traverse outside DataRoot.
+    private string SharedDataDirFor(string? dataScope) =>
+        Path.Combine(options.CurrentValue.DataRoot, FilePaths.SharedMarketDataDirName,
+            FilePaths.SanitizeDataScope(dataScope));
 
     private static void TryDelete(string dir)
     {

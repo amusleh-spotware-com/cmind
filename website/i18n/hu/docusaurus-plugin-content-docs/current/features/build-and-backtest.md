@@ -1,95 +1,88 @@
 ---
-description: "cTrader cBots (C# és Python, mindkettő .NET) felépítése, futtatása, backtestje böngészőbeli Monaco IDE-ből, futtatás a hivatalos ghcr.io/spotware/ctrader-console képen."
+description: "cTrader cBotok fordítása, futtatása, backtesztelése (C# és Python, mindkettő .NET) böngészőben lévő Monaco IDE-ből, futtatás az official ghcr.io/spotware/ctrader-console képen."
 ---
 
-# cBots felépítése és backtestje
+# cBotok fordítása és backtesztelése
 
-cTrader cBots (C# **és** Python, mindkettő .NET) felépítése, futtatása, backtestje böngészőbeli Monaco
-IDE-ből, futtatás a hivatalos `ghcr.io/spotware/ctrader-console` képen.
+cTrader cBotok fordítása, futtatása, backtesztelése (C# **és** Python, mindkettő .NET) böngészőben lévő Monaco IDE-ből, futtatás az official `ghcr.io/spotware/ctrader-console` képen.
 
-## Felépítés
+## Fordítás
 
-- A **Builder** oldal Monaco szerkesztőt biztosít; a `CBotBuilder` a projektet `dotnet build` -del fordítja le **eldobható konténerben** (`AppOptions.BuildImage`, munkakönyvtár bind-mount az `/work` szinten), így az nem megbízható felhasználó MSBuild-céljai nem érik el a gazdagépet. A NuGet helyreállítás gyorsítótárazódik a buildek között egy megosztott kötet segítségével. A web host Docker socket-hozzáférést igényel.
-- A C# + Python kezdősablonok a `src/Nodes/Builder/Templates/` helyen vannak.
+- A **Builder** oldal Monaco szerkesztőt üzemeltet; a `CBotBuilder` a projektet `dotnet build` paranccsal fordítja le egy **eldobható konténerben** (`AppOptions.BuildImage`, munkakönyvtár bind-mount `/work` helyen), így a nem megbízható felhasználó MSBuild célok nem érik el a gazdagépet. A NuGet helyreállítás gyorsítótárazott az összeállítások között egy megosztott kötet segítségével. A webes host Docker szoftvercsatorna-hozzáférésre van szükség.
+- A C# és Python indító sablonok a `src/Nodes/Builder/Templates/` mappában találhatók.
 
-## Futtatás és backtest
+## Futtatás és backtesztelés
 
-- Az **Instances** = TPH állapot-hierarchia (`Run`/`Backtest` × `Pending`/`Scheduled`/`Starting`/
-  `Running`/`Stopping`/`Stopped`/`Failed`). Az átmenet helyettesítve az entitást (id-je megváltozik),
-  a konténer id-je átkerül.
-- A `NodeScheduler` kiválasztja a legkevésbé terheltnél jogosult csomópontot; a `ContainerDispatcherFactory` útvonalat küld a
-  távoli csomópont HTTP ügynökhöz vagy a helyi Docker diszpécserhez.
-- A befejezési poller-ek egyeztetik a kilépett konténereket (a backtest konténerei önmagukban kilépnek a `--exit-on-stop` segítségével); a jelentés jelen van → befejezve (tárolás `ReportJson`), hiányzik → sikertelen.
-- Az élő konténer naplói az SignalR-en keresztül áramlanak a böngészőbe; a backtest equity görbék az jelentésből elemzésre kerülnek és diagramozódnak.
+- Az **Instances** (Példányok) = TPH állapothierarchia (`Run`/`Backtest` × `Pending`/`Scheduled`/`Starting`/`Running`/`Stopping`/`Stopped`/`Failed`). Az átmenet helyettesíti az entitást (azonosító változás), a konténer azonosítót átviszik.
+- A `NodeScheduler` a legkevésbé terhelten lévő jogosult csomópontot választja ki; a `ContainerDispatcherFactory` egy távoli csomópont HTTP ügynökre vagy a helyi Docker diszpécserhez irányítja az útvonalat.
+- A befejezési poller-ek kiegyenlítik a kilépett konténereket (a backteszt konténerek önként kilépnek a `--exit-on-stop` segítségével); a jelentés jelen van → befejezve (tárolás `ReportJson`), hiányzik → sikertelen.
+- Az élő konténer naplók SignalR-en keresztül folynak a böngészőre; a backteszt részvénygörbék az objektumból elemzett és diagrammázott.
 
-## A backtest piaci adatai gyorsítótárazódnak számlánként
+## A backteszt piaci adatai konténkeyntonként vannak gyorsítótárazva
 
-A cTrader Console a történeti tick/bar adatokat az `--data-dir` címre tölti le. Ez a könyvtár egy
-**stabil, állandó gyorsítótár, amely a kereskedési számlán van kulcsozva** (annak számlaszámán) — kötet-mount a csomópont lemezéről annak saját konténer útvonalán (`/mnt/data`), egy **külön, nem beágyazott csatolás** a
-per-instance munkakönyvtárból. Így minden backtest ugyanazon a számlán **újrafelhasználja** az már letöltött adatokat, ahelyett, hogy minden futáson frissen letöltené azt. (Korábban az adatkönyvtár a per-instance munkakönyvtárban volt, amelynek id-je minden futáson megváltozik, ami minden backtestre friss letöltésre kényszerített.) Az efemer per-instance munkakönyvtár még tartalmazza az algo-t, paramétereket, jelszót és jelentést; a megosztott adatgyorsítótár a csomópont backtest-data használatában számítódik és a node-clean akció által törlődik.
+A cTrader Console a `--data-dir` adatkönyvtárba tölti le a történeti tick/bar adatokat. Ez a könyvtár egy **stabil, perzisztens gyorsítótár, amely a kereskedési számlára** (annak számlaszámára) van kulcsozva — a csomópont lemezéről bind-mount-olva a saját konténer útvonalán (`/mnt/data`), a **per-instance munkakönyvtár egy külön, nem egymásba ágyazott csatlakoztatása**. Így minden backteszt ugyanazon a számlán **újrahasznosítja** az már letöltött adatokat az egyes futások során történő újbóli letöltés helyett. (Korábban az adatkönyvtár az per-instance munkakönyvtár alatt volt, amelynek azonosítója minden futás során megváltozik, ami minden backtesztet friss letöltésre kényszerített.) Az ephemeral per-instance munkakönyvtár még mindig az algoritmust, paramétereket, jelszót és jelentést tartalmazza; a megosztott adatok gyorsítótára a csomópont backteszt-adatok használatában számít, és a csomópont tiszta művelete törli.
 
-## Backtest beállítások
+## Backteszt beállítások
 
-A **Backtest** párbeszédablak felhasználó-hangolható cTrader Console backtest beállításokat tesz elérhetővé, így soha nem kell parancssorhoz nyúlnia:
+A **Backtest** (Backtesztelés) párbeszédpanel a felhasználó által beállítható cTrader Console backteszt beállítások közé fejleszt, így soha nem kell megérintenie a parancssor:
 
-- **Symbol / Timeframe** — az időkeret egy **legördülő lista minden cTrader periódussal** (`t1`…`t1000`,
-  `m1`…`m45`, `h1`…`h12`, `D1`/`D2`/`D3`, `W1`, `Month1` és a Renko/Range/Heikin periódusok), a
-  konzol kanonikus alakjában, így mindig érvényes `--period`-ot választ.
-- **From / To** — a backtest ablak (`--start` / `--end`).
-- **Data mode** — a három cTrader mód egyike (`--data-mode`): **Tick adatok** (`tick`, pontos),
-  **m1 sávok** (`m1`, gyors), vagy **Nyitási árak csak** (`open`, leggyorsabb).
-- **Starting balance** — alapértelmezés `10000` (`--balance`). Egy **0 egyenleg nem végez kereskedelmet, és a cTrader üres jelentést bocsát ki, amely később összeomlik** ("Message expected"), így egy nem nulla egyenleg mindig elküldésre kerül.
+- **Symbol / Timeframe** — az időkeret az **összes cTrader periódus legördülő menüje** (`t1`…`t1000`, `m1`…`m45`, `h1`…`h12`, `D1`/`D2`/`D3`, `W1`, `Month1` és a Renko/Range/Heikin időszakok), a konzol kanonikus dobozaiban, így mindig érvényes `--period`-ot választhat.
+- **From / To** — a backteszt ablak (`--start` / `--end`).
+- **Data mode** — a cTrader három módja közül egy (`--data-mode`): **Tick data** (`tick`, pontos), **m1 bars** (`m1`, gyors), vagy **Open prices only** (`open`, leggyorsabb).
+- **Starting balance** — alapértelmezés szerint `10000` (`--balance`). A **0 egyenleg nem hajtja végre a kereskedéseket, és a cTrader üres jelentés kibocsátásra kényszerít, majd összeomlanak ("Message expected"), így mindig nem nulla egyenleget küldenek el.
 - **Commission** — `--commission`.
-- **Spread** — `--spread`, egy **numerikus mező pipben, amely nem mehet 0 alá**. **Tick adatok módban rejtve van**, ahol a cTrader az spread-et magából a tick adatokból levezetik (nincs `--spread` elküldve).
+- **Spread** — `--spread`, egy **numerikus mező pipekben, amely nem mehet 0 alá**. **A Tick adatok módban rejtett**, ahol a cTrader a spread-et a tick adatokból vezeti le (nincs `--spread` elküldve).
 
-Az adatkönyvtár (`--data-file` / `--data-dir`) az alkalmazás által felügyelt (per-account gyorsítótár, lásd fent), nem jelenik meg a párbeszédablakban.
+Az adatkönyvtár (`--data-file` / `--data-dir`) az alkalmazás által felügyelt (per-account gyorsítótár, lásd fent), nem jelenik meg a párbeszédpanelen.
 
-:::note A cTrader összeomlik egy üres backtesten
-Ha egy backtest **nincs eredményt** — nincs kereskedelem, vagy nincs piaci adat a kiválasztott dátumokhoz/szimbólumhoz — a cTrader Console saját jelentés-írója dobja a `Message expected` hibát és kilép jelentés nélkül. Az alkalmazás nem tudja ezt felfelé javítani, de észleli és az instancet **Failed** (Sikertelen) jelöléssel látja el egy gyakorlatias indoklással ("no backtest results for the selected range…") ahelyett, hogy nyers stack trace-t adna. Válasszon egy szélesebb dátumtartományt, amelyhez elérhető piaci adatok vannak, és próbálja újra.
+:::note cTrader összeomlása egy üres backteszten
+Ha a backteszt **nem ad eredményt** — nincs kereskedés, vagy nincs piaci adat a választott dátumokhoz/szimbólumhoz — a cTrader Console saját jelentés írója `Message expected`-ot dob, és kilép, szinte jelentés nélkül. Az alkalmazás nem tudja az upstream hibát kijavítani, de észleli és megjegyzi az instance-t **Failed** (Sikertelen) állapottal, egy működésre képes oka miatt ("no backtest results for the selected range…") egy nyers stack trace helyett. Válasszon egy szélesebb dátumtartományt, amely rendelkezik elérhető piaci adatokkal, és próbálkozzon újra.
 :::
 
-## Instance detail oldal
+## Instance részletoldala
 
-Egy instance megnyitása (`/instance/{id}`) megjeleníti az élő állapotát, naplóit és — egy backtest esetén — az equity görbét. A **böngésző fül címe** az adott instancet tükrözi (**cBot neve · típusa · szimbóluma**, pl. `TrendBot · Backtest · EURUSD`), így az élő futtatás füle és a backtest füle egy pillantásra megkülönböztethető. Egy cBot futtatása és backtestje külön **lineage-ként** követkedik (egy stabil lineage id az állapot-átmeneteken keresztül), így az oldal pontosan egy instancet követ, és soha nem keveri össze a futtatás adatait egy backtest adataival.
+Az instance megnyitása (`/instance/{id}`) az élő állapotot, naplókat és — backteszt esetén — a részvénygörbét mutatja. A **böngésző lapjának címe** az adott instancet tükrözi (**cBot név · típus · szimbólum**, pl. `TrendBot · Backtest · EURUSD`), így egy élő futtatási fül és egy backteszt fül azonnal megkülönböztethető. Az ugyanazon cBot futtatása és backtesztelése az **vonalak** között követett (egy stabil vonalazonosító az állapotátmeneteken keresztül), így az oldal pontosan egy instancet követi, és soha nem keveri a futtatás adatait a backteszt adataihoz.
 
-## Instance életciklus-vezérlők
+## Instance életciklus kezelőelemek
 
-Minden instance sor (és annak detail oldala) állapot-helyes vezérlőkkel rendelkezik. Egy **aktív** instance mutatja a **Stop** gombot; egy **terminális** (Stopped / Completed / Failed) pedig mutatja a **Start (▶)** gombot az újraindításhoz ugyanazon cBot, fiók, szimbólum, időkeret, paraméter készlet és kép segítségével (egy futtatás futtatásként indul újra, egy backtest backtestként). A Stop kattintáskor egy "Stopping…" értesítés jelenik meg és az ikon le van tiltva, amíg az nem rendezõdik, és egy újonnan létrehozott futtatás azonnal megjelenik a listában — nincs oldal újratöltés.
+Az egyes instance sorok (és a részletoldal) állapothoz helyes vezérlésekkel rendelkeznek. Egy **aktív** instance **Stop** (Leállítás) gombot mutat; egy **terminal** (Stopped / Completed / Failed) pedig **Start (▶)** gombot mutat az újraindításához, ugyanazon cBot, fiók, szimbólum, időkeret, paraméter készlet és kép (egy futtatás futtatásként újraindul, egy backteszt backtesztként). A Stop kattintásra a "Stopping…" (Leállítás alatt) hirdetmény és letiltott ikon kerül megjelenítésre, amíg feloldódik, és az újonnan létrehozott futtatás azonnal megjelenik a listában — oldalfrissítés nélkül.
 
-A konzol naplói **megmaradnak, amikor egy instance végpontot ér** — futtatás (Stop-on) és **backtest** (befejezéskor) esetén — így az utolsó futtatás naplói megtekinthetõek maradnak a detail oldalon és, a napló eszköztáron keresztül, **vágólapra másolva** (Naplók másolása ikon) vagy **letöltve** (Naplók letöltése ikon), még azután is, hogy a konténer már eltûnt. Mindkettõ az instance teljes konzol-naplóján mûködik, nem csak a képernyõn megjelenõ végén.
+Az konzol naplók **megmaradnak, ha az instance leáll** — egy futtatásra (Leállításkor) és egy **backtesztra** (befejezéskor) egyaránt — így az utolsó futtatás naplói a részletoldalon tekinthetők meg, és a naplók eszköztár segítségével **a vágólapra másolva** (Naplók másolása ikon) vagy **letöltve** (Naplók letöltése ikon) még az után is, hogy a konténer már nem létezik. Mindkét műveletnél az instance teljes konzol naplójára működik, nem csak a képernyőn látható farok.
 
-Az **feltöltött** `.algo` sohasem lett felépítve itt, ezért az **Last Build** oszlopa a cBots oldalon üres marad (csak az itt böngészõben felépített cBots mutatnak összeállítási idõt).
+Az **elkészített backteszt** az **cTrader jelentést** mindkét formátumban is megtartja — az nyers **JSON** (ugyanaz, amelyet a részvénygörbe és a mesterséges intelligencia elemzés olvas) és a teljes **HTML** jelentés. Mindkettő letölthető a backteszt sorból **és** a részletoldalról dedikált ikonok segítségével. Csak az **utolsó futtatás** jelentéseit tartják meg, és az ikonok **le vannak tiltva** minden backtesztnél, amely nincs elindítva, fut vagy sikertelen (és soha nem jelennek meg a futtatási instancenél) — csak egy befejezett backteszten van letölthető jelentés.
 
-## Leállított instance szerkesztése és újbóli futtatása
+Az **feltöltött** `.algo` soha nem lett itt fordítva le, így az **Last Build** (Utolsó összeállítás) oszlopa a cBots oldalon üres (ez csak azokhoz a cBotokhoz mutat összeállítási időt, amelyeket a böngészőben fordít le).
 
-A **leállított** instance (futtatás vagy backtest) rendelkezik egy **Edit** vezérlõvel — egy ikon az sor listáján **és** Start/Stop mellett a detail oldalán — amely egy párbeszédablakot nyit meg, amely az **elõre kitöltött** az aktuális konfigurációval. Módosíthatja a **kereskedési fiókot, szimbólumot, időkeret, paraméter készletet és kép címkét** (és backtest esetén az **ablakot és az összes fenti backtest-beállítást**), majd a **Save & start** az újraindítja az új beállításokkal (helyettesítve a leállított instancet). A vezérlõ **le van tiltva, amíg az instance aktív** — csak egy leállított instance szerkeszthetõ.
+## Leállított instance szerkesztése és újrafuttatása
 
-## Futtatás a kódszerkesztõbõl
+Egy **leállított** instance (futtatás vagy backteszt) egy **Edit** (Szerkesztés) vezérléshez tartozik — egy ikon a lista sorában **és** a Start/Stop mellett a részletoldalon — amely egy párbeszédpanelt nyit **az aktuális konfigurációval előre feltöltve**. Megváltoztathatja a **kereskedési számlát, szimbólumot, időkeretet, paraméter készletet és képcímkét** (és backteszt esetén az **ablakot és az összes fenti backteszt beállítást**), majd a **Save & start** (Mentés és indítás) gomb az új beállítások közé újraindítja (helyettesítve a leállított instancet). A vezérlés **letiltott, amíg az instance aktív** — csak egy leállított instance szerkeszthető.
 
-A kódszerkesztõben a **Run** kattintáskor egy párbeszédablak nyílik meg a vakon, merevített futtatás helyett:
+## Futtatás a kódszerkesztőből
 
-- **Trading account** (kötelezõ) — a cTrader fiók, amelyhez a cBot csatlakozik.
-- **Parameter set** (opcionális) — válasszon egy meglévõ készletet, vagy hagyja üresen, hogy a cBot **alapértelmezett paraméter értékeivel** fusson. A szelektort szomszédos **+** gomb egy új paraméter készletet hoz létre beágyazottan (lásd alább) és kiválasztja azt.
-- **Symbol / Timeframe** alapértelmezés `EURUSD` / `h1`, és módosítható; **Cancel** vagy **Run**.
+A kódszerkesztőben a **Run** (Futtatás) gombra kattintva egy párbeszédpanel jelenik meg a vak, kemény kódú futtatás helyett:
 
-A **Run** kattintáskor a szerkesztõ menti + felépíti az aktuális forrást, elindítja az instancet a kiválasztott fiókon a kiválasztott paraméterekkel, majd az élõ konténer naplóit követi. (A napló stream az aláírt felhasználó hitelesítési sütijét továbbítja a `/hubs/logs` SignalR hubra, így csatlakozik az `Invalid negotiation response received` helyett.)
+- **Trading account** (Kereskedési fiók) (szükséges) — a cTrader fiók, amelyhez a cBot csatlakozik.
+- **Parameter set** (Paraméter készlet) (opcionális) — válasszon egy meglévő készletet, vagy hagyja üresen a cBot **alapértelmezett paraméter értékeivel** való futtatáshoz. A kiválasztó melletti **+** gomb létrehoz egy új paraméter készletet inline (lásd alább) és kijelöli.
+- A **Symbol / Timeframe** alapértelmezés szerint `EURUSD` / `h1` értékre állnak, és módosíthatók; **Cancel** (Mégse) vagy **Run** (Futtatás).
+
+A **Run** (Futtatás) gombra kattintva a szerkesztő menti + összeállítja az aktuális forrást, az instance indítása a kiválasztott számlán a választott paraméterekkel, majd az élő konténer naplókat továbbítja. (A naplófolyam a bejelentkezett felhasználó hitelesítési sütijét a `/hubs/logs` SignalR hubra továbbítja, így csatlakozik az `Invalid negotiation response received` helyett.)
 
 ## Paraméter készletek
 
-A **parameter set** egy elnevezett, újrafelhasználható cBot paraméter felülírások készlete, amely egy sík JSON objektumként tárolódik, amely minden paraméter nevét egy skaláris értékre leképezi, pl. `{"Period": 14, "Label": "trend"}`. A futtatás/backtest idõben a cTrader `params.cbotset` fájlvá alakul (`{ "Parameters": { … } }`). Létrehozhat/szerkeszthet egy készletet nyers JSON-ként a cBot **Parameter sets** párbeszédablakjából vagy beágyazottan a Run párbeszédablakból.
+Az **paraméter készlet** egy elnevezett, újrafelhasználható cBot paraméter felülbírálási készlet, amely sima JSON objektumként tárolódik, amely minden paraméter nevet a skalár értékre leképez, pl. `{"Period": 14, "Label": "trend"}`. Futtatás/backteszt idején a cTrader `params.cbotset` fájlra konvertálódik (`{ "Parameters": { … } }`). A cBot **Parameter sets** (Paraméter készletek) párbeszédpaneléből vagy a Run párbeszédpanelből inline hozhat létre/szerkeszthet készletet.
 
-Minden paraméter készlet **egy cBothoz tartozik**: az Új paraméter készlet párbeszédablak az összes cBot-ját listázza, és **ki kell választanod egyet** — a létrehozás le van tiltva, amíg egy cBot nincs kiválasztva. A készlet **neve egyedi cBotonként**: egy készlet átnevezése ugyanarra a cBotra egy olyan névre, amelyet egy másik, ugyanazon cBot más készletének már használ, elvetítésre kerül (egy világos hiba a párbeszédablakban, `409 Conflict` az API-ban). Ugyanez a név újrafelhasználható egy **másik** cBoten.
+Minden paraméter készlet **egy cBothoz tartozik**: az New Parameter Set (Új paraméter készlet) párbeszédpanel felsorolja az összes cBotot, és **kötelező kijelölni egyet** — a létrehozás blokkolt, amíg a cBot nincs kijelölve. Egy készlet **neve egyedi cBotonként**: egy készletet egy olyan névre létrehozni vagy átnevezni, amelyet az ugyanazon cBot másik készlete már használ, elutasított (egyértelmű hiba a párbeszédpanelen, `409 Conflict` az API-ban). Ugyanez a név újrahasznosítható egy **másik** cBoten.
 
-A JSON **érvényesítésre kerül** mentéskor: egyetlen sík objektumnak kell lennie, amelynek értékei mind skalárok (string / szám / logikai). Egy nem objektum gyökér, egy tömb, egy beágyazott objektum, egy `null` érték, vagy hibás JSON elvetítésre kerül (egy világos hiba a párbeszédablakban, `400 Bad Request` az API-ban). Egy üres objektum `{}` megengedett, és azt jelenti, hogy "nincs felülírás".
+A JSON **validálva** mentéskor: ez egy olyan egyedi sima objektumnak kell lennie, amelynek értékei skalár (string / szám / bool). A nem objektum gyökér, egy tömb, egy beágyazott objektum, egy `null` érték vagy rosszul formázott JSON elutasított (egyértelmű hiba a párbeszédpanelen, `400 Bad Request` az API-ban). Az üres objektum `{}` megengedett és azt jelenti, hogy "nincs felülbírálás".
 
 ## cTrader Console CLI megjegyzések
 
-A backtestekhez `--data-mode` szükséges (alapértelmezés `m1`), dátumok as `dd/MM/yyyy HH:mm`, és `params.cbotset` JSON pozicionális arg; a `run` elutasítja a `--data-dir` (csak backtest). Lásd a `ContainerCommandHelpers` helyet.
+A backtesztekhez `--data-mode` (alapértelmezés `m1`), dátumok `dd/MM/yyyy HH:mm` formátumban és `params.cbotset` JSON pozicionális argumentum; a `run` elutasítja a `--data-dir` (csak backteszt). Lásd a `ContainerCommandHelpers` szakaszt.
 
 ## Csomópontok és skálázás
 
-A végrehajtási kapacitás csomópont ügynökök hozzáadásával növekszik (önregisztráció + szívverés). Lásd a [node discovery](../operations/node-discovery.md) és [scaling](../deployment/scaling.md) oldalakat.
+A végrehajtás kapacitása csomópont ügynökök hozzáadásával skálázható (önregesztráció + szívverés). Lásd a [node discovery](../operations/node-discovery.md) és a [scaling](../deployment/scaling.md) szakaszokat.
 
 ## Kereskedési fiók szükséges
 
-A cBot futtatásához vagy backtestjéhez szükséges egy cTrader kereskedési fiók, hogy csatlakozzon. Amíg nem adja hozzá az egyik a **Trading accounts** alatt, a **Run New cBot** / **Backtest New cBot** gombokat le vannak tiltva (eszköztippel), és az oldal egy prompt-ot mutat, amely a fiók beállítására hivatkozik — már nem találkozhat egy nyers `stream connect failed` hibával egy fiók nélküli botról.
+A cBot futtatásához vagy backteszteléséhez szükséges egy cTrader kereskedési fiók a csatlakozásához. Amíg nem ad hozzá egyet a **Trading accounts** (Kereskedési fiókok) alatt, a **Run New cBot** / **Backtest New cBot** (Új cBot futtatása / Új cBot backtesztelése) gombok le vannak tiltva (egy tippel), az oldal pedig egy felhívást mutat a fiók beállítási linkjével — már nem találkozik nyers `stream connect failed` hibával egy fiók nélküli bothoz.

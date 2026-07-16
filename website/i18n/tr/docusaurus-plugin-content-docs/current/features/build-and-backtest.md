@@ -1,114 +1,88 @@
 ---
-description: "cTrader cBotlarını (C# ve Python, her ikisi de .NET) tarayıcı içi Monaco IDE'den derleyin, çalıştırın ve geri test edin; resmi ghcr.io/spotware/ctrader-console görüntüsünde çalıştırın."
+description: "cTrader cBot'larını (C# ve Python, her ikisi de .NET) tarayıcı içi Monaco IDE'sinden oluşturun, çalıştırın, geriye dönük test edin; resmi ghcr.io/spotware/ctrader-console görüntüsü üzerinde çalıştırın."
 ---
 
-# cBotları derleme ve geri test etme
+# cBot'ları oluşturun ve geriye dönük test edin
 
-cTrader cBotlarını (C# **ve** Python, her ikisi de .NET) tarayıcı içi Monaco IDE'den derleyin, çalıştırın ve geri test edin; resmi `ghcr.io/spotware/ctrader-console` görüntüsünde çalıştırın.
+cTrader cBot'larını (C# **ve** Python, her ikisi de .NET) tarayıcı içi Monaco IDE'sinden oluşturun, çalıştırın ve geriye dönük test edin; resmi `ghcr.io/spotware/ctrader-console` görüntüsü üzerinde çalıştırın.
 
-## Derleme
+## Oluşturma
 
-- **Builder** sayfası Monaco editörünü barındırır; `CBotBuilder` projeyi `dotnet build` ile **tek kullanımlık kapsayıcıda** derler (`AppOptions.BuildImage`, çalışma dizini `/work` adresinde bind-mount edilir), böylece güvenilmeyen kullanıcı MSBuild hedefleri ana bilgisayara ulaşamaz. NuGet geri yüklemesi paylaşılan birim aracılığıyla derlemeler arasında önbelleğe alınır. Web ana bilgisayarının Docker soket erişimine ihtiyacı vardır.
+- **Builder** sayfası Monaco düzenleyici barındırır; `CBotBuilder` projeyi **geçici kapsayıcı içinde** (`AppOptions.BuildImage`, çalışma dizini `/work` adresinde bağlanmıştır) `dotnet build` ile derler, böylece güvenilmeyen kullanıcı MSBuild hedefleri ana bilgisayara erişemez. NuGet geri yüklemesi paylaşılan birim aracılığıyla derlemeler arasında önbelleğe alınır. Web ana bilgisayarı Docker soketine erişim gerekir.
 - C# ve Python başlangıç şablonları `src/Nodes/Builder/Templates/` içinde bulunur.
 
-## Çalıştırma ve geri test etme
+## Çalıştırma ve geriye dönük test
 
-- **Instances** = TPH durum hiyerarşisi (`Run`/`Backtest` × `Pending`/`Scheduled`/`Starting`/
-  `Running`/`Stopping`/`Stopped`/`Failed`). Geçiş varlığı değiştirir (id değişimi),
-  kapsayıcı id taşınır.
-- `NodeScheduler` en az yüklenen uygun düğümü seçer; `ContainerDispatcherFactory` rotayı
-  uzak düğüm HTTP aracısına veya yerel Docker gönderici'ye yönlendirir.
-- Tamamlama yoklayıcıları çıkılmış kapsayıcıları uzlaştırır (geri test kapsayıcıları `--exit-on-stop` aracılığıyla kendi kendine çıkarlar); rapor mevcut → tamamlandı (depolama `ReportJson`), eksik → başarısız.
-- Canlı kapsayıcı günlükleri SignalR üzerinden tarayıcıya akışı yapılır; geri test öz sermaye eğrileri rapordan ayrıştırılır ve grafik hâline getirilir.
+- **Instances** = TPH durum hiyerarşisi (`Run`/`Backtest` × `Pending`/`Scheduled`/`Starting`/`Running`/`Stopping`/`Stopped`/`Failed`). Geçiş varlığı değiştirir (id değişikliği), kapsayıcı id taşınır.
+- `NodeScheduler` en az yüklü uygun Node seçer; `ContainerDispatcherFactory` uzak Node HTTP aracısına veya yerel Docker dağıtıcısına yönlendirir.
+- Tamamlama tarayıcıları çıkan kapsayıcıları uzlaştırır (geriye dönük test kapsayıcıları `--exit-on-stop` aracılığıyla kendileri çıkar); rapor mevcut → tamamlandı (depolanan `ReportJson`), eksik → başarısız.
+- Canlı kapsayıcı günlükleri tarayıcıya SignalR üzerinden akışla iletilir; geriye dönük test öz sermaye eğrileri rapordan ayrıştırılır ve çizelgesi oluşturulur.
 
-## Geri test pazar verileri hesaba göre önbelleğe alınır
+## Geriye dönük test pazar verileri hesap başına önbelleğe alınır
 
-cTrader Console, geçmiş kene/çubuk verilerini `--data-dir` içine indirir. Bu dizin, **ticaret hesabı tarafından anahtarlanan (hesap numarasına göre) istikrarlı, kalıcı bir önbellektir** — düğümün diskinden düğümün kendi kapsayıcı yolunda (`/mnt/data`) bind-mount edilir, **örnek başına çalışma dizininden ayrı, iç içe olmayan bir mounttur**. Böylece aynı hesapta her geri test **zaten indirilmiş verileri yeniden kullanır** yerine her çalıştırmada yeniden indirmez. (Daha önce veri dizini, kimliği her çalıştırmada değişen örnek başına çalışma dizininin altında yaşıyordu, bu da her geri testte yeni bir indirmeyi zorladı.) Geçici örnek başına çalışma dizini hâlâ algoritmayı, parametreleri, şifreyi ve raporu tutar; paylaşılan veri önbelleği, bir düğümün geri test veri kullanımında sayılır ve düğüm temiz eyleminde temizlenir.
+cTrader Console, geçmiş kene/bar verilerini `--data-dir` içine indirir. Bu dizin, **ticari hesap tarafından tutulan kararlı, kalıcı bir önbellek** (hesap numarası) — Node'un diskinden kendi kapsayıcı yolunda bağlanmıştır (`/mnt/data`), örnek başına çalışma dizininden **ayrı, iç içe olmayan bir bağlantı**. Bu nedenle aynı hesapta her geriye dönük test, zaten indirilen verileri **yeniden kullanır** ve her çalıştırmada yeniden indirmek yerine bu şekilde devam eder. (Daha önce veri dizini örnek başına çalışma dizini altında bulunuyordu; bu da her çalıştırmada id değiştiğinden ve taze indirme zorladığından.) Geçici örnek başına çalışma dizini yine de algoritmayı, parametreleri, parolayı ve raporu tutar; paylaşılan veri önbelleği Node'un geriye dönük test-veri kullanımında sayılır ve Node temizleme eylemi tarafından silinir.
 
-## Geri test ayarları
+## Geriye dönük test ayarları
 
-**Backtest** iletişim kutusu, kullanıcı tarafından ayarlanabilen cTrader Console geri test ayarlarını ortaya koymaktadır, böylece hiç komut satırına dokunmanız gerekmez:
+**Backtest** diyaloğu, kullanıcı tarafından ayarlanabilir cTrader Console geriye dönük test ayarlarını ortaya çıkarır; böylece komut satırına dokunmanız asla gerekmez:
 
-- **Symbol / Timeframe** — zaman çerçevesi **her cTrader döneminin açılır listesidir** (`t1`…`t1000`,
-  `m1`…`m45`, `h1`…`h12`, `D1`/`D2`/`D3`, `W1`, `Month1` ve Renko/Range/Heikin dönemleri), konsolun kanonik büyük harf yazısında, böylece her zaman geçerli bir `--period` seçersiniz.
-- **From / To** — geri test penceresi (`--start` / `--end`).
-- **Data mode** — üç cTrader modundan biri (`--data-mode`): **Tick data** (`tick`, doğru),
-  **m1 bars** (`m1`, hızlı), veya **Open prices only** (`open`, en hızlı).
-- **Starting balance** — varsayılan olarak `10000` (`--balance`). **0 bakiye hiç ticaret yapmaz ve cTrader'ın boş bir rapor yayması nedeniyle çökmesine neden olur** ("Message expected"), bu nedenle sıfır olmayan bir bakiye her zaman gönderilir.
+- **Symbol / Timeframe** — zaman dilimi, **her cTrader döneminin açılır listesi** (`t1`…`t1000`, `m1`…`m45`, `h1`…`h12`, `D1`/`D2`/`D3`, `W1`, `Month1` ve Renko/Range/Heikin dönemleri), konsolun kanonik kasasında, böylece her zaman geçerli bir `--period` seçersiniz.
+- **From / To** — geriye dönük test penceresi (`--start` / `--end`).
+- **Data mode** — üç cTrader modundan biri (`--data-mode`): **Tick data** (`tick`, doğru), **m1 bars** (`m1`, hızlı) veya **Open prices only** (`open`, en hızlı).
+- **Starting balance** — `10000` öğesine varsayılan değer (`--balance`). **0 bakiye hiçbir işlem yapmaz ve cTrader'ın boş bir rapor yayması halinde kilitlenmesine neden olur** ("Message expected"), bu nedenle sıfır olmayan bir bakiye her zaman gönderilir.
 - **Commission** — `--commission`.
-- **Spread** — `--spread`, **0'ın altına gidemeyecek pips cinsinden sayısal bir alandır**. **Tick data modunda gizlidir**, cTrader yayılmayı kene verilerinden kendisi türetir (`--spread` gönderilmez).
+- **Spread** — `--spread`, **0'ın altına inmesi mümkün olmayan pip cinsinden sayısal bir alan**. **Tick data modunda gizlidir**, burada cTrader kurul verilerinin kendisinden kurul türetir (hiçbir `--spread` gönderilmez).
 
-Veri dizini (`--data-file` / `--data-dir`) uygulama tarafından yönetilir (hesaba göre önbellek, yukarıya bakınız), iletişim kutusunda gösterilmez.
+Veri dizini (`--data-file` / `--data-dir`) uygulamanın kendisi tarafından yönetilir (hesap başına önbellek, yukarıya bakınız), diyaloglarda gösterilmez.
 
-:::note cTrader boş geri testte çöker
-Geri test **sonuç üretmezse** — hiç ticaret yok veya seçilen tarihler/sembol için pazar verisi yok —
-cTrader Console'un kendi rapor yazıcısı `Message expected` atar ve rapor olmadan çıkar. Uygulama bunu yukarı akışlı hatayı düzeltemez, ancak bunu algılar ve örneği **Başarısız** olarak işaretler, uygulanabilir bir nedenle
-("seçilen aralık için geri test sonuçları yok…") yerine ham bir yığın izlemesi. Seçili aralığı genişletin
-mevcut pazar verisi olan ve yeniden deneyin.
+:::note cTrader boş geriye dönük testte kilitlenir
+Bir geriye dönük test **hiçbir sonuç** üretirse — hiçbir işlem yok veya seçilen tarihler/sembol için pazar verileri yok — cTrader Console'un kendi rapor yazıcısı `Message expected` değerini atar ve raport olmadan çıkar. Uygulama bu yukarı akış hatasını düzeltemez, ama bunu algılar ve örneği **Failed** olarak işaretler; eylem yapılabilir bir nedenle ("seçilen aralık için hiçbir geriye dönük test sonucu...") ham yığın izlemesi yerine. Mevcut pazar verileri olan daha geniş bir tarih aralığı seçin ve yeniden deneyin.
 :::
 
-## Örnek detay sayfası
+## Örnek ayrıntı sayfası
 
-Bir örneği açmak (`/instance/{id}`), canlı durumunu, günlükleri ve — geri test için — öz sermaye eğrisini gösterir. **Tarayıcı sekmesi başlığı** belirli örneği yansıtır (**cBot adı · tür · sembol**, örn.
-`TrendBot · Backtest · EURUSD`) böylece canlı bir çalıştırma sekmesi ve geri test sekmesi bir bakışta ayırt edilebilir.
-Aynı cBot'un bir çalıştırması ve geri testi, farklı **lineages** olarak izlenir (durum geçişleri arasında taşınan istikrarlı bir lineage id), bu nedenle sayfa tam olarak bir örneği takip eder ve hiçbir zaman bir çalıştırmanın verilerini geri testle karıştırmaz.
+Bir örneği açma (`/instance/{id}`) canlı durumunu, günlükleri ve — geriye dönük test için — öz sermaye eğrisini gösterir. **Tarayıcı sekme başlığı**, belirli örneği yansıtır (**cBot adı · tür · sembol**, örn. `TrendBot · Backtest · EURUSD`), böylece bir canlı çalıştırma sekmesi ve bir geriye dönük test sekmesi bir bakışta ayırt edilebilir. Aynı cBot'un bir çalıştırması ve bir geriye dönük testi farklı **lineages** olarak izlenir (durum geçişlerine taşınan kararlı bir soy kimliği), böylece sayfa tam olarak bir örneği izler ve asla bir çalıştırmanın verilerini geriye dönük testin verileriyle karışmaz.
 
-## Örnek yaşam döngüsü kontrolleri
+## Örnek yaşam döngüsü denetimleri
 
-Her örnek satırı (ve detay sayfası), durum açısından doğru kontrollere sahiptir. Bir **etkin** örnek
-**Stop** gösterir; **terminal** olanı (Stopped / Completed / Failed) aynı cBot, hesap, sembol, zaman çerçevesi, parametre seti ve görüntü ile yeniden başlatmak için **Start (▶)** gösterir (bir çalıştırma çalıştırma olarak yeniden başlar, geri test geri test olarak). Stop'a tıklamak "Stopping…" bildirimi gösterir ve çözülene kadar simgeyi devre dışı bırakır ve yeni oluşturulan çalıştırma listeye hemen görünür — sayfa yeniden yükleme yok.
+Her örnek satırı (ve ayrıntı sayfası) duruma uygun denetimler vardır. **Etkin** bir örnek **Stop** gösterir; **terminal** bir örnek (Stopped / Completed / Failed) **Start (▶)** gösterir; bunu aynı cBot, hesap, sembol, zaman dilimi, parametre seti ve görüntü ile yeniden başlatmak için (bir çalıştırma bir çalıştırma olarak yeniden başlatılır, geriye dönük test bir geriye dönük test olarak). Stop'a tıklamak "Stopping…" bildirimini gösterir ve çözdülene kadar simgeyi devre dışı bırakır ve yeni oluşturulan bir çalıştırma listede hemen görünür — sayfa yeniden yükleme yoktur.
 
-Konsol günlükleri **bir örnek sonlandığında kalıcıdır** — bir çalıştırma (Stop'ta) ve **geri test** (tamamlandığında) için — böylece son çalıştırmanın günlükleri detay sayfasında görüntülenebilir kalır ve,
-günlük araç çubuğu aracılığıyla, **panodan kopyalanmış** (Günlükleri Kopyala simgesi) veya **indirilmiş** (Günlükleri İndir simgesi) kapsayıcı gittikten sonra bile. Her ikisi de örneğin tam konsol günlüğü üzerinde hareket eder, sadece ekran üzerindeki kuyruk değil.
+Konsol günlükleri **bir örnek sonlandırıldığında saklanır** — çalıştırma için (Stop'da) ve **geriye dönük test** için (tamamlama sırasında) — böylece son çalıştırmanın günlükleri ayrıntı sayfasında görüntülenebilir kalır ve günlük araç çubuğu aracılığıyla **panoya kopyalanır** (Günlükleri kopyala simgesi) veya **indirilir** (Günlükleri indir simgesi) kapsayıcı gittikten sonra bile. Her ikisi de örneğin tam konsol günlüğü üzerinde işlem yapar, yalnızca ekranda görüntülenen kuyruk değil.
 
-**Yüklenen** bir `.algo` hiçbir zaman burada derlenmediyse, cBots sayfasındaki **Last Build** sütunu boş bırakılır (yalnızca tarayıcıda derlediğiniz cBotlar için derleme zamanı gösterir).
+**Tamamlanmış geriye dönük test** ayrıca **cTrader raporunu** her iki biçimde saklar — ham **JSON** (öz sermaye eğrisi ve yapay zeka analizi okuyan aynı) ve tam **HTML** raporu. Her ikisi de geriye dönük test satırından **ve** ayrıntı sayfasından özel simgeleri aracılığıyla indirilebilir. Yalnızca **son çalıştırmanın** raporları tutulur ve simgeler **başlangıç yapılmayan, çalışan veya başarısız geriye dönük testler için devre dışı** bırakılır (ve bir çalıştırma örneği için hiçbir zaman gösterilmez) — yalnızca tamamlanmış bir geriye dönük testin indirilebilir bir raporu vardır.
 
-## Durdurulmuş örneği düzenleyin ve yeniden çalıştırın
+Yüklenen `.algo` asla burada oluşturulmadığından, cBot'lar sayfasındaki **Last Build** sütunu boş bırakılır (tarayıcıda oluşturduğunuz cBot'lar için yalnızca bir oluşturma süresi gösterir).
 
-Durdurulmuş bir örneğin (çalıştırma veya geri test) **Edit** denetimi vardır — listedeki satırında ve detay sayfasında Start/Stop'un yanında bir simge —
-mevcut yapılandırması ile **önceden doldurulmuş** bir iletişim kutusunu açar.
-**Ticaret hesabı, sembol, zaman çerçevesi, parametre seti ve görüntü etiketini** değiştirebilirsiniz (ve, geri test için,
-**pencere ve yukarıdaki tüm geri test ayarları**), ardından **Save & start** yeni ayarlarla yeniden başlatır (durdurulmuş örneği değiştirir). Denetim **örnek etkinken devre dışıdır** —
-sadece durdurulmuş bir örnek düzenlenebilir.
+## Durdurulmuş bir örneği düzenleyin ve yeniden çalıştırın
 
-## Kod editöründen çalıştırma
+**Durdurulmuş** bir örnek (çalıştırma veya geriye dönük test) **Edit** denetimi vardır — listede bir satırında simge **ve** ayrıntı sayfasında Başlat/Durdur'un yanında — geçerli yapılandırması ile **önceden doldurulmuş** bir diyaloğu açar. **Ticari hesap, sembol, zaman dilimi, parametre seti ve görüntü etiketini** değiştirebilirsiniz (ve bir geriye dönük test için **pencereyi ve yukarıdaki tüm geriye dönük test ayarlarını**), ardından **Save & start** bunu yeni ayarlarla yeniden başlatır (durdurulmuş örneği değiştirir). Denetim **örnek etkin olsa devre dışı bırakılır** — yalnızca durdurulmuş bir örnek düzenlenebilir.
 
-Kod editöründe **Run** tuşuna tıklamak, kör, sabit kodlanmış çalışmayı ateşlemek yerine bir iletişim kutusu açar:
+## Kod düzenleyicisinden çalıştırın
 
-- **Trading account** (gerekli) — cBot'un bağlandığı cTrader hesabı.
-- **Parameter set** (isteğe bağlı) — mevcut bir seti seçin veya cBot'un
-  **varsayılan parametre değerleriyle** çalışmak için boş bırakın. Seçicinin yanında bir **+** düğmesi yeni bir parametre seti oluşturur
-  satır içinde (aşağıya bakınız) ve seçer.
-- **Symbol / Timeframe** varsayılan olarak `EURUSD` / `h1` ve değiştirilebilir; **Cancel** veya **Run**.
+Kod düzenleyicisinde **Run** tıklamak kör, sabit bir çalıştırma tetiklemek yerine bir diyaloğu açar:
 
-**Run** üzerine editör geçerli kaynağı kaydetme + derler, seçilen hesapta örneği başlatır
-seçilen parametrelerle, ardından canlı kapsayıcı günlükleri izler. (Günlük akışı oturum açmış kullanıcının auth tanımlama bilgisini `/hubs/logs` SignalR hub'ına iletir, bu nedenle `Invalid negotiation response received` nedeniyle başarısız olmak yerine bağlanır.)
+- **Ticari hesap** (gerekli) — cBot'un bağlandığı cTrader hesabı.
+- **Parameter set** (isteğe bağlı) — mevcut bir seti seçin veya cBot'un **varsayılan parametre değerleriyle** çalıştırmak için boş bırakın. Seçicinin yanındaki **+** düğmesi satır içinde yeni bir parametre seti oluşturur (aşağıya bakınız) ve bunu seçer.
+- **Symbol / Timeframe** `EURUSD` / `h1` öğesine varsayılan olur ve değiştirilebilir; **Cancel** veya **Run**.
+
+**Run**'da düzenleyici geçerli kaynağı kaydetmeli + derlemeli, seçilen hesapta seçilen parametrelerle örneği başlatmalı ve sonra canlı kapsayıcı günlüklerini takip etmeli. (Günlük akışı, oturum açan kullanıcının kimlik doğrulama tanımlama bilgisini `/hubs/logs` SignalR hub'ına iletir; böylece `Invalid negotiation response received` hatası yerine bağlanır.)
 
 ## Parametre setleri
 
-Bir **parameter set**, her parametre adını skaler bir değerle eşleştiren flat JSON nesnesi olarak depolanan, adlandırılmış, yeniden kullanılabilir bir cBot parametresi geçersiz kılma setidir, örn. `{"Period": 14, "Label": "trend"}`. Çalıştırma/geri test zamanında cTrader `params.cbotset` dosyasına dönüştürülür
-(`{ "Parameters": { … } }`). cBot'un **Parameter sets** iletişim kutusundan ham JSON olarak bir set oluşturabilir/düzenleyebilir veya Run iletişim kutusundan satır içi.
+**Parametre seti**, her parametre adını bir skaler değerle eşleştiren düz JSON nesnesi olarak depolanan, adlandırılmış, yeniden kullanılabilir cBot parametre geçersiz kılmaları setidir; örn. `{"Period": 14, "Label": "trend"}`. Çalıştırma/geriye dönük test sırasında cTrader `params.cbotset` dosyasına çevrilir (`{ "Parameters": { … } }`). cBot'un **Parameter sets** diyaloğundan ham JSON olarak bir seti oluşturabileceğiniz veya Run diyaloğundan satır içinde düzenleyebilirsiniz.
 
-Her parametre seti **bir cBot'a aittir**: Yeni Parametre Seti iletişim kutusu tüm cBotlarınızı listeler ve **bir sete seçmelisiniz** — bir cBot seçilene kadar oluşturma engellenir. Setin **adı cBot başına benzersizdir**:
-bir seti, aynı cBot'un başka bir setinin zaten kullandığı bir ada oluşturmak veya yeniden adlandırmak reddedilir (iletişim kutusunda açık hata, API'de `409 Conflict`). Aynı ad, **farklı** bir cBot'ta yeniden kullanılabilir.
+Her parametre seti **bir cBot'a aittir**: New Parameter Set diyaloğu tüm cBot'larınızı listeler ve **bir seti seçmelisiniz** — cBot seçilene kadar oluşturma engellenir. Bir setin **adı cBot başına benzersizdir**: bir setini aynı cBot'un başka bir seti zaten kullanan bir ada oluşturmak veya yeniden adlandırmak reddedilir (diyaloglarda net bir hata, API'de `409 Conflict`). Aynı ad **farklı** cBot'da yeniden kullanılabilir.
 
-JSON **kaydedilirken doğrulanmıştır**: tek bir düz nesnesi olmalı ve değerleri tüm skalerlerin (string / number / bool) olmalıdır. Kök olmayan nesne, bir dizi, iç içe nesne, bir `null` değeri veya hatalı biçimlendirilmiş
-JSON reddedilir (iletişim kutusunda açık hata, API'de `400 Bad Request`). Boş nesne `{}`
-izin verilir ve "geçersiz kılma yok" anlamına gelir.
+JSON **save'de doğrulanır**: tek bir düz nesne olmalı ve değerleri tüm skaler (dize / sayı / bool) olmalıdır. Kök olmayan bir nesne, bir dizi, iç içe bir nesne, bir `null` değer veya yanlış biçimlendirilmiş JSON reddedilir (diyaloglarda net bir hata, API'de `400 Bad Request`). Boş nesne `{}` izin verilir ve "geçersiz kılma yok" anlamına gelir.
 
 ## cTrader Console CLI notları
 
-Backtests `--data-mode` gerektirir (varsayılan `m1`), tarihler `dd/MM/yyyy HH:mm` ve
-`params.cbotset` JSON konumsal argüman; `run` `--data-dir` reddeder (sadece geri test). Bakınız
-`ContainerCommandHelpers`.
+Geriye dönük testler `--data-mode` (varsayılan `m1`) gerektirir; `dd/MM/yyyy HH:mm` olarak tarihler ve `params.cbotset` JSON konumsal argümanı; `run` `--data-dir` reddeder (yalnızca geriye dönük test). Bkz. `ContainerCommandHelpers`.
 
-## Düğümler ve ölçek
+## Node'lar ve ölçek
 
-Yürütme kapasitesi düğüm aracıları eklenerek ölçeklendirir (kendi kendine kaydolma + kalp atışı). Bakınız
-[node discovery](../operations/node-discovery.md) ve [scaling](../deployment/scaling.md).
+Yürütme kapasitesi, Node aracıları ekleyerek ölçeklenir (kendileri kaydol + sinyal); bkz. [node discovery](../operations/node-discovery.md) ve [scaling](../deployment/scaling.md).
 
-## Ticaret hesabı gereklidir
+## Bir ticari hesap gereklidir
 
-Bir cBot'u çalıştırmak veya geri test etmek cBot'un bağlanabileceği bir cTrader ticaret hesabı gerektirir. **Trading accounts** altında bir tane ekleyene kadar,
-**Run New cBot** / **Backtest New cBot** düğmeleri devre dışıdır (bir ipucu ile) ve sayfa, hesap kurulumuna bağlantı gösteren bir istem gösterir — artık ham bir
-`stream connect failed` hatası almazsınız hesabı olmayan bir bottan.
+Bir cBot'u çalıştırmak veya geriye dönük test yapmak için bağlanacak bir cTrader ticari hesabı gerekir. **Ticari hesaplar** altında birini ekleyene kadar, **Run New cBot** / **Backtest New cBot** düğmeleri devre dışı bırakılır (araç ipucu ile) ve sayfa hesap kurulumuna bağlayan bir istem gösterir — artık bir hesabı olmayan bir bot'tan ham `stream connect failed` hatası almazsınız.

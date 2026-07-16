@@ -1,61 +1,79 @@
 ---
-description: "สร้าง รัน และ backtest cTrader cBots (C# และ Python ทั้งคู่ .NET) จาก in-browser Monaco IDE ที่รันบน official ghcr.io/spotware/ctrader-console image"
+description: "สร้าง รัน ทดสอบย้อนหลัง cTrader cBots (C# และ Python ทั้งคู่ .NET) จากตัวแก้ไข Monaco ในเบราว์เซอร์ รัน บน official ghcr.io/spotware/ctrader-console image"
 ---
 
 # Build & backtest cBots
 
-สร้าง รัน backtest cTrader cBots (C# **และ** Python ทั้งคู่ .NET) จาก in-browser Monaco
-IDE ที่รันบน official `ghcr.io/spotware/ctrader-console` image
+สร้าง รัน ทดสอบย้อนหลัง cTrader cBots (C# **และ** Python ทั้งคู่ .NET) จากตัวแก้ไข Monaco ในเบราว์เซอร์ รัน บน official `ghcr.io/spotware/ctrader-console` image
 
 ## Build
 
-- **Builder** page host Monaco editor; `CBotBuilder` compile project ด้วย
-  `dotnet build` **ใน throwaway container** (`AppOptions.BuildImage`, work dir bind-mount
-  at `/work`) ดังนั้น untrusted user MSBuild targets ไม่ถึง host NuGet restore cached
-  ข้าม builds ผ่าน shared volume Web host ต้องมี Docker socket access
+- **Builder** page โฮสต์ตัวแก้ไข Monaco; `CBotBuilder` compile project ด้วย `dotnet build` **ในคอนเทนเนอร์ที่ชั่วคราว** (`AppOptions.BuildImage` work dir bind-mount ที่ `/work`) เพื่อไม่ให้ MSBuild targets ที่ไม่น่าเชื่อถือเข้าถึง host NuGet restore จะถูกแคชไว้ข้ามการ build ผ่าน shared volume Web host ต้องการ Docker socket access
 - C# + Python starter templates อยู่ใน `src/Nodes/Builder/Templates/`
 
 ## Run & backtest
 
-- **Instances** = TPH state hierarchy (`Run`/`Backtest` × `Pending`/`Scheduled`/`Starting`/
-  `Running`/`Stopping`/`Stopped`/`Failed`) Transition replace entity (id change),
-  container id ถูกพาไป
-- `NodeScheduler` เลือก least-loaded eligible node; `ContainerDispatcherFactory` route ไปยัง
-  remote node HTTP agent หรือ local Docker dispatcher
-- Completion pollers reconcile exited containers (backtest containers self-exit ผ่าน
-  `--exit-on-stop`); report มี → completed (เก็บ `ReportJson`), ไม่มี → failed
-- Live container logs stream ไปยัง browser ผ่าน SignalR; backtest equity curves parse จาก
-  report + charted
+- **Instances** = TPH state hierarchy (`Run`/`Backtest` × `Pending`/`Scheduled`/`Starting`/`Running`/`Stopping`/`Stopped`/`Failed`) Transition แทนที่ entity (id change) container id จะถูกพกพา
+- `NodeScheduler` เลือก least-loaded eligible node; `ContainerDispatcherFactory` route ไปยัง remote node HTTP agent หรือ local Docker dispatcher
+- Completion pollers reconcile exited containers (backtest containers self-exit ผ่าน `--exit-on-stop`); report present → completed (store `ReportJson`) missing → failed
+- Live container logs stream ไปยังเบราว์เซอร์ผ่าน SignalR; backtest equity curves parsed จาก report + charted
+
+## Backtest market data is cached per account
+
+cTrader Console ดาวน์โหลด historical tick/bar data เข้าไป `--data-dir` ของมัน ไดเรกทอรีนั้นเป็น **stable persistent cache keyed บน trading account** (account number ของมัน) — bind-mounted จาก disk ของ node ที่ container path ของมัน (`/mnt/data`) **separate non-nested mount** จาก per-instance work dir ดังนั้นทุก backtest บน account เดียวกัน **reuses** ข้อมูลที่ดาวน์โหลดแล้ว แทนที่จะ re-download ในแต่ละครั้ง (ก่อนหน้านี้ data dir อยู่ใต้ per-instance work dir ซึ่ง id เปลี่ยนทุกครั้ง ที่บังคับให้ fresh download ทุก backtest) ephemeral per-instance work dir ยังคงเก็บ algo params password และ report; shared data cache นับรวมใน node's backtest-data usage และ cleared โดย node-clean action
+
+## Backtest settings
+
+**Backtest** dialog expose ทุก setting ที่ cTrader Console backtest CLI accept เพื่อคุณไม่ต้องสัมผัสคำสั่ง command line:
+
+- **From / To** — backtest window (`--start` / `--end`)
+- **Data mode** — `m1` (1-minute bars) หรือ `tick` (`--data-mode`)
+- **Starting balance** — defaults ถึง `10000` (`--balance`) **0 balance places no trades และทำให้ cTrader emit empty report ที่มันจะ crash บน** ("Message expected") ดังนั้น non-zero balance จะถูกส่งเสมอ
+- **Commission** และ **Spread** (`--commission` / `--spread` spread ใน pips)
+- **Advanced options** — free-form `name=value` per line box สำหรับ backtest option อื่นที่ cTrader support (เช่น `applyCommissionAutomatically=true`); แต่ละ line กลายเป็น `--name value` CLI argument
+
+## Instance detail page
+
+เปิด instance (`/instance/{id}`) แสดง live status logs และ — สำหรับ backtest — equity curve **browser tab title** สะท้อน specific instance (**cBot name · kind · symbol** เช่น `TrendBot · Backtest · EURUSD`) เพื่อว่า live-run tab และ backtest tab จะแตกต่างได้ง่ายในแวบแรก run และ backtest ของ cBot เดียวกัน tracked as distinct **lineages** (stable lineage id พกพาข้าม state transitions) ดังนั้นหน้านี้ follow exactly one instance และไม่เคยผสมข้อมูล run's ด้วย backtest's
+
+## Instance lifecycle controls
+
+แต่ละ instance row (และ detail page ของมัน) มี state-correct controls **active** instance แสดง **Stop**; **terminal** one (Stopped / Completed / Failed) แสดง **Start (▶)** เพื่อ re-launch ด้วย cBot account symbol timeframe parameter set และ image เดียวกัน (run restarts as run backtest as backtest) Clicking Stop แสดง "Stopping…" notice และ disable icon จนกว่า resolve และ newly created run ปรากฏในรายการทันที — no page reload
+
+Console logs เป็น **persisted เมื่อ instance terminates** — สำหรับ run (on Stop) และสำหรับ **backtest** (on completion) เช่นเดียวกัน — ดังนั้น last run's logs stay viewable บน detail page และผ่าน log toolbar **copied ไปยัง clipboard** (Copy logs icon) หรือ **downloaded** (Download logs icon) แม้หลังจากคอนเทนเนอร์หายไป ทั้งสองทำต่อ instance's full console log ไม่ใช่ on-screen tail เท่านั้น
+
+**uploaded** `.algo` ไม่เคย built ที่นี่ ดังนั้น **Last Build** column ของมัน บน cBots page ว่าง (มันแสดง build time เฉพาะสำหรับ cBots ที่คุณ build ในเบราว์เซอร์)
+
+## Edit & re-run a stopped instance
+
+**stopped** instance (run หรือ backtest) มี **Edit** control — icon บน row ของมัน ในรายการ **และ** ข้าง Start/Stop บน detail page — ที่เปิด dialog **prefilled** ด้วย current configuration ของมัน คุณสามารถเปลี่ยน **trading account symbol timeframe parameter set และ image tag** (และสำหรับ backtest **window และทั้งหมด backtest settings** ด้านบน) แล้ว **Save & start** re-launch ด้วย settings ใหม่ (แทนที่ stopped instance) control เป็น **disabled ในขณะที่ instance active** — เฉพาะ stopped instance เท่านั้นที่สามารถ edit ได้
+
+## Run from the code editor
+
+Clicking **Run** ในตัวแก้ไขโค้ด เปิด dialog แทนที่จะยิง blind hard-coded run:
+
+- **Trading account** (required) — cTrader account ที่ cBot เชื่อมต่อไป
+- **Parameter set** (optional) — เลือก existing set หรือปล่อยให้ว่างเพื่อ run ด้วย **default parameter values** ของ cBot **+** button ข้าง selector สร้าง new parameter set inline (ดูด้านล่าง) และเลือกมัน
+- **Symbol / Timeframe** default ถึง `EURUSD` / `h1` และสามารถเปลี่ยน; **Cancel** หรือ **Run**
+
+บน **Run** editor saves + builds current source starts instance บน chosen account ด้วย chosen parameters แล้ว tails live container logs (log stream forwards signed-in user's auth cookie ไปยัง `/hubs/logs` SignalR hub เพื่อมันเชื่อมต่อแทนที่จะ fail ด้วย `Invalid negotiation response received`)
+
+## Parameter sets
+
+**parameter set** คือ named reusable set ของ cBot parameter overrides stored as flat JSON object mapping แต่ละ parameter name ถึง scalar value เช่น `{"Period": 14, "Label": "trend"}` ที่ run/backtest time มันเปลี่ยนเป็น cTrader `params.cbotset` file (`{ "Parameters": { … } }`) คุณสามารถ create/edit set as raw JSON จาก **Parameter sets** dialog ของ cBot หรือ inline จาก Run dialog
+
+ทุก parameter set **belongs ถึง cBot**: New Parameter Set dialog แสดง cBots ทั้งหมดของคุณ และคุณ **must pick one** — creation block จนกว่า cBot จะเลือก set's **name is unique per cBot**: creating หรือ renaming set ถึง name ที่ set อื่น ของ cBot เดียวกันใช้แล้ว จะถูก reject (clear error ในการ dialog `409 Conflict` ที่ API) ชื่อเดียวกันอาจ reused บน **different** cBot
+
+JSON เป็น **validated** on save: มันต้องเป็น single flat object ที่ values ทั้งหมดเป็น scalars (string / number / bool) non-object root array nested object `null` value หรือ malformed JSON จะถูก reject (clear error ในการ dialog `400 Bad Request` ที่ API) empty object `{}` อนุญาตและ means "no overrides"
 
 ## cTrader Console CLI notes
 
-Backtests ต้องการ `--data-mode` (default `m1`), dates เป็น `dd/MM/yyyy HH:mm` และ
-`params.cbotset` JSON positional arg; `run` reject `--data-dir` (backtest-only) ดู
-`ContainerCommandHelpers`
+Backtests ต้อง `--data-mode` (default `m1`) dates as `dd/MM/yyyy HH:mm` และ `params.cbotset` JSON positional arg; `run` reject `--data-dir` (backtest-only) ดู `ContainerCommandHelpers`
 
 ## Nodes & scale
 
-Execution capacity scale โดยเพิ่ม node agents (self-register + heartbeat) ดู
-[node discovery](../operations/node-discovery.md) และ [scaling](../deployment/scaling.md)
+Execution capacity scale โดย adding node agents (self-register + heartbeat) ดู [node discovery](../operations/node-discovery.md) และ [scaling](../deployment/scaling.md)
 
-## เรียกใช้จากตัวแก้ไขโค้ด
+## A trading account is required
 
-การคลิก **เรียกใช้** ในตัวแก้ไขโค้ดจะเปิดกล่องโต้ตอบแทนที่จะเริ่มการเรียกใช้แบบตายตัวที่ตั้งค่าไว้ล่วงหน้า:
-
-- **บัญชีเทรด** (จำเป็น) — บัญชี cTrader ที่ cBot เชื่อมต่อ
-- **ชุดพารามิเตอร์** (ไม่บังคับ) — เลือกชุดที่มีอยู่ หรือเว้นว่างไว้เพื่อเรียกใช้ด้วย**ค่าพารามิเตอร์เริ่มต้น**ของ cBot ปุ่ม **+** ข้างตัวเลือกจะสร้างชุดพารามิเตอร์ใหม่ในบรรทัด (ดูด้านล่าง) และเลือกมัน
-- **สัญลักษณ์ / กรอบเวลา** ค่าเริ่มต้นคือ `EURUSD` / `h1` และเปลี่ยนได้ **ยกเลิก** หรือ **เรียกใช้**
-
-เมื่อ **เรียกใช้** ตัวแก้ไขจะบันทึกและสร้างซอร์สโค้ดปัจจุบัน เริ่มอินสแตนซ์บนบัญชีที่เลือกด้วยพารามิเตอร์ที่เลือก แล้วติดตามบันทึกคอนเทนเนอร์แบบสด (สตรีมบันทึกจะส่งต่อคุกกี้การตรวจสอบสิทธิ์ของผู้ใช้ที่ลงชื่อเข้าใช้ไปยังฮับ SignalR `/hubs/logs` จึงเชื่อมต่อแทนที่จะล้มเหลวด้วย `Invalid negotiation response received`)
-
-## ชุดพารามิเตอร์
-
-**ชุดพารามิเตอร์** คือชุดการแทนที่พารามิเตอร์ cBot ที่มีชื่อและใช้ซ้ำได้ จัดเก็บเป็นอ็อบเจ็กต์ JSON แบบแบนที่แมปชื่อพารามิเตอร์แต่ละตัวกับค่าสเกลาร์ เช่น `{"Period": 14, "Label": "trend"}` เมื่อเรียกใช้/backtest จะถูกแปลงเป็นไฟล์ cTrader `params.cbotset` (`{ "Parameters": { … } }`) คุณสามารถสร้าง/แก้ไขชุดเป็น JSON ดิบจากกล่องโต้ตอบ **ชุดพารามิเตอร์** ของ cBot หรือในบรรทัดจากกล่องโต้ตอบเรียกใช้
-
-JSON จะถูก**ตรวจสอบ**เมื่อบันทึก: ต้องเป็นอ็อบเจ็กต์แบบแบนเดี่ยวที่ค่าทั้งหมดเป็นสเกลาร์ (สตริง / ตัวเลข / bool) รูทที่ไม่ใช่อ็อบเจ็กต์ อาร์เรย์ อ็อบเจ็กต์ซ้อน ค่า `null` หรือ JSON ที่ผิดรูปแบบจะถูกปฏิเสธ (ข้อผิดพลาดที่ชัดเจนในกล่องโต้ตอบ `400 Bad Request` ที่ API) อ็อบเจ็กต์ว่าง `{}` ได้รับอนุญาตและหมายถึง "ไม่มีการแทนที่"
-
-## การควบคุมวงจรชีวิตของอินสแตนซ์
-
-แต่ละแถวอินสแตนซ์ (และหน้ารายละเอียด) มีปุ่มควบคุมที่ถูกต้องตามสถานะ อินสแตนซ์ที่ **ทำงานอยู่** จะแสดง **หยุด** ส่วนอินสแตนซ์ที่ **สิ้นสุดแล้ว** (หยุดแล้ว / เสร็จสิ้น / ล้มเหลว) จะแสดง **เริ่ม (▶)** เพื่อเริ่มใหม่ด้วย cBot บัญชี สัญลักษณ์ กรอบเวลา ชุดพารามิเตอร์ และอิมเมจเดิม (การรันเริ่มใหม่เป็นการรัน backtest เป็น backtest) การคลิกหยุดจะแสดงการแจ้งเตือน "กำลังหยุด…" และปิดใช้งานไอคอนจนกว่าจะเสร็จ การรันที่สร้างใหม่จะปรากฏในรายการทันที — โดยไม่ต้องโหลดหน้าใหม่
-
-บันทึกคอนโซลจะถูก **เก็บรักษาไว้เมื่ออินสแตนซ์สิ้นสุด** — ทั้งสำหรับการรัน (เมื่อหยุด) และสำหรับ **backtest** (เมื่อเสร็จสิ้น) — ดังนั้นบันทึกของการรันล่าสุดยังคงดูได้ในหน้ารายละเอียดและดาวน์โหลดได้ผ่านไอคอน **ดาวน์โหลดบันทึก** แม้หลังจากคอนเทนเนอร์หายไปแล้ว
+Running หรือ backtesting cBot ต้องมี cTrader trading account เพื่อเชื่อมต่อ จนกว่าคุณจะ add one ภายใต้ **Trading accounts** **Run New cBot** / **Backtest New cBot** buttons ถูก disabled (พร้อมกับ tooltip) และหน้า แสดง prompt linking ไปยัง account setup — คุณไม่อีกต่อไปจะ hit raw `stream connect failed` error จาก bot ที่ไม่มี account

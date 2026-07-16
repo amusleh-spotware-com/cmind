@@ -150,10 +150,17 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
    `website/i18n/<locale>/docusaurus-plugin-content-docs/current/<same-rel-path>` (all 22 languages in
    `docusaurus.config.ts` i18n.locales / `Core.Constants.SupportedCultures`) in the **same commit** — a
    new or changed doc is not "done" until it exists in all languages. The parity gate
-   `npm run i18n:check` (wired into `.github/workflows/docs.yml`) **fails the docs build** on any missing
-   translation. Never leave a locale stale; never merge an English-only doc. **ALWAYS load and use the
-   `translate-localization` skill** to produce the translations — it fans out one sub-agent per language
-   on the cheapest/fastest model at low effort; do not translate all locales inline.
+   `npm run i18n:check` (`website/scripts/check-i18n-parity.mjs`, wired into `.github/workflows/docs.yml`)
+   **fails the docs build** on any missing translation **and on STRUCTURAL DRIFT** — a translated doc
+   whose Markdown heading sequence (the `#`/`##`/… levels, language-agnostic) no longer matches its
+   English source, i.e. you changed/added/removed a section in English without re-syncing the
+   translations. Pre-existing drift is grandfathered in `website/scripts/i18n-drift-baseline.txt`, a
+   **shrink-only ratchet**: you may delete a line after re-syncing that doc, but you may **never add** a
+   line for a doc you just changed — translate it instead (the gate also fails if a baseline entry stops
+   drifting, forcing the list down). So an English-only doc edit can no longer ship with the other
+   languages left behind. Never leave a locale stale; never merge an English-only doc. **ALWAYS load and
+   use the `translate-localization` skill** to produce the translations — it fans out one sub-agent per
+   language on the cheapest/fastest model at low effort; do not translate all locales inline.
 9. **Everything user-facing is localized (no exceptions, enforced).** No literal user-facing string in a
    `.razor`, endpoint, email, or notification — inject `IStringLocalizer<Ui>` and use `@L["key"]`; add
    the key to `tools/i18n/ui-translations.json` for **every** language in `Core.Constants.SupportedCultures`
@@ -211,8 +218,9 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
     above is only their documentation. When you add a rule, add its census gate in the same change — a rule
     with no census gate is a suggestion, and suggestions lose under delivery pressure. Current census gates:
     `RouteCoverageTests`, `NoHardcodedUiTextTests` (ratchet vs `pending-localization.txt`),
-    `NoWallClockInRazorTests`, `ResourceParityTests`, `WhiteLabelCatalogParityTests`, `ArchitectureGuardTests`,
-    `DestructiveActionConfirmTests`, `DomainExceptionMappingTests`, `GatingParityTests`, `RouteExistenceTests`.
+    `NoWallClockInRazorTests`, `ResourceParityTests`, `WhiteLabelCatalogParityTests`, `ArchitectureGuardTests`
+    (incl. strong-id + app/docs favicon parity), `DestructiveActionConfirmTests`, `DomainExceptionMappingTests`,
+    `GatingParityTests`, `RouteExistenceTests`, and the docs `check-i18n-parity.mjs` structural-drift ratchet.
     → `plans/audit-root-cause-and-gate-hardening.md`.
 
 ## Modern C# — MANDATORY (target C# 14 / .NET 10, `LangVersion=latest`)

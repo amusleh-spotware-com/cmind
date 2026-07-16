@@ -142,6 +142,22 @@ public sealed class ArchitectureGuardTests
             string.Join("\n", offenders));
     }
 
+    // The app favicon (src/Web/wwwroot/favicon.svg) and the docs-site favicon
+    // (website/static/img/favicon.svg) must be the SAME file: a logo change has to land in both at once so
+    // the running app and the published docs never show different marks.
+    [Fact]
+    public void App_and_docs_favicon_are_byte_identical()
+    {
+        var appFavicon = Path.Combine(RepoRoot, "src", "Web", "wwwroot", "favicon.svg");
+        var docsFavicon = Path.Combine(RepoRoot, "website", "static", "img", "favicon.svg");
+
+        File.Exists(appFavicon).Should().BeTrue("the app favicon is missing: {0}", appFavicon);
+        File.Exists(docsFavicon).Should().BeTrue("the docs favicon is missing: {0}", docsFavicon);
+
+        File.ReadAllBytes(appFavicon).Should().Equal(File.ReadAllBytes(docsFavicon),
+            "the app and docs favicon must stay in sync — update both when the logo changes");
+    }
+
     private static IEnumerable<string> ScanSource(string root, Regex pattern, Func<string, bool> fileFilter)
     {
         foreach (var file in Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories))

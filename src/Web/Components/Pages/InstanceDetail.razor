@@ -136,10 +136,12 @@
     private async Task StopAsync()
     {
         _stopping = true;
+        Snack.Add("Stopping instance…", Severity.Info);
+        StateHasChanged();
         try
         {
             var r = await Http.PostAsync($"/api/instances/{Id}/stop", null);
-            Snack.Add(r.IsSuccessStatusCode ? "Instance stopping" : "Stop failed",
+            Snack.Add(r.IsSuccessStatusCode ? "Instance stopped" : "Stop failed",
                 r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
             try { _detail = await Http.GetDynamicAsync($"/api/instances/{Id}"); } catch { /* keep prior */ }
         }

@@ -141,7 +141,25 @@ public static class InstanceEndpoints
             starting.AttachNode(node);
 
             var algo = protector.Unprotect(cbot.EncryptedAlgo, EncryptionPurposes.CbotAlgo);
-            var containerId = await factory.For(node).StartAsync(starting, algo, paramJson, default);
+
+            string containerId;
+            try
+            {
+                containerId = await factory.For(node).StartAsync(starting, algo, paramJson, default);
+            }
+            catch (Exception ex)
+            {
+                // Container start failed (e.g. image pull / docker error): record the instance as Failed and
+                // still return OK so the caller shows the (failed) instance in the list instead of a 500 with
+                // an orphaned Starting row.
+                Instance failedInstance = starting is BacktestInstance failedBacktest
+                    ? failedBacktest.ToFailed(ex.Message, timeProvider.GetUtcNow())
+                    : ((RunInstance)starting).ToFailed(ex.Message, timeProvider.GetUtcNow());
+                db.Instances.Remove(starting);
+                db.Instances.Add(failedInstance);
+                await db.SaveChangesAsync();
+                return Results.Ok(new { failedInstance.Id });
+            }
 
             // Transition to Running by replacing entity (TPH discriminator cannot change)
             Instance running = starting switch

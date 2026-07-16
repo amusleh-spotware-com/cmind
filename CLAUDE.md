@@ -94,6 +94,14 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
    mobile + desktop) or an authenticated API call. **Failure paths count** — connection drop, order
    rejection, desync/resync, token rotation, node death + lease reclaim. New route → add to
    `PageSmokeTests`. → `tests/CLAUDE.md`.
+   **NEVER remove, delete, comment out, `[Fact(Skip=…)]`, or weaken a test (or its assertions) to make a
+   suite go green — this is forbidden, no exception.** A red/flaky test is resolved by fixing the code, or
+   fixing the test's *incorrect* expectation, or making the test deterministic (e.g. seed state / use a
+   fake / force a fast-fail path instead of removing coverage) — never by deleting coverage. A flaky test
+   is a bug to fix, not to delete. If a test is genuinely obsolete, replace it in the same change with one
+   that covers the same behaviour at least as strongly; the total count of asserted behaviours may only
+   grow. Deleting a test to unblock a commit is a regression that ships bugs. (Enforced by review + git
+   history — a diff that nets out test coverage is rejected.)
    **Missing credentials/API keys is NEVER a reason to skip a test tier, and never a reason to ask.**
    Always write every applicable tier — unit, integration, **and E2E** — even when the AI key, Open API
    creds, or a live cluster are absent. Test the parts that don't need the secret directly (UI renders,

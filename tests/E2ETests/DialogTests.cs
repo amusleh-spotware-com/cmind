@@ -220,6 +220,52 @@ public sealed class DialogTests(AppFixture app)
         await SubmitAsync(dialog, "Cancel");
     }
 
+    // A run created from the dialog appears in the Instances list immediately, without reloading the page
+    // (regression: InstanceTable.RefreshAsync updated its data but never re-rendered the child component).
+    [Fact]
+    public async Task Created_run_appears_in_the_list_without_page_reload()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await SeedTradingAccountAsync(page);
+
+        // Seed a cBot through the upload UI (retry: a change fired before the circuit is interactive is lost).
+        var cbotName = $"runlist-{Suffix}";
+        await GotoAsync(page, "/cbots");
+        var cbotRow = page.GetByText(cbotName).First;
+        await page.RunUntilVisibleAsync(() => page.SetInputFilesAsync("#cbotFile", new FilePayload
+        {
+            Name = $"{cbotName}.algo",
+            MimeType = "application/octet-stream",
+            Buffer = "dummy-algo-content"u8.ToArray()
+        }), cbotRow);
+        await Assertions.Expect(cbotRow).ToBeVisibleAsync(Slow);
+
+        await GotoAsync(page, "/run");
+        var dialog = await OpenDialogAsync(page, "Run New cBot");
+        await SelectMudOptionAsync(page, dialog, "cBot", cbotName);
+        await SelectFirstMudOptionAsync(page, dialog, "Trading account");
+        // Force a fast container-start failure with an unknown image tag: the run resolves to Failed almost
+        // instantly (no slow image pull), keeping the test light and deterministic while still exercising the
+        // create → list-refresh path end to end.
+        await dialog.GetByLabel("Image tag").FillAsync("e2e-nonexistent-tag");
+        await dialog.Locator("[data-testid=run-submit]").ClickAsync();
+
+        // The instance row shows in the table without a manual page reload.
+        await Assertions.Expect(page.GetByText(cbotName).First).ToBeVisibleAsync(new() { Timeout = 60000 });
+    }
+
+    private static async Task SelectMudOptionAsync(IPage page, ILocator dialog, string label, string optionText)
+    {
+        await dialog.GetByLabel(label).ClickAsync();
+        await page.Locator($".mud-list-item:has-text('{optionText}')").First.ClickAsync();
+    }
+
+    private static async Task SelectFirstMudOptionAsync(IPage page, ILocator dialog, string label)
+    {
+        await dialog.GetByLabel(label).ClickAsync();
+        await page.Locator(".mud-list-item").First.ClickAsync();
+    }
+
     private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 30000 };
 
     // Creates a cID + demo trading account via the app API so account-gated buttons (Run/Backtest) are

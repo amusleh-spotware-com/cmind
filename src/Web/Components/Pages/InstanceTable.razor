@@ -26,9 +26,10 @@
                                Disabled="@(!(bool)context.hasLogs)"
                                OnClick="@(() => DownloadLogs((Guid)context.id))" data-testid="instance-logs-download" />
             </MudTooltip>
-            <MudTooltip Text="@(IsActive((string)context.status) ? "Stop instance" : "Instance already stopped")">
+            <MudTooltip Text="@(_stopping.Contains((Guid)context.id) ? "Stopping…" : IsActive((string)context.status) ? "Stop instance" : "Instance already stopped")">
                 <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Small" Color="Color.Warning"
-                               Disabled="@(!IsActive((string)context.status))" aria-label="Stop instance"
+                               Disabled="@(!IsActive((string)context.status) || _stopping.Contains((Guid)context.id))"
+                               aria-label="Stop instance"
                                OnClick="@(() => Stop((Guid)context.id))" data-testid="instance-stop" />
             </MudTooltip>
             <MudTooltip Text="@(IsActive((string)context.status) ? "Stop the instance before deleting" : "Delete instance")">
@@ -43,12 +44,19 @@
 @code {
     [Parameter] public string Type { get; set; } = "Run";
     private dynamic[] _items = [];
+    // Instances whose Stop request is in flight — their Stop icon is disabled until it resolves.
+    private readonly HashSet<Guid> _stopping = new();
 
     protected override Task OnInitializedAsync() => Load();
 
     // Lets the host page (Run/Backtest) refresh the list immediately after queuing a new instance, so it
-    // shows up without waiting for a manual reload.
-    public Task RefreshAsync() => Load();
+    // shows up without waiting for a manual reload. StateHasChanged is required because the parent invoking
+    // this method does not re-render this child (its parameters are unchanged).
+    public async Task RefreshAsync()
+    {
+        await Load();
+        StateHasChanged();
+    }
 
     private async Task Load()
     {
@@ -93,10 +101,21 @@
     }
     private async Task Stop(Guid id)
     {
-        var r = await Http.PostAsync($"/api/instances/{id}/stop", null);
-        Snack.Add(r.IsSuccessStatusCode ? "Instance stopping" : "Stop failed",
-            r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
-        await Load();
+        // Immediately notify + disable the Stop icon for this row until the request resolves.
+        _stopping.Add(id);
+        Snack.Add("Stopping instance…", Severity.Info);
+        StateHasChanged();
+        try
+        {
+            var r = await Http.PostAsync($"/api/instances/{id}/stop", null);
+            Snack.Add(r.IsSuccessStatusCode ? "Instance stopped" : "Stop failed",
+                r.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        }
+        finally
+        {
+            _stopping.Remove(id);
+            await Load();
+        }
     }
 
     private async Task Delete(Guid id)

@@ -29,7 +29,8 @@ public static class TestSeedEndpoints
         // Seeds a minimal portfolio for the current user: a cBot + param set, one completed backtest
         // carrying a report, and one running instance. Enough to drive digest / exposure / tune / optimize
         // / analyze-backtest / post-mortem end to end against a configured AI provider.
-        g.MapPost("/ai-portfolio", async (DataContext db, ICurrentUser user, TimeProvider clock, CancellationToken ct) =>
+        g.MapPost("/ai-portfolio", async (DataContext db, ICurrentUser user, TimeProvider clock,
+            ISecretProtector protector, CancellationToken ct) =>
         {
             if (user.UserId is not { } uid) return Results.Unauthorized();
             var now = clock.GetUtcNow();
@@ -49,6 +50,14 @@ public static class TestSeedEndpoints
 
             var paramSet = ParamSet.Create(uid, cbot.Id, "seed-params", """{"period":14}""");
             db.ParamSets.Add(paramSet);
+
+            // A trading account for the completed backtest, so the Edit dialog can render the account number
+            // and parameter-set name (never the raw Guid) when it prefills.
+            var cid = CTraderIdAccount.Create(uid, $"seed-cid-{Guid.NewGuid():N}",
+                protector.Protect("pw"u8, EncryptionPurposes.CtidPassword));
+            var account = cid.AddTradingAccount(5_800_000L + Random.Shared.Next(190_000), "SeedBroker",
+                isLive: false, "seed", Core.Accounts.BrokerAllowlist.Unrestricted);
+            db.CTids.Add(cid);
             await db.SaveChangesAsync(ct);
 
             var tag = new DockerImageTag("latest");
@@ -56,7 +65,8 @@ public static class TestSeedEndpoints
             var timeframe = new Timeframe("h1");
 
             var completed = ((StartingBacktestInstance)BacktestInstance.CreateStarting(
-                    uid, cbot.Id, node.Id, tag, symbol, timeframe, null))
+                    uid, cbot.Id, node.Id, tag, symbol, timeframe,
+                    """{"from":"2024-01-01","to":"2024-02-01","balance":"10000"}""", account.Id, paramSet.Id))
                 .ToRunning("seed-bt", now.AddMinutes(-30))
                 .ToCompleted(now.AddMinutes(-5), SampleReportJson);
             completed.CaptureConsoleLog("seed backtest console line 1\nseed backtest console line 2");
@@ -75,6 +85,7 @@ public static class TestSeedEndpoints
             {
                 cbotId = cbot.Id.Value,
                 paramSetId = paramSet.Id.Value,
+                accountNumber = account.AccountNumber,
                 completedInstanceId = completed.Id.Value,
                 runningInstanceId = running.Id.Value
             });

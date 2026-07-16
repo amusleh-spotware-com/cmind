@@ -2,6 +2,7 @@
    Prefills from the instance's current config; returns the new instance id on confirm. *@
 @using System.Text.Json
 @using Web.Json
+@using Core.Constants
 @inject HttpClient Http
 @inject ISnackbar Snack
 
@@ -12,11 +13,15 @@
     <DialogContent>
         <MudForm @ref="_form">
             <MudSelect T="Guid?" @bind-Value="_acctId" Label="Trading account" Required="true"
-                       RequiredError="Trading account is required" Class="mb-2" data-testid="edit-account">
+                       RequiredError="Trading account is required" Class="mb-2" data-testid="edit-account"
+                       ToStringFunc="@AccountLabel">
                 @foreach (var a in _accts) { <MudSelectItem T="Guid?" Value="@((Guid?)(Guid)a.id)">@a.accountNumber - @a.broker</MudSelectItem> }
             </MudSelect>
             <MudTextField @bind-Value="_symbol" Label="Symbol" Required="true" RequiredError="Symbol is required" Class="mb-2" data-testid="edit-symbol" />
-            <MudTextField @bind-Value="_timeframe" Label="Timeframe" Required="true" RequiredError="Timeframe is required" Class="mb-2" data-testid="edit-timeframe" />
+            <MudSelect T="string" @bind-Value="_timeframe" Label="Timeframe" Required="true"
+                       RequiredError="Timeframe is required" Class="mb-2" data-testid="edit-timeframe">
+                @foreach (var tf in Timeframes.Supported) { <MudSelectItem T="string" Value="@tf">@tf</MudSelectItem> }
+            </MudSelect>
             @if (_isBacktest)
             {
                 <MudDatePicker @bind-Date="_from" Label="From" Class="mb-2" data-testid="edit-from" />
@@ -29,16 +34,13 @@
                 <MudTextField @bind-Value="_balance" Label="Starting balance" Class="mb-2" data-testid="edit-balance" />
                 <MudTextField @bind-Value="_commission" Label="Commission" Class="mb-2" data-testid="edit-commission" />
                 <MudTextField @bind-Value="_spread" Label="Spread (pips)" Class="mb-2" data-testid="edit-spread" />
-                <MudTextField @bind-Value="_dataFile" Label="Data file (optional node path)" Class="mb-2" data-testid="edit-datafile"
-                              HelperText="Leave empty to use downloaded data; set a node-side path (--data-file)." />
-                <MudSwitch T="bool" @bind-Value="_environmentVariables" Color="Color.Primary" Class="mb-1"
-                           Label="Expose environment variables to the cBot" data-testid="edit-envvars" />
                 @if (_dateError is not null)
                 {
                     <MudText Color="Color.Error" Typo="Typo.caption" data-testid="edit-date-error">@_dateError</MudText>
                 }
             }
-            <MudSelect T="Guid?" @bind-Value="_psId" Label="Parameter set" Clearable="true" Class="mb-2" data-testid="edit-paramset">
+            <MudSelect T="Guid?" @bind-Value="_psId" Label="Parameter set" Clearable="true" Class="mb-2" data-testid="edit-paramset"
+                       ToStringFunc="@ParamSetLabel">
                 @foreach (var p in _paramsets) { <MudSelectItem T="Guid?" Value="@((Guid?)(Guid)p.id)">@p.name</MudSelectItem> }
             </MudSelect>
             <MudTextField @bind-Value="_image" Label="Image tag" data-testid="edit-image" />
@@ -60,8 +62,7 @@
     private Guid? _acctId, _psId, _cbotId;
     private bool _isBacktest;
     private string _symbol = "EURUSD", _timeframe = "h1", _image = "latest";
-    private string _balance = BacktestSettings.DefaultBalance, _commission = "0", _spread = "0", _dataFile = "";
-    private bool _environmentVariables;
+    private string _balance = BacktestSettings.DefaultBalance, _commission = "0", _spread = "0";
     private string _dataMode = BacktestSettings.DefaultDataMode;
     private DateTime? _from, _to;
     private string? _dateError;
@@ -107,12 +108,6 @@
                     case "commission": _commission = ValueString(p.Value); break;
                     case "spread": _spread = ValueString(p.Value); break;
                     case "datamode" or "data-mode": _dataMode = ValueString(p.Value); break;
-                    case "datafile" or "data-file": _dataFile = ValueString(p.Value); break;
-                    case "environmentvariables" or "environment-variables":
-                        _environmentVariables = p.Value.ValueKind == JsonValueKind.True
-                            || (p.Value.ValueKind == JsonValueKind.String
-                                && bool.TryParse(p.Value.GetString(), out var b) && b);
-                        break;
                 }
             }
         }
@@ -121,6 +116,24 @@
 
     private static string ValueString(JsonElement e) =>
         e.ValueKind == JsonValueKind.String ? e.GetString() ?? "" : e.ToString();
+
+    // MudSelect shows the selected VALUE's text via these maps, so a programmatically-prefilled account /
+    // parameter set renders its human name (account number · broker, set name) instead of the raw Guid.
+    private string AccountLabel(Guid? id)
+    {
+        if (id is not { } value) return "";
+        foreach (var a in _accts)
+            if ((Guid)a.id == value) return $"{a.accountNumber} - {a.broker}";
+        return "";
+    }
+
+    private string ParamSetLabel(Guid? id)
+    {
+        if (id is not { } value) return "";
+        foreach (var p in _paramsets)
+            if ((Guid)p.id == value) return (string)p.name;
+        return "";
+    }
 
     private async Task<dynamic[]> LoadOrEmptyAsync(string url)
     {
@@ -142,7 +155,7 @@
                 return;
             }
             _dateError = null;
-            backtestJson = BacktestSettings.ToJson(_from, _to, _dataMode, _balance, _commission, _spread, _dataFile, _environmentVariables);
+            backtestJson = BacktestSettings.ToJson(_from, _to, _dataMode, _balance, _commission, _spread);
         }
 
         var body = new

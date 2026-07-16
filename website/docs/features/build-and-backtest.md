@@ -41,9 +41,12 @@ node-clean action.
 
 ## Backtest settings
 
-The **Backtest** dialog exposes every setting the cTrader Console backtest CLI accepts, so you never
-have to touch a command line:
+The **Backtest** dialog exposes the user-tunable cTrader Console backtest settings, so you never have to
+touch a command line:
 
+- **Symbol / Timeframe** — the timeframe is a **dropdown of every cTrader period** (`t1`…`t1000`,
+  `m1`…`m45`, `h1`…`h12`, `D1`/`D2`/`D3`, `W1`, `Month1`, and the Renko/Range/Heikin periods), in the
+  console's canonical casing, so you always pick a valid `--period`.
 - **From / To** — the backtest window (`--start` / `--end`).
 - **Data mode** — one of the three cTrader modes (`--data-mode`): **Tick data** (`tick`, accurate),
   **m1 bars** (`m1`, fast), or **Open prices only** (`open`, fastest).
@@ -51,10 +54,9 @@ have to touch a command line:
   cTrader emit an empty report it then crashes on** ("Message expected"), so a non-zero balance is
   always sent.
 - **Commission** and **Spread** — `--commission` / `--spread` (spread in pips).
-- **Data file** (optional) — a node-side path to a historical data file (`--data-file`); leave empty to
-  use the downloaded/cached data.
-- **Expose environment variables** — a toggle that passes the host environment variables to the cBot
-  (the `--environment-variables` flag).
+
+The data directory (`--data-file` / `--data-dir`) is managed by the app itself (a per-account cache, see
+above), not exposed in the dialog.
 
 ## Instance detail page
 

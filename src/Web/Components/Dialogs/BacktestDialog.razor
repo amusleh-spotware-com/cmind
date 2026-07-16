@@ -1,5 +1,6 @@
 @* Modal dialog for starting a new backtest. Returns BacktestDialogResult on confirm. *@
 @using Web.Json
+@using Core.Constants
 @inject HttpClient Http
 @inject TimeProvider TimeProvider
 
@@ -18,7 +19,10 @@
                 @foreach (var a in _accts) { <MudSelectItem T="Guid?" Value="@((Guid?)a.id)">@a.accountNumber - @a.broker</MudSelectItem> }
             </MudSelect>
             <MudTextField @bind-Value="_symbol" Label="Symbol" Required="true" RequiredError="Symbol is required" Class="mb-2" />
-            <MudTextField @bind-Value="_timeframe" Label="Timeframe" Required="true" RequiredError="Timeframe is required" Class="mb-2" />
+            <MudSelect T="string" @bind-Value="_timeframe" Label="Timeframe" Required="true"
+                       RequiredError="Timeframe is required" Class="mb-2" data-testid="backtest-timeframe">
+                @foreach (var tf in Timeframes.Supported) { <MudSelectItem T="string" Value="@tf">@tf</MudSelectItem> }
+            </MudSelect>
             <MudDatePicker @bind-Date="_from" Label="From" Class="mb-2" data-testid="backtest-from" />
             <MudDatePicker @bind-Date="_to" Label="To" Class="mb-2" data-testid="backtest-to" />
             @if (_dateError is not null)
@@ -33,10 +37,6 @@
             <MudTextField @bind-Value="_balance" Label="Starting balance" Class="mb-2" data-testid="backtest-balance" />
             <MudTextField @bind-Value="_commission" Label="Commission" Class="mb-2" data-testid="backtest-commission" />
             <MudTextField @bind-Value="_spread" Label="Spread (pips)" Class="mb-2" data-testid="backtest-spread" />
-            <MudTextField @bind-Value="_dataFile" Label="Data file (optional node path)" Class="mb-2" data-testid="backtest-datafile"
-                          HelperText="Leave empty to use downloaded data; set to a node-side data file path (--data-file)." />
-            <MudSwitch T="bool" @bind-Value="_environmentVariables" Color="Color.Primary" Class="mb-1"
-                       Label="Expose environment variables to the cBot" data-testid="backtest-envvars" />
             <MudSelect T="Guid?" @bind-Value="_psId" Label="Parameter set" Clearable="true" Class="mb-2">
                 @foreach (var p in _paramsets) { <MudSelectItem T="Guid?" Value="@((Guid?)p.id)">@p.name</MudSelectItem> }
             </MudSelect>
@@ -56,8 +56,7 @@
     private dynamic[] _cbots = [], _accts = [], _paramsets = [];
     private Guid? _cbotId, _acctId, _psId;
     private string _symbol = "EURUSD", _timeframe = "h1", _image = "latest";
-    private string _dataMode = "m1", _balance = "10000", _commission = "0", _spread = "0", _dataFile = "";
-    private bool _environmentVariables;
+    private string _dataMode = "m1", _balance = "10000", _commission = "0", _spread = "0";
     private DateTime? _from, _to;
     private string? _dateError;
 
@@ -105,7 +104,7 @@
             return;
         }
         _dateError = null;
-        var settingsJson = BacktestSettings.ToJson(_from, _to, _dataMode, _balance, _commission, _spread, _dataFile, _environmentVariables);
+        var settingsJson = BacktestSettings.ToJson(_from, _to, _dataMode, _balance, _commission, _spread);
         Dialog.Close(DialogResult.Ok(new BacktestDialogResult(
             _cbotId, _acctId, _symbol.Trim(), _timeframe.Trim(), _psId, _image.Trim(), settingsJson)));
     }

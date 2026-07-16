@@ -327,7 +327,9 @@ public readonly record struct Timeframe
     {
         if (string.IsNullOrWhiteSpace(value))
             throw new ArgumentException("Invalid timeframe", nameof(value));
-        Value = value.Trim().ToLowerInvariant();
+        // Preserve the cTrader canonical casing (D1/W1/Month1/Re1/…) — the CLI period names are
+        // case-sensitive, so lowercasing would break every non-minute/hour timeframe.
+        Value = value.Trim();
     }
     public override string ToString() => Value;
 }

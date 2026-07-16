@@ -21,6 +21,7 @@ Dialogs/CalendarFilterDialog.razor
 Dialogs/CopyProfileDialog.razor
 Dialogs/DashboardCustomizeDialog.razor
 Dialogs/DisableTwoFactorDialog.razor
+Dialogs/EditInstanceDialog.razor
 Dialogs/EnableTwoFactorDialog.razor
 Dialogs/McpKeyCreatedDialog.razor
 Dialogs/NewCidAccountDialog.razor

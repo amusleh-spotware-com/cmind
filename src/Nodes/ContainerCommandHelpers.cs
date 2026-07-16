@@ -84,20 +84,10 @@ public static class ContainerCommandHelpers
                         continue;
                     }
                     if (lower is "balance") sawBalance = true;
-                    // --environment-variables is a valueless flag: emit it (no value) when truthy, skip otherwise.
-                    if (lower is "environmentvariables" or "environment-variables")
-                    {
-                        var envOn = p.Value.ValueKind == JsonValueKind.True
-                            || (p.Value.ValueKind == JsonValueKind.String
-                                && bool.TryParse(p.Value.GetString(), out var parsed) && parsed);
-                        if (envOn) args.Add(CliFlags.EnvironmentVariables);
-                        continue;
-                    }
                     var name = lower switch
                     {
                         "from" => "start",
                         "to" => "end",
-                        "datafile" or "data-file" => "data-file",
                         _ => p.Name
                     };
                     var val = name is "start" or "end"
@@ -105,8 +95,6 @@ public static class ContainerCommandHelpers
                         : p.Value.ValueKind == JsonValueKind.String
                             ? p.Value.GetString() ?? string.Empty
                             : p.Value.ToString();
-                    // Skip an empty optional path so we never emit a bare "--data-file".
-                    if (name is "data-file" && string.IsNullOrWhiteSpace(val)) continue;
                     args.Add($"--{name}");
                     args.Add(val);
                 }

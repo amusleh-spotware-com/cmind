@@ -545,8 +545,31 @@ public static class CliFlags
     public const string ReportJson = "--report-json";
     public const string Report = "--report";
     public const string ExitOnStop = "--exit-on-stop";
-    public const string DataFile = "--data-file";
-    public const string EnvironmentVariables = "--environment-variables";
+}
+
+// The complete set of cTrader chart periods ("timeframes"), in canonical casing exactly as the
+// cTrader Console `periods` command lists them (verified against the console image). Used to populate
+// the timeframe dropdowns so users pick a valid period instead of free-typing. Kept authoritative by
+// SupportedTimeframesTests.
+public static class Timeframes
+{
+    public const string Default = "h1";
+
+    public static readonly string[] Supported =
+    [
+        "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9", "t10", "t15", "t20", "t25", "t30", "t40",
+        "t50", "t60", "t80", "t90", "t100", "t150", "t200", "t250", "t300", "t500", "t750", "t1000",
+        "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9", "m10", "m15", "m20", "m30", "m45",
+        "h1", "h2", "h3", "h4", "h6", "h8", "h12",
+        "D1", "D2", "D3", "W1", "Month1",
+        "Re1", "Re2", "Re3", "Re4", "Re5", "Re6", "Re7", "Re8", "Re9", "Re10", "Re15", "Re20", "Re25",
+        "Re30", "Re35", "Re40", "Re45", "Re50", "Re100", "Re150", "Re200", "Re300", "Re500", "Re800",
+        "Re1000", "Re2000",
+        "Ra1", "Ra2", "Ra3", "Ra4", "Ra5", "Ra8", "Ra10", "Ra20", "Ra30", "Ra50", "Ra80", "Ra100",
+        "Ra150", "Ra200", "Ra300", "Ra500", "Ra800", "Ra1000", "Ra2000", "Ra5000", "Ra7500", "Ra10000",
+        "Hm1", "Hm2", "Hm3", "Hm4", "Hm5", "Hm6", "Hm7", "Hm8", "Hm9", "Hm10", "Hm15", "Hm20", "Hm30",
+        "Hm45", "Hh1", "Hh2", "Hh3", "Hh4", "Hh6", "Hh8", "Hh12", "Hd1", "Hd2", "Hd3", "Hw1", "HMonth1",
+    ];
 }
 
 public static class BacktestDefaults

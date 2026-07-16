@@ -92,6 +92,34 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
             .Should().BeFalse("a running instance must not offer Edit");
     }
 
+    // Regression: the Edit dialog's Trading account and Parameter set selectors must render the human name
+    // (account number · broker, set name) when prefilled — never the raw Guid id.
+    [Fact]
+    public async Task Edit_dialog_shows_account_and_paramset_names_not_guids()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var seed = await page.APIRequest.PostAsync("/api/testseed/ai-portfolio", new() { DataObject = new { } });
+        seed.Ok.Should().BeTrue($"seed failed: {seed.Status}");
+        using var doc = JsonDocument.Parse(await seed.TextAsync());
+        var completedId = doc.RootElement.GetProperty("completedInstanceId").GetGuid();
+        var accountNumber = doc.RootElement.GetProperty("accountNumber").GetInt64();
+
+        await page.GotoAsync($"/instance/{completedId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        var edit = page.Locator("[data-testid=instance-detail-edit]");
+        await Assertions.Expect(edit).ToBeVisibleAsync(Slow);
+        await edit.ClickAsync();
+
+        // MudSelect renders the selected text (via ToStringFunc) as the readonly input's value.
+        var account = page.Locator("[data-testid=edit-account]");
+        await Assertions.Expect(account).ToHaveValueAsync(
+            new System.Text.RegularExpressions.Regex($"{accountNumber} - "), new() { Timeout = 30000 });
+        await Assertions.Expect(page.Locator("[data-testid=edit-paramset]")).ToHaveValueAsync(
+            new System.Text.RegularExpressions.Regex("seed-params"), new() { Timeout = 30000 });
+        (await account.InputValueAsync()).Should().NotMatchRegex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-",
+            "the account selector must show the number, not a raw Guid");
+    }
+
     // The detail page's Copy logs button must copy the instance's full console log to the clipboard.
     [Fact]
     public async Task Copy_logs_button_copies_the_console_log_to_the_clipboard()

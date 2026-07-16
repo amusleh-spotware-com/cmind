@@ -31,7 +31,10 @@
                 @foreach (var a in _accts) { <MudSelectItem T="Guid?" Value="@((Guid?)a.id)">@a.accountNumber - @a.broker</MudSelectItem> }
             </MudSelect>
             <MudTextField @bind-Value="_symbol" Label="Symbol" Required="true" RequiredError="Symbol is required" Class="mb-2" />
-            <MudTextField @bind-Value="_timeframe" Label="Timeframe" Required="true" RequiredError="Timeframe is required" Class="mb-2" />
+            <MudSelect T="string" @bind-Value="_timeframe" Label="Timeframe" Required="true"
+                       RequiredError="Timeframe is required" Class="mb-2" data-testid="run-timeframe">
+                @foreach (var tf in Core.Constants.Timeframes.Supported) { <MudSelectItem T="string" Value="@tf">@tf</MudSelectItem> }
+            </MudSelect>
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
                 <MudSelect T="Guid?" @bind-Value="_psId" Label="Parameter set (optional)" Clearable="true" Style="flex:1;">
                     @foreach (var p in _paramsets) { <MudSelectItem T="Guid?" Value="@((Guid?)p.id)">@p.name</MudSelectItem> }

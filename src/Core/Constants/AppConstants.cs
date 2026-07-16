@@ -545,6 +545,8 @@ public static class CliFlags
     public const string ReportJson = "--report-json";
     public const string Report = "--report";
     public const string ExitOnStop = "--exit-on-stop";
+    public const string DataFile = "--data-file";
+    public const string EnvironmentVariables = "--environment-variables";
 }
 
 public static class BacktestDefaults

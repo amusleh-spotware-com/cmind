@@ -84,6 +84,39 @@ public class ContainerCommandHelpersTests
     }
 
     [Fact]
+    public void BuildConsoleArgsList_backtest_maps_data_file_and_environment_variables_flag()
+    {
+        var i = new StartingBacktestInstance
+        {
+            Symbol = "EURUSD", Timeframe = "h1",
+            BacktestSettingsJson = """{"from":"2024-01-01","to":"2024-02-01","dataFile":"/mnt/data/eurusd.csv","environmentVariables":"true"}"""
+        };
+
+        var args = ContainerCommandHelpers.BuildConsoleArgsList(i, "", false);
+
+        args.Should().ContainInConsecutiveOrder("--data-file", "/mnt/data/eurusd.csv");
+        // A valueless flag — present with no following value.
+        args.Should().Contain("--environment-variables");
+        args.Should().NotContain("--environmentVariables");
+        args.Should().NotContain("--dataFile");
+    }
+
+    [Fact]
+    public void BuildConsoleArgs_backtest_omits_empty_data_file_and_off_env_flag()
+    {
+        var i = new StartingBacktestInstance
+        {
+            Symbol = "EURUSD", Timeframe = "h1",
+            BacktestSettingsJson = """{"from":"2024-01-01","to":"2024-02-01","dataFile":"","environmentVariables":"false"}"""
+        };
+
+        var args = ContainerCommandHelpers.BuildConsoleArgs(i, "", false);
+
+        args.Should().NotContain("--data-file");
+        args.Should().NotContain("--environment-variables");
+    }
+
+    [Fact]
     public void BuildConsoleArgs_backtest_reformats_from_to_dates()
     {
         var i = new StartingBacktestInstance

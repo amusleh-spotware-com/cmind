@@ -22,15 +22,17 @@
                 <MudDatePicker @bind-Date="_from" Label="From" Class="mb-2" data-testid="edit-from" />
                 <MudDatePicker @bind-Date="_to" Label="To" Class="mb-2" data-testid="edit-to" />
                 <MudSelect T="string" @bind-Value="_dataMode" Label="Data mode" Class="mb-2" data-testid="edit-datamode">
-                    <MudSelectItem T="string" Value="@("m1")">m1 (1-minute bars)</MudSelectItem>
-                    <MudSelectItem T="string" Value="@("tick")">tick</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("tick")">Tick data (accurate)</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("m1")">m1 bars (fast)</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("open")">Open prices only (fastest)</MudSelectItem>
                 </MudSelect>
                 <MudTextField @bind-Value="_balance" Label="Starting balance" Class="mb-2" data-testid="edit-balance" />
                 <MudTextField @bind-Value="_commission" Label="Commission" Class="mb-2" data-testid="edit-commission" />
-                <MudTextField @bind-Value="_spread" Label="Spread" Class="mb-2" data-testid="edit-spread" />
-                <MudTextField @bind-Value="_advanced" Label="Advanced options (one name=value per line)" Lines="3"
-                              Variant="Variant.Outlined" Class="mb-1" data-testid="edit-advanced"
-                              HelperText="Any other cTrader backtest option, e.g. applyCommissionAutomatically=true" />
+                <MudTextField @bind-Value="_spread" Label="Spread (pips)" Class="mb-2" data-testid="edit-spread" />
+                <MudTextField @bind-Value="_dataFile" Label="Data file (optional node path)" Class="mb-2" data-testid="edit-datafile"
+                              HelperText="Leave empty to use downloaded data; set a node-side path (--data-file)." />
+                <MudSwitch T="bool" @bind-Value="_environmentVariables" Color="Color.Primary" Class="mb-1"
+                           Label="Expose environment variables to the cBot" data-testid="edit-envvars" />
                 @if (_dateError is not null)
                 {
                     <MudText Color="Color.Error" Typo="Typo.caption" data-testid="edit-date-error">@_dateError</MudText>
@@ -58,7 +60,8 @@
     private Guid? _acctId, _psId, _cbotId;
     private bool _isBacktest;
     private string _symbol = "EURUSD", _timeframe = "h1", _image = "latest";
-    private string _balance = BacktestSettings.DefaultBalance, _commission = "0", _spread = "0", _advanced = "";
+    private string _balance = BacktestSettings.DefaultBalance, _commission = "0", _spread = "0", _dataFile = "";
+    private bool _environmentVariables;
     private string _dataMode = BacktestSettings.DefaultDataMode;
     private DateTime? _from, _to;
     private string? _dateError;
@@ -91,7 +94,6 @@
     private void ParseBacktestSettings(string? json)
     {
         if (string.IsNullOrWhiteSpace(json)) return;
-        var advanced = new List<string>();
         try
         {
             using var doc = JsonDocument.Parse(json);
@@ -105,12 +107,16 @@
                     case "commission": _commission = ValueString(p.Value); break;
                     case "spread": _spread = ValueString(p.Value); break;
                     case "datamode" or "data-mode": _dataMode = ValueString(p.Value); break;
-                    default: advanced.Add($"{p.Name}={ValueString(p.Value)}"); break;
+                    case "datafile" or "data-file": _dataFile = ValueString(p.Value); break;
+                    case "environmentvariables" or "environment-variables":
+                        _environmentVariables = p.Value.ValueKind == JsonValueKind.True
+                            || (p.Value.ValueKind == JsonValueKind.String
+                                && bool.TryParse(p.Value.GetString(), out var b) && b);
+                        break;
                 }
             }
         }
         catch { /* malformed prior settings — keep defaults */ }
-        _advanced = string.Join('\n', advanced);
     }
 
     private static string ValueString(JsonElement e) =>
@@ -136,7 +142,7 @@
                 return;
             }
             _dateError = null;
-            backtestJson = BacktestSettings.ToJson(_from, _to, _dataMode, _balance, _commission, _spread, _advanced);
+            backtestJson = BacktestSettings.ToJson(_from, _to, _dataMode, _balance, _commission, _spread, _dataFile, _environmentVariables);
         }
 
         var body = new

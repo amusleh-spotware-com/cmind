@@ -45,13 +45,16 @@ The **Backtest** dialog exposes every setting the cTrader Console backtest CLI a
 have to touch a command line:
 
 - **From / To** — the backtest window (`--start` / `--end`).
-- **Data mode** — `m1` (1-minute bars) or `tick` (`--data-mode`).
+- **Data mode** — one of the three cTrader modes (`--data-mode`): **Tick data** (`tick`, accurate),
+  **m1 bars** (`m1`, fast), or **Open prices only** (`open`, fastest).
 - **Starting balance** — defaults to `10000` (`--balance`). A **0 balance places no trades and makes
   cTrader emit an empty report it then crashes on** ("Message expected"), so a non-zero balance is
   always sent.
-- **Commission** and **Spread** (`--commission` / `--spread`, spread in pips).
-- **Advanced options** — a free-form `name=value` per line box for any other backtest option cTrader
-  supports (e.g. `applyCommissionAutomatically=true`); each line becomes a `--name value` CLI argument.
+- **Commission** and **Spread** — `--commission` / `--spread` (spread in pips).
+- **Data file** (optional) — a node-side path to a historical data file (`--data-file`); leave empty to
+  use the downloaded/cached data.
+- **Expose environment variables** — a toggle that passes the host environment variables to the cBot
+  (the `--environment-variables` flag).
 
 ## Instance detail page
 

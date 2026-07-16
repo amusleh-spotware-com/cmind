@@ -4,8 +4,8 @@ namespace Web.Json;
 
 // Builds the BacktestSettingsJson payload shared by the create (BacktestDialog) and modify
 // (EditInstanceDialog) flows. Every key becomes a cTrader Console CLI backtest option at dispatch time
-// (ContainerCommandHelpers maps from→--start, to→--end, dataMode→--data-mode, and any other key→--key),
-// so the Advanced field lets the user pass ANY supported backtest option cTrader accepts.
+// (ContainerCommandHelpers maps from→--start, to→--end, dataMode→--data-mode, dataFile→--data-file,
+// environmentVariables→the --environment-variables flag, and any other key→--key value).
 public static class BacktestSettings
 {
     public const string DefaultDataMode = "m1";
@@ -13,7 +13,7 @@ public static class BacktestSettings
 
     public static string ToJson(
         DateTime? from, DateTime? to, string? dataMode, string? balance, string? commission,
-        string? spread, string? advanced)
+        string? spread, string? dataFile, bool environmentVariables)
     {
         var settings = new Dictionary<string, string>(StringComparer.Ordinal);
         if (from is { } f) settings["from"] = f.ToString("yyyy-MM-dd");
@@ -22,23 +22,8 @@ public static class BacktestSettings
         settings["balance"] = Blank(balance) ? DefaultBalance : balance!.Trim();
         settings["commission"] = Blank(commission) ? "0" : commission!.Trim();
         settings["spread"] = Blank(spread) ? "0" : spread!.Trim();
-
-        // Advanced: one "name=value" per line → any other supported cTrader backtest CLI option. A later
-        // line overrides an earlier key; an explicit advanced key overrides the named field above it.
-        if (!Blank(advanced))
-        {
-            foreach (var rawLine in advanced!.Replace("\r\n", "\n").Split('\n'))
-            {
-                var line = rawLine.Trim();
-                if (line.Length == 0) continue;
-                var eq = line.IndexOf('=');
-                if (eq <= 0) continue;
-                var key = line[..eq].Trim().TrimStart('-');
-                var value = line[(eq + 1)..].Trim();
-                if (key.Length > 0) settings[key] = value;
-            }
-        }
-
+        if (!Blank(dataFile)) settings["dataFile"] = dataFile!.Trim();
+        if (environmentVariables) settings["environmentVariables"] = "true";
         return JsonSerializer.Serialize(settings);
     }
 

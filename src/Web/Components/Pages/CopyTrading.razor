@@ -12,7 +12,7 @@
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
     <MudText Typo="Typo.h5">Copy Trading</MudText>
-    <HelpTip Text="Mirror a source (master) account's trades onto one or more destination (slave) accounts. Each destination controls its own sizing, direction, symbols and order handling. Start a profile to begin copying. Click a profile to manage its destinations." />
+    <HelpTip Text="Mirror a source (master) account's trades onto one or more destination (slave) accounts. Each destination controls its own sizing, direction, symbols and order handling. Start a profile to begin copying. Use the edit button to manage a profile's destinations (stop it first)." />
     <MudSpacer />
     <MudButton Color="Color.Secondary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.AutoAwesome"
                OnClick="OpenRecommendDialog" data-testid="ai-suggest">AI suggest</MudButton>
@@ -49,7 +49,7 @@
     </DialogActions>
 </MudDialog>
 
-<MudTable Items="_profiles" Dense="true" Breakpoint="Breakpoint.Sm" OnRowClick="@((TableRowClickEventArgs<dynamic> e) => OpenDetail((Guid)e.Item!.id, (string)e.Item!.name))">
+<MudTable Items="_profiles" Dense="true" Breakpoint="Breakpoint.Sm">
     <HeaderContent>
         <MudTh>Name</MudTh><MudTh>Source</MudTh><MudTh>Status</MudTh><MudTh>Destinations</MudTh><MudTh /></HeaderContent>
     <RowTemplate>
@@ -67,6 +67,11 @@
                 <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Small" Color="Color.Warning"
                                Disabled="@(!IsRunning((string)context.status))" aria-label="Stop profile"
                                OnClick="@(() => Action((Guid)context.id, "stop"))" data-testid="copy-stop" />
+            </MudTooltip>
+            <MudTooltip Text="@(IsRunning((string)context.status) ? "Stop the profile before editing" : "Edit profile & destinations")">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary"
+                               Disabled="@IsRunning((string)context.status)" aria-label="Edit profile"
+                               OnClick="@(() => OpenDetail((Guid)context.id, (string)context.name))" data-testid="copy-edit" />
             </MudTooltip>
             <MudTooltip Text="@(IsRunning((string)context.status) ? "Stop the profile before deleting" : "Delete profile")">
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"

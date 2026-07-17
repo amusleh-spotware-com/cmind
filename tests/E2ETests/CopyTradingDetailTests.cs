@@ -71,7 +71,7 @@ public sealed class CopyTradingDetailTests(AppFixture app)
         // With the dropdown open, the dialog's Close button must still dismiss the dialog. MudBlazor's
         // click-away overlay closes the dropdown first; a second click reaches Close — but Close must
         // never be permanently trapped under the overlay.
-        var close = dialog.GetByRole(AriaRole.Button, new() { Name = "Close" });
+        var close = dialog.GetByRole(AriaRole.Button, new() { Name = "Close", Exact = true });
         for (var attempt = 0; attempt < 5; attempt++)
         {
             await close.ClickAsync(new() { Force = true });

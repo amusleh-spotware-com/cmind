@@ -76,6 +76,45 @@ public sealed class CopyTradingTests(AppFixture app)
         await Assertions.Expect(page.Locator("[data-testid=symbol-map-import]")).ToBeVisibleAsync(Slow);
     }
 
+    [Fact]
+    public async Task Profile_row_edit_button_opens_dialog_and_is_disabled_while_running()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var api = page.APIRequest;
+
+        var cidId = await CreateCidAsync(api, $"edit-cid-{Suffix}");
+        var master = await CreateAccountAsync(api, cidId, NextAccountNumber(40), "EditMaster");
+        var slave = await CreateAccountAsync(api, cidId, NextAccountNumber(41), "EditSlave");
+        var name = $"edit-ui-{Suffix}";
+
+        var create = await api.PostAsync(U("/api/copy/profiles"), new()
+        {
+            DataObject = new { Name = name, SourceAccountId = master, DestinationAccountIds = new[] { slave } }
+        });
+        Assert.True(create.Ok, $"create profile failed: {create.Status}");
+        var profileId = (await ReadJsonAsync(create)).GetProperty("id").GetString()!;
+
+        await GotoAsync(page, "/copy-trading");
+        var row = page.Locator($"tr:has-text('{name}')");
+        await Assertions.Expect(row).ToBeVisibleAsync(Slow);
+
+        // Draft: the edit control opens the manage-destinations dialog (row-click no longer does).
+        var edit = row.Locator("[data-testid=copy-edit]");
+        await Assertions.Expect(edit).ToBeEnabledAsync(new() { Timeout = 15000 });
+        await edit.ClickAsync();
+        var dialog = page.Locator(".mud-dialog").Last;
+        await dialog.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 15000 });
+        Assert.True(await dialog.GetByText(name).First.IsVisibleAsync(),
+            "the edit dialog must show the profile name");
+        await dialog.GetByRole(AriaRole.Button, new() { Name = "Close", Exact = true }).ClickAsync(new() { Force = true });
+
+        // Running: editing is invalid, so the control is disabled (mandate 11: state-correct controls).
+        Assert.Equal("Running", await ActAsync(api, profileId, "start"));
+        await GotoAsync(page, "/copy-trading");
+        await Assertions.Expect(page.Locator($"tr:has-text('{name}')").Locator("[data-testid=copy-edit]"))
+            .ToBeDisabledAsync(new() { Timeout = 15000 });
+    }
+
     // ---------------- Non-UI (API): multi-slave, options, lifecycle ----------------
 
     [Fact]

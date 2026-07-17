@@ -29,7 +29,7 @@ public sealed record CopyProfileSettingsModel
     public bool CopyTakeProfit { get; init; } = true;
     public bool MirrorPartialClose { get; init; } = true;
     public bool MirrorScaleIn { get; init; }
-    public bool CopyPendingOrders { get; init; }
+    public bool CopyPendingOrders { get; init; } = true;
     public bool CopyTrailingStop { get; init; }
     public bool CopyPendingExpiry { get; init; } = true;
     public bool CopyMasterSlippage { get; init; } = true;

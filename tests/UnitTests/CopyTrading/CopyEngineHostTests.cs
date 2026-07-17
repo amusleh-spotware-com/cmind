@@ -662,10 +662,27 @@ public sealed class CopyEngineHostTests
     }
 
     [Fact]
+    public async Task Pending_order_is_placed_by_default_without_extra_configuration()
+    {
+        // Regression: pending-order copying used to default OFF (the odd one out vs market/SL/TP/partial),
+        // so a source limit/stop order silently never reached destinations. A default destination mirrors it.
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave)));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushPending(Source, 4111, SymbolId, isBuy: true, volume: 100, CopyOrderKind.Limit, 1.05);
+            await WaitUntil(() => session.Pendings.Count == 1);
+        });
+
+        session.Pendings.Single().Ctid.Should().Be(Slave, "pending orders copy by default now");
+    }
+
+    [Fact]
     public async Task Pending_order_is_not_placed_when_disabled()
     {
         var session = NewSession();
-        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave)));
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d => d.SetPendingOrderCopying(false))));
 
         await DriveAsync(session, plan, async () =>
         {
@@ -673,7 +690,7 @@ public sealed class CopyEngineHostTests
             await Task.Delay(150);
         });
 
-        session.Pendings.Should().BeEmpty("pending-order copying is off by default");
+        session.Pendings.Should().BeEmpty("pending-order copying was turned off for this destination");
     }
 
     [Fact]

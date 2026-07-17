@@ -51,7 +51,7 @@ public class CopyDestination : AuditedEntity<CopyDestinationId>
     public bool CopyTakeProfit { get; private set; } = true;
     public bool MirrorPartialClose { get; private set; } = true;
     public bool MirrorScaleIn { get; private set; }
-    public bool CopyPendingOrders { get; private set; }
+    public bool CopyPendingOrders { get; private set; } = true;
     public bool CopyTrailingStop { get; private set; }
     public CopyOrderTypes CopyOrderTypes { get; private set; } = CopyOrderTypes.All;
     public bool CopyPendingExpiry { get; private set; } = true;

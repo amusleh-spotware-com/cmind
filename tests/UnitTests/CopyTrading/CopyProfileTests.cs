@@ -113,12 +113,13 @@ public sealed class CopyProfileTests
     }
 
     [Fact]
-    public void Destination_defaults_mirror_partial_close_on_and_advanced_flags_off()
+    public void Destination_defaults_mirror_partial_close_and_pending_orders_on()
     {
         var destination = NewProfile(out _).AddDestination(TradingAccountId.New(), Mirror);
         destination.MirrorPartialClose.Should().BeTrue();
+        // Pending orders copy by default, like market orders (they were the confusing odd-one-out at off).
+        destination.CopyPendingOrders.Should().BeTrue();
         destination.MirrorScaleIn.Should().BeFalse();
-        destination.CopyPendingOrders.Should().BeFalse();
         destination.CopyTrailingStop.Should().BeFalse();
     }
 

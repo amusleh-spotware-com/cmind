@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Неуспело прављење профила</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Профил је направљен, али нека одредишна подешавања нису могла бити примењена</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Кратко име за препознавање овог профила копирања у листи.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>Мајсторски рачун чије трговине су копиране. Само рачуни повезани преко cTrader Open API се појављују овде — ручно додати рачуни не могу копирати трговине.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Један или више рачуна који примају копије мајсторских трговина (мајстор је искључен). Наведени су само рачуни повезани преко cTrader Open API.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Главни рачун чија трговина се копира. Овде се приказују само рачуни додати кроз отворени API cTrader — ручно додати рачуни не могу копирати трговину.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Један или више рачуна који примају копије трговине главног рачуна (главни рачун је искључен). Наведени су само рачуни додати кроз отворени API cTrader.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Како је свака копирана трговина димензионисана у односу на главну: фиксна лот, мултипликатор, пропорција балансе/капитала, или фиксан проценат ризика.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Број који режим величине користи — на пример мултипликатор (1 = иста величина) или проценат ризика.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Максимално одступање цене, у пипс, толерисано приликом постављања копираног налога пре него што буде одбијен.</value></data>
@@ -336,8 +336,8 @@
   <data name="copyNew.filter.None" xml:space="preserve"><value>Без филтера</value></data>
   <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Белина листа</value></data>
   <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Црна листа</value></data>
-  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Ниједан рачун још није повезан преко cTrader Open API. Само Open API рачуни могу копирати трговине — повежите једну за почетак.</value></data>
-  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Повезивање рачуна</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Нема рачуна додатих кроз отворени API cTrader. Само рачуни Open API могу копирати трговину — додајте јединствени за почетак.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Додај рачун</value></data>
   <data name="copy.map.tip.source" xml:space="preserve"><value>Симбол како је назван на мајсторском (извору) рачуну, нпр. EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Одговарајући симбол на брокеру одредишта, нпр. EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Додатни множитељ волумена за овај симбол преко промене величине одредишта (1 = без промене).</value></data>

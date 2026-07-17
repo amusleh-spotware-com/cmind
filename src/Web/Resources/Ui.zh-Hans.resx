@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>配置创建失败</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>配置已创建，但某些目标设置无法应用</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>用于在列表中识别此跟单配置的简短名称。</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>复制其交易的主账户。只有通过 cTrader Open API 链接的账户才会显示在此处 — 手动添加的账户无法复制交易。</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>接收主账户交易副本的一个或多个账户（主账户被排除）。只列出通过 cTrader Open API 链接的账户。</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>交易被复制的主账户。此处仅显示通过cTrader开放API添加的账户 — 手动添加的账户无法复制交易。</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>接收主账户交易副本的一个或多个账户（主账户被排除）。仅列出通过cTrader开放API添加的账户。</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>如何根据主账户调整每个跟单交易的大小：固定手数、倍数、余额/权益比例或固定风险百分比。</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>头寸大小模式使用的数字 —— 例如倍数（1 = 相同大小）或风险百分比。</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>在拒绝跟单订单之前允许的最大价格偏差，以点数计。</value></data>
@@ -336,8 +336,8 @@
   <data name="copyNew.filter.None" xml:space="preserve"><value>无过滤器</value></data>
   <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>白名单</value></data>
   <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>黑名单</value></data>
-  <data name="copyNew.noOpenApi" xml:space="preserve"><value>尚未有任何账户通过 cTrader Open API 链接。只有 Open API 账户才能复制交易 — 链接一个账户以开始。</value></data>
-  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>链接账户</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>尚未通过cTrader开放API添加任何账户。仅开放API账户可以复制交易 — 添加一个账户即可开始。</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>添加账户</value></data>
   <data name="copy.map.tip.source" xml:space="preserve"><value>在主账户（来源）上命名的符号，例如 EURUSD。</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>目标经纪商上的匹配符号，例如 EUR.USD。</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>此符号在目标交易量调整之上的额外体积倍数（1 = 无变化）。</value></data>

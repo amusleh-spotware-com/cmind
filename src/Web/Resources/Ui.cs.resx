@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Nepodařilo se vytvořit profil</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Profil byl vytvořen, ale některá nastavení destinace se nepovedlo použít</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Krátký název pro identifikaci tohoto profilu kopírování v seznamu.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>Hlavní účet, jehož obchody jsou kopírovány. Zde se zobrazují pouze účty propojené přes cTrader Open API — ručně přidané účty nemohou kopírovat obchody.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Jeden nebo více účtů, které přijímají kopie obchodů hlavního účtu (hlavní účet je vyloučen). Uvedeny jsou pouze účty propojené přes cTrader Open API.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Hlavní účet, jehož obchody se kopírují. Zde se zobrazují pouze účty přidané prostřednictvím rozhraní cTrader Open API — účty přidané ručně nemohou kopírovat obchody.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Jeden nebo více účtů, které přijímají kopie obchodů hlavního účtu (hlavní účet je vyloučen). Jsou uvedeny pouze účty přidané prostřednictvím rozhraní cTrader Open API.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Jak je každý kopírovaný obchod zjemňován relativně k masteru: pevný lot, násobitel, podíl zůstatku/vlastního kapitálu nebo pevné procento rizika.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Číslo, které používá režim velikosti — např. násobitel (1 = stejná velikost) nebo procento rizika.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Maximální odchylka ceny v pipech tolerovaná při umísťování kopírované objednávky, než bude zamítnuta.</value></data>
@@ -336,8 +336,8 @@
   <data name="copyNew.filter.None" xml:space="preserve"><value>Bez filtru</value></data>
   <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Whitelist</value></data>
   <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Blacklist</value></data>
-  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Zatím nejsou propojeny žádné účty přes cTrader Open API. Pouze účty Open API mohou kopírovat obchody — propojte jeden, abyste mohli začít.</value></data>
-  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Propojit účet</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Zatím nejsou přidány žádné účty prostřednictvím rozhraní cTrader Open API. Obchody můžou kopírovat pouze účty Open API — přidejte jeden, abyste mohli začít.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Přidat účet</value></data>
   <data name="copy.map.tip.source" xml:space="preserve"><value>Symbol tak, jak je pojmenován na hlavním (zdrojovém) účtu, např. EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Odpovídající symbol u destinačního brokera, např. EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Dodatečný násobitel objemu pro tento symbol nad rámec nastavení velikosti destinace (1 = bez změny).</value></data>

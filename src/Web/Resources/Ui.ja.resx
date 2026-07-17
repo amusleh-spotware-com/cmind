@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>プロファイルの作成に失敗しました</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>プロファイルが作成されましたが、一部のデスティネーション設定を適用できません</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>このコピープロファイルをリストで認識するための短い名前。</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>トレードがコピーされるマスターアカウント。cTrader Open APIを介してリンクされたアカウントのみがここに表示されます。手動で追加されたアカウントはトレードをコピーできません。</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>マスターのトレードのコピーを受け取る1つ以上のアカウント（マスターは除外）。cTrader Open APIを介してリンクされたアカウントのみがリストされます。</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>トレードがコピーされるマスターアカウント。ここには、cTrader Open APIを介して追加されたアカウントのみが表示されます。手動で追加されたアカウントはトレードをコピーできません。</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>マスターアカウントのトレードのコピーを受け取る1つ以上のアカウント (マスターアカウントは除外)。cTrader Open APIを介して追加されたアカウントのみがリストされます。</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>コピーされた各トレードのサイズがマスターに対してどのようにスケーリングされるか: 固定ロット、乗数、残高/エクイティの割合、または固定リスク％。</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>サイジングモードが使用する数値 — 例えば乗数（1 = 同じサイズ）またはリスク％。</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>コピー注文を拒否する前に許容される最大価格偏差（pips）。</value></data>
@@ -336,8 +336,8 @@
   <data name="copyNew.filter.None" xml:space="preserve"><value>フィルターなし</value></data>
   <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>ホワイトリスト</value></data>
   <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>ブラックリスト</value></data>
-  <data name="copyNew.noOpenApi" xml:space="preserve"><value>cTrader Open APIを介してアカウントはまだリンクされていません。Open APIアカウントのみがトレードをコピーできます。開始するにはアカウントをリンクしてください。</value></data>
-  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>アカウントをリンク</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>cTrader Open APIを介して追加されたアカウントはまだありません。Open APIアカウントのみがトレードをコピーできます。コピーをコピーできます — 始めるには1つ追加してください。</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>アカウントを追加</value></data>
   <data name="copy.map.tip.source" xml:space="preserve"><value>マスター（ソース）アカウントで名付けられたシンボル。例：EURUSD。</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>宛先ブローカーの対応するシンボル。例：EUR.USD。</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>宛先のサイジングに加えて、このシンボルの追加ボリューム乗数（1 = 変更なし）。</value></data>

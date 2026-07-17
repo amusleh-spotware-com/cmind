@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Gagal membuat profil</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Profil dibuat, tetapi beberapa tetapan destinasi tidak dapat digunakan</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Nama pendek untuk mengenali profil salinan ini dalam senarai.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>Akaun master yang dagangan disalin. Hanya akaun yang dipautkan melalui cTrader Open API muncul di sini — akaun yang ditambah secara manual tidak boleh menyalin dagangan.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Satu atau lebih akaun yang menerima salinan dagangan master (master dikecualikan). Hanya akaun yang dipautkan Open API cTrader disenaraikan.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Akaun induk yang dagangannya disalin. Hanya akaun yang ditambah melalui cTrader Open API muncul di sini — akaun yang ditambah secara manual tidak boleh menyalin dagangan.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Satu atau lebih akaun yang menerima salinan dagangan akaun induk (akaun induk dikecualikan). Hanya akaun yang ditambah melalui cTrader Open API yang disenaraikan.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Bagaimana setiap dagangan disalin diubah saiz berbanding master: lot tetap, pengganda, bahagian daripada baki/ekuiti, atau peratusan risiko tetap.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Nombor yang mod saiz gunakan — contohnya pengganda (1 = saiz sama) atau peratusan risiko.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Sisihan harga maksimum, dalam pips, dibenarkan apabila meletakkan pesanan disalin sebelum ditolak.</value></data>
@@ -336,8 +336,8 @@
   <data name="copyNew.filter.None" xml:space="preserve"><value>Tiada penapis</value></data>
   <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Senarai putih</value></data>
   <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Senarai hitam</value></data>
-  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Tiada akaun yang dipautkan melalui cTrader Open API lagi. Hanya akaun Open API boleh menyalin dagangan — pautkan satu untuk memulakan.</value></data>
-  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Pautkan akaun</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Belum ada akaun ditambah melalui cTrader Open API. Hanya akaun Open API yang boleh menyalin dagangan — tambah satu untuk bermula.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Tambah akaun</value></data>
   <data name="copy.map.tip.source" xml:space="preserve"><value>Simbol seperti dinamakan pada akaun master (sumber), cth EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Simbol sepadan pada broker tujuan, cth EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Pengganda volum tambahan untuk simbol ini di atas pengubahan saiz tujuan (1 = tiada perubahan).</value></data>

@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Αποτυχία δημιουργίας προφίλ</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Προφίλ δημιουργήθηκε, αλλά ορισμένες ρυθμίσεις προορισμού δεν μπορούσαν να εφαρμοστούν</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Ένα σύντομο όνομα για να αναγνωρίσετε αυτό το προφίλ αντιγραφής στη λίστα.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>Ο λογαριασμός master του οποίου οι συναλλαγές αντιγράφονται. Εδώ εμφανίζονται μόνο λογαριασμοί που συνδέονται μέσω cTrader Open API — οι χειροκίνητα προστιθέμενοι λογαριασμοί δεν μπορούν να αντιγράψουν συναλλαγές.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Ένας ή περισσότεροι λογαριασμοί που λαμβάνουν αντιγραφές των συναλλαγών του master (ο master αποκλείεται). Καταχωρούνται μόνο λογαριασμοί που συνδέονται μέσω cTrader Open API.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Ο κύριος λογαριασμός του οποίου οι συναλλαγές αντιγράφονται. Εδώ εμφανίζονται μόνο λογαριασμοί που προστέθηκαν μέσω του cTrader Open API — λογαριασμοί που προστέθηκαν με μη αυτόματο τρόπο δεν μπορούν να αντιγράψουν συναλλαγές.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Ένας ή περισσότεροι λογαριασμοί που λαμβάνουν αντιγραφές των συναλλαγών του κύριου λογαριασμού (ο κύριος λογαριασμός αποκλείεται). Εμφανίζονται μόνο λογαριασμοί που προστέθηκαν μέσω του cTrader Open API.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Πώς κάθε αντιγραμμένη συναλλαγή διαστασιολογείται σε σχέση με τον master: ένα σταθερό lot, ένας πολλαπλασιαστής, ένα ποσοστό του υπολοίπου/κεφαλαίου ή ένα σταθερό ποσοστό κινδύνου.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Ο αριθμός που χρησιμοποιεί η λειτουργία διαστασιολόγησης — για παράδειγμα ο πολλαπλασιαστής (1 = ίδιο μέγεθος) ή το ποσοστό κινδύνου.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Μέγιστη απόκλιση τιμής, σε pips, που ανέχεται κατά την τοποθέτηση της αντιγραμμένης εντολής πριν απορριφθεί.</value></data>
@@ -336,8 +336,8 @@
   <data name="copyNew.filter.None" xml:space="preserve"><value>Χωρίς φίλτρο</value></data>
   <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Whitelist</value></data>
   <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Blacklist</value></data>
-  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Κανένας λογαριασμός δεν έχει συνδεθεί μέσω cTrader Open API ακόμα. Μόνο οι λογαριασμοί Open API μπορούν να αντιγράψουν συναλλαγές — συνδέστε έναν για να ξεκινήσετε.</value></data>
-  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Σύνδεση λογαριασμού</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Δεν έχουν προστεθεί ακόμη λογαριασμοί μέσω του cTrader Open API. Μόνο λογαριασμοί Open API μπορούν να αντιγράφουν συναλλαγές — προσθέστε έναν για να ξεκινήσετε.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Προσθήκη λογαριασμού</value></data>
   <data name="copy.map.tip.source" xml:space="preserve"><value>Το σύμβολο όπως ονομάζεται στο master (πηγή) λογαριασμό, π.χ. EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Το αντίστοιχο σύμβολο στον broker προορισμού, π.χ. EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Επιπλέον πολλαπλασιαστής όγκου για αυτό το σύμβολο πάνω από το μέγεθος του προορισμού (1 = καμία αλλαγή).</value></data>

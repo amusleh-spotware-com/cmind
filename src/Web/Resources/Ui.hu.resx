@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Nem sikerült a profil létrehozása</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>A profil létrehozva, de egyes cél beállítások nem kerültek alkalmazásra</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Egy rövid név a másolási profil felismeréséhez a listában.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>A mester számla, amelynek kereskedéseit másolatozzák. Csak a cTrader Open API-n keresztül összekapcsolt számlák jelennek meg itt — a kézzel hozzáadott számlák nem tudnak kereskedéseket másolni.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Egy vagy több számla, amely a mester kereskedésének másolatait kapja (a mester kizárt). Csak a cTrader Open API-n keresztül összekapcsolt számlák vannak felsorolva.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>A fő fiók, amelynek kereskedéseit másolja a rendszer. Itt csak a cTrader Open API-n keresztül hozzáadott fiókok jelennek meg — a manuálisan hozzáadott fiókok nem másolhatnak kereskedéseket.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Egy vagy több fiók, amely a fő fiók kereskedéseinek másolatait fogadja (a fő fiók ki van zárva). Csak a cTrader Open API-n keresztül hozzáadott fiókok vannak felsorolva.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Hogyan méretezzük az egyes másolt kereskedéseket a masterhez képest: fix lot, szorzó, egyenleg/tőke aránya vagy rögzített kockázat százalék.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>A szám, amelyet a méretezési mód használ — pl. a szorzó (1 = ugyanaz a méret) vagy a kockázat százalék.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Maximális áreltérés (pipben), amely tolerálható a másolt rendelés elhelyezésekor, mielőtt azt elutasítanák.</value></data>
@@ -336,8 +336,8 @@
   <data name="copyNew.filter.None" xml:space="preserve"><value>Nincs szűrő</value></data>
   <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Whitelist</value></data>
   <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Blacklist</value></data>
-  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Eddig egyetlen számla sincs összekapcsolva a cTrader Open API-n keresztül. Csak az Open API számlák tudnak kereskedéseket másolni — kapcsolj össze egyet az induláshoz.</value></data>
-  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Számla összekapcsolása</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Még nincs fiók hozzáadva a cTrader Open API-n keresztül. Csak az Open API-fiókok másolhatnak kereskedéseket — adj hozzá egyet az elkezdéshez.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Fiók hozzáadása</value></data>
   <data name="copy.map.tip.source" xml:space="preserve"><value>A szimbólum a mester (forrás) számlán megnevezve, pl. EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>A megfelelő szimbólum a célbrókeré, pl. EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Extra térfogat szorzó erre a szimbólumra a cél méretezésén felül (1 = nincs változás).</value></data>

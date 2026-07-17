@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Không thể tạo hồ sơ</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Hồ sơ đã được tạo, nhưng không thể áp dụng một số cài đặt đích</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Một tên ngắn để nhận biết hồ sơ sao chép này trong danh sách.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>Tài khoản master có giao dịch được sao chép. Chỉ tài khoản được liên kết qua cTrader Open API mới hiển thị ở đây — tài khoản được thêm thủ công không thể sao chép giao dịch.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Một hoặc nhiều tài khoản nhận bản sao của giao dịch master (master bị loại trừ). Chỉ tài khoản được liên kết qua cTrader Open API mới được liệt kê.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Tài khoản chính có giao dịch được sao chép. Chỉ các tài khoản được thêm qua cTrader Open API mới xuất hiện tại đây — các tài khoản được thêm thủ công không thể sao chép giao dịch.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Một hoặc nhiều tài khoản nhận bản sao giao dịch của tài khoản chính (tài khoản chính bị loại trừ). Chỉ các tài khoản được thêm qua cTrader Open API mới được liệt kê.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Cách mỗi giao dịch được sao chép có kích thước so với chủ: một lot cố định, một bội số, một tỷ lệ của số dư/vốn chủ, hoặc một phần trăm rủi ro cố định.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Số mà chế độ kích thước sử dụng — ví dụ: bội số (1 = cùng kích thước) hoặc phần trăm rủi ro.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Độ lệch giá tối đa, tính bằng pips, được chấp nhận khi đặt lệnh sao chép trước khi nó bị từ chối.</value></data>
@@ -336,8 +336,8 @@
   <data name="copyNew.filter.None" xml:space="preserve"><value>Không có bộ lọc</value></data>
   <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Danh sách trắng</value></data>
   <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Danh sách đen</value></data>
-  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Chưa có tài khoản nào được liên kết qua cTrader Open API. Chỉ tài khoản Open API mới có thể sao chép giao dịch — liên kết một cái để bắt đầu.</value></data>
-  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Liên kết tài khoản</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Chưa có tài khoản nào được thêm qua cTrader Open API. Chỉ có tài khoản Open API mới có thể sao chép giao dịch — hãy thêm một tài khoản để bắt đầu.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Thêm tài khoản</value></data>
   <data name="copy.map.tip.source" xml:space="preserve"><value>Ký hiệu như được đặt tên trên tài khoản master (nguồn), ví dụ: EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Ký hiệu phù hợp tại sàn giao dịch đích, ví dụ: EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Bộ nhân khối lượng bổ sung cho ký hiệu này ngoài thay đổi kích thước đích (1 = không thay đổi).</value></data>

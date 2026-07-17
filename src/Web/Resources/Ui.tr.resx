@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Profil oluşturulamadı</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Profil oluşturuldu, ancak bazı hedef ayarları uygulanamadı</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Bu kopya profilini listede tanımak için kısa bir ad.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>İşlemleri kopyalanan ana hesap. Yalnızca cTrader Open API aracılığıyla bağlantılı hesaplar burada görünür — el ile eklenen hesaplar işlemleri kopyalayamaz.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Ana hesabın işlemlerinin kopyalarını alan bir veya daha fazla hesap (ana hesap hariç). Yalnızca cTrader Open API aracılığıyla bağlantılı hesaplar listelenir.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>İşlemleri kopyalanan ana hesap. Yalnızca cTrader Open API aracılığıyla eklenen hesaplar burada görüntülenir — el ile eklenen hesaplar işlemleri kopyalayamaz.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Ana hesabın işlemlerinin kopyalarını alan bir veya daha fazla hesap (ana hesap hariç tutulur). Yalnızca cTrader Open API aracılığıyla eklenen hesaplar listelenir.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Kopyalanan her işlemin mastere göre boyutlandırılması: sabit lot, çarpan, bakiye/özsermayenin oranı veya sabit risk yüzdesi.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Boyutlandırma modunun kullandığı sayı — örneğin çarpan (1 = aynı boyut) veya risk yüzdesi.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Kopyalanan emir reddedilmeden önce tolere edilen maksimum fiyat sapması (pip cinsinden).</value></data>
@@ -336,8 +336,8 @@
   <data name="copyNew.filter.None" xml:space="preserve"><value>Filtre yok</value></data>
   <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>İzin verilen liste</value></data>
   <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Yasaklı liste</value></data>
-  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Henüz cTrader Open API aracılığıyla bağlantılı hesap yok. Yalnızca Open API hesapları işlemleri kopyalayabilir — başlamak için bir tane bağlayın.</value></data>
-  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Hesap bağlantısı</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>cTrader Open API aracılığıyla henüz hiç hesap eklenmemiş. Yalnızca Open API hesapları işlemleri kopyalayabilir — başlamak için bir tane ekleyin.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Hesap Ekle</value></data>
   <data name="copy.map.tip.source" xml:space="preserve"><value>Ana (kaynak) hesapta adlandırıldığı şekilde sembol, ör. EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Hedef brokerdeki eşleşen sembol, ör. EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Hedef boyut değişikliğinin üzerine bu sembol için ek hacim çarpanı (1 = değişiklik yok).</value></data>

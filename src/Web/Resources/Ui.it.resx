@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Impossibile creare il profilo</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Profilo creato, ma alcune impostazioni di destinazione non hanno potuto essere applicate</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Un nome breve per riconoscere questo profilo di copia nell'elenco.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>Il conto master i cui trade vengono copiati. Solo i conti collegati tramite cTrader Open API compaiono qui — i conti aggiunti manualmente non possono copiare i trade.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Uno o più conti che ricevono copie dei trade del master (il master è escluso). Solo i conti collegati tramite cTrader Open API sono elencati.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>L'account principale le cui operazioni vengono copiate. Solo gli account aggiunti tramite l'API aperta di cTrader appaiono qui — gli account aggiunti manualmente non possono copiare operazioni.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Uno o più account che ricevono copie delle operazioni dell'account principale (l'account principale è escluso). Solo gli account aggiunti tramite l'API aperta di cTrader sono elencati.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Come ogni scambio copiato viene dimensionato rispetto al master: un lotto fisso, un moltiplicatore, una proporzione del saldo/equity, o una percentuale di rischio fissa.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Il numero che la modalità di dimensionamento utilizza — ad es. il moltiplicatore (1 = stessa dimensione) o la percentuale di rischio.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Deviazione di prezzo massima, in pip, tollerata quando si piazza l'ordine copiato prima che venga rifiutato.</value></data>
@@ -336,8 +336,8 @@
   <data name="copyNew.filter.None" xml:space="preserve"><value>Nessun filtro</value></data>
   <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Whitelist</value></data>
   <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Blacklist</value></data>
-  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Nessun conto è ancora collegato tramite cTrader Open API. Solo gli account Open API possono copiare i trade — collegane uno per iniziare.</value></data>
-  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Collega un conto</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Nessun account aggiunto tramite l'API aperta di cTrader. Solo gli account Open API possono copiare operazioni — aggiungi uno per iniziare.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Aggiungi account</value></data>
   <data name="copy.map.tip.source" xml:space="preserve"><value>Il simbolo come denominato sul conto master (source), ad es. EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Il simbolo corrispondente presso il broker di destinazione, ad es. EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Moltiplicatore di volume aggiuntivo per questo simbolo oltre al dimensionamento della destinazione (1 = nessun cambiamento).</value></data>

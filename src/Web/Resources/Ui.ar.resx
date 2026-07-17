@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>فشل في إنشاء الملف الشخصي</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>تم إنشاء الملف الشخصي، لكن لم يتمكن من تطبيق بعض إعدادات الوجهة</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>اسم قصير للتعرف على ملف تعريف النسخ هذا في القائمة.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>حساب المتداول الرئيسي الذي يتم نسخ صفقاته. فقط الحسابات المرتبطة عبر Open API في cTrader تظهر هنا — الحسابات المضافة يدويّاً لا يمكنها نسخ الصفقات.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>حساب أو أكثر يستقبل نسخ صفقات المتداول الرئيسي (يتم استبعاد المتداول الرئيسي). فقط الحسابات المرتبطة عبر cTrader Open API مُدرجة.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>الحساب الرئيسي الذي يتم نسخ صفقاته. فقط الحسابات المضافة من خلال واجهة برمجة تطبيقات cTrader المفتوحة تظهر هنا — لا يمكن للحسابات المضافة يدويًا نسخ الصفقات.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>حساب واحد أو أكثر يستقبل نسخ من صفقات الحساب الرئيسي (يتم استبعاد الحساب الرئيسي). يتم إدراج الحسابات المضافة فقط من خلال واجهة برمجة تطبيقات cTrader المفتوحة.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>كيفية تحديد حجم كل صفقة تم نسخها بالنسبة للحساب الرئيسي: حجم ثابت، أو مضاعف، أو نسبة من الرصيد/الأسهم، أو نسبة مخاطر ثابتة.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>الرقم الذي يستخدمه وضع تحديد الحجم — مثلاً المضاعف (1 = نفس الحجم) أو نسبة المخاطر.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>الحد الأقصى لانحراف السعر، بالـ pips، المتسامح به عند وضع أمر النسخ قبل رفضه.</value></data>
@@ -336,8 +336,8 @@
   <data name="copyNew.filter.None" xml:space="preserve"><value>بدون تصفية</value></data>
   <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>قائمة بيضاء</value></data>
   <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>قائمة سوداء</value></data>
-  <data name="copyNew.noOpenApi" xml:space="preserve"><value>لم يتم ربط أي حسابات عبر Open API في cTrader حتى الآن. فقط حسابات Open API يمكنها نسخ الصفقات — اربط واحداً للبدء.</value></data>
-  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>ربط حساب</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>لم تتم إضافة أي حسابات عبر واجهة برمجة تطبيقات cTrader المفتوحة حتى الآن. يمكن فقط لحسابات Open API نسخ الصفقات — أضف واحدة للبدء.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>إضافة حساب</value></data>
   <data name="copy.map.tip.source" xml:space="preserve"><value>الرمز كما يُسمى على حساب المتداول الرئيسي (المصدر)، على سبيل المثال EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>الرمز المطابق عند وسيط الوجهة، على سبيل المثال EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>مضاعف حجم إضافي لهذا الرمز بالإضافة إلى حجم الوجهة (1 = لا توجد تغييرات).</value></data>

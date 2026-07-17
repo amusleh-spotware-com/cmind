@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Failed to create profile</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Profile created, but some destination settings could not be applied</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>A short name to recognise this copy profile in the list.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>The master account whose trades are copied. Only accounts linked via the cTrader Open API appear here — manually added accounts can't copy trades.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>One or more accounts that receive copies of the master's trades (the master is excluded). Only cTrader Open API-linked accounts are listed.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>The master account whose trades are copied. Only accounts added through the cTrader Open API appear here — accounts added manually can't copy trades.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>One or more accounts that receive copies of the master's trades (the master is excluded). Only accounts added through the cTrader Open API are listed.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>How each copied trade is sized relative to the master: a fixed lot, a multiplier, a proportion of balance/equity, or a fixed risk percent.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>The number the sizing mode uses — e.g. the multiplier (1 = same size) or the risk percent.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Maximum price deviation, in pips, tolerated when placing the copied order before it is rejected.</value></data>
@@ -336,8 +336,8 @@
   <data name="copyNew.filter.None" xml:space="preserve"><value>No filter</value></data>
   <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Whitelist</value></data>
   <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Blacklist</value></data>
-  <data name="copyNew.noOpenApi" xml:space="preserve"><value>No accounts are linked via the cTrader Open API yet. Only Open API accounts can copy trades — link one to get started.</value></data>
-  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Link an account</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>No accounts are added via the cTrader Open API yet. Only Open API accounts can copy trades — add one to get started.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Add an account</value></data>
   <data name="copy.map.tip.source" xml:space="preserve"><value>The symbol as named on the master (source) account, e.g. EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>The matching symbol on the destination broker, e.g. EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Extra volume multiplier for this symbol on top of the destination's sizing (1 = no change).</value></data>

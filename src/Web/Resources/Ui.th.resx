@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>ไม่สามารถสร้างโปรไฟล์</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>สร้างโปรไฟล์แล้ว แต่ไม่สามารถใช้การตั้งค่าปลายทางบางส่วน</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>ชื่อสั้น ๆ เพื่อจดจำโปรไฟล์การคัดลอกนี้ในรายการ</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>บัญชีมาสเตอร์ที่มีการคัดลอกการค้นหา บัญชีที่เชื่อมต่อผ่าน cTrader Open API เท่านั้นจะแสดงที่นี่ — บัญชีที่เพิ่มด้วยตนเองไม่สามารถคัดลอกการค้นหา</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>บัญชีหนึ่งบัญชีขึ้นไปที่รับสำเนาของการค้นหาของมาสเตอร์ (มาสเตอร์ถูกแยกออก) เฉพาะบัญชีที่เชื่อมต่อ cTrader Open API เท่านั้นที่อยู่ในรายชื่อ</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>บัญชีหลักที่คัดลอกการแลกเปลี่ยน บัญชีที่เพิ่มเข้ามาผ่าน cTrader Open API เท่านั้นที่ปรากฏที่นี่ — บัญชีที่เพิ่มด้วยตนเองไม่สามารถคัดลอกการแลกเปลี่ยน</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>บัญชีหนึ่งรายการหรือมากกว่าที่ได้รับสำเนาของการแลกเปลี่ยนของบัญชีหลัก (บัญชีหลักจะถูกยกเว้น) บัญชีที่เพิ่มเข้ามาผ่าน cTrader Open API เท่านั้นที่อยู่ในรายการ</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>วิธีการปรับขนาดการซื้อขายที่คัดลอกแต่ละรายการสัมพันธ์กับ master ได้แก่ lot คงที่ ตัวคูณ สัดส่วนของยอด/ทุน หรือเปอร์เซ็นต์ความเสี่ยงคงที่</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>ตัวเลขที่โหมดการปรับขนาดใช้ เช่น ตัวคูณ (1 = ขนาดเดียวกัน) หรือเปอร์เซ็นต์ความเสี่ยง</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>ความเบี่ยงเบนราคาสูงสุด (pips) ที่ยอมรับได้ เมื่อวางคำสั่งที่คัดลอก ก่อนที่จะถูกปฏิเสธ</value></data>
@@ -336,8 +336,8 @@
   <data name="copyNew.filter.None" xml:space="preserve"><value>ไม่มีตัวกรอง</value></data>
   <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>รายชื่อสีขาว</value></data>
   <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>รายชื่อสีดำ</value></data>
-  <data name="copyNew.noOpenApi" xml:space="preserve"><value>ยังไม่มีบัญชีใดเชื่อมต่อผ่าน cTrader Open API บัญชี Open API เท่านั้นที่สามารถคัดลอกการค้นหา — เชื่อมต่อหนึ่งเพื่อเริ่มต้น</value></data>
-  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>เชื่อมต่อบัญชี</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>ยังไม่มีบัญชีที่เพิ่มเข้ามาผ่าน cTrader Open API บัญชี Open API เท่านั้นที่สามารถคัดลอกการแลกเปลี่ยน — เพิ่มหนึ่งรายการเพื่อเริ่มต้น</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>เพิ่มบัญชี</value></data>
   <data name="copy.map.tip.source" xml:space="preserve"><value>สัญลักษณ์ตามชื่อบนบัญชีมาสเตอร์ (แหล่งที่มา) เช่น EURUSD</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>สัญลักษณ์ที่ตรงกันที่โบรกเกอร์ปลายทาง เช่น EUR.USD</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>ตัวคูณปริมาณเพิ่มเติมสำหรับสัญลักษณ์นี้นอกเหนือจากการเปลี่ยนขนาดปลายทาง (1 = ไม่มีการเปลี่ยนแปลง)</value></data>

@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Profila ni bilo mogoče ustvariti</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Profil je ustvarjen, toda nekaterih nastavitev cilja ni bilo mogoče uporabiti</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Kratko ime za prepoznavanje tega profila kopiranja v seznamu.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>Gospodarjev račun, katerega trgovine so kopirane. Tu se pojavijo samo računi povezani prek cTrader Open API — ročno dodani računi ne morejo kopirati trgovin.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>En ali več računov, ki prejemajo kopije gospodarjevih trgovin (gospodarj je izključen). Navedeni so samo računi povezani prek cTrader Open API.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Glavni račun, katerega trgovine se kopirajo. Tu se prikažejo le računi, dodani prek odprtega vmesnika cTrader API — ročno dodani računi ne morejo kopirati trgovin.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>En ali več računov, ki prejemajo kopije trgovin glavnega računa (glavni račun je izključen). Navedeni so le računi, dodani prek odprtega vmesnika cTrader API.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Kako se vsaka kopiirana trgovina prilagodi relativno na master: fiksna lota, množitelj, delež stanja/kapitala ali fiksni odstotek tveganja.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Števka, ki jo način velikosti uporabi — npr. množitelj (1 = enaka velikost) ali odstotek tveganja.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Največji dopusten premik cene v pipih pri postavljanju kopiranega naročila preden je zavrnjeno.</value></data>
@@ -336,8 +336,8 @@
   <data name="copyNew.filter.None" xml:space="preserve"><value>Brez filtra</value></data>
   <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Bela lista</value></data>
   <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Črna lista</value></data>
-  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Noben račun še ni povezan prek cTrader Open API. Samo računi Open API lahko kopirajo trgovine — povežite enega za začetek.</value></data>
-  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Povežite račun</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Prek odprtega vmesnika cTrader API še niso dodani nobeni računi. Trgovine lahko kopirajo le računi Open API — dodajte enega za začetek.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Dodaj račun</value></data>
   <data name="copy.map.tip.source" xml:space="preserve"><value>Simbol kot imenovan na gospodarjevem (izvornem) računu, npr. EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Ustrezni simbol pri brokerju namenskega računa, npr. EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Dodatni volumski množilec za ta simbol nad spreminjanjem velikosti namenskega računa (1 = brez spremembe).</value></data>

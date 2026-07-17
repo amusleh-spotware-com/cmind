@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Не удалось создать профиль</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Профиль создан, но некоторые настройки целевого счета не удалось применить</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Короткое имя для идентификации этого профиля копирования в списке.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>Счет мастера, сделки которого копируются. Только счета, связанные через cTrader Open API, отображаются здесь — вручную добавленные счета не могут копировать сделки.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Один или несколько счетов, получающих копии сделок мастера (мастер исключен). Указаны только счета, связанные через cTrader Open API.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Главная учетная запись, сделки которой копируются. Здесь отображаются только учетные записи, добавленные через открытый API cTrader — учетные записи, добавленные вручную, не могут копировать сделки.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Одна или несколько учетных записей, получающих копии сделок главной учетной записи (главная учетная запись исключена). Перечислены только учетные записи, добавленные через открытый API cTrader.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Как копируемая торговля определяется относительно главного счета: фиксированный лот, множитель, доля от баланса/капитала или процент фиксированного риска.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Число, используемое режимом размера позиции — например множитель (1 = одинаковый размер) или процент риска.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Максимальное отклонение цены в pips, допускаемое при размещении скопированного ордера, прежде чем он будет отклонен.</value></data>
@@ -336,8 +336,8 @@
   <data name="copyNew.filter.None" xml:space="preserve"><value>Без фильтра</value></data>
   <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Белый список</value></data>
   <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Чёрный список</value></data>
-  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Никакие счета еще не связаны через cTrader Open API. Только счета Open API могут копировать сделки — свяжите один, чтобы начать.</value></data>
-  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Связать счет</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Учетные записи через открытый API cTrader еще не добавлены. Копировать сделки могут только учетные записи Open API — добавьте одну для начала.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Добавить учетную запись</value></data>
   <data name="copy.map.tip.source" xml:space="preserve"><value>Символ как именуется на счете мастера (источник), например EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Соответствующий символ у брокера назначения, например EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Дополнительный множитель объема для этого символа поверх изменения размера назначения (1 = без изменений).</value></data>

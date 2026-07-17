@@ -59,4 +59,26 @@ public sealed class NavMenuTests(AppFixture app)
         (await cbotsGroup.Locator("a[href='/quant/integrity']").CountAsync())
             .Should().Be(0, "the quant pages moved from cBots to Tools");
     }
+
+    [Fact]
+    public async Task Tools_group_is_ordered_below_copy_trading()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        // The Tools group is pinned below the Copy trading link in the drawer. Assert DOM order:
+        // Copy trading precedes the Tools group (Node.DOCUMENT_POSITION_FOLLOWING == 4).
+        var copyPrecedesTools = await page.EvaluateAsync<bool>(
+            """
+            () => {
+                const copy = document.querySelector("a[href='/copy-trading']");
+                const groups = [...document.querySelectorAll('.mud-nav-group')];
+                const tools = groups.find(g => g.querySelector("button")?.textContent?.includes('Tools'));
+                if (!copy || !tools) return false;
+                return (copy.compareDocumentPosition(tools) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+            }
+            """);
+        copyPrecedesTools.Should().BeTrue("the Tools group must render below the Copy trading link");
+    }
 }

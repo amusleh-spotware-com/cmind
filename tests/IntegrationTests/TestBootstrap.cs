@@ -21,5 +21,12 @@ internal static class TestBootstrap
         // "AI is not configured" degraded result the disabled-path tests assert. Keep the built-in
         // provider OFF process-wide (mirrors the E2E AppFixture) so those gates are deterministic.
         Environment.SetEnvironmentVariable("App__Ai__BuiltIn__Enabled", "false");
+
+        // Copy hosting is gated on the single CopyTrading feature flag (on by default), so the copy API and
+        // UI stay available for the copy tests — but the background supervisor would otherwise reconcile
+        // every 30s against each parallel host and, for a linkable running profile, open a real cTrader
+        // socket. A long reconcile interval keeps it inert for the run (one boot-time reconcile with no
+        // running profiles, then it sleeps past the suite) without disabling the feature.
+        Environment.SetEnvironmentVariable("App__Copy__ReconcileInterval", "01:00:00");
     }
 }

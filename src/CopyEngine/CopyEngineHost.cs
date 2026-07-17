@@ -39,7 +39,8 @@ public sealed class CopyEngineHost(
     ILogger logger,
     ICopyEventSink? sink = null,
     ICopyNotificationSink? notifications = null,
-    Func<string, CancellationToken, ValueTask<bool>>? newsBlackout = null)
+    Func<string, CancellationToken, ValueTask<bool>>? newsBlackout = null,
+    ICopyLogSink? logSink = null)
 {
     // Optional, opt-in news-window pause: when supplied, a source open whose symbol is inside a high-impact
     // economic-calendar blackout is skipped (not mirrored). Null (the default) leaves the engine unchanged.
@@ -50,6 +51,9 @@ public sealed class CopyEngineHost(
     private readonly ICopyEventSink _sink = sink ?? NullCopyEventSink.Instance;
     // Operational-notification sink (2b): the profile owner's copy alert feed. No-op by default.
     private readonly ICopyNotificationSink _notifications = notifications ?? NullCopyNotificationSink.Instance;
+    // Live activity log for the owner's log viewer (the copy equivalent of a cBot run's console tail). No-op
+    // by default so the engine and every test are unchanged; the supervisor passes the in-process broker.
+    private readonly ICopyLogSink _logSink = logSink ?? NullCopyLogSink.Instance;
     private readonly Dictionary<long, string> _sourceSymbolNames = new();
     private readonly Dictionary<long, IReadOnlyDictionary<string, long>> _destinationSymbolIds = new();
     // Thread-safe: read+populated from the G4 bounded-parallel destination fan-out (distinct keys per
@@ -109,6 +113,11 @@ public sealed class CopyEngineHost(
     // false if the signal could not be enqueued (host shutting down) so the caller keeps the request pending.
     public bool PushFlatten() => _flattenSignals.Writer.TryWrite(0);
 
+    // Emits one timestamped, human-readable activity line to the owner's live log viewer. Never throws
+    // (mirrors the sinks — the caller is the trading hot path).
+    private void Activity(string line) =>
+        _logSink.Append(plan.ProfileId, $"{timeProvider.GetUtcNow():HH:mm:ss} {line}");
+
     public async Task RunAsync(CancellationToken ct)
     {
         await using var session = sessionFactory.Create(plan.Live, plan.ClientId, plan.ClientSecret);
@@ -125,6 +134,7 @@ public sealed class CopyEngineHost(
         };
         await session.StartAsync(ct);
         logger.CopyHostStarted(plan.ProfileId.Value, plan.SourceCtidTraderAccountId, plan.Destinations.Count);
+        Activity($"Copy engine started — source {plan.SourceCtidTraderAccountId} → {plan.Destinations.Count} destination(s).");
 
         // Hold the state gate across the initial reference-data load and first resync: OnReconnected is
         // already wired, so a socket flap during startup would otherwise run a second resync concurrently
@@ -179,6 +189,9 @@ public sealed class CopyEngineHost(
             try { await equityGuardLoop; } catch { /* equity guard cancellation is expected on shutdown */ }
             try { await flattenLoop; } catch { /* flatten loop cancellation is expected on shutdown */ }
             try { await pendingTimeoutLoop; } catch { /* pending-timeout loop cancellation is expected on shutdown */ }
+            // Release the live-log buffer and end any open viewer tails: the profile is no longer running, so
+            // its logs control is disabled and nothing more can be viewed (prevents a per-profile ring leak).
+            _logSink.Complete(plan.ProfileId);
         }
     }
 
@@ -447,6 +460,7 @@ public sealed class CopyEngineHost(
         var sourceSnapshot = await AccountSnapshotAsync(session, plan.SourceCtidTraderAccountId, AnyDestinationNeedsEquity(), ct);
         logger.CopySourceOpen(plan.ProfileId.Value, execution.PositionId, sourceName,
             execution.IsBuy ? "Buy" : "Sell", sourceLots);
+        Activity($"Source opened {sourceName} {(execution.IsBuy ? "Buy" : "Sell")} {sourceLots:0.##} lots — mirroring to {plan.Destinations.Count} destination(s).");
 
         var dispatchStart = timeProvider.GetTimestamp();
         await ForEachDestinationAsync(async (destination, token) =>
@@ -464,6 +478,7 @@ public sealed class CopyEngineHost(
                 if (!NoteIfTokenInvalidated(ex, destination.CtidTraderAccountId))
                     RecordCopyFailure(destination.CtidTraderAccountId);
                 logger.CopyOpenFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, ex);
+                Activity($"→ {destination.CtidTraderAccountId}: FAILED to open ({ex.GetType().Name}).");
                 _sink.Record(new CopyExecutionRecord(plan.ProfileId, destination.CtidTraderAccountId,
                     execution.PositionId, sourceName, CopyExecutionKind.Failed, execution.IsBuy, execution.Volume,
                     execution.Price, null, EventAge(execution).TotalMilliseconds, ex.GetType().Name,
@@ -552,6 +567,7 @@ public sealed class CopyEngineHost(
             {
                 NoteIfTokenInvalidated(ex, destination.CtidTraderAccountId);
                 logger.CopyOpenFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, ex);
+                Activity($"→ {destination.CtidTraderAccountId}: FAILED to open ({ex.GetType().Name}).");
             }
         }, ct);
     }
@@ -584,6 +600,7 @@ public sealed class CopyEngineHost(
             {
                 NoteIfTokenInvalidated(ex, destination.CtidTraderAccountId);
                 logger.CopyOpenFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, ex);
+                Activity($"→ {destination.CtidTraderAccountId}: FAILED to open ({ex.GetType().Name}).");
             }
         }, ct);
     }
@@ -752,18 +769,21 @@ public sealed class CopyEngineHost(
         if (_protectedDestinations.Contains(destination.CtidTraderAccountId))
         {
             CopyMetrics.Instance.CopySkipped("account_protection");
+            Activity($"→ {destination.CtidTraderAccountId}: skipped (account_protection latched).");
             return;
         }
 
         if (_lockedOutDestinations.Contains(destination.CtidTraderAccountId))
         {
             CopyMetrics.Instance.CopySkipped("prop_lockout");
+            Activity($"→ {destination.CtidTraderAccountId}: skipped (prop_lockout for the day).");
             return;
         }
 
         if (destination.Config.ManageOnly)
         {
             CopyMetrics.Instance.CopySkipped("manage_only");
+            Activity($"→ {destination.CtidTraderAccountId}: skipped (manage_only — new opens disabled).");
             return;
         }
 
@@ -771,6 +791,7 @@ public sealed class CopyEngineHost(
         if (!destination.Config.TradingHours.IsOpenAt((int)timeProvider.GetUtcNow().TimeOfDay.TotalMinutes))
         {
             CopyMetrics.Instance.CopySkipped("trading_hours");
+            Activity($"→ {destination.CtidTraderAccountId}: skipped (trading_hours — outside the configured window).");
             return;
         }
 
@@ -778,6 +799,7 @@ public sealed class CopyEngineHost(
         if (!destination.Config.IsSourceLabelAllowed(execution.SourceLabel))
         {
             CopyMetrics.Instance.CopySkipped("source_label");
+            Activity($"→ {destination.CtidTraderAccountId}: skipped (source_label filter).");
             return;
         }
 
@@ -788,12 +810,16 @@ public sealed class CopyEngineHost(
         if (!fromResync && IsDestinationTripped(destination.CtidTraderAccountId))
         {
             CopyMetrics.Instance.CopySkipped("circuit_open");
+            Activity($"→ {destination.CtidTraderAccountId}: skipped (circuit_open — too many recent rejections).");
             return;
         }
 
         var destinationName = destination.Config.ResolveDestinationSymbol(sourceName);
         if (!_destinationSymbolIds[destination.CtidTraderAccountId].TryGetValue(Normalize(destinationName), out var destinationSymbolId))
+        {
+            Activity($"→ {destination.CtidTraderAccountId}: skipped (symbol {destinationName} not tradable on destination).");
             return;
+        }
 
         var destinationDetail = await SymbolDetailAsync(session, destination.CtidTraderAccountId, destinationSymbolId, ct);
         var destinationSnapshot = await AccountSnapshotAsync(
@@ -820,6 +846,7 @@ public sealed class CopyEngineHost(
             var reason = decision.SkipReason ?? "unknown";
             CopyMetrics.Instance.CopySkipped(reason);
             logger.CopySkipped(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, reason);
+            Activity($"→ {destination.CtidTraderAccountId}: skipped ({reason}).");
             return;
         }
 
@@ -829,6 +856,7 @@ public sealed class CopyEngineHost(
         {
             CopyMetrics.Instance.CopySkipped("size_zero");
             logger.CopySkipped(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, "size_zero");
+            Activity($"→ {destination.CtidTraderAccountId}: skipped (size_zero — computed volume rounds to 0).");
             return;
         }
 
@@ -870,6 +898,7 @@ public sealed class CopyEngineHost(
         else
             logger.CopyOrderPlaced(plan.ProfileId.Value, destination.CtidTraderAccountId, destinationName,
                 effectiveBuy ? "Buy" : "Sell", wireVolume, execution.PositionId);
+        Activity($"→ {destination.CtidTraderAccountId}: {(isScaleIn ? "scaled in" : "placed")} {(effectiveBuy ? "Buy" : "Sell")} {decision.Lots:0.##} lots {destinationName}.");
 
         if (applyProtection) await ApplyProtectionAsync(session, destination, execution, ct);
     }
@@ -910,6 +939,7 @@ public sealed class CopyEngineHost(
         _sourceStops.Remove(sourcePositionId);
         var label = sourcePositionId.ToString();
         logger.CopySourceClose(plan.ProfileId.Value, sourcePositionId);
+        Activity($"Source closed position {sourcePositionId} — closing mirrored destination positions.");
 
         await ForEachDestinationAsync(async (destination, token) =>
         {

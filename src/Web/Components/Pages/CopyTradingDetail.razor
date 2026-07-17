@@ -42,10 +42,10 @@ else
         <MudText Typo="Typo.subtitle1" Class="mb-2">@L["copyNew.source"]</MudText>
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
             <MudSelect T="long" Value="_source" ValueChanged="ChangeSource" Label="@L["copyNew.source"]" Class="flex-grow-1"
-                       data-testid="copy-source-select">
+                       ToStringFunc="@(n => AccountLabel(n))" data-testid="copy-source-select">
                 @foreach (var a in SourceOptions)
                 {
-                    <MudSelectItem T="long" Value="@a.Number">@a.Number</MudSelectItem>
+                    <MudSelectItem T="long" Value="@a.Number">@AccountLabel(a.Number)</MudSelectItem>
                 }
             </MudSelect>
             <HelpTip Text="@L["copyNew.tip.source"]" />
@@ -65,10 +65,10 @@ else
                     <MudTh>@L["copyDetail.col.account"]</MudTh><MudTh>@L["copyDetail.col.mode"]</MudTh><MudTh>@L["copyDetail.col.param"]</MudTh><MudTh>@L["copyDetail.col.reverse"]</MudTh><MudTh>@L["copyDetail.col.direction"]</MudTh><MudTh>@L["copyDetail.col.partial"]</MudTh><MudTh>@L["copyDetail.col.pending"]</MudTh><MudTh>@L["copyDetail.col.trailing"]</MudTh><MudTh /></HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="@L["copyDetail.col.account"]">@AccountNumber((Guid)context.destinationAccountId)</MudTd>
-                    <MudTd DataLabel="@L["copyDetail.col.mode"]">@context.mode</MudTd>
+                    <MudTd DataLabel="@L["copyDetail.col.mode"]">@ModeLabel((string)context.mode)</MudTd>
                     <MudTd DataLabel="@L["copyDetail.col.param"]">@context.riskParameter</MudTd>
                     <MudTd DataLabel="@L["copyDetail.col.reverse"]">@YesNo(context.reverse)</MudTd>
-                    <MudTd DataLabel="@L["copyDetail.col.direction"]">@context.direction</MudTd>
+                    <MudTd DataLabel="@L["copyDetail.col.direction"]">@DirLabel((string)context.direction)</MudTd>
                     <MudTd DataLabel="@L["copyDetail.col.partial"]">@YesNo(context.mirrorPartialClose)</MudTd>
                     <MudTd DataLabel="@L["copyDetail.col.pending"]">@YesNo(context.copyPendingOrders)</MudTd>
                     <MudTd DataLabel="@L["copyDetail.col.trailing"]">@YesNo(context.copyTrailingStop)</MudTd>
@@ -91,7 +91,7 @@ else
                                data-testid="copy-dest-accounts">
                         @foreach (var a in DestinationOptions)
                         {
-                            <MudSelectItem T="long" Value="@a.Number">@a.Number</MudSelectItem>
+                            <MudSelectItem T="long" Value="@a.Number">@AccountLabel(a.Number)</MudSelectItem>
                         }
                     </MudSelect>
                     <HelpTip Text="@L["copyDetail.tip.destAccounts"]" />
@@ -316,7 +316,7 @@ else
         var accounts = await Http.GetDynamicArrayAsync("/api/accounts");
         _accountRefs = ((IEnumerable<dynamic>)accounts)
             .Where(a => (bool)a.linkedViaOpenApi)
-            .Select(a => new AccountRef((Guid)a.id, (long)a.accountNumber))
+            .Select(a => new AccountRef((Guid)a.id, (long)a.accountNumber, (string)a.broker))
             .ToArray();
         _source = _accountRefs.FirstOrDefault(a => a.Id == (Guid)profile.sourceAccountId)?.Number ?? 0;
         _loaded = true;
@@ -359,6 +359,26 @@ else
     private string MmName(MoneyManagementMode mode) => L[$"copyNew.mm.{mode}"];
     private string DirName(CopyDirectionFilter direction) => L[$"copyNew.dir.{direction}"];
     private string FilterName(SymbolFilterMode filter) => L[$"copyNew.filter.{filter}"];
+
+    // Account selectors show the human account number plus its broker (never the internal GUID), matching
+    // the create form. Falls back to the bare number if the broker is unknown.
+    private string AccountLabel(long number)
+    {
+        foreach (var a in _accountRefs)
+            if (a.Number == number)
+                return string.IsNullOrWhiteSpace(a.Broker)
+                    ? number.ToString(CultureInfo.CurrentCulture)
+                    : $"{number.ToString(CultureInfo.CurrentCulture)} ({a.Broker})";
+        return number.ToString(CultureInfo.CurrentCulture);
+    }
+
+    // Render the persisted enum name from the API as its friendly, localized label (as the money-management
+    // selector does) instead of the raw value.
+    private string ModeLabel(string mode) =>
+        Enum.TryParse<MoneyManagementMode>(mode, out var m) ? MmName(m) : mode;
+
+    private string DirLabel(string direction) =>
+        Enum.TryParse<CopyDirectionFilter>(direction, out var d) ? DirName(d) : direction;
 
     private async Task Reload()
     {
@@ -458,5 +478,5 @@ else
         catch { _suggested = []; }
     }
 
-    private sealed record AccountRef(Guid Id, long Number);
+    private sealed record AccountRef(Guid Id, long Number, string Broker);
 }

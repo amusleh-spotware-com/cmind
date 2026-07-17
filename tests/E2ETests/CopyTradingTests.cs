@@ -155,11 +155,12 @@ public sealed class CopyTradingTests(AppFixture app)
             new() { DataObject = new { SourceAccountId = slaveId } });
         Assert.Equal(400, invalid.Status);
 
-        // The full-page editor exposes the source (master) selector, reflecting the changed master.
+        // The full-page editor exposes the source (master) selector, reflecting the changed master. The
+        // selector now labels each account by number AND broker, so the value is "<number> (<broker>)".
         // NB: MudSelect's data-testid lands on a hidden <input> — assert its VALUE, never its visibility.
         await GotoAsync(page, $"/copy-trading/{profileId}");
         await Assertions.Expect(page.Locator("[data-testid=copy-source-select]"))
-            .ToHaveValueAsync(master2.ToString(), new() { Timeout = 15000 });
+            .ToHaveValueAsync(new Regex($"^{master2}(\\s|$)"), new() { Timeout = 15000 });
 
         // The browser tab title shows the profile name (polled — the title updates once the profile loads).
         await Assertions.Expect(page).ToHaveTitleAsync(
@@ -281,6 +282,44 @@ public sealed class CopyTradingTests(AppFixture app)
     private string U(string path) => app.BaseUrl + path;
 
     private static long NextAccountNumber(int slot) => 700_000 + (Convert.ToInt64(Suffix, 16) % 50_000) * 100 + slot;
+
+    [Fact]
+    public async Task Profile_logs_button_is_disabled_until_running_then_opens_the_live_log_dialog()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var api = page.APIRequest;
+
+        var cidId = await CreateCidAsync(api, $"logs-cid-{Suffix}");
+        var master = await CreateAccountAsync(api, cidId, NextAccountNumber(42), "LogsMaster");
+        var slave = await CreateAccountAsync(api, cidId, NextAccountNumber(43), "LogsSlave");
+        var name = $"logs-ui-{Suffix}";
+
+        var create = await api.PostAsync(U("/api/copy/profiles"), new()
+        {
+            DataObject = new { Name = name, SourceAccountId = master, DestinationAccountIds = new[] { slave } }
+        });
+        Assert.True(create.Ok, $"create profile failed: {create.Status}");
+        var profileId = (await ReadJsonAsync(create)).GetProperty("id").GetString()!;
+
+        await GotoAsync(page, "/copy-trading");
+        var row = page.Locator($"tr:has-text('{name}')");
+        await Assertions.Expect(row).ToBeVisibleAsync(Slow);
+
+        // Draft: there is nothing running to tail, so the live-logs control is disabled (mandate 11:
+        // state-correct controls). A cBot's log button behaves the same for a non-running instance.
+        await Assertions.Expect(row.Locator("[data-testid=copy-logs]"))
+            .ToBeDisabledAsync(new() { Timeout = 15000 });
+
+        // Running: the control enables and opens the live-log dialog with its streaming console.
+        Assert.Equal("Running", await ActAsync(api, profileId, "start"));
+        await GotoAsync(page, "/copy-trading");
+        var logs = page.Locator($"tr:has-text('{name}')").Locator("[data-testid=copy-logs]");
+        await Assertions.Expect(logs).ToBeEnabledAsync(new() { Timeout = 15000 });
+        await logs.ClickAsync();
+        await Assertions.Expect(page.Locator("[data-testid=copy-logs-console]")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.Locator("[data-testid=copy-logs-close]")).ToBeVisibleAsync(Slow);
+        await page.Locator("[data-testid=copy-logs-close]").ClickAsync();
+    }
 
     private async Task<long> SeedOpenApiAccountAsync(IAPIRequestContext api)
     {

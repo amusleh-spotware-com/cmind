@@ -2,10 +2,15 @@
 @using System.Net.Http.Json
 @using Core.Domain
 @using Web.Json
+@using Microsoft.AspNetCore.SignalR.Client
+@using Web.Hubs
+@implements IAsyncDisposable
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
 @inject IDialogService Dialogs
+@inject IJSRuntime JS
+@inject LogHubConnectionFactory HubFactory
 
 <PageTitle>Copy Trading</PageTitle>
 
@@ -48,6 +53,47 @@
     </DialogActions>
 </MudDialog>
 
+<MudDialog @bind-Visible="_logsOpen" Options="_logsDialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Article" Size="Size.Small" Class="mr-2" />Live logs — @_logsName
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+            <MudSwitch T="bool" @bind-Value="_logsAutoScroll" Label="Auto-scroll" Color="Color.Primary"
+                       data-testid="copy-logs-autoscroll" />
+            <MudSpacer />
+            <MudTooltip Text="Copy to clipboard">
+                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" OnClick="CopyLogs"
+                               data-testid="copy-logs-copy" />
+            </MudTooltip>
+            <MudTooltip Text="Download">
+                <MudIconButton Icon="@Icons.Material.Filled.Download" Size="Size.Small" OnClick="DownloadLogs"
+                               data-testid="copy-logs-download" />
+            </MudTooltip>
+        </MudStack>
+        <MudPaper id="copy-logs-console" Outlined="true" data-testid="copy-logs-console"
+                  Style="height:50vh;overflow:auto;font-family:monospace;font-size:0.8rem;white-space:pre-wrap;"
+                  Class="pa-2">
+            @if (_logLines.Count == 0)
+            {
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">Waiting for copy activity…</MudText>
+            }
+            else
+            {
+                @foreach (var line in _logLines)
+                {
+                    <div>@line</div>
+                }
+            }
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseLogs" data-testid="copy-logs-close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
 <MudTable Items="_profiles" Dense="true" Breakpoint="Breakpoint.Sm">
     <HeaderContent>
         <MudTh>Name</MudTh><MudTh>Source</MudTh><MudTh>Status</MudTh><MudTh>Destinations</MudTh><MudTh /></HeaderContent>
@@ -57,6 +103,11 @@
         <MudTd DataLabel="Status"><MudChip T="string" Size="Size.Small" Color="StatusColor((string)context.status)">@context.status</MudChip></MudTd>
         <MudTd DataLabel="Destinations">@context.destinationCount</MudTd>
         <MudTd DataLabel="">
+            <MudTooltip Text="@(IsRunning((string)context.status) ? "View live logs" : "Start the profile to view live logs")">
+                <MudIconButton Icon="@Icons.Material.Filled.Article" Size="Size.Small" Color="Color.Info"
+                               Disabled="@(!IsRunning((string)context.status))" aria-label="View profile logs"
+                               OnClick="@(() => OpenLogs((Guid)context.id, (string)context.name))" data-testid="copy-logs" />
+            </MudTooltip>
             <MudTooltip Text="Start copying">
                 <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" Color="Color.Success"
                                Disabled="@IsRunning((string)context.status)" aria-label="Start profile"
@@ -92,6 +143,107 @@
 
     private static readonly DialogOptions _recommendDialogOptions =
         new() { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+
+    private const string LogsConsoleId = "copy-logs-console";
+    private static readonly DialogOptions _logsDialogOptions =
+        new() { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    private bool _logsOpen;
+    private bool _logsAutoScroll = true;
+    private string _logsName = "";
+    private Guid _logsId;
+    private readonly List<string> _logLines = [];
+    private HubConnection? _logsHub;
+    private CancellationTokenSource? _logsCts;
+
+    private async Task OpenLogs(Guid id, string name)
+    {
+        _logsId = id;
+        _logsName = name;
+        _logLines.Clear();
+        _logsOpen = true;
+        await StartLogStreamAsync();
+    }
+
+    private async Task StartLogStreamAsync()
+    {
+        await StopLogStreamAsync();
+        try
+        {
+            _logsHub = HubFactory.Create();
+            await _logsHub.StartAsync();
+        }
+        catch
+        {
+            _logsHub = null;
+            return;
+        }
+
+        _logsCts = new CancellationTokenSource();
+        var stream = _logsHub.StreamAsync<string>("TailCopyProfile", _logsId, _logsCts.Token);
+        // Stream errors (a stopped profile, a dropped connection) must never bubble out and tear down the
+        // Blazor circuit, so tail on a detached background task exactly like the instance log viewer.
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await foreach (var line in stream)
+                {
+                    _logLines.Add(line);
+                    if (_logLines.Count > 500) _logLines.RemoveAt(0);
+                    await InvokeAsync(async () =>
+                    {
+                        StateHasChanged();
+                        if (_logsAutoScroll)
+                        {
+                            try { await JS.InvokeVoidAsync("appScrollToEnd", LogsConsoleId); }
+                            catch { /* JS unavailable (e.g. prerender) — ignore */ }
+                        }
+                    });
+                }
+            }
+            catch { /* log stream ended or failed — nothing to tail */ }
+        });
+    }
+
+    private async Task StopLogStreamAsync()
+    {
+        if (_logsCts is not null)
+        {
+            await _logsCts.CancelAsync();
+            _logsCts.Dispose();
+            _logsCts = null;
+        }
+        if (_logsHub is not null)
+        {
+            await _logsHub.DisposeAsync();
+            _logsHub = null;
+        }
+    }
+
+    private async Task CloseLogs()
+    {
+        _logsOpen = false;
+        await StopLogStreamAsync();
+    }
+
+    private async Task CopyLogs()
+    {
+        try
+        {
+            var ok = await JS.InvokeAsync<bool>("copyToClipboard", string.Join("\n", _logLines));
+            Snack.Add(ok ? "Logs copied to clipboard" : "Could not copy logs", ok ? Severity.Success : Severity.Warning);
+        }
+        catch { /* clipboard unavailable — ignore */ }
+    }
+
+    private async Task DownloadLogs()
+    {
+        try { await JS.InvokeVoidAsync("appDownloadText", $"copy-profile-{_logsId:N}.log", string.Join("\n", _logLines)); }
+        catch { /* JS unavailable — ignore */ }
+    }
+
+    public async ValueTask DisposeAsync() => await StopLogStreamAsync();
 
     private void OpenRecommendDialog()
     {

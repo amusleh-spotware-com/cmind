@@ -20,8 +20,10 @@ namespace Nodes.CopyTrading;
 /// <summary>
 /// In-process copy hosting for the local node. Each cycle it reconciles running copy profiles with
 /// live <see cref="CopyEngineHost"/> instances, starting hosts for newly running profiles and
-/// cancelling those no longer running. Gated on <see cref="CopyOptions.Enabled"/> (off by default).
-/// Order execution requires validation against a real authorised trading account.
+/// cancelling those no longer running. Gated on the single <see cref="FeatureFlag.CopyTrading"/> feature
+/// flag (resolved at runtime through <see cref="IFeatureGate"/>, so an owner can turn copy trading on/off
+/// without a redeploy) — there is no separate on/off switch. Order execution requires validation against a
+/// real authorised trading account.
 /// </summary>
 public sealed class CopyEngineSupervisor(
     IServiceScopeFactory scopeFactory,
@@ -31,7 +33,8 @@ public sealed class CopyEngineSupervisor(
     ILogger<CopyEngineSupervisor> log,
     TimeProvider timeProvider,
     Core.CopyTrading.ICopyEventSink copyEventSink,
-    Core.CopyTrading.ICopyNotificationSink copyNotificationSink) : BackgroundService
+    Core.CopyTrading.ICopyNotificationSink copyNotificationSink,
+    Core.CopyTrading.ICopyLogSink copyLogSink) : BackgroundService
 {
     private readonly ConcurrentDictionary<CopyProfileId, HostHandle> _running = new();
 
@@ -39,11 +42,8 @@ public sealed class CopyEngineSupervisor(
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            if (options.CurrentValue.Copy.Enabled)
-            {
-                try { await ReconcileAsync(stoppingToken); }
-                catch (Exception ex) { log.CopySupervisorFailed(ex); }
-            }
+            try { await ReconcileAsync(stoppingToken); }
+            catch (Exception ex) { log.CopySupervisorFailed(ex); }
 
             await Task.Delay(JitteredInterval(options.CurrentValue.Copy.ReconcileInterval, Random.Shared), stoppingToken);
         }
@@ -93,6 +93,22 @@ public sealed class CopyEngineSupervisor(
     private async Task ReconcileAsync(CancellationToken stoppingToken)
     {
         using var scope = scopeFactory.CreateScope();
+
+        // Single copy-trading gate: the CopyTrading feature flag (config baseline overlaid with the owner's
+        // runtime override). When it is off, host nothing and tear down any hosts still running so a runtime
+        // toggle-off stops copying without a redeploy.
+        var featureGate = scope.ServiceProvider.GetRequiredService<Core.Features.IFeatureGate>();
+        if (!featureGate.IsEnabled(Core.Features.FeatureFlag.CopyTrading))
+        {
+            foreach (var (id, handle) in _running.ToArray())
+            {
+                await handle.Cts.CancelAsync();
+                _running.TryRemove(id, out _);
+            }
+
+            return;
+        }
+
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
         var protector = scope.ServiceProvider.GetRequiredService<ISecretProtector>();
 
@@ -152,7 +168,7 @@ public sealed class CopyEngineSupervisor(
             var host = new CopyEngineHost(plan, sessionFactory,
                 new CopyDecisionEngine(new CopySizingCalculator()), timeProvider,
                 loggerFactory.CreateLogger<CopyEngineHost>(), copyEventSink, copyNotificationSink,
-                NewsBlackoutHook());
+                NewsBlackoutHook(), copyLogSink);
             var task = Task.Run(() => host.RunAsync(cts.Token), CancellationToken.None);
             _running[profile.Id] = new HostHandle(task, cts, host, signature);
             log.CopyProfileHosted(profile.Id.Value);

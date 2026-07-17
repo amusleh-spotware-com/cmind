@@ -153,7 +153,6 @@ public sealed record CalendarOptions
 
 public sealed record CopyOptions
 {
-    public bool Enabled { get; init; }
     public TimeSpan ReconcileInterval { get; init; } = TimeSpan.FromSeconds(30);
 
     /// <summary>

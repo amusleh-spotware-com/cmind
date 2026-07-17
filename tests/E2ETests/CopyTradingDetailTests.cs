@@ -73,7 +73,52 @@ public sealed class CopyTradingDetailTests(AppFixture app)
             .Should().BeFalse("selecting a sizing mode on the page must not trip the Blazor error UI");
     }
 
+    [Fact]
+    public async Task Selectors_show_broker_and_destination_mode_is_the_friendly_label()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var api = page.APIRequest;
+
+        var master = await SeedLinkedAccountAsync(api);
+        var slave = await SeedLinkedAccountAsync(api);
+        var name = $"broker-{Suffix}";
+
+        // Create with the destination inline; it lands with the default sizing (Lot multiplier).
+        var create = await api.PostAsync(U("/api/copy/profiles"), new()
+        {
+            DataObject = new { Name = name, SourceAccountId = master.Id, DestinationAccountIds = new[] { slave.Id } }
+        });
+        Assert.True(create.Ok, $"create profile failed: {create.Status}");
+        var profileId = (await ReadJsonAsync(create)).GetProperty("id").GetString()!;
+
+        await page.GotoAsync($"/copy-trading/{profileId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForAppReadyAsync();
+
+        // The source selector lists each account by its human number AND broker (never the raw GUID) — the
+        // seed broker is "SeedBroker". Open the dropdown via its VISIBLE control (the testid lands on a
+        // hidden MudSelect input that can't be clicked) — the source select is the first on the page.
+        await page.Locator(".mud-select").First.ClickAsync();
+        await Assertions.Expect(page.Locator(".mud-list-item:has-text('SeedBroker')").First).ToBeVisibleAsync(Slow);
+        await page.Keyboard.PressAsync("Escape");
+
+        // The destinations table renders the friendly money-management mode ("Lot multiplier"), like the
+        // money-management selector — never the raw enum "LotMultiplier".
+        await Assertions.Expect(page.Locator("[data-testid=copy-destinations]"))
+            .ToContainTextAsync("Lot multiplier", new() { Timeout = 15000 });
+    }
+
     private string U(string path) => app.BaseUrl + path;
+
+    private async Task<(long Number, Guid Id)> SeedLinkedAccountAsync(IAPIRequestContext api)
+    {
+        var r = await api.PostAsync(U("/api/testseed/openapi-account"), new());
+        Assert.True(r.Ok, $"seed openapi account failed: {r.Status}");
+        var number = (await ReadJsonAsync(r)).GetProperty("accountNumber").GetInt64();
+        var accounts = await GetJsonAsync(api, "/api/accounts");
+        var id = accounts.EnumerateArray().First(a => a.GetProperty("accountNumber").GetInt64() == number)
+            .GetProperty("id").GetGuid();
+        return (number, id);
+    }
 
     private async Task<string> CreateProfileAsync(IAPIRequestContext api, string name)
     {

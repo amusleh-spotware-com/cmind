@@ -22,8 +22,18 @@ var connectionString = builder.Configuration.GetConnectionString(ConnectionStrin
 builder.Services.AddDbContext<DataContext>(options => options.UseAppNpgsql(connectionString));
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// Standing per-node copy host. Runs the same in-process supervisor against the shared database;
-// enable App:Copy:Enabled here (and disable it on the web host) to move copy hosting onto this node.
+// Copy engine dependencies the supervisor needs (the web host gets these from AddNodes; this standalone
+// agent wires them directly). No transparency/notification drainers here — this node just executes copies —
+// so both sinks are the no-op default; the live-log broker is in-process for symmetry.
+builder.Services.AddSingleton<CopyLogBroker>();
+builder.Services.AddSingleton<Core.CopyTrading.ICopyLogSink>(sp => sp.GetRequiredService<CopyLogBroker>());
+builder.Services.AddSingleton<Core.CopyTrading.ICopyLogFeed>(sp => sp.GetRequiredService<CopyLogBroker>());
+builder.Services.AddSingleton<Core.CopyTrading.ICopyEventSink>(Core.CopyTrading.NullCopyEventSink.Instance);
+builder.Services.AddSingleton<Core.CopyTrading.ICopyNotificationSink>(Core.CopyTrading.NullCopyNotificationSink.Instance);
+
+// Standing per-node copy host. Runs the same in-process supervisor against the shared database; gated by
+// the single App:Features:CopyTrading flag (like the web host). Copy profiles are claimed by exactly one
+// node via the DB lease, so running this agent alongside the web host never double-executes.
 builder.Services.AddHostedService<CopyEngineSupervisor>();
 builder.Services.AddHostedService<OpenApiTokenRefreshService>();
 

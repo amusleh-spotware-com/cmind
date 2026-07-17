@@ -63,6 +63,46 @@ public sealed class CopyEngineHostTests
     }
 
     [Fact]
+    public async Task Host_emits_live_activity_lines_for_the_owner_log_viewer()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave)));
+        var log = new CapturingCopyLogSink();
+
+        var host = new CopyEngineHost(plan, new FakeTradingSessionFactory(session),
+            new CopyDecisionEngine(new CopySizingCalculator()), TimeProvider.System, NullLogger.Instance,
+            logSink: log);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var run = Task.Run(() => host.RunAsync(cts.Token), CancellationToken.None);
+        try
+        {
+            await WaitUntil(() => log.Lines.Any(l => l.Contains("Copy engine started")));
+            session.PushOpen(Source, positionId: 2001, SymbolId, isBuy: true, volume: 100);
+            await WaitUntil(() => log.Lines.Any(l => l.Contains("Source opened"))
+                                  && log.Lines.Any(l => l.Contains(Slave.ToString()) && l.Contains("placed")));
+        }
+        finally
+        {
+            cts.Cancel();
+            try { await run; } catch { /* cancellation */ }
+        }
+
+        log.Lines.Should().Contain(l => l.Contains("Copy engine started"));
+        log.Lines.Should().Contain(l => l.Contains("Source opened EURUSD"));
+        log.Lines.Should().Contain(l => l.Contains("placed") && l.Contains("EURUSD"));
+    }
+
+    private sealed class CapturingCopyLogSink : Core.CopyTrading.ICopyLogSink
+    {
+        private readonly List<string> _lines = [];
+        private readonly object _gate = new();
+        public string[] Lines { get { lock (_gate) return [.. _lines]; } }
+        public void Append(CopyProfileId profileId, string line) { lock (_gate) _lines.Add(line); }
+        public void Complete(CopyProfileId profileId) { }
+    }
+
+    [Fact]
     public async Task Open_is_skipped_when_the_symbol_is_in_a_news_blackout()
     {
         var session = NewSession();

@@ -22,6 +22,14 @@ public static class DependencyInjection
         services.AddSingleton<LocalContainerDispatcher>();
         services.AddSingleton<IContainerDispatcher>(sp => sp.GetRequiredService<HttpContainerDispatcher>());
         services.AddSingleton<IContainerDispatcherFactory, ContainerDispatcherFactory>();
+
+        // Live copy-profile log broker (in-process): the copy host writes activity lines, the Web log hub
+        // tails them. Registered unconditionally so the hub can always resolve the read side even when copy
+        // trading is disabled — an unused broker is harmless.
+        services.AddSingleton<Nodes.CopyTrading.CopyLogBroker>();
+        services.AddSingleton<Core.CopyTrading.ICopyLogSink>(sp => sp.GetRequiredService<Nodes.CopyTrading.CopyLogBroker>());
+        services.AddSingleton<Core.CopyTrading.ICopyLogFeed>(sp => sp.GetRequiredService<Nodes.CopyTrading.CopyLogBroker>());
+
         services.AddHostedService<NodeStatsPoller>();
         services.AddHostedService<NodeHeartbeatMonitor>();
         services.AddHostedService<NodeInstanceReclaimer>();

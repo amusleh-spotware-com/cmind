@@ -139,6 +139,11 @@ public class AppFixture : IAsyncLifetime
         // (mirrors IntegrationTests' TestBootstrap).
         psi.Environment["App__Calendar__IngestionEnabled"] = "false";
         psi.Environment["App__CurrencyStrength__RefreshEnabled"] = "false";
+        // Copy hosting is gated on the single CopyTrading feature flag (on by default) so the copy UI stays
+        // available for the copy E2E tests, but the background supervisor would otherwise reconcile every
+        // 30s against the shared app. A long reconcile interval keeps it inert for the run (one boot-time
+        // reconcile with no running profiles, then it sleeps past the suite) without hiding the feature.
+        psi.Environment["App__Copy__ReconcileInterval"] = "01:00:00";
         // Dev-only seeding endpoints (guarded by IsDevelopment in Program.cs) — lets E2E seed domain state
         // like an Open-API-linked account without a live broker. Never enabled outside Development.
         psi.Environment["App__TestSeed__Enabled"] = "true";

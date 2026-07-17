@@ -39,6 +39,25 @@ public sealed class CopyProfileTests
     }
 
     [Fact]
+    public void ChangeSource_updates_the_source_account()
+    {
+        var profile = NewProfile(out _);
+        var newSource = TradingAccountId.New();
+        profile.ChangeSource(newSource);
+        profile.SourceAccountId.Should().Be(newSource);
+    }
+
+    [Fact]
+    public void ChangeSource_rejects_an_existing_destination()
+    {
+        var profile = NewProfile(out _);
+        var dest = TradingAccountId.New();
+        profile.AddDestination(dest, Mirror);
+        var act = () => profile.ChangeSource(dest);
+        act.Should().Throw<DomainException>().Which.Code.Should().Be(DomainErrors.CopySourceEqualsDestination);
+    }
+
+    [Fact]
     public void Start_transitions_running_and_raises_event()
     {
         var profile = NewProfile(out _);

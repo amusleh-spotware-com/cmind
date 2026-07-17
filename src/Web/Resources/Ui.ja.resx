@@ -364,4 +364,6 @@
   <data name="copyDetail.someFailed" xml:space="preserve"><value>一部の目的地を追加できませんでした</value></data>
   <data name="copyDetail.yes" xml:space="preserve"><value>はい</value></data>
   <data name="copyDetail.no" xml:space="preserve"><value>いいえ</value></data>
+  <data name="copyDetail.sourceChanged" xml:space="preserve"><value>ソースアカウントが更新されました</value></data>
+  <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>ソースアカウントを変更できませんでした</value></data>
 </root>

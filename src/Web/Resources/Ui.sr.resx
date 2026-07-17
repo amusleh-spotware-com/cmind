@@ -364,4 +364,6 @@
   <data name="copyDetail.someFailed" xml:space="preserve"><value>Нека одредишта није било могуће додати</value></data>
   <data name="copyDetail.yes" xml:space="preserve"><value>Да</value></data>
   <data name="copyDetail.no" xml:space="preserve"><value>Не</value></data>
+  <data name="copyDetail.sourceChanged" xml:space="preserve"><value>Извор рачуна ажуриран</value></data>
+  <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Не могу да променим извор рачуна</value></data>
 </root>

@@ -364,4 +364,6 @@
   <data name="copyDetail.someFailed" xml:space="preserve"><value>Beberapa destinasi tidak dapat ditambah</value></data>
   <data name="copyDetail.yes" xml:space="preserve"><value>Ya</value></data>
   <data name="copyDetail.no" xml:space="preserve"><value>Tidak</value></data>
+  <data name="copyDetail.sourceChanged" xml:space="preserve"><value>Akaun sumber dikemas kini</value></data>
+  <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Tidak dapat menukar akaun sumber</value></data>
 </root>

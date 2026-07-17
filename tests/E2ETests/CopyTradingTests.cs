@@ -116,6 +116,44 @@ public sealed class CopyTradingTests(AppFixture app)
             .ToBeDisabledAsync(new() { Timeout = 15000 });
     }
 
+    [Fact]
+    public async Task Edit_page_can_change_source_master_and_rejects_a_destination_as_source()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var api = page.APIRequest;
+
+        // Copy lists only Open-API-linked accounts; seed three (no live broker needed).
+        var master1 = await SeedOpenApiAccountAsync(api);
+        var master2 = await SeedOpenApiAccountAsync(api);
+        var slave = await SeedOpenApiAccountAsync(api);
+        var master1Id = await AccountIdAsync(api, master1);
+        var master2Id = await AccountIdAsync(api, master2);
+        var slaveId = await AccountIdAsync(api, slave);
+
+        var create = await api.PostAsync(U("/api/copy/profiles"), new()
+        {
+            DataObject = new { Name = $"src-{Suffix}", SourceAccountId = master1Id, DestinationAccountIds = new[] { slaveId } }
+        });
+        Assert.True(create.Ok, $"create profile failed: {create.Status}");
+        var profileId = (await ReadJsonAsync(create)).GetProperty("id").GetString()!;
+
+        // The source (master) can be changed to another account.
+        var change = await api.PutAsync(U($"/api/copy/profiles/{profileId}/source"),
+            new() { DataObject = new { SourceAccountId = master2Id } });
+        Assert.Equal(200, change.Status);
+        var detail = await GetJsonAsync(api, $"/api/copy/profiles/{profileId}");
+        Assert.Equal(master2Id.ToString(), detail.GetProperty("sourceAccountId").GetString());
+
+        // A current destination can never become the source (domain invariant → 400).
+        var invalid = await api.PutAsync(U($"/api/copy/profiles/{profileId}/source"),
+            new() { DataObject = new { SourceAccountId = slaveId } });
+        Assert.Equal(400, invalid.Status);
+
+        // The full-page editor exposes the source (master) selector.
+        await GotoAsync(page, $"/copy-trading/{profileId}");
+        await Assertions.Expect(page.Locator("[data-testid=copy-source-select]")).ToBeVisibleAsync(Slow);
+    }
+
     // ---------------- Non-UI (API): multi-slave, options, lifecycle ----------------
 
     [Fact]
@@ -227,6 +265,13 @@ public sealed class CopyTradingTests(AppFixture app)
         var r = await api.PostAsync(U("/api/testseed/openapi-account"), new());
         Assert.True(r.Ok, $"seed openapi account failed: {r.Status}");
         return (await ReadJsonAsync(r)).GetProperty("accountNumber").GetInt64();
+    }
+
+    private async Task<Guid> AccountIdAsync(IAPIRequestContext api, long number)
+    {
+        var accounts = await GetJsonAsync(api, "/api/accounts");
+        return accounts.EnumerateArray().First(a => a.GetProperty("accountNumber").GetInt64() == number)
+            .GetProperty("id").GetGuid();
     }
 
     private async Task<string> CreateCidAsync(IAPIRequestContext api, string username)

@@ -364,4 +364,6 @@
   <data name="copyDetail.someFailed" xml:space="preserve"><value>无法添加某些目的地</value></data>
   <data name="copyDetail.yes" xml:space="preserve"><value>是</value></data>
   <data name="copyDetail.no" xml:space="preserve"><value>否</value></data>
+  <data name="copyDetail.sourceChanged" xml:space="preserve"><value>源账户已更新</value></data>
+  <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>无法更改源账户</value></data>
 </root>

@@ -364,4 +364,6 @@
   <data name="copyDetail.someFailed" xml:space="preserve"><value>Bazı hedefler eklenemedi</value></data>
   <data name="copyDetail.yes" xml:space="preserve"><value>Evet</value></data>
   <data name="copyDetail.no" xml:space="preserve"><value>Hayır</value></data>
+  <data name="copyDetail.sourceChanged" xml:space="preserve"><value>Kaynak hesabı güncellendi</value></data>
+  <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Kaynak hesabı değiştirilemedi</value></data>
 </root>

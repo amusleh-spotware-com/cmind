@@ -39,6 +39,20 @@ else if (!_loaded)
 else
 {
     <MudPaper Class="pa-4 mb-3" Elevation="0" Outlined="true">
+        <MudText Typo="Typo.subtitle1" Class="mb-2">@L["copyNew.source"]</MudText>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+            <MudSelect T="long" Value="_source" ValueChanged="ChangeSource" Label="@L["copyNew.source"]" Class="flex-grow-1"
+                       data-testid="copy-source-select">
+                @foreach (var a in SourceOptions)
+                {
+                    <MudSelectItem T="long" Value="@a.Number">@a.Number</MudSelectItem>
+                }
+            </MudSelect>
+            <HelpTip Text="@L["copyNew.tip.source"]" />
+        </MudStack>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mb-3" Elevation="0" Outlined="true">
         <MudText Typo="Typo.subtitle1" Class="mb-2">@L["copyDetail.destinations"]</MudText>
         @if (_destinations.Count == 0)
         {
@@ -75,7 +89,7 @@ else
                                Label="@L["copyDetail.destAccounts"]"
                                MultiSelectionTextFunc="@(v => string.Format(CultureInfo.CurrentCulture, L["copyDetail.destinationsCount"], v?.Count ?? 0))"
                                data-testid="copy-dest-accounts">
-                        @foreach (var a in _accountRefs)
+                        @foreach (var a in DestinationOptions)
                         {
                             <MudSelectItem T="long" Value="@a.Number">@a.Number</MudSelectItem>
                         }
@@ -237,7 +251,22 @@ else
     private List<dynamic> _destinations = [];
     private AccountRef[] _accountRefs = [];
 
+    private long _source;
     private IEnumerable<long> _destAccounts = new HashSet<long>();
+
+    // The source can't also be a destination, and a destination can't be the source: keep the two pickers
+    // mutually exclusive so an invalid combination can never be submitted.
+    private HashSet<long> DestinationNumbers => _destinations
+        .Select(d => DestinationNumber((Guid)d.destinationAccountId)).Where(n => n != 0).ToHashSet();
+    private IEnumerable<AccountRef> SourceOptions => _accountRefs.Where(a => !DestinationNumbers.Contains(a.Number));
+    private IEnumerable<AccountRef> DestinationOptions => _accountRefs.Where(a => a.Number != _source);
+
+    private long DestinationNumber(Guid id)
+    {
+        foreach (var a in _accountRefs)
+            if (a.Id == id) return a.Number;
+        return 0;
+    }
     private MoneyManagementMode _mode = MoneyManagementMode.LotMultiplier;
     private double _param = 1;
     private double _slippage;
@@ -288,7 +317,26 @@ else
             .Where(a => (bool)a.linkedViaOpenApi)
             .Select(a => new AccountRef((Guid)a.id, (long)a.accountNumber))
             .ToArray();
+        _source = _accountRefs.FirstOrDefault(a => a.Id == (Guid)profile.sourceAccountId)?.Number ?? 0;
         _loaded = true;
+    }
+
+    private async Task ChangeSource(long number)
+    {
+        var guid = AccountGuid(number);
+        if (guid == Guid.Empty) return;
+        var r = await Http.PutAsJsonAsync($"/api/copy/profiles/{Id}/source", new { SourceAccountId = guid });
+        if (r.IsSuccessStatusCode)
+        {
+            _source = number;
+            // The new source can no longer be staged as a destination.
+            _destAccounts = _destAccounts.Where(d => d != number).ToHashSet();
+            Snack.Add(L["copyDetail.sourceChanged"], Severity.Success);
+        }
+        else
+        {
+            Snack.Add(L["copyDetail.sourceChangeFailed"], Severity.Error);
+        }
     }
 
     private RenderFragment SwitchTip(bool value, Action<bool> setter, string label, string tip) => __builder =>

@@ -59,6 +59,8 @@ public record AddCopyDestinationRequest(
 
 public record SymbolMapPair(string Source, string Destination, double VolumeMultiplier = 1);
 
+public record ChangeCopySourceRequest(Guid SourceAccountId);
+
 public record LockCopyDestinationRequest(int Minutes);
 
 public record PublishProviderRequest(string DisplayName, string? Description = null, double PerformanceFeePercent = 0);
@@ -192,6 +194,16 @@ public static class CopyEndpoints
             db.CopyProfiles.Remove(profile);
             await db.SaveChangesAsync(ct);
             return Results.NoContent();
+        });
+
+        g.MapPut("/profiles/{id:guid}/source", async (Guid id, ChangeCopySourceRequest req,
+            ICopyProfileRepository repo, ICurrentUser u, CancellationToken ct) =>
+        {
+            var profile = await repo.GetWithDestinationsAsync(CopyProfileId.From(id), ct);
+            if (profile is null || profile.UserId != u.UserId!.Value) return Results.NotFound();
+            profile.ChangeSource(TradingAccountId.From(req.SourceAccountId));
+            await repo.SaveChangesAsync(ct);
+            return Results.Ok(new { SourceAccountId = profile.SourceAccountId.Value });
         });
 
         g.MapPost("/profiles/{id:guid}/destinations", async (Guid id, AddCopyDestinationRequest req,

@@ -364,4 +364,6 @@
   <data name="copyDetail.someFailed" xml:space="preserve"><value>Nekaterih destinacij ni bilo mogoče dodati</value></data>
   <data name="copyDetail.yes" xml:space="preserve"><value>Da</value></data>
   <data name="copyDetail.no" xml:space="preserve"><value>Ne</value></data>
+  <data name="copyDetail.sourceChanged" xml:space="preserve"><value>Izvirni račun je posodobljen</value></data>
+  <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Ni mogoče spremeniti izvirnega računa</value></data>
 </root>

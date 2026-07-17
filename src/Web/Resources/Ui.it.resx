@@ -364,4 +364,6 @@
   <data name="copyDetail.someFailed" xml:space="preserve"><value>Alcune destinazioni non hanno potuto essere aggiunte</value></data>
   <data name="copyDetail.yes" xml:space="preserve"><value>Sì</value></data>
   <data name="copyDetail.no" xml:space="preserve"><value>No</value></data>
+  <data name="copyDetail.sourceChanged" xml:space="preserve"><value>Account sorgente aggiornato</value></data>
+  <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Impossibile modificare l'account sorgente</value></data>
 </root>

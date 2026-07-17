@@ -364,4 +364,6 @@
   <data name="copyDetail.someFailed" xml:space="preserve"><value>Некоторые направления не удалось добавить</value></data>
   <data name="copyDetail.yes" xml:space="preserve"><value>Да</value></data>
   <data name="copyDetail.no" xml:space="preserve"><value>Нет</value></data>
+  <data name="copyDetail.sourceChanged" xml:space="preserve"><value>Исходящий аккаунт обновлен</value></data>
+  <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Не удалось изменить исходящий аккаунт</value></data>
 </root>

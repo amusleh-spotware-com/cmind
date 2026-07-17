@@ -364,6 +364,15 @@ public class CopyProfile : AuditedEntity<CopyProfileId>
         Name = DomainGuard.AgainstNullOrWhiteSpace(name, DomainErrors.NameRequired);
     }
 
+    // Change the source (master) account. The new source must not already be one of this profile's
+    // destinations — a source can never copy from itself (same invariant AddDestination guards).
+    public void ChangeSource(TradingAccountId sourceAccountId)
+    {
+        if (_destinations.Any(d => d.DestinationAccountId == sourceAccountId))
+            throw new DomainException(DomainErrors.CopySourceEqualsDestination);
+        SourceAccountId = sourceAccountId;
+    }
+
     public bool IsHostedBy(NodeIdentity node) => string.Equals(AssignedNode, node.Value, StringComparison.Ordinal);
 
     public void AssignToNode(NodeIdentity node)

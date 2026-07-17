@@ -364,4 +364,6 @@
   <data name="copyDetail.someFailed" xml:space="preserve"><value>Ορισμένοι προορισμοί δεν μπορούσαν να προστεθούν</value></data>
   <data name="copyDetail.yes" xml:space="preserve"><value>Ναι</value></data>
   <data name="copyDetail.no" xml:space="preserve"><value>Όχι</value></data>
+  <data name="copyDetail.sourceChanged" xml:space="preserve"><value>Ο λογαριασμός προέλευσης ενημερώθηκε</value></data>
+  <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Δεν ήταν δυνατό να αλλαχθεί ο λογαριασμός προέλευσης</value></data>
 </root>

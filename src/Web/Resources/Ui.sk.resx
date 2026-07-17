@@ -364,4 +364,6 @@
   <data name="copyDetail.someFailed" xml:space="preserve"><value>Niektoré ciele sa nepodarilo pridať</value></data>
   <data name="copyDetail.yes" xml:space="preserve"><value>Áno</value></data>
   <data name="copyDetail.no" xml:space="preserve"><value>Nie</value></data>
+  <data name="copyDetail.sourceChanged" xml:space="preserve"><value>Zdrojový účet aktualizovaný</value></data>
+  <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Nepodarilo sa zmeniť zdrojový účet</value></data>
 </root>

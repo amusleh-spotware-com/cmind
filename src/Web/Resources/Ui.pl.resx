@@ -364,4 +364,6 @@
   <data name="copyDetail.someFailed" xml:space="preserve"><value>Nie można było dodać niektórych celów</value></data>
   <data name="copyDetail.yes" xml:space="preserve"><value>Tak</value></data>
   <data name="copyDetail.no" xml:space="preserve"><value>Nie</value></data>
+  <data name="copyDetail.sourceChanged" xml:space="preserve"><value>Konto źródłowe zaktualizowane</value></data>
+  <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Nie udało się zmienić konta źródłowego</value></data>
 </root>

@@ -364,4 +364,6 @@
   <data name="copyDetail.someFailed" xml:space="preserve"><value>Egyes célpontok nem tudtak hozzáadódni</value></data>
   <data name="copyDetail.yes" xml:space="preserve"><value>Igen</value></data>
   <data name="copyDetail.no" xml:space="preserve"><value>Nem</value></data>
+  <data name="copyDetail.sourceChanged" xml:space="preserve"><value>Forrásfiókok frissítve</value></data>
+  <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Nem sikerült módosítani a forrásfiókon</value></data>
 </root>

@@ -219,6 +219,8 @@
       "copyDetail.tip.suggestSymbols": "Load the destination broker's tradable symbols. Click a chip to add it to the symbol filter.",
       "copyDetail.selectAccountWarning": "Select at least one destination account",
       "copyDetail.someFailed": "Some destinations could not be added",
+      "copyDetail.sourceChanged": "Source account updated",
+      "copyDetail.sourceChangeFailed": "Could not change the source account",
       "copyDetail.yes": "Yes",
       "copyDetail.no": "No",
       "copy.symbols.add": "Add",
@@ -723,7 +725,9 @@
       "copyDetail.selectAccountWarning": "حدد حساب وجهة واحد على الأقل",
       "copyDetail.someFailed": "تعذر إضافة بعض الوجهات",
       "copyDetail.yes": "نعم",
-      "copyDetail.no": "لا"
+      "copyDetail.no": "لا",
+      "copyDetail.sourceChanged": "تم تحديث الحساب المصدر",
+      "copyDetail.sourceChangeFailed": "تعذر تغيير الحساب المصدر"
     },
     "cs": {
       "integrity.row.sharpe": "Sharpe (za období)",
@@ -1085,7 +1089,9 @@
       "copyDetail.selectAccountWarning": "Vyberte alespoň jeden cílový účet",
       "copyDetail.someFailed": "Některé cíle se nepodařilo přidat",
       "copyDetail.yes": "Ano",
-      "copyDetail.no": "Ne"
+      "copyDetail.no": "Ne",
+      "copyDetail.sourceChanged": "Zdrojový účet aktualizován",
+      "copyDetail.sourceChangeFailed": "Nepodařilo se změnit zdrojový účet"
     },
     "de": {
       "integrity.row.sharpe": "Sharpe (pro Periode)",
@@ -1447,7 +1453,9 @@
       "copyDetail.selectAccountWarning": "Wählen Sie mindestens ein Zielkonto",
       "copyDetail.someFailed": "Einige Ziele konnten nicht hinzugefügt werden",
       "copyDetail.yes": "Ja",
-      "copyDetail.no": "Nein"
+      "copyDetail.no": "Nein",
+      "copyDetail.sourceChanged": "Quellkonto aktualisiert",
+      "copyDetail.sourceChangeFailed": "Quellkonto konnte nicht geändert werden"
     },
     "el": {
       "integrity.row.sharpe": "Sharpe (ανά περίοδο)",
@@ -1809,7 +1817,9 @@
       "copyDetail.selectAccountWarning": "Επιλέξτε τουλάχιστον έναν λογαριασμό προορισμού",
       "copyDetail.someFailed": "Ορισμένοι προορισμοί δεν μπορούσαν να προστεθούν",
       "copyDetail.yes": "Ναι",
-      "copyDetail.no": "Όχι"
+      "copyDetail.no": "Όχι",
+      "copyDetail.sourceChanged": "Ο λογαριασμός προέλευσης ενημερώθηκε",
+      "copyDetail.sourceChangeFailed": "Δεν ήταν δυνατό να αλλαχθεί ο λογαριασμός προέλευσης"
     },
     "es": {
       "integrity.row.sharpe": "Sharpe (por período)",
@@ -2171,7 +2181,9 @@
       "copyDetail.selectAccountWarning": "Seleccione al menos una cuenta de destino",
       "copyDetail.someFailed": "No se pudieron agregar algunos destinos",
       "copyDetail.yes": "Sí",
-      "copyDetail.no": "No"
+      "copyDetail.no": "No",
+      "copyDetail.sourceChanged": "Cuenta de origen actualizada",
+      "copyDetail.sourceChangeFailed": "No se pudo cambiar la cuenta de origen"
     },
     "fr": {
       "integrity.row.sharpe": "Sharpe (par période)",
@@ -2533,7 +2545,9 @@
       "copyDetail.selectAccountWarning": "Sélectionnez au moins un compte de destination",
       "copyDetail.someFailed": "Certaines destinations n'ont pas pu être ajoutées",
       "copyDetail.yes": "Oui",
-      "copyDetail.no": "Non"
+      "copyDetail.no": "Non",
+      "copyDetail.sourceChanged": "Compte source mis à jour",
+      "copyDetail.sourceChangeFailed": "Impossible de changer le compte source"
     },
     "hu": {
       "integrity.row.sharpe": "Sharpe (periódusonként)",
@@ -2895,7 +2909,9 @@
       "copyDetail.selectAccountWarning": "Válasszon legalább egy célszámlát",
       "copyDetail.someFailed": "Egyes célpontok nem tudtak hozzáadódni",
       "copyDetail.yes": "Igen",
-      "copyDetail.no": "Nem"
+      "copyDetail.no": "Nem",
+      "copyDetail.sourceChanged": "Forrásfiókok frissítve",
+      "copyDetail.sourceChangeFailed": "Nem sikerült módosítani a forrásfiókon"
     },
     "id": {
       "integrity.row.sharpe": "Sharpe (per periode)",
@@ -3257,7 +3273,9 @@
       "copyDetail.selectAccountWarning": "Pilih setidaknya satu akun tujuan",
       "copyDetail.someFailed": "Beberapa tujuan tidak dapat ditambahkan",
       "copyDetail.yes": "Ya",
-      "copyDetail.no": "Tidak"
+      "copyDetail.no": "Tidak",
+      "copyDetail.sourceChanged": "Akun sumber diperbarui",
+      "copyDetail.sourceChangeFailed": "Tidak dapat mengubah akun sumber"
     },
     "it": {
       "integrity.row.sharpe": "Sharpe (per periodo)",
@@ -3619,7 +3637,9 @@
       "copyDetail.selectAccountWarning": "Seleziona almeno un conto di destinazione",
       "copyDetail.someFailed": "Alcune destinazioni non hanno potuto essere aggiunte",
       "copyDetail.yes": "Sì",
-      "copyDetail.no": "No"
+      "copyDetail.no": "No",
+      "copyDetail.sourceChanged": "Account sorgente aggiornato",
+      "copyDetail.sourceChangeFailed": "Impossibile modificare l'account sorgente"
     },
     "ja": {
       "integrity.row.sharpe": "シャープ（期間あたり）",
@@ -3981,7 +4001,9 @@
       "copyDetail.selectAccountWarning": "少なくとも1つの目的地アカウントを選択してください",
       "copyDetail.someFailed": "一部の目的地を追加できませんでした",
       "copyDetail.yes": "はい",
-      "copyDetail.no": "いいえ"
+      "copyDetail.no": "いいえ",
+      "copyDetail.sourceChanged": "ソースアカウントが更新されました",
+      "copyDetail.sourceChangeFailed": "ソースアカウントを変更できませんでした"
     },
     "ko": {
       "integrity.row.sharpe": "샤프 (기간당)",
@@ -4343,7 +4365,9 @@
       "copyDetail.selectAccountWarning": "최소한 하나의 대상 계정을 선택하세요",
       "copyDetail.someFailed": "일부 대상을 추가할 수 없습니다",
       "copyDetail.yes": "예",
-      "copyDetail.no": "아니오"
+      "copyDetail.no": "아니오",
+      "copyDetail.sourceChanged": "소스 계정이 업데이트됨",
+      "copyDetail.sourceChangeFailed": "소스 계정을 변경할 수 없습니다"
     },
     "ms": {
       "integrity.row.sharpe": "Sharpe (setiap tempoh)",
@@ -4705,7 +4729,9 @@
       "copyDetail.selectAccountWarning": "Pilih sekurang-kurangnya satu akaun destinasi",
       "copyDetail.someFailed": "Beberapa destinasi tidak dapat ditambah",
       "copyDetail.yes": "Ya",
-      "copyDetail.no": "Tidak"
+      "copyDetail.no": "Tidak",
+      "copyDetail.sourceChanged": "Akaun sumber dikemas kini",
+      "copyDetail.sourceChangeFailed": "Tidak dapat menukar akaun sumber"
     },
     "pl": {
       "integrity.row.sharpe": "Sharpe (na okres)",
@@ -5067,7 +5093,9 @@
       "copyDetail.selectAccountWarning": "Wybierz co najmniej jedno konto docelowe",
       "copyDetail.someFailed": "Nie można było dodać niektórych celów",
       "copyDetail.yes": "Tak",
-      "copyDetail.no": "Nie"
+      "copyDetail.no": "Nie",
+      "copyDetail.sourceChanged": "Konto źródłowe zaktualizowane",
+      "copyDetail.sourceChangeFailed": "Nie udało się zmienić konta źródłowego"
     },
     "pt-BR": {
       "integrity.row.sharpe": "Sharpe (por período)",
@@ -5429,7 +5457,9 @@
       "copyDetail.selectAccountWarning": "Selecione pelo menos uma conta de destino",
       "copyDetail.someFailed": "Alguns destinos não puderam ser adicionados",
       "copyDetail.yes": "Sim",
-      "copyDetail.no": "Não"
+      "copyDetail.no": "Não",
+      "copyDetail.sourceChanged": "Conta de origem atualizada",
+      "copyDetail.sourceChangeFailed": "Não foi possível alterar a conta de origem"
     },
     "ru": {
       "integrity.row.sharpe": "Шарп (за период)",
@@ -5791,7 +5821,9 @@
       "copyDetail.selectAccountWarning": "Выберите хотя бы один целевой счет",
       "copyDetail.someFailed": "Некоторые направления не удалось добавить",
       "copyDetail.yes": "Да",
-      "copyDetail.no": "Нет"
+      "copyDetail.no": "Нет",
+      "copyDetail.sourceChanged": "Исходящий аккаунт обновлен",
+      "copyDetail.sourceChangeFailed": "Не удалось изменить исходящий аккаунт"
     },
     "sk": {
       "integrity.row.sharpe": "Sharpe (za obdobie)",
@@ -6153,7 +6185,9 @@
       "copyDetail.selectAccountWarning": "Vyberte aspoň jeden cieľový účet",
       "copyDetail.someFailed": "Niektoré ciele sa nepodarilo pridať",
       "copyDetail.yes": "Áno",
-      "copyDetail.no": "Nie"
+      "copyDetail.no": "Nie",
+      "copyDetail.sourceChanged": "Zdrojový účet aktualizovaný",
+      "copyDetail.sourceChangeFailed": "Nepodarilo sa zmeniť zdrojový účet"
     },
     "sl": {
       "integrity.row.sharpe": "Sharpe (na obdobje)",
@@ -6515,7 +6549,9 @@
       "copyDetail.selectAccountWarning": "Izberite vsaj en cilnji račun",
       "copyDetail.someFailed": "Nekaterih destinacij ni bilo mogoče dodati",
       "copyDetail.yes": "Da",
-      "copyDetail.no": "Ne"
+      "copyDetail.no": "Ne",
+      "copyDetail.sourceChanged": "Izvirni račun je posodobljen",
+      "copyDetail.sourceChangeFailed": "Ni mogoče spremeniti izvirnega računa"
     },
     "sr": {
       "integrity.row.sharpe": "Шарп (по периоду)",
@@ -6877,7 +6913,9 @@
       "copyDetail.selectAccountWarning": "Изаберите најмање један одредишни рачун",
       "copyDetail.someFailed": "Нека одредишта није било могуће додати",
       "copyDetail.yes": "Да",
-      "copyDetail.no": "Не"
+      "copyDetail.no": "Не",
+      "copyDetail.sourceChanged": "Извор рачуна ажуриран",
+      "copyDetail.sourceChangeFailed": "Не могу да променим извор рачуна"
     },
     "th": {
       "integrity.row.sharpe": "ชาร์ป (ต่อช่วง)",
@@ -7239,7 +7277,9 @@
       "copyDetail.selectAccountWarning": "เลือกบัญชีปลายทางอย่างน้อยหนึ่งบัญชี",
       "copyDetail.someFailed": "ไม่สามารถเพิ่มปลายทางบางแห่งได้",
       "copyDetail.yes": "ใช่",
-      "copyDetail.no": "ไม่"
+      "copyDetail.no": "ไม่",
+      "copyDetail.sourceChanged": "อัปเดตบัญชีต้นทาง",
+      "copyDetail.sourceChangeFailed": "ไม่สามารถเปลี่ยนบัญชีต้นทางได้"
     },
     "tr": {
       "integrity.row.sharpe": "Sharpe (dönem başına)",
@@ -7601,7 +7641,9 @@
       "copyDetail.selectAccountWarning": "En az bir hedef hesap seçin",
       "copyDetail.someFailed": "Bazı hedefler eklenemedi",
       "copyDetail.yes": "Evet",
-      "copyDetail.no": "Hayır"
+      "copyDetail.no": "Hayır",
+      "copyDetail.sourceChanged": "Kaynak hesabı güncellendi",
+      "copyDetail.sourceChangeFailed": "Kaynak hesabı değiştirilemedi"
     },
     "vi": {
       "integrity.row.sharpe": "Sharpe (mỗi kỳ)",
@@ -7963,7 +8005,9 @@
       "copyDetail.selectAccountWarning": "Chọn ít nhất một tài khoản đích đến",
       "copyDetail.someFailed": "Không thể thêm một số đích đến",
       "copyDetail.yes": "Có",
-      "copyDetail.no": "Không"
+      "copyDetail.no": "Không",
+      "copyDetail.sourceChanged": "Tài khoản nguồn đã được cập nhật",
+      "copyDetail.sourceChangeFailed": "Không thể thay đổi tài khoản nguồn"
     },
     "zh-Hans": {
       "integrity.row.sharpe": "夏普（每期）",
@@ -8325,7 +8369,9 @@
       "copyDetail.selectAccountWarning": "至少选择一个目标账户",
       "copyDetail.someFailed": "无法添加某些目的地",
       "copyDetail.yes": "是",
-      "copyDetail.no": "否"
+      "copyDetail.no": "否",
+      "copyDetail.sourceChanged": "源账户已更新",
+      "copyDetail.sourceChangeFailed": "无法更改源账户"
     }
   }
 }

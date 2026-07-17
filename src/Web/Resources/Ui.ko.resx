@@ -364,4 +364,6 @@
   <data name="copyDetail.someFailed" xml:space="preserve"><value>일부 대상을 추가할 수 없습니다</value></data>
   <data name="copyDetail.yes" xml:space="preserve"><value>예</value></data>
   <data name="copyDetail.no" xml:space="preserve"><value>아니오</value></data>
+  <data name="copyDetail.sourceChanged" xml:space="preserve"><value>소스 계정이 업데이트됨</value></data>
+  <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>소스 계정을 변경할 수 없습니다</value></data>
 </root>

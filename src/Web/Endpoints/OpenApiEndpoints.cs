@@ -265,7 +265,7 @@ public static class OpenApiEndpoints
             "Accounts authorized",
             $"<h1>&#10003; You're all set</h1><p>{accountCount} trading account(s) were added and authorized.</p>" +
             skippedNote +
-            $"<p class=\"muted\">Taking you back in {delay} seconds&hellip;</p>",
+            $"<p class=\"muted\">Taking you back in <span id=\"redirect-countdown\">{delay}</span> seconds&hellip;</p>",
             redirectUrl);
     }
 
@@ -279,9 +279,13 @@ public static class OpenApiEndpoints
         var meta = redirectUrl is null
             ? string.Empty
             : $"<meta http-equiv=\"refresh\" content=\"{delay};url={System.Net.WebUtility.HtmlEncode(redirectUrl)}\">";
+        // Tick the visible "N seconds" counter down each second, then redirect — so the countdown is live,
+        // not a static number. The <meta refresh> above stays as a no-JS fallback.
         var script = redirectUrl is null
             ? string.Empty
-            : $"<script>setTimeout(function(){{location.href={System.Text.Json.JsonSerializer.Serialize(redirectUrl)};}},{delay * 1000});</script>";
+            : "<script>(function(){var n=" + delay + ";var u=" + System.Text.Json.JsonSerializer.Serialize(redirectUrl) +
+              ";var el=document.getElementById('redirect-countdown');var t=setInterval(function(){n--;" +
+              "if(el)el.textContent=n<0?0:n;if(n<=0){clearInterval(t);location.href=u;}},1000);})();</script>";
         return $"<!doctype html><html><head><meta charset=\"utf-8\"><title>{title}</title>{meta}" +
             "<style>body{font-family:system-ui,sans-serif;background:#1a1a1a;color:#eee;display:flex;" +
             "align-items:center;justify-content:center;height:100vh;margin:0}" +

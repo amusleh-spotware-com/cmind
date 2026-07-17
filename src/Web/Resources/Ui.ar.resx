@@ -364,4 +364,6 @@
   <data name="copyDetail.someFailed" xml:space="preserve"><value>تعذر إضافة بعض الوجهات</value></data>
   <data name="copyDetail.yes" xml:space="preserve"><value>نعم</value></data>
   <data name="copyDetail.no" xml:space="preserve"><value>لا</value></data>
+  <data name="copyDetail.sourceChanged" xml:space="preserve"><value>تم تحديث الحساب المصدر</value></data>
+  <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>تعذر تغيير الحساب المصدر</value></data>
 </root>

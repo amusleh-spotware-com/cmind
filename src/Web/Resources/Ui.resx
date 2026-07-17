@@ -221,6 +221,8 @@
   <data name="copyDetail.tip.suggestSymbols" xml:space="preserve"><value>Load the destination broker's tradable symbols. Click a chip to add it to the symbol filter.</value></data>
   <data name="copyDetail.selectAccountWarning" xml:space="preserve"><value>Select at least one destination account</value></data>
   <data name="copyDetail.someFailed" xml:space="preserve"><value>Some destinations could not be added</value></data>
+  <data name="copyDetail.sourceChanged" xml:space="preserve"><value>Source account updated</value></data>
+  <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Could not change the source account</value></data>
   <data name="copyDetail.yes" xml:space="preserve"><value>Yes</value></data>
   <data name="copyDetail.no" xml:space="preserve"><value>No</value></data>
   <data name="copy.symbols.add" xml:space="preserve"><value>Add</value></data>

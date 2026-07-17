@@ -73,6 +73,68 @@ public sealed class OpenApiSharedAppTests(AppFixture app)
     }
 
     [Fact]
+    public async Task Owner_without_shared_app_can_register_their_own_per_user_application()
+    {
+        var page = await app.NewAuthedPageAsync();
+        try
+        {
+            await page.GotoAsync("/settings/openapi");
+            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+            // Owner gets their own per-user application section (regression: it was hidden, leaving only the
+            // deployment shared-app card) plus the shared-app admin below.
+            await Assertions.Expect(page.GetByText("Your Open API application")).ToBeVisibleAsync(Slow);
+            await Assertions.Expect(page.GetByText("Deployment shared application")).ToBeVisibleAsync(Slow);
+
+            // With no shared app configured, the owner's own per-user app registration is allowed.
+            var put = await page.APIRequest.PutAsync($"{app.BaseUrl}/api/openapi/application",
+                new APIRequestContextOptions
+                {
+                    DataObject = new { Name = "OwnerOwn", ClientId = "owner-cid", ClientSecret = "owner-secret" }
+                });
+            put.Status.Should().Be(200);
+
+            var info = await page.APIRequest.GetAsync($"{app.BaseUrl}/api/openapi/application");
+            var json = (await info.JsonAsync())!.Value;
+            json.GetProperty("configured").GetBoolean().Should().BeTrue();
+            json.GetProperty("sharedMode").GetBoolean().Should().BeFalse();
+            json.GetProperty("name").GetString().Should().Be("OwnerOwn");
+            (await page.Locator("#blazor-error-ui:visible").CountAsync()).Should().Be(0);
+        }
+        finally
+        {
+            await page.APIRequest.DeleteAsync($"{app.BaseUrl}/api/openapi/application");
+        }
+    }
+
+    [Fact]
+    public async Task Add_application_dialog_shows_redirect_uri_with_a_working_copy_button()
+    {
+        var page = await app.NewAuthedPageAsync();
+        try
+        {
+            // Ensure the owner has no per-user app so the "Add Application" entrypoint is present.
+            await page.APIRequest.DeleteAsync($"{app.BaseUrl}/api/openapi/application");
+            await page.GotoAsync("/settings/openapi");
+            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+            await page.GetByRole(AriaRole.Button, new() { Name = "Add Application", Exact = true }).ClickAsync();
+            var dialog = page.Locator(".mud-dialog");
+            await Assertions.Expect(dialog.GetByText("Redirect URI (set this in cTrader)")).ToBeVisibleAsync(Slow);
+
+            // Regression: the copy adornment had no click handler, so it did nothing. It must be actionable
+            // and clicking it must not crash the circuit.
+            var copy = dialog.GetByLabel("Copy redirect URI");
+            await Assertions.Expect(copy).ToBeVisibleAsync(Slow);
+            await copy.ClickAsync();
+            (await page.Locator("#blazor-error-ui:visible").CountAsync()).Should().Be(0);
+        }
+        finally
+        {
+            await page.APIRequest.DeleteAsync($"{app.BaseUrl}/api/openapi/application");
+        }
+    }
+
+    [Fact]
     public async Task Non_owner_under_shared_mode_sees_the_managed_panel_not_the_owner_controls()
     {
         var ownerPage = await app.NewAuthedPageAsync();

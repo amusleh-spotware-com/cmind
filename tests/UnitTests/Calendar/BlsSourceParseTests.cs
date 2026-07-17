@@ -1,6 +1,8 @@
 ﻿using System.Text;
+using Core.Options;
 using Infrastructure.Calendar;
 using FluentAssertions;
+using NSubstitute;
 using Xunit;
 
 namespace UnitTests.Calendar;
@@ -8,6 +10,28 @@ namespace UnitTests.Calendar;
 public sealed class BlsSourceParseTests
 {
     private static Stream Json(string s) => new MemoryStream(Encoding.UTF8.GetBytes(s));
+
+    private sealed class ThrowingHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+            => throw new InvalidOperationException("BLS must not hit the network when no API key is configured.");
+    }
+
+    [Fact]
+    public async Task No_api_key_yields_no_items_without_touching_the_network()
+    {
+        using var http = new HttpClient(new ThrowingHandler()) { BaseAddress = new Uri("https://api.bls.gov/") };
+        var options = Substitute.For<Microsoft.Extensions.Options.IOptionsMonitor<AppOptions>>();
+        options.CurrentValue.Returns(new AppOptions()); // Calendar.BlsApiKey is null by default
+
+        var source = new BlsSource(http, options);
+
+        var items = await source.FetchReleasesAsync("CUUR0000SA0",
+            new DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2024, 6, 1, 0, 0, 0, TimeSpan.Zero), CancellationToken.None);
+
+        items.Should().BeEmpty();
+    }
 
     [Fact]
     public void Parses_monthly_observations_into_release_items()

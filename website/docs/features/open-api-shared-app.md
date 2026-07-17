@@ -35,9 +35,13 @@ overwrites an owner-edited runtime value, and re-seeding is a no-op).
 
 ### 2. Owner settings (runtime, no redeploy)
 
-**Settings → Open API** (owner only) shows a **Deployment shared application** card: add / edit /
+**Settings → Open API** (owner only) shows two things: a **Your Open API application** section — the
+owner registers, edits, and authorizes their **own** per-user app exactly like any user (available
+while no shared app is configured) — and a **Deployment shared application** card to add / edit /
 delete the shared app, with the redirect URL displayed for copy-paste. Changes take effect for new
-authorizations immediately.
+authorizations immediately. Once a shared app is configured it supersedes the owner's own app, and the
+**Your Open API application** section switches to a notice that accounts now authorize through the
+shared app.
 
 ## The redirect URL (register this in cTrader)
 

@@ -30,10 +30,58 @@ else
 {
     @if (_isOwner)
     {
+        @* Owner's own account authorization. An owner registers a per-user Open API application exactly like
+           any user, UNLESS a deployment shared application is configured below, which then supersedes it. *@
+        <MudText Typo="Typo.h6" Class="mb-2">Your Open API application</MudText>
+        @if (_sharedMode)
+        {
+            <MudAlert Severity="Severity.Info" Class="mb-4">
+                A deployment shared application is configured, so your accounts authorize through it. Remove the
+                shared application below if you want to register your own per-user application instead.
+            </MudAlert>
+        }
+        else if (!_configured)
+        {
+            <MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
+                Register your own cTrader Open API application, then authorize your cIDs to add their trading accounts.
+            </MudText>
+            <MudPaper Class="pa-6 mb-4" Elevation="0" Outlined="true">
+                <MudStack AlignItems="AlignItems.Center" Spacing="3">
+                    <MudIcon Icon="@Icons.Material.Filled.Api" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.subtitle1">No Open API application configured</MudText>
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="Configure">Add Application</MudButton>
+                </MudStack>
+            </MudPaper>
+        }
+        else
+        {
+            <MudCard Class="mb-4">
+                <MudCardContent>
+                    <MudStack Spacing="2">
+                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                            <MudText Typo="Typo.subtitle1">@_name</MudText>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Icon="@Icons.Material.Filled.CheckCircle">Configured</MudChip>
+                        </MudStack>
+                        <MudText Typo="Typo.body2"><b>Client ID:</b> @_clientId</MudText>
+                        <MudText Typo="Typo.body2"><b>Redirect URI:</b> <code>@_callbackUrl</code></MudText>
+                    </MudStack>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Edit" OnClick="Configure">Edit</MudButton>
+                    <MudButton Color="Color.Secondary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyInvite">Copy Invite Link</MudButton>
+                    <MudSpacer />
+                    <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="Delete">Delete</MudButton>
+                </MudCardActions>
+            </MudCard>
+        }
+
+        <MudDivider Class="my-6" />
+
         @* Deployment shared application: one Open API app all users authorize through (white-label). *@
         <MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
-            Configure a single deployment-wide cTrader Open API application. When set, every user authorizes
-            their accounts through it and the per-user application option is removed for them.
+            Optionally configure a single deployment-wide cTrader Open API application. When set, every user
+            (including you) authorizes their accounts through it and the per-user application option is removed.
         </MudText>
         <MudCard Class="mb-4">
             <MudCardContent>

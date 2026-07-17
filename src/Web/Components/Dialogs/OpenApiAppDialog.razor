@@ -1,4 +1,6 @@
 @* Modal dialog to configure the single cTrader Open API application. Returns OpenApiAppDialogResult on confirm. *@
+@inject IJSRuntime JS
+@inject ISnackbar Snack
 
 <MudDialog>
     <TitleContent>
@@ -25,7 +27,8 @@
                           HelperText="@(IsEdit ? "Leave blank to keep the current secret" : null)"
                           Required="@(!IsEdit)" RequiredError="Client Secret is required" Class="mb-2" Immediate="true" />
             <MudTextField T="string" Value="@CallbackUrl" ReadOnly="true" Label="Redirect URI (set this in cTrader)"
-                          Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.ContentCopy" Class="mb-1" />
+                          Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.ContentCopy"
+                          AdornmentAriaLabel="Copy redirect URI" OnAdornmentClick="CopyRedirect" Class="mb-1" />
         </MudForm>
     </DialogContent>
     <DialogActions>
@@ -64,6 +67,13 @@
     }
 
     private void Cancel() => Dialog.Cancel();
+
+    private async Task CopyRedirect()
+    {
+        if (string.IsNullOrEmpty(CallbackUrl)) return;
+        try { await JS.InvokeVoidAsync("copyToClipboard", CallbackUrl); Snack.Add("Redirect URI copied", Severity.Success); }
+        catch { Snack.Add($"Redirect URI: {CallbackUrl}", Severity.Info); }
+    }
 
     public sealed record OpenApiAppDialogResult(string Name, string ClientId, string? ClientSecret);
 }

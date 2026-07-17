@@ -10,8 +10,10 @@ namespace Infrastructure.Calendar;
 /// <summary>
 /// BLS (US Bureau of Labor Statistics) connector — the authority for CPI, PPI, employment and JOLTS. Its
 /// public API v2 takes a POST of series ids + a year range and returns monthly observations. Mapped to source
-/// release items keyed by the observation's month. Absent the endpoint/data it degrades to empty; lives
-/// behind the shared resilient, rate-limited client.
+/// release items keyed by the observation's month. Absent an API key it degrades to an empty result without
+/// touching the network (mirrors <see cref="FredSource"/>), so a keyless deployment keeps working on the
+/// keyless central-bank schedule and never spams connection errors; lives behind the shared resilient,
+/// rate-limited client.
 /// </summary>
 public sealed class BlsSource(HttpClient httpClient, IOptionsMonitor<AppOptions> options) : ICalendarSource
 {
@@ -25,6 +27,8 @@ public sealed class BlsSource(HttpClient httpClient, IOptionsMonitor<AppOptions>
         string sourceSeriesId, DateTimeOffset from, DateTimeOffset to, CancellationToken ct)
     {
         var calendar = options.CurrentValue.Calendar;
+        if (string.IsNullOrWhiteSpace(calendar.BlsApiKey)) return [];
+
         var payload = new
         {
             seriesid = new[] { sourceSeriesId },

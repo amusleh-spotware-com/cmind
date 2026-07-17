@@ -93,9 +93,24 @@ xUnit does not guarantee order. Two traps that each shipped a red CI here:
   (`page.Locator(".mud-dialog").GetByRole(...)`) **and** pass `new() { Name = "Close", Exact = true }`.
   `:has-text('N')` is likewise a substring — fine for a distinct number, wrong for a short/near-duplicate.
 
+- **Wait for interactivity, not just `window.Blazor` — use `page.WaitForAppReadyAsync()`.** The app is
+  Blazor **Server** (InteractiveServer): a freshly-loaded page shows SSR HTML *before* the circuit wires
+  its `@onclick` handlers. `WaitForFunctionAsync("() => window.Blazor !== undefined")` only proves the
+  framework script loaded, so a click dispatched in that gap is **silently dropped** and the dialog/effect
+  never appears → a 15 s visibility timeout on whichever page hit the window (this is why a *different*
+  test failed each CI run). Always await `WaitForAppReadyAsync()` (in `PageExtensions.cs`) after a
+  `GotoAsync` before interacting — it waits for `window.__appInteractive` (set from
+  `Routes.OnAfterRenderAsync`, a truthful "circuit is interactive" signal) and degrades to the old probe
+  on timeout. Never reintroduce the bare `window.Blazor` probe.
+
 Saturation ≠ failure: when a whole slice fast-fails in ~5–40 ms on `AppFixture.InitializeAsync` (login-nav
 timeout), the machine is saturated from back-to-back runs — cool down and run a smaller `--filter`, don't
-"fix" the test. A *real* failure takes seconds and reproduces in isolation.
+"fix" the test. A *real* failure takes seconds and reproduces in isolation. **Never run E2E test processes
+concurrently** (overlapping foreground + `run_in_background` `dotnet test`, or a rebuild while one runs):
+they collide on the `Web.dll` build lock (MSB3027) and leak orphaned app hosts that keep locking output and
+starve the machine, producing *false* 90 s `InitializeAsync` timeouts that look like a code regression but
+aren't. Run **one** E2E slice at a time; if boot times out, check for stray `dotnet …Web.dll` / `testhost`
+processes and kill them before blaming your change.
 
 ## Kubernetes — the app must work in-cluster
 

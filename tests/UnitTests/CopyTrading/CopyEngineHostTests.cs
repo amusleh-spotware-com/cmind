@@ -787,6 +787,87 @@ public sealed class CopyEngineHostTests
         last.StopLoss.Should().Be(1.09, "the unchanged stop-loss is preserved on the amend");
     }
 
+    // ---- Stop-loss / take-profit mirroring matrix ----
+    // These cover the source protection-change matrix at the simulator tier, because E2E cannot drive a
+    // live broker setting SL/TP on a position. Every cell (on-open vs post-open, SL vs TP vs both vs clear,
+    // straight vs reverse) is asserted so a regression like "take-profit hardcoded null in the amend" fails
+    // a unit test instead of shipping. See tests/CLAUDE.md "Broker-mediated behaviour is simulator-tested".
+
+    [Fact]
+    public async Task Stop_and_take_profit_on_open_are_both_mirrored()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d => d.SetCopyProtection(true, true))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushOpen(Source, 6001, SymbolId, isBuy: true, volume: 100, stopLoss: 1.09, takeProfit: 1.15);
+            await WaitUntil(() => session.Amends.Count == 1);
+        });
+
+        var amend = session.Amends.Single();
+        amend.StopLoss.Should().Be(1.09);
+        amend.TakeProfit.Should().Be(1.15);
+    }
+
+    [Fact]
+    public async Task Simultaneous_stop_and_take_profit_change_mirrors_both()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d => d.SetCopyProtection(true, true))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushOpen(Source, 6101, SymbolId, isBuy: true, volume: 100, stopLoss: 1.09, takeProfit: 1.15);
+            await WaitUntil(() => session.Amends.Count == 1);
+            session.PushOpen(Source, 6101, SymbolId, isBuy: true, volume: 100, stopLoss: 1.08, takeProfit: 1.16);
+            await WaitUntil(() => session.Amends.Count == 2);
+        });
+
+        var last = session.Amends.Last();
+        last.StopLoss.Should().Be(1.08);
+        last.TakeProfit.Should().Be(1.16);
+    }
+
+    [Fact]
+    public async Task Clearing_the_take_profit_on_an_existing_position_is_mirrored()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d => d.SetCopyProtection(true, true))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushOpen(Source, 6201, SymbolId, isBuy: true, volume: 100, stopLoss: 1.09, takeProfit: 1.15);
+            await WaitUntil(() => session.Amends.Count == 1);
+            session.PushOpen(Source, 6201, SymbolId, isBuy: true, volume: 100, stopLoss: 1.09); // take-profit removed
+            await WaitUntil(() => session.Amends.Count == 2);
+        });
+
+        var last = session.Amends.Last();
+        last.TakeProfit.Should().BeNull("clearing the source take-profit clears it on the destination");
+        last.StopLoss.Should().Be(1.09);
+    }
+
+    [Fact]
+    public async Task Reverse_maps_a_post_open_take_profit_change_to_the_destination_stop_loss()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
+            Destination(Slave, d => { d.SetReverse(true); d.SetCopyProtection(true, true); })));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushOpen(Source, 6301, SymbolId, isBuy: true, volume: 100, stopLoss: 1.09);
+            await WaitUntil(() => session.Amends.Count == 1);
+            session.PushOpen(Source, 6301, SymbolId, isBuy: true, volume: 100, stopLoss: 1.09, takeProfit: 1.20);
+            await WaitUntil(() => session.Amends.Count == 2);
+        });
+
+        var last = session.Amends.Last();
+        last.StopLoss.Should().Be(1.20, "on reverse the source take-profit becomes the destination stop-loss");
+        last.TakeProfit.Should().Be(1.09, "on reverse the source stop-loss becomes the destination take-profit");
+    }
+
     [Fact]
     public async Task Advanced_mirroring_audit_events_fire()
     {

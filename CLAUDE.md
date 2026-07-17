@@ -129,6 +129,14 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
    (`McpAiToolsLocalLlmTests`). The keyless "not configured" gate E2E stays too. → `tests/CLAUDE.md`.
 3. **`FakeTradingSession` stays cTrader-faithful.** Extend it for new cTrader behavior; never weaken
    the simulator or a test to make CI pass. Fix the code. (`tests/UnitTests/CopyTrading/`)
+   **Broker-mediated money logic is SIMULATOR-tested, not E2E — E2E cannot drive a live broker.** CI has no
+   cTrader account placing orders, so no Playwright test can make a source set an SL, add a TP, partial-close,
+   scale in, trail, or place/amend/cancel a pending; those are covered by `FakeTradingSession` assertions on
+   the destination effect, and "everything is E2E-tested" is false confidence for them. **Every source
+   `ExecutionEvent` branch that changes a destination has a `FakeTradingSession` `[Fact]` — the full
+   open/close · SL/TP set·move·clear · trailing · partial/scale · pending matrix, × `Reverse`/`Copy*`
+   transforms** (a source take-profit set on an open position shipped uncopied because that cell was missing).
+   Add a source action or a transform ⇒ add its cells same commit. → `tests/CLAUDE.md`.
 4. **Never `DateTime.UtcNow`/`.Now`/`DateTimeOffset.UtcNow`.** Inject `TimeProvider`, read
    `GetUtcNow()`; domain methods take a `DateTimeOffset now` param from the caller. Tests use
    `FakeTimeProvider` or hardcoded timestamps — never the real clock. Touch time-dependent code →
@@ -211,6 +219,17 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
       (including failed/terminal, missing, or gated-off) must render — guard every non-200 fetch and wrap
       background streams (SignalR log tails) in try/catch. A row's view/eye control is E2E-driven for a
       terminal entity. → `src/Web/CLAUDE.md`.
+    - **CRUD parity — no create-without-edit.** Anything the user can **add** to a collection (a copy
+      **destination**, a rule, a schedule, a mapping row) must also be **editable and deletable** in the UI:
+      an edit surface reusing the create controls, pre-filled from a read DTO that serializes **every** field,
+      backed by a `PUT …/{id}`. An add-only collection is a bug (copy destinations shipped addable-only,
+      forcing delete-and-re-add). E2E asserts the edit round-trip (open existing → change → save → persisted).
+    - **User-started background work has live logs + full activity.** Anything the user **starts** that runs
+      in the background (a run, a backtest, a **copy profile**, tracking) exposes a **live streaming log** view
+      (per-row icon over `LogsHub`, enabled only while active) and emits a log line for **every** state change
+      that affects it (an amend, a skip *with reason*, a guard trip, a failure) — never a silent no-op. The
+      copy profile shipped with no logs, then with logs too sparse. UI state is E2E-driven; log **content** is
+      asserted at the engine/simulator tier. → `src/Web/CLAUDE.md`.
 12. **Census gates, never opt-in enrollment lists.** *This mandate exists because 71 shipped bugs proved the
     others are unenforceable without it.* Every gate that enforces an "every X" rule (localize every string,
     every page mobile-safe, every route smoke-tested, every destructive action confirmed, every API-domain

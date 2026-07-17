@@ -42,6 +42,39 @@ path.
 partial close, SL/TP amend, trailing, disconnect/reconnect desync, token swap, rejections). Add a
 behavior → extend the simulator. **Never weaken it or a test to make CI pass** — fix the code.
 
+## Broker-mediated behaviour is SIMULATOR-tested, NOT E2E (learn from the take-profit bug)
+
+E2E **cannot** exercise live-broker trade mechanics — CI has no cTrader account placing orders, so a
+Playwright test can never make a *source* set a stop-loss, add a take-profit, partially close, scale in,
+trail, or place/amend/cancel a pending. **These behaviours are covered at the `FakeTradingSession` (unit)
+tier; E2E does NOT substitute for them.** "Everything is E2E-tested" is *false confidence* for money
+logic. A real shipped bug — a source **take-profit** set on an open position was never copied, because
+`MirrorStopChangeAsync` passed a hardcoded `null` TP and the host tracked only the SL — passed **every**
+E2E (no E2E can drive that path). It was a **unit** hole, and only a `FakeTradingSession` assertion catches
+its class.
+
+So: **every source `ExecutionEvent` branch that changes a destination MUST have a `FakeTradingSession`
+assertion on the destination effect** — the full matrix, each cell a `[Fact]`:
+
+| Source action | On open | Post-open (position update) |
+|---|---|---|
+| open / close | ✓ mirror order / close | — |
+| stop-loss set · move · **clear** | ✓ | ✓ |
+| take-profit set · move · **clear** | ✓ | ✓ |
+| **stop + take-profit together** | ✓ | ✓ |
+| trailing on · off | ✓ | ✓ |
+| partial close / scale-in | — | ✓ |
+| pending place · amend · cancel | ✓ | ✓ |
+
+…each **× the config that transforms it**: `Reverse` (the source SL↔TP swap must hold on open **and**
+post-open — the bug's blind spot), `CopyStopLoss`/`CopyTakeProfit`/`CopyTrailingStop` on/off,
+`MirrorPartialClose`/`MirrorScaleIn`. The matrix lives in `CopyEngineHostTests` ("Stop-loss / take-profit
+mirroring matrix"). Adding a new source action, or a new per-destination transform, ⇒ add its row/cells in
+the **same commit**. A copy-engine behaviour with no `FakeTradingSession` assertion is unshipped — no
+matter how many E2E tests exist. The same rule applies to any future broker-mediated surface (prop-firm
+tracking, agent order execution): assert the observable effect through its simulator/fake, not through a
+UI that can't reach it.
+
 ## Coverage — target 100%, never regress
 
 Coverage is **100% line/branch** across unit + integration + E2E, and it **only ratchets up**. A change

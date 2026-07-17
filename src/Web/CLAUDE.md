@@ -37,6 +37,25 @@ here. Full UI contract: [website/docs/ui-guidelines.md](website/docs/ui-guidelin
   updated in the same commit.
 - **Guard the load / recover the boundary:** a gated API returns 404; guard page loads and reset the
   `ErrorBoundary` on nav or a sticky error crashes the page (see feature-gate/ErrorBoundary gotcha).
+- **CRUD parity — anything creatable is editable AND deletable.** If a page lets the user *add* an item to
+  a collection (a copy **destination**, an alert rule, a schedule, a mapping row, an agent mandate), it MUST
+  also let them *edit* that existing item and *delete* it. **Add-without-edit is a bug** — the copy-profile
+  destinations shipped addable but not editable, forcing delete-and-re-add. The edit surface reuses the
+  create form's controls (extract a shared editor, or bind an edit model pre-filled from the item), the read
+  DTO must serialize **every** field the editor needs to pre-fill, and there must be an update endpoint
+  (`PUT …/{id}`) applying the same setters as create. E2E asserts the **edit round-trip**: open an existing
+  item → change a field → save → reload → the change persisted. A create form with no matching edit path does
+  not merge.
+- **Long-running / streaming work exposes LIVE logs in the UI.** Any process the user starts that runs in
+  the background and produces progress — a cBot **run**, a **backtest**, a **copy profile**, prop-firm
+  tracking, any `BackgroundService`/host the user can start — MUST offer a live log view: a per-row icon
+  button opening a streaming console over `LogsHub`, **enabled only while the process is active**, disabled
+  otherwise (mirror the instance-run log tail + `CopyTrading.razor`'s copy-logs dialog). And **every state
+  change that affects the process emits a log line the user can see** — an amend, a skip (with its reason),
+  a guard trip, a failure — never leave the user guessing why nothing happened. The copy profile shipped
+  with no log surface and then with logs too sparse (opens/closes only, no SL/TP amend); the rule is: if it
+  changes what the process does, it logs. E2E asserts the button's disabled/enabled state and that the
+  console opens; the log content itself is asserted at the engine tier (see `tests/CLAUDE.md`).
 
 ## Localization — MANDATORY (blocking, build-enforced)
 

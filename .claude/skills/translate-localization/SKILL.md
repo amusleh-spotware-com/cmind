@@ -5,8 +5,8 @@ description: >-
   language. Invoke WHENEVER you add or change a user-facing string, a doc under website/docs/**, or
   any other localizable content, and translations must be produced. Covers the two translation
   surfaces (app UI resources in tools/i18n/ui-translations.json + Docusaurus docs under
-  website/i18n/<locale>/...), the full locale list, and the required workflow: fan out one
-  sub-agent PER LANGUAGE using the fastest/cheapest model at low effort. Triggers on: "translate",
+  website/i18n/<locale>/...), the full locale list, and the required workflow: translate ONLY the
+  changed segments (translation memory), batched across locales, on the cheapest model. Triggers on: "translate",
   "localize", "add a string", "new doc", "i18n", "update translations", "localization gate",
   any change that adds/edits user-facing text or documentation.
 ---
@@ -45,47 +45,75 @@ Sources of truth — keep in sync:
    cd website && npm run i18n:check
    ```
 
-## Workflow — FAN OUT ONE SUB-AGENT PER LANGUAGE (mandatory)
+## Rule #1 — translate ONLY the diff (translation memory)
 
-Do **not** translate all 22 languages inline on the main thread — it burns the main context and is
-slow. Instead:
+This is where the tokens and time go, and it is almost always avoidable. Mature i18n pipelines
+(Crowdin, Weblate, Lokalise, i18next) **never re-translate unchanged content** — they hash each source
+segment and send only *new or changed* segments to the translator, reusing the existing translation for
+everything else. Do the same here. **Never re-translate a whole file when only a few keys / a few
+paragraphs changed.** Re-translating the full 4,500-key UI file or a full 100-line doc × 22 locales for
+a 3-key or 2-paragraph edit is the single biggest waste (it cost ~2M tokens and ~15 min last time).
 
-1. **Prepare the base — and BATCH.** Finalize the English source first; nothing translates until English
-   is locked. A full doc's 22-locale fan-out is expensive (22 sub-agents × the whole doc), so **do NOT
-   re-translate after every small English edit** — make ALL the English changes for the feature-area,
-   then translate the doc **once** at the end.
-   **A prose-only English edit is NOT exempt** (common misconception): the docs gate tracks a **content
-   hash** of each English source in a freshness manifest, so *any* change to an English doc — even a typo
-   fix that touches no heading — makes `npm run i18n:check` fail with "changed without re-syncing" until
-   you re-translate that doc into **all 22 locales** and run `npm run i18n:sync` to update the manifest.
-   So: batch every English edit, then translate + `i18n:sync` once at the end.
-   Each sub-agent prompt MUST include the **explicit list of headings in order** (a doc with 13 headings
-   → say "13 headings, this order: …") — without it agents silently drop/merge sections.
-2. **Fan out.** Spawn **one sub-agent per target locale** (22 of them), background where possible. Each
-   sub-agent handles exactly one language end-to-end and **obeys the write protocol below**:
-   - **Docs:** each locale writes a **different** file (`website/i18n/<locale>/...`) — safe to run all 22
-     in parallel.
-   - **UI (`tools/i18n/ui-translations.json`) is ONE shared file — 22 agents editing it in parallel
-     clobber each other.** Do **not** have sub-agents edit it concurrently. Instead: write the English
-     keys to a temp `tools/i18n/_new/en.json` (flat key→English), have each sub-agent **write only its own
-     locale's translations to a separate `tools/i18n/_new/<locale>.json`** (same keys), then **merge on
-     the main thread** with a small Node/PowerShell script (load each `_new/<locale>.json`, set
-     `cultures[locale][key]=value`, write `ui-translations.json` once) and validate parity + placeholders
-     (`{0}`) before deleting the temp dir. This avoids the clobber and lets the fan-out stay parallel.
-3. **Model + effort — cheapest/fastest, low effort.** Translation is a low-reasoning task. Each
-   sub-agent MUST use the **fastest and cheapest available model** (e.g. Haiku / `claude-haiku-4-5`,
-   or an even cheaper one if available) with **low reasoning effort**. Do NOT use Opus/Sonnet for bulk
-   translation — waste of tokens and time. Pass `model: "haiku"` (or cheapest) to the Agent tool.
-4. **Constraints every sub-agent obeys:**
-   - Translate values only. **Never** change keys, placeholders (`{0}`, `{name}`), markdown
-     structure, code fences, front-matter ids, or links.
-   - Keep the exact same key set as `en` (UI) / same file path + headings (docs).
-   - Preserve technical/ubiquitous-language terms (cBot, backtest, ParamSet, Node, cTrader) — don't
-     invent synonyms; keep product names untranslated.
-   - RTL (`ar`): translate normally; direction is handled by config.
-   - **One agent per locale, never two for the same file. WAIT for every agent to finish before you
-     commit** — a slow agent that lands after your commit leaves a stray uncommitted change (and can
-     overwrite a file you already fixed). Re-run the parity gate after the last agent, then commit once.
+Concretely, before translating anything, compute the **delta** vs the last committed English:
+
+- **UI:** the set of keys that are **new or whose English value changed** — nothing else.
+  ```bash
+  # changed/added en keys vs HEAD → tools/i18n/_new/en.json (only the delta)
+  node -e '
+    const fs=require("fs"),cp=require("child_process");
+    const cur=JSON.parse(fs.readFileSync("tools/i18n/ui-translations.json","utf8")).cultures.en;
+    const old=JSON.parse(cp.execSync("git show HEAD:tools/i18n/ui-translations.json")).cultures.en;
+    const d={}; for(const k in cur) if(cur[k]!==old[k]) d[k]=cur[k];
+    fs.mkdirSync("tools/i18n/_new",{recursive:true});
+    fs.writeFileSync("tools/i18n/_new/en.json",JSON.stringify(d,null,2));
+    console.log(Object.keys(d).length,"changed keys");'
+  ```
+- **Docs:** the **sections that changed** (`git diff -- website/docs/<file>` → which heading-blocks were
+  touched). Re-translate **only those blocks** and splice them into each existing locale file; leave every
+  untouched section's existing translation **verbatim**. Full-file translation is only for a **brand-new**
+  doc (no prior translation exists).
+
+If the delta is empty, there is nothing to translate — stop. (A pure code change that adds no key and no
+doc edit needs no translation.)
+
+## Rule #2 — batch locales; don't spawn 22 agents for a small delta
+
+A sub-agent has fixed overhead (system prompt, tool round-trips, its own reasoning). Spawning 22 of them
+to translate a handful of strings pays that overhead 22×. Pick the strategy by **delta size**:
+
+| Delta | Strategy | Calls |
+|---|---|---|
+| **UI: ≤ ~30 changed keys** (the common case) | **One** cheap sub-agent translates the delta into **all 22 locales at once**, emitting a single JSON `{ "<loc>": { key: value, … }, … }`. | 1 |
+| **UI: > ~30 keys** | Split into a few batches, or fan out per locale (below). One agent's *output* shouldn't approach its limit — a huge single JSON truncates. | ~2–22 |
+| **Docs: changed sections only** | One sub-agent per locale, but each is handed **only the changed section(s)** to translate + splice — not the whole file. | ≤22 (tiny each) |
+| **Docs: brand-new file** | One sub-agent per locale, full file (unavoidable). | 22 |
+
+The English source is read **once** into a small delta file (`_new/en.json` or the extracted section);
+agents read that, **not** the 4,500-key JSON or unrelated sections. Reading the whole `ui-translations.json`
+into an agent is the classic token bomb — never do it.
+
+**Batched-UI agent (the default for UI):** one sub-agent, low effort, cheapest model. Input:
+`tools/i18n/_new/en.json` (delta only). Output: **Write** `tools/i18n/_new/_all.json` =
+`{ "ar": {…}, "cs": {…}, … , "zh-Hans": {…} }` — every locale, same keys, values translated, `{0}`
+preserved. Then merge on the main thread (one script sets `cultures[loc][key]=value` for each and writes
+`ui-translations.json` once), validate parity + placeholders, delete `_new/`, run `gen-resx.ps1`. One
+agent instead of 22; only the delta instead of the whole file.
+
+## Model, effort, batching hygiene
+
+- **Cheapest/fastest model, low reasoning effort** — translation is low-reasoning. Pass `model: "haiku"`
+  (or cheaper). Never Opus/Sonnet for bulk translation.
+- **Finalize English first, then translate once** — don't re-translate after every small English edit;
+  batch all English changes for the feature-area, translate the delta once at the end. Note the docs gate
+  tracks a **content hash** per English doc, so **any** English doc edit (even prose-only / a typo) makes
+  `npm run i18n:check` fail until you re-translate the changed sections and run `npm run i18n:sync`.
+- When you **do** fan out per locale (large delta / new doc): **one agent per locale, never two for the
+  same file; WAIT for all to finish before committing** (a late agent overwrites a file you already
+  fixed / leaves a stray change). For docs each locale writes a **different** file → parallel is safe;
+  `ui-translations.json` is **one shared file** → agents must write per-locale `_new/<loc>.json`, never
+  edit the shared JSON concurrently (they clobber each other), then merge on the main thread.
+- Every fan-out prompt still MUST give the **ordered heading list** (docs) and the **exact key set** (UI),
+  or agents silently drop/merge — see the write protocol and templates below.
 
 ### Sub-agent WRITE PROTOCOL — the #1 cause of failed/retried translations
 
@@ -107,43 +135,65 @@ spell these out, or agents thrash:
 - Do not route around a deny/permission prompt via an alternate tool — if `Write` is blocked, `Read` the
   target and retry `Write`; report back rather than using PowerShell.
 
-### Ready-to-use sub-agent prompt template (docs)
+### Ready-to-use prompt — batched UI delta (the default; ONE agent, all 22 locales)
 
 ```
-Translate a documentation page from English to <LANGUAGE> (locale `<loc>`).
+Translate app UI strings into ALL 22 target locales at once.
 
-STEP 1 — Read the English source with the Read tool:
-  <ROOT>/website/docs/<rel-path>.md
-STEP 2 — Read the existing target file with the Read tool (it already exists; Write needs this first):
-  <ROOT>/website/i18n/<loc>/docusaurus-plugin-content-docs/current/<rel-path>.md
-STEP 3 — Write that target path ONCE with the Write tool, containing the full translation.
+STEP 1 — Read the delta with the Read tool: <ROOT>/tools/i18n/_new/en.json
+  (a small flat JSON of only the keys that changed: key -> English value).
+STEP 2 — Write <ROOT>/tools/i18n/_new/_all.json ONCE with the Write tool. Shape:
+  { "ar": { <same keys>: <Arabic> }, "cs": {…}, "de": {…}, "el": {…}, "es": {…},
+    "fr": {…}, "hu": {…}, "id": {…}, "it": {…}, "ja": {…}, "ko": {…}, "ms": {…},
+    "pl": {…}, "pt-BR": {…}, "ru": {…}, "sk": {…}, "sl": {…}, "sr": {…}, "th": {…},
+    "tr": {…}, "vi": {…}, "zh-Hans": {…} }
 
-HARD RULES:
-- Use ONLY the Read and Write tools. NEVER Bash/echo/heredoc/sed/PowerShell/Python — they corrupt
-  Unicode and truncate. One Write call, whole file.
-- Translate EVERY line. The source has ~<N> lines, <B> bullet lines starting `- `, and a <T>-row table.
-  Your output MUST contain all <B> bullets and all <T> table rows. Do NOT summarize, merge, or drop.
-- Keep heading LEVELS + order: <explicit ordered heading list>.
-- Preserve YAML front-matter fences + keys (translate the `description:` VALUE only).
-- Do NOT change code spans/backticked identifiers, Markdown link paths (translate only visible text),
-  the table structure, or product/technical terms (cTrader, cBot, cID, CSV, SL, TP, lot, pip,
-  master/slave, and any others). No prose back — just Write the file.
+HARD RULES: Use ONLY Read + Write (never a shell — it corrupts Unicode). Every locale must have the
+EXACT same key set as the input. Translate values only; keep placeholders like `{0}` and `×` verbatim;
+keep product/technical terms (cTrader, cBot, cID, CSV, SL, TP, lot, pip). No prose back.
+```
+Then on the main thread: load `_all.json`, set `cultures[loc][key]=value` for each, write
+`ui-translations.json` once, validate parity + `{0}`, delete `_new/`, run `pwsh tools/i18n/gen-resx.ps1`.
+
+### Ready-to-use prompt — docs, CHANGED SECTIONS only (edited doc)
+
+```
+Update the <LANGUAGE> (`<loc>`) translation of an edited doc — only the changed section(s).
+
+STEP 1 — Read the English source:  <ROOT>/website/docs/<rel-path>.md
+STEP 2 — Read the existing target:  <ROOT>/website/i18n/<loc>/docusaurus-plugin-content-docs/current/<rel-path>.md
+STEP 3 — The English changed only in this/these section(s): <heading name(s)>. Translate JUST that/those
+  section(s) and Write the target ONCE, keeping EVERY other section's existing translation byte-for-byte
+  unchanged.
+
+HARD RULES: Read + Write only (no shell). Do not retranslate or reword untouched sections. Preserve
+heading levels/order, front-matter, code spans, link paths, table structure, and technical terms.
 ```
 
-For the **UI** surface, point the agent at `tools/i18n/_new/en.json` (Read it) and have it **Write**
-`tools/i18n/_new/<loc>.json` (a new file — no target-Read needed) with the same keys, values translated,
-placeholders (`{0}`) preserved. Then merge on the main thread (step 2 above).
-5. **Reconcile + verify on the main thread** after fan-out:
-   - `pwsh tools/i18n/gen-resx.ps1` (regenerate resx)
-   - `cd website && npm run i18n:check` (docs parity)
-   - `dotnet test` the localization gates (`ResourceParityTests`, `NoHardcodedUiTextTests`)
-   - `npm run build` in `website/` (catches broken links).
+### Ready-to-use prompt — docs, FULL file (brand-new doc only)
+
+```
+Translate a NEW documentation page to <LANGUAGE> (`<loc>`).
+STEP 1 — Read the English source. STEP 2 — Write the target path once (it may not exist yet).
+Translate EVERY line: ~<N> lines, <B> `- ` bullets, a <T>-row table — output must match those counts.
+Keep heading order: <explicit ordered heading list>. Front-matter/code/links/table/terms preserved.
+Read + Write only; never a shell.
+```
+
+## Reconcile + verify on the main thread
+
+- UI: merge `_new/_all.json` (or per-locale files) → `ui-translations.json`; `pwsh tools/i18n/gen-resx.ps1`.
+- Docs: `cd website && npm run i18n:sync` (refresh the content-hash manifest), then `npm run i18n:check`.
+  If a re-translation **fixed** grandfathered structural drift, delete those now-passing lines from
+  `website/scripts/i18n-drift-baseline.txt` (the ratchet only shrinks).
+- `dotnet test` the localization gates (`ResourceParityTests`, `NoHardcodedUiTextTests`); `npm run build`
+  in `website/` (broken links). Delete the temp `tools/i18n/_new/` before committing.
 
 ## Definition of done
 
-- [ ] English base locked first.
-- [ ] All 22 satellites produced via per-language sub-agents on the cheapest/fastest model, low effort.
+- [ ] Only the **delta** was translated — no unchanged key or untouched doc section re-translated.
+- [ ] Cheapest model, low effort; UI delta batched (one call) unless it was large enough to split.
 - [ ] UI: every culture has the full key set; `gen-resx.ps1` run; `ResourceParityTests` green.
-- [ ] Docs: translated counterpart exists for every locale; `npm run i18n:check` green; site builds.
+- [ ] Docs: counterpart exists for every locale; `i18n:sync` run; `npm run i18n:check` green; site builds.
 - [ ] No hard-coded user-facing text (`NoHardcodedUiTextTests` green); RTL renders for `ar`.
-- [ ] All in the **same commit** as the English change.
+- [ ] Temp `_new/` deleted; all in the **same commit** as the English change.

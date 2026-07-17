@@ -366,4 +366,6 @@
   <data name="copyDetail.no" xml:space="preserve"><value>否</value></data>
   <data name="copyDetail.sourceChanged" xml:space="preserve"><value>源账户已更新</value></data>
   <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>无法更改源账户</value></data>
+  <data name="copyDetail.editDestination" xml:space="preserve"><value>编辑目标</value></data>
+  <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>目标已更新</value></data>
 </root>

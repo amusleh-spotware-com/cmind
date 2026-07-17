@@ -59,6 +59,34 @@ public record AddCopyDestinationRequest(
 
 public record SymbolMapPair(string Source, string Destination, double VolumeMultiplier = 1);
 
+// Edit of an existing destination's settings. Carries only the fields the copy-profile editor exposes;
+// the advanced per-destination settings (manage-only, account protection, prop rules, sync policy, trading
+// hours, jitter, fees, lot-sanity) are left untouched so editing the basics never resets them.
+public record UpdateCopyDestinationRequest(
+    MoneyManagementMode Mode,
+    double Parameter,
+    double SlippagePips,
+    int MaxDelaySeconds,
+    bool Reverse,
+    bool CopyStopLoss,
+    bool CopyTakeProfit,
+    CopyDirectionFilter Direction,
+    double MinLot,
+    double MaxLot,
+    bool ForceMinLot,
+    double MaxDrawdownPercent,
+    double DailyLossLimit,
+    SymbolFilterMode SymbolFilterMode = SymbolFilterMode.None,
+    IReadOnlyList<string>? SymbolFilters = null,
+    IReadOnlyList<SymbolMapPair>? SymbolMap = null,
+    bool MirrorPartialClose = true,
+    bool MirrorScaleIn = false,
+    bool CopyPendingOrders = false,
+    bool CopyTrailingStop = false,
+    CopyOrderTypes OrderTypes = CopyOrderTypes.All,
+    bool CopyPendingExpiry = true,
+    bool CopyMasterSlippage = true);
+
 public record ChangeCopySourceRequest(Guid SourceAccountId);
 
 public record LockCopyDestinationRequest(int Minutes);
@@ -243,6 +271,41 @@ public static class CopyEndpoints
                 destination.SetSymbolMap(req.SymbolMap.Select(m => new SymbolMapEntry(new Symbol(m.Source), new Symbol(m.Destination), m.VolumeMultiplier)));
             if (req.SymbolFilterMode != SymbolFilterMode.None && req.SymbolFilters is { Count: > 0 })
                 destination.SetSymbolFilter(req.SymbolFilterMode, req.SymbolFilters.Select(s => new Symbol(s)));
+            await repo.SaveChangesAsync(ct);
+            return Results.Ok(new { destination.Id });
+        });
+
+        // Update an EXISTING destination's editor-exposed settings (CRUD parity — a destination you can add
+        // you can also edit). Advanced settings not on the editor are intentionally left as-is.
+        g.MapPut("/profiles/{id:guid}/destinations/{destinationId:guid}", async (Guid id, Guid destinationId,
+            UpdateCopyDestinationRequest req, ICopyProfileRepository repo, ICurrentUser u, CancellationToken ct) =>
+        {
+            var profile = await repo.GetWithDestinationsAsync(CopyProfileId.From(id), ct);
+            if (profile is null || profile.UserId != u.UserId!.Value) return Results.NotFound();
+            var destination = profile.Destinations.FirstOrDefault(d => d.Id == CopyDestinationId.From(destinationId));
+            if (destination is null) return Results.NotFound();
+
+            destination.ConfigureRisk(new RiskSettings(req.Mode, req.Parameter));
+            destination.ConfigureSlippage(new SlippagePips(req.SlippagePips));
+            destination.ConfigureMaxDelay(MaxCopyDelay.Seconds(req.MaxDelaySeconds));
+            destination.ConfigureBounds(new LotBounds(req.MinLot, req.MaxLot, req.ForceMinLot));
+            destination.SetReverse(req.Reverse);
+            destination.SetCopyProtection(req.CopyStopLoss, req.CopyTakeProfit);
+            destination.SetDirection(req.Direction);
+            destination.SetPartialCloseMirroring(req.MirrorPartialClose, req.MirrorScaleIn);
+            destination.SetPendingOrderCopying(req.CopyPendingOrders);
+            destination.SetTrailingStopCopying(req.CopyTrailingStop);
+            destination.SetOrderTypeFilter(req.OrderTypes);
+            destination.SetExpiryCopying(req.CopyPendingExpiry);
+            destination.SetSlippageCopying(req.CopyMasterSlippage);
+            destination.SetGuards(new DrawdownPercent(req.MaxDrawdownPercent), req.DailyLossLimit);
+            destination.SetSymbolMap(req.SymbolMap is { Count: > 0 }
+                ? req.SymbolMap.Select(m => new SymbolMapEntry(new Symbol(m.Source), new Symbol(m.Destination), m.VolumeMultiplier))
+                : []);
+            if (req.SymbolFilterMode != SymbolFilterMode.None && req.SymbolFilters is { Count: > 0 })
+                destination.SetSymbolFilter(req.SymbolFilterMode, req.SymbolFilters.Select(s => new Symbol(s)));
+            else
+                destination.SetSymbolFilter(SymbolFilterMode.None, []);
             await repo.SaveChangesAsync(ct);
             return Results.Ok(new { destination.Id });
         });

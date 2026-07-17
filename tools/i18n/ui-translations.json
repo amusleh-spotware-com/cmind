@@ -363,7 +363,9 @@
       "copyNew.linkOpenApi": "Add an account",
       "copy.map.tip.source": "The symbol as named on the master (source) account, e.g. EURUSD.",
       "copy.map.tip.destination": "The matching symbol on the destination broker, e.g. EUR.USD.",
-      "copy.map.tip.multiplier": "Extra volume multiplier for this symbol on top of the destination's sizing (1 = no change)."
+      "copy.map.tip.multiplier": "Extra volume multiplier for this symbol on top of the destination's sizing (1 = no change).",
+      "copyDetail.editDestination": "Edit destination",
+      "copyDetail.destinationUpdated": "Destination updated"
     },
     "ar": {
       "integrity.row.sharpe": "شارب (لكل فترة)",
@@ -727,7 +729,9 @@
       "copyDetail.yes": "نعم",
       "copyDetail.no": "لا",
       "copyDetail.sourceChanged": "تم تحديث الحساب المصدر",
-      "copyDetail.sourceChangeFailed": "تعذر تغيير الحساب المصدر"
+      "copyDetail.sourceChangeFailed": "تعذر تغيير الحساب المصدر",
+      "copyDetail.editDestination": "تعديل الوجهة",
+      "copyDetail.destinationUpdated": "تم تحديث الوجهة"
     },
     "cs": {
       "integrity.row.sharpe": "Sharpe (za období)",
@@ -1091,7 +1095,9 @@
       "copyDetail.yes": "Ano",
       "copyDetail.no": "Ne",
       "copyDetail.sourceChanged": "Zdrojový účet aktualizován",
-      "copyDetail.sourceChangeFailed": "Nepodařilo se změnit zdrojový účet"
+      "copyDetail.sourceChangeFailed": "Nepodařilo se změnit zdrojový účet",
+      "copyDetail.editDestination": "Upravit cíl",
+      "copyDetail.destinationUpdated": "Cíl aktualizován"
     },
     "de": {
       "integrity.row.sharpe": "Sharpe (pro Periode)",
@@ -1455,7 +1461,9 @@
       "copyDetail.yes": "Ja",
       "copyDetail.no": "Nein",
       "copyDetail.sourceChanged": "Quellkonto aktualisiert",
-      "copyDetail.sourceChangeFailed": "Quellkonto konnte nicht geändert werden"
+      "copyDetail.sourceChangeFailed": "Quellkonto konnte nicht geändert werden",
+      "copyDetail.editDestination": "Ziel bearbeiten",
+      "copyDetail.destinationUpdated": "Ziel aktualisiert"
     },
     "el": {
       "integrity.row.sharpe": "Sharpe (ανά περίοδο)",
@@ -1819,7 +1827,9 @@
       "copyDetail.yes": "Ναι",
       "copyDetail.no": "Όχι",
       "copyDetail.sourceChanged": "Ο λογαριασμός προέλευσης ενημερώθηκε",
-      "copyDetail.sourceChangeFailed": "Δεν ήταν δυνατό να αλλαχθεί ο λογαριασμός προέλευσης"
+      "copyDetail.sourceChangeFailed": "Δεν ήταν δυνατό να αλλαχθεί ο λογαριασμός προέλευσης",
+      "copyDetail.editDestination": "Επεξεργασία προορισμού",
+      "copyDetail.destinationUpdated": "Ο προορισμός ενημερώθηκε"
     },
     "es": {
       "integrity.row.sharpe": "Sharpe (por período)",
@@ -2183,7 +2193,9 @@
       "copyDetail.yes": "Sí",
       "copyDetail.no": "No",
       "copyDetail.sourceChanged": "Cuenta de origen actualizada",
-      "copyDetail.sourceChangeFailed": "No se pudo cambiar la cuenta de origen"
+      "copyDetail.sourceChangeFailed": "No se pudo cambiar la cuenta de origen",
+      "copyDetail.editDestination": "Editar destino",
+      "copyDetail.destinationUpdated": "Destino actualizado"
     },
     "fr": {
       "integrity.row.sharpe": "Sharpe (par période)",
@@ -2547,7 +2559,9 @@
       "copyDetail.yes": "Oui",
       "copyDetail.no": "Non",
       "copyDetail.sourceChanged": "Compte source mis à jour",
-      "copyDetail.sourceChangeFailed": "Impossible de changer le compte source"
+      "copyDetail.sourceChangeFailed": "Impossible de changer le compte source",
+      "copyDetail.editDestination": "Modifier la destination",
+      "copyDetail.destinationUpdated": "Destination mise à jour"
     },
     "hu": {
       "integrity.row.sharpe": "Sharpe (periódusonként)",
@@ -2911,7 +2925,9 @@
       "copyDetail.yes": "Igen",
       "copyDetail.no": "Nem",
       "copyDetail.sourceChanged": "Forrásfiókok frissítve",
-      "copyDetail.sourceChangeFailed": "Nem sikerült módosítani a forrásfiókon"
+      "copyDetail.sourceChangeFailed": "Nem sikerült módosítani a forrásfiókon",
+      "copyDetail.editDestination": "Cél szerkesztése",
+      "copyDetail.destinationUpdated": "Cél frissítve"
     },
     "id": {
       "integrity.row.sharpe": "Sharpe (per periode)",
@@ -3275,7 +3291,9 @@
       "copyDetail.yes": "Ya",
       "copyDetail.no": "Tidak",
       "copyDetail.sourceChanged": "Akun sumber diperbarui",
-      "copyDetail.sourceChangeFailed": "Tidak dapat mengubah akun sumber"
+      "copyDetail.sourceChangeFailed": "Tidak dapat mengubah akun sumber",
+      "copyDetail.editDestination": "Edit destinasi",
+      "copyDetail.destinationUpdated": "Destinasi diperbarui"
     },
     "it": {
       "integrity.row.sharpe": "Sharpe (per periodo)",
@@ -3639,7 +3657,9 @@
       "copyDetail.yes": "Sì",
       "copyDetail.no": "No",
       "copyDetail.sourceChanged": "Account sorgente aggiornato",
-      "copyDetail.sourceChangeFailed": "Impossibile modificare l'account sorgente"
+      "copyDetail.sourceChangeFailed": "Impossibile modificare l'account sorgente",
+      "copyDetail.editDestination": "Modifica destinazione",
+      "copyDetail.destinationUpdated": "Destinazione aggiornata"
     },
     "ja": {
       "integrity.row.sharpe": "シャープ（期間あたり）",
@@ -4003,7 +4023,9 @@
       "copyDetail.yes": "はい",
       "copyDetail.no": "いいえ",
       "copyDetail.sourceChanged": "ソースアカウントが更新されました",
-      "copyDetail.sourceChangeFailed": "ソースアカウントを変更できませんでした"
+      "copyDetail.sourceChangeFailed": "ソースアカウントを変更できませんでした",
+      "copyDetail.editDestination": "送信先を編集",
+      "copyDetail.destinationUpdated": "送信先が更新されました"
     },
     "ko": {
       "integrity.row.sharpe": "샤프 (기간당)",
@@ -4367,7 +4389,9 @@
       "copyDetail.yes": "예",
       "copyDetail.no": "아니오",
       "copyDetail.sourceChanged": "소스 계정이 업데이트됨",
-      "copyDetail.sourceChangeFailed": "소스 계정을 변경할 수 없습니다"
+      "copyDetail.sourceChangeFailed": "소스 계정을 변경할 수 없습니다",
+      "copyDetail.editDestination": "대상 편집",
+      "copyDetail.destinationUpdated": "대상이 업데이트됨"
     },
     "ms": {
       "integrity.row.sharpe": "Sharpe (setiap tempoh)",
@@ -4731,7 +4755,9 @@
       "copyDetail.yes": "Ya",
       "copyDetail.no": "Tidak",
       "copyDetail.sourceChanged": "Akaun sumber dikemas kini",
-      "copyDetail.sourceChangeFailed": "Tidak dapat menukar akaun sumber"
+      "copyDetail.sourceChangeFailed": "Tidak dapat menukar akaun sumber",
+      "copyDetail.editDestination": "Edit destinasi",
+      "copyDetail.destinationUpdated": "Destinasi dikemas kini"
     },
     "pl": {
       "integrity.row.sharpe": "Sharpe (na okres)",
@@ -5095,7 +5121,9 @@
       "copyDetail.yes": "Tak",
       "copyDetail.no": "Nie",
       "copyDetail.sourceChanged": "Konto źródłowe zaktualizowane",
-      "copyDetail.sourceChangeFailed": "Nie udało się zmienić konta źródłowego"
+      "copyDetail.sourceChangeFailed": "Nie udało się zmienić konta źródłowego",
+      "copyDetail.editDestination": "Edytuj cel",
+      "copyDetail.destinationUpdated": "Cel zaktualizowany"
     },
     "pt-BR": {
       "integrity.row.sharpe": "Sharpe (por período)",
@@ -5459,7 +5487,9 @@
       "copyDetail.yes": "Sim",
       "copyDetail.no": "Não",
       "copyDetail.sourceChanged": "Conta de origem atualizada",
-      "copyDetail.sourceChangeFailed": "Não foi possível alterar a conta de origem"
+      "copyDetail.sourceChangeFailed": "Não foi possível alterar a conta de origem",
+      "copyDetail.editDestination": "Editar destino",
+      "copyDetail.destinationUpdated": "Destino atualizado"
     },
     "ru": {
       "integrity.row.sharpe": "Шарп (за период)",
@@ -5823,7 +5853,9 @@
       "copyDetail.yes": "Да",
       "copyDetail.no": "Нет",
       "copyDetail.sourceChanged": "Исходящий аккаунт обновлен",
-      "copyDetail.sourceChangeFailed": "Не удалось изменить исходящий аккаунт"
+      "copyDetail.sourceChangeFailed": "Не удалось изменить исходящий аккаунт",
+      "copyDetail.editDestination": "Изменить назначение",
+      "copyDetail.destinationUpdated": "Назначение обновлено"
     },
     "sk": {
       "integrity.row.sharpe": "Sharpe (za obdobie)",
@@ -6187,7 +6219,9 @@
       "copyDetail.yes": "Áno",
       "copyDetail.no": "Nie",
       "copyDetail.sourceChanged": "Zdrojový účet aktualizovaný",
-      "copyDetail.sourceChangeFailed": "Nepodarilo sa zmeniť zdrojový účet"
+      "copyDetail.sourceChangeFailed": "Nepodarilo sa zmeniť zdrojový účet",
+      "copyDetail.editDestination": "Upraviť cieľ",
+      "copyDetail.destinationUpdated": "Cieľ aktualizovaný"
     },
     "sl": {
       "integrity.row.sharpe": "Sharpe (na obdobje)",
@@ -6551,7 +6585,9 @@
       "copyDetail.yes": "Da",
       "copyDetail.no": "Ne",
       "copyDetail.sourceChanged": "Izvirni račun je posodobljen",
-      "copyDetail.sourceChangeFailed": "Ni mogoče spremeniti izvirnega računa"
+      "copyDetail.sourceChangeFailed": "Ni mogoče spremeniti izvirnega računa",
+      "copyDetail.editDestination": "Uredi namen",
+      "copyDetail.destinationUpdated": "Namen posodobljen"
     },
     "sr": {
       "integrity.row.sharpe": "Шарп (по периоду)",
@@ -6915,7 +6951,9 @@
       "copyDetail.yes": "Да",
       "copyDetail.no": "Не",
       "copyDetail.sourceChanged": "Извор рачуна ажуриран",
-      "copyDetail.sourceChangeFailed": "Не могу да променим извор рачуна"
+      "copyDetail.sourceChangeFailed": "Не могу да променим извор рачуна",
+      "copyDetail.editDestination": "Izmeni odredište",
+      "copyDetail.destinationUpdated": "Odredište je ažurirano"
     },
     "th": {
       "integrity.row.sharpe": "ชาร์ป (ต่อช่วง)",
@@ -7279,7 +7317,9 @@
       "copyDetail.yes": "ใช่",
       "copyDetail.no": "ไม่",
       "copyDetail.sourceChanged": "อัปเดตบัญชีต้นทาง",
-      "copyDetail.sourceChangeFailed": "ไม่สามารถเปลี่ยนบัญชีต้นทางได้"
+      "copyDetail.sourceChangeFailed": "ไม่สามารถเปลี่ยนบัญชีต้นทางได้",
+      "copyDetail.editDestination": "แก้ไขปลายทาง",
+      "copyDetail.destinationUpdated": "ปลายทางได้รับการอัปเดต"
     },
     "tr": {
       "integrity.row.sharpe": "Sharpe (dönem başına)",
@@ -7643,7 +7683,9 @@
       "copyDetail.yes": "Evet",
       "copyDetail.no": "Hayır",
       "copyDetail.sourceChanged": "Kaynak hesabı güncellendi",
-      "copyDetail.sourceChangeFailed": "Kaynak hesabı değiştirilemedi"
+      "copyDetail.sourceChangeFailed": "Kaynak hesabı değiştirilemedi",
+      "copyDetail.editDestination": "Hedefi düzenle",
+      "copyDetail.destinationUpdated": "Hedef güncellendi"
     },
     "vi": {
       "integrity.row.sharpe": "Sharpe (mỗi kỳ)",
@@ -8007,7 +8049,9 @@
       "copyDetail.yes": "Có",
       "copyDetail.no": "Không",
       "copyDetail.sourceChanged": "Tài khoản nguồn đã được cập nhật",
-      "copyDetail.sourceChangeFailed": "Không thể thay đổi tài khoản nguồn"
+      "copyDetail.sourceChangeFailed": "Không thể thay đổi tài khoản nguồn",
+      "copyDetail.editDestination": "Chỉnh sửa đích đến",
+      "copyDetail.destinationUpdated": "Đích đến đã được cập nhật"
     },
     "zh-Hans": {
       "integrity.row.sharpe": "夏普（每期）",
@@ -8371,7 +8415,9 @@
       "copyDetail.yes": "是",
       "copyDetail.no": "否",
       "copyDetail.sourceChanged": "源账户已更新",
-      "copyDetail.sourceChangeFailed": "无法更改源账户"
+      "copyDetail.sourceChangeFailed": "无法更改源账户",
+      "copyDetail.editDestination": "编辑目标",
+      "copyDetail.destinationUpdated": "目标已更新"
     }
   }
 }

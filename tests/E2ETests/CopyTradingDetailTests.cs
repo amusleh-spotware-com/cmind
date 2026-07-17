@@ -107,6 +107,41 @@ public sealed class CopyTradingDetailTests(AppFixture app)
             .ToContainTextAsync("Lot multiplier", new() { Timeout = 15000 });
     }
 
+    [Fact]
+    public async Task Existing_destination_settings_can_be_edited_in_place()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var api = page.APIRequest;
+
+        var master = await SeedLinkedAccountAsync(api);
+        var slave = await SeedLinkedAccountAsync(api);
+        var name = $"editdest-{Suffix}";
+        var create = await api.PostAsync(U("/api/copy/profiles"), new()
+        {
+            DataObject = new { Name = name, SourceAccountId = master.Id, DestinationAccountIds = new[] { slave.Id } }
+        });
+        Assert.True(create.Ok, $"create profile failed: {create.Status}");
+        var profileId = (await ReadJsonAsync(create)).GetProperty("id").GetString()!;
+
+        await page.GotoAsync($"/copy-trading/{profileId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForAppReadyAsync();
+
+        // The destination row exposes an EDIT control (CRUD parity) that switches the form into edit mode —
+        // the Cancel-edit affordance only exists while editing (a robust, localization-independent signal).
+        await page.Locator("[data-testid=copy-edit-destination]").First.ClickAsync();
+        await Assertions.Expect(page.Locator("[data-testid=copy-cancel-edit]")).ToBeVisibleAsync(Slow);
+
+        // Change the sizing parameter and save — the edit round-trips (not delete-and-re-add).
+        await page.GetByLabel("Parameter").FillAsync("7");
+        await page.Locator("[data-testid=copy-add-destination]").ClickAsync();
+
+        // The form returns to Add mode (Cancel-edit gone) and the change is persisted.
+        await Assertions.Expect(page.Locator("[data-testid=copy-cancel-edit]")).ToBeHiddenAsync(new() { Timeout = 15000 });
+        await page.WaitForFunctionAsync(
+            "async () => (await (await fetch('/api/copy/profiles/" + profileId + "')).json()).destinations[0].riskParameter === 7",
+            null, new() { Timeout = 15000 });
+    }
+
     private string U(string path) => app.BaseUrl + path;
 
     private async Task<(long Number, Guid Id)> SeedLinkedAccountAsync(IAPIRequestContext api)

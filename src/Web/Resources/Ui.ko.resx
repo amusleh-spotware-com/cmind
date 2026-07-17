@@ -366,4 +366,6 @@
   <data name="copyDetail.no" xml:space="preserve"><value>아니오</value></data>
   <data name="copyDetail.sourceChanged" xml:space="preserve"><value>소스 계정이 업데이트됨</value></data>
   <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>소스 계정을 변경할 수 없습니다</value></data>
+  <data name="copyDetail.editDestination" xml:space="preserve"><value>대상 편집</value></data>
+  <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>대상이 업데이트됨</value></data>
 </root>

@@ -366,4 +366,6 @@
   <data name="copyDetail.no" xml:space="preserve"><value>Nem</value></data>
   <data name="copyDetail.sourceChanged" xml:space="preserve"><value>Forrásfiókok frissítve</value></data>
   <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Nem sikerült módosítani a forrásfiókon</value></data>
+  <data name="copyDetail.editDestination" xml:space="preserve"><value>Cél szerkesztése</value></data>
+  <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Cél frissítve</value></data>
 </root>

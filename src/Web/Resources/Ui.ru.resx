@@ -366,4 +366,6 @@
   <data name="copyDetail.no" xml:space="preserve"><value>Нет</value></data>
   <data name="copyDetail.sourceChanged" xml:space="preserve"><value>Исходящий аккаунт обновлен</value></data>
   <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Не удалось изменить исходящий аккаунт</value></data>
+  <data name="copyDetail.editDestination" xml:space="preserve"><value>Изменить назначение</value></data>
+  <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Назначение обновлено</value></data>
 </root>

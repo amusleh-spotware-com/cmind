@@ -366,4 +366,6 @@
   <data name="copyDetail.no" xml:space="preserve"><value>لا</value></data>
   <data name="copyDetail.sourceChanged" xml:space="preserve"><value>تم تحديث الحساب المصدر</value></data>
   <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>تعذر تغيير الحساب المصدر</value></data>
+  <data name="copyDetail.editDestination" xml:space="preserve"><value>تعديل الوجهة</value></data>
+  <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>تم تحديث الوجهة</value></data>
 </root>

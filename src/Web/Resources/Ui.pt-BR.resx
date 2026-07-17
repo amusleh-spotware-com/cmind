@@ -366,4 +366,6 @@
   <data name="copyDetail.no" xml:space="preserve"><value>Não</value></data>
   <data name="copyDetail.sourceChanged" xml:space="preserve"><value>Conta de origem atualizada</value></data>
   <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Não foi possível alterar a conta de origem</value></data>
+  <data name="copyDetail.editDestination" xml:space="preserve"><value>Editar destino</value></data>
+  <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Destino atualizado</value></data>
 </root>

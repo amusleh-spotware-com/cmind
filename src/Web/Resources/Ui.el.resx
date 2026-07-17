@@ -366,4 +366,6 @@
   <data name="copyDetail.no" xml:space="preserve"><value>Όχι</value></data>
   <data name="copyDetail.sourceChanged" xml:space="preserve"><value>Ο λογαριασμός προέλευσης ενημερώθηκε</value></data>
   <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Δεν ήταν δυνατό να αλλαχθεί ο λογαριασμός προέλευσης</value></data>
+  <data name="copyDetail.editDestination" xml:space="preserve"><value>Επεξεργασία προορισμού</value></data>
+  <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Ο προορισμός ενημερώθηκε</value></data>
 </root>

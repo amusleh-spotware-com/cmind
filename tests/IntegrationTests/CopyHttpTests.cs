@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Core.Domain;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -53,5 +54,72 @@ public class CopyHttpTests(PostgresFixture fixture) : IClassFixture<PostgresFixt
 
         (await client.GetAsync("/api/copy/profiles")).StatusCode.Should().Be(HttpStatusCode.NotFound,
             "a disabled feature returns 404 for its endpoints");
+    }
+
+    [Fact]
+    public async Task Editing_a_destination_updates_exposed_settings_and_preserves_advanced_ones()
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+
+        var create = await client.PostAsJsonAsync("/api/copy/profiles",
+            new { Name = "edit-int", SourceAccountId = Guid.NewGuid() });
+        create.EnsureSuccessStatusCode();
+        var profileId = (await create.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+
+        // Add a destination that also sets an ADVANCED field the editor never shows (manage-only + jitter).
+        var addDest = await client.PostAsJsonAsync($"/api/copy/profiles/{profileId}/destinations", new
+        {
+            DestinationAccountId = Guid.NewGuid(),
+            Mode = MoneyManagementMode.LotMultiplier,
+            Parameter = 1.0,
+            SlippagePips = 0.0,
+            MaxDelaySeconds = 0,
+            Reverse = false,
+            CopyStopLoss = true,
+            CopyTakeProfit = true,
+            Direction = CopyDirectionFilter.Both,
+            MinLot = 0.0,
+            MaxLot = 0.0,
+            ForceMinLot = false,
+            MaxDrawdownPercent = 0.0,
+            DailyLossLimit = 0.0,
+            ManageOnly = true,
+            ExecutionJitterMaxMs = 250
+        });
+        addDest.EnsureSuccessStatusCode();
+        var destinationId = (await addDest.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+
+        // Edit only the editor-exposed settings — the advanced fields are NOT sent.
+        var put = await client.PutAsJsonAsync($"/api/copy/profiles/{profileId}/destinations/{destinationId}", new
+        {
+            Mode = MoneyManagementMode.ProportionalBalance,
+            Parameter = 2.5,
+            SlippagePips = 3.0,
+            MaxDelaySeconds = 0,
+            Reverse = true,
+            CopyStopLoss = true,
+            CopyTakeProfit = false,
+            Direction = CopyDirectionFilter.LongOnly,
+            MinLot = 0.0,
+            MaxLot = 0.0,
+            ForceMinLot = false,
+            MaxDrawdownPercent = 0.0,
+            DailyLossLimit = 0.0
+        });
+        put.EnsureSuccessStatusCode();
+
+        var detail = await (await client.GetAsync($"/api/copy/profiles/{profileId}")).Content.ReadFromJsonAsync<JsonElement>();
+        var destination = detail.GetProperty("destinations").EnumerateArray().Single();
+        destination.GetProperty("mode").GetString().Should().Be("ProportionalBalance", "the exposed mode was edited");
+        destination.GetProperty("riskParameter").GetDouble().Should().Be(2.5);
+        destination.GetProperty("slippagePips").GetDouble().Should().Be(3.0);
+        destination.GetProperty("reverse").GetBoolean().Should().BeTrue();
+        destination.GetProperty("copyTakeProfit").GetBoolean().Should().BeFalse();
+        destination.GetProperty("direction").GetString().Should().Be("LongOnly");
+        destination.GetProperty("manageOnly").GetBoolean().Should()
+            .BeTrue("an advanced field not on the editor must be preserved across an edit");
+        destination.GetProperty("executionJitterMaxMs").GetInt32().Should()
+            .Be(250, "advanced fields the editor doesn't expose are preserved, not reset");
     }
 }

@@ -72,31 +72,39 @@ else
                     <MudTd DataLabel="@L["copyDetail.col.partial"]">@YesNo(context.mirrorPartialClose)</MudTd>
                     <MudTd DataLabel="@L["copyDetail.col.pending"]">@YesNo(context.copyPendingOrders)</MudTd>
                     <MudTd DataLabel="@L["copyDetail.col.trailing"]">@YesNo(context.copyTrailingStop)</MudTd>
-                    <MudTd DataLabel=""><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
-                                          aria-label="@L["copyDetail.removeDestination"]" OnClick="@(() => RemoveDestination((Guid)context.id))"
-                                          data-testid="copy-remove-destination" /></MudTd>
+                    <MudTd DataLabel="">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary"
+                                       aria-label="@L["copyDetail.editDestination"]" OnClick="@(() => { BeginEdit(context); })"
+                                       data-testid="copy-edit-destination" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                       aria-label="@L["copyDetail.removeDestination"]" OnClick="@(() => RemoveDestination((Guid)context.id))"
+                                       data-testid="copy-remove-destination" />
+                    </MudTd>
                 </RowTemplate>
             </MudTable>
         }
     </MudPaper>
 
     <MudPaper Class="pa-4" Elevation="0" Outlined="true">
-        <MudText Typo="Typo.subtitle1" Class="mb-2">@L["copyDetail.addDestination"]</MudText>
+        <MudText Typo="Typo.subtitle1" Class="mb-2" data-testid="copy-dest-form-title">@(_editingId is null ? L["copyDetail.addDestination"] : L["copyDetail.editDestination"])</MudText>
         <MudGrid>
-            <MudItem xs="12" md="4">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                    <MudSelect T="long" MultiSelection="true" @bind-SelectedValues="_destAccounts" Class="flex-grow-1"
-                               Label="@L["copyDetail.destAccounts"]"
-                               MultiSelectionTextFunc="@(v => string.Format(CultureInfo.CurrentCulture, L["copyDetail.destinationsCount"], v?.Count ?? 0))"
-                               data-testid="copy-dest-accounts">
-                        @foreach (var a in DestinationOptions)
-                        {
-                            <MudSelectItem T="long" Value="@a.Number">@AccountLabel(a.Number)</MudSelectItem>
-                        }
-                    </MudSelect>
-                    <HelpTip Text="@L["copyDetail.tip.destAccounts"]" />
-                </MudStack>
-            </MudItem>
+            @if (_editingId is null)
+            {
+                <MudItem xs="12" md="4">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudSelect T="long" MultiSelection="true" @bind-SelectedValues="_destAccounts" Class="flex-grow-1"
+                                   Label="@L["copyDetail.destAccounts"]"
+                                   MultiSelectionTextFunc="@(v => string.Format(CultureInfo.CurrentCulture, L["copyDetail.destinationsCount"], v?.Count ?? 0))"
+                                   data-testid="copy-dest-accounts">
+                            @foreach (var a in DestinationOptions)
+                            {
+                                <MudSelectItem T="long" Value="@a.Number">@AccountLabel(a.Number)</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <HelpTip Text="@L["copyDetail.tip.destAccounts"]" />
+                    </MudStack>
+                </MudItem>
+            }
             <MudItem xs="12" sm="6" md="4">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                     <MudSelect T="MoneyManagementMode" @bind-Value="_mode" Label="@L["copyNew.mode"]" Class="flex-grow-1"
@@ -235,9 +243,13 @@ else
             </MudItem>
         </MudGrid>
 
-        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-3">
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddDestination"
-                       data-testid="copy-add-destination">@L["copyDetail.addDestination"]</MudButton>
+        <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="mt-3">
+            @if (_editingId is not null)
+            {
+                <MudButton OnClick="CancelEdit" data-testid="copy-cancel-edit">@L["common.cancel"]</MudButton>
+            }
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveDestination"
+                       data-testid="copy-add-destination">@(_editingId is null ? L["copyDetail.addDestination"] : L["common.save"])</MudButton>
         </MudStack>
     </MudPaper>
 }
@@ -253,6 +265,8 @@ else
 
     private long _source;
     private IEnumerable<long> _destAccounts = new HashSet<long>();
+    // Null = the form adds new destinations; set = the form is editing this existing destination (CRUD parity).
+    private Guid? _editingId;
 
     // The source can't also be a destination, and a destination can't be the source: keep the two pickers
     // mutually exclusive so an invalid combination can never be submitted.
@@ -401,6 +415,129 @@ else
         foreach (var a in _accountRefs)
             if (a.Number == number) return a.Id;
         return Guid.Empty;
+    }
+
+    private async Task SaveDestination()
+    {
+        if (_editingId is null) await AddDestination();
+        else await UpdateDestination();
+    }
+
+    // Load an existing destination's editor-exposed settings into the shared form so the user can change
+    // them, then Save updates in place. Advanced settings not shown here are preserved server-side.
+    private void BeginEdit(dynamic destination)
+    {
+        // Whole numbers arrive boxed as `long` (see JsonDefaults), so unboxing straight to double/int throws;
+        // Convert.To* handles both a boxed long and a boxed double.
+        _editingId = (Guid)destination.id;
+        _mode = Enum.Parse<MoneyManagementMode>((string)destination.mode);
+        _param = Convert.ToDouble(destination.riskParameter);
+        _slippage = Convert.ToDouble(destination.slippagePips);
+        _direction = Enum.Parse<CopyDirectionFilter>((string)destination.direction);
+        _minLot = Convert.ToDouble(destination.minLot);
+        _maxLot = Convert.ToDouble(destination.maxLot);
+        _maxDelay = Convert.ToInt32(destination.maxDelaySeconds);
+        _maxDrawdown = Convert.ToDouble(destination.maxDrawdownPercent);
+        _dailyLoss = Convert.ToDouble(destination.dailyLossLimit);
+        _reverse = (bool)destination.reverse;
+        _forceMin = (bool)destination.forceMinLot;
+        _copyStopLoss = (bool)destination.copyStopLoss;
+        _copyTakeProfit = (bool)destination.copyTakeProfit;
+        _mirrorPartialClose = (bool)destination.mirrorPartialClose;
+        _mirrorScaleIn = (bool)destination.mirrorScaleIn;
+        _copyPending = (bool)destination.copyPendingOrders;
+        _copyTrailing = (bool)destination.copyTrailingStop;
+        _copyPendingExpiry = (bool)destination.copyPendingExpiry;
+        _copyMasterSlippage = (bool)destination.copyMasterSlippage;
+        var orderTypes = Enum.Parse<CopyOrderTypes>((string)destination.orderTypes);
+        _copyMarket = orderTypes.HasFlag(CopyOrderTypes.Market);
+        _copyMarketRange = orderTypes.HasFlag(CopyOrderTypes.MarketRange);
+        _copyLimit = orderTypes.HasFlag(CopyOrderTypes.Limit);
+        _copyStop = orderTypes.HasFlag(CopyOrderTypes.Stop);
+        _copyStopLimit = orderTypes.HasFlag(CopyOrderTypes.StopLimit);
+        _filterMode = Enum.Parse<SymbolFilterMode>((string)destination.symbolFilterMode);
+        _filterSymbols = ((IEnumerable<dynamic>)destination.symbolFilters).Select(s => (string)s).ToList();
+        _symbolMap = ((IEnumerable<dynamic>)destination.symbolMaps)
+            .Select(m => new SymbolMapRow((string)m.source, (string)m.destination, Convert.ToDouble(m.volumeMultiplier)))
+            .ToList();
+        _destAccounts = new HashSet<long>();
+    }
+
+    private async Task UpdateDestination()
+    {
+        if (_editingId is not { } destinationId) return;
+        var r = await Http.PutAsJsonAsync($"/api/copy/profiles/{Id}/destinations/{destinationId}", new
+        {
+            Mode = _mode,
+            Parameter = _param,
+            SlippagePips = _slippage,
+            MaxDelaySeconds = _maxDelay,
+            Reverse = _reverse,
+            CopyStopLoss = _copyStopLoss,
+            CopyTakeProfit = _copyTakeProfit,
+            Direction = _direction,
+            MinLot = _minLot,
+            MaxLot = _maxLot,
+            ForceMinLot = _forceMin,
+            MaxDrawdownPercent = _maxDrawdown,
+            DailyLossLimit = _dailyLoss,
+            SymbolFilterMode = _filterMode,
+            SymbolFilters = _filterSymbols.ToArray(),
+            SymbolMap = _symbolMap
+                .Select(m => (object)new { m.Source, m.Destination, VolumeMultiplier = m.VolumeMultiplier })
+                .ToArray(),
+            MirrorPartialClose = _mirrorPartialClose,
+            MirrorScaleIn = _mirrorScaleIn,
+            CopyPendingOrders = _copyPending,
+            CopyTrailingStop = _copyTrailing,
+            OrderTypes = SelectedOrderTypes(),
+            CopyPendingExpiry = _copyPendingExpiry,
+            CopyMasterSlippage = _copyMasterSlippage
+        });
+
+        if (r.IsSuccessStatusCode)
+        {
+            Snack.Add(L["copyDetail.destinationUpdated"], Severity.Success);
+            CancelEdit();
+            await Reload();
+        }
+        else
+        {
+            Snack.Add(L["copyDetail.someFailed"], Severity.Error);
+        }
+    }
+
+    private void CancelEdit()
+    {
+        _editingId = null;
+        _mode = MoneyManagementMode.LotMultiplier;
+        _param = 1;
+        _slippage = 0;
+        _direction = CopyDirectionFilter.Both;
+        _minLot = 0;
+        _maxLot = 0;
+        _maxDelay = 0;
+        _maxDrawdown = 0;
+        _dailyLoss = 0;
+        _reverse = false;
+        _forceMin = false;
+        _copyStopLoss = true;
+        _copyTakeProfit = true;
+        _mirrorPartialClose = true;
+        _mirrorScaleIn = false;
+        _copyPending = false;
+        _copyTrailing = false;
+        _copyPendingExpiry = true;
+        _copyMasterSlippage = true;
+        _copyMarket = true;
+        _copyMarketRange = true;
+        _copyLimit = true;
+        _copyStop = true;
+        _copyStopLimit = true;
+        _filterMode = SymbolFilterMode.None;
+        _filterSymbols = [];
+        _symbolMap = [];
+        _destAccounts = new HashSet<long>();
     }
 
     private async Task AddDestination()

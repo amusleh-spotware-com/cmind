@@ -366,4 +366,6 @@
   <data name="copyDetail.no" xml:space="preserve"><value>ไม่</value></data>
   <data name="copyDetail.sourceChanged" xml:space="preserve"><value>อัปเดตบัญชีต้นทาง</value></data>
   <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>ไม่สามารถเปลี่ยนบัญชีต้นทางได้</value></data>
+  <data name="copyDetail.editDestination" xml:space="preserve"><value>แก้ไขปลายทาง</value></data>
+  <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>ปลายทางได้รับการอัปเดต</value></data>
 </root>

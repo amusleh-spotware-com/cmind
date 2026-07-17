@@ -366,4 +366,6 @@
   <data name="copyDetail.no" xml:space="preserve"><value>Ne</value></data>
   <data name="copyDetail.sourceChanged" xml:space="preserve"><value>Zdrojový účet aktualizován</value></data>
   <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Nepodařilo se změnit zdrojový účet</value></data>
+  <data name="copyDetail.editDestination" xml:space="preserve"><value>Upravit cíl</value></data>
+  <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Cíl aktualizován</value></data>
 </root>

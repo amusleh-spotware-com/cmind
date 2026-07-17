@@ -366,4 +366,6 @@
   <data name="copy.map.tip.source" xml:space="preserve"><value>The symbol as named on the master (source) account, e.g. EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>The matching symbol on the destination broker, e.g. EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Extra volume multiplier for this symbol on top of the destination's sizing (1 = no change).</value></data>
+  <data name="copyDetail.editDestination" xml:space="preserve"><value>Edit destination</value></data>
+  <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Destination updated</value></data>
 </root>

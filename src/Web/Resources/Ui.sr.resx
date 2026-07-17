@@ -366,4 +366,6 @@
   <data name="copyDetail.no" xml:space="preserve"><value>Не</value></data>
   <data name="copyDetail.sourceChanged" xml:space="preserve"><value>Извор рачуна ажуриран</value></data>
   <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Не могу да променим извор рачуна</value></data>
+  <data name="copyDetail.editDestination" xml:space="preserve"><value>Izmeni odredište</value></data>
+  <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Odredište je ažurirano</value></data>
 </root>

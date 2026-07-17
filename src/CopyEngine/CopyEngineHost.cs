@@ -62,6 +62,7 @@ public sealed class CopyEngineHost(
     private readonly HashSet<long> _openSourcePositions = [];
     private readonly Dictionary<long, long> _sourceVolumes = new();
     private readonly Dictionary<long, double?> _sourceStops = new();
+    private readonly Dictionary<long, double?> _sourceTakeProfits = new();
     private readonly HashSet<long> _mirroredPendingOrders = [];
     // C13: when each mirrored pending was placed, so a slave copy whose master pending later vanishes can be
     // cancelled after the correlation timeout.
@@ -117,6 +118,8 @@ public sealed class CopyEngineHost(
     // (mirrors the sinks — the caller is the trading hot path).
     private void Activity(string line) =>
         _logSink.Append(plan.ProfileId, $"{timeProvider.GetUtcNow():HH:mm:ss} {line}");
+
+    private static string FormatPrice(double? price) => price?.ToString("0.#####") ?? "—";
 
     public async Task RunAsync(CancellationToken ct)
     {
@@ -257,6 +260,7 @@ public sealed class CopyEngineHost(
             {
                 _protectedDestinations.Add(ctid);
                 logger.CopyAccountProtectionTriggered(plan.ProfileId.Value, ctid, policy.Mode.ToString(), equity, policy.StopEquity);
+                Activity($"→ {ctid}: account protection ({policy.Mode}) triggered at equity {equity:0.##} — new opens stopped.");
                 _notifications.Notify(new CopyNotificationRecord(plan.ProfileId, ctid,
                     CopyNotificationKind.AccountProtectionTriggered, CopyNotificationSeverity.Critical,
                     $"Account protection ({policy.Mode}) triggered on destination {ctid} at equity {equity:0.##}.",
@@ -301,6 +305,7 @@ public sealed class CopyEngineHost(
             {
                 _lockedOutDestinations.Add(ctid);
                 logger.CopyPropRuleBreached(plan.ProfileId.Value, ctid, rule, equity);
+                Activity($"→ {ctid}: prop rule breached ({rule}) at equity {equity:0.##} — locked out for the day.");
                 _notifications.Notify(new CopyNotificationRecord(plan.ProfileId, ctid,
                     CopyNotificationKind.PropRuleBreached, CopyNotificationSeverity.Critical,
                     $"Prop rule '{rule}' breached on destination {ctid} at equity {equity:0.##}; flattened and locked out for the day.",
@@ -454,6 +459,7 @@ public sealed class CopyEngineHost(
         _openSourcePositions.Add(execution.PositionId);
         _sourceVolumes[execution.PositionId] = execution.Volume;
         _sourceStops[execution.PositionId] = execution.StopLoss;
+        _sourceTakeProfits[execution.PositionId] = execution.TakeProfit;
 
         var sourceDetail = await SymbolDetailAsync(session, plan.SourceCtidTraderAccountId, execution.SymbolId, ct);
         var sourceLots = VolumeConversion.LotsFromProtocol(execution.Volume, sourceDetail.LotSize);
@@ -492,23 +498,35 @@ public sealed class CopyEngineHost(
     {
         var previousVolume = _sourceVolumes.GetValueOrDefault(execution.PositionId, execution.Volume);
         var previousStop = _sourceStops.GetValueOrDefault(execution.PositionId);
+        var previousTakeProfit = _sourceTakeProfits.GetValueOrDefault(execution.PositionId);
         _sourceVolumes[execution.PositionId] = execution.Volume;
         _sourceStops[execution.PositionId] = execution.StopLoss;
+        _sourceTakeProfits[execution.PositionId] = execution.TakeProfit;
 
         if (execution.Volume < previousVolume)
         {
+            Activity($"Source partially reduced position {execution.PositionId} — mirroring partial close.");
             await MirrorPartialCloseAsync(session, execution, previousVolume, ct);
             return;
         }
 
         if (execution.Volume > previousVolume)
         {
+            Activity($"Source scaled in position {execution.PositionId} — mirroring scale-in.");
             await MirrorScaleInAsync(session, execution, execution.Volume - previousVolume, ct);
             return;
         }
 
-        if (!Equals(previousStop, execution.StopLoss) || execution.TrailingStopLoss)
+        // Mirror a change to EITHER stop-loss OR take-profit (a TP-only change must trigger too), plus a
+        // trailing-stop toggle. Tracking take-profit is what makes a source setting TP after SL — or TP
+        // alone — propagate to the destinations.
+        if (!Equals(previousStop, execution.StopLoss)
+            || !Equals(previousTakeProfit, execution.TakeProfit)
+            || execution.TrailingStopLoss)
+        {
+            Activity($"Source amended SL/TP on position {execution.PositionId} — mirroring protection change.");
             await MirrorStopChangeAsync(session, execution, ct);
+        }
     }
 
     private async Task MirrorPartialCloseAsync(
@@ -535,6 +553,7 @@ public sealed class CopyEngineHost(
                     BookReduce(destination.CtidTraderAccountId, position.PositionId, slice);
                     logger.CopyPartialClose(plan.ProfileId.Value, destination.CtidTraderAccountId,
                         position.PositionId, slice, execution.PositionId);
+                    Activity($"→ {destination.CtidTraderAccountId}: partially closed {slice} of mirrored position (source {execution.PositionId}).");
                 }
             }
             catch (Exception ex)
@@ -577,24 +596,32 @@ public sealed class CopyEngineHost(
         var label = execution.PositionId.ToString();
         await ForEachDestinationAsync(async (destination, token) =>
         {
-            if (!destination.Config.CopyStopLoss && !destination.Config.CopyTrailingStop) return;
+            if (!destination.Config.CopyStopLoss && !destination.Config.CopyTakeProfit && !destination.Config.CopyTrailingStop)
+                return;
             try
             {
                 var positions = await DestinationPositionsAsync(session, destination.CtidTraderAccountId, token);
                 var match = positions.FirstOrDefault(p => p.Label == label);
                 if (match is null) return;
 
+                // Compute both protections exactly as ApplyProtectionAsync does on open, so a post-open
+                // amend mirrors take-profit too (not just stop-loss) and Reverse swaps SL<->TP correctly.
+                double? stopLoss = destination.Config.CopyStopLoss ? execution.StopLoss : null;
+                double? takeProfit = destination.Config.CopyTakeProfit ? execution.TakeProfit : null;
+                if (destination.Config.Reverse) (stopLoss, takeProfit) = (takeProfit, stopLoss);
                 var trailing = destination.Config.CopyTrailingStop && execution.TrailingStopLoss;
-                var stopLoss = destination.Config.CopyStopLoss ? execution.StopLoss : null;
-                if (destination.Config.Reverse) stopLoss = destination.Config.CopyTakeProfit ? execution.TakeProfit : stopLoss;
+                if (stopLoss is null && takeProfit is null && !trailing) return;
+
                 var detail = await SymbolDetailAsync(session, destination.CtidTraderAccountId, match.SymbolId, token);
                 var roundedStop = RoundToDigits(stopLoss, detail.Digits);
+                var roundedTake = RoundToDigits(takeProfit, detail.Digits);
                 await session.AmendPositionSltpAsync(destination.CtidTraderAccountId, match.PositionId,
-                    roundedStop, null, trailing, token);
+                    roundedStop, roundedTake, trailing, token);
                 BookSetStop(destination.CtidTraderAccountId, match.PositionId, roundedStop, trailing);
 
                 if (trailing) logger.CopyTrailingApplied(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId);
                 else logger.CopyStopLossAmended(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.PositionId, stopLoss ?? 0);
+                Activity($"→ {destination.CtidTraderAccountId}: amended SL={FormatPrice(roundedStop)} TP={FormatPrice(roundedTake)}{(trailing ? " (trailing)" : "")} on position {execution.PositionId}.");
             }
             catch (Exception ex)
             {
@@ -619,6 +646,7 @@ public sealed class CopyEngineHost(
         var price = execution.OrderKind is CopyOrderKind.Stop or CopyOrderKind.StopLimit
             ? execution.StopPrice ?? 0
             : execution.LimitPrice ?? 0;
+        Activity($"Source placed pending {execution.OrderKind} {(execution.IsBuy ? "Buy" : "Sell")} {sourceName} @ {FormatPrice(price)} — mirroring to {plan.Destinations.Count} destination(s).");
         var placedAny = 0;
 
         await ForEachDestinationAsync(async (destination, token) =>
@@ -694,6 +722,7 @@ public sealed class CopyEngineHost(
             wireVolume, execution.OrderKind, price, execution.OrderId.ToString(), ct, expiry, slippage);
         logger.CopyPendingOrderPlaced(plan.ProfileId.Value, destination.CtidTraderAccountId, destinationName,
             execution.OrderKind.ToString(), effectiveBuy ? "Buy" : "Sell", wireVolume, price, execution.OrderId);
+        Activity($"→ {destination.CtidTraderAccountId}: placed pending {execution.OrderKind} {(effectiveBuy ? "Buy" : "Sell")} {destinationName} @ {FormatPrice(price)} (source order {execution.OrderId}).");
         if (expiry is { } expiryTimestamp)
             logger.CopyPendingExpiryMirrored(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.OrderId, expiryTimestamp);
         return true;
@@ -736,6 +765,7 @@ public sealed class CopyEngineHost(
     {
         _mirroredPendingOrders.Remove(execution.OrderId);
         _mirroredPendingPlacedAt.Remove(execution.OrderId);
+        Activity($"Source pending order {execution.OrderId} cancelled/expired — cancelling mirrored pendings.");
         await CancelDestinationPendingsAsync(session, execution.OrderId, ct);
     }
 
@@ -924,6 +954,7 @@ public sealed class CopyEngineHost(
                     RoundToDigits(stopLoss, detail.Digits), RoundToDigits(takeProfit, detail.Digits), trailing, ct);
                 logger.CopyProtectionApplied(plan.ProfileId.Value, destination.CtidTraderAccountId,
                     source.PositionId, stopLoss ?? 0, takeProfit ?? 0);
+                Activity($"→ {destination.CtidTraderAccountId}: applied SL={FormatPrice(stopLoss)} TP={FormatPrice(takeProfit)}{(trailing ? " (trailing)" : "")} on new position (source {source.PositionId}).");
                 if (trailing) logger.CopyTrailingApplied(plan.ProfileId.Value, destination.CtidTraderAccountId, source.PositionId);
                 return;
             }
@@ -937,6 +968,7 @@ public sealed class CopyEngineHost(
         _openSourcePositions.Remove(sourcePositionId);
         _sourceVolumes.Remove(sourcePositionId);
         _sourceStops.Remove(sourcePositionId);
+        _sourceTakeProfits.Remove(sourcePositionId);
         var label = sourcePositionId.ToString();
         logger.CopySourceClose(plan.ProfileId.Value, sourcePositionId);
         Activity($"Source closed position {sourcePositionId} — closing mirrored destination positions.");
@@ -953,12 +985,14 @@ public sealed class CopyEngineHost(
                     BookRemove(destination.CtidTraderAccountId, position.PositionId);
                     logger.CopyPositionClosed(plan.ProfileId.Value, destination.CtidTraderAccountId,
                         position.PositionId, sourcePositionId);
+                    Activity($"→ {destination.CtidTraderAccountId}: closed mirrored position (source {sourcePositionId}).");
                 }
             }
             catch (Exception ex)
             {
                 NoteIfTokenInvalidated(ex, destination.CtidTraderAccountId);
                 logger.CopyCloseFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, sourcePositionId, ex);
+                Activity($"→ {destination.CtidTraderAccountId}: FAILED to close mirrored position (source {sourcePositionId}) ({ex.GetType().Name}).");
             }
         }, ct);
     }
@@ -971,11 +1005,15 @@ public sealed class CopyEngineHost(
         _openSourcePositions.Clear();
         _sourceVolumes.Clear();
         _sourceStops.Clear();
+        _sourceTakeProfits.Clear();
         foreach (var position in sourcePositions)
         {
             _openSourcePositions.Add(position.PositionId);
             _sourceVolumes[position.PositionId] = position.Volume;
             _sourceStops[position.PositionId] = position.StopLoss;
+            // The broker reconcile snapshot carries no take-profit, so leave it unknown (null); the next
+            // source amend (previousTp null != new TP) re-mirrors it — a safe, idempotent re-apply.
+            _sourceTakeProfits[position.PositionId] = null;
         }
 
         var sourcePendingIds = (await session.ReconcilePendingOrdersAsync(plan.SourceCtidTraderAccountId, ct))

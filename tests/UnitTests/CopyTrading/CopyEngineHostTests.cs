@@ -767,6 +767,27 @@ public sealed class CopyEngineHostTests
     }
 
     [Fact]
+    public async Task Take_profit_set_on_an_existing_position_is_mirrored_even_when_the_stop_loss_is_unchanged()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(Slave, d => d.SetCopyProtection(true, true))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushOpen(Source, 5501, SymbolId, isBuy: true, volume: 100, stopLoss: 1.09);
+            await WaitUntil(() => session.Amends.Count == 1); // stop-loss applied on open
+            // Add a take-profit; the stop-loss is unchanged. This is the exact regression: a TP-only change
+            // was neither detected (only SL was tracked) nor amended (take-profit was hardcoded null).
+            session.PushOpen(Source, 5501, SymbolId, isBuy: true, volume: 100, stopLoss: 1.09, takeProfit: 1.20);
+            await WaitUntil(() => session.Amends.Count == 2);
+        });
+
+        var last = session.Amends.Last();
+        last.TakeProfit.Should().Be(1.20, "a take-profit set on an existing position must mirror to the destination");
+        last.StopLoss.Should().Be(1.09, "the unchanged stop-loss is preserved on the amend");
+    }
+
+    [Fact]
     public async Task Advanced_mirroring_audit_events_fire()
     {
         var session = NewSession();

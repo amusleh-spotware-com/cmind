@@ -21,6 +21,13 @@ shapes leak into Core. The domain does not know EF exists.
 - **Don't project an entity with a one-to-one nav cycle** (`Node.LatestStats`/`NodeStats.Node`) into
   an API response — System.Text.Json has no cycle detection → serializes to `MaxDepth` → 500. Project
   scalar fields only.
+- **Don't fake a single-row aggregate with `GroupBy(_ => 1).Select(…).FirstOrDefaultAsync()`** — EF
+  logs `FirstWithoutOrderByAndFilterWarning` (10103, `First` with no `OrderBy`/predicate → "unpredictable
+  results") on **every** request, and `dotnet build` never surfaces it. For a set of conditional counts,
+  issue plain scalar `CountAsync(predicate)` calls off one shared filtered `IQueryable` (as the dashboard
+  resource/backtest counts do) — same result, no warning. More generally, any `First`/`FirstOrDefault`
+  meant to return one deterministic row needs an `OrderBy` (or a unique-key predicate); if you truly want
+  "the only row", say `SingleOrDefaultAsync`, not `First`. (bit us on `/api/dashboard/overview` + `/stats`.)
 - **`AddDbContextPool`** ctor gotcha applies — see memory if pooling a context.
 
 ## Other

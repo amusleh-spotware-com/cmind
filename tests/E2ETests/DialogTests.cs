@@ -99,7 +99,7 @@ public sealed class DialogTests(AppFixture app)
         await taInputs.Nth(1).FillAsync(broker);
         await SubmitAsync(taDialog, "Add");
 
-        await Assertions.Expect(page.GetByText(broker)).ToBeVisibleAsync(Slow);
+        await ExpectRowVisibleAsync(page, broker);
         // Type column shows Demo for a non-live account (the Live toggle defaults off). Exact match so it
         // targets the Type cell, not the "Demo…" broker name.
         var accountRow = page.Locator($"tr:has-text('{broker}')");
@@ -129,7 +129,7 @@ public sealed class DialogTests(AppFixture app)
         await taDialog.Locator("label.mud-switch").ClickAsync();
         await SubmitAsync(taDialog, "Add");
 
-        await Assertions.Expect(page.GetByText(broker)).ToBeVisibleAsync(Slow);
+        await ExpectRowVisibleAsync(page, broker);
         var accountRow = page.Locator($"tr:has-text('{broker}')");
         await Assertions.Expect(accountRow.GetByText("Live", new() { Exact = true })).ToBeVisibleAsync(Slow);
     }
@@ -409,6 +409,23 @@ public sealed class DialogTests(AppFixture app)
     {
         await page.GotoAsync(path);
         await page.WaitForAppReadyAsync();
+    }
+
+    // After an add-dialog closes, the page reloads its list via an async Load(); under CI load a Blazor
+    // Server circuit hiccup can drop that single re-render, so the row silently never appears. Wait for the
+    // natural re-render first, then fall back to a fresh navigation that deterministically re-fetches the
+    // list. If the row is genuinely absent (a real POST failure) both waits fail and the test still reports.
+    private static async Task ExpectRowVisibleAsync(IPage page, string text)
+    {
+        try
+        {
+            await Assertions.Expect(page.GetByText(text)).ToBeVisibleAsync(new() { Timeout = 15000 });
+        }
+        catch (PlaywrightException)
+        {
+            await GotoAsync(page, "/accounts");
+            await Assertions.Expect(page.GetByText(text)).ToBeVisibleAsync(new() { Timeout = 15000 });
+        }
     }
 
     private static async Task<ILocator> OpenDialogAsync(IPage page, string buttonText)

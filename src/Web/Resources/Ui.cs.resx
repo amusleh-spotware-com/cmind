@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Nepodařilo se vytvořit profil</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Profil byl vytvořen, ale některá nastavení destinace se nepovedlo použít</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Krátký název pro identifikaci tohoto profilu kopírování v seznamu.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>Hlavní účet, jehož obchody jsou kopírovány.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Jeden nebo více účtů, které přijímají kopie obchodů mastera. Samotný master je vyloučen.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Hlavní účet, jehož obchody jsou kopírovány. Zde se zobrazují pouze účty propojené přes cTrader Open API — ručně přidané účty nemohou kopírovat obchody.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Jeden nebo více účtů, které přijímají kopie obchodů hlavního účtu (hlavní účet je vyloučen). Uvedeny jsou pouze účty propojené přes cTrader Open API.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Jak je každý kopírovaný obchod zjemňován relativně k masteru: pevný lot, násobitel, podíl zůstatku/vlastního kapitálu nebo pevné procento rizika.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Číslo, které používá režim velikosti — např. násobitel (1 = stejná velikost) nebo procento rizika.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Maximální odchylka ceny v pipech tolerovaná při umísťování kopírované objednávky, než bude zamítnuta.</value></data>
@@ -310,4 +310,35 @@
   <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Denní limit ztrát nemůže být negativní.</value></data>
   <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Povolte alespoň jeden typ objednávky.</value></data>
   <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Přidejte alespoň jeden symbol pro vybraný filtr symbolů.</value></data>
+  <data name="copyNew.mm.FixedLot" xml:space="preserve"><value>Pevný lot</value></data>
+  <data name="copyNew.mm.LotMultiplier" xml:space="preserve"><value>Násobitel lotu</value></data>
+  <data name="copyNew.mm.NotionalMultiplier" xml:space="preserve"><value>Násobitel nominální hodnoty</value></data>
+  <data name="copyNew.mm.ProportionalBalance" xml:space="preserve"><value>Úměrně k zůstatku</value></data>
+  <data name="copyNew.mm.ProportionalEquity" xml:space="preserve"><value>Úměrně k vlastnímu kapitálu</value></data>
+  <data name="copyNew.mm.ProportionalFreeMargin" xml:space="preserve"><value>Úměrně k volné marži</value></data>
+  <data name="copyNew.mm.FixedRiskPercent" xml:space="preserve"><value>Pevné riziko %</value></data>
+  <data name="copyNew.mm.FixedLeverage" xml:space="preserve"><value>Pevné páky</value></data>
+  <data name="copyNew.mm.AutoProportional" xml:space="preserve"><value>Automaticky úměrné</value></data>
+  <data name="copyNew.mm.RiskFromStopLoss" xml:space="preserve"><value>Riziko z stop-loss</value></data>
+  <data name="copyNew.mm.desc.FixedLot" xml:space="preserve"><value>Vždy obchodujte pevný počet lotů (parametr), ignorujíc velikost pozice hlavního účtu.</value></data>
+  <data name="copyNew.mm.desc.LotMultiplier" xml:space="preserve"><value>Zkopírujte velikost lotu hlavního účtu vynásobenou parametrem (1 = stejná velikost).</value></data>
+  <data name="copyNew.mm.desc.NotionalMultiplier" xml:space="preserve"><value>Odpovídejte nominální hodnotě hlavního účtu × parametrem, s přizpůsobením ceně každého účtu.</value></data>
+  <data name="copyNew.mm.desc.ProportionalBalance" xml:space="preserve"><value>Škálujte podle vašeho zůstatku ÷ zůstattku hlavního účtu.</value></data>
+  <data name="copyNew.mm.desc.ProportionalEquity" xml:space="preserve"><value>Škálujte podle vašeho vlastního kapitálu (zůstatek + floating P&amp;L) ÷ vlastní kapitál hlavního účtu.</value></data>
+  <data name="copyNew.mm.desc.ProportionalFreeMargin" xml:space="preserve"><value>Škálujte podle vaší volné marže ÷ volné marže hlavního účtu.</value></data>
+  <data name="copyNew.mm.desc.FixedRiskPercent" xml:space="preserve"><value>Určete velikost každé kopie tak, aby riskovala parametr procent vašeho zůstatku (používá stop-loss hlavního účtu).</value></data>
+  <data name="copyNew.mm.desc.FixedLeverage" xml:space="preserve"><value>Škálujte na pevné páky (parametr) na vašem účtu.</value></data>
+  <data name="copyNew.mm.desc.AutoProportional" xml:space="preserve"><value>Automaticky škálujte podle poměru zůstatků, bez potřeby vylaďování parametru.</value></data>
+  <data name="copyNew.mm.desc.RiskFromStopLoss" xml:space="preserve"><value>Zrcadlete riziko hlavního účtu: odvozujte ho ze vzdálenosti stop-loss hlavního účtu a aplikujte ho na váš zůstatek; vraťte se na maximální rizikový lot, když hlavní účet nemá stop.</value></data>
+  <data name="copyNew.dir.Both" xml:space="preserve"><value>Obě směry</value></data>
+  <data name="copyNew.dir.LongOnly" xml:space="preserve"><value>Pouze dlouhé pozice</value></data>
+  <data name="copyNew.dir.ShortOnly" xml:space="preserve"><value>Pouze krátké pozice</value></data>
+  <data name="copyNew.filter.None" xml:space="preserve"><value>Bez filtru</value></data>
+  <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Whitelist</value></data>
+  <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Blacklist</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Zatím nejsou propojeny žádné účty přes cTrader Open API. Pouze účty Open API mohou kopírovat obchody — propojte jeden, abyste mohli začít.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Propojit účet</value></data>
+  <data name="copy.map.tip.source" xml:space="preserve"><value>Symbol tak, jak je pojmenován na hlavním (zdrojovém) účtu, např. EURUSD.</value></data>
+  <data name="copy.map.tip.destination" xml:space="preserve"><value>Odpovídající symbol u destinačního brokera, např. EUR.USD.</value></data>
+  <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Dodatečný násobitel objemu pro tento symbol nad rámec nastavení velikosti destinace (1 = bez změny).</value></data>
 </root>

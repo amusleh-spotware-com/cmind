@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Fehler beim Erstellen des Profils</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Profil erstellt, aber einige Zieleinstellungen konnten nicht angewendet werden</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Ein Kurzname zur Erkennung dieses Kopierprofils in der Liste.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>Das Master-Konto, dessen Trades kopiert werden.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Ein oder mehrere Konten, die Kopien der Trades des Masters erhalten. Das Master-Konto selbst ist ausgeschlossen.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Das Master-Konto, dessen Trades kopiert werden. Nur über cTrader Open API verbundene Konten werden hier angezeigt — manuell hinzugefügte Konten können keine Trades kopieren.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Ein oder mehrere Konten, die Kopien der Trades des Masters erhalten (der Master ist ausgeschlossen). Es werden nur über cTrader Open API verbundene Konten aufgelistet.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Wie jeder kopierte Trade relativ zum Master dimensioniert wird: ein festes Lot, ein Multiplikator, ein Anteil des Kontostands/Eigenkapitals oder ein festes Risikoprozent.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Die Zahl, die der Größenmodus verwendet – z. B. der Multiplikator (1 = gleiche Größe) oder das Risikoprozent.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Maximale Preisabweichung in Pips, die beim Platzieren der kopierten Order toleriert wird, bevor sie abgelehnt wird.</value></data>
@@ -310,4 +310,35 @@
   <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Tägliche Verlustgrenze kann nicht negativ sein.</value></data>
   <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Aktivieren Sie mindestens einen Auftragstyp.</value></data>
   <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Fügen Sie mindestens ein Symbol für den ausgewählten Symbolfilter hinzu.</value></data>
+  <data name="copyNew.mm.FixedLot" xml:space="preserve"><value>Festes Los</value></data>
+  <data name="copyNew.mm.LotMultiplier" xml:space="preserve"><value>Los-Multiplikator</value></data>
+  <data name="copyNew.mm.NotionalMultiplier" xml:space="preserve"><value>Nominaler Multiplikator</value></data>
+  <data name="copyNew.mm.ProportionalBalance" xml:space="preserve"><value>Proportional zum Saldo</value></data>
+  <data name="copyNew.mm.ProportionalEquity" xml:space="preserve"><value>Proportional zum Eigenkapital</value></data>
+  <data name="copyNew.mm.ProportionalFreeMargin" xml:space="preserve"><value>Proportional zur verfügbaren Marge</value></data>
+  <data name="copyNew.mm.FixedRiskPercent" xml:space="preserve"><value>Festes Risiko %</value></data>
+  <data name="copyNew.mm.FixedLeverage" xml:space="preserve"><value>Fester Hebel</value></data>
+  <data name="copyNew.mm.AutoProportional" xml:space="preserve"><value>Automatisch proportional</value></data>
+  <data name="copyNew.mm.RiskFromStopLoss" xml:space="preserve"><value>Risiko aus Stop-Loss</value></data>
+  <data name="copyNew.mm.desc.FixedLot" xml:space="preserve"><value>Immer mit einer festen Anzahl von Losen handeln (Parameter), die Größe des Masters ignorierend.</value></data>
+  <data name="copyNew.mm.desc.LotMultiplier" xml:space="preserve"><value>Kopieren Sie die Los-Größe des Masters multipliziert mit dem Parameter (1 = gleiche Größe).</value></data>
+  <data name="copyNew.mm.desc.NotionalMultiplier" xml:space="preserve"><value>Passen Sie den Nominalwert des Masters × den Parameter an und justieren Sie für den Preis jedes Kontos.</value></data>
+  <data name="copyNew.mm.desc.ProportionalBalance" xml:space="preserve"><value>Skaliert nach Ihrem Saldo ÷ Saldo des Masters.</value></data>
+  <data name="copyNew.mm.desc.ProportionalEquity" xml:space="preserve"><value>Skaliert nach Ihrem Eigenkapital (Saldo + schwebendes P&amp;L) ÷ Eigenkapital des Masters.</value></data>
+  <data name="copyNew.mm.desc.ProportionalFreeMargin" xml:space="preserve"><value>Skaliert nach Ihrer verfügbaren Marge ÷ verfügbare Marge des Masters.</value></data>
+  <data name="copyNew.mm.desc.FixedRiskPercent" xml:space="preserve"><value>Bestimmen Sie die Größe jeder Kopie so, dass Sie den Parameterprozentsatz Ihres Saldos riskieren (nutzt den Stop-Loss des Masters).</value></data>
+  <data name="copyNew.mm.desc.FixedLeverage" xml:space="preserve"><value>Auf einen festen Hebel (Parameter) auf Ihrem Konto skalieren.</value></data>
+  <data name="copyNew.mm.desc.AutoProportional" xml:space="preserve"><value>Automatisch nach dem Saldoverhältnis skalieren, keine Parameteroptimierung erforderlich.</value></data>
+  <data name="copyNew.mm.desc.RiskFromStopLoss" xml:space="preserve"><value>Spiegeln Sie das Risiko des Masters wider: Leiten Sie es aus dem Stop-Loss-Abstand des Masters ab und wenden Sie es auf Ihren Saldo an; wechseln Sie zum maximalen Risiko-Los, wenn der Master keinen Stop hat.</value></data>
+  <data name="copyNew.dir.Both" xml:space="preserve"><value>Beide Richtungen</value></data>
+  <data name="copyNew.dir.LongOnly" xml:space="preserve"><value>Nur Long</value></data>
+  <data name="copyNew.dir.ShortOnly" xml:space="preserve"><value>Nur Short</value></data>
+  <data name="copyNew.filter.None" xml:space="preserve"><value>Kein Filter</value></data>
+  <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Whitelist</value></data>
+  <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Blacklist</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Bisher sind keine Konten über cTrader Open API verbunden. Nur Open API-Konten können Trades kopieren — verbinden Sie eines, um zu beginnen.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Konto verbinden</value></data>
+  <data name="copy.map.tip.source" xml:space="preserve"><value>Das Symbol wie auf dem Master-(Quell-)Konto benannt, z. B. EURUSD.</value></data>
+  <data name="copy.map.tip.destination" xml:space="preserve"><value>Das entsprechende Symbol beim Ziel-Broker, z. B. EUR.USD.</value></data>
+  <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Zusätzlicher Volumen-Multiplikator für dieses Symbol über der Dimensionierung des Ziels (1 = keine Änderung).</value></data>
 </root>

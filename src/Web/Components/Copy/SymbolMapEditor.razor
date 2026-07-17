@@ -10,16 +10,25 @@
 <div>
     <MudGrid Spacing="1" Class="align-center">
         <MudItem xs="12" sm="4">
-            <MudTextField T="string" @bind-Value="_source" Label="@L["copy.map.source"]" Immediate="true"
-                          Variant="Variant.Outlined" Margin="Margin.Dense" data-testid="symbol-map-source" />
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudTextField T="string" @bind-Value="_source" Label="@L["copy.map.source"]" Immediate="true" Class="flex-grow-1"
+                              Variant="Variant.Outlined" Margin="Margin.Dense" data-testid="symbol-map-source" />
+                <HelpTip Text="@L["copy.map.tip.source"]" />
+            </MudStack>
         </MudItem>
         <MudItem xs="12" sm="4">
-            <MudTextField T="string" @bind-Value="_destination" Label="@L["copy.map.destination"]" Immediate="true"
-                          Variant="Variant.Outlined" Margin="Margin.Dense" data-testid="symbol-map-destination" />
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudTextField T="string" @bind-Value="_destination" Label="@L["copy.map.destination"]" Immediate="true" Class="flex-grow-1"
+                              Variant="Variant.Outlined" Margin="Margin.Dense" data-testid="symbol-map-destination" />
+                <HelpTip Text="@L["copy.map.tip.destination"]" />
+            </MudStack>
         </MudItem>
         <MudItem xs="7" sm="2">
-            <MudNumericField T="double" @bind-Value="_multiplier" Label="@L["copy.map.multiplier"]" Min="0"
-                             Step="0.1" Variant="Variant.Outlined" Margin="Margin.Dense" data-testid="symbol-map-multiplier" />
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudNumericField T="double" @bind-Value="_multiplier" Label="@L["copy.map.multiplier"]" Min="0" Class="flex-grow-1"
+                                 Step="0.1" Variant="Variant.Outlined" Margin="Margin.Dense" data-testid="symbol-map-multiplier" />
+                <HelpTip Text="@L["copy.map.tip.multiplier"]" />
+            </MudStack>
         </MudItem>
         <MudItem xs="5" sm="2">
             <MudButton FullWidth="true" Variant="Variant.Outlined" Size="Size.Small"

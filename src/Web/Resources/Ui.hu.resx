@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Nem sikerült a profil létrehozása</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>A profil létrehozva, de egyes cél beállítások nem kerültek alkalmazásra</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Egy rövid név a másolási profil felismeréséhez a listában.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>A master számla, amelynek kereskedéseit másolni kell.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Egy vagy több számla, amely megkapja a master kereskedéseit. A master maga ki van zárva.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>A mester számla, amelynek kereskedéseit másolatozzák. Csak a cTrader Open API-n keresztül összekapcsolt számlák jelennek meg itt — a kézzel hozzáadott számlák nem tudnak kereskedéseket másolni.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Egy vagy több számla, amely a mester kereskedésének másolatait kapja (a mester kizárt). Csak a cTrader Open API-n keresztül összekapcsolt számlák vannak felsorolva.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Hogyan méretezzük az egyes másolt kereskedéseket a masterhez képest: fix lot, szorzó, egyenleg/tőke aránya vagy rögzített kockázat százalék.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>A szám, amelyet a méretezési mód használ — pl. a szorzó (1 = ugyanaz a méret) vagy a kockázat százalék.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Maximális áreltérés (pipben), amely tolerálható a másolt rendelés elhelyezésekor, mielőtt azt elutasítanák.</value></data>
@@ -310,4 +310,35 @@
   <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>A napi veszteség korlát nem lehet negatív.</value></data>
   <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Engedélyezze legalább egy rendeléstípust.</value></data>
   <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Adjon hozzá legalább egy szimbólumot a kiválasztott szimbólumszűrőhöz.</value></data>
+  <data name="copyNew.mm.FixedLot" xml:space="preserve"><value>Rögzített tétel</value></data>
+  <data name="copyNew.mm.LotMultiplier" xml:space="preserve"><value>Tétel szorzó</value></data>
+  <data name="copyNew.mm.NotionalMultiplier" xml:space="preserve"><value>Nominális szorzó</value></data>
+  <data name="copyNew.mm.ProportionalBalance" xml:space="preserve"><value>Arányos az egyenleghez</value></data>
+  <data name="copyNew.mm.ProportionalEquity" xml:space="preserve"><value>Arányos a tőkéhez</value></data>
+  <data name="copyNew.mm.ProportionalFreeMargin" xml:space="preserve"><value>Arányos a szabad marginhoz</value></data>
+  <data name="copyNew.mm.FixedRiskPercent" xml:space="preserve"><value>Rögzített kockázat %</value></data>
+  <data name="copyNew.mm.FixedLeverage" xml:space="preserve"><value>Rögzített tőkeáttétel</value></data>
+  <data name="copyNew.mm.AutoProportional" xml:space="preserve"><value>Automatikusan arányos</value></data>
+  <data name="copyNew.mm.RiskFromStopLoss" xml:space="preserve"><value>Kockázat a stop-loss-ból</value></data>
+  <data name="copyNew.mm.desc.FixedLot" xml:space="preserve"><value>Mindig rögzített számú tétellel kereskedjen (a paraméter), figyelmen kívül hagyva a mester méretét.</value></data>
+  <data name="copyNew.mm.desc.LotMultiplier" xml:space="preserve"><value>Másolja a mester tétel méretét a paraméterrel szorozva (1 = ugyanez a méret).</value></data>
+  <data name="copyNew.mm.desc.NotionalMultiplier" xml:space="preserve"><value>Feleltesse meg a mester nominális értékét × a paraméterrel, minden számla árára igazítva.</value></data>
+  <data name="copyNew.mm.desc.ProportionalBalance" xml:space="preserve"><value>Méretezze egyenlege ÷ mester egylegének alapján.</value></data>
+  <data name="copyNew.mm.desc.ProportionalEquity" xml:space="preserve"><value>Méretezze tőkéje (egyenleg + lebegő P&amp;L) ÷ mester tőkéje alapján.</value></data>
+  <data name="copyNew.mm.desc.ProportionalFreeMargin" xml:space="preserve"><value>Méretezze szabad margiója ÷ mester szabad margiója alapján.</value></data>
+  <data name="copyNew.mm.desc.FixedRiskPercent" xml:space="preserve"><value>Méretezzen minden másolatot úgy, hogy az egyenlege paraméter százalékát kockáztassa (a mester stop-loss értékét használja).</value></data>
+  <data name="copyNew.mm.desc.FixedLeverage" xml:space="preserve"><value>Méretezzen rögzített tőkeáttételre (a paraméter) a számláján.</value></data>
+  <data name="copyNew.mm.desc.AutoProportional" xml:space="preserve"><value>Méretezzen automatikusan az egyenleg arányának megfelelően, paraméter finomhangolás nélkül.</value></data>
+  <data name="copyNew.mm.desc.RiskFromStopLoss" xml:space="preserve"><value>Tükrözze a mester kockázatát: vonja le a mester stop-loss távolságából és alkalmazza az egyenlegére; térjen vissza a maximális kockázati tételre, ha a mesternek nincs stop-ja.</value></data>
+  <data name="copyNew.dir.Both" xml:space="preserve"><value>Mindkét irány</value></data>
+  <data name="copyNew.dir.LongOnly" xml:space="preserve"><value>Csak hosszú pozíció</value></data>
+  <data name="copyNew.dir.ShortOnly" xml:space="preserve"><value>Csak rövid pozíció</value></data>
+  <data name="copyNew.filter.None" xml:space="preserve"><value>Nincs szűrő</value></data>
+  <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Whitelist</value></data>
+  <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Blacklist</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Eddig egyetlen számla sincs összekapcsolva a cTrader Open API-n keresztül. Csak az Open API számlák tudnak kereskedéseket másolni — kapcsolj össze egyet az induláshoz.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Számla összekapcsolása</value></data>
+  <data name="copy.map.tip.source" xml:space="preserve"><value>A szimbólum a mester (forrás) számlán megnevezve, pl. EURUSD.</value></data>
+  <data name="copy.map.tip.destination" xml:space="preserve"><value>A megfelelő szimbólum a célbrókeré, pl. EUR.USD.</value></data>
+  <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Extra térfogat szorzó erre a szimbólumra a cél méretezésén felül (1 = nincs változás).</value></data>
 </root>

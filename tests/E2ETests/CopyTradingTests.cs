@@ -19,18 +19,9 @@ public sealed class CopyTradingTests(AppFixture app)
         var page = await app.NewAuthedPageAsync();
         var api = page.APIRequest;
 
-        await GotoAsync(page, "/accounts");
-        var cid = $"ui-cid-{Suffix}";
-        var cidDialog = await OpenDialogAsync(page, "New cID Account");
-        await cidDialog.Locator("input").Nth(0).FillAsync(cid);
-        await cidDialog.Locator("input").Nth(1).FillAsync("cid_password_123");
-        await SubmitAsync(cidDialog, "Add");
-        await Assertions.Expect(page.GetByText(cid)).ToBeVisibleAsync(Slow);
-
-        var master = NextAccountNumber(10);
-        await AddTradingAccountAsync(page, master, $"UiMaster-{Suffix}");
-        var slave = NextAccountNumber(11);
-        await AddTradingAccountAsync(page, slave, $"UiSlave-{Suffix}");
+        // Copy trading lists only Open-API-linked accounts, so seed two of them (no live broker needed).
+        var master = await SeedOpenApiAccountAsync(api);
+        var slave = await SeedOpenApiAccountAsync(api);
 
         await GotoAsync(page, "/copy-trading");
         var profileName = $"ui-profile-{Suffix}";
@@ -39,6 +30,9 @@ public sealed class CopyTradingTests(AppFixture app)
         await page.Locator("[data-testid=copy-new-profile]").ClickAsync();
         await page.WaitForURLAsync("**/copy-trading/new");
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        // Enum options render as human labels, not raw enum names (money management default = Lot multiplier).
+        await Assertions.Expect(page.GetByText("Lot multiplier").First).ToBeVisibleAsync(Slow);
 
         await page.GetByLabel("Profile name").FillAsync(profileName);
         // Source (master) is the first select on the page.
@@ -188,6 +182,13 @@ public sealed class CopyTradingTests(AppFixture app)
 
     private static long NextAccountNumber(int slot) => 700_000 + (Convert.ToInt64(Suffix, 16) % 50_000) * 100 + slot;
 
+    private async Task<long> SeedOpenApiAccountAsync(IAPIRequestContext api)
+    {
+        var r = await api.PostAsync(U("/api/testseed/openapi-account"), new());
+        Assert.True(r.Ok, $"seed openapi account failed: {r.Status}");
+        return (await ReadJsonAsync(r)).GetProperty("accountNumber").GetInt64();
+    }
+
     private async Task<string> CreateCidAsync(IAPIRequestContext api, string username)
     {
         var r = await api.PostAsync(U("/api/ctids/"), new() { DataObject = new { Username = username, Password = "cid_password_123" } });
@@ -229,55 +230,9 @@ public sealed class CopyTradingTests(AppFixture app)
         return JsonSerializer.Deserialize<JsonElement>(text);
     }
 
-    private async Task AddTradingAccountAsync(IPage page, long accountNumber, string broker)
-    {
-        var dialog = await OpenDialogAsync(page, "New Trading Account");
-        await dialog.Locator("input").Nth(0).FillAsync(accountNumber.ToString());
-        await dialog.Locator("input").Nth(1).FillAsync(broker);
-        await SubmitAsync(dialog, "Add");
-        await Assertions.Expect(page.GetByText(broker)).ToBeVisibleAsync(Slow);
-    }
-
     private static async Task GotoAsync(IPage page, string path)
     {
         await page.GotoAsync(path);
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
-    }
-
-    private static async Task<ILocator> OpenDialogAsync(IPage page, string buttonText)
-    {
-        var button = page.Locator($"button:has-text('{buttonText}')").First;
-        await button.WaitForAsync(new() { Timeout = 15000 });
-        var dialog = page.Locator(".mud-dialog").Last;
-
-        for (var attempt = 0; attempt < 15; attempt++)
-        {
-            await button.ClickAsync();
-            try
-            {
-                await dialog.WaitForAsync(new() { Timeout = 2000, State = WaitForSelectorState.Visible });
-                return dialog;
-            }
-            catch (TimeoutException) { /* circuit not interactive yet — retry */ }
-            catch (PlaywrightException) { /* stale locator after circuit reconnect — retry */ }
-        }
-        throw new TimeoutException($"Dialog did not open after clicking '{buttonText}'.");
-    }
-
-    private static async Task SubmitAsync(ILocator dialog, string buttonText)
-    {
-        var button = dialog.Locator($"button:has-text('{buttonText}')");
-        for (var attempt = 0; attempt < 15; attempt++)
-        {
-            await button.ClickAsync();
-            try
-            {
-                await dialog.WaitForAsync(new() { Timeout = 2000, State = WaitForSelectorState.Hidden });
-                return;
-            }
-            catch (TimeoutException) { /* submit click lost before circuit ready — retry */ }
-            catch (PlaywrightException) { /* stale locator after circuit reconnect — retry */ }
-        }
-        throw new TimeoutException($"Dialog did not close after clicking '{buttonText}'.");
     }
 }

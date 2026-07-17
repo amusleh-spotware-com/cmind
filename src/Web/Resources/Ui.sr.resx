@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Неуспело прављење профила</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Профил је направљен, али нека одредишна подешавања нису могла бити примењена</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Кратко име за препознавање овог профила копирања у листи.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>Главни рачун чије се трговине копирају.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Један или више рачуна који примају копије трговина главног. Сам главни је искључен.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Мајсторски рачун чије трговине су копиране. Само рачуни повезани преко cTrader Open API се појављују овде — ручно додати рачуни не могу копирати трговине.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Један или више рачуна који примају копије мајсторских трговина (мајстор је искључен). Наведени су само рачуни повезани преко cTrader Open API.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Како је свака копирана трговина димензионисана у односу на главну: фиксна лот, мултипликатор, пропорција балансе/капитала, или фиксан проценат ризика.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Број који режим величине користи — на пример мултипликатор (1 = иста величина) или проценат ризика.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Максимално одступање цене, у пипс, толерисано приликом постављања копираног налога пре него што буде одбијен.</value></data>
@@ -310,4 +310,35 @@
   <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Дневни лимит за губитак не може бити негативан.</value></data>
   <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Омогући најмање једну врсту налога.</value></data>
   <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Додајте најмање један симбол за одабрани филтер симбола.</value></data>
+  <data name="copyNew.mm.FixedLot" xml:space="preserve"><value>Fiksna količina</value></data>
+  <data name="copyNew.mm.LotMultiplier" xml:space="preserve"><value>Множитељ quantidade</value></data>
+  <data name="copyNew.mm.NotionalMultiplier" xml:space="preserve"><value>Номинални множитељ</value></data>
+  <data name="copyNew.mm.ProportionalBalance" xml:space="preserve"><value>Пропорционално биланцу</value></data>
+  <data name="copyNew.mm.ProportionalEquity" xml:space="preserve"><value>Пропорционално капиталу</value></data>
+  <data name="copyNew.mm.ProportionalFreeMargin" xml:space="preserve"><value>Пропорционално слободној маржи</value></data>
+  <data name="copyNew.mm.FixedRiskPercent" xml:space="preserve"><value>Фиксни ризик %</value></data>
+  <data name="copyNew.mm.FixedLeverage" xml:space="preserve"><value>Фиксна полуга</value></data>
+  <data name="copyNew.mm.AutoProportional" xml:space="preserve"><value>Аутоматски пропорционалан</value></data>
+  <data name="copyNew.mm.RiskFromStopLoss" xml:space="preserve"><value>Ризик од стоп-лосса</value></data>
+  <data name="copyNew.mm.desc.FixedLot" xml:space="preserve"><value>Увек тргујте са фиксном количином од количина (параметар), игноришући величину мајстора.</value></data>
+  <data name="copyNew.mm.desc.LotMultiplier" xml:space="preserve"><value>Копирајте величину количине мајстора помножену са параметром (1 = иста величина).</value></data>
+  <data name="copyNew.mm.desc.NotionalMultiplier" xml:space="preserve"><value>Поклопите номиналну вредност мајстора × параметар, прилагођавајући се цени сваког рачуна.</value></data>
+  <data name="copyNew.mm.desc.ProportionalBalance" xml:space="preserve"><value>Скалирајте према вашем биланцу ÷ биланс мајстора.</value></data>
+  <data name="copyNew.mm.desc.ProportionalEquity" xml:space="preserve"><value>Скалирајте према вашем капиталу (биланс + плутајући P&amp;L) ÷ капитал мајстора.</value></data>
+  <data name="copyNew.mm.desc.ProportionalFreeMargin" xml:space="preserve"><value>Скалирајте према вашој слободној марџи ÷ слободна марџа мајстора.</value></data>
+  <data name="copyNew.mm.desc.FixedRiskPercent" xml:space="preserve"><value>Величина сваке копије за ризик параметра процента вашег биланса (користи стоп-лосс мајстора).</value></data>
+  <data name="copyNew.mm.desc.FixedLeverage" xml:space="preserve"><value>Величина за фиксну полугу (параметар) на вашем рачуну.</value></data>
+  <data name="copyNew.mm.desc.AutoProportional" xml:space="preserve"><value>Аутоматски скалирајте по коефицијенту биланса, без потребе за подешавањем параметра.</value></data>
+  <data name="copyNew.mm.desc.RiskFromStopLoss" xml:space="preserve"><value>Пресликајте ризик мајстора: изведите из растојања стоп мајстора и применити на вашем биланцу; врати се на максимални ризик количине када мајстор нема стоп.</value></data>
+  <data name="copyNew.dir.Both" xml:space="preserve"><value>Оба смера</value></data>
+  <data name="copyNew.dir.LongOnly" xml:space="preserve"><value>Само лонг</value></data>
+  <data name="copyNew.dir.ShortOnly" xml:space="preserve"><value>Само шорт</value></data>
+  <data name="copyNew.filter.None" xml:space="preserve"><value>Без филтера</value></data>
+  <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Белина листа</value></data>
+  <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Црна листа</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Ниједан рачун још није повезан преко cTrader Open API. Само Open API рачуни могу копирати трговине — повежите једну за почетак.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Повезивање рачуна</value></data>
+  <data name="copy.map.tip.source" xml:space="preserve"><value>Симбол како је назван на мајсторском (извору) рачуну, нпр. EURUSD.</value></data>
+  <data name="copy.map.tip.destination" xml:space="preserve"><value>Одговарајући симбол на брокеру одредишта, нпр. EUR.USD.</value></data>
+  <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Додатни множитељ волумена за овај симбол преко промене величине одредишта (1 = без промене).</value></data>
 </root>

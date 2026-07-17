@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Αποτυχία δημιουργίας προφίλ</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Προφίλ δημιουργήθηκε, αλλά ορισμένες ρυθμίσεις προορισμού δεν μπορούσαν να εφαρμοστούν</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Ένα σύντομο όνομα για να αναγνωρίσετε αυτό το προφίλ αντιγραφής στη λίστα.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>Ο λογαριασμός master του οποίου οι συναλλαγές αντιγράφονται.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Ένας ή περισσότεροι λογαριασμοί που λαμβάνουν αντίγραφα των συναλλαγών του master. Ο ίδιος ο master αποκλείεται.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Ο λογαριασμός master του οποίου οι συναλλαγές αντιγράφονται. Εδώ εμφανίζονται μόνο λογαριασμοί που συνδέονται μέσω cTrader Open API — οι χειροκίνητα προστιθέμενοι λογαριασμοί δεν μπορούν να αντιγράψουν συναλλαγές.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Ένας ή περισσότεροι λογαριασμοί που λαμβάνουν αντιγραφές των συναλλαγών του master (ο master αποκλείεται). Καταχωρούνται μόνο λογαριασμοί που συνδέονται μέσω cTrader Open API.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Πώς κάθε αντιγραμμένη συναλλαγή διαστασιολογείται σε σχέση με τον master: ένα σταθερό lot, ένας πολλαπλασιαστής, ένα ποσοστό του υπολοίπου/κεφαλαίου ή ένα σταθερό ποσοστό κινδύνου.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Ο αριθμός που χρησιμοποιεί η λειτουργία διαστασιολόγησης — για παράδειγμα ο πολλαπλασιαστής (1 = ίδιο μέγεθος) ή το ποσοστό κινδύνου.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Μέγιστη απόκλιση τιμής, σε pips, που ανέχεται κατά την τοποθέτηση της αντιγραμμένης εντολής πριν απορριφθεί.</value></data>
@@ -310,4 +310,35 @@
   <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Το όριο ημερήσιας απώλειας δεν μπορεί να είναι αρνητικό.</value></data>
   <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Ενεργοποιήστε τουλάχιστον έναν τύπο εντολής.</value></data>
   <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Προσθέστε τουλάχιστον ένα σύμβολο για το επιλεγμένο φίλτρο συμβόλου.</value></data>
+  <data name="copyNew.mm.FixedLot" xml:space="preserve"><value>Σταθερό lot</value></data>
+  <data name="copyNew.mm.LotMultiplier" xml:space="preserve"><value>Πολλαπλασιαστής lot</value></data>
+  <data name="copyNew.mm.NotionalMultiplier" xml:space="preserve"><value>Πολλαπλασιαστής ονοματικής αξίας</value></data>
+  <data name="copyNew.mm.ProportionalBalance" xml:space="preserve"><value>Ανάλογο με το υπόλοιπο</value></data>
+  <data name="copyNew.mm.ProportionalEquity" xml:space="preserve"><value>Ανάλογο με το κεφάλαιο</value></data>
+  <data name="copyNew.mm.ProportionalFreeMargin" xml:space="preserve"><value>Ανάλογο με το ελεύθερο περιθώριο</value></data>
+  <data name="copyNew.mm.FixedRiskPercent" xml:space="preserve"><value>Σταθερός κίνδυνος %</value></data>
+  <data name="copyNew.mm.FixedLeverage" xml:space="preserve"><value>Σταθερή μόχλευση</value></data>
+  <data name="copyNew.mm.AutoProportional" xml:space="preserve"><value>Αυτόματα ανάλογο</value></data>
+  <data name="copyNew.mm.RiskFromStopLoss" xml:space="preserve"><value>Κίνδυνος από stop-loss</value></data>
+  <data name="copyNew.mm.desc.FixedLot" xml:space="preserve"><value>Πάντα διαπραγματεύστε έναν σταθερό αριθμό lots (η παράμετρος), αγνοώντας το μέγεθος του master.</value></data>
+  <data name="copyNew.mm.desc.LotMultiplier" xml:space="preserve"><value>Αντιγράψτε το μέγεθος lot του master πολλαπλασιασμένο με την παράμετρο (1 = ίδιο μέγεθος).</value></data>
+  <data name="copyNew.mm.desc.NotionalMultiplier" xml:space="preserve"><value>Προσαρμόστε την ονοματική αξία του master × την παράμετρο, προσαρμόζοντας για την τιμή κάθε λογαριασμού.</value></data>
+  <data name="copyNew.mm.desc.ProportionalBalance" xml:space="preserve"><value>Κλιμακώστε ανάλογα με το υπόλοιπό σας ÷ υπόλοιπο του master.</value></data>
+  <data name="copyNew.mm.desc.ProportionalEquity" xml:space="preserve"><value>Κλιμακώστε ανάλογα με το κεφάλαιό σας (υπόλοιπο + floating P&amp;L) ÷ κεφάλαιο του master.</value></data>
+  <data name="copyNew.mm.desc.ProportionalFreeMargin" xml:space="preserve"><value>Κλιμακώστε ανάλογα με το ελεύθερο περιθώριό σας ÷ ελεύθερο περιθώριο του master.</value></data>
+  <data name="copyNew.mm.desc.FixedRiskPercent" xml:space="preserve"><value>Καθορίστε το μέγεθος κάθε αντιγραφής για να κινδυνεύσει το ποσοστό παραμέτρου του υπολοίπου σας (χρησιμοποιεί το stop-loss του master).</value></data>
+  <data name="copyNew.mm.desc.FixedLeverage" xml:space="preserve"><value>Κλιμακώστε σε σταθερή μόχλευση (παράμετρος) στο λογαριασμό σας.</value></data>
+  <data name="copyNew.mm.desc.AutoProportional" xml:space="preserve"><value>Κλιμακώστε αυτόματα ανάλογα με την αναλογία υπολοίπου, δεν απαιτείται διαμόρφωση παραμέτρων.</value></data>
+  <data name="copyNew.mm.desc.RiskFromStopLoss" xml:space="preserve"><value>Αντικατοπτρίστε τον κίνδυνο του master: προέρχεται από την απόσταση stop-loss του master και εφαρμόστε τον στο υπόλοιπό σας· πέστε στο μέγιστο lot κινδύνου όταν ο master δεν έχει stop.</value></data>
+  <data name="copyNew.dir.Both" xml:space="preserve"><value>Και οι δύο κατευθύνσεις</value></data>
+  <data name="copyNew.dir.LongOnly" xml:space="preserve"><value>Μόνο long</value></data>
+  <data name="copyNew.dir.ShortOnly" xml:space="preserve"><value>Μόνο short</value></data>
+  <data name="copyNew.filter.None" xml:space="preserve"><value>Χωρίς φίλτρο</value></data>
+  <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Whitelist</value></data>
+  <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Blacklist</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Κανένας λογαριασμός δεν έχει συνδεθεί μέσω cTrader Open API ακόμα. Μόνο οι λογαριασμοί Open API μπορούν να αντιγράψουν συναλλαγές — συνδέστε έναν για να ξεκινήσετε.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Σύνδεση λογαριασμού</value></data>
+  <data name="copy.map.tip.source" xml:space="preserve"><value>Το σύμβολο όπως ονομάζεται στο master (πηγή) λογαριασμό, π.χ. EURUSD.</value></data>
+  <data name="copy.map.tip.destination" xml:space="preserve"><value>Το αντίστοιχο σύμβολο στον broker προορισμού, π.χ. EUR.USD.</value></data>
+  <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Επιπλέον πολλαπλασιαστής όγκου για αυτό το σύμβολο πάνω από το μέγεθος του προορισμού (1 = καμία αλλαγή).</value></data>
 </root>

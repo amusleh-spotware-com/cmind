@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>配置创建失败</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>配置已创建，但某些目标设置无法应用</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>用于在列表中识别此跟单配置的简短名称。</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>其交易被跟单的主账户。</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>接收主账户跟单交易的一个或多个账户。主账户本身被排除。</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>复制其交易的主账户。只有通过 cTrader Open API 链接的账户才会显示在此处 — 手动添加的账户无法复制交易。</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>接收主账户交易副本的一个或多个账户（主账户被排除）。只列出通过 cTrader Open API 链接的账户。</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>如何根据主账户调整每个跟单交易的大小：固定手数、倍数、余额/权益比例或固定风险百分比。</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>头寸大小模式使用的数字 —— 例如倍数（1 = 相同大小）或风险百分比。</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>在拒绝跟单订单之前允许的最大价格偏差，以点数计。</value></data>
@@ -310,4 +310,35 @@
   <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>每日亏损上限不能为负。</value></data>
   <data name="copyNew.err.orderTypes" xml:space="preserve"><value>至少启用一种订单类型。</value></data>
   <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>至少为选定的符号过滤器添加一个符号。</value></data>
+  <data name="copyNew.mm.FixedLot" xml:space="preserve"><value>固定手数</value></data>
+  <data name="copyNew.mm.LotMultiplier" xml:space="preserve"><value>手数倍数</value></data>
+  <data name="copyNew.mm.NotionalMultiplier" xml:space="preserve"><value>名义倍数</value></data>
+  <data name="copyNew.mm.ProportionalBalance" xml:space="preserve"><value>与余额成比例</value></data>
+  <data name="copyNew.mm.ProportionalEquity" xml:space="preserve"><value>与权益成比例</value></data>
+  <data name="copyNew.mm.ProportionalFreeMargin" xml:space="preserve"><value>与可用保证金成比例</value></data>
+  <data name="copyNew.mm.FixedRiskPercent" xml:space="preserve"><value>固定风险%</value></data>
+  <data name="copyNew.mm.FixedLeverage" xml:space="preserve"><value>固定杠杆</value></data>
+  <data name="copyNew.mm.AutoProportional" xml:space="preserve"><value>自动按比例</value></data>
+  <data name="copyNew.mm.RiskFromStopLoss" xml:space="preserve"><value>来自止损的风险</value></data>
+  <data name="copyNew.mm.desc.FixedLot" xml:space="preserve"><value>始终交易固定数量的手数（参数），忽略主账户的头寸大小。</value></data>
+  <data name="copyNew.mm.desc.LotMultiplier" xml:space="preserve"><value>复制主账户的手数乘以参数（1 = 相同大小）。</value></data>
+  <data name="copyNew.mm.desc.NotionalMultiplier" xml:space="preserve"><value>匹配主账户的名义价值 × 参数，根据每个账户的价格进行调整。</value></data>
+  <data name="copyNew.mm.desc.ProportionalBalance" xml:space="preserve"><value>按您的余额 ÷ 主账户余额进行缩放。</value></data>
+  <data name="copyNew.mm.desc.ProportionalEquity" xml:space="preserve"><value>按您的权益（余额 + 浮动损益） ÷ 主账户权益进行缩放。</value></data>
+  <data name="copyNew.mm.desc.ProportionalFreeMargin" xml:space="preserve"><value>按您的可用保证金 ÷ 主账户可用保证金进行缩放。</value></data>
+  <data name="copyNew.mm.desc.FixedRiskPercent" xml:space="preserve"><value>调整每个副本的大小以冒您余额的参数百分比的风险（使用主账户的止损）。</value></data>
+  <data name="copyNew.mm.desc.FixedLeverage" xml:space="preserve"><value>设置为您账户上的固定杠杆（参数）。</value></data>
+  <data name="copyNew.mm.desc.AutoProportional" xml:space="preserve"><value>按余额比率自动缩放，无需调整参数。</value></data>
+  <data name="copyNew.mm.desc.RiskFromStopLoss" xml:space="preserve"><value>镜像主账户的风险：从主账户的止损距离衍生并应用于您的余额；当主账户没有止损时回退到最大风险手数。</value></data>
+  <data name="copyNew.dir.Both" xml:space="preserve"><value>双向</value></data>
+  <data name="copyNew.dir.LongOnly" xml:space="preserve"><value>仅做多</value></data>
+  <data name="copyNew.dir.ShortOnly" xml:space="preserve"><value>仅做空</value></data>
+  <data name="copyNew.filter.None" xml:space="preserve"><value>无过滤器</value></data>
+  <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>白名单</value></data>
+  <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>黑名单</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>尚未有任何账户通过 cTrader Open API 链接。只有 Open API 账户才能复制交易 — 链接一个账户以开始。</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>链接账户</value></data>
+  <data name="copy.map.tip.source" xml:space="preserve"><value>在主账户（来源）上命名的符号，例如 EURUSD。</value></data>
+  <data name="copy.map.tip.destination" xml:space="preserve"><value>目标经纪商上的匹配符号，例如 EUR.USD。</value></data>
+  <data name="copy.map.tip.multiplier" xml:space="preserve"><value>此符号在目标交易量调整之上的额外体积倍数（1 = 无变化）。</value></data>
 </root>

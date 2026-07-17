@@ -122,8 +122,11 @@
         return "—";
     }
 
+    // Only Open-API-linked accounts can copy trades (they carry the token used to place orders), so the
+    // destination picker in the dialog is limited to them — manually added accounts are excluded.
     private IReadOnlyList<CopyProfileDialog.AccountRef> AccountRefs() =>
         ((IEnumerable<dynamic>)_accounts)
+        .Where(a => (bool)a.linkedViaOpenApi)
         .Select(a => new CopyProfileDialog.AccountRef((Guid)a.id, (long)a.accountNumber))
         .ToList();
 

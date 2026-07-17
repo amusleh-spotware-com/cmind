@@ -85,8 +85,16 @@ to translate a handful of strings pays that overhead 22×. Pick the strategy by 
 |---|---|---|
 | **UI: ≤ ~30 changed keys** (the common case) | **One** cheap sub-agent translates the delta into **all 22 locales at once**, emitting a single JSON `{ "<loc>": { key: value, … }, … }`. | 1 |
 | **UI: > ~30 keys** | Split into a few batches, or fan out per locale (below). One agent's *output* shouldn't approach its limit — a huge single JSON truncates. | ~2–22 |
-| **Docs: changed sections only** | One sub-agent per locale, but each is handed **only the changed section(s)** to translate + splice — not the whole file. | ≤22 (tiny each) |
+| **Docs: changed sections only** | **One sub-agent PER locale** — each handed only the changed section(s) to translate + splice, not the whole file. | ≤22 (tiny each) |
 | **Docs: brand-new file** | One sub-agent per locale, full file (unavoidable). | 22 |
+
+**Docs do NOT batch across locales like UI does.** Editing a doc means each locale's whole file must be
+Read (to keep untouched sections byte-for-byte) and Written — one agent asked to do several locales'
+full-file docs **runs out of budget mid-way and silently completes only the first few** (seen live: an
+agent given 11 doc locales finished 5 and punted the other 6 back as "remaining work"). So for docs, fan
+out **one agent per locale** (they touch different files → run them all in parallel/background), even for
+a one-section change. Only the tiny UI-JSON *delta* (small text, one shared output) is safe to batch into
+a single agent.
 
 The English source is read **once** into a small delta file (`_new/en.json` or the extracted section);
 agents read that, **not** the 4,500-key JSON or unrelated sections. Reading the whole `ui-translations.json`

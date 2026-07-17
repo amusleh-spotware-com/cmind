@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>ไม่สามารถสร้างโปรไฟล์</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>สร้างโปรไฟล์แล้ว แต่ไม่สามารถใช้การตั้งค่าปลายทางบางส่วน</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>ชื่อสั้น ๆ เพื่อจดจำโปรไฟล์การคัดลอกนี้ในรายการ</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>บัญชี master ที่มีการซื้อขายที่ถูกคัดลอก</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>บัญชีหนึ่งบัญชีหรือมากกว่า ที่รับสำเนาการซื้อขายของ master บัญชี master เองจะถูกยกเว้น</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>บัญชีมาสเตอร์ที่มีการคัดลอกการค้นหา บัญชีที่เชื่อมต่อผ่าน cTrader Open API เท่านั้นจะแสดงที่นี่ — บัญชีที่เพิ่มด้วยตนเองไม่สามารถคัดลอกการค้นหา</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>บัญชีหนึ่งบัญชีขึ้นไปที่รับสำเนาของการค้นหาของมาสเตอร์ (มาสเตอร์ถูกแยกออก) เฉพาะบัญชีที่เชื่อมต่อ cTrader Open API เท่านั้นที่อยู่ในรายชื่อ</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>วิธีการปรับขนาดการซื้อขายที่คัดลอกแต่ละรายการสัมพันธ์กับ master ได้แก่ lot คงที่ ตัวคูณ สัดส่วนของยอด/ทุน หรือเปอร์เซ็นต์ความเสี่ยงคงที่</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>ตัวเลขที่โหมดการปรับขนาดใช้ เช่น ตัวคูณ (1 = ขนาดเดียวกัน) หรือเปอร์เซ็นต์ความเสี่ยง</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>ความเบี่ยงเบนราคาสูงสุด (pips) ที่ยอมรับได้ เมื่อวางคำสั่งที่คัดลอก ก่อนที่จะถูกปฏิเสธ</value></data>
@@ -310,4 +310,35 @@
   <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Daily loss cap ไม่สามารถเป็นค่าลบได้</value></data>
   <data name="copyNew.err.orderTypes" xml:space="preserve"><value>เปิดใช้งานประเภทคำสั่งอย่างน้อยหนึ่งประเภท</value></data>
   <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>เพิ่มสัญลักษณ์อย่างน้อยหนึ่งตัว สำหรับตัวกรองสัญลักษณ์ที่เลือก</value></data>
+  <data name="copyNew.mm.FixedLot" xml:space="preserve"><value>ลอตคงที่</value></data>
+  <data name="copyNew.mm.LotMultiplier" xml:space="preserve"><value>ตัวคูณลอต</value></data>
+  <data name="copyNew.mm.NotionalMultiplier" xml:space="preserve"><value>ตัวคูณ nominal</value></data>
+  <data name="copyNew.mm.ProportionalBalance" xml:space="preserve"><value>สัดส่วนกับยอดเงิน</value></data>
+  <data name="copyNew.mm.ProportionalEquity" xml:space="preserve"><value>สัดส่วนกับส่วนทุน</value></data>
+  <data name="copyNew.mm.ProportionalFreeMargin" xml:space="preserve"><value>สัดส่วนกับ margin อิสระ</value></data>
+  <data name="copyNew.mm.FixedRiskPercent" xml:space="preserve"><value>ความเสี่ยงคงที่ %</value></data>
+  <data name="copyNew.mm.FixedLeverage" xml:space="preserve"><value>เลเวอเรจคงที่</value></data>
+  <data name="copyNew.mm.AutoProportional" xml:space="preserve"><value>สัดส่วนอัตโนมัติ</value></data>
+  <data name="copyNew.mm.RiskFromStopLoss" xml:space="preserve"><value>ความเสี่ยงจาก stop-loss</value></data>
+  <data name="copyNew.mm.desc.FixedLot" xml:space="preserve"><value>เทพอเสมอด้วยจำนวนลอตคงที่ (พารามิเตอร์) โดยไม่สนใจขนาดของมาสเตอร์</value></data>
+  <data name="copyNew.mm.desc.LotMultiplier" xml:space="preserve"><value>คัดลอกขนาดลอตของมาสเตอร์คูณด้วยพารามิเตอร์ (1 = ขนาดเดียวกัน)</value></data>
+  <data name="copyNew.mm.desc.NotionalMultiplier" xml:space="preserve"><value>จับคู่ค่า nominal ของมาสเตอร์ × พารามิเตอร์ ปรับตามราคาของแต่ละบัญชี</value></data>
+  <data name="copyNew.mm.desc.ProportionalBalance" xml:space="preserve"><value>ปรับขนาดตามยอดเงินของคุณ ÷ ยอดเงินของมาสเตอร์</value></data>
+  <data name="copyNew.mm.desc.ProportionalEquity" xml:space="preserve"><value>ปรับขนาดตามส่วนทุนของคุณ (ยอดเงิน + P&amp;L ที่ลอยตัว) ÷ ส่วนทุนของมาสเตอร์</value></data>
+  <data name="copyNew.mm.desc.ProportionalFreeMargin" xml:space="preserve"><value>ปรับขนาดตาม margin อิสระของคุณ ÷ margin อิสระของมาสเตอร์</value></data>
+  <data name="copyNew.mm.desc.FixedRiskPercent" xml:space="preserve"><value>ขนาดแต่ละสำเนาเพื่อเสี่ยงพารามิเตอร์เปอร์เซ็นต์ของยอดเงินของคุณ (ใช้ stop-loss ของมาสเตอร์)</value></data>
+  <data name="copyNew.mm.desc.FixedLeverage" xml:space="preserve"><value>ขนาดสำหรับเลเวอเรจคงที่ (พารามิเตอร์) บนบัญชีของคุณ</value></data>
+  <data name="copyNew.mm.desc.AutoProportional" xml:space="preserve"><value>ปรับขนาดโดยอัตโนมัติตามอัตราส่วนยอดเงิน ไม่จำเป็นต้องปรับพารามิเตอร์</value></data>
+  <data name="copyNew.mm.desc.RiskFromStopLoss" xml:space="preserve"><value>สะท้อนความเสี่ยงของมาสเตอร์: ได้มาจากระยะ stop ของมาสเตอร์และนำไปใช้กับยอดเงินของคุณ; กลับไปที่ลอตความเสี่ยงสูงสุดเมื่อมาสเตอร์ไม่มี stop</value></data>
+  <data name="copyNew.dir.Both" xml:space="preserve"><value>ทั้งสองทิศทาง</value></data>
+  <data name="copyNew.dir.LongOnly" xml:space="preserve"><value>Long เท่านั้น</value></data>
+  <data name="copyNew.dir.ShortOnly" xml:space="preserve"><value>Short เท่านั้น</value></data>
+  <data name="copyNew.filter.None" xml:space="preserve"><value>ไม่มีตัวกรอง</value></data>
+  <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>รายชื่อสีขาว</value></data>
+  <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>รายชื่อสีดำ</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>ยังไม่มีบัญชีใดเชื่อมต่อผ่าน cTrader Open API บัญชี Open API เท่านั้นที่สามารถคัดลอกการค้นหา — เชื่อมต่อหนึ่งเพื่อเริ่มต้น</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>เชื่อมต่อบัญชี</value></data>
+  <data name="copy.map.tip.source" xml:space="preserve"><value>สัญลักษณ์ตามชื่อบนบัญชีมาสเตอร์ (แหล่งที่มา) เช่น EURUSD</value></data>
+  <data name="copy.map.tip.destination" xml:space="preserve"><value>สัญลักษณ์ที่ตรงกันที่โบรกเกอร์ปลายทาง เช่น EUR.USD</value></data>
+  <data name="copy.map.tip.multiplier" xml:space="preserve"><value>ตัวคูณปริมาณเพิ่มเติมสำหรับสัญลักษณ์นี้นอกเหนือจากการเปลี่ยนขนาดปลายทาง (1 = ไม่มีการเปลี่ยนแปลง)</value></data>
 </root>

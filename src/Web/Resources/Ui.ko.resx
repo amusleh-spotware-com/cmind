@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>프로필을 생성하지 못했습니다</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>프로필이 생성되었으나 일부 대상 설정을 적용하지 못했습니다</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>이 복사 프로필을 목록에서 인식하기 위한 짧은 이름입니다.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>거래를 복사할 마스터 계정입니다.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>마스터의 거래 사본을 받을 하나 이상의 계정입니다. 마스터 자신은 제외됩니다.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>거래가 복사되는 마스터 계좌입니다. cTrader Open API를 통해 연결된 계좌만 여기에 표시되며, 수동으로 추가된 계좌는 거래를 복사할 수 없습니다.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>마스터의 거래 복사본을 받는 하나 이상의 계좌입니다(마스터는 제외됨). cTrader Open API를 통해 연결된 계좌만 나열됩니다.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>각 복사된 거래가 마스터를 기준으로 어떻게 규모 조정되는지: 고정 로트, 승수, 잔액/자산의 비율, 또는 고정 위험 백분율입니다.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>규모 조정 모드가 사용하는 숫자입니다. 예: 승수(1 = 동일 규모) 또는 위험 백분율입니다.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>복사된 주문이 거부되기 전에 허용되는 최대 가격 편차(pips)입니다.</value></data>
@@ -310,4 +310,35 @@
   <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>일일 손실 한도는 음수일 수 없습니다.</value></data>
   <data name="copyNew.err.orderTypes" xml:space="preserve"><value>적어도 하나의 주문 유형을 활성화합니다.</value></data>
   <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>선택한 심볼 필터에 대해 적어도 하나의 심볼을 추가합니다.</value></data>
+  <data name="copyNew.mm.FixedLot" xml:space="preserve"><value>고정 로트</value></data>
+  <data name="copyNew.mm.LotMultiplier" xml:space="preserve"><value>로트 승수</value></data>
+  <data name="copyNew.mm.NotionalMultiplier" xml:space="preserve"><value>명목 승수</value></data>
+  <data name="copyNew.mm.ProportionalBalance" xml:space="preserve"><value>잔액에 비례</value></data>
+  <data name="copyNew.mm.ProportionalEquity" xml:space="preserve"><value>자본금에 비례</value></data>
+  <data name="copyNew.mm.ProportionalFreeMargin" xml:space="preserve"><value>여유 증거금에 비례</value></data>
+  <data name="copyNew.mm.FixedRiskPercent" xml:space="preserve"><value>고정 위험 %</value></data>
+  <data name="copyNew.mm.FixedLeverage" xml:space="preserve"><value>고정 레버리지</value></data>
+  <data name="copyNew.mm.AutoProportional" xml:space="preserve"><value>자동 비례</value></data>
+  <data name="copyNew.mm.RiskFromStopLoss" xml:space="preserve"><value>손절매에서의 위험</value></data>
+  <data name="copyNew.mm.desc.FixedLot" xml:space="preserve"><value>마스터의 크기를 무시하고 항상 고정된 로트 수(매개변수)로 거래합니다.</value></data>
+  <data name="copyNew.mm.desc.LotMultiplier" xml:space="preserve"><value>마스터의 로트 크기에 매개변수를 곱해서 복사합니다(1 = 같은 크기).</value></data>
+  <data name="copyNew.mm.desc.NotionalMultiplier" xml:space="preserve"><value>마스터의 명목 가치 × 매개변수를 일치시키고 각 계좌의 가격에 맞게 조정합니다.</value></data>
+  <data name="copyNew.mm.desc.ProportionalBalance" xml:space="preserve"><value>귀하의 잔액 ÷ 마스터의 잔액으로 조정합니다.</value></data>
+  <data name="copyNew.mm.desc.ProportionalEquity" xml:space="preserve"><value>귀하의 자본금(잔액 + 변동 P&amp;L) ÷ 마스터의 자본금으로 조정합니다.</value></data>
+  <data name="copyNew.mm.desc.ProportionalFreeMargin" xml:space="preserve"><value>귀하의 여유 증거금 ÷ 마스터의 여유 증거금으로 조정합니다.</value></data>
+  <data name="copyNew.mm.desc.FixedRiskPercent" xml:space="preserve"><value>각 복사를 귀하의 잔액의 매개변수 퍼센트 위험이 되도록 크기를 조정합니다(마스터의 손절매 사용).</value></data>
+  <data name="copyNew.mm.desc.FixedLeverage" xml:space="preserve"><value>귀하의 계좌에서 고정 레버리지(매개변수)로 조정합니다.</value></data>
+  <data name="copyNew.mm.desc.AutoProportional" xml:space="preserve"><value>잔액 비율에 따라 자동으로 조정하며, 매개변수 조정이 필요하지 않습니다.</value></data>
+  <data name="copyNew.mm.desc.RiskFromStopLoss" xml:space="preserve"><value>마스터의 위험을 반영합니다. 마스터의 손절매 거리에서 도출하여 귀하의 잔액에 적용합니다. 마스터에 손절매가 없는 경우 최대 위험 로트로 돌아갑니다.</value></data>
+  <data name="copyNew.dir.Both" xml:space="preserve"><value>양쪽 방향</value></data>
+  <data name="copyNew.dir.LongOnly" xml:space="preserve"><value>롱만</value></data>
+  <data name="copyNew.dir.ShortOnly" xml:space="preserve"><value>숏만</value></data>
+  <data name="copyNew.filter.None" xml:space="preserve"><value>필터 없음</value></data>
+  <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>화이트리스트</value></data>
+  <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>블랙리스트</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>아직 cTrader Open API를 통해 연결된 계좌가 없습니다. Open API 계좌만 거래를 복사할 수 있습니다. 시작하려면 계좌를 연결하세요.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>계좌 연결</value></data>
+  <data name="copy.map.tip.source" xml:space="preserve"><value>마스터(소스) 계좌에 명명된 기호입니다(예: EURUSD).</value></data>
+  <data name="copy.map.tip.destination" xml:space="preserve"><value>대상 브로커의 해당 기호입니다(예: EUR.USD).</value></data>
+  <data name="copy.map.tip.multiplier" xml:space="preserve"><value>대상의 크기 조정 위에 이 기호에 대한 추가 거래량 승수(1 = 변경 없음).</value></data>
 </root>

@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>プロファイルの作成に失敗しました</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>プロファイルが作成されましたが、一部のデスティネーション設定を適用できません</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>このコピープロファイルをリストで認識するための短い名前。</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>トレードがコピーされるマスターアカウント。</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>マスターのトレードのコピーを受け取る1つ以上のアカウント。マスター自体は除外されます。</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>トレードがコピーされるマスターアカウント。cTrader Open APIを介してリンクされたアカウントのみがここに表示されます。手動で追加されたアカウントはトレードをコピーできません。</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>マスターのトレードのコピーを受け取る1つ以上のアカウント（マスターは除外）。cTrader Open APIを介してリンクされたアカウントのみがリストされます。</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>コピーされた各トレードのサイズがマスターに対してどのようにスケーリングされるか: 固定ロット、乗数、残高/エクイティの割合、または固定リスク％。</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>サイジングモードが使用する数値 — 例えば乗数（1 = 同じサイズ）またはリスク％。</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>コピー注文を拒否する前に許容される最大価格偏差（pips）。</value></data>
@@ -310,4 +310,35 @@
   <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>1日の損失上限は負にできません。</value></data>
   <data name="copyNew.err.orderTypes" xml:space="preserve"><value>少なくとも1つの注文タイプを有効にしてください。</value></data>
   <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>選択したシンボルフィルターに対して少なくとも1つのシンボルを追加してください。</value></data>
+  <data name="copyNew.mm.FixedLot" xml:space="preserve"><value>固定ロット</value></data>
+  <data name="copyNew.mm.LotMultiplier" xml:space="preserve"><value>ロット乗数</value></data>
+  <data name="copyNew.mm.NotionalMultiplier" xml:space="preserve"><value>名目乗数</value></data>
+  <data name="copyNew.mm.ProportionalBalance" xml:space="preserve"><value>残高に比例</value></data>
+  <data name="copyNew.mm.ProportionalEquity" xml:space="preserve"><value>エクイティに比例</value></data>
+  <data name="copyNew.mm.ProportionalFreeMargin" xml:space="preserve"><value>フリーマージンに比例</value></data>
+  <data name="copyNew.mm.FixedRiskPercent" xml:space="preserve"><value>固定リスク %</value></data>
+  <data name="copyNew.mm.FixedLeverage" xml:space="preserve"><value>固定レバレッジ</value></data>
+  <data name="copyNew.mm.AutoProportional" xml:space="preserve"><value>自動比例</value></data>
+  <data name="copyNew.mm.RiskFromStopLoss" xml:space="preserve"><value>ストップロスからのリスク</value></data>
+  <data name="copyNew.mm.desc.FixedLot" xml:space="preserve"><value>常にマスターのサイズを無視して、固定数のロット（パラメータ）でトレードします。</value></data>
+  <data name="copyNew.mm.desc.LotMultiplier" xml:space="preserve"><value>マスターのロットサイズにパラメータを掛けてコピーします（1 = 同じサイズ）。</value></data>
+  <data name="copyNew.mm.desc.NotionalMultiplier" xml:space="preserve"><value>マスターの名目価値 × パラメータを一致させ、各アカウントの価格に合わせて調整します。</value></data>
+  <data name="copyNew.mm.desc.ProportionalBalance" xml:space="preserve"><value>あなたの残高 ÷ マスターの残高で調整します。</value></data>
+  <data name="copyNew.mm.desc.ProportionalEquity" xml:space="preserve"><value>あなたのエクイティ（残高 + 変動P&amp;L）÷ マスターのエクイティで調整します。</value></data>
+  <data name="copyNew.mm.desc.ProportionalFreeMargin" xml:space="preserve"><value>あなたのフリーマージン ÷ マスターのフリーマージンで調整します。</value></data>
+  <data name="copyNew.mm.desc.FixedRiskPercent" xml:space="preserve"><value>各コピーを、あなたの残高のパラメータパーセンテージをリスクするようにサイズします（マスターのストップロスを使用）。</value></data>
+  <data name="copyNew.mm.desc.FixedLeverage" xml:space="preserve"><value>あなたのアカウントで固定レバレッジ（パラメータ）にサイズします。</value></data>
+  <data name="copyNew.mm.desc.AutoProportional" xml:space="preserve"><value>残高比率に応じて自動的に調整します。パラメータの調整は不要です。</value></data>
+  <data name="copyNew.mm.desc.RiskFromStopLoss" xml:space="preserve"><value>マスターのリスクを反映します。マスターのストップロス距離から導き出し、あなたの残高に適用します。マスターにストップがない場合は、最大リスクロットに戻ります。</value></data>
+  <data name="copyNew.dir.Both" xml:space="preserve"><value>両方向</value></data>
+  <data name="copyNew.dir.LongOnly" xml:space="preserve"><value>ロングのみ</value></data>
+  <data name="copyNew.dir.ShortOnly" xml:space="preserve"><value>ショートのみ</value></data>
+  <data name="copyNew.filter.None" xml:space="preserve"><value>フィルターなし</value></data>
+  <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>ホワイトリスト</value></data>
+  <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>ブラックリスト</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>cTrader Open APIを介してアカウントはまだリンクされていません。Open APIアカウントのみがトレードをコピーできます。開始するにはアカウントをリンクしてください。</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>アカウントをリンク</value></data>
+  <data name="copy.map.tip.source" xml:space="preserve"><value>マスター（ソース）アカウントで名付けられたシンボル。例：EURUSD。</value></data>
+  <data name="copy.map.tip.destination" xml:space="preserve"><value>宛先ブローカーの対応するシンボル。例：EUR.USD。</value></data>
+  <data name="copy.map.tip.multiplier" xml:space="preserve"><value>宛先のサイジングに加えて、このシンボルの追加ボリューム乗数（1 = 変更なし）。</value></data>
 </root>

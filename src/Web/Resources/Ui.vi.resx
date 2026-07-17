@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Không thể tạo hồ sơ</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Hồ sơ đã được tạo, nhưng không thể áp dụng một số cài đặt đích</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Một tên ngắn để nhận biết hồ sơ sao chép này trong danh sách.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>Tài khoản chủ có các giao dịch được sao chép.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Một hoặc nhiều tài khoản nhận bản sao của các giao dịch của chủ. Bản thân tài khoản chủ bị loại trừ.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Tài khoản master có giao dịch được sao chép. Chỉ tài khoản được liên kết qua cTrader Open API mới hiển thị ở đây — tài khoản được thêm thủ công không thể sao chép giao dịch.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Một hoặc nhiều tài khoản nhận bản sao của giao dịch master (master bị loại trừ). Chỉ tài khoản được liên kết qua cTrader Open API mới được liệt kê.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Cách mỗi giao dịch được sao chép có kích thước so với chủ: một lot cố định, một bội số, một tỷ lệ của số dư/vốn chủ, hoặc một phần trăm rủi ro cố định.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Số mà chế độ kích thước sử dụng — ví dụ: bội số (1 = cùng kích thước) hoặc phần trăm rủi ro.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Độ lệch giá tối đa, tính bằng pips, được chấp nhận khi đặt lệnh sao chép trước khi nó bị từ chối.</value></data>
@@ -310,4 +310,35 @@
   <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Giới hạn lỗ hàng ngày không thể là số âm.</value></data>
   <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Bật ít nhất một loại lệnh.</value></data>
   <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Thêm ít nhất một ký hiệu cho bộ lọc ký hiệu được chọn.</value></data>
+  <data name="copyNew.mm.FixedLot" xml:space="preserve"><value>Lô cố định</value></data>
+  <data name="copyNew.mm.LotMultiplier" xml:space="preserve"><value>Bộ nhân lô</value></data>
+  <data name="copyNew.mm.NotionalMultiplier" xml:space="preserve"><value>Bộ nhân danh nghĩa</value></data>
+  <data name="copyNew.mm.ProportionalBalance" xml:space="preserve"><value>Tỷ lệ với số dư</value></data>
+  <data name="copyNew.mm.ProportionalEquity" xml:space="preserve"><value>Tỷ lệ với vốn chủ sở hữu</value></data>
+  <data name="copyNew.mm.ProportionalFreeMargin" xml:space="preserve"><value>Tỷ lệ với ký quỹ tự do</value></data>
+  <data name="copyNew.mm.FixedRiskPercent" xml:space="preserve"><value>Rủi ro cố định %</value></data>
+  <data name="copyNew.mm.FixedLeverage" xml:space="preserve"><value>Đòn bẩy cố định</value></data>
+  <data name="copyNew.mm.AutoProportional" xml:space="preserve"><value>Tự động theo tỷ lệ</value></data>
+  <data name="copyNew.mm.RiskFromStopLoss" xml:space="preserve"><value>Rủi ro từ stop-loss</value></data>
+  <data name="copyNew.mm.desc.FixedLot" xml:space="preserve"><value>Luôn giao dịch một số lô cố định (tham số), bỏ qua kích thước của master.</value></data>
+  <data name="copyNew.mm.desc.LotMultiplier" xml:space="preserve"><value>Sao chép kích thước lô của master nhân với tham số (1 = kích thước giống nhau).</value></data>
+  <data name="copyNew.mm.desc.NotionalMultiplier" xml:space="preserve"><value>Khớp giá trị danh nghĩa của master × tham số, điều chỉnh theo giá của từng tài khoản.</value></data>
+  <data name="copyNew.mm.desc.ProportionalBalance" xml:space="preserve"><value>Tỷ lệ theo số dư của bạn ÷ số dư của master.</value></data>
+  <data name="copyNew.mm.desc.ProportionalEquity" xml:space="preserve"><value>Tỷ lệ theo vốn chủ sở hữu của bạn (số dư + P&amp;L nổi) ÷ vốn chủ sở hữu của master.</value></data>
+  <data name="copyNew.mm.desc.ProportionalFreeMargin" xml:space="preserve"><value>Tỷ lệ theo ký quỹ tự do của bạn ÷ ký quỹ tự do của master.</value></data>
+  <data name="copyNew.mm.desc.FixedRiskPercent" xml:space="preserve"><value>Kích thước từng bản sao để rủi ro tỷ lệ phần trăm của tham số số dư của bạn (sử dụng stop-loss của master).</value></data>
+  <data name="copyNew.mm.desc.FixedLeverage" xml:space="preserve"><value>Kích thước đến đòn bẩy cố định (tham số) trên tài khoản của bạn.</value></data>
+  <data name="copyNew.mm.desc.AutoProportional" xml:space="preserve"><value>Tự động tỷ lệ theo tỷ lệ số dư, không cần điều chỉnh tham số.</value></data>
+  <data name="copyNew.mm.desc.RiskFromStopLoss" xml:space="preserve"><value>Phản ánh rủi ro của master: lấy từ khoảng cách stop-loss của master và áp dụng vào số dư của bạn; quay lại lô rủi ro tối đa khi master không có stop.</value></data>
+  <data name="copyNew.dir.Both" xml:space="preserve"><value>Cả hai hướng</value></data>
+  <data name="copyNew.dir.LongOnly" xml:space="preserve"><value>Chỉ long</value></data>
+  <data name="copyNew.dir.ShortOnly" xml:space="preserve"><value>Chỉ short</value></data>
+  <data name="copyNew.filter.None" xml:space="preserve"><value>Không có bộ lọc</value></data>
+  <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Danh sách trắng</value></data>
+  <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Danh sách đen</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Chưa có tài khoản nào được liên kết qua cTrader Open API. Chỉ tài khoản Open API mới có thể sao chép giao dịch — liên kết một cái để bắt đầu.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Liên kết tài khoản</value></data>
+  <data name="copy.map.tip.source" xml:space="preserve"><value>Ký hiệu như được đặt tên trên tài khoản master (nguồn), ví dụ: EURUSD.</value></data>
+  <data name="copy.map.tip.destination" xml:space="preserve"><value>Ký hiệu phù hợp tại sàn giao dịch đích, ví dụ: EUR.USD.</value></data>
+  <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Bộ nhân khối lượng bổ sung cho ký hiệu này ngoài thay đổi kích thước đích (1 = không thay đổi).</value></data>
 </root>

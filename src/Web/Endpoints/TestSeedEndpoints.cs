@@ -1,9 +1,7 @@
 using Core;
 using Core.Constants;
+using Core.Domain;
 using Infrastructure.Persistence;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 
 namespace Web.Endpoints;
@@ -109,6 +107,22 @@ public static class TestSeedEndpoints
                 completedInstanceId = completed.Id.Value,
                 runningInstanceId = running.Id.Value
             });
+        });
+
+        // Seeds an Open-API-linked trading account for the current user (bypassing the real OAuth flow),
+        // so the copy-trading UI — which lists only Open API accounts — has selectable master/destination
+        // accounts in E2E without a live broker. Returns the account id + number.
+        g.MapPost("/openapi-account", async (DataContext db, ICurrentUser user, CancellationToken ct) =>
+        {
+            if (user.UserId is not { } uid) return Results.Unauthorized();
+            var number = 5_900_000L + Random.Shared.Next(90_000);
+            var cid = CTraderIdAccount.CreateForOpenApi(uid, new CtidUserId(number), $"seed-oa-{Guid.NewGuid():N}");
+            var account = cid.LinkOpenApiAccount(number, "SeedBroker", isLive: false,
+                new CtidTraderAccountId(number), OpenApiAuthorizationId.New(), "seed-oa",
+                Core.Accounts.BrokerAllowlist.Unrestricted);
+            db.CTids.Add(cid);
+            await db.SaveChangesAsync(ct);
+            return Results.Ok(new { id = account.Id.Value, accountNumber = account.AccountNumber });
         });
 
         return g;

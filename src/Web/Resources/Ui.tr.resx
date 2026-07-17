@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Profil oluşturulamadı</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Profil oluşturuldu, ancak bazı hedef ayarları uygulanamadı</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Bu kopya profilini listede tanımak için kısa bir ad.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>İşlemleri kopyalanan master hesap.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Masterin işlemlerinin kopyalarını alan bir veya daha fazla hesap. Master'ın kendisi hariç tutulur.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>İşlemleri kopyalanan ana hesap. Yalnızca cTrader Open API aracılığıyla bağlantılı hesaplar burada görünür — el ile eklenen hesaplar işlemleri kopyalayamaz.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Ana hesabın işlemlerinin kopyalarını alan bir veya daha fazla hesap (ana hesap hariç). Yalnızca cTrader Open API aracılığıyla bağlantılı hesaplar listelenir.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Kopyalanan her işlemin mastere göre boyutlandırılması: sabit lot, çarpan, bakiye/özsermayenin oranı veya sabit risk yüzdesi.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Boyutlandırma modunun kullandığı sayı — örneğin çarpan (1 = aynı boyut) veya risk yüzdesi.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Kopyalanan emir reddedilmeden önce tolere edilen maksimum fiyat sapması (pip cinsinden).</value></data>
@@ -310,4 +310,35 @@
   <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Günlük kayıp limiti negatif olamaz.</value></data>
   <data name="copyNew.err.orderTypes" xml:space="preserve"><value>En az bir emir türünü etkinleştirin.</value></data>
   <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Seçilen sembol filtresi için en az bir sembol ekleyin.</value></data>
+  <data name="copyNew.mm.FixedLot" xml:space="preserve"><value>Sabit lot</value></data>
+  <data name="copyNew.mm.LotMultiplier" xml:space="preserve"><value>Lot çarpanı</value></data>
+  <data name="copyNew.mm.NotionalMultiplier" xml:space="preserve"><value>Nominal çarpan</value></data>
+  <data name="copyNew.mm.ProportionalBalance" xml:space="preserve"><value>Bakiyeyle orantılı</value></data>
+  <data name="copyNew.mm.ProportionalEquity" xml:space="preserve"><value>Öz sermayeyle orantılı</value></data>
+  <data name="copyNew.mm.ProportionalFreeMargin" xml:space="preserve"><value>Serbest marjla orantılı</value></data>
+  <data name="copyNew.mm.FixedRiskPercent" xml:space="preserve"><value>Sabit risk %</value></data>
+  <data name="copyNew.mm.FixedLeverage" xml:space="preserve"><value>Sabit kaldıraç</value></data>
+  <data name="copyNew.mm.AutoProportional" xml:space="preserve"><value>Otomatik orantılı</value></data>
+  <data name="copyNew.mm.RiskFromStopLoss" xml:space="preserve"><value>Zararı durdurdan risk</value></data>
+  <data name="copyNew.mm.desc.FixedLot" xml:space="preserve"><value>Her zaman sabit sayıda lot (parametre) ile ticaret yapın, ana hesabın boyutunu göz ardı ederek.</value></data>
+  <data name="copyNew.mm.desc.LotMultiplier" xml:space="preserve"><value>Ana hesabın lot boyutunu parametre ile çarpmış şekilde kopyalayın (1 = aynı boyut).</value></data>
+  <data name="copyNew.mm.desc.NotionalMultiplier" xml:space="preserve"><value>Ana hesabın nominal değeri × parametreyi eşleştirin, her hesabın fiyatına göre ayarlayın.</value></data>
+  <data name="copyNew.mm.desc.ProportionalBalance" xml:space="preserve"><value>Bakiyeniz ÷ ana hesabın bakiyesi ile ölçekleyin.</value></data>
+  <data name="copyNew.mm.desc.ProportionalEquity" xml:space="preserve"><value>Öz sermayeniz (bakiye + yüzen P&amp;L) ÷ ana hesabın öz sermayesi ile ölçekleyin.</value></data>
+  <data name="copyNew.mm.desc.ProportionalFreeMargin" xml:space="preserve"><value>Serbest marjınız ÷ ana hesabın serbest marjı ile ölçekleyin.</value></data>
+  <data name="copyNew.mm.desc.FixedRiskPercent" xml:space="preserve"><value>Her kopyayı bakiyenizin parametre yüzdesini riske atmak için boyutlandırın (ana hesabın zararı durdurunu kullanır).</value></data>
+  <data name="copyNew.mm.desc.FixedLeverage" xml:space="preserve"><value>Hesabınıza sabit kaldıraç (parametre) için boyutlandırın.</value></data>
+  <data name="copyNew.mm.desc.AutoProportional" xml:space="preserve"><value>Bakiye oranına göre otomatik olarak ölçekleyin, parametre ayarlaması gerekmez.</value></data>
+  <data name="copyNew.mm.desc.RiskFromStopLoss" xml:space="preserve"><value>Ana hesabın riskini yansıtın: ana hesabın durdur mesafesinden türetin ve bakiyenize uygulayın; ana hesabın durdurusu olmadığında maksimum risk lota geri dönün.</value></data>
+  <data name="copyNew.dir.Both" xml:space="preserve"><value>Her iki yön</value></data>
+  <data name="copyNew.dir.LongOnly" xml:space="preserve"><value>Yalnız long</value></data>
+  <data name="copyNew.dir.ShortOnly" xml:space="preserve"><value>Yalnız short</value></data>
+  <data name="copyNew.filter.None" xml:space="preserve"><value>Filtre yok</value></data>
+  <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>İzin verilen liste</value></data>
+  <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Yasaklı liste</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Henüz cTrader Open API aracılığıyla bağlantılı hesap yok. Yalnızca Open API hesapları işlemleri kopyalayabilir — başlamak için bir tane bağlayın.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Hesap bağlantısı</value></data>
+  <data name="copy.map.tip.source" xml:space="preserve"><value>Ana (kaynak) hesapta adlandırıldığı şekilde sembol, ör. EURUSD.</value></data>
+  <data name="copy.map.tip.destination" xml:space="preserve"><value>Hedef brokerdeki eşleşen sembol, ör. EUR.USD.</value></data>
+  <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Hedef boyut değişikliğinin üzerine bu sembol için ek hacim çarpanı (1 = değişiklik yok).</value></data>
 </root>

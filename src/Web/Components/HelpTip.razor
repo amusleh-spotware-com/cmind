@@ -2,14 +2,29 @@
    label, control or action; source the text from docs so guidance stays in sync. Mandatory on new
    controls per website/docs/ui-guidelines.md. *@
 
-<MudTooltip Text="@Text" Arrow="true" Placement="@Placement" ShowOnHover="true" ShowOnClick="true" ShowOnFocus="true">
-    <span class="app-help-tip" data-testid="help-tip" tabindex="0" role="button" aria-label="@Text">
-        <MudIcon Icon="@Icons.Material.Outlined.HelpOutline" Size="Size.Small" />
-    </span>
+<MudTooltip Arrow="true" Placement="@Placement" ShowOnHover="true" ShowOnClick="true" ShowOnFocus="true">
+    <TooltipContent>
+        @if (TooltipBody is not null)
+        {
+            <div class="app-help-tip-rich">@TooltipBody</div>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2">@Text</MudText>
+        }
+    </TooltipContent>
+    <ChildContent>
+        <span class="app-help-tip" data-testid="help-tip" tabindex="0" role="button" aria-label="@Text">
+            <MudIcon Icon="@Icons.Material.Outlined.HelpOutline" Size="Size.Small" />
+        </span>
+    </ChildContent>
 </MudTooltip>
 
 @code {
     [Parameter, EditorRequired] public string Text { get; set; } = string.Empty;
+    // Optional rich body: when set, the tooltip shows this markup (e.g. a bulleted list) instead of the
+    // plain Text. Text is still used for the aria-label so the affordance stays accessible.
+    [Parameter] public RenderFragment? TooltipBody { get; set; }
     // Default to Bottom: many help tips sit in a page header right under the app bar, where a Top-placed
     // tooltip has no room and MudBlazor can clamp it off-screen (looked like "hovering does nothing").
     [Parameter] public Placement Placement { get; set; } = Placement.Bottom;

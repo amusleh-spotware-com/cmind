@@ -49,18 +49,29 @@
                                 <MudSelectItem T="long" Value="@a.Number">@a.Number</MudSelectItem>
                             }
                         </MudSelect>
-                        <HelpTip Text="One or more destination (slave) accounts to add, each with the settings below." />
+                        <HelpTip Text="One or more destination (slave) accounts to add, each with the settings below. Only accounts linked via the cTrader Open API are listed — manually added accounts can't copy trades." />
                     </MudStack>
                 </MudItem>
                 <MudItem xs="12" sm="6" md="4">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                        <MudSelect T="MoneyManagementMode" @bind-Value="_mode" Label="Money management" Class="flex-grow-1">
+                        <MudSelect T="MoneyManagementMode" @bind-Value="_mode" Label="Money management" Class="flex-grow-1"
+                                   ToStringFunc="@(m => MmName(m))">
                             @foreach (var m in Enum.GetValues<MoneyManagementMode>())
                             {
-                                <MudSelectItem T="MoneyManagementMode" Value="@m">@m</MudSelectItem>
+                                <MudSelectItem T="MoneyManagementMode" Value="@m">@MmName(m)</MudSelectItem>
                             }
                         </MudSelect>
-                        <HelpTip Text="How each copied trade is sized relative to the master: a fixed lot, a multiplier, a proportion of balance/equity, or a fixed risk percent." />
+                        <HelpTip Text="How each copied trade is sized relative to the master.">
+                            <TooltipBody>
+                                <MudText Typo="Typo.body2">How each copied trade is sized relative to the master:</MudText>
+                                <ul>
+                                    @foreach (var m in Enum.GetValues<MoneyManagementMode>())
+                                    {
+                                        <li><strong>@MmName(m)</strong> — @MmDesc(m)</li>
+                                    }
+                                </ul>
+                            </TooltipBody>
+                        </HelpTip>
                     </MudStack>
                 </MudItem>
                 <MudItem xs="12" sm="6" md="4">
@@ -77,10 +88,11 @@
                 </MudItem>
                 <MudItem xs="12" sm="6" md="4">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                        <MudSelect T="CopyDirectionFilter" @bind-Value="_direction" Label="Direction" Class="flex-grow-1">
+                        <MudSelect T="CopyDirectionFilter" @bind-Value="_direction" Label="Direction" Class="flex-grow-1"
+                                   ToStringFunc="@(d => DirName(d))">
                             @foreach (var d in Enum.GetValues<CopyDirectionFilter>())
                             {
-                                <MudSelectItem T="CopyDirectionFilter" Value="@d">@d</MudSelectItem>
+                                <MudSelectItem T="CopyDirectionFilter" Value="@d">@DirName(d)</MudSelectItem>
                             }
                         </MudSelect>
                         <HelpTip Text="Copy both directions, or only the master's long or only its short trades." />
@@ -139,10 +151,11 @@
                 @SwitchTip(_copyStopLimit, v => _copyStopLimit = v, "Stop limit", "Copy stop-limit orders.")
                 <MudItem xs="12" md="4">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                        <MudSelect T="SymbolFilterMode" @bind-Value="_filterMode" Label="Symbol filter" Class="flex-grow-1">
+                        <MudSelect T="SymbolFilterMode" @bind-Value="_filterMode" Label="Symbol filter" Class="flex-grow-1"
+                                   ToStringFunc="@(f => FilterName(f))">
                             @foreach (var f in Enum.GetValues<SymbolFilterMode>())
                             {
-                                <MudSelectItem T="SymbolFilterMode" Value="@f">@f</MudSelectItem>
+                                <MudSelectItem T="SymbolFilterMode" Value="@f">@FilterName(f)</MudSelectItem>
                             }
                         </MudSelect>
                         <HelpTip Text="None = copy every symbol. Whitelist = copy only the listed symbols. Blacklist = copy all except the listed symbols." />
@@ -233,6 +246,52 @@
         if (!_filterSymbols.Contains(symbol, StringComparer.OrdinalIgnoreCase))
             _filterSymbols.Add(symbol);
     }
+
+    private static string MmName(MoneyManagementMode mode) => mode switch
+    {
+        MoneyManagementMode.FixedLot => "Fixed lot",
+        MoneyManagementMode.LotMultiplier => "Lot multiplier",
+        MoneyManagementMode.NotionalMultiplier => "Notional multiplier",
+        MoneyManagementMode.ProportionalBalance => "Proportional to balance",
+        MoneyManagementMode.ProportionalEquity => "Proportional to equity",
+        MoneyManagementMode.ProportionalFreeMargin => "Proportional to free margin",
+        MoneyManagementMode.FixedRiskPercent => "Fixed risk %",
+        MoneyManagementMode.FixedLeverage => "Fixed leverage",
+        MoneyManagementMode.AutoProportional => "Auto-proportional",
+        MoneyManagementMode.RiskFromStopLoss => "Risk from stop-loss",
+        _ => mode.ToString()
+    };
+
+    private static string MmDesc(MoneyManagementMode mode) => mode switch
+    {
+        MoneyManagementMode.FixedLot => "Always trade a fixed number of lots (the parameter), ignoring the master's size.",
+        MoneyManagementMode.LotMultiplier => "Copy the master's lot size multiplied by the parameter (1 = same size).",
+        MoneyManagementMode.NotionalMultiplier => "Match the master's notional value × the parameter, adjusting for each account's price.",
+        MoneyManagementMode.ProportionalBalance => "Scale by your balance ÷ the master's balance.",
+        MoneyManagementMode.ProportionalEquity => "Scale by your equity (balance + floating P&L) ÷ the master's equity.",
+        MoneyManagementMode.ProportionalFreeMargin => "Scale by your free margin ÷ the master's free margin.",
+        MoneyManagementMode.FixedRiskPercent => "Size each copy to risk the parameter percent of your balance (uses the master's stop-loss).",
+        MoneyManagementMode.FixedLeverage => "Size to a fixed leverage (the parameter) on your account.",
+        MoneyManagementMode.AutoProportional => "Scale automatically by the balance ratio, no parameter tuning needed.",
+        MoneyManagementMode.RiskFromStopLoss => "Mirror the master's risk: derive it from the master's stop distance and apply it to your balance; falls back to the max-risk lot when the master has no stop.",
+        _ => ""
+    };
+
+    private static string DirName(CopyDirectionFilter direction) => direction switch
+    {
+        CopyDirectionFilter.Both => "Both directions",
+        CopyDirectionFilter.LongOnly => "Long only",
+        CopyDirectionFilter.ShortOnly => "Short only",
+        _ => direction.ToString()
+    };
+
+    private static string FilterName(SymbolFilterMode filter) => filter switch
+    {
+        SymbolFilterMode.None => "No filter",
+        SymbolFilterMode.Whitelist => "Whitelist",
+        SymbolFilterMode.Blacklist => "Blacklist",
+        _ => filter.ToString()
+    };
 
     protected override Task OnInitializedAsync() => Load();
 

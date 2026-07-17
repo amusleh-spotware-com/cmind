@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Profila ni bilo mogoče ustvariti</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Profil je ustvarjen, toda nekaterih nastavitev cilja ni bilo mogoče uporabiti</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Kratko ime za prepoznavanje tega profila kopiranja v seznamu.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>Račun master, katerega trgovine se kopirajo.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>En ali več računov, ki prejemajo kopije trgovin mastera. Sam master je izključen.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Gospodarjev račun, katerega trgovine so kopirane. Tu se pojavijo samo računi povezani prek cTrader Open API — ročno dodani računi ne morejo kopirati trgovin.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>En ali več računov, ki prejemajo kopije gospodarjevih trgovin (gospodarj je izključen). Navedeni so samo računi povezani prek cTrader Open API.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Kako se vsaka kopiirana trgovina prilagodi relativno na master: fiksna lota, množitelj, delež stanja/kapitala ali fiksni odstotek tveganja.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Števka, ki jo način velikosti uporabi — npr. množitelj (1 = enaka velikost) ali odstotek tveganja.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Največji dopusten premik cene v pipih pri postavljanju kopiranega naročila preden je zavrnjeno.</value></data>
@@ -310,4 +310,35 @@
   <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Omejitev dnevne izgube ne more biti negativna.</value></data>
   <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Omogočite vsaj eno vrsto naročila.</value></data>
   <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Dodajte vsaj en simbol za izbrani filter simbolov.</value></data>
+  <data name="copyNew.mm.FixedLot" xml:space="preserve"><value>Fiksna količina lotov</value></data>
+  <data name="copyNew.mm.LotMultiplier" xml:space="preserve"><value>Množilec lolov</value></data>
+  <data name="copyNew.mm.NotionalMultiplier" xml:space="preserve"><value>Nominalni množilec</value></data>
+  <data name="copyNew.mm.ProportionalBalance" xml:space="preserve"><value>Sorazmerno s stanjem</value></data>
+  <data name="copyNew.mm.ProportionalEquity" xml:space="preserve"><value>Sorazmerno s kapitalom</value></data>
+  <data name="copyNew.mm.ProportionalFreeMargin" xml:space="preserve"><value>Sorazmerno s prosto razpoložljivo maržo</value></data>
+  <data name="copyNew.mm.FixedRiskPercent" xml:space="preserve"><value>Fiksno tveganje %</value></data>
+  <data name="copyNew.mm.FixedLeverage" xml:space="preserve"><value>Fiksna finančna ročica</value></data>
+  <data name="copyNew.mm.AutoProportional" xml:space="preserve"><value>Samodejno sorazmerno</value></data>
+  <data name="copyNew.mm.RiskFromStopLoss" xml:space="preserve"><value>Tveganje iz stop-loss</value></data>
+  <data name="copyNew.mm.desc.FixedLot" xml:space="preserve"><value>Vedno trgujte s fiksno količino lotov (parameter), ne glede na velikost gospodarjeve pozicije.</value></data>
+  <data name="copyNew.mm.desc.LotMultiplier" xml:space="preserve"><value>Kopiraj gospodarjevo količino lotov pomnoženo s parametrom (1 = enaka količina).</value></data>
+  <data name="copyNew.mm.desc.NotionalMultiplier" xml:space="preserve"><value>Ujemi nominalnih vrednost gospodarja × parameter, prilagajajočo se ceni vsakega računa.</value></data>
+  <data name="copyNew.mm.desc.ProportionalBalance" xml:space="preserve"><value>Prilagodi po tvojem stanju ÷ gospodarjevo stanje.</value></data>
+  <data name="copyNew.mm.desc.ProportionalEquity" xml:space="preserve"><value>Prilagodi po tvojem kapitalu (stanje + plavajoči P&amp;L) ÷ gospodarjev kapital.</value></data>
+  <data name="copyNew.mm.desc.ProportionalFreeMargin" xml:space="preserve"><value>Prilagodi po tvoji prosto razpoložljivi marži ÷ gospodarjeva prosto razpoložljiva marža.</value></data>
+  <data name="copyNew.mm.desc.FixedRiskPercent" xml:space="preserve"><value>Nastavi vsako kopijo za tveganje parametrskega odstotka tvojega stanja (uporablja gospodarjev stop-loss).</value></data>
+  <data name="copyNew.mm.desc.FixedLeverage" xml:space="preserve"><value>Nastavi na fiksno finančno ročico (parameter) na tvojem računu.</value></data>
+  <data name="copyNew.mm.desc.AutoProportional" xml:space="preserve"><value>Samodejno prilagodi glede na razmerje stanj, brez potrebe po nastavljanju parametrov.</value></data>
+  <data name="copyNew.mm.desc.RiskFromStopLoss" xml:space="preserve"><value>Zrcali gospodarjevo tveganje: je izpeljano iz razdalje stop-loss gospodarja in ga uporabi na tvoje stanje; padla se vrne na največje tveganje lota, ko gospodarj nima stop-loss.</value></data>
+  <data name="copyNew.dir.Both" xml:space="preserve"><value>Obe smeri</value></data>
+  <data name="copyNew.dir.LongOnly" xml:space="preserve"><value>Samo long</value></data>
+  <data name="copyNew.dir.ShortOnly" xml:space="preserve"><value>Samo short</value></data>
+  <data name="copyNew.filter.None" xml:space="preserve"><value>Brez filtra</value></data>
+  <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Bela lista</value></data>
+  <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Črna lista</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Noben račun še ni povezan prek cTrader Open API. Samo računi Open API lahko kopirajo trgovine — povežite enega za začetek.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Povežite račun</value></data>
+  <data name="copy.map.tip.source" xml:space="preserve"><value>Simbol kot imenovan na gospodarjevem (izvornem) računu, npr. EURUSD.</value></data>
+  <data name="copy.map.tip.destination" xml:space="preserve"><value>Ustrezni simbol pri brokerju namenskega računa, npr. EUR.USD.</value></data>
+  <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Dodatni volumski množilec za ta simbol nad spreminjanjem velikosti namenskega računa (1 = brez spremembe).</value></data>
 </root>

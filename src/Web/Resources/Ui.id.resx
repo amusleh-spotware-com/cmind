@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Gagal membuat profil</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Profil dibuat, tetapi beberapa pengaturan tujuan tidak dapat diterapkan</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Nama pendek untuk mengenali profil salinan ini dalam daftar.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>Akun master yang perdagangannya disalin.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Satu atau lebih akun yang menerima salinan perdagangan master. Master itu sendiri dikecualikan.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Akun master yang perdagangannya disalin. Hanya akun yang terhubung melalui cTrader Open API yang muncul di sini — akun yang ditambahkan secara manual tidak dapat menyalin perdagangan.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Satu atau lebih akun yang menerima salinan perdagangan master (master dikecualikan). Hanya akun yang terhubung melalui cTrader Open API yang terdaftar.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Bagaimana setiap perdagangan yang disalin diukur relatif terhadap master: lot tetap, pengganda, proporsi saldo/ekuitas, atau persen risiko tetap.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Angka yang digunakan mode sizing — misalnya pengganda (1 = ukuran sama) atau persen risiko.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Deviasi harga maksimal, dalam pips, yang ditoleransi saat menempatkan pesanan yang disalin sebelum ditolak.</value></data>
@@ -310,4 +310,35 @@
   <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Batas kerugian harian tidak dapat negatif.</value></data>
   <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Aktifkan setidaknya satu jenis pesanan.</value></data>
   <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Tambahkan setidaknya satu simbol untuk filter simbol yang dipilih.</value></data>
+  <data name="copyNew.mm.FixedLot" xml:space="preserve"><value>Lot tetap</value></data>
+  <data name="copyNew.mm.LotMultiplier" xml:space="preserve"><value>Pengganda lot</value></data>
+  <data name="copyNew.mm.NotionalMultiplier" xml:space="preserve"><value>Pengganda notional</value></data>
+  <data name="copyNew.mm.ProportionalBalance" xml:space="preserve"><value>Sebanding dengan saldo</value></data>
+  <data name="copyNew.mm.ProportionalEquity" xml:space="preserve"><value>Sebanding dengan ekuitas</value></data>
+  <data name="copyNew.mm.ProportionalFreeMargin" xml:space="preserve"><value>Sebanding dengan margin bebas</value></data>
+  <data name="copyNew.mm.FixedRiskPercent" xml:space="preserve"><value>Risiko tetap %</value></data>
+  <data name="copyNew.mm.FixedLeverage" xml:space="preserve"><value>Leverage tetap</value></data>
+  <data name="copyNew.mm.AutoProportional" xml:space="preserve"><value>Proporsional otomatis</value></data>
+  <data name="copyNew.mm.RiskFromStopLoss" xml:space="preserve"><value>Risiko dari stop-loss</value></data>
+  <data name="copyNew.mm.desc.FixedLot" xml:space="preserve"><value>Selalu berdagang dengan jumlah lot tetap (parameternya), mengabaikan ukuran master.</value></data>
+  <data name="copyNew.mm.desc.LotMultiplier" xml:space="preserve"><value>Salin ukuran lot master dikalikan dengan parameter (1 = ukuran sama).</value></data>
+  <data name="copyNew.mm.desc.NotionalMultiplier" xml:space="preserve"><value>Cocokkan nilai notional master × parameter, sesuaikan dengan harga setiap akun.</value></data>
+  <data name="copyNew.mm.desc.ProportionalBalance" xml:space="preserve"><value>Skalakan dengan saldo Anda ÷ saldo master.</value></data>
+  <data name="copyNew.mm.desc.ProportionalEquity" xml:space="preserve"><value>Skalakan dengan ekuitas Anda (saldo + P&amp;L mengambang) ÷ ekuitas master.</value></data>
+  <data name="copyNew.mm.desc.ProportionalFreeMargin" xml:space="preserve"><value>Skalakan dengan margin bebas Anda ÷ margin bebas master.</value></data>
+  <data name="copyNew.mm.desc.FixedRiskPercent" xml:space="preserve"><value>Ukuran setiap salinan untuk risiko persentase parameter saldo Anda (menggunakan stop-loss master).</value></data>
+  <data name="copyNew.mm.desc.FixedLeverage" xml:space="preserve"><value>Skalakan ke leverage tetap (parameternya) di akun Anda.</value></data>
+  <data name="copyNew.mm.desc.AutoProportional" xml:space="preserve"><value>Skalakan secara otomatis sesuai rasio saldo, tidak perlu penyetelan parameter.</value></data>
+  <data name="copyNew.mm.desc.RiskFromStopLoss" xml:space="preserve"><value>Cerminkan risiko master: turunkan dari jarak stop-loss master dan terapkan pada saldo Anda; kembali ke lot risiko maksimal ketika master tidak memiliki stop.</value></data>
+  <data name="copyNew.dir.Both" xml:space="preserve"><value>Kedua arah</value></data>
+  <data name="copyNew.dir.LongOnly" xml:space="preserve"><value>Long saja</value></data>
+  <data name="copyNew.dir.ShortOnly" xml:space="preserve"><value>Short saja</value></data>
+  <data name="copyNew.filter.None" xml:space="preserve"><value>Tanpa filter</value></data>
+  <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Whitelist</value></data>
+  <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Blacklist</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Belum ada akun yang terhubung melalui cTrader Open API. Hanya akun Open API yang dapat menyalin perdagangan — hubungkan satu untuk memulai.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Hubungkan akun</value></data>
+  <data name="copy.map.tip.source" xml:space="preserve"><value>Simbol seperti yang dinamai di akun master (sumber), misalnya EURUSD.</value></data>
+  <data name="copy.map.tip.destination" xml:space="preserve"><value>Simbol yang cocok di broker tujuan, misalnya EUR.USD.</value></data>
+  <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Pengganda volume tambahan untuk simbol ini di atas ukuran tujuan (1 = tidak ada perubahan).</value></data>
 </root>

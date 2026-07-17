@@ -521,6 +521,14 @@ html, body {
     text-align: start;
 }
 
+/* Rich (bulleted) help tooltip — e.g. the money-management modes list. Kept tight so it reads on a
+   phone (tap-to-open) as well as on desktop (hover). */
+.app-help-tip-rich ul {
+    margin: 4px 0 0;
+    padding-inline-start: 16px;
+}
+.app-help-tip-rich li { margin-bottom: 2px; }
+
 /* ---- Auth split-screen (login) -------------------------------------------- */
 
 .app-auth {

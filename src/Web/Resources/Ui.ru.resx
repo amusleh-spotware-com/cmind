@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Не удалось создать профиль</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Профиль создан, но некоторые настройки целевого счета не удалось применить</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Короткое имя для идентификации этого профиля копирования в списке.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>Главный счет, торговля которого копируется.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Один или несколько счетов, которые получают копии торговли главного счета. Сам главный счет исключен.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Счет мастера, сделки которого копируются. Только счета, связанные через cTrader Open API, отображаются здесь — вручную добавленные счета не могут копировать сделки.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Один или несколько счетов, получающих копии сделок мастера (мастер исключен). Указаны только счета, связанные через cTrader Open API.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Как копируемая торговля определяется относительно главного счета: фиксированный лот, множитель, доля от баланса/капитала или процент фиксированного риска.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Число, используемое режимом размера позиции — например множитель (1 = одинаковый размер) или процент риска.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Максимальное отклонение цены в pips, допускаемое при размещении скопированного ордера, прежде чем он будет отклонен.</value></data>
@@ -310,4 +310,35 @@
   <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Дневной лимит убытков не может быть отрицательным.</value></data>
   <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Включите как минимум один тип ордера.</value></data>
   <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Добавьте как минимум один символ для выбранного фильтра символов.</value></data>
+  <data name="copyNew.mm.FixedLot" xml:space="preserve"><value>Фиксированный лот</value></data>
+  <data name="copyNew.mm.LotMultiplier" xml:space="preserve"><value>Множитель лота</value></data>
+  <data name="copyNew.mm.NotionalMultiplier" xml:space="preserve"><value>Множитель номинала</value></data>
+  <data name="copyNew.mm.ProportionalBalance" xml:space="preserve"><value>Пропорционально балансу</value></data>
+  <data name="copyNew.mm.ProportionalEquity" xml:space="preserve"><value>Пропорционально капиталу</value></data>
+  <data name="copyNew.mm.ProportionalFreeMargin" xml:space="preserve"><value>Пропорционально свободной марже</value></data>
+  <data name="copyNew.mm.FixedRiskPercent" xml:space="preserve"><value>Фиксированный риск %</value></data>
+  <data name="copyNew.mm.FixedLeverage" xml:space="preserve"><value>Фиксированное плечо</value></data>
+  <data name="copyNew.mm.AutoProportional" xml:space="preserve"><value>Автопропорциональный</value></data>
+  <data name="copyNew.mm.RiskFromStopLoss" xml:space="preserve"><value>Риск от стоп-лосса</value></data>
+  <data name="copyNew.mm.desc.FixedLot" xml:space="preserve"><value>Всегда торгуйте фиксированным количеством лотов (параметр), игнорируя размер мастера.</value></data>
+  <data name="copyNew.mm.desc.LotMultiplier" xml:space="preserve"><value>Скопируйте размер лота мастера, умноженный на параметр (1 = одинаковый размер).</value></data>
+  <data name="copyNew.mm.desc.NotionalMultiplier" xml:space="preserve"><value>Соответствуйте номиналу мастера × параметр, адаптируя к цене каждого счета.</value></data>
+  <data name="copyNew.mm.desc.ProportionalBalance" xml:space="preserve"><value>Масштабируйте по вашему балансу ÷ баланс мастера.</value></data>
+  <data name="copyNew.mm.desc.ProportionalEquity" xml:space="preserve"><value>Масштабируйте по вашему капиталу (баланс + плавающий P&amp;L) ÷ капитал мастера.</value></data>
+  <data name="copyNew.mm.desc.ProportionalFreeMargin" xml:space="preserve"><value>Масштабируйте по вашей свободной марже ÷ свободная маржа мастера.</value></data>
+  <data name="copyNew.mm.desc.FixedRiskPercent" xml:space="preserve"><value>Размер каждой копии, чтобы рисковать процентом параметра вашего баланса (использует стоп-лосс мастера).</value></data>
+  <data name="copyNew.mm.desc.FixedLeverage" xml:space="preserve"><value>Размер к фиксированному плечу (параметр) на вашем счете.</value></data>
+  <data name="copyNew.mm.desc.AutoProportional" xml:space="preserve"><value>Автоматическое масштабирование по коэффициенту баланса, без необходимости настройки параметров.</value></data>
+  <data name="copyNew.mm.desc.RiskFromStopLoss" xml:space="preserve"><value>Отразите риск мастера: получите его из расстояния стопа мастера и примените к вашему балансу; вернитесь к максимальному риску лота, когда у мастера нет стопа.</value></data>
+  <data name="copyNew.dir.Both" xml:space="preserve"><value>Обе стороны</value></data>
+  <data name="copyNew.dir.LongOnly" xml:space="preserve"><value>Только long</value></data>
+  <data name="copyNew.dir.ShortOnly" xml:space="preserve"><value>Только short</value></data>
+  <data name="copyNew.filter.None" xml:space="preserve"><value>Без фильтра</value></data>
+  <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Белый список</value></data>
+  <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Чёрный список</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Никакие счета еще не связаны через cTrader Open API. Только счета Open API могут копировать сделки — свяжите один, чтобы начать.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Связать счет</value></data>
+  <data name="copy.map.tip.source" xml:space="preserve"><value>Символ как именуется на счете мастера (источник), например EURUSD.</value></data>
+  <data name="copy.map.tip.destination" xml:space="preserve"><value>Соответствующий символ у брокера назначения, например EUR.USD.</value></data>
+  <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Дополнительный множитель объема для этого символа поверх изменения размера назначения (1 = без изменений).</value></data>
 </root>

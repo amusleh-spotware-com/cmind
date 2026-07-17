@@ -139,6 +139,9 @@ public class AppFixture : IAsyncLifetime
         // (mirrors IntegrationTests' TestBootstrap).
         psi.Environment["App__Calendar__IngestionEnabled"] = "false";
         psi.Environment["App__CurrencyStrength__RefreshEnabled"] = "false";
+        // Dev-only seeding endpoints (guarded by IsDevelopment in Program.cs) — lets E2E seed domain state
+        // like an Open-API-linked account without a live broker. Never enabled outside Development.
+        psi.Environment["App__TestSeed__Enabled"] = "true";
         ConfigureApp(psi);
 
         _app = new Process { StartInfo = psi };

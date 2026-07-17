@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Nie udało się utworzyć profilu</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Profil utworzony, ale nie można było zastosować niektórych ustawień docelowych</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Krótka nazwa do rozpoznania tego profilu kopiowania na liście.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>Konto master, którego transakcje są kopiowane.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Jedno lub więcej kont, które otrzymują kopie transakcji master. Sam master jest wykluczony.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Konto mastera, którego transakcje są kopiowane. Tylko konta połączone przez cTrader Open API pojawiają się tutaj — ręcznie dodane konta nie mogą kopiować transakcji.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Jedno lub więcej kont, które otrzymują kopie transakcji mastera (master jest wykluczony). Wymienione są tylko konta połączone przez cTrader Open API.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Jak każda skopiowana transakcja jest zmieniana względem master: stały lot, mnożnik, proporcja salda/kapitału lub stały procent ryzyka.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Liczba używana przez tryb zmiany wielkości — np. mnożnik (1 = ten sam rozmiar) lub procent ryzyka.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Maksymalne odchylenie ceny w pipach tolerowane podczas składania skopiowanego zlecenia, zanim zostanie odrzucone.</value></data>
@@ -310,4 +310,35 @@
   <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Dzienny limit strat nie może być ujemny.</value></data>
   <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Włącz co najmniej jeden typ zlecenia.</value></data>
   <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Dodaj co najmniej jeden symbol dla wybranego filtru symboli.</value></data>
+  <data name="copyNew.mm.FixedLot" xml:space="preserve"><value>Stały lot</value></data>
+  <data name="copyNew.mm.LotMultiplier" xml:space="preserve"><value>Mnożnik lota</value></data>
+  <data name="copyNew.mm.NotionalMultiplier" xml:space="preserve"><value>Mnożnik nominalny</value></data>
+  <data name="copyNew.mm.ProportionalBalance" xml:space="preserve"><value>Proporcjonalnie do salda</value></data>
+  <data name="copyNew.mm.ProportionalEquity" xml:space="preserve"><value>Proporcjonalnie do kapitału</value></data>
+  <data name="copyNew.mm.ProportionalFreeMargin" xml:space="preserve"><value>Proporcjonalnie do wolnej marży</value></data>
+  <data name="copyNew.mm.FixedRiskPercent" xml:space="preserve"><value>Stałe ryzyko %</value></data>
+  <data name="copyNew.mm.FixedLeverage" xml:space="preserve"><value>Stała dźwignia</value></data>
+  <data name="copyNew.mm.AutoProportional" xml:space="preserve"><value>Autoproportcjonalne</value></data>
+  <data name="copyNew.mm.RiskFromStopLoss" xml:space="preserve"><value>Ryzyko ze stop-loss</value></data>
+  <data name="copyNew.mm.desc.FixedLot" xml:space="preserve"><value>Zawsze handluj stałą liczbą lotów (parametrem), ignorując wielkość mastera.</value></data>
+  <data name="copyNew.mm.desc.LotMultiplier" xml:space="preserve"><value>Skopiuj wielkość lota mastera pomnożoną przez parametr (1 = ta sama wielkość).</value></data>
+  <data name="copyNew.mm.desc.NotionalMultiplier" xml:space="preserve"><value>Dopasuj nominalną wartość mastera × parametr, dostosowując się do ceny każdego konta.</value></data>
+  <data name="copyNew.mm.desc.ProportionalBalance" xml:space="preserve"><value>Skaluj według twojego salda ÷ saldo mastera.</value></data>
+  <data name="copyNew.mm.desc.ProportionalEquity" xml:space="preserve"><value>Skaluj według twojego kapitału (saldo + pływający P&amp;L) ÷ kapitał mastera.</value></data>
+  <data name="copyNew.mm.desc.ProportionalFreeMargin" xml:space="preserve"><value>Skaluj według twojej wolnej marży ÷ wolna marża mastera.</value></data>
+  <data name="copyNew.mm.desc.FixedRiskPercent" xml:space="preserve"><value>Ustaw każdą kopię, aby ryzykować procent parametru twojego salda (używa stop-loss mastera).</value></data>
+  <data name="copyNew.mm.desc.FixedLeverage" xml:space="preserve"><value>Ustaw na stałą dźwignię (parametr) na twoim koncie.</value></data>
+  <data name="copyNew.mm.desc.AutoProportional" xml:space="preserve"><value>Skaluj automatycznie według współczynnika salda, bez konieczności dostrajania parametrów.</value></data>
+  <data name="copyNew.mm.desc.RiskFromStopLoss" xml:space="preserve"><value>Zwierciadłuj ryzyko mastera: pochodzi z odległości stop mastera i zastosuj je do twojego salda; powróć do maksymalnego ryzyka lota, gdy master nie ma stop.</value></data>
+  <data name="copyNew.dir.Both" xml:space="preserve"><value>Obie strony</value></data>
+  <data name="copyNew.dir.LongOnly" xml:space="preserve"><value>Tylko long</value></data>
+  <data name="copyNew.dir.ShortOnly" xml:space="preserve"><value>Tylko short</value></data>
+  <data name="copyNew.filter.None" xml:space="preserve"><value>Brak filtra</value></data>
+  <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Lista dozwolonych</value></data>
+  <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Lista zablokowanych</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Żadne konta nie są jeszcze połączone przez cTrader Open API. Tylko konta Open API mogą kopiować transakcje — połącz jedno, aby rozpocząć.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Połącz konto</value></data>
+  <data name="copy.map.tip.source" xml:space="preserve"><value>Symbol jak nazwany na koncie mastera (źródła), np. EURUSD.</value></data>
+  <data name="copy.map.tip.destination" xml:space="preserve"><value>Pasujący symbol u brokera docelowego, np. EUR.USD.</value></data>
+  <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Dodatkowy mnożnik wolumenu dla tego symbolu oprócz zmiany wielkości celu (1 = bez zmian).</value></data>
 </root>

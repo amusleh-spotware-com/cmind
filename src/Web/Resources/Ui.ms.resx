@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Gagal membuat profil</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Profil dibuat, tetapi beberapa tetapan destinasi tidak dapat digunakan</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Nama pendek untuk mengenali profil salinan ini dalam senarai.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>Akaun master yang dagangan dilakukan salinan.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Satu atau lebih akaun yang menerima salinan dagangan master. Master sendiri dikecualikan.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Akaun master yang dagangan disalin. Hanya akaun yang dipautkan melalui cTrader Open API muncul di sini — akaun yang ditambah secara manual tidak boleh menyalin dagangan.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Satu atau lebih akaun yang menerima salinan dagangan master (master dikecualikan). Hanya akaun yang dipautkan Open API cTrader disenaraikan.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Bagaimana setiap dagangan disalin diubah saiz berbanding master: lot tetap, pengganda, bahagian daripada baki/ekuiti, atau peratusan risiko tetap.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>Nombor yang mod saiz gunakan — contohnya pengganda (1 = saiz sama) atau peratusan risiko.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Sisihan harga maksimum, dalam pips, dibenarkan apabila meletakkan pesanan disalin sebelum ditolak.</value></data>
@@ -310,4 +310,35 @@
   <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Had kerugian harian tidak boleh negatif.</value></data>
   <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Dayakan sekurang-kurangnya satu jenis pesanan.</value></data>
   <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Tambah sekurang-kurangnya satu simbol untuk penapis simbol yang dipilih.</value></data>
+  <data name="copyNew.mm.FixedLot" xml:space="preserve"><value>Lot tetap</value></data>
+  <data name="copyNew.mm.LotMultiplier" xml:space="preserve"><value>Pengganda lot</value></data>
+  <data name="copyNew.mm.NotionalMultiplier" xml:space="preserve"><value>Pengganda notional</value></data>
+  <data name="copyNew.mm.ProportionalBalance" xml:space="preserve"><value>Proporsional dengan baki</value></data>
+  <data name="copyNew.mm.ProportionalEquity" xml:space="preserve"><value>Proporsional dengan ekuiti</value></data>
+  <data name="copyNew.mm.ProportionalFreeMargin" xml:space="preserve"><value>Proporsional dengan margin bebas</value></data>
+  <data name="copyNew.mm.FixedRiskPercent" xml:space="preserve"><value>Risiko tetap %</value></data>
+  <data name="copyNew.mm.FixedLeverage" xml:space="preserve"><value>Leverage tetap</value></data>
+  <data name="copyNew.mm.AutoProportional" xml:space="preserve"><value>Proporsional auto</value></data>
+  <data name="copyNew.mm.RiskFromStopLoss" xml:space="preserve"><value>Risiko dari stop-loss</value></data>
+  <data name="copyNew.mm.desc.FixedLot" xml:space="preserve"><value>Sentiasa berdagang dengan jumlah lot tetap (parameter), mengabaikan saiz master.</value></data>
+  <data name="copyNew.mm.desc.LotMultiplier" xml:space="preserve"><value>Salin saiz lot master dikalikan dengan parameter (1 = saiz yang sama).</value></data>
+  <data name="copyNew.mm.desc.NotionalMultiplier" xml:space="preserve"><value>Padankan nilai notional master × parameter, sesuaikan untuk setiap akaun harga.</value></data>
+  <data name="copyNew.mm.desc.ProportionalBalance" xml:space="preserve"><value>Skala mengikut baki anda ÷ baki master.</value></data>
+  <data name="copyNew.mm.desc.ProportionalEquity" xml:space="preserve"><value>Skala mengikut ekuiti anda (baki + floating P&amp;L) ÷ ekuiti master.</value></data>
+  <data name="copyNew.mm.desc.ProportionalFreeMargin" xml:space="preserve"><value>Skala mengikut margin bebas anda ÷ margin bebas master.</value></data>
+  <data name="copyNew.mm.desc.FixedRiskPercent" xml:space="preserve"><value>Saiz setiap salinan untuk mempertaruhkan peratus parameter baki anda (menggunakan stop-loss master).</value></data>
+  <data name="copyNew.mm.desc.FixedLeverage" xml:space="preserve"><value>Saiz ke leverage tetap (parameter) pada akaun anda.</value></data>
+  <data name="copyNew.mm.desc.AutoProportional" xml:space="preserve"><value>Skala secara automatik mengikut nisbah baki, tiada penyesuaian parameter diperlukan.</value></data>
+  <data name="copyNew.mm.desc.RiskFromStopLoss" xml:space="preserve"><value>Cerminkan risiko master: terima daripada jarak stop master dan aplikasikan ke baki anda; kembali ke lot risiko-maks apabila master tiada stop.</value></data>
+  <data name="copyNew.dir.Both" xml:space="preserve"><value>Kedua-dua arah</value></data>
+  <data name="copyNew.dir.LongOnly" xml:space="preserve"><value>Hanya long</value></data>
+  <data name="copyNew.dir.ShortOnly" xml:space="preserve"><value>Hanya short</value></data>
+  <data name="copyNew.filter.None" xml:space="preserve"><value>Tiada penapis</value></data>
+  <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Senarai putih</value></data>
+  <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Senarai hitam</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Tiada akaun yang dipautkan melalui cTrader Open API lagi. Hanya akaun Open API boleh menyalin dagangan — pautkan satu untuk memulakan.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Pautkan akaun</value></data>
+  <data name="copy.map.tip.source" xml:space="preserve"><value>Simbol seperti dinamakan pada akaun master (sumber), cth EURUSD.</value></data>
+  <data name="copy.map.tip.destination" xml:space="preserve"><value>Simbol sepadan pada broker tujuan, cth EUR.USD.</value></data>
+  <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Pengganda volum tambahan untuk simbol ini di atas pengubahan saiz tujuan (1 = tiada perubahan).</value></data>
 </root>

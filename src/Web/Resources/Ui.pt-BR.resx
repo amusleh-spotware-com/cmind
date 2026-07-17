@@ -267,8 +267,8 @@
   <data name="copyNew.createFailed" xml:space="preserve"><value>Falha ao criar o perfil</value></data>
   <data name="copyNew.partialFailed" xml:space="preserve"><value>Perfil criado, mas algumas configurações de destino não puderam ser aplicadas</value></data>
   <data name="copyNew.tip.name" xml:space="preserve"><value>Um nome curto para reconhecer esse perfil de cópia na lista.</value></data>
-  <data name="copyNew.tip.source" xml:space="preserve"><value>A conta master cujas negociações são copiadas.</value></data>
-  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Uma ou mais contas que recebem cópias das negociações do master. O próprio master é excluído.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>A conta master cujos trades são copiados. Apenas contas vinculadas via cTrader Open API aparecem aqui — contas adicionadas manualmente não podem copiar trades.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Uma ou mais contas que recebem cópias dos trades do master (o master é excluído). Apenas contas vinculadas ao cTrader Open API são listadas.</value></data>
   <data name="copyNew.tip.mode" xml:space="preserve"><value>Como cada negociação copiada é dimensionada em relação ao master: um lot fixo, um multiplicador, uma proporção do saldo/patrimônio ou um risco em percentual fixo.</value></data>
   <data name="copyNew.tip.parameter" xml:space="preserve"><value>O número que o modo de dimensionamento usa — por exemplo, o multiplicador (1 = mesmo tamanho) ou o risco em percentual.</value></data>
   <data name="copyNew.tip.slippage" xml:space="preserve"><value>Desvio máximo de preço, em pips, tolerado ao colocar a ordem copiada antes de ser rejeitada.</value></data>
@@ -310,4 +310,35 @@
   <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>O limite de perda diária não pode ser negativo.</value></data>
   <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Ative pelo menos um tipo de ordem.</value></data>
   <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Adicione pelo menos um símbolo para o filtro de símbolo selecionado.</value></data>
+  <data name="copyNew.mm.FixedLot" xml:space="preserve"><value>Lote fixo</value></data>
+  <data name="copyNew.mm.LotMultiplier" xml:space="preserve"><value>Multiplicador de lote</value></data>
+  <data name="copyNew.mm.NotionalMultiplier" xml:space="preserve"><value>Multiplicador nocional</value></data>
+  <data name="copyNew.mm.ProportionalBalance" xml:space="preserve"><value>Proporcional ao saldo</value></data>
+  <data name="copyNew.mm.ProportionalEquity" xml:space="preserve"><value>Proporcional ao patrimônio</value></data>
+  <data name="copyNew.mm.ProportionalFreeMargin" xml:space="preserve"><value>Proporcional à margem livre</value></data>
+  <data name="copyNew.mm.FixedRiskPercent" xml:space="preserve"><value>Risco fixo %</value></data>
+  <data name="copyNew.mm.FixedLeverage" xml:space="preserve"><value>Alavancagem fixa</value></data>
+  <data name="copyNew.mm.AutoProportional" xml:space="preserve"><value>Autopropcional</value></data>
+  <data name="copyNew.mm.RiskFromStopLoss" xml:space="preserve"><value>Risco do stop-loss</value></data>
+  <data name="copyNew.mm.desc.FixedLot" xml:space="preserve"><value>Sempre negocie um número fixo de lotes (o parâmetro), ignorando o tamanho do master.</value></data>
+  <data name="copyNew.mm.desc.LotMultiplier" xml:space="preserve"><value>Copie o tamanho do lote do master multiplicado pelo parâmetro (1 = mesmo tamanho).</value></data>
+  <data name="copyNew.mm.desc.NotionalMultiplier" xml:space="preserve"><value>Corresponda ao valor nocional do master × parâmetro, ajustando para o preço de cada conta.</value></data>
+  <data name="copyNew.mm.desc.ProportionalBalance" xml:space="preserve"><value>Dimensione pelo seu saldo ÷ saldo do master.</value></data>
+  <data name="copyNew.mm.desc.ProportionalEquity" xml:space="preserve"><value>Dimensione pelo seu patrimônio (saldo + P&amp;L flutuante) ÷ patrimônio do master.</value></data>
+  <data name="copyNew.mm.desc.ProportionalFreeMargin" xml:space="preserve"><value>Dimensione pela sua margem livre ÷ margem livre do master.</value></data>
+  <data name="copyNew.mm.desc.FixedRiskPercent" xml:space="preserve"><value>Dimensione cada cópia para arriscar o percentual do parâmetro do seu saldo (usa o stop-loss do master).</value></data>
+  <data name="copyNew.mm.desc.FixedLeverage" xml:space="preserve"><value>Dimensione para uma alavancagem fixa (o parâmetro) em sua conta.</value></data>
+  <data name="copyNew.mm.desc.AutoProportional" xml:space="preserve"><value>Dimensione automaticamente pela razão de saldo, sem necessidade de ajuste de parâmetros.</value></data>
+  <data name="copyNew.mm.desc.RiskFromStopLoss" xml:space="preserve"><value>Espelhe o risco do master: derive da distância de stop do master e aplique ao seu saldo; retorne ao lote de risco máximo quando o master não tiver stop.</value></data>
+  <data name="copyNew.dir.Both" xml:space="preserve"><value>Ambas as direções</value></data>
+  <data name="copyNew.dir.LongOnly" xml:space="preserve"><value>Apenas long</value></data>
+  <data name="copyNew.dir.ShortOnly" xml:space="preserve"><value>Apenas short</value></data>
+  <data name="copyNew.filter.None" xml:space="preserve"><value>Sem filtro</value></data>
+  <data name="copyNew.filter.Whitelist" xml:space="preserve"><value>Lista de permissões</value></data>
+  <data name="copyNew.filter.Blacklist" xml:space="preserve"><value>Lista de bloqueios</value></data>
+  <data name="copyNew.noOpenApi" xml:space="preserve"><value>Nenhuma conta foi vinculada via cTrader Open API ainda. Apenas contas Open API podem copiar trades — vincule uma para começar.</value></data>
+  <data name="copyNew.linkOpenApi" xml:space="preserve"><value>Vincular uma conta</value></data>
+  <data name="copy.map.tip.source" xml:space="preserve"><value>O símbolo como nomeado na conta master (fonte), p. EURUSD.</value></data>
+  <data name="copy.map.tip.destination" xml:space="preserve"><value>O símbolo correspondente no broker de destino, p. EUR.USD.</value></data>
+  <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Multiplicador de volume extra para este símbolo além do dimensionamento do destino (1 = sem alteração).</value></data>
 </root>

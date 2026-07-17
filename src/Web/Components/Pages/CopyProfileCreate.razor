@@ -24,6 +24,15 @@
     <MudText Typo="Typo.h5">@L["copyNew.title"]</MudText>
 </MudStack>
 
+@if (_loaded && _accountOptions.Length == 0)
+{
+    <MudAlert Severity="Severity.Warning" Class="mb-3" data-testid="copy-no-openapi">
+        @L["copyNew.noOpenApi"]
+        <MudButton Class="ms-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
+                   Href="/accounts" data-testid="copy-link-openapi">@L["copyNew.linkOpenApi"]</MudButton>
+    </MudAlert>
+}
+
 @if (_errors.Count > 0)
 {
     <MudAlert Severity="Severity.Error" Class="mb-3" data-testid="copy-profile-errors">
@@ -81,13 +90,24 @@
         <MudItem xs="12"><MudText Typo="Typo.subtitle1" Class="mt-2">@L["copyNew.section.sizing"]</MudText></MudItem>
         <MudItem xs="12" sm="6" md="3">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                <MudSelect T="MoneyManagementMode" @bind-Value="_mode" Label="@L["copyNew.mode"]" Class="flex-grow-1">
+                <MudSelect T="MoneyManagementMode" @bind-Value="_mode" Label="@L["copyNew.mode"]" Class="flex-grow-1"
+                           ToStringFunc="@(m => MmName(m))">
                     @foreach (var m in Enum.GetValues<MoneyManagementMode>())
                     {
-                        <MudSelectItem T="MoneyManagementMode" Value="@m">@m</MudSelectItem>
+                        <MudSelectItem T="MoneyManagementMode" Value="@m">@MmName(m)</MudSelectItem>
                     }
                 </MudSelect>
-                <HelpTip Text="@L["copyNew.tip.mode"]" />
+                <HelpTip Text="@L["copyNew.tip.mode"]">
+                    <TooltipBody>
+                        <MudText Typo="Typo.body2">@L["copyNew.tip.mode"]</MudText>
+                        <ul>
+                            @foreach (var m in Enum.GetValues<MoneyManagementMode>())
+                            {
+                                <li><strong>@MmName(m)</strong> — @L[$"copyNew.mm.desc.{m}"]</li>
+                            }
+                        </ul>
+                    </TooltipBody>
+                </HelpTip>
             </MudStack>
         </MudItem>
         <MudItem xs="12" sm="6" md="3">
@@ -104,10 +124,11 @@
         </MudItem>
         <MudItem xs="12" sm="6" md="3">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                <MudSelect T="CopyDirectionFilter" @bind-Value="_direction" Label="@L["copyNew.direction"]" Class="flex-grow-1">
+                <MudSelect T="CopyDirectionFilter" @bind-Value="_direction" Label="@L["copyNew.direction"]" Class="flex-grow-1"
+                           ToStringFunc="@(d => DirName(d))">
                     @foreach (var d in Enum.GetValues<CopyDirectionFilter>())
                     {
-                        <MudSelectItem T="CopyDirectionFilter" Value="@d">@d</MudSelectItem>
+                        <MudSelectItem T="CopyDirectionFilter" Value="@d">@DirName(d)</MudSelectItem>
                     }
                 </MudSelect>
                 <HelpTip Text="@L["copyNew.tip.direction"]" />
@@ -171,10 +192,11 @@
         <MudItem xs="12"><MudText Typo="Typo.subtitle1" Class="mt-2">@L["copyNew.section.symbols"]</MudText></MudItem>
         <MudItem xs="12" md="4">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                <MudSelect T="SymbolFilterMode" @bind-Value="_filterMode" Label="@L["copyNew.filterMode"]" Class="flex-grow-1">
+                <MudSelect T="SymbolFilterMode" @bind-Value="_filterMode" Label="@L["copyNew.filterMode"]" Class="flex-grow-1"
+                           ToStringFunc="@(f => FilterName(f))">
                     @foreach (var f in Enum.GetValues<SymbolFilterMode>())
                     {
-                        <MudSelectItem T="SymbolFilterMode" Value="@f">@f</MudSelectItem>
+                        <MudSelectItem T="SymbolFilterMode" Value="@f">@FilterName(f)</MudSelectItem>
                     }
                 </MudSelect>
                 <HelpTip Text="@L["copyNew.tip.filterMode"]" />
@@ -256,19 +278,29 @@
     private IReadOnlyList<CopyAccountOption> Accounts => _accountOptions;
     private IEnumerable<CopyAccountOption> Selectable => _accountOptions.Where(a => a.Number != _source);
 
+    private bool _loaded;
+
     protected override async Task OnInitializedAsync()
     {
         var accounts = await Http.GetDynamicArrayAsync("/api/accounts");
-        _accountOptions = ((IEnumerable<dynamic>)accounts)
+        // Copy trading places orders over the cTrader Open API, so only Open-API-linked accounts can be a
+        // master or destination — a manually added (cID-only) account has no token to trade with.
+        var openApi = ((IEnumerable<dynamic>)accounts).Where(a => (bool)a.linkedViaOpenApi).ToArray();
+        _accountOptions = openApi
             .Select(a => new CopyAccountOption((long)a.accountNumber, $"{a.accountNumber} ({a.broker})"))
             .ToArray();
-        _accountRefs = ((IEnumerable<dynamic>)accounts)
+        _accountRefs = openApi
             .Select(a => new AccountRef((Guid)a.id, (long)a.accountNumber))
             .ToArray();
+        _loaded = true;
     }
 
     private void SelectAll() => _destinations = Selectable.Select(a => a.Number).ToHashSet();
     private void ClearAll() => _destinations = new HashSet<long>();
+
+    private string MmName(MoneyManagementMode mode) => L[$"copyNew.mm.{mode}"];
+    private string DirName(CopyDirectionFilter direction) => L[$"copyNew.dir.{direction}"];
+    private string FilterName(SymbolFilterMode filter) => L[$"copyNew.filter.{filter}"];
 
     private RenderFragment SwitchWithTip(bool value, Action<bool> setter, string label, string tip) => __builder =>
     {

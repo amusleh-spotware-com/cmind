@@ -38,7 +38,12 @@ public sealed class CopyTradingTests(AppFixture app)
         // Source (master) is the first select on the page.
         await page.Locator(".mud-select").First.ClickAsync();
         await page.Locator($".mud-list-item:has-text('{master}')").First.ClickAsync();
-        await page.Locator("[data-testid=copy-select-all]").ClickAsync();
+        // Pick THIS test's own destination explicitly — never select-all. Other tests in this collection
+        // seed extra Open-API accounts into the shared user; select-all would attach them too and break the
+        // single-destination assertions below (CI flake: "Sequence contains more than one element").
+        await page.Locator("[data-testid=copy-destinations-select]").ClickAsync();
+        await page.Locator($".mud-list-item:has-text('{slave}')").First.ClickAsync();
+        await page.Keyboard.PressAsync("Escape");
 
         // Symbol map via the proper add/remove controls (no comma-separated blob).
         await page.Locator("[data-testid=symbol-map-source]").FillAsync("EURUSD");
@@ -152,6 +157,17 @@ public sealed class CopyTradingTests(AppFixture app)
         // The full-page editor exposes the source (master) selector.
         await GotoAsync(page, $"/copy-trading/{profileId}");
         await Assertions.Expect(page.Locator("[data-testid=copy-source-select]")).ToBeVisibleAsync(Slow);
+
+        // The browser tab title shows the profile name.
+        Assert.Contains($"src-{Suffix}", await page.TitleAsync());
+
+        // The destination picker excludes the current source and any already-added destination — only free
+        // accounts are offered (master1 was freed when the source moved to master2).
+        await page.Locator("[data-testid=copy-dest-accounts]").ClickAsync();
+        await page.Locator(".mud-list-item").First.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
+        Assert.True(await page.Locator($".mud-list-item:has-text('{master1}')").CountAsync() > 0, "a free account must be offered");
+        Assert.Equal(0, await page.Locator($".mud-list-item:has-text('{slave}')").CountAsync());   // already a destination
+        Assert.Equal(0, await page.Locator($".mud-list-item:has-text('{master2}')").CountAsync());  // current source
     }
 
     // ---------------- Non-UI (API): multi-slave, options, lifecycle ----------------

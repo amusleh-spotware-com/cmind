@@ -16,7 +16,7 @@
 @inject NavigationManager Nav
 @inject IStringLocalizer<Ui> L
 
-<PageTitle>@L["copyDetail.title"]</PageTitle>
+<PageTitle>@(_name is { Length: > 0 } ? _name : L["copyDetail.title"])</PageTitle>
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
     <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" aria-label="@L["copyDetail.back"]"
@@ -259,7 +259,8 @@ else
     private HashSet<long> DestinationNumbers => _destinations
         .Select(d => DestinationNumber((Guid)d.destinationAccountId)).Where(n => n != 0).ToHashSet();
     private IEnumerable<AccountRef> SourceOptions => _accountRefs.Where(a => !DestinationNumbers.Contains(a.Number));
-    private IEnumerable<AccountRef> DestinationOptions => _accountRefs.Where(a => a.Number != _source);
+    private IEnumerable<AccountRef> DestinationOptions =>
+        _accountRefs.Where(a => a.Number != _source && !DestinationNumbers.Contains(a.Number));
 
     private long DestinationNumber(Guid id)
     {

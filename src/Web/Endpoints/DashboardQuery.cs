@@ -17,22 +17,21 @@ public static class DashboardQuery
     {
         var (window, buckets) = DashboardPeriods.Plan(period);
 
-        // All-time status snapshot — active/pending/etc. are not window-bounded.
-        var counts = await db.Instances.Where(i => i.UserId == userId)
-            .GroupBy(_ => 1)
-            .Select(g => new
-            {
-                Running = g.Count(i => i is RunningRunInstance || i is StartingRunInstance),
-                BacktestRunning = g.Count(i => i is RunningBacktestInstance || i is StartingBacktestInstance),
-                Pending = g.Count(i => i is PendingRunInstance || i is PendingBacktestInstance),
-                Failed = g.Count(i => i is FailedRunInstance || i is FailedBacktestInstance),
-                Completed = g.Count(i => i is StoppedRunInstance || i is CompletedBacktestInstance),
-                Total = g.Count()
-            })
-            .FirstOrDefaultAsync(cancellationToken);
-
-        var running = counts?.Running ?? 0;
-        var backtestRunning = counts?.BacktestRunning ?? 0;
+        // All-time status snapshot — active/pending/etc. are not window-bounded. Counted with scalar
+        // aggregates (not a GroupBy(_ => 1)/First projection, which trips EF's
+        // FirstWithoutOrderByAndFilterWarning).
+        var mine = db.Instances.Where(i => i.UserId == userId);
+        var running = await mine.CountAsync(
+            i => i is RunningRunInstance || i is StartingRunInstance, cancellationToken);
+        var backtestRunning = await mine.CountAsync(
+            i => i is RunningBacktestInstance || i is StartingBacktestInstance, cancellationToken);
+        var pending = await mine.CountAsync(
+            i => i is PendingRunInstance || i is PendingBacktestInstance, cancellationToken);
+        var failed = await mine.CountAsync(
+            i => i is FailedRunInstance || i is FailedBacktestInstance, cancellationToken);
+        var completed = await mine.CountAsync(
+            i => i is StoppedRunInstance || i is CompletedBacktestInstance, cancellationToken);
+        var totalInstances = await mine.CountAsync(cancellationToken);
         var activeNow = running + backtestRunning;
 
         // Window (x2 for previous-period deltas). StatusName/timestamps live on TPH subtypes and are not
@@ -143,11 +142,11 @@ public static class DashboardQuery
             Status = new DashboardStatusBreakdown
             {
                 Running = running,
-                Pending = counts?.Pending ?? 0,
-                Failed = counts?.Failed ?? 0,
-                Completed = counts?.Completed ?? 0,
+                Pending = pending,
+                Failed = failed,
+                Completed = completed,
                 BacktestsRunning = backtestRunning,
-                Total = counts?.Total ?? 0
+                Total = totalInstances
             },
             TimeSeries = timeSeries,
             Activity = activity,

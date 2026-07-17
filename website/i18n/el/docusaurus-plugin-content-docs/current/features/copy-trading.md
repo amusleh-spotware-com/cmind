@@ -1,100 +1,105 @@
 ---
-description: "Κατοπτρίστε το κύριο λογαριασμό cTrader σε έναν+ λογαριασμό σκλάβου — διαπλατφόρμης, cross-cID — με έλεγχο ανά-προορισμού + συμφωνία αγοραίας καθαρότητας."
+description: "Αντιγραφή λογαριασμού master cTrader σε έναν ή περισσότερους slave λογαριασμούς — διαδιακοπής, διαφορετικές cID — με έλεγχο ανά προορισμό + συμφωνία τραπεζικής ποιότητας."
 ---
 
-# Αντιγραφή διαπραγμάτευσης
+# Copy trading
 
-Κατοπτρίστε **κύριο** λογαριασμό cTrader σε έναν+ **δούλο** λογαριασμό — διαπλατφόρμης, cross-cID — με ανά-προορισμό έλεγχο + συμφωνία χρήματος-καθαρότητας.
+Αντιγραφή **master** λογαριασμού cTrader σε έναν ή περισσότερους **slave** λογαριασμούς — διαδιακοπής, διαφορετικές cID — με έλεγχο ανά προορισμό + συμφωνία τραπεζικής ποιότητας.
 
-## Έννοιες
+## Concepts
 
-- **Προφίλ αντιγραφής** — ένας κύριος (`SourceAccountId`) + ένας+ **προορισμών**. Κύκλος ζωής: `Draft → Running → Paused → Stopped` (`Error` κατά αποτυχία). Root aggregate: `CopyProfile` (κατέχει `CopyDestination`).
-- **Προορισμός** — ένας λογαριασμό δούλου + πλήρο σύνολο κανόνων για τον τρόπο κύριου αντιγράφηκε σε αυτό. Όλη η ρύθμιση ανά-προορισμό, έτσι ένας κύριος τροφοδοτεί συντηρητικό + επιθετικό δούλους ταυτόχρονα.
-- **Ο κεντρικός κινητήρας αντιγραφής** — τρέχον εργαλείο για προφίλ (`CopyEngineHost`). Εγγραφές ρεύμα εκτέλεσης κύριου, εφαρμόζει κάθε συμβάν σε κάθε προορισμό.
-- **Επόπτης** — `CopyEngineSupervisor`, υπηρεσία παρασκηνίου σε κάθε κόμβο. Φιλοξενεί αντιστοιχίες προφίλ, αυτο-θεραπείες σε όλο το σύμπλεγμα (δείτε [scaling](../deployment/scaling.md)).
+- **Copy profile** — ένα master (`SourceAccountId`) + ένας ή περισσότεροι **προορισμοί**. Κύκλος ζωής: `Draft → Running → Paused → Stopped` (`Error` σε περίπτωση αποτυχίας). Aggregate root: `CopyProfile` (ιδιοκτησία `CopyDestination`).
+- **Destination** — ένας slave λογαριασμός + πλήρο σύνολο κανόνων για το πώς αντιγράφεται το master σε αυτόν. Όλη η ρύθμιση ανά προορισμό, οπότε ένα master μπορεί να τροφοδοτήσει συντηρητικά + επιθετικά slave λογαριασμάτα ταυτόχρονα.
+- **Copy engine host** — εργαζόμενος που εκτελείται για profile (`CopyEngineHost`). Συνδρομή στο stream εκτέλεσης του master, εφαρμογή κάθε γεγονότος σε κάθε προορισμό.
+- **Supervisor** — `CopyEngineSupervisor`, background service σε κάθε node. Φιλοξενεί αναθεμένα profiles, αυτό-διορθώνει στο cluster (δείτε [scaling](../deployment/scaling.md)).
 
-## Τι αντιγράφεται
+## What gets mirrored
 
-| Συμβάν κύριου | Δράση δούλου |
+| Master event | Slave action |
 |--------------|--------------|
-| Ανοιχτή θέση αγοράς / εύρους αγοράς | Ανοίξτε ένα υπολογιστό αντίγραφο (επισημασμένο με το αναγνωριστικό θέσης πηγής) |
-| Εκκρεμές εντολή όριο / στάση / στάση-όριο | Τοποθετήστε τη αντιστοιχίζουσα εκκρεμή εντολή |
-| Τροποποίηση εκκρεμούς εντολής | Τροποποιήστε την αντιγραφή εκκρεμούς εντολής στη θέση |
-| Ακύρωση εκκρεμούς εντολής / λήξη | Ακυρώστε την αντιγραφή εκκρεμούς εντολής |
-| Μερική κλείσιμο | Κλείστε το ίδιο ποσοστό της δουλικής θέσης |
-| Scale-in (αύξηση όγκου) | Ανοίξτε τον προστιθέμενο όγκο (προαιρετικό) |
-| Αλλαγή stop-loss / trailing-stop | Τροποποιήστε την προστασία της δουλικής θέσης |
-| Πλήρης κλείσιμο | Κλείστε το δουλικό αντίγραφο |
+| Market / market-range position open | Άνοιγμα μιας σταθμισμένης αντιγραφής (επισημασμένης με το ID της πηγαίας θέσης) |
+| Limit / stop / stop-limit pending order | Τοποθέτηση της αντίστοιχης pending order |
+| Pending order amend | Τροποποίηση της αντιγραφής pending order στη θέση της |
+| Pending order cancel / expiry | Ακύρωση της αντιγραφής pending order |
+| Partial close | Κλείσιμο του ίδιου ποσοστού της slave θέσης |
+| Scale-in (volume increase) | Άνοιγμα του πρόσθετου όγκου (opt-in) |
+| Stop-loss / trailing-stop change | Τροποποίηση της προστασίας της slave θέσης |
+| Full close | Κλείσιμο της slave αντιγραφής |
 
-Κάθε αντίγραφο **επισημασμένο με αναγνωριστικό θέσης/εντολής πηγής**. Μετά από επανασύνδεση ο κεντρικός κινητήρας ξαναχτίζει κατάσταση από συμφωνία: ανοίγει αντίγραφα κύριου κράτησης αλλά δούλος λείπει, κλείνει δούλο "ορφανά" κύριο δεν κρατάει — **χωρίς διπλασιασμό διαπραγματεύσεων**.
+Κάθε αντιγραφή **επισημασμένη με το ID της πηγαίας θέσης/order**. Μετά την επανασύνδεση, ο host ανακατασκευάζει την κατάσταση από reconcile: ανοίγει αντιγραφές που διατηρεί το master αλλά λείπουν από το slave, κλείνει slave "ορφανές" που το master δεν διατηρεί πλέον — **χωρίς να διπλασιάζει trades**.
 
-## Δημιουργία προφίλ
+## Creating a profile
 
-**Νέο προφίλ** διάλογος στη σελίδα Copy Trading συλλέγει όλα έξω: όνομα προφίλ, πηγή (κύριο) λογαριασμό, προορισμό (δούλο) λογαριασμούς (πολλαπλή επιλογή με **Επιλογή όλων** κουμπί. επιλεγμένος κύριος εξαιρείται από τη λίστα δούλων), + πλήρο ανά-προορισμό σύνολο ειδοχής παρακάτω. Όλες οι εισροές **επικύρωση πριν από την αποθήκευση** — λείπει όνομα/πηγή/προορισμό, μη θετικό σύστημα sizing, αρνητικό/ασυνεπές όρια πολλών, εκτός εμβέλειας drawdown %, κανένας τύπος εντολής ενεργοποιημένος, κενό φίλτρο σύμβολο, ή κακοδιαμορφωμένα ζεύγη χαρτών συμβόλων επιφανείας ως λίστα σφαλμάτων + αποκλείουν αποθήκευση. Κατά την επιβεβαίωση, προφίλ δημιουργήθηκε + κάθε επιλεγμένο δούλο προστέθηκε με τις επιλεγμένες ρυθμίσεις.
+**New Profile** ανοίγει ένα αφιερωμένο **full-page** φόρμα (`/copy-trading/new`), όχι διάλογο — το σύνολο επιλογών είναι αρκετά μεγάλο ώστε μια σελίδα να διαβάζεται καλύτερα σε τηλέφωνο και desktop. Συλλέγει τα πάντα εκ των προτέρων: όνομα profile, πηγαία (master) λογαριασμός, προορισμοί (slave) λογαριασμοί (multi-select με κουμπί **Select all**; ο επιλεγμένος master εξαιρείται από τη λίστα slave), + το πλήρες σύνολο επιλογών ανά προορισμό. **Κάθε έλεγχος φέρει κάποια tooltip με βοήθεια** που εξηγεί τι κάνει και πώς να τον χρησιμοποιήσει. Δομημένες εισροές χρησιμοποιούν **σωστούς επικυρωμένους ελέγχους** — αριθμοί/ποσοστό μέσω αριθμητικών πεδίων, modes/κατεύθυνση/φίλτρο μέσω selects, το σύμβολο φίλτρου μέσω λίστας προσθήκης/κατάργησης συμβόλων, και ο χάρτης συμβόλων μέσω πίνακα προσθήκης/κατάργησης `Source → Destination (× multiplier)` σειρών — ποτέ ένα comma-separated κείμενο blob. Όλες οι εισροές **επικυρωθείσες πριν από την αποθήκευση** — ονόματος/πηγαίας/προορισμού που λείπουν, παράμετρος sizing όχι θετική, αρνητικά/ασυνεπή όρια lot, ποσοστό drawdown εκτός εύρους, καμία τύπος εντολής ενεργοποιημένη, ή κενό σύμβολο φίλτρου που εμφανίζεται ως λίστα σφάλματος + αποτρέπει την αποθήκευση. Κατά τη δημιουργία, το profile δημιουργείται + κάθε επιλεγμένο slave προστίθεται με τις επιλεγμένες ρυθμίσεις, στη συνέχεια η σελίδα επιστρέφει στη λίστα Copy Trading.
 
-Δράσεις σειράς σεβόμαστε κύκλο ζωής: **Εκκίνηση** ενεργοποιημένη μόνο όταν δεν τρέχει, **Διακοπή** + **Παύση** μόνο όταν τρέχει, **Διαγραφή** απενεργοποιημένη κατά τη διάρκεια τρεξίματος + ζητά επιβεβαίωση πριν από την κατάργηση προφίλ + προορισμών.
+**Import / export.** Ολόκληρο το σύνολο ρυθμίσεων μπορεί να **εξαχθεί σε αρχείο JSON** και να **εισαχθεί** ξανά για προ-συμπλήρωση του φόρμα, οπότε μια ρύθμιση μπορεί να επαναχρησιμοποιηθεί σε διαφορετικά profiles χωρίς επανατύπωση. Ο χάρτης συμβόλων μπορεί επίσης να **εξαχθεί / εισαχθεί ως αρχείο CSV** (`Source,Destination,VolumeMultiplier`) — προετοιμάστε έναν μεγάλο χάρτη symbols του broker σε ένα spreadsheet και φορτώστε τον σε ένα βήμα. Οι ίδιοι έλεγχοι συμβόλων και η εισαγωγή/εξαγωγή CSV είναι επίσης διαθέσιμα στο διάλογο προορισμού στη σελίδα Copy Trading.
 
-## Ειδοχές ανά-προορισμού
+Οι ενέργειες σειράς σέβονται τον κύκλο ζωής: **Start** ενεργοποιημένο μόνο όταν δεν εκτελείται, **Stop** + **Pause** μόνο όταν εκτελείται, **Delete** απενεργοποιημένο κατά την εκτέλεση + ζητά επιβεβαίωση πριν αφαιρέσει το profile + τους προορισμούς.
 
-Ορίστε στο διάλογο Νέο προφίλ, στον ανά-προορισμό πίνακα της σελίδας Copy Trading ή μέσω `POST /api/copy/profiles/{id}/destinations`:
+## Per-destination options
 
-- **Sizing** (`MoneyManagementMode` + παράμετρο): σταθερό πολλ, πολλ/συμβολικό πολλαπλασιαστή, ανάλογο ισοζύγιο/ίδια κεφάλαια/ελεύθερη περιθώριο, σταθερό κίνδυνο %, σταθερό μόχλευση, αυτο-ανάλογο, **κίνδυνο-%-από-στάση** (M7). Συν ελάχιστο/μέγιστο πολλ όρια + δύναμη-ελάχιστο-πολλ. **Κίνδυνο-από-στάση** μεγέθη προορισμού έτσι έτσι αναλαμβάνει ρύθμιση ποσοστού *δικό του* ισοζύγιο, προκύπτων από **απόσταση stop-loss του κύριου** (`κύριο κίνδυνο 2% → δούλο αυτο-κίνδυνο 2%`): `πολλ = ισοζύγιο×% ÷ (stopDistance ×
-  contractSize)`. Ανοικτό κύριο **χωρίς** stop-loss έχει χωρίς απόσταση για το μέγεθος έναντι → χρησιμοποιεί ρύθμιση **μέγιστο-κίνδυνο fallback πολλ** (M7) εάν ορίστηκε, άλλως παραληφθεί (`no_stop_loss`) δεν μάντεψε. Αναλογικό-**ίδια κεφάλαια**/**ελεύθερη περιθώριο** μέγεθος από λογαριασμό **ίδια κεφάλαια** (`ισοζύγιο + Σ πλέον P&L`, προκύπτων ανά cTrader Open API το οποίο δεν παραδίδει ίδια κεφάλαια), όχι απλό ισοζύγιο — έτσι κύριο κάθεται σε ανοικτό κέρδος/ζημιά μεγέθη αντίγραφα δεξιά. Χρησιμοποιημένο περιθώριο δεν εκτίθεται από συμφωνία API, έτσι ελεύθερη περιθώριο θεραπεύεται ως ίδια κεφάλαια (ειλικρινής διαθέσιμα κεφάλαια προκυρήξ). άλλες τρόποι διαβάζουν ισοζύγιο + αποφύγουν επιπλέον revaluation round-trip.
-- **Κατευθυντήριο φίλτρο κατεύθυνσης**: και τα δύο / μόνο μακρύ / μόνο σύντομο. **Αντιστροφή**: πλευρά διαφοράς (+ ανταλλαγή SL↔ TP) για αντιθετική αντιγραφή.
-- **Μόνο διαχείριση** (Αγνόηση-Νέων-Διαπραγματεύσεων / Κλείσιμο-Μόνο): κατοπτρίστε κλησίματα, μερικά κλησίματα + προστασία αλλαγές σε ήδη αντιγραφή θέσεις, αλλά ανοίξτε **κανένα** νέα θέση/εκκρεμή εντολή (παραληφθεί `manage_only`). Χρησιμοποιήστε για δούλο κατεύθυνση χωρίς κοπή υπάρχοντα αντίγραφα.
-- **Σύγχρονο-Ανοιχτό-Έναρξη** / **Σύγχρονο-Κλειστό-Έναρξη** (προεπιλογή σε): σχετικά κύριο **πρώτο** resync, εάν να ανοίξει αντίγραφα για κύριο προ-υπάρχον θέσεις, + εάν να κλείσει αντίγραφα κύριο κλειστό κατά τη διάρκεια προφίλ διακοπή. Αμφότερα ισχύουν μόνο κατά την εκκίνηση — mid-run επανασύνδεση πάντα συμφωνία πλήρως έτσι desync ανακάμπτει αναφορικά.
-- **Χάρτης συμβόλου** + **φίλτρο σύμβολο** (λευκή λίστα / λίστα μαύρη). Κάθε καταχώρηση χάρτη συμβόλου φέρει προαιρετικό **ανά-σύμβολο πολλαπλασιαστή όγκου** (cMAM ανά-σύμβολο αντικατάσταση) σκάλα αντίγραφο μέγεθος για αυτό σύμβολο σε κορυφή προορισμού sizing (1 = χωρίς αλλαγή). Ολόκληρος χάρτης εισαγωγές/εξαγωγές ως **CSV** (`GET …/symbol-map.csv`, `PUT …/symbol-map/csv`. στήλες `Source,Destination,VolumeMultiplier`) — κάθε σειρά επικυρώνεται μέσα από αναφορά τομέα αντικειμένων αξιών, έτσι κακοδιαμορφωμένο αρχείο δεν μπορεί να παράγει άκυρος χάρτης.
-- **Παράθυρο ώρες διαπραγμάτευσης** (C18) — ανά-προορισμό καθημερινό UTC παράθυρο (`start`/`end` λεπτά της ημέρας, τέλος αποκλειστικό. `start == end` = όλη την ημέρα). Νέα ανοίγματα έξω παράθυρο παραληφθεί (`trading_hours`). παράθυρο με `start > end` αναδιπλώνει ημερήσιος εκτός (π.χ. 22:00–06:00). Υπάρχοντα θέση διαχείριση παραμένει.
-- **Φίλτρο ετικέτας πηγής** (C18, cTrader ισοδύναμο του MT μαγικού αριθμού φίλτρο) — όταν ορίστηκε, αντίγραφο μόνο κύριο διαπραγματεύσεις του οποίου ετικέτα ταιριάζει **ακριβώς** (π.χ. ένας bot διαπραγματεύσεις, ή μόνο-χειροκίνητη ετικέτα). αλλιώς παραληφθεί (`source_label`). Κενό = αντίγραφο όλα. Φέρεται σε `ExecutionEvent.SourceLabel` από κύριο θέση/εντολή `TradeData.Label`, τιμάται σε resync πολύ.
-- **Λογαριασμό προστασία** (ZuluGuard / Καθολική λογαριασμό προστασία) — παρακολούθηση προορισμού **ζωντανό ίδια κεφάλαια** (`ισοζύγιο + Σ πλέον P&L`, ψήφισε κάθε `CopyDefaults.EquityGuardInterval`) κατά `StopEquity` όροφος και/ή προαιρετικό `TakeEquity` οροφή. Κατά παραβίασης, εφαρμόστε κατάσταση: **CloseOnly** (στάση νέα αντίγραφα, διαχείριση παραμένει), **Κατάψυξη** (στάση ανοίγματος), **Πώληση** (κλείστε **κάθε** αντίγραφο προορισμού ακόμη). Μόλις πυροβολήθηκε, προορισμός πακέτο — χωρίς νέα ανοίγματα έως ο κεντρικός κινητήρας αναεκκίνηση — + `CopyAccountProtectionTriggered` ειδοποίηση ανακάλυψε. `Πώληση` απαιτεί `StopEquity`. `TakeEquity` πρέπει να κάθεται έξω `StopEquity`. **Χωρίς-εγγύηση προειδοποίηση:** πώληση χρησιμοποιεί εκτέλεση αγοράς — όπως κάθε ανταγωνιστής ισοδύναμο, δεν μπορώ να εγγυηθώ τιμή πλήρωσης σε γρήγορο/διάκενο αγοράς.
-- **Χαμηλό-Όλα πανικού κουμπί** (C8) — `POST /api/copy/profiles/{id}/flatten` κλείνει αμέσως **κάθε** αντιγραφή θέση σε κάθε προορισμό + κλειδώνει κατά νέων ανοιγμάτων. Δρομολογημένη διαδικασία διαμέσου: API θέσεις σημαία, επόπτης παραδίδει σε τρέχων κεντρικός κινητήρας (επαναχρησιμοποίηση token-rotation κανάλι), ο οποίος χαμηλώνει στη θέση. σημαία εκκαθάρεται έτσι πυρά ακριβώς μία φορά (`CopyFlattenAll` ειδοποίηση). Χρήστης στη συνέχεια ενεργοποιήσεων/διακοπές προφίλ.
-- **Prop-firm κανόνας φρουρό** (C7) — εφαρμογή prop-firm χρήστες αντιγραφής ζητάω για. Ανά προορισμού, **καθημερινή-απώλεια κάλυμμα** (απώλεια από ημέρα ανοιχτή ίδια κεφάλαια) και/ή **trailing-drawdown** όριο (απώλεια από τρέχων κορυφή ίδια κεφάλαια), αμφότερα στο νόμισμα εναπόθεσης. Κατά παραβίασης προορισμού **αυτο-χαμηλωμένα** (κάθε αντίγραφο κλειστό) + **κλειδωμένη έξω** ανάπαυση UTC ημέρα (νέα ανοίγματα παραληφθεί `prop_lockout`). `CopyPropRuleBreached` ειδοποίηση πυρά. Κλείδωμα σαφή όταν UTC ημέρα κυλιέται πάνω (ανανέωση βάσης/κορυφή λαμβάνονται). Μοιράζεται ίδιο ζωντανό ίδια κεφάλαια ψήφο ως λογαριασμό προστασία.
-- **Εκτέλεση jitter** (C11, από προεπιλογή) — τυχαίο `0..N` ms καθυστέρηση πριν από την τοποθέτηση κάθε αντιγραφής, διακορευθεί κοντά-πανομοιότυπο εντολή σφραγίδων διαμέσου χρήστη **δικό του** λογαριασμούς. **Συμμόρφωση προειδοποίηση:** βοηθός για prop φίρμας που *επιτρέπουν* αντιγραφή — **δεν** εργαλείο για περιφέρεια φίρμας που απαγορεύει αυτό. παραμένει μέσα δικό σας φίρμας κανόνες είναι δική σας ευθύνη.
-- **Config κλείδωμα** (C9) — κατάψυξη προορισμού ρυθμίσεις για περίοδο (`POST …/destinations/{id}/lock` με λεπτά). Ενώ κλειδωμένη, προορισμού δεν μπορεί να αφαιρεθεί (aggregate απορρίπτει με `CopyDestinationConfigLocked`) — σκόπιμος φρουρό κατά παρορμητικό αλλαγές κατά τη διάρκεια drawdown. κλείδωμα λήξη αυτόματα στο του σφραγίδα.
-- **Συνέπεια προ-ειδοποίηση** (C10) — προειδοποίηση (μία φορά ανά UTC ημέρα) όταν προορισμού **καθημερινό κέρδος** φτάνει ρύθμιση ποσοστού της ημέρα ανοιχτή ίδια κεφάλαια (`CopyConsistencyThresholdApproaching`), έτσι prop-firm συνέπεια κανόνας σεβόμαστε *πριν* χτυπά. κέρδος-πλευρά, ανεξάρτητη απώλεια-πλευρά κλείδωμα. τρέχει από ίδιο ημέρα βάσης ως prop-κανόνας φρουρό.
-- **Κατάλογος τύπου εντολής** — επιλέξτε ακριβώς ποιο κύριο εντολή τύπι αντιγραφή: αγοράς, αγοράς-εύρος, όριο, στάση, στάση-όριο (`CopyOrderTypes` σημαίες. προεπιλογή όλα). cMAM-στυλ selectivity.
-- **Αντίγραφο SL / Αντίγραφο TP** — κατοπτρίστε κύριο stop-loss / take-profit, ή διαχείριση προστασία ανεξάρτητα.
-- **Αντίγραφο trailing στάση**, **κατοπτρίστε μερική κλείσιμο**, **κατοπτρίστε scale-in** — κάθε ανεξάρτητα toggleable.
-- **Αντίγραφο εκκρεμής λήξη** (προεπιλογή σε) — κατοπτρίστε κύριο εκκρεμής εντολή Καλή-Έως-Ημερομηνία λήξη σφραγίδα.
-- **Αντίγραφο κύριο ολίσθηση** (προεπιλογή σε) — για αγοράς-εύρος + στάση-όριο εντολή, τοποθέτηση δούλο εντολή με κύριο ακριβή ολίσθηση-σε-σημεία (βάση τιμή λαμβάνονται από δούλο ζωντανό σημείο).
-- **Φρουροί**: μέγιστο drawdown %, καθημερινή απώλεια κάλυμμα, μέγιστο αντίγραφο καθυστέρηση, ολίσθηση φίλτρο (αντιγραφή παραλήψης εάν δούλο τιμή κινήθηκε πέρα N pips από κύριο καταχώρηση). **Μέγιστο αντίγραφο καθυστέρηση** μετράται κατά κύριο συμβάν ρεάλ διακομιστή σφραγίδα (`ExecutionEvent.ServerTimestamp`) μέσω injected `TimeProvider`: σήμα παλαιότερη από ρύθμιση μέγιστο-υστέρηση παραληφθεί, έτσι χαμηλά αντίγραφο ποτέ τοποθετημένη αργά (προηγούμενη καθυστέρηση πάντα μηδέν + φρουρό νεκρό).
-- **SL/TP ακρίβεια κανονικοποίηση** (M6) — αντιγραφή stop-loss/take-profit τιμές στρογγυλοποιημένη σε **προορισμού** σύμβολο ψηφίο ακρίβεια πριν amend, έτσι κύριο τιμή σε λεπτότερη ακρίβεια (ή cross-broker ψηφίο ασυμφωνία) ποτέ χτυπά διακομιστή `INVALID_STOPLOSS_TAKEPROFIT`.
-- **Άρνηση κύκλωμα διακόπτη / Ακολουθητής Φρουρό** (G8) — προορισμού απορρίπτει `CopyDefaults.RejectionBudget` ανοίγματα σε σειρά είναι **ταξιδεύει**: χωρίς νέα ανοίγματα για χρονικό περίθλαση (`CopyDestinationTripped` ειδοποίηση πυρά), διακοπή απορρίψεων καταιγίδα από σφυρί (prop-firm) λογαριασμό. Υπάρχοντα θέση διαχείριση + κλεισμένα κατά ταξιδευμένου. διακόπτης αυτο-καταρρεύσεις μετά χρονικό περίθλαση + επιτυχής αντίγραφο σαφή μετρητής.
-- **Πολλ λογικής κολόνας** (C14) — απόλυτο μέγιστο αντίγραφο μέγεθος και/ή πολλ-του-κύριου κάλυμμα. Υπολογιστό αντίγραφο ξεπερνά απόλυτο κάλυμμα, ή ξεπερνά `N×` κύριο δικό του πολλ μέγεθος, **σκληρό-αποκλειστικό** (επιφανείας ως `lot_sanity` παραλήψης, μετράται σε `cmind.copy.skipped`) δεν τοποθετημένα — υπεράσπιση κατά καταστροφική-oversize κατηγορία (0.23-πολλ κύριο απόκτηση 3 πολλ σε κάθε δέκτη μέσω δρόμευσης πολλαπλασιαστή ή στρογγυλοποίηση σφάλμα). Αμφότερα διαστάσεις προεπιλογή `0` (από).
+Ορίστε στη σελίδα New Profile, στο διάλογο προορισμού στη σελίδα Copy Trading, ή μέσω `POST /api/copy/profiles/{id}/destinations`:
 
-## Αξιοπιστία & περιθώρια περιπτώσεις
+- **Sizing** (`MoneyManagementMode` + παράμετρος): σταθερό lot, lot/notional multiplier, proportional balance/equity/free-margin, σταθερό risk %, σταθερό leverage, auto-proportional, **risk-%-from-stop** (M7). Συν ελάχιστο/μέγιστο όρια lot + force-min-lot. **Risk-from-stop** σταθμίζει τον προορισμό ώστε να κινδυνεύει με ρυθμιστέο ποσοστό *της δικής του* απόδοσης, προερχόμενο από **απόσταση stop-loss του master** (`master κινδυνεύει 2% → slave auto-κινδυνεύει 2%`): `lots = balance×% ÷ (stopDistance × contractSize)`. Ανοιχτό master **χωρίς** stop-loss δεν έχει απόσταση για σταθμίζεται εναντίον → χρησιμοποιεί ρυθμιστέο **max-risk fallback lot** (M7) αν τεθεί, αλλιώς παραλείπεται (`no_stop_loss`) όχι μαντεύεται. Proportional-**equity**/**free-margin** μέγεθος από πραγματική λογαριασμού **equity** (`balance + Σ floating P&L`, προερχόμενο ανά cTrader Open API το οποίο δεν παρέχει equity), όχι απλό balance — έτσι το master που κάθεται σε ανοικτό κέρδος/ζημία σταθμίζει αντιγραφές σωστά. Χρησιμοποιημένο περιθώριο δεν εκτίθεται από reconcile API, οπότε free-margin αντιμετωπίζεται ως equity (ειλικρινές διαθέσιμα-κεφάλαια proxy); άλλοι modes διαβάζουν balance + παραλείπουν επιπλέον γύρο αποτίμησης.
+- **Direction filter**: both / long-only / short-only. **Reverse**: αναστροφή πλευράς (+ swap SL↔TP) για contrarian αντιγραφή.
+- **Manage-only** (Ignore-New-Trades / Close-Only): αντιγραφή κλεισίματα, μερικά κλεισίματα + αλλαγές προστασίας σε ήδη αντιγραμμένες θέσεις, αλλά άνοιγμα **χωρίς** νέες θέσεις/pending orders (παραλείπεται `manage_only`). Χρησιμοποιήστε για το κατέβασμα προορισμού χωρίς κοπή υπάρχουσών αντιγραφών.
+- **Sync-Open-on-start** / **Sync-Closed-on-start** (default on): στην **πρώτη** resync του profile, αν άνοιγμα αντιγραφών για προ-υπάρχουσες θέσεις του master, + αν κλείσιμο αντιγραφών που ο master έκλεισε ενώ το profile ήταν σταματημένο. Και τα δύο ισχύουν μόνο κατά την έναρξη — mid-run reconnect πάντα reconciles πλήρως έτσι η desync ανακάμπτει ανεξάρτητα.
+- **Symbol map** + **symbol filter** (whitelist / blacklist). Κάθε symbol-map entry φέρει προαιρετικά **per-symbol volume multiplier** (cMAM per-symbol override) scaling copy size για αυτό το σύμβολο επί του sizing προορισμού (1 = χωρίς αλλαγή). Ολόκληρος ο χάρτης εισάγει/εξάγει ως **CSV** (`GET …/symbol-map.csv`, `PUT …/symbol-map/csv`; στήλες `Source,Destination,VolumeMultiplier`) — κάθε σειρά επικυρώνεται μέσω domain value objects, οπότε κακοδημιουργημένο αρχείο δεν μπορεί να παράγει άκυρο χάρτη.
+- **Trading-hours window** (C18) — ανά-προορισμό καθημερινό UTC παράθυρο (`start`/`end` minutes-of-day, end exclusive; `start == end` = all-day). Νέα άνοιγματα έξω από παράθυρο παραλείπονται (`trading_hours`); παράθυρο με `start > end` τυλίγεται περά τα μεσάνυχτα (π.χ. 22:00–06:00). Υπάρχουσες θέσεις παραμένουν διαχειρίσιμες.
+- **Source-label filter** (C18, cTrader equivalent του MT magic-number filter) — όταν ορίζεται, αντιγραφή μόνο master trades του οποίου η ετικέτα ταιριάζει **ακριβώς** (π.χ. trades ενός bot, ή manual-only label); αλλιώς παραλείπεται (`source_label`). Κενό = αντιγραφή όλα. Μεταφερόμενο στο `ExecutionEvent.SourceLabel` από master position/order του `TradeData.Label`, τιμάται και κατά το resync.
+- **Account protection** (ZuluGuard / Global Account Protection) — παρακολούθηση προορισμού **live equity** (`balance + Σ floating P&L`, polled κάθε `CopyDefaults.EquityGuardInterval`) εναντίον `StopEquity` floor και/ή προαιρετικό `TakeEquity` ceiling. Στη παραβίαση, εφαρμογή mode: **CloseOnly** (σταματήστε νέες αντιγραφές, διατηρήστε υπάρχουσες), **Frozen** (σταματήστε άνοιγμα), **SellOut** (κλείστε **κάθε** αντιγραφή στον προορισμό αμέσως). Μόλις ενεργοποιηθεί, προορισμός latched — χωρίς νέα άνοιγματα έως ο host να επανεκκινηθεί — + `CopyAccountProtectionTriggered` alert σηκώθηκε. `SellOut` απαιτεί `StopEquity`; `TakeEquity` πρέπει να κάθεται πάνω από `StopEquity`. **Χωρίς εγγύηση caveat:** sell-out χρησιμοποιεί market execution — όπως κάθε competitor's equivalent, δεν μπορεί να εγγυηθεί τιμή πλήρωσης σε γρήγορη/gapped αγορά.
+- **Flatten-All panic button** (C8) — `POST /api/copy/profiles/{id}/flatten` αμέσως κλείνει **κάθε** copied position σε κάθε προορισμό + κλειδώνει εναντίον νέων ανοιγμάτων. Δρομολόγηση cross-process: API θέτει flag, supervisor παραδίδει σε running host (επαναχρησιμοποίηση channel rotation token), το οποίο ισοπεδώνει στη θέση· flag εκκαθαρίστηκε έτσι ενεργοποιείται ακριβώς μία φορά (`CopyFlattenAll` alert). Χρήστης τότε παύει/σταματά profile.
+- **Prop-firm rule guard** (C7) — enforcement prop-firm copier users ζητούν. Ανά προορισμό, **daily-loss cap** (ζημία από equity αγοράς της ημέρας) και/ή **trailing-drawdown** limit (ζημία από τρέχον peak equity), και τα δύο σε νόμισμα κατάθεσης. Στη παραβίαση προορισμός **auto-flattened** (κάθε αντιγραφή κλειστή) + **locked out** rest του UTC day (νέα άνοιγματα παραλείπεται `prop_lockout`); `CopyPropRuleBreached` alert πυροδοτείται. Lockout καθαρίζει όταν UTC day κυλίεται πάνω (νέο baseline/peak λαμβάνεται). Μοιράζεται ίδιο live-equity poll με account protection.
+- **Execution jitter** (C11, off by default) — τυχαίο `0..N` ms delay πριν τοποθετηθεί κάθε αντιγραφή, για de-correlate σχεδόν πανομοιότυπα order timestamps σε λογαριασμούς της **ίδιας του** χρήστη. **Compliance caveat:** aid για prop firms που *επιτρέπουν* αντιγραφή — **όχι** εργαλείο για παρακάμψεις firm που απαγορεύει· παραμονή εντός των κανόνων της firm σας είναι δική σας ευθύνη.
+- **Config lock** (C9) — freeze ρυθμίσεων προορισμού για περίοδο (`POST …/destinations/{id}/lock` με λεπτά). Κατά την κλείδωση, προορισμός δεν μπορεί να αφαιρεθεί (aggregate απορρίπτει με `CopyDestinationConfigLocked`) — σκόπιμος φυλάκας εναντίον ωμής αλλαγής κατά drawdown. Κλείδωμα λήγει αυτόματα στο timestamp του.
+- **Consistency pre-alert** (C10) — προειδοποίηση (μία φορά ανά UTC day) όταν **daily profit** προορισμού φτάνει ρυθμιστέο ποσοστό ημερήσιας equity αγοράς (`CopyConsistencyThresholdApproaching`), έτσι prop-firm consistency rule σεβαστός *πριν* εμπλακεί. Profit-side, ανεξάρτητο από loss-side lockout; εκτελείται από ίδιο day baseline με prop-rule guard.
+- **Order-type filter** — επιλογή ακριβώς ποιοι master order types να αντιγράφονται: market, market-range, limit, stop, stop-limit (`CopyOrderTypes` flags; default all). cMAM-style selectivity.
+- **Copy SL / Copy TP** — αντιγραφή stop-loss / take-profit του master, ή ανεξάρτητη διαχείριση προστασίας.
+- **Copy trailing stop**, **mirror partial close**, **mirror scale-in** — κάθε ανεξάρτητα toggleable.
+- **Copy pending expiry** (default on) — αντιγραφή master pending order's Good-Till-Date expiry timestamp.
+- **Copy master slippage** (default on) — για market-range + stop-limit orders, τοποθέτηση slave order με ακριβές slippage-in-points του master (base price λαμβάνεται από slave's live spot).
+- **Guards**: max drawdown %, daily loss cap, max copy delay, slippage filter (skip copy αν slave price μετακινήθηκε πέρα από N pips από master entry). **Max copy delay** μετρημένο εναντίον master event's real server timestamp (`ExecutionEvent.ServerTimestamp`) μέσω injected `TimeProvider`: signal παλαιότερο του ρυθμιστέου max-lag παραλείπεται, έτσι stale copy ποτέ δεν τοποθετείται καθυστερημένο (πρέπει delay πάντα μηδέν + guard νεκρό).
+- **SL/TP precision normalization** (M6) — αντιγραφή stop-loss/take-profit τιμές στρογγυλεμένες σε **destination** symbol's digit precision πριν amend, έτσι master price σε λεπτότερη precision (ή cross-broker digit mismatch) ποτέ δεν ενεργοποιεί server's `INVALID_STOPLOSS_TAKEPROFIT`.
+- **Rejection circuit breaker / Follower Guard** (G8) — προορισμός απορρίπτων `CopyDefaults.RejectionBudget` ανοίγματα σε σειρά **tripped**: χωρίς νέα άνοιγματα για cooldown window (`CopyDestinationTripped` alert πυροδοτείται), σταματώντας απορρίψεις άνοιγμα από hammering (prop-firm) λογαριασμό. Υπάρχουσες θέσεις ακόμα διαχειρίσιμες + κλειστές κατά tripped; breaker auto-resets μετά cooldown + successful copy καθαρίζει counter.
+- **Lot sanity ceiling** (C14) — απόλυτο μέγιστο copy size και/ή multiple-of-master cap. Υπολογισμένη αντιγραφή υπέρβαση absolute cap, ή υπέρβαση `N×` master's own lot size, **hard-blocked** (επιφανές ως `lot_sanity` skip, μετρημένο σε `cmind.copy.skipped`) δεν τοποθετείται — υπερασπίζει εναντίον catastrophic-oversize class (0.23-lot master γίνεται 3 lots σε κάθε receiver μέσω runaway multiplier ή rounding bug). Και τα δύο dimensions default `0` (off).
 
-Κινητήρας χτισμένη για πραγματικότητα το οτιδήποτε μπορεί αποτύχει ανά πάσα στιγμή:
+## Reliability & edge cases
 
-- **Δούλο-εκκρεμής πληρωμή-συσχέτιση χρονικό όριο** (C13) — αντιγραφή δούλο εκκρεμής του οποίου κύριο εκκρεμής εξαφανίστηκε (ούτε ηρεμούν ούτε δίαφορα πληρωμή) ακυρώθηκε μετά συσχέτιση χρονικό όριο, έτσι δούλο αντίγραφο δεν μπορώ να γεμίσει ασύσχετη σε διαχείριση θέση (`CopyPendingTimedOut`). Resync επίσης καθάρει εντολή-αναγνωριστικό-εγγραφή πληρωμή ορφανά.
-- **Ισχυρή κλείσιμο/χαμηλώνω** (M8) — κλείσιμο ορφανά σε resync, ή χαμηλώνω σε φρουρό παραβίαση, ανοχή θέση κομίστας ήδη κλειστό (`POSITION_NOT_FOUND`): κάθε κλείσιμο τρέχει ανεξάρτητα, έτσι ένας παλιά αναγνωριστικό ποτέ aborts resync ή φύλλα ανάπαυση λογαριασμού un-χαμηλωμένα.
+Engine κατασκευασμένο για πραγματικότητα ότι τίποτα δεν μπορεί να αποτύχει οποιαδήποτε στιγμή:
 
-- **Ξεκίνημα με κύριο ήδη σε διαπραγματεύσεις** — κατά επί ξεκίνημα κεντρικός κινητήρας συμφωνία + ανοίγματα αντίγραφα κύριο υπάρχον θέσεις.
-- **Σύνδεση αποσύνδεση / desync** — κατά επί επανασύνδεση κεντρικός κινητήρας συμφωνία: ανοίγματα λείπα αντίγραφα, κλείνει ορφανά, επανο-ετικέτες pendings. Χωρίς διπλό εντολή.
-- **Εντολή τοποθέτηση αποτυχία** — αποτυχία σε ένας προορισμού καταγραφή, ποτέ αποκλείει άλλο προορισμών.
-- **Μοναδικό έγκυρο token ανά cID** — cTrader ακυρώνει cID παλιά πρόσβαση token στιγμή νέα ένα εκδοθεί. cMind ανταλλαγή τρέχων κεντρικός κινητήρας token **σε θέση** (re-έλεγχος σε ζωντανό σόκετ) έτσι αντιγραφή συνεχίζει χωρίς ρίπτη ρεύμα. Δείτε [token κύκλο ζωής](token-lifecycle.md).
+- **Slave-pending fill-correlation timeout** (C13) — αντιγραμμένη slave pending του οποίου master pending εξαφανίστηκε (ούτε ξεκουράζεται ούτε φρεσκοπληρωθεί) ακυρώθηκε μετά correlation timeout, έτσι slave copy δεν μπορεί να πληρωθεί αλλοιωμένη σε unmanaged position (`CopyPendingTimedOut`). Resync επίσης καθαρίζει order-id-labelled filled-pending orphan.
+- **Robust close/flatten** (M8) — κλείσιμο orphan σε resync, ή ισοπέδωση σε guard breach, ανοχή position broker ήδη κλειστή (`POSITION_NOT_FOUND`): κάθε κλείσιμο εκτελείται ανεξάρτητα, έτσι μία stale id ποτέ δεν αποτυγχάνει resync ή αφήνει rest του λογαριασμού un-flattened.
 
-## Ελεγκτικότητα
+- **Start με master ήδη σε trades** — σε start host reconciles + ανοίγει αντιγραφές για υπάρχουσες θέσεις του master.
+- **Connection drops / desync** — σε reconnect host reconciles: ανοίγει missing αντιγραφές, κλείνει orphans, re-labels pendings. Χωρίς duplicate orders.
+- **Order placement failure** — αποτυχία σε έναν προορισμό καταγράφεται, ποτέ δεν αποκλείει άλλους προορισμούς.
+- **Single valid token ανά cID** — cTrader ακυρώνει cID's παλιό access token στιγμή που κδοθεί νέο. cMind swaps running host's token **στη θέση** (re-auth σε live socket) έτσι copying συνεχίζεται χωρίς dropping stream. Δείτε [token lifecycle](token-lifecycle.md).
 
-Κάθε δράση εκπέμπει δομημένη, πηγή-παραγόμενη συμβάν καταγραφή (`LogMessages`) με αναγνωριστικό προφίλ, προορισμού cID, εντολή/θέση αναγνωριστικά, + αξίες — εντολή τοποθετημένη/παραληφθεί (με λόγο), μερική κλείσιμο, προστασία εφαρμόζεται, trailing εφαρμόζεται, εκκρεμής τοποθετημένη/τροποποιημένη/ακυρωμένη, λήξη αντιγράφηκε, αγοράς-εύρος ολίσθηση αντιγράφηκε, token ανταλλαγή, resync περίληψη. Αυτό είναι η ελεγκτική λογιστική για συμμόρφωση + διαφορά ανάλυση.
+## Auditability
 
-Παράλληλα καταγραφή, κινητήρας εκπέμπει **OpenTelemetry μέτρα** σε `cMind.Copy` μετρητής (εγγραφή σε κοινής OTel σωλήνας, εξαγωγή πάνω OTLP / σε Azure Monitor όπως ανάπαυση): `cmind.copy.latency` (κύριο-συμβάν → αποστολή, ms), `cmind.copy.dispatch.duration` (ανεμιστήρας-έξω σε όλο προορισμών, ms), `cmind.copy.slippage.points`, `cmind.copy.placed` (επισημασμένο από προορισμού), `cmind.copy.skipped` (επισημασμένο από λόγο), + `cmind.copy.failed`. Αυτά κάνουν latency/ολίσθηση παλινδρόμηση μετρήσιμο, δεν ακριβώς ορατό σε καταγραφή σειρά — ζωντανό σουίτα asserts τους κατά προϋπολογισμό.
+Κάθε ενέργεια εκπέμπει δομημένο, source-generated log event (`LogMessages`) με profile id, destination cID, order/position ids, + values — order placed/skipped (με λόγο), partial close, protection applied, trailing applied, pending placed/amended/cancelled, expiry mirrored, market-range slippage mirrored, token swapped, resync summary. Αυτή είναι η audit trail για compliance + dispute resolution.
+
+Παράλληλα με logs, engine εκπέμπει **OpenTelemetry metrics** σε `cMind.Copy` meter (καταχωρημένο σε shared OTel pipeline, exported πάνω OTLP / σε Azure Monitor όπως rest): `cmind.copy.latency` (master-event → dispatch, ms), `cmind.copy.dispatch.duration` (fan-out σε όλους προορισμούς, ms), `cmind.copy.slippage.points`, `cmind.copy.placed` (tagged by destination), `cmind.copy.skipped` (tagged by reason), + `cmind.copy.failed`. Αυτά κάνουν latency/slippage regression measurable, όχι μόνο ορατά σε log line — live suite asserts τα εναντίον budget.
 
 ## API
 
-- `GET /api/copy/profiles` — λίστα.
-- `POST /api/copy/profiles` — δημιουργία (με προαιρετικό προορισμού λογαριασμό αναγνωριστικά).
-- `GET /api/copy/profiles/{id}` — πλήρης λεπτομέρεια incl. κάθε προορισμού επιλογή.
-- `POST /api/copy/profiles/{id}/destinations` — προσθήκη ένα προορισμό με το πλήρες σύνολο ειδοχής.
-- `DELETE /api/copy/profiles/{id}/destinations/{destinationId}` — αφαίρεση.
-- `POST /api/copy/profiles/{id}/{start|pause|stop}` — κύκλο ζωής.
+- `GET /api/copy/profiles` — list.
+- `POST /api/copy/profiles` — create (με προαιρετικό destination account ids).
+- `GET /api/copy/profiles/{id}` — full detail incl. κάθε destination option.
+- `POST /api/copy/profiles/{id}/destinations` — add a destination με το πλήρες option set.
+- `DELETE /api/copy/profiles/{id}/destinations/{destinationId}` — remove.
+- `POST /api/copy/profiles/{id}/{start|pause|stop}` — lifecycle.
 
-## Δοκιμές
+## Tests
 
-- **Ενότητα** (`tests/UnitTests/CopyTrading`) — sizing τρόποι, απόφαση φίλτρα, τύπι εντολή φίλτρο, λήξη αντίγραφο, αγοράς-εύρος/στάση-όριο ολίσθηση, SL/TP toggles, μερική κλείσιμο, εκκρεμής amend/cancel, έναρξη-με-ανοικτό, αποσύνδεση→desync→resync, σε-θέση token ανταλλαγή, cross-cID ακύρωση. Τρέχει κατά `FakeTradingSession`, cTrader-πιστή εν λόγω προσομοιωτή.
-- **Ολοκλήρωση** (`tests/IntegrationTests/CopyLive`) — κόμβο-συγγένεια/κάθιση απαίτηση, token-έκδοση διάδοση σε πραγματικό Postgres.
-- **E2E** (`tests/E2ETests`) — προορισμού-ειδοχή round-trip μέσα API + UI, πλήρης κύκλο ζωής.
-- **Stress / DST** (`tests/StressTests`) — ντερμινιστικό-προσομοίωση δοκιμή: σπόρος ρυθμοποιημένα ρεζίλια + σφάλμα έγχυση (σόκετ περιτύλιξη, εντολή απόρριψη, αγοράς-εύρος απόρριψη, token περιστροφή, κόμβο θάνατο) μονάδα `CopyEngineHost` σε quiescence + assert σύγκλιση αναλλοίωτα. Δείτε [δοκιμή/stress-δοκιμή.md](../testing/stress-testing.md). Αυτή η σουίτα ανακάλυψε + σταθερό πραγματικό επί ξεκίνημα φυλή: `OnReconnected` καλώδιο πριν αρχικό αναφορά-φόρτωση + resync, έτσι σόκετ περιτύλιξη κατά επί ξεκίνημα δύναμη δεύτερο resync ταυτόχρονα + χαμηλό κεντρικός κινητήρας δεν-ταυτόχρονη κατάσταση λεξικά — επί ξεκίνημα φόρτωση + πρώτο resync τώρα τρέχω κάτω από `_stateGate`.
-- **Ζωντανό** — πραγματικό cTrader δειγματική λογαριασμούς. δείτε [δοκιμή/ζωντανό-αντίγραφο-διαπραγμάτευση.md](../testing/live-copy-trading.md).
+- **Unit** (`tests/UnitTests/CopyTrading`) — sizing modes, decision filters, order-type filter, expiry copy, market-range/stop-limit slippage, SL/TP toggles, partial close, pending amend/cancel, start-with-open, disconnect→desync→resync, in-place token swap, cross-cID invalidation. Εκτελείται εναντίον `FakeTradingSession`, cTrader-faithful in-memory simulator.
+- **Integration** (`tests/IntegrationTests/CopyLive`) — node-affinity/lease claim, token-version propagation σε real Postgres.
+- **E2E** (`tests/E2ETests`) — destination-option round-trip μέσω API + UI, full lifecycle.
+- **Stress / DST** (`tests/StressTests`) — deterministic-simulation testing: seeded randomized workloads + fault injection (socket flap, order rejection, market-range rejection, token rotation, node death) drive `CopyEngineHost` σε quiescence + assert convergence invariants. Δείτε [testing/stress-testing.md](../testing/stress-testing.md). Αυτή η suite επιφάνεια + fixed real startup race: `OnReconnected` wired πριν initial reference-load + resync, έτσι socket flap κατά startup θα μπορούσε να τρέξει δεύτερη resync concurrently + corrupt host's non-concurrent state dictionaries — startup load + first resync τώρα τρέχουν κάτω από `_stateGate`.
+- **Live** — real cTrader demo accounts; δείτε [testing/live-copy-trading.md](../testing/live-copy-trading.md).
 
-Δείτε [dev-credentials.md](../testing/dev-credentials.md) για μοναδικό διαπιστευτήρια αρχείο ζωντανό + E2E σειρών διαβάζεται.
+Δείτε [dev-credentials.md](../testing/dev-credentials.md) για ενιαίο credentials file live + E2E tiers διάβασμα.
+
+## Profile controls and destination management
+
+Start/stop είναι icon buttons σε κάθε profile row (απενεργοποιημένο όταν η ενέργεια δεν ισχύει). Source και destination λογαριασμοί εμφανίζονται από τον **account number** τους, ποτέ ένα εσωτερικό id. Κλικ στο profile ανοίγει ένα **διάλογο** για διαχείριση των destination accounts του (προσθήκη/αφαίρεση με πλήρες per-destination settings).

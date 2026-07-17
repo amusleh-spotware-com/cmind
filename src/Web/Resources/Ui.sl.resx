@@ -200,4 +200,114 @@
   <data name="copyDetail.title" xml:space="preserve"><value>Copy Profile</value></data>
   <data name="copyDetail.notFound" xml:space="preserve"><value>This copy profile no longer exists - it may have been deleted or you do not have access to it.</value></data>
   <data name="copyDetail.back" xml:space="preserve"><value>Back to copy trading</value></data>
+  <data name="copy.symbols.add" xml:space="preserve"><value>Dodaj</value></data>
+  <data name="copy.symbols.none" xml:space="preserve"><value>Še nobenih simbolov</value></data>
+  <data name="copy.map.source" xml:space="preserve"><value>Izvorni simbol</value></data>
+  <data name="copy.map.destination" xml:space="preserve"><value>Ciljni simbol</value></data>
+  <data name="copy.map.multiplier" xml:space="preserve"><value>Količina ×</value></data>
+  <data name="copy.map.add" xml:space="preserve"><value>Dodaj</value></data>
+  <data name="copy.map.none" xml:space="preserve"><value>Še nobenih preslikav simbolov</value></data>
+  <data name="copy.map.remove" xml:space="preserve"><value>Odstrani preslikavo</value></data>
+  <data name="copy.map.exportCsv" xml:space="preserve"><value>Izvozi CSV</value></data>
+  <data name="copy.map.importCsv" xml:space="preserve"><value>Uvozi CSV</value></data>
+  <data name="copy.map.imported" xml:space="preserve"><value>Uvoženih {0} preslikav</value></data>
+  <data name="copy.map.importEmpty" xml:space="preserve"><value>V datoteki ni preslikav</value></data>
+  <data name="copy.map.importFailed" xml:space="preserve"><value>Datoteke CSV ni bilo mogoče prebrati</value></data>
+  <data name="copyNew.title" xml:space="preserve"><value>Nov profil kopiranja</value></data>
+  <data name="copyNew.back" xml:space="preserve"><value>Nazaj na kopiranje trgovanja</value></data>
+  <data name="copyNew.section.identity" xml:space="preserve"><value>Profil in računi</value></data>
+  <data name="copyNew.section.sizing" xml:space="preserve"><value>Velikost in tveganje</value></data>
+  <data name="copyNew.section.behaviour" xml:space="preserve"><value>Vedenje kopiranja</value></data>
+  <data name="copyNew.section.orderTypes" xml:space="preserve"><value>Vrste naročil</value></data>
+  <data name="copyNew.section.symbols" xml:space="preserve"><value>Simboli</value></data>
+  <data name="copyNew.section.portability" xml:space="preserve"><value>Uvoz/izvoz nastavitev</value></data>
+  <data name="copyNew.name" xml:space="preserve"><value>Ime profila</value></data>
+  <data name="copyNew.name.required" xml:space="preserve"><value>Ime profila je obvezno</value></data>
+  <data name="copyNew.source" xml:space="preserve"><value>Izvorni (master) račun</value></data>
+  <data name="copyNew.source.required" xml:space="preserve"><value>Izvorni račun je obavezan</value></data>
+  <data name="copyNew.destinations" xml:space="preserve"><value>Ciljni (slave) računi</value></data>
+  <data name="copyNew.destinations.count" xml:space="preserve"><value>{0} račun(ov) izbran</value></data>
+  <data name="copyNew.destinations.help" xml:space="preserve"><value>Izberite en ali več računov, v katere kopirati trgovine (master je izključen)</value></data>
+  <data name="copyNew.selectAll" xml:space="preserve"><value>Izberi vse</value></data>
+  <data name="copyNew.clear" xml:space="preserve"><value>Počisti</value></data>
+  <data name="copyNew.mode" xml:space="preserve"><value>Upravljanje denarja</value></data>
+  <data name="copyNew.parameter" xml:space="preserve"><value>Parameter</value></data>
+  <data name="copyNew.slippage" xml:space="preserve"><value>Drrsanje (pipi)</value></data>
+  <data name="copyNew.direction" xml:space="preserve"><value>Smer</value></data>
+  <data name="copyNew.minLot" xml:space="preserve"><value>Najmanj lota</value></data>
+  <data name="copyNew.maxLot" xml:space="preserve"><value>Največ lota</value></data>
+  <data name="copyNew.maxDelay" xml:space="preserve"><value>Največ zakasnitve (s)</value></data>
+  <data name="copyNew.maxDrawdown" xml:space="preserve"><value>Maks. padec %</value></data>
+  <data name="copyNew.dailyLoss" xml:space="preserve"><value>Omejitev dnevne izgube</value></data>
+  <data name="copyNew.reverse" xml:space="preserve"><value>Obrni</value></data>
+  <data name="copyNew.forceMin" xml:space="preserve"><value>Prisili najmanj lota</value></data>
+  <data name="copyNew.copySl" xml:space="preserve"><value>Kopiraj SL</value></data>
+  <data name="copyNew.copyTp" xml:space="preserve"><value>Kopiraj TP</value></data>
+  <data name="copyNew.partialClose" xml:space="preserve"><value>Delno zaprtje</value></data>
+  <data name="copyNew.scaleIn" xml:space="preserve"><value>Povečuj vstop</value></data>
+  <data name="copyNew.pending" xml:space="preserve"><value>Odprta naročila</value></data>
+  <data name="copyNew.trailing" xml:space="preserve"><value>Zaostala zaustavitev</value></data>
+  <data name="copyNew.copyExpiry" xml:space="preserve"><value>Kopiraj rok trajanja</value></data>
+  <data name="copyNew.copySlippage" xml:space="preserve"><value>Kopiraj drrsanje</value></data>
+  <data name="copyNew.market" xml:space="preserve"><value>Trž</value></data>
+  <data name="copyNew.marketRange" xml:space="preserve"><value>Tržni razpon</value></data>
+  <data name="copyNew.limit" xml:space="preserve"><value>Omejitev</value></data>
+  <data name="copyNew.stop" xml:space="preserve"><value>Zaustavitev</value></data>
+  <data name="copyNew.stopLimit" xml:space="preserve"><value>Zaustavitev s pogajem</value></data>
+  <data name="copyNew.filterMode" xml:space="preserve"><value>Filter simbolov</value></data>
+  <data name="copyNew.filterSymbols" xml:space="preserve"><value>Filtriraj simbole</value></data>
+  <data name="copyNew.symbolMap" xml:space="preserve"><value>Preslikava simbolov</value></data>
+  <data name="copyNew.exportSettings" xml:space="preserve"><value>Izvozi nastavitve</value></data>
+  <data name="copyNew.importSettings" xml:space="preserve"><value>Uvozi nastavitve</value></data>
+  <data name="copyNew.settingsImported" xml:space="preserve"><value>Nastavitve so uvožene</value></data>
+  <data name="copyNew.settingsImportFailed" xml:space="preserve"><value>Datoteke nastavitev ni bilo mogoče prebrati</value></data>
+  <data name="copyNew.cancel" xml:space="preserve"><value>Prekliči</value></data>
+  <data name="copyNew.create" xml:space="preserve"><value>Ustvari profil</value></data>
+  <data name="copyNew.created" xml:space="preserve"><value>Profil je ustvarjen</value></data>
+  <data name="copyNew.createFailed" xml:space="preserve"><value>Profila ni bilo mogoče ustvariti</value></data>
+  <data name="copyNew.partialFailed" xml:space="preserve"><value>Profil je ustvarjen, toda nekaterih nastavitev cilja ni bilo mogoče uporabiti</value></data>
+  <data name="copyNew.tip.name" xml:space="preserve"><value>Kratko ime za prepoznavanje tega profila kopiranja v seznamu.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Račun master, katerega trgovine se kopirajo.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>En ali več računov, ki prejemajo kopije trgovin mastera. Sam master je izključen.</value></data>
+  <data name="copyNew.tip.mode" xml:space="preserve"><value>Kako se vsaka kopiirana trgovina prilagodi relativno na master: fiksna lota, množitelj, delež stanja/kapitala ali fiksni odstotek tveganja.</value></data>
+  <data name="copyNew.tip.parameter" xml:space="preserve"><value>Števka, ki jo način velikosti uporabi — npr. množitelj (1 = enaka velikost) ali odstotek tveganja.</value></data>
+  <data name="copyNew.tip.slippage" xml:space="preserve"><value>Največji dopusten premik cene v pipih pri postavljanju kopiranega naročila preden je zavrnjeno.</value></data>
+  <data name="copyNew.tip.direction" xml:space="preserve"><value>Kopiraj obe smeri ali samo dolgopotezne ali samo kratke trgovine mastera.</value></data>
+  <data name="copyNew.tip.minLot" xml:space="preserve"><value>Najmanjša velikost lota, ki jo lahko uporablja kopija. 0 = brez minimuma.</value></data>
+  <data name="copyNew.tip.maxLot" xml:space="preserve"><value>Največja velikost lota, ki jo lahko uporablja kopija. 0 = brez maksimuma.</value></data>
+  <data name="copyNew.tip.maxDelay" xml:space="preserve"><value>Preskoči kopijo, če je ni mogoče postaviti v tej številki sekund po polnjenju mastera. 0 = brez omejitve.</value></data>
+  <data name="copyNew.tip.maxDrawdown" xml:space="preserve"><value>Zaustavi kopiranje na cilj, če njegov padec kapitala preseže ta odstotek. 0 = onemogočeno.</value></data>
+  <data name="copyNew.tip.dailyLoss" xml:space="preserve"><value>Zaustavi kopiranje za dan, če realizirana izguba cilja dosegne ta znesek. 0 = onemogočeno.</value></data>
+  <data name="copyNew.tip.reverse" xml:space="preserve"><value>Zrcali trgovine mastera v nasprotni smeri (nakup postane prodaja).</value></data>
+  <data name="copyNew.tip.forceMin" xml:space="preserve"><value>Če je izračunana velikost manjša od najmanjše lote, namesto preskoči postavi najmanj.</value></data>
+  <data name="copyNew.tip.copySl" xml:space="preserve"><value>Kopiraj zaustavitev izgube mastera na ciljno naročilo.</value></data>
+  <data name="copyNew.tip.copyTp" xml:space="preserve"><value>Kopiraj prevzamanje dobička mastera na ciljno naročilo.</value></data>
+  <data name="copyNew.tip.partialClose" xml:space="preserve"><value>Ko master delno zatvori pozicijo, zapri enako razmerje na cilju.</value></data>
+  <data name="copyNew.tip.scaleIn" xml:space="preserve"><value>Ko master doda pozicijo, dodaj sorazmerno na cilj.</value></data>
+  <data name="copyNew.tip.pending" xml:space="preserve"><value>Kopiraj odprta naročila mastera (omejitev/zaustavitev), ne samo tržne izpolnitve.</value></data>
+  <data name="copyNew.tip.trailing" xml:space="preserve"><value>Kopiraj prilagoditve zaostale zaustavitve mastera.</value></data>
+  <data name="copyNew.tip.copyExpiry" xml:space="preserve"><value>Kopiraj rok trajanja odprte naročila mastera.</value></data>
+  <data name="copyNew.tip.copySlippage" xml:space="preserve"><value>Namesto zgornje vrednosti uporabi lastno nastavitev drrsanja mastera.</value></data>
+  <data name="copyNew.tip.orderTypes" xml:space="preserve"><value>Katere vrste naročil mastera se kopirajo. Onemogočite tip, da prezrete ta naročila.</value></data>
+  <data name="copyNew.tip.market" xml:space="preserve"><value>Kopiraj tržna naročila.</value></data>
+  <data name="copyNew.tip.marketRange" xml:space="preserve"><value>Kopiraj tržna naročila s razponom.</value></data>
+  <data name="copyNew.tip.limit" xml:space="preserve"><value>Kopiraj omejujoča naročila.</value></data>
+  <data name="copyNew.tip.stop" xml:space="preserve"><value>Kopiraj zaustavitvena naročila.</value></data>
+  <data name="copyNew.tip.stopLimit" xml:space="preserve"><value>Kopiraj naročila s zaustavitvijo in pogajem.</value></data>
+  <data name="copyNew.tip.filterMode" xml:space="preserve"><value>Nič = kopiraj vsak simbol. Seznam dovoljenj = kopiraj samo navedene simbole. Seznam prepovedanih = kopiraj vse razen naštetih simbolov.</value></data>
+  <data name="copyNew.tip.symbolMap" xml:space="preserve"><value>Pretvori simbol mastera v simbol ciljanega posrednika, z izbirno multiplikatorjem količine za simbol. Celotno preslikavo uvozite ali izvozite kot datoteko CSV.</value></data>
+  <data name="copyNew.tip.portability" xml:space="preserve"><value>Shrani vse nastavitve na tem obrazcu v datoteko ali jih naloži iz prejšnje shranjene datoteke.</value></data>
+  <data name="copyNew.err.name" xml:space="preserve"><value>Ime profila je obvezno.</value></data>
+  <data name="copyNew.err.source" xml:space="preserve"><value>Izberite izvorni (master) račun.</value></data>
+  <data name="copyNew.err.destinations" xml:space="preserve"><value>Izberite vsaj en ciljni (slave) račun.</value></data>
+  <data name="copyNew.err.parameter" xml:space="preserve"><value>Parameter mora biti večji od nič.</value></data>
+  <data name="copyNew.err.slippage" xml:space="preserve"><value>Drrsanje ne more biti negativno.</value></data>
+  <data name="copyNew.err.minLot" xml:space="preserve"><value>Najmanj lota ne more biti negativna.</value></data>
+  <data name="copyNew.err.maxLot" xml:space="preserve"><value>Največ lota ne more biti negativna.</value></data>
+  <data name="copyNew.err.lotOrder" xml:space="preserve"><value>Največ lota mora biti večja ali enaka najmanj loti.</value></data>
+  <data name="copyNew.err.maxDelay" xml:space="preserve"><value>Največja zakasnitev ne more biti negativna.</value></data>
+  <data name="copyNew.err.drawdown" xml:space="preserve"><value>Največ padca % mora biti med 0 in 100.</value></data>
+  <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Omejitev dnevne izgube ne more biti negativna.</value></data>
+  <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Omogočite vsaj eno vrsto naročila.</value></data>
+  <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Dodajte vsaj en simbol za izbrani filter simbolov.</value></data>
 </root>

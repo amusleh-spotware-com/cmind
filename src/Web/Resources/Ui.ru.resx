@@ -200,4 +200,114 @@
   <data name="copyDetail.title" xml:space="preserve"><value>Copy Profile</value></data>
   <data name="copyDetail.notFound" xml:space="preserve"><value>This copy profile no longer exists - it may have been deleted or you do not have access to it.</value></data>
   <data name="copyDetail.back" xml:space="preserve"><value>Back to copy trading</value></data>
+  <data name="copy.symbols.add" xml:space="preserve"><value>Добавить</value></data>
+  <data name="copy.symbols.none" xml:space="preserve"><value>Символы еще не добавлены</value></data>
+  <data name="copy.map.source" xml:space="preserve"><value>Исходный символ</value></data>
+  <data name="copy.map.destination" xml:space="preserve"><value>Целевой символ</value></data>
+  <data name="copy.map.multiplier" xml:space="preserve"><value>Объем ×</value></data>
+  <data name="copy.map.add" xml:space="preserve"><value>Добавить</value></data>
+  <data name="copy.map.none" xml:space="preserve"><value>Сопоставления символов еще не добавлены</value></data>
+  <data name="copy.map.remove" xml:space="preserve"><value>Удалить сопоставление</value></data>
+  <data name="copy.map.exportCsv" xml:space="preserve"><value>Экспортировать CSV</value></data>
+  <data name="copy.map.importCsv" xml:space="preserve"><value>Импортировать CSV</value></data>
+  <data name="copy.map.imported" xml:space="preserve"><value>Импортировано сопоставлений: {0}</value></data>
+  <data name="copy.map.importEmpty" xml:space="preserve"><value>В файле не найдено сопоставлений</value></data>
+  <data name="copy.map.importFailed" xml:space="preserve"><value>Не удалось прочитать файл CSV</value></data>
+  <data name="copyNew.title" xml:space="preserve"><value>Новый профиль копирования</value></data>
+  <data name="copyNew.back" xml:space="preserve"><value>Вернуться к копированию торговли</value></data>
+  <data name="copyNew.section.identity" xml:space="preserve"><value>Профиль и счета</value></data>
+  <data name="copyNew.section.sizing" xml:space="preserve"><value>Размер позиции и риск</value></data>
+  <data name="copyNew.section.behaviour" xml:space="preserve"><value>Поведение копирования</value></data>
+  <data name="copyNew.section.orderTypes" xml:space="preserve"><value>Типы ордеров</value></data>
+  <data name="copyNew.section.symbols" xml:space="preserve"><value>Символы</value></data>
+  <data name="copyNew.section.portability" xml:space="preserve"><value>Импорт / экспорт настроек</value></data>
+  <data name="copyNew.name" xml:space="preserve"><value>Имя профиля</value></data>
+  <data name="copyNew.name.required" xml:space="preserve"><value>Имя профиля обязательно</value></data>
+  <data name="copyNew.source" xml:space="preserve"><value>Исходный (master) счет</value></data>
+  <data name="copyNew.source.required" xml:space="preserve"><value>Исходный счет обязателен</value></data>
+  <data name="copyNew.destinations" xml:space="preserve"><value>Целевые (slave) счета</value></data>
+  <data name="copyNew.destinations.count" xml:space="preserve"><value>Выбрано счетов: {0}</value></data>
+  <data name="copyNew.destinations.help" xml:space="preserve"><value>Выберите один или несколько счетов для копирования торговли (главный счет исключен)</value></data>
+  <data name="copyNew.selectAll" xml:space="preserve"><value>Выбрать все</value></data>
+  <data name="copyNew.clear" xml:space="preserve"><value>Очистить</value></data>
+  <data name="copyNew.mode" xml:space="preserve"><value>Управление капиталом</value></data>
+  <data name="copyNew.parameter" xml:space="preserve"><value>Параметр</value></data>
+  <data name="copyNew.slippage" xml:space="preserve"><value>Проскальзывание (pips)</value></data>
+  <data name="copyNew.direction" xml:space="preserve"><value>Направление</value></data>
+  <data name="copyNew.minLot" xml:space="preserve"><value>Минимальный лот</value></data>
+  <data name="copyNew.maxLot" xml:space="preserve"><value>Максимальный лот</value></data>
+  <data name="copyNew.maxDelay" xml:space="preserve"><value>Макс. задержка (с)</value></data>
+  <data name="copyNew.maxDrawdown" xml:space="preserve"><value>Макс. просадка %</value></data>
+  <data name="copyNew.dailyLoss" xml:space="preserve"><value>Дневной лимит убытков</value></data>
+  <data name="copyNew.reverse" xml:space="preserve"><value>Обратное копирование</value></data>
+  <data name="copyNew.forceMin" xml:space="preserve"><value>Принудительный минимальный лот</value></data>
+  <data name="copyNew.copySl" xml:space="preserve"><value>Копировать SL</value></data>
+  <data name="copyNew.copyTp" xml:space="preserve"><value>Копировать TP</value></data>
+  <data name="copyNew.partialClose" xml:space="preserve"><value>Частичное закрытие</value></data>
+  <data name="copyNew.scaleIn" xml:space="preserve"><value>Масштабирование входа</value></data>
+  <data name="copyNew.pending" xml:space="preserve"><value>Отложенные ордеры</value></data>
+  <data name="copyNew.trailing" xml:space="preserve"><value>Трейлинг стоп</value></data>
+  <data name="copyNew.copyExpiry" xml:space="preserve"><value>Копировать время истечения</value></data>
+  <data name="copyNew.copySlippage" xml:space="preserve"><value>Копировать проскальзывание</value></data>
+  <data name="copyNew.market" xml:space="preserve"><value>Market</value></data>
+  <data name="copyNew.marketRange" xml:space="preserve"><value>Market range</value></data>
+  <data name="copyNew.limit" xml:space="preserve"><value>Limit</value></data>
+  <data name="copyNew.stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="copyNew.stopLimit" xml:space="preserve"><value>Stop limit</value></data>
+  <data name="copyNew.filterMode" xml:space="preserve"><value>Фильтр символов</value></data>
+  <data name="copyNew.filterSymbols" xml:space="preserve"><value>Фильтровать символы</value></data>
+  <data name="copyNew.symbolMap" xml:space="preserve"><value>Таблица соответствия символов</value></data>
+  <data name="copyNew.exportSettings" xml:space="preserve"><value>Экспортировать настройки</value></data>
+  <data name="copyNew.importSettings" xml:space="preserve"><value>Импортировать настройки</value></data>
+  <data name="copyNew.settingsImported" xml:space="preserve"><value>Настройки импортированы</value></data>
+  <data name="copyNew.settingsImportFailed" xml:space="preserve"><value>Не удалось прочитать файл настроек</value></data>
+  <data name="copyNew.cancel" xml:space="preserve"><value>Отмена</value></data>
+  <data name="copyNew.create" xml:space="preserve"><value>Создать профиль</value></data>
+  <data name="copyNew.created" xml:space="preserve"><value>Профиль создан</value></data>
+  <data name="copyNew.createFailed" xml:space="preserve"><value>Не удалось создать профиль</value></data>
+  <data name="copyNew.partialFailed" xml:space="preserve"><value>Профиль создан, но некоторые настройки целевого счета не удалось применить</value></data>
+  <data name="copyNew.tip.name" xml:space="preserve"><value>Короткое имя для идентификации этого профиля копирования в списке.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Главный счет, торговля которого копируется.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Один или несколько счетов, которые получают копии торговли главного счета. Сам главный счет исключен.</value></data>
+  <data name="copyNew.tip.mode" xml:space="preserve"><value>Как копируемая торговля определяется относительно главного счета: фиксированный лот, множитель, доля от баланса/капитала или процент фиксированного риска.</value></data>
+  <data name="copyNew.tip.parameter" xml:space="preserve"><value>Число, используемое режимом размера позиции — например множитель (1 = одинаковый размер) или процент риска.</value></data>
+  <data name="copyNew.tip.slippage" xml:space="preserve"><value>Максимальное отклонение цены в pips, допускаемое при размещении скопированного ордера, прежде чем он будет отклонен.</value></data>
+  <data name="copyNew.tip.direction" xml:space="preserve"><value>Копировать оба направления или только длинные, или только короткие позиции главного счета.</value></data>
+  <data name="copyNew.tip.minLot" xml:space="preserve"><value>Наименьший размер лота, который может использовать копия. 0 = без минимума.</value></data>
+  <data name="copyNew.tip.maxLot" xml:space="preserve"><value>Наибольший размер лота, который может использовать копия. 0 = без максимума.</value></data>
+  <data name="copyNew.tip.maxDelay" xml:space="preserve"><value>Пропустить копирование, если оно не может быть размещено в течение этого количества секунд после заполнения на главном счете. 0 = без ограничений.</value></data>
+  <data name="copyNew.tip.maxDrawdown" xml:space="preserve"><value>Приостановить копирование на целевой счет, если просадка его капитала превышает этот процент. 0 = отключено.</value></data>
+  <data name="copyNew.tip.dailyLoss" xml:space="preserve"><value>Остановить копирование на день, если реализованный убыток целевого счета достигает этой суммы. 0 = отключено.</value></data>
+  <data name="copyNew.tip.reverse" xml:space="preserve"><value>Зеркально отразить торговлю главного счета в противоположном направлении (покупка становится продажей).</value></data>
+  <data name="copyNew.tip.forceMin" xml:space="preserve"><value>Если вычисленный размер ниже минимального лота, разместить минимум вместо пропуска.</value></data>
+  <data name="copyNew.tip.copySl" xml:space="preserve"><value>Копировать stop-loss главного счета на ордер целевого счета.</value></data>
+  <data name="copyNew.tip.copyTp" xml:space="preserve"><value>Копировать take-profit главного счета на ордер целевого счета.</value></data>
+  <data name="copyNew.tip.partialClose" xml:space="preserve"><value>Когда главный счет частично закрывает позицию, закрыть ту же долю на целевом счете.</value></data>
+  <data name="copyNew.tip.scaleIn" xml:space="preserve"><value>Когда главный счет добавляет к позиции, добавить пропорционально на целевом счете.</value></data>
+  <data name="copyNew.tip.pending" xml:space="preserve"><value>Копировать отложенные (limit/stop) ордеры главного счета, а не только рыночные заполнения.</value></data>
+  <data name="copyNew.tip.trailing" xml:space="preserve"><value>Копировать регулировки трейлинг-стопа главного счета.</value></data>
+  <data name="copyNew.tip.copyExpiry" xml:space="preserve"><value>Копировать время истечения отложенных ордеров главного счета.</value></data>
+  <data name="copyNew.tip.copySlippage" xml:space="preserve"><value>Использовать собственное значение проскальзывания главного счета вместо приведенного выше.</value></data>
+  <data name="copyNew.tip.orderTypes" xml:space="preserve"><value>Какие типы ордеров главного счета копируются. Отключите тип, чтобы игнорировать эти ордеры.</value></data>
+  <data name="copyNew.tip.market" xml:space="preserve"><value>Копировать рыночные ордеры.</value></data>
+  <data name="copyNew.tip.marketRange" xml:space="preserve"><value>Копировать рыночные ордеры с диапазоном.</value></data>
+  <data name="copyNew.tip.limit" xml:space="preserve"><value>Копировать лимит-ордеры.</value></data>
+  <data name="copyNew.tip.stop" xml:space="preserve"><value>Копировать стоп-ордеры.</value></data>
+  <data name="copyNew.tip.stopLimit" xml:space="preserve"><value>Копировать стоп-лимит ордеры.</value></data>
+  <data name="copyNew.tip.filterMode" xml:space="preserve"><value>Никак = копировать все символы. Белый список = копировать только указанные символы. Черный список = копировать все кроме указанных символов.</value></data>
+  <data name="copyNew.tip.symbolMap" xml:space="preserve"><value>Преобразовать символ главного счета в символ брокера целевого счета с опциональным множителем объема для каждого символа. Импортируйте или экспортируйте всю таблицу как CSV-файл.</value></data>
+  <data name="copyNew.tip.portability" xml:space="preserve"><value>Сохраните все настройки этой формы в файл или загрузите их из предыдущего сохраненного файла.</value></data>
+  <data name="copyNew.err.name" xml:space="preserve"><value>Имя профиля обязательно.</value></data>
+  <data name="copyNew.err.source" xml:space="preserve"><value>Выберите исходный (master) счет.</value></data>
+  <data name="copyNew.err.destinations" xml:space="preserve"><value>Выберите как минимум один целевой (slave) счет.</value></data>
+  <data name="copyNew.err.parameter" xml:space="preserve"><value>Параметр должен быть больше нуля.</value></data>
+  <data name="copyNew.err.slippage" xml:space="preserve"><value>Проскальзывание не может быть отрицательным.</value></data>
+  <data name="copyNew.err.minLot" xml:space="preserve"><value>Минимальный лот не может быть отрицательным.</value></data>
+  <data name="copyNew.err.maxLot" xml:space="preserve"><value>Максимальный лот не может быть отрицательным.</value></data>
+  <data name="copyNew.err.lotOrder" xml:space="preserve"><value>Максимальный лот должен быть больше или равен минимальному лоту.</value></data>
+  <data name="copyNew.err.maxDelay" xml:space="preserve"><value>Макс. задержка не может быть отрицательной.</value></data>
+  <data name="copyNew.err.drawdown" xml:space="preserve"><value>Макс. просадка % должна быть от 0 до 100.</value></data>
+  <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Дневной лимит убытков не может быть отрицательным.</value></data>
+  <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Включите как минимум один тип ордера.</value></data>
+  <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Добавьте как минимум один символ для выбранного фильтра символов.</value></data>
 </root>

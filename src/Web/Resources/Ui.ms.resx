@@ -200,4 +200,114 @@
   <data name="copyDetail.title" xml:space="preserve"><value>Copy Profile</value></data>
   <data name="copyDetail.notFound" xml:space="preserve"><value>This copy profile no longer exists - it may have been deleted or you do not have access to it.</value></data>
   <data name="copyDetail.back" xml:space="preserve"><value>Back to copy trading</value></data>
+  <data name="copy.symbols.add" xml:space="preserve"><value>Tambah</value></data>
+  <data name="copy.symbols.none" xml:space="preserve"><value>Tiada simbol ditambah lagi</value></data>
+  <data name="copy.map.source" xml:space="preserve"><value>Simbol sumber</value></data>
+  <data name="copy.map.destination" xml:space="preserve"><value>Simbol destinasi</value></data>
+  <data name="copy.map.multiplier" xml:space="preserve"><value>Volum ×</value></data>
+  <data name="copy.map.add" xml:space="preserve"><value>Tambah</value></data>
+  <data name="copy.map.none" xml:space="preserve"><value>Tiada pemetaan simbol lagi</value></data>
+  <data name="copy.map.remove" xml:space="preserve"><value>Buang pemetaan</value></data>
+  <data name="copy.map.exportCsv" xml:space="preserve"><value>Eksport CSV</value></data>
+  <data name="copy.map.importCsv" xml:space="preserve"><value>Import CSV</value></data>
+  <data name="copy.map.imported" xml:space="preserve"><value>{0} pemetaan diimport</value></data>
+  <data name="copy.map.importEmpty" xml:space="preserve"><value>Tiada pemetaan ditemui dalam fail</value></data>
+  <data name="copy.map.importFailed" xml:space="preserve"><value>Tidak dapat membaca fail CSV</value></data>
+  <data name="copyNew.title" xml:space="preserve"><value>Profil Salinan Baru</value></data>
+  <data name="copyNew.back" xml:space="preserve"><value>Kembali ke Perdagangan Salinan</value></data>
+  <data name="copyNew.section.identity" xml:space="preserve"><value>Profil &amp; akaun</value></data>
+  <data name="copyNew.section.sizing" xml:space="preserve"><value>Saiz &amp; risiko</value></data>
+  <data name="copyNew.section.behaviour" xml:space="preserve"><value>Kelakuan salinan</value></data>
+  <data name="copyNew.section.orderTypes" xml:space="preserve"><value>Jenis pesanan</value></data>
+  <data name="copyNew.section.symbols" xml:space="preserve"><value>Simbol</value></data>
+  <data name="copyNew.section.portability" xml:space="preserve"><value>Tetapan import / eksport</value></data>
+  <data name="copyNew.name" xml:space="preserve"><value>Nama profil</value></data>
+  <data name="copyNew.name.required" xml:space="preserve"><value>Nama profil diperlukan</value></data>
+  <data name="copyNew.source" xml:space="preserve"><value>Akaun sumber (master)</value></data>
+  <data name="copyNew.source.required" xml:space="preserve"><value>Akaun sumber diperlukan</value></data>
+  <data name="copyNew.destinations" xml:space="preserve"><value>Akaun destinasi (slave)</value></data>
+  <data name="copyNew.destinations.count" xml:space="preserve"><value>{0} akaun dipilih</value></data>
+  <data name="copyNew.destinations.help" xml:space="preserve"><value>Pilih satu atau lebih akaun untuk menyalin dagangan (master dikecualikan)</value></data>
+  <data name="copyNew.selectAll" xml:space="preserve"><value>Pilih semua</value></data>
+  <data name="copyNew.clear" xml:space="preserve"><value>Kosongkan</value></data>
+  <data name="copyNew.mode" xml:space="preserve"><value>Pengurusan wang</value></data>
+  <data name="copyNew.parameter" xml:space="preserve"><value>Parameter</value></data>
+  <data name="copyNew.slippage" xml:space="preserve"><value>Slippage (pips)</value></data>
+  <data name="copyNew.direction" xml:space="preserve"><value>Arah</value></data>
+  <data name="copyNew.minLot" xml:space="preserve"><value>Lot min</value></data>
+  <data name="copyNew.maxLot" xml:space="preserve"><value>Lot maks</value></data>
+  <data name="copyNew.maxDelay" xml:space="preserve"><value>Kelewatan maks (s)</value></data>
+  <data name="copyNew.maxDrawdown" xml:space="preserve"><value>Drawdown maks %</value></data>
+  <data name="copyNew.dailyLoss" xml:space="preserve"><value>Had kerugian harian</value></data>
+  <data name="copyNew.reverse" xml:space="preserve"><value>Terbalik</value></data>
+  <data name="copyNew.forceMin" xml:space="preserve"><value>Paksakan lot minimum</value></data>
+  <data name="copyNew.copySl" xml:space="preserve"><value>Salin SL</value></data>
+  <data name="copyNew.copyTp" xml:space="preserve"><value>Salin TP</value></data>
+  <data name="copyNew.partialClose" xml:space="preserve"><value>Tutup separa</value></data>
+  <data name="copyNew.scaleIn" xml:space="preserve"><value>Tambah skala</value></data>
+  <data name="copyNew.pending" xml:space="preserve"><value>Pesanan tertangguh</value></data>
+  <data name="copyNew.trailing" xml:space="preserve"><value>Henti jejak</value></data>
+  <data name="copyNew.copyExpiry" xml:space="preserve"><value>Salin tamat tempoh</value></data>
+  <data name="copyNew.copySlippage" xml:space="preserve"><value>Salin slippage</value></data>
+  <data name="copyNew.market" xml:space="preserve"><value>Pasaran</value></data>
+  <data name="copyNew.marketRange" xml:space="preserve"><value>Julat pasaran</value></data>
+  <data name="copyNew.limit" xml:space="preserve"><value>Had</value></data>
+  <data name="copyNew.stop" xml:space="preserve"><value>Henti</value></data>
+  <data name="copyNew.stopLimit" xml:space="preserve"><value>Henti had</value></data>
+  <data name="copyNew.filterMode" xml:space="preserve"><value>Penapis simbol</value></data>
+  <data name="copyNew.filterSymbols" xml:space="preserve"><value>Penapis simbol</value></data>
+  <data name="copyNew.symbolMap" xml:space="preserve"><value>Peta simbol</value></data>
+  <data name="copyNew.exportSettings" xml:space="preserve"><value>Eksport tetapan</value></data>
+  <data name="copyNew.importSettings" xml:space="preserve"><value>Import tetapan</value></data>
+  <data name="copyNew.settingsImported" xml:space="preserve"><value>Tetapan diimport</value></data>
+  <data name="copyNew.settingsImportFailed" xml:space="preserve"><value>Tidak dapat membaca fail tetapan</value></data>
+  <data name="copyNew.cancel" xml:space="preserve"><value>Batal</value></data>
+  <data name="copyNew.create" xml:space="preserve"><value>Buat profil</value></data>
+  <data name="copyNew.created" xml:space="preserve"><value>Profil dibuat</value></data>
+  <data name="copyNew.createFailed" xml:space="preserve"><value>Gagal membuat profil</value></data>
+  <data name="copyNew.partialFailed" xml:space="preserve"><value>Profil dibuat, tetapi beberapa tetapan destinasi tidak dapat digunakan</value></data>
+  <data name="copyNew.tip.name" xml:space="preserve"><value>Nama pendek untuk mengenali profil salinan ini dalam senarai.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Akaun master yang dagangan dilakukan salinan.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Satu atau lebih akaun yang menerima salinan dagangan master. Master sendiri dikecualikan.</value></data>
+  <data name="copyNew.tip.mode" xml:space="preserve"><value>Bagaimana setiap dagangan disalin diubah saiz berbanding master: lot tetap, pengganda, bahagian daripada baki/ekuiti, atau peratusan risiko tetap.</value></data>
+  <data name="copyNew.tip.parameter" xml:space="preserve"><value>Nombor yang mod saiz gunakan — contohnya pengganda (1 = saiz sama) atau peratusan risiko.</value></data>
+  <data name="copyNew.tip.slippage" xml:space="preserve"><value>Sisihan harga maksimum, dalam pips, dibenarkan apabila meletakkan pesanan disalin sebelum ditolak.</value></data>
+  <data name="copyNew.tip.direction" xml:space="preserve"><value>Salin kedua-dua arah, atau hanya dagangan panjang master atau hanya dagangan pendeknya.</value></data>
+  <data name="copyNew.tip.minLot" xml:space="preserve"><value>Saiz lot terkecil yang salinan boleh gunakan. 0 = tiada minimum.</value></data>
+  <data name="copyNew.tip.maxLot" xml:space="preserve"><value>Saiz lot terbesar yang salinan boleh gunakan. 0 = tiada maksimum.</value></data>
+  <data name="copyNew.tip.maxDelay" xml:space="preserve"><value>Langkau salinan jika tidak dapat diletakkan dalam beberapa saat ini selepas isian master. 0 = tiada had.</value></data>
+  <data name="copyNew.tip.maxDrawdown" xml:space="preserve"><value>Jeda penyalinan ke destinasi jika ekuiti drawdownnya melebihi peratusan ini. 0 = dilumpuhkan.</value></data>
+  <data name="copyNew.tip.dailyLoss" xml:space="preserve"><value>Hentikan penyalinan untuk hari itu jika kerugian realisasi destinasi mencapai jumlah ini. 0 = dilumpuhkan.</value></data>
+  <data name="copyNew.tip.reverse" xml:space="preserve"><value>Cermin dagangan master dalam arah bertentangan (beli menjadi jual).</value></data>
+  <data name="copyNew.tip.forceMin" xml:space="preserve"><value>Jika saiz dikira di bawah lot minimum, letakkan minimum sebaliknya melangkau.</value></data>
+  <data name="copyNew.tip.copySl" xml:space="preserve"><value>Salin henti rugi master ke pesanan destinasi.</value></data>
+  <data name="copyNew.tip.copyTp" xml:space="preserve"><value>Salin ambil untung master ke pesanan destinasi.</value></data>
+  <data name="copyNew.tip.partialClose" xml:space="preserve"><value>Apabila master menutup sebahagian kedudukan, tutup bahagian yang sama pada destinasi.</value></data>
+  <data name="copyNew.tip.scaleIn" xml:space="preserve"><value>Apabila master menambah kedudukan, tambah secara berkadaran pada destinasi.</value></data>
+  <data name="copyNew.tip.pending" xml:space="preserve"><value>Salin pesanan tertangguh master (had/henti), bukan hanya isian pasaran.</value></data>
+  <data name="copyNew.tip.trailing" xml:space="preserve"><value>Salin penyesuaian henti jejak master.</value></data>
+  <data name="copyNew.tip.copyExpiry" xml:space="preserve"><value>Salin masa tamat tempoh pesanan tertangguh master.</value></data>
+  <data name="copyNew.tip.copySlippage" xml:space="preserve"><value>Gunakan tetapan slippage master sendiri sebaliknya nilai di atas.</value></data>
+  <data name="copyNew.tip.orderTypes" xml:space="preserve"><value>Yang mana jenis pesanan master disalin. Lumpuhkan jenis untuk mengabaikan pesanan tersebut.</value></data>
+  <data name="copyNew.tip.market" xml:space="preserve"><value>Salin pesanan pasaran.</value></data>
+  <data name="copyNew.tip.marketRange" xml:space="preserve"><value>Salin pesanan julat pasaran.</value></data>
+  <data name="copyNew.tip.limit" xml:space="preserve"><value>Salin pesanan had.</value></data>
+  <data name="copyNew.tip.stop" xml:space="preserve"><value>Salin pesanan henti.</value></data>
+  <data name="copyNew.tip.stopLimit" xml:space="preserve"><value>Salin pesanan henti had.</value></data>
+  <data name="copyNew.tip.filterMode" xml:space="preserve"><value>Tiada = salin setiap simbol. Senarai putih = salin hanya simbol tersenarai. Senarai hitam = salin semua kecuali simbol tersenarai.</value></data>
+  <data name="copyNew.tip.symbolMap" xml:space="preserve"><value>Terjemah simbol master ke simbol broker destinasi, dengan pengganda volum opsyonal bagi setiap simbol. Import atau eksport peta keseluruhan sebagai fail CSV.</value></data>
+  <data name="copyNew.tip.portability" xml:space="preserve"><value>Simpan semua tetapan pada borang ini ke fail, atau muatkan daripada fail yang disimpan sebelumnya.</value></data>
+  <data name="copyNew.err.name" xml:space="preserve"><value>Nama profil diperlukan.</value></data>
+  <data name="copyNew.err.source" xml:space="preserve"><value>Pilih akaun sumber (master).</value></data>
+  <data name="copyNew.err.destinations" xml:space="preserve"><value>Pilih sekurang-kurangnya satu akaun destinasi (slave).</value></data>
+  <data name="copyNew.err.parameter" xml:space="preserve"><value>Parameter mestilah lebih besar daripada sifar.</value></data>
+  <data name="copyNew.err.slippage" xml:space="preserve"><value>Slippage tidak boleh negatif.</value></data>
+  <data name="copyNew.err.minLot" xml:space="preserve"><value>Lot min tidak boleh negatif.</value></data>
+  <data name="copyNew.err.maxLot" xml:space="preserve"><value>Lot maks tidak boleh negatif.</value></data>
+  <data name="copyNew.err.lotOrder" xml:space="preserve"><value>Lot maks mestilah lebih besar daripada atau sama dengan lot min.</value></data>
+  <data name="copyNew.err.maxDelay" xml:space="preserve"><value>Kelewatan maks tidak boleh negatif.</value></data>
+  <data name="copyNew.err.drawdown" xml:space="preserve"><value>Drawdown maks % mestilah antara 0 dan 100.</value></data>
+  <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Had kerugian harian tidak boleh negatif.</value></data>
+  <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Dayakan sekurang-kurangnya satu jenis pesanan.</value></data>
+  <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Tambah sekurang-kurangnya satu simbol untuk penapis simbol yang dipilih.</value></data>
 </root>

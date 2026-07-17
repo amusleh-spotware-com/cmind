@@ -1,0 +1,124 @@
+@* Editable add/remove list of source→destination symbol mappings, each with an optional volume
+   multiplier. Replaces the raw "SRC=DST, comma separated" text box (mandate 7). Supports importing and
+   exporting the mapping as a CSV file (Source,Destination,VolumeMultiplier) so a user can prepare a large
+   broker-symbol map in a spreadsheet instead of typing it. *@
+@using Web.Json
+@inject IStringLocalizer<Ui> L
+@inject IJSRuntime Js
+@inject ISnackbar Snack
+
+<div>
+    <MudGrid Spacing="1" Class="align-center">
+        <MudItem xs="12" sm="4">
+            <MudTextField T="string" @bind-Value="_source" Label="@L["copy.map.source"]" Immediate="true"
+                          Variant="Variant.Outlined" Margin="Margin.Dense" data-testid="symbol-map-source" />
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudTextField T="string" @bind-Value="_destination" Label="@L["copy.map.destination"]" Immediate="true"
+                          Variant="Variant.Outlined" Margin="Margin.Dense" data-testid="symbol-map-destination" />
+        </MudItem>
+        <MudItem xs="7" sm="2">
+            <MudNumericField T="double" @bind-Value="_multiplier" Label="@L["copy.map.multiplier"]" Min="0"
+                             Step="0.1" Variant="Variant.Outlined" Margin="Margin.Dense" data-testid="symbol-map-multiplier" />
+        </MudItem>
+        <MudItem xs="5" sm="2">
+            <MudButton FullWidth="true" Variant="Variant.Outlined" Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.Add" OnClick="Add"
+                       data-testid="symbol-map-add">@L["copy.map.add"]</MudButton>
+        </MudItem>
+    </MudGrid>
+
+    @if (Rows.Count == 0)
+    {
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">@L["copy.map.none"]</MudText>
+    }
+    else
+    {
+        <div style="overflow-x:auto">
+        <MudSimpleTable Dense="true" Bordered="false" Class="mt-1" data-testid="symbol-map-rows">
+            <thead>
+                <tr>
+                    <th>@L["copy.map.source"]</th>
+                    <th>@L["copy.map.destination"]</th>
+                    <th>@L["copy.map.multiplier"]</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Rows)
+                {
+                    <tr>
+                        <td>@row.Source</td>
+                        <td>@row.Destination</td>
+                        <td>@row.VolumeMultiplier.ToString("0.###", System.Globalization.CultureInfo.CurrentCulture)</td>
+                        <td>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                           aria-label="@L["copy.map.remove"]" OnClick="@(() => Remove(row))" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </MudSimpleTable>
+        </div>
+    }
+
+    <MudStack Row="true" Spacing="1" Class="mt-1" Wrap="Wrap.Wrap">
+        <MudButton Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.Download"
+                   OnClick="ExportCsv" Disabled="@(Rows.Count == 0)"
+                   data-testid="symbol-map-export">@L["copy.map.exportCsv"]</MudButton>
+        <MudButton Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.Upload"
+                   HtmlTag="label" for="symbol-map-csv"
+                   data-testid="symbol-map-import">@L["copy.map.importCsv"]</MudButton>
+        <InputFile id="symbol-map-csv" hidden OnChange="ImportCsv" accept=".csv,text/csv" />
+    </MudStack>
+</div>
+
+@code {
+    [Parameter] public List<SymbolMapRow> Rows { get; set; } = [];
+
+    private string _source = "";
+    private string _destination = "";
+    private double _multiplier = 1;
+
+    private void Add()
+    {
+        var source = _source.Trim();
+        var destination = _destination.Trim();
+        if (source.Length == 0 || destination.Length == 0) return;
+        var multiplier = _multiplier > 0 ? _multiplier : 1;
+        Rows.RemoveAll(r => string.Equals(r.Source, source, StringComparison.OrdinalIgnoreCase));
+        Rows.Add(new SymbolMapRow(source, destination, multiplier));
+        _source = "";
+        _destination = "";
+        _multiplier = 1;
+    }
+
+    private void Remove(SymbolMapRow row) => Rows.Remove(row);
+
+    private async Task ExportCsv()
+    {
+        var csv = CopyProfilePortability.SymbolMapToCsv(Rows);
+        await Js.InvokeVoidAsync("appDownloadText", "symbol-map.csv", csv);
+    }
+
+    private async Task ImportCsv(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            using var reader = new StreamReader(e.File.OpenReadStream(1024 * 1024));
+            var csv = await reader.ReadToEndAsync();
+            var parsed = CopyProfilePortability.ParseSymbolMapCsv(csv);
+            if (parsed.Count == 0) { Snack.Add(L["copy.map.importEmpty"], Severity.Warning); return; }
+            foreach (var row in parsed)
+            {
+                Rows.RemoveAll(r => string.Equals(r.Source, row.Source, StringComparison.OrdinalIgnoreCase));
+                Rows.Add(row);
+            }
+            Snack.Add(L["copy.map.imported", parsed.Count], Severity.Success);
+        }
+        catch (Exception)
+        {
+            Snack.Add(L["copy.map.importFailed"], Severity.Error);
+        }
+    }
+}

@@ -1,99 +1,104 @@
 ---
-description: "Zrcali glavni cTrader račun na enega ali več podrejenih računov — cross-broker, cross-cID — s kontrolo na cilj in reconciliacijo denarnega razreda."
+description: "Zrcali glavni račun cTrader na enega ali več podredenih računov — čez borzne hiše, čez cID — s kontrolo po ciljih + finančno natančnostjo."
 ---
 
 # Kopiranje trgovanja
 
-Zrcali **glavni** cTrader račun na enega ali več **podrejenih** računov — cross-broker, cross-cID — s kontrolo na cilj in reconciliacijo denarnega razreda.
+Zrcalite **glavni** račun cTrader na enega ali več **podredenih** računov — čez borzne hiše, čez cID — s kontrolo po ciljih + finančno natančnostjo.
 
-## Koncepti
+## Pojmi
 
-- **Profil kopiranja** — en glavni (`SourceAccountId`) + en ali več **ciljev**. Življenjski cikel: `Draft → Running → Paused → Stopped` (`Error` ob napaki). Agregatni koren: `CopyProfile` (ima `CopyDestination`).
-- **Cilj** — en podrejeni račun + poln nabor pravil za to, kako se glavni kopira nanj. Vsa konfiguracija na cilj, torej en glavni lahko hrani konzervativnega in agresivnega podrejenega.
-- **Gostitelj podvajalnega motorja** — tekoči delavec za profil (`CopyEngineHost`). Se naroči na pretok izvajanja glavnega, uporabi vsak dogodek na vsakem cilju.
-- **Supervisor** — `CopyEngineSupervisor`, ozadnji servis na vsakem vozlišču. Vozlišču dodeljeni profili se samozdravijo čez gručo (glej [scaling](../deployment/scaling.md)).
+- **Profil kopiranja** — en glavni (`SourceAccountId`) + en ali več **ciljev**. Življenjski ciklus: `Draft → Running → Paused → Stopped` (`Error` ob napaki). Koren agregata: `CopyProfile` (lastnik `CopyDestination`).
+- **Cilj** — en podrejeni račun + popoln nabor pravil, kako se glavni kopira nanj. Vsa konfiguracija po cilju, zato en glavni lahko hkrati napaja konzervativne in agresivne podrejene.
+- **Pogon za kopiranje** — delujoči delavec za profil (`CopyEngineHost`). Se naroči na tok izvršitve glavnega, vsak dogodek uporabi za vse cilje.
+- **Nadglednik** — `CopyEngineSupervisor`, storitev v ozadju na vsakem vozlišču. Gosti dodeljene profile, samopopravi se čez grupo (glejte [skaliranje](../deployment/scaling.md)).
 
 ## Kaj se zrcali
 
 | Dogodek glavnega | Dejanje podrejenega |
-|------------------|---------------------|
-| Tržna / tržna-območje pozicija odprta | Odpri dimenzionirano kopijo (označeno z id izvorne pozicije) |
-| Limit / stop / stop-limit čakajoči nalog | Postavi ustrezen čakajoči nalog |
-| Sprememba čakajočega naloga | Spremeni zrcaljeni čakajoči nalog na mestu |
-| Preklic/potek čakajočega naloga | Prekliči zrcaljeni čakajoči nalog |
-| Delno zaprtje | Zapri isto sorazmerje podrejene pozicije |
-| Scale-in (povečanje volumna) | Odpri dodani volumen (opt-in) |
-| Sprememba stop-loss/trailing-stop | Spremeni zaščito podrejene pozicije |
-| Polno zaprtje | Zapri podrejeno kopijo |
+|--------------|--------------|
+| Pozicija na trgu / pozicija na območju trgovanja odprta | Odpri kopijo velikosti (označeno s ID-om izvirne pozicije) |
+| Naročilo v prihodnosti / naročilo s stopnjo / naročilo s stopnjo in zaustavljanjem čakajočo | Postavi ujemajoče se čakajoče naročilo |
+| Sprememba čakajočega naročila | Spremeni čakajoče naročilo podrejenega na mestu |
+| Preklic čakajočega naročila / izteka | Prekliči čakajoče naročilo podrejenega |
+| Delna zapora | Zapri enak delež pozicije podrejenega |
+| Povečanje volumna | Odpri dodani volumen (možno) |
+| Sprememba zaustavitve ob izgubi / izgube z zaostajanjem | Spremeni zaščito pozicije podrejenega |
+| Popolna zapora | Zapri kopijo podrejenega |
 
-Vsaka kopia **označena z id izvorne pozicije/naloga**. Po ponovnem povezovanju gostitelj obnovi stanje iz uskladitve: odpre kopije pozicij, ki jih ima glavni, a manjkajo podrejenemu, zapre podrejenega "siroto", ki ga glavni nima več — **brez podvajanja poslov**.
+Vsaka kopija **označena z ID-om izvirne pozicije/naročila**. Po ponovni povezavi gostitelj znova sestavi stanje iz usklajevanja: odpre kopije, ki jih ima glavni, a podrejeni nima, zapre „sirote" podrejenega, ki jih glavni več nima — **brez podvajanja trgovanj**.
 
 ## Ustvarjanje profila
 
-**Nov profil** dialog na strani kopiranja trgovanja zbere vse naenkrat: ime profila, vir (glavni račun), cilj (podrejeni računi) (multi-select s gumbom **Izberi vse**; izbrani glavni je izvzet iz seznama podrejenih), + poln nabor možnosti na cilj spodaj. Vsi vnosi **validirani pred shranjevanjem** — manjkajoče ime/vir/cilj, nepozitivni dimenzijski parametri, negativni/nesklenjeni meji lota, odstotek izven obsega, nobena vrsta naloga ni omogočena, prazen filter simbolov, ali napačno oblikovani pari simbolov se prikažejo kot seznam napak + blokirajo shranjevanje. Ob potrditvi, profil ustvarjen + vsak izbrani podrejen dodan z izbranimi nastavitvami.
+**Novi profil** odpre namenske **polno-strani** obrazec (`/copy-trading/new`), ne dialog — nabor možnosti je dovolj velik, da se stran bolje bere na telefonu in namizju. Zbira vse vnaprej: ime profila, izvor (glavni) račun, cilje (podrejene) račune (večsmerni izbor s **Izberi vse** gumbom; izbrani glavni izključen iz seznama podredenih), + celoten nabor možnosti za cilje. **Vsak nadzor ima nasveto**, ki pojasni, kaj počne in kako ga uporabiti. Strukturirani vnosi uporabljajo **pravilne validirane nadzore** — številke/odstotek prek numeričnih polj, načini/smer/filter prek izbirnikov, filter simbola prek seznama dodajanja/odstranjevanja čipov simbola, in mapo simbolov prek tabele dodajanja/odstranjevanja `Vir → Cilj (× množitelj)` vrstic — nikoli besedilo z vejicami. Vsi vnosi **validirani pred shranjevanjem** — manjkajoče ime/izvor/cilj, ne-pozitivni parameter določanja velikosti, negativne/nedosledne meje, izven domet procent izgube, ni vrste naročila omogočene, ali prazen filter simbola se pojavijo kot seznam napak + blokira shranjevanje. Pri ustvarjanju je profil ustvarjen + vsak izbrani podrejeni dodan z izbranimi nastavitvami, nato se stran vrne na seznam za kopiranje trgovanja.
 
-Vrstične akcije spoštujejo življenjski cikel: **Začni** omogočeno samo ko ne teče, **Ustavi** + **Pavziraj** samo ko teče, **Izbriši** onemogočeno med tekom + zahteva potrditev pred odstranitvijo profila + ciljev.
+**Uvoz / izvoz.** Celoten blok nastavitev se lahko **izveže v datoteko JSON** in se ponovno **uvozi** za predpolnjenje obrazca, tako da se uglašavanje lahko ponovno uporabi v profilih brez ponovno tipkanja. Karto simbolov se lahko podobno **izveže / uvozi kot datoteko CSV** (`Source,Destination,VolumeMultiplier`) — pripravite veliko brokersko karto simbolov v preglednici in jo naložite v enem koraku. Isti nadzori simbolov in uvoz/izvoz CSV so prav tako na voljo v dialogu za cilje na strani Kopiranje trgovanja.
 
-## Možnosti na cilj
+Dejanja vrstic spoštujejo življenjski ciklus: **Zagon** omogočen samo, kadar se ne izvaja, **Ustavitev** + **Pavza** samo pri zagonu, **Izbris** onemogočen med zagonom + pred odstranitvijo profila + ciljev vpraša za potrditev.
 
-Nastavljivo v dialogu Novega profila, na panelu profila kopiranja na strani, ali prek `POST /api/copy/profiles/{id}/destinations`:
+## Možnosti na cilje
 
-- **Dimenzioniranje** (`MoneyManagementMode` + parameter): fiksen lot, lot/notional množilnik, sorazmerno bilanco/equity/prosto maržo, fiksen tveganja %, fiksna vzvod, avtomatsko sorazmerno, **tveganja-%-od-stop** (M7). Plus min/max meje lota + prisili-min-lot. **Tveganja-od-stop** dimenzionira cilj tako, da tvega konfiguriran odstotek **svoje** bilance, izpeljan iz **razdalje glavnega stop-loss** (`glavni tvega 2% → podrejeni avtomatsko tvega 2%`): `lots = balance×% ÷ (stopDistance × contractSize)`. Glavni odprt **brez** stop-loss nima razdalje za dimenzioniranje → uporabi konfiguriran **max-tveganja fallback lot** (M7) če nastavljeno, sicer preskoči (`no_stop_loss`). Sorazmerno-**equity**/**prosto-maržo** dimenzioniranje iz resnične **equity** računa (`balance + Σ floating P&L`, izpeljano iz cTrader Open API ki ne dostavlja equity), ne navadne bilance — torej glavni na odprtem dobičku/izgubi pravilno dimenzionira kopije. Uporabljena marža ni razkrita prek API za uskladitev, torej prosta marža obravnavana kot equity (pošten približek razpoložljivih sredstev); drugi načini berejo bilanco + preskočijo dodatno revalvacijo.
-- **Filter smeri**: oba / samo dolg / samo kratek. **Obrni**: obrne stran (+ zamenjaj SL↔TP) za kontrarian copy.
-- **Samo-upravljanje** (Ignore-New-Trades / Close-Only): zrcali zaprtja, delna zaprtja + zaščitne spremembe na že kopiranih pozicijah, vendar **ne odpira** novih pozicij/čakajočih nalogov (preskočeno `manage_only`). Uporabi za zmanjšanje cilja brez rezanja obstoječih kopij.
-- **Sync-Open-on-start** / **Sync-Closed-on-start** (privzeto vključeno): ob **prvi** uskladitvi profila, ali odpreti kopije za obstoječe pozicije glavnega, + ali zapreti kopije, ki jih je glavni zaprl medtem ko je bil profil ustavljen. Oba veljata samo na začetku — med delovanjem ponovno povezovanje vedno popolnoma uskladi, da se razhajanja popravijo.
-- **Zemljevid simbolov** + **filter simbolov** (bela lista / črna lista). Vsak vnos zemljevida simbolov ima izbirno **prilagojen množilnik volumna na simbol** (cMAM nadomestitev na simbol) ki spreminja velikost kopije za ta simbol na vrhu ciljevega dimenzioniranja (1 = brez spremembe). Celoten zemljevid se uvozi/izvozi kot **CSV** (`GET …/symbol-map.csv`, `PUT …/symbol-map/csv`; stolpci `Source,Destination,VolumeMultiplier`) — vsaka vrstica validirana skozi domenske vrednostne objekte, torej napačna datoteka ne more proizvesti neveljavnega zemljevida.
-- **Časovno okno trgovanja** (C18) — na cilj dnevno UTC okno (`start`/`end` minute dneva, end ekskluziven; `start == end` = ves dan). Nova odprtja zunaj okna preskočena (`trading_hours`); okno z `start > end` se ovije čez polnoč (npr. 22:00–06:00). Obstoječe pozicije ostanejo upravljane.
-- **Filter oznake vira** (C18, ekvivalent MT magic-number filtra cTrader) — ko nastavljeno, kopiraj samo trgovine glavnega katerih oznaka se natančno ujema (npr. enega bot-a trgovine, ali samo ročna oznaka); sicer preskočeno (`source_label`). Prazen = kopiraj vse. Nosi se na `ExecutionEvent.SourceLabel` iz pozicije/naloga glavnega `TradeData.Label`, spoštuje se tud pri uskladitvi.
-- **Zaščita računa** (ZuluGuard / Global Account Protection) — spremljaj **živo equity** cilja (`balance + Σ floating P&L`, anketirano vsak `CopyDefaults.EquityGuardInterval`) proti tlom `StopEquity` in/ali izbirni strehi `TakeEquity`. Ob prelomu, uporabi način: **CloseOnly** (ustavi nove kopije, upravljaj obstoječe), **Frozen** (ustavi odprtja), **SellOut** (zapri **vse** kopije na cilju takoj). Ko sproženo, cilj zaklenjen — nobena nova odprtja dokler gostitelj ne reštartira — + `CopyAccountProtectionTriggered` alert dvignjen. `SellOut` zahteva `StopEquity`; `TakeEquity` mora biti nad `StopEquity`. **Brez garancije opozorilo:** prodaja uporablja tržno izvršitev — kot vsaka konkurenčna enakratna, ne more garantirati cene izpolnitve v hitrem/tržnem presledku.
-- **Panik gumb Zapri-vse** (C8) — `POST /api/copy/profiles/{id}/flatten` takoj zapre **vse** kopirane pozicije na vsakem cilju + zaklene proti novim odprtjem. Usmerjeno cross-process: API nastavi zastavico, supervisor dostavi tekočemu gostitelju (povrne kanal za rotacijo žetona), ki flattenira na mestu; zastavica počistena torej sproži natanko enkrat (`CopyFlattenAll` alert). Uporabnik nato pavziraj/ustavi profil.
-- **Varovalka pravil prop firm** (C7) — uveljavljanje, ki ga zahtevajo uporabniki prop firm kopiranj. Na cilj, **dnevna izguba limit** (izguba od odprtja equity dneva) in/ali **sledeča izguba limit** (izguba od tekočega vrha equity), oba v depozitni valuti. Ob prelomu cilj **avtomatsko flatteniran** (vse kopije zaprte) + **zaklenjen** preostanek UTC dneva (nova odprtja preskočena `prop_lockout`); `CopyPropRuleBreached` alert sprožen. Zaklep se počisti ko se UTC dan zavrti (nova osnova/vrh vzeta). Deli isto živo equity anketo kot zaščita računa.
-- **Izvršitveni jitter** (C11, privzeto izključeno) — naključni `0..N` ms zamik pred postavitvijo vsake kopije, za dekorelacijo skoraj enakih časovnih žigov naročil čez **lastne** račune uporabnika. **Opomba o skladnosti:** pomoč za prop firme ki *dovoljujejo* kopiranje — **ne** orodje za izogibanje firmi ki prepoveduje; ostajanje znotraj pravil tvoje firme je tvoja odgovornost.
-- **Zaklep konfiguracije** (C9) — zamrznitev nastavitev cilja za obdobje (`POST …/destinations/{id}/lock` z minutami). Med zaklenitvijo cilj ne more biti odstranjen (agregat zavrne z `CopyDestinationConfigLocked`) — namerna varovalka proti impulzivnim spremembam med izgubo. Zaklep poteče avtomatsko ob časovnem žigu.
-- **Opozorilo konsistentnosti** (C10) — opozori (enkrat na UTC dan) ko **dnevni dobiček** cilja doseže konfiguriran odstotek odprtja equity dneva (`CopyConsistencyThresholdApproaching`), tako da se spoštuje pravilo konsistentnosti prop firme *preden* sproži. Dobičkowa stran, neodvisna od izgubne strani zaklepanja; teče na isti dnevni osnovi kot prop-rule varovalka.
-- **Filter vrste naloga** — izberi natančno katere vrste nalogov glavnega kopirati: market, market-range, limit, stop, stop-limit (`CopyOrderTypes` zastavice; privzeto vse). cMAM-stil selektivnost.
-- **Kopiraj SL / Kopiraj TP** — zrcali stop-loss / take-profit glavnega, ali upravljaj zaščito neodvisno.
-- **Kopiraj trailing stop**, **zrcali delno zaprtje**, **zrcali scale-in** — vsak neodvisno preklopljiv.
-- **Kopiraj potek čakajočega** (privzeto vključeno) — zrcali čas poteka Good-Till-Date čakajočega naloga glavnega.
-- **Kopiraj slippage glavnega** (privzeto vključeno) — za market-range + stop-limit naloge, postavi podrejen nalog z natančnim slippage-v-točkah glavnega (bazna cena vzeta iz žive spot podrejenega).
-- **Varovalke**: max drawdown %, dnevni izguba limit, max copy delay, slippage filter (preskoči copy če se je podrejena cena premaknila več kot N pips od glavnega vstopa). **Max copy delay** merjeno proti realnemu časovnemu žigu strežnika glavnega dogodka (`ExecutionEvent.ServerTimestamp`) prek injiciranega `TimeProvider`: signal starejši od konfiguriranega max-lag preskočen, torej zastarele kopije nikoli ne postavljene pozno (prej zamuda vedno nič + varovalka mrtva).
-- **Normalizacija natančnosti SL/TP** (M6) — kopirani stop-loss/take-profit zaokrožen na **ciljevo** natančnost števk simbola pred spremembo, torej natančnejša cena glavnega (ali cross-broker neujemanje števk) nikoli ne sproži strežnikove `INVALID_STOPLOSS_TAKEPROFIT`.
-- **Varovalka za zavrnitev / Follower Guard** (G8) — cilj ki zavrne `CopyDefaults.RejectionBudget` odprt zaporedoma je **tript**: nobena nova odprtja za cooldown okno (`CopyDestinationTripped` alert sprožen), ustavi zavrnitveno nevihto ki tolče (prop-firm) račun. Obstoječe pozicije še upravljane + zaprte med triptim; varovalka avtomatsko resetira po cooldown + uspešni copy počisti števec.
-- **Zgornja meja lota** (C14) — absolutni max velikost kopije in/ali večkratnik velikosti glavnega. Izračunana kopia ki presega absolutni cap, ali presega `N×` velikost lota glavnega, **težko-blokirana** (prikazano kot `lot_sanity` preskok, štet na `cmind.copy.skipped`) ne postavljena — brani pred katastrofalno-nadmerno velikostjo razreda (glavni 0.23 lota ki postane 3 loti na vsakega prejemnika prek divjega množilnika ali zaokrožitvene hrošča). Obe dimenziji privzeto `0` (izključeno).
+Nastavite na strani Novi profil, v dialogu za cilje na strani Kopiranje trgovanja, ali prek `POST /api/copy/profiles/{id}/destinations`:
+
+- **Določanje velikosti** (`MoneyManagementMode` + parameter): fiksni lot, lot/nominalni množitelj, sorazmerna ravnovesje/lastniški kapital/prosta marža, fiksni tvegani %, fiksna ročica, samodejno-sorazmerno, **tveganje-%-od-zaustavitve** (M7). Plus najmanjše/največje meje lot + prisili-najmanjše-lot. **Tveganje-od-zaustavitve** velikosti cilj, tako da tvega nastavljen procent *njegovega lastnega* ravnovesja, izpeljan iz **razdalje zaustavitve-ob-izgubi glavnega** (`glavni tvega 2% → podrejeni samodejno-tvega 2%`): `loti = ravnovesje×% ÷ (razdalja zaustavitve × velikost pogodbe)`. Glavni odpri **brez** zaustavitve-ob-izgubi nima razdalje za določanje velikosti → uporablja nastavljeno **največji-tvegani-lot** (M7), če je nastavljen, drugače preskoči (`no_stop_loss`) ne ugiba. Sorazmerno-**lastniški kapital**/**prosta marža** velikost iz realnega računa **lastniški kapital** (`ravnovesje + Σ lebdeče P&L`, izpeljan prek odprte cTrader API, ki ne dostavi lastniškega kapitala), ne običajnega ravnovesja — tako da glavni sedi na odprti dobiček/izgubo velikosti kopije pravično. Uporabljena marža ni izpostavljena prek usklajevalnega API, zato se prosta marža obravnava kot lastniški kapital (pošten proxy razpoložljivih sredstev); drugi načini preberejo ravnovesje + preskočijo dodatni revalvacijski krog v povratku.
+- **Filter smeri**: oba / samo-dolgi / samo-kratki. **Obrnejo**: preklopi stranko (+ zamenja SL↔TP) za nasprotni kopijo.
+- **Upravljaj-samo** (Prezri-nova-trgovanja / Samo-zaprto): zrcali zapore, delne zapore + zaščitne spremembe na že-kopirane pozicije, vendar odpri **nobene** nove pozicije/čakajoče naročile (preskoči `manage_only`). Uporabite za zmanjšanje cilja brez rezanja obstoječih kopij.
+- **Sinhroniziranje-odprtega-ob-zagonu** / **Sinhroniziranje-zaprtega-ob-zagonu** (privzeto vključeno): pri **prvi** resinhronizaciji profila, ali odpri kopije za že obstoječe pozicije glavnega, + ali zapri kopije, ki jih je glavni zaprlo medtem ko je profil ustavljen. Oba veljata samo ob zagonu — med tekočim ponovnim povezovanjem se vedno popolnoma usklajevanje, zato se nesinhroniziranost opravlja ne glede na to.
+- **Karta simbolov** + **filter simbola** (bellist / blacklist). Vsak vnos karte simbolov ima izbirni **po-simbolni množitelj volumna** (cMAM po-simbolni preklic) skaliranje velikosti kopije za ta simbol na vrhu določanja velikosti cilja (1 = brez spremembe). Celotna karta se uvozi/izveže kot **CSV** (`GET …/symbol-map.csv`, `PUT …/symbol-map/csv`; stolpci `Source,Destination,VolumeMultiplier`) — vsaka vrstica validirana prek objektov domenske vrednosti, zato napakovana datoteka ne more izdelati neveljavne karte.
+- **Okno trgovalnih ur** (C18) — na-cilje dnevno UTC okno (`start`/`end` minut-dneva, konec-ekskluzivno; `start == end` = celodan). Nove odprtine zunaj okna preskoči (`trading_hours`); okno z `start > end` se zavije čez polnoč (npr. 22:00–06:00). Obstoječe pozicije ostanejo upravljane.
+- **Filter izvorne oznake** (C18, cTrader enakovredno filtru čarobne-številke MT) — ko je nastavljen, kopiraj samo trgovanja glavnega, katerih oznaka se **natančno** ujema (npr. trgovanja enega bota, ali samo-ročna oznaka); drugače preskoči (`source_label`). Prazno = kopiraj vse. Prineseno na `ExecutionEvent.SourceLabel` iz izvorne pozicije/naročila glavnega `TradeData.Label`, poštovano tudi pri resinhronizaciji.
+- **Zaščita računa** (ZuluGuard / Globalna zaščita računa) — opazuje **živi lastniški kapital** cilja (`ravnovesje + Σ lebdeče P&L`, pollfano vsakih `CopyDefaults.EquityGuardInterval`) proti `StopEquity` dnu in/ali izbirnemu `TakeEquity` stropcu. Na kršitvi uporabi način: **Samo zaprto** (ustavi nove kopije, nadaljuj upravljaj obstoječe), **Zamrznjenost** (ustavi odpiranje), **Prodaš ven** (zapri **vse** kopije na cilju takoj). Ko se sproži, cilj zatrgljiv — brez novih odpiranj, dokler se gostitelj ne ponovno zažene — + `CopyAccountProtectionTriggered` opozorilo dvignjeno. `SellOut` zahteva `StopEquity`; `TakeEquity` mora sedeti nad `StopEquity`. **Brez-garancij opozorilo:** prodaj-ven uporablja tržno izvedbo — kot pri vsakem konkurentu, ne more jamčiti ceno izpolnitve na hitrem/razpkanem trgu.
+- **Ravni-vse gumb za paniko** (C8) — `POST /api/copy/profiles/{id}/flatten` takoj zapri **vse** kopirane pozicije na vsakem cilju + zaklene proti novim odpiranjem. Usmerjen čez proces: API postavi zastavico, nadglednik dostavi tekočem gostitelju (ponovno uporabi kanal za zasuk tokena), ki splošči na mestu; zastavica izbrisana, zato se sproži točno enkrat (`CopyFlattenAll` opozorilo). Uporabnik nato pavzira/ustavi profil.
+- **Varnostnik pravila za delodajalca** (C7) — uveljavljanje, ki ga vzpodbuja delodajalce uporabniki kopiranja. Na cilje, **dnevna izgubna kapica** (izguba od dnevnega odprtja lastniškega kapitala) in/ali **zaostajajočega-izgube** omejitev (izguba od tekočega vrhunskega lastniškega kapitala), oba v valuti depozita. Na kršitvi cilja **samodejno splošči** (vse kopije zaprte) + **zaključene** ves preostali dan UTC (nove odprtine preskoči `prop_lockout`); `CopyPropRuleBreached` opozorilo sproženo. Zaključki se jasnijo, ko se dan UTC premakne (sveže osnova/vrh prejeti). Deli isto živo-lastniški kapital anketo kot zaščita računa.
+- **Izvedba jitter** (C11, privzeto izključeno) — naključni `0..N` ms zamik pred postavljanjem vsake kopije, da se de-korelira skoraj-enake časovne žige naročil čez svojega **lastnega** račune. **Skladnost opozorilo:** pomoč za delodajalce, ki *dovoljujejo* kopiranje — **ne** orodje za izogib delodajalcu, ki ga prepoveduje; ostati v skladu s pravili vašega delodajalca je vaša odgovornost.
+- **Zaključek konfiguracije** (C9) — zamrzni nastavitve cilja za obdobje (`POST …/destinations/{id}/lock` s minutami). Med zaklepanjem ne moremo odstraniti cilja (agregat zavrne z `CopyDestinationConfigLocked`) — načrtna varnostna funkcija pred impulzivnimi spremembami med izgubo. Zaklepanje poteče samodejno ob njegovem časovnem žigu.
+- **Predopozorilo konsistentnosti** (C10) — opozori (enkrat na dan UTC), kadar **dnevni dobiček** cilja doseže nastavljen procent dnevnega odprtja lastniškega kapitala (`CopyConsistencyThresholdApproaching`), tako da se pravilo skladnosti delodajalca spoštuje *pred* tem, da se sproži. Dobiček-stran, neodvisno od izgube-strani zaklepanja; se teče iz istega dnevnega osnovnega kot varnostnik pravila delodajalca.
+- **Filter vrste naročila** — izberite točno, katere vrste naročil glavnega kopirati: tržno, tržno-območje, omejeno, zaustavljeno, zaustavljeno-omejeno (`CopyOrderTypes` zastavice; privzeto vse). Slog cMAM-izbire.
+- **Kopiraj SL / Kopiraj TP** — zrcali zaustavitev-ob-izgubi / izkoristek glavnega, ali upravljaj zaščito neodvisno.
+- **Kopiraj zaostajajočo zaustavljanje**, **zrcali delno zaprto**, **zrcali povečanje volumna** — vsaka neodvisno preklapljiva.
+- **Kopiraj čakajoče izteke** (privzeto vključeno) — zrcali dobi-do-datuma izteka čakajočega naročila glavnega.
+- **Kopiraj zdrs glavnega** (privzeto vključeno) — za tržno-območje + zaustavljeno-omejeno naročila, postavi naročilo cilja z natančnim zdrsom glavnega-v-točkah (osnovna cena vzeta iz živega mesta cilja).
+- **Varnostniki**: največja izguba v %, dnevna izgubna kapica, največji zamik kopije, filter zdrsa (preskoči kopijo, če se cena cilja premakne več kot N pik od vnosa glavnega). **Največji zamik kopije** izmerjen proti časovnemu žigu realnega strežnika dogodka glavnega (`ExecutionEvent.ServerTimestamp`) prek injicirane `TimeProvider`: signal starejši od nastavljenega največjega-zaostanka preskoči, tako da se nikoli ne postavi pozna star kopija.
+- **Normalizacija natančnosti SL/TP** (M6) — kopirana zaustavitev-ob-izgubi/izkoristek cene zaokrožena na **cilja** simbol natančnost pred spremembo, tako da se cena glavnega pri bolj fini natančnosti (ali brokerska meja neprevlade) nikoli ne sproži `INVALID_STOPLOSS_TAKEPROFIT`.
+- **Varnostnik vezja zavrnitve / Varnostnik sleditelja** (G8) — cilj zavrne `CopyDefaults.RejectionBudget` odpiranj v vrsti je **sproži**: nobenih novih odpiranj za hlajenje okno (`CopyDestinationTripped` opozorilo se sproži), zaustavitvi nevihte zavrnitve od kladenja (delodajalca) račun. Obstoječe pozicije ostanejo upravljane + zaprte med sprožitvijo; varnostnik se samodejno ponastavi po hlajenju + uspešna kopija izbriše števec.
+- **Razum lot stropca** (C14) — absolutna največja velikost kopije in/ali večkratnik-od-glavnega kapica. Izračunana kopija presegajoči absolutni kapica, ali presegajoči `N×` glavnega lastno lot velikost, **trda-blokada** (površina kot `lot_sanity` preskoči, računana na `cmind.copy.skipped`) ne postavljena — braniči pred katastrofalno-preuporabo razreda (0.23-lot glavni se obrnejo v 3 lote na vsakem prejemniku prek runaway množitelja ali bug zaokroženja). Oba znanja privzeto `0` (izklopljeno).
 
 ## Zanesljivost in robni primeri
 
-Motor zgrajen za realnost, kjer lahko karkoli kadar koli propade:
+Motor zgrajen za realnost, da je vse lahko neuspešno kadarkoli:
 
-- **Korelacijski timeout čakajoče podrejenega** (C13) — zrcaljena podrejena čakajoča katere glavna čakajoča izginila (ne počiva niti svežnje napolnjena) preklicana po korelacijskem timeoutu, torej podrejena kopia ne more napolniti nekorreltirano v neupravljano pozicijo (`CopyPendingTimedOut`). Uskladitev prav tako čisti id-naloga označeno napolnjeno-čakajočo siroto.
-- **Robustno zaprtje/flatten** (M8) — zapiranje sirote na uskladitvi, ali flatteniranje ob prelomu varovalke, tolerira da je pozicija broker že zaprta (`POSITION_NOT_FOUND`): vsako zaprtje teče neodvisno, torej ena zastarela id nikoli ne prekine uskladitve ali pusti preostanek računa ne-flatteniranega.
+- **Čakajočega podrejenega zapolnjene-korelacije timeout** (C13) — zrcaljenoga čakajočega podrejenega, katerega čakajoči glavni izginul (niti počivajoči niti sveže izpolnjeni) preklican po korelacijske timeout, tako da kopija podrejenega ne more zapolniti nekoreliranega v upravljano pozicijo (`CopyPendingTimedOut`). Resinhronizacija tudi čisti ID-označeni izpolnjeni-čakajočega siroto.
+- **Robustna zapora/splošči** (M8) — zapiranje sirote pri resinhronizaciji, ali splošči pri varnostni prelomu, tolerira pozicijo, ki jo je broker že zaprlo (`POSITION_NOT_FOUND`): vsaka zapora se teče neodvisno, tako da en star ID nikoli ne ustavi resinhronizacije ali zapusti preostalih računov-neraztopljenih.
 
-- **Začetek z glavnim že v poslih** — ob začetku gostitelj uskladi + odpre kopije za obstoječe pozicije glavnega.
-- **Pad povezave / razhajanje** — ob ponovnem povezovanju gostitelj uskladi: odpri manjkajoče kopije, zapri sirote, ponovno označi čakajoče. Brez podvojenih naročil.
-- **Neuspeh postavitve naročila** — neuspeh na enem cilju beležen, nikoli ne blokira drugih ciljev.
-- **En veljaven žeton na cID** — cTrader razveljavi star dostopovni žeton cID v trenutku ko se izda nov. cMind zamenja tekočega gostitelja žeton **na mestu** (re-auth na živem vtiču) tako da kopiranje nadaljuje brez padca pretoka. Glej [življenjski cikel žetona](token-lifecycle.md).
+- **Začetek z glavnim že v trgovanjih** — pri zagonu gostitelj usklajevanje + odpre kopije za obstoječe pozicije glavnega.
+- **Povezave pada / nesinhronizacija** — pri ponovni povezavi gostitelj usklajevanje: odpre manjkajoče kopije, zapre sirote, ponovno označi čakajočega. Brez podvojenih naročil.
+- **Napaka pri postavki naročila** — napaka na enem cilju zabeležena, nikoli ne blokira drugih ciljev.
+- **Edini veljaven žeton na cID** — cTrader razveljavi stari dostopni žeton cID trenutka novega izdanega. cMind zamenja žeton tekočega gostitelja **na mestu** (ponovno-avtentifikacija na živem gnjezdu) tako da kopiranje nadaljuje brez padanja toka. Glejte [življenjski ciklus žetona](token-lifecycle.md).
 
-## Sledljivost
+## Revizija
 
-Vsako dejanje oddaja strukturiran, vir-generiran dnevniški dogodek (`LogMessages`) s profil id, cilj cID, id naročila/pozicije, + vrednosti — naročilo postavljeno/preskočeno (z razlogom), delno zaprtje, zaščita uporabljena, trailing uporabljen, čakajoč postavljen/spremenjen/preklican, potek zrcaljen, slippage zrcaljen, žeton zamenjan, uskladitev povzeta. To je sled za skladnost + razreševanje sporov.
+Vsako dejanje sprožita strukturirane, izvor-generirane dogodke dnevnika (`LogMessages`) s ID-om profila, ciljem cID, ID-jem naročila/pozicije, + vrednostmi — naročilo postavljeno/preskoči (z razlogom), delna zapora, zaščita uporabljena, zaostajanje uporabljeno, čakajoča postavljena/spremenjena/preklicana, izteka zrcaljeno, tržno-območje zdrs zrcaljeno, žeton zaměnjeno, resinhronizacijski povzetek. To je razvidna pot za skladnost + razreševanje sporov.
 
-Poleg dnevnikov, motor oddaja **OpenTelemetry metrike** na `cMind.Copy` metru (registriran v skupni OTel pipline, izvožen prek OTLP / v Azure Monitor kot ostalo): `cmind.copy.latency` (glavni-dogodek → dispatch, ms), `cmind.copy.dispatch.duration` (fan-out na vse cilje, ms), `cmind.copy.slippage.points`, `cmind.copy.placed` (označeno po cilju), `cmind.copy.skipped` (označeno po razlogu), + `cmind.copy.failed`. To naredi latentnost/slippage regresijo merljivo, ne samo vidno v dnevniški vrstici — živi suite trdi proti proračunu.
+Ob straneh dnevnika, motor sprožita **OpenTelemetry metrike** na metriki `cMind.Copy` (registrirano v skupni cevovod OTel, izvoženo čez OTLP / v Azure Monitor kot ostalo): `cmind.copy.latency` (glavni-dogodek → despach, ms), `cmind.copy.dispatch.duration` (razširitev na vse cilje, ms), `cmind.copy.slippage.points`, `cmind.copy.placed` (označeno s ciljem), `cmind.copy.skipped` (označeno z razlogom), + `cmind.copy.failed`. Te naredijo regresijo latentnosti/zdrsa merljiva, ne samo vidno v liniji dnevnika — živa svet trdimo jih kot proračunski.
 
 ## API
 
 - `GET /api/copy/profiles` — seznam.
-- `POST /api/copy/profiles` — ustvari (z izbirnimi id-ji ciljnih računov).
-- `GET /api/copy/profiles/{id}` — polna podrobnost incl. vsaka možnost cilja.
-- `POST /api/copy/profiles/{id}/destinations` — dodaj cilj s polnim naborom možnosti.
+- `POST /api/copy/profiles` — ustvari (z izbirnim ID-ji cilja računa).
+- `GET /api/copy/profiles/{id}` — popolna podrobnost vključno z vsemi možnostmi cilja.
+- `POST /api/copy/profiles/{id}/destinations` — dodaj cilj s celotnim naborom možnosti.
 - `DELETE /api/copy/profiles/{id}/destinations/{destinationId}` — odstrani.
-- `POST /api/copy/profiles/{id}/{start|pause|stop}` — življenjski cikel.
+- `POST /api/copy/profiles/{id}/{start|pause|stop}` — životinjski ciklus.
 
-## Testi
+## Preizkusi
 
-- **Enote** (`tests/UnitTests/CopyTrading`) — dimenzioniranje, odločitveni filtri, filter vrste naloga, potek, slippage market-range/stop-limit, SL/TP preklopniki, delno zaprtje, sprememba/preklic čakajočega, začetek z odprtimi, disconnect→razhajanje→resync, zamenjava žetona na mestu, cross-cID razveljavitev. Teče proti `FakeTradingSession`, cTrader-veren in-memory simulator.
-- **Integracija** (`tests/IntegrationTests/CopyLive`) — vozlišče-afiniteta/zahtevek lease, propagacija različice žetona na resničnem Postgres.
-- **E2E** (`tests/E2ETests`) — round-trip možnosti cilja prek API + UI, poln življenjski cikel.
-- **Stress / DST** (`tests/StressTests`) — deterministično simulacijsko testiranje: sejani naključni delovni obremenitvi + vbrizgane napake (socket flap, zavrnitev naročila, zavrnitev market-range, rotacija žetona, smrt vozlišča) poganje `CopyEngineHost` v stanje tišine + trdijo konvergenčne invariante. Glej [testing/stress-testing.md](../testing/stress-testing.md). Ta suite je razkrila + popravila realno start-up race: `OnReconnected` napeljan pred initial reference-load + prvo resync, torej socket flap med start-up je lahko tekel drug resync sočasno + pokvaril ne-concurrent state dictionary gostitelja (`_symbolDetails`, `_sourceVolumes`) — popravljeno: start-up load + prvi resync zdaj tečeta pod `_stateGate`.
-- **Live** — realni cTrader demo računi; glej [testing/live-copy-trading.md](../testing/live-copy-trading.md).
+- **Enota** (`tests/UnitTests/CopyTrading`) — načini velikosti, filtri odločitve, filter vrste naročila, kopija izteka, tržno-območje/zaustavljeno-omejeno zdrs, SL/TP preklapljivi, delna zapora, čakajočega spremeni/prekliči, začetek-z-odprtim, zapora→nesinhronizacija→resinhronizacija, na-mestu zamena žetona, čez-cID neveljavnost. Teče proti `FakeTradingSession`, cTrader-zvesti simulatorja v spominu.
+- **Integracija** (`tests/IntegrationTests/CopyLive`) — afiniteta-vozlišča/zahtevek-zakupnine, žeton-različica-propagacija na pravem Postgres-u.
+- **E2E** (`tests/E2ETests`) — opcije-cilja-povratni-krog prek API + vmesniku, polni življenjski ciklus.
+- **Stress / DST** (`tests/StressTests`) — determinističko-simulacijo testiranja: seeded naključne obremenitve + vbrizgavanje napake (vtičnica valjanje, zavrnitev naročila, tržno-območje zavrnitev, zasuk žetona, smrt vozlišča) pogon `CopyEngineHost` k mirovanju + trdim konvergence invariante. Glejte [testiranje/stress-testiranje.md](../testing/stress-testing.md). Ta svet površina + popravljena realna napaka pri zagonu: `OnReconnected` žičani pred začetkom branja reference + resinhronizacijo, zato je sokovi valjanje med zagonom lahko tekočega drugo resinhronizacijo sočasno + pokvarjena gostitelja ne-sočasna stanja slovarje — zagon branja + prvo resinhronizacija sedaj teče pod `_stateGate`.
+- **Živa** — pravi cTrader demo računi; glejte [testiranje/live-copy-trading.md](../testing/live-copy-trading.md).
 
-Glej [dev-credentials.md](../testing/dev-credentials.md) za enotno datoteko poverilnic live + E2E tiers bereta.
+Glejte [dev-credentials.md](../testing/dev-credentials.md) za samski datoteko pooblaščencev živa + E2E stopnje prebire.
+## Nadzori profila in upravljanje ciljev
+
+Zagon/ustavitev so gumbi ikone na vsaki vrstici profila (onemogočeni, kadar dejanje ne velja). Glavni in cilja računi so prikazani z njihovo **številko računa**, nikoli notranjim ID-om. Klik na profil odpre **dialog** upravljanja svojih cilja računov (dodaj/odstrani s celotnim naborom možnosti na cilje).

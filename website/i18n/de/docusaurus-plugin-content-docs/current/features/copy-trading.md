@@ -1,99 +1,107 @@
 ---
-description: "Spiegeln Sie Master cTrader-Konto auf ein+ Slave-Konten — Cross-Broker, Cross-cID — mit Pro-Ziel-Kontrolle + Geld-Grade-Abstimmung."
+description: "Spiegeln Sie das Master-cTrader-Konto auf ein oder mehr Slave-Konten — über Broker hinweg, über cID hinweg — mit pro-Ziel-Steuerung und Geldklassen-Abgleich."
 ---
 
-# Copy-Trading
+# Copy Trading
 
-Spiegeln Sie **Master** cTrader-Konto auf ein+ **Slave**-Konten — Cross-Broker, Cross-cID — mit Pro-Ziel-Kontrolle + Geld-Grade-Abstimmung.
+Spiegeln Sie das **Master**-cTrader-Konto auf ein oder mehr **Slave**-Konten — über Broker hinweg, über cID hinweg — mit pro-Ziel-Steuerung und Geldklassen-Abgleich.
 
 ## Konzepte
 
-- **Copy-Profil** — ein Master (`SourceAccountId`) + ein+ **Ziele**. Lebenszyklus: `Draft → Running → Paused → Stopped` (`Error` bei Misserfolg). Aggregate-Wurzel: `CopyProfile` (besitzt `CopyDestination`).
-- **Ziel** — ein Slave-Konto + vollständiger Regelwerk wie Master darauf kopiert wird. Alle Konfiguration Pro-Ziel, daher ein Master speist konservative + aggressive Slaves gleichzeitig.
-- **Copy-Engine-Host** — laufender Worker für Profil (`CopyEngineHost`). Abonniert Master-Ausführungsstrom, wendet jedes Ereignis auf jedes Ziel an.
-- **Supervisor** — `CopyEngineSupervisor`, Background-Service auf jedem Knoten. Hostet zugewiesene Profile, selbst-heilt über Cluster (siehe [Skalierung](../deployment/scaling.md)).
+- **Copy-Profil** — ein Master (`SourceAccountId`) + ein oder mehr **Ziele**. Lebenszyklus: `Draft → Running → Paused → Stopped` (`Error` bei Fehler). Aggregate-Wurzel: `CopyProfile` (besitzt `CopyDestination`).
+- **Ziel** — ein Slave-Konto + vollständiger Regelsatz für die Art und Weise, wie der Master darauf gespiegelt wird. Alle Konfigurationen pro Ziel, sodass ein Master gleichzeitig konservative und aggressive Slaves versorgen kann.
+- **Copy-Engine-Host** — laufender Worker für das Profil (`CopyEngineHost`). Abonniert den Master-Ausführungsstrom und wendet jedes Ereignis auf jedes Ziel an.
+- **Supervisor** — `CopyEngineSupervisor`, Hintergrunddienst auf jedem Knoten. Hostet zugewiesene Profile, selbstheilend über Cluster (siehe [Skalierung](../deployment/scaling.md)).
 
 ## Was wird gespiegelt
 
-| Master-Ereignis | Slave-Aktion |
+| Master event | Slave action |
 |--------------|--------------|
-| Markt- / Marktbereich-Position offen | Öffnen Sie eine große Copy (gekennzeichnet mit Quellposition-ID) |
-| Limit / Stop / Stop-Limit ausstehende Bestellung | Platzieren Sie die entsprechende ausstehende Bestellung |
-| Ausstehende Bestellung Änderung | Ändern Sie die gespiegelte ausstehende Bestellung vorhanden |
-| Ausstehende Bestellung Stornierung / Ablauf | Stornieren Sie die gespiegelte ausstehende Bestellung |
-| Teilschließung | Schließen Sie die gleiche Proportion der Slave-Position |
-| Scale-in (Volumen Steigerung) | Öffnen Sie das hinzugefügte Volumen (Opt-in) |
-| Stop-Loss / Trailing-Stop-Änderung | Ändern Sie den Schutz der Slave-Position |
-| Vollständige Schließung | Schließen Sie die Slave-Copy |
+| Market / market-range position open | Open a sized copy (labelled with the source position id) |
+| Limit / stop / stop-limit pending order | Place the matching pending order |
+| Pending order amend | Amend the mirrored pending order in place |
+| Pending order cancel / expiry | Cancel the mirrored pending order |
+| Partial close | Close the same proportion of the slave position |
+| Scale-in (volume increase) | Open the added volume (opt-in) |
+| Stop-loss / trailing-stop change | Amend the slave position's protection |
+| Full close | Close the slave copy |
 
-Jeder Copy **gekennzeichnet mit Quellposition/Bestellungs-ID**. Nach Wiederverbindung host baut Status aus Abstimmung auf: öffnet Copies Master hält aber Slave fehlend, schließt Slave "Waisen" Master nicht mehr hält — **ohne Trades zu verdoppeln**.
+Every copy **labelled with source position/order id**. After reconnect host rebuilds state from reconcile: opens copies master holds but slave missing, closes slave "orphans" master no longer holds — **without duplicating trades**.
 
-## Ein Profil erstellen
+## Erstellen eines Profils
 
-**Neues Profil** Dialog auf Copy-Trading-Seite sammelt alles im Voraus: Profilname, Quelle (Master) Konto, Ziel (Slave) Konten (Multi-Auswahl mit **Alles auswählen** Schaltfläche; gewählter Master aus Slave-Liste ausgeschlossen), + vollständiger Pro-Ziel-Optionssatz unten. Alle Eingaben **validiert vor dem Speichern** — fehlender Name/Quelle/Ziel, nicht-positive Sizing-Parameter, negative/Inkonsistente Lot-Grenzen, außer-Bereich Drawdown%, keine Bestellungstyp aktiviert, leere Symbol-Filter oder fehlgeformte Symbol-Map-Paare Oberfläche als Fehlerliste + blockieren Speichern. Bei Bestätigung Profil erstellt + jedes gewählte Slave mit gewählten Einstellungen hinzugefügt.
+**New Profile** opens a dedicated **full-page** form (`/copy-trading/new`), not a dialog — the option set is large enough that a page reads better on phone and desktop. It collects everything up front: profile name, source (master) account, destination (slave) accounts (multi-select with **Select all** button; chosen master excluded from slave list), + the full per-destination option set. **Every control carries a help tooltip** explaining what it does and how to use it. Structured inputs use **proper validated controls** — numbers/percent via numeric fields, modes/direction/filter via selects, the symbol filter via an add/remove list of symbol chips, and the symbol map via an add/remove table of `Source → Destination (× multiplier)` rows — never a comma-separated text blob. All inputs **validated before saving** — missing name/source/destination, non-positive sizing param, negative/inconsistent lot bounds, out-of-range drawdown %, no order type enabled, or empty symbol filter surface as an error list + block save. On create, the profile is created + every selected slave added with the chosen settings, then the page returns to the Copy Trading list.
 
-Row-Aktionen respektieren Lebenszyklus: **Start** aktiviert nur wenn nicht laufend, **Stop** + **Pause** nur wenn laufend, **Löschen** deaktiviert während laufend + fragt Bestätigung vor Profil + Ziele entfernen.
+**Import / export.** The whole settings block can be **exported to a JSON file** and re-**imported** to prefill the form, so a tuning can be reused across profiles without re-typing. The symbol map can likewise be **exported / imported as a CSV file** (`Source,Destination,VolumeMultiplier`) — prepare a large broker-symbol map in a spreadsheet and load it in one step. The same symbol controls and CSV import/export are also available in the destination dialog on the Copy Trading page.
+
+Row actions respect lifecycle: **Start** enabled only when not running, **Stop** + **Pause** only when running, **Delete** disabled while running + asks confirmation before removing profile + destinations.
 
 ## Pro-Ziel-Optionen
 
-Gesetzt in Neues Profil Dialog, auf Copy-Trading-Seite Pro-Ziel Panel oder via `POST /api/copy/profiles/{id}/destinations`:
+Set on the New Profile page, in the destination dialog on the Copy Trading page, or via `POST /api/copy/profiles/{id}/destinations`:
 
-- **Sizing** (`MoneyManagementMode` + Parameter): festes Lot, Lot/Nominalwert Multiplikator, proportionale Balance/Eigenkapital/freier Spielraum, festes Risiko%, feste Hebelwirkung, Auto-Proportional, **Risiko-%-von-Stop** (M7). Plus Min/Max Lot-Grenzen + Force-Min-Lot. **Risiko-von-Stop** größes Ziel daher risikiert es konfiguriertes Prozent seiner *eigenen* Balance, abgeleitet von **Master-Stop-Loss-Abstand** (`Master risikiert 2% → Slave Auto-risikiert 2%`): `Lots = Balance×% ÷ (StopAbstand × Kontraktgröße)`. Master öffnet **ohne** Stop-Loss hat keinen Abstand zum größen gegen → verwendet konfiguriert **Max-Risiko Fallback-Lot** (M7) wenn gesetzt, sonst übersprungen (`no_stop_loss`) nicht geraten. Proportional-**Eigenkapital**/**freier Spielraum** Größe ab real Konto **Eigenkapital** (`Balance + Σ floating P&L`, abgeleitet pro cTrader Open API die Eigenkapital nicht liefert), nicht reine Balance — daher Master sitzend auf offener Gewinn/Verlust Größen Copies richtig. Verwendeter Spielraum nicht verfügbar gemacht von Abstimmungs-API, daher freier Spielraum behandelt als Eigenkapital (ehrlich verfügbare Mittel Proxy); andere Modi lesen Balance + überspringen zusätzliche Neubewertungs-Rundfahrt.
-- **Richtungsfilter**: beide / nur-lang / nur-kurz. **Umkehrung**: Flip-Seite (+ Tausch SL↔TP) für konträres Copy.
-- **Verwalten-nur** (Neue-Trades-ignorieren / Nur-Schließen): Spiegelbild schließen, Teilschließungen + Schutzänderungen auf bereits-kopierte Positionen, aber öffnen Sie **keine** neuen Positionen/ausstehenden Bestellungen (übersprungen `manage_only`). Verwendung zum Abwickeln des Ziels ohne Schneiden vorhandener Copies.
-- **Sync-Öffnung-on-Start** / **Sync-Geschlossen-on-Start** (Standard an): bei Profil **erste** Resync, ob Copies für Master existierende Positionen zu öffnen, + ob Copies Master geschlossene während Profil gestoppt zu schließen. Beide gelten nur beim Start — Mid-Run Wiederverbindung immer voll versöhnt daher Desync erholt unabhängig.
-- **Symbol Map** + **Symbol Filter** (Whitelist / Blacklist). Jeder Symbol-Map-Eintrag trägt optional **Pro-Symbol-Volumen-Multiplikator** (cMAM Pro-Symbol Override) Skalierung-Copy-Größe für dieses Symbol auf Top des Ziel-Sizings (1 = keine Änderung). Ganze Map Importe/Exporte als **CSV** (`GET …/symbol-map.csv`, `PUT …/symbol-map/csv`; Spalten `Source,Destination,VolumeMultiplier`) — jede Reihe validiert durch Domain-Wertobjekte, daher kann fehlgeformte Datei nicht ungültige Map erzeugen.
-- **Trading-Stunden-Fenster** (C18) — Pro-Ziel täglich UTC-Fenster (`Start`/`Endt` Minuten-des-Tages, Ende exklusiv; `Start == Ende` = ganztägig). Neue Opens außerhalb Fenster übersprungen (`trading_hours`); Fenster mit `Start > Ende` Wraps vorbei Mitternacht (z. B. 22:00–06:00). Vorhandene Positionen bleiben verwaltet.
-- **Quell-Label-Filter** (C18, cTrader Äquivalent von MT Magic-Nummer-Filter) — wenn gesetzt, kopieren Sie nur Master-Trades deren Label-Spiele **exakt** (z. B. einen Bot-Trades oder nur-manuell-Label); sonst übersprungen (`source_label`). Leer = Copy alle. Getragen auf `ExecutionEvent.SourceLabel` von Master-Position/Bestellung `TradeData.Label`, geehrt auf Resync auch.
-- **Kontoschutz** (ZuluGuard / Globaler Kontoschutz) — überblick Ziel **live Eigenkapital** (`Balance + Σ floating P&L`, abgerufen jeden `CopyDefaults.EquityGuardInterval`) gegen `StopEquity` Boden und/oder optional `TakeEquity` Decke. Bei Verstoß, gelten Modus: **CloseOnly** (stoppen neue Copies, halten Verwaltung vorhandener), **Frozen** (stoppen Öffnung), **SellOut** (Schließen Sie **jede** Copy auf Ziel sofort). Einmal Feuer, Ziel Verriegelung — keine neuen Opens bis Host Neustarts — + `CopyAccountProtectionTriggered` Warnung erhöht. `SellOut` erfordert `StopEquity`; `TakeEquity` muss oberhalb `StopEquity` sitzen. **Keine-Garantie-Warnung:** Ausverkauf verwendet Markt-Ausführung — wie jedes Konkurrenten-Äquivalent, kann Füll-Preis nicht in schnell/gegaptem Markt garantieren.
-- **Flatten-All Panik-Schaltfläche** (C8) — `POST /api/copy/profiles/{id}/flatten` schließt sofort **jede** kopierte Position auf jedem Ziel + Sperren gegen neue Opens. Geroutet Cross-Prozess: API setzt Flag, Supervisor sendet an laufenden Host (wiederverwendend Token-Rotation-Kanal), der Flache an Ort; Flag gelöscht daher Feuer genau einmal (`CopyFlattenAll` Warnung). Benutzer dann pausiert/stoppt Profil.
-- **Prop-Firm Regel-Guard** (C7) — Erzwingung Prop-Firm Copier-Benutzer fragen um. Pro Ziel, **täglich-Verlust Cap** (Verlust von Tag-Öffnungs-Eigenkapital) und/oder **Trailing-Drawdown** Limit (Verlust von laufen Peak-Eigenkapital), beide in Einzahlungs-Währung. Bei Verstoß Ziel **Auto-Flach** (jede Copy geschlossen) + **gesperrt** Rest UTC-Tag (neue Opens übersprungen `prop_lockout`); `CopyPropRuleBreached` Warnung Feuer. Lockout klar wenn UTC-Tag rollt über (frischer Baseline/Peak genommen). Anteile gleiches Live-Eigenkapital Poll wie Kontoschutz.
-- **Ausführungs-Jitter** (C11, Standard aus) — zufälliges `0..N` ms Verzögerung vor dem Platzieren jeder Copy, zur De-Korrelation Nahe-identische Bestellungs-Zeitstempel über Benutzer **eigenen** Konten. **Compliance-Warnung:** Hilfe für Prop-Firmen die *erlauben* Kopieren — **nicht** Tool um Firma zu vermeiden die verbietet; bleiben Sie innerhalb Ihrer Firma Regeln ist Ihre Verantwortung.
-- **Konfiguration Sperren** (C9) — Einfrieren Ziel Einstellungen für Punkt (`POST …/destinations/{id}/lock` mit Minuten). Während gesperrt, Ziel kann nicht entfernt werden (Aggregate lehnt mit `CopyDestinationConfigLocked` ab) — absichtlich Guard gegen impulsive Änderungen während Drawdown. Sperren läuft automatisch bei seinem Zeitstempel ab.
-- **Konsistenz Pre-Warnung** (C10) — warnen (einmal pro UTC-Tag) wenn Ziel **täglich Gewinn** erreichter konfiguriert Prozent der Tag Öffnungs-Eigenkapital (`CopyConsistencyThresholdApproaching`), daher Prop-Firm Konsistenzen Regel respektiert *bevor* es Trips. Gewinn-Seite, unabhängig von Verlust-Seite Lockout; läuft aus gleicher Tag Baseline wie Prop-Regel Guard.
-- **Bestellungstyp-Filter** — wählen exakt welche Master-Bestellungstypen zu kopieren: Markt, Marktbereich, Limit, Stop, Stop-Limit (`CopyOrderTypes` Flags; Standard alle). cMAM-Stil Selektivität.
-- **Copy SL / Copy TP** — Spiegel Master Stop-Loss / Gewinn-Ziel, oder verwalten Schutz unabhängig.
-- **Copy Trailing Stop**, **Spiegel Teilschließung**, **Spiegel Scale-in** — jede unabhängig umschaltbar.
-- **Copy ausstehend Ablauf** (Standard an) — Spiegel Master ausstehend Bestellung Good-Till-Date Ablauf Zeitstempel.
-- **Copy Master Slippage** (Standard an) — für Marktbereich + Stop-Limit Bestellungen, Platz Slave-Bestellung mit Master-Exakt Slippage-in-Pips (Basis-Preis genommen von Slave Live-Spot).
-- **Guards**: Max Drawdown%, täglich Verlust Cap, Max Copy-Verzögerung, Slippage-Filter (Skip Copy wenn Slave-Preis bewegt jenseits N Pips von Master-Eintrag). **Max Copy-Verzögerung** gemessen gegen Master-Ereignis echten Server-Zeitstempel (`ExecutionEvent.ServerTimestamp`) via injiziert `TimeProvider`: Signal älter als konfiguriert Max-Lag übersprungen, daher stale Copy nie spät platziert (vor Verzögerung immer Nullt + Guard tot).
-- **SL/TP Präzisions-Normalisierung** (M6) — kopiert Stop-Loss/Take-Profit-Preise gerundert zu **Ziel** Symbol Ziffer Präzision bevor Änderung, daher Master-Preis bei feiner Präzision (oder Cross-Broker Ziffer Mismatch) nie Trip Server `INVALID_STOPLOSS_TAKEPROFIT`.
-- **Ablehnung Circuit Breaker / Follower Guard** (G8) — Ziel ablehnen `CopyDefaults.RejectionBudget` öffnet in Reihe ist **getripped**: keine neuen Opens für Cooldown-Fenster (`CopyDestinationTripped` Warnung Feuer), stoppen Ablehnung Sturm aus Hämmern (Prop-Firm) Konto. Vorhandene Positionen noch verwaltet + geschlossen während getripped; Breaker Auto-Rücksetze nach Cooldown + erfolgreich Copy löscht Zähler.
-- **Lot Sanity Decke** (C14) — absolut Max Copy-Größe und/oder Multiple-of-Master Cap. Berechnet Copy übersteigt absolut Cap, oder übersteigt `N×` Master Eigene Lot-Größe, **hart-blockiert** (dargestellt als `lot_sanity` Skip, gezählt auf `cmind.copy.skipped`) nicht platziert — verteidigen gegen katastrophal-Übergroße Klasse (0.23-Lot Master in 3 Lots jeder Receiver via Runaway Multiplikator oder Rundung Bug). Beide Dimensionen Standard `0` (aus).
+- **Sizing** (`MoneyManagementMode` + parameter): fixed lot, lot/notional multiplier, proportional balance/equity/free-margin, fixed risk %, fixed leverage, auto-proportional, **risk-%-from-stop** (M7). Plus min/max lot bounds + force-min-lot. **Risk-from-stop** sizes destination so it risks configured percent of *its own* balance, derived from **master's stop-loss distance** (`master risks 2% → slave auto-risks 2%`): `lots = balance×% ÷ (stopDistance ×
+  contractSize)`. Master open **without** stop-loss has no distance to size against → uses configured **max-risk fallback lot** (M7) if set, else skipped (`no_stop_loss`) not guessed. Proportional-**equity**/**free-margin** size off real account **equity** (`balance + Σ floating P&L`, derived per cTrader Open API which doesn't deliver equity), not plain balance — so master sitting on open profit/loss sizes copies right. Used margin not exposed by reconcile API, so free-margin treated as equity (honest available-funds proxy); other modes read balance + skip extra revaluation round-trip.
+- **Direction filter**: both / long-only / short-only. **Reverse**: flip side (+ swap SL↔TP) for contrarian copy.
+- **Manage-only** (Ignore-New-Trades / Close-Only): mirror closes, partial closes + protection changes on already-copied positions, but open **no** new positions/pending orders (skipped `manage_only`). Use to wind destination down without cutting existing copies.
+- **Sync-Open-on-start** / **Sync-Closed-on-start** (default on): on profile's **first** resync, whether to open copies for master's pre-existing positions, + whether to close copies master closed while profile stopped. Both apply only at start — mid-run reconnect always reconciles fully so desync recovers regardless.
+- **Symbol map** + **symbol filter** (whitelist / blacklist). Each symbol-map entry carries optional **per-symbol volume multiplier** (cMAM per-symbol override) scaling copy size for that symbol on top of destination's sizing (1 = no change). Whole map imports/exports as **CSV** (`GET …/symbol-map.csv`, `PUT …/symbol-map/csv`; columns `Source,Destination,VolumeMultiplier`) — each row validated through domain value objects, so malformed file can't produce invalid map.
+- **Trading-hours window** (C18) — per-destination daily UTC window (`start`/`end` minutes-of-day, end exclusive; `start == end` = all-day). New opens outside window skipped (`trading_hours`); window with `start > end` wraps past midnight (e.g. 22:00–06:00). Existing positions stay managed.
+- **Source-label filter** (C18, cTrader equivalent of MT magic-number filter) — when set, copy only master trades whose label matches **exactly** (e.g. one bot's trades, or manual-only label); else skipped (`source_label`). Empty = copy all. Carried on `ExecutionEvent.SourceLabel` from master position/order's `TradeData.Label`, honored on resync too.
+- **Account protection** (ZuluGuard / Global Account Protection) — watch destination's **live equity** (`balance + Σ floating P&L`, polled every `CopyDefaults.EquityGuardInterval`) against `StopEquity` floor and/or optional `TakeEquity` ceiling. On breach, apply mode: **CloseOnly** (stop new copies, keep managing existing), **Frozen** (stop opening), **SellOut** (close **every** copy on destination immediately). Once fired, destination latched — no new opens until host restarts — + `CopyAccountProtectionTriggered` alert raised. `SellOut` requires `StopEquity`; `TakeEquity` must sit above `StopEquity`. **No-guarantee caveat:** sell-out uses market execution — like every competitor's equivalent, can't guarantee fill price in fast/gapped market.
+- **Flatten-All panic button** (C8) — `POST /api/copy/profiles/{id}/flatten` immediately closes **every** copied position on every destination + locks against new opens. Routed cross-process: API sets flag, supervisor delivers to running host (reusing token-rotation channel), which flattens in place; flag cleared so fires exactly once (`CopyFlattenAll` alert). User then pauses/stops profile.
+- **Prop-firm rule guard** (C7) — enforcement prop-firm copier users ask for. Per destination, **daily-loss cap** (loss from day's opening equity) and/or **trailing-drawdown** limit (loss from running peak equity), both in deposit currency. On breach destination **auto-flattened** (every copy closed) + **locked out** rest of UTC day (new opens skipped `prop_lockout`); `CopyPropRuleBreached` alert fires. Lockout clears when UTC day rolls over (fresh baseline/peak taken). Shares same live-equity poll as account protection.
+- **Execution jitter** (C11, off by default) — random `0..N` ms delay before placing each copy, to de-correlate near-identical order timestamps across user's **own** accounts. **Compliance caveat:** aid for prop firms that *permit* copying — **not** tool to evade firm that forbids it; staying within your firm's rules is your responsibility.
+- **Config lock** (C9) — freeze destination's settings for period (`POST …/destinations/{id}/lock` with minutes). While locked, destination can't be removed (aggregate rejects with `CopyDestinationConfigLocked`) — deliberate guard against impulsive changes during drawdown. Lock expires automatically at its timestamp.
+- **Consistency pre-alert** (C10) — warn (once per UTC day) when destination's **daily profit** reaches configured percent of day's opening equity (`CopyConsistencyThresholdApproaching`), so prop-firm consistency rule respected *before* it trips. Profit-side, independent of loss-side lockout; runs off same day baseline as prop-rule guard.
+- **Order-type filter** — choose exactly which master order types to copy: market, market-range, limit, stop, stop-limit (`CopyOrderTypes` flags; default all). cMAM-style selectivity.
+- **Copy SL / Copy TP** — mirror master's stop-loss / take-profit, or manage protection independently.
+- **Copy trailing stop**, **mirror partial close**, **mirror scale-in** — each independently toggleable.
+- **Copy pending expiry** (default on) — mirror master pending order's Good-Till-Date expiry timestamp.
+- **Copy master slippage** (default on) — for market-range + stop-limit orders, place slave order with master's exact slippage-in-points (base price taken from slave's live spot).
+- **Guards**: max drawdown %, daily loss cap, max copy delay, slippage filter (skip copy if slave price moved beyond N pips from master entry). **Max copy delay** measured against master event's real server timestamp (`ExecutionEvent.ServerTimestamp`) via injected `TimeProvider`: signal older than configured max-lag skipped, so stale copy never placed late (previously delay always zero + guard dead).
+- **SL/TP precision normalization** (M6) — copied stop-loss/take-profit prices rounded to **destination** symbol's digit precision before amend, so master price at finer precision (or cross-broker digit mismatch) never trips server's `INVALID_STOPLOSS_TAKEPROFIT`.
+- **Rejection circuit breaker / Follower Guard** (G8) — destination rejecting `CopyDefaults.RejectionBudget` opens in a row is **tripped**: no new opens for cooldown window (`CopyDestinationTripped` alert fires), stopping rejection storm from hammering (prop-firm) account. Existing positions still managed + closed while tripped; breaker auto-resets after cooldown + successful copy clears counter.
+- **Lot sanity ceiling** (C14) — absolute max copy size and/or multiple-of-master cap. Computed copy exceeding absolute cap, or exceeding `N×` master's own lot size, **hard-blocked** (surfaced as `lot_sanity` skip, counted on `cmind.copy.skipped`) not placed — defends against catastrophic-oversize class (0.23-lot master turning into 3 lots on each receiver via runaway multiplier or rounding bug). Both dimensions default `0` (off).
 
-## Zuverlässigkeit & Rand-Fälle
+## Zuverlässigkeit & Grenzfälle
 
-Engine gebaut für Realität dass alles kann Fehler anytime:
+Engine built for reality that anything can fail anytime:
 
-- **Slave-ausstehend Füllung-Korrelation Timeout** (C13) — gespiegelt Slave ausstehend dessen Master ausstehend verschwunden (weder Ruhend noch frisch gefüllt) storniert nach Korrelations-Timeout, daher Slave Copy kann Füllung nicht-korreliert in nicht-verwaltete Position nicht (`CopyPendingTimedOut`). Resync auch räumt Bestellungs-ID-gekennzeichnet gefüllt-ausstehend Waise.
-- **Robust Schließung/Flatten** (M8) — Schließung Waise auf Resync, oder Flatten auf Guard Bruch, toleriert Position Broker bereits geschlossen (`POSITION_NOT_FOUND`): jede Schließung läuft unabhängig, daher eine Stale ID nie abbruch Resync oder Blatt Rest Konto Un-flattened.
+- **Slave-pending fill-correlation timeout** (C13) — mirrored slave pending whose master pending vanished (neither resting nor freshly filled) cancelled after correlation timeout, so slave copy can't fill uncorrelated into unmanaged position (`CopyPendingTimedOut`). Resync also cleans order-id-labelled filled-pending orphan.
+- **Robust close/flatten** (M8) — closing orphan on resync, or flattening on guard breach, tolerates position broker already closed (`POSITION_NOT_FOUND`): each close runs independently, so one stale id never aborts resync or leaves rest of account un-flattened.
 
-- **Start mit Master bereits in Trades** — auf Start Host Versöhnung + öffnet Copies für Master vorhandene Positionen.
-- **Verbindung Tropfen / Desync** — auf Wiederverbindung Host Versöhnung: öffnet fehlende Copies, schließt Waisen, Re-Etiketten ausstehend. Keine Duplikat-Bestellungen.
-- **Bestellungs-Platzierung Misserfolg** — Misserfolg auf einem Ziel protokolliert, nie blockiert andere Ziele.
-- **Einzelner gültiger Token pro cID** — cTrader ungültig cID alte Zugriff-Token Moment neue ausgestellt. cMind vertauscht laufenden Host Token **an Ort** (Re-Auth auf Live-Socket) daher Kopieren fortsetzt ohne Strom fallen. Siehe [Token Lebenszyklus](token-lifecycle.md).
+- **Start with master already in trades** — on start host reconciles + opens copies for master's existing positions.
+- **Connection drops / desync** — on reconnect host reconciles: opens missing copies, closes orphans, re-labels pendings. No duplicate orders.
+- **Order placement failure** — failure on one destination logged, never blocks other destinations.
+- **Single valid token per cID** — cTrader invalidates cID's old access token moment new one issued. cMind swaps running host's token **in place** (re-auth on live socket) so copying continues without dropping stream. See [token lifecycle](token-lifecycle.md).
 
-## Audit-Fähigkeit
+## Nachvollziehbarkeit
 
-Jede Aktion emittiert strukturiert, Quell-generiert Log-Ereignis (`LogMessages`) mit Profil-ID, Ziel cID, Bestellung/Position-IDs, + Werte — Bestellung platziert/übersprungen (mit Grund), Teilschließung, Schutz angewendet, Trailing angewendet, ausstehend platziert/geändert/storniert, Ablauf gespiegelt, Marktbereich Slippage gespiegelt, Token vertauscht, Resync Zusammenfassung. Dies ist das Audit-Trail für Compliance + Streit-Lösung.
+Every action emits structured, source-generated log event (`LogMessages`) with profile id, destination cID, order/position ids, + values — order placed/skipped (with reason), partial close, protection applied, trailing applied, pending placed/amended/cancelled, expiry mirrored, market-range slippage mirrored, token swapped, resync summary. This is the audit trail for compliance + dispute resolution.
 
-Zusammen mit Protokollen, Engine emittiert **OpenTelemetry Metriken** auf `cMind.Copy` Meter (registriert in gemeinsam OTel Pipeline, exportiert über OTLP / zu Azure Monitor wie Rest): `cmind.copy.latency` (Master-Ereignis → Versand, ms), `cmind.copy.dispatch.duration` (Fan-out zu alle Ziele, ms), `cmind.copy.slippage.points`, `cmind.copy.placed` (getaggt von Ziel), `cmind.copy.skipped` (getaggt von Grund), + `cmind.copy.failed`. Diese machen Latenz/Slippage Regression messbar, nicht nur sichtbar in Log-Zeile — Live-Suite behauptet sie gegen Budget.
+Alongside logs, engine emits **OpenTelemetry metrics** on `cMind.Copy` meter (registered in shared OTel pipeline, exported over OTLP / to Azure Monitor like rest): `cmind.copy.latency` (master-event → dispatch, ms), `cmind.copy.dispatch.duration` (fan-out to all destinations, ms), `cmind.copy.slippage.points`, `cmind.copy.placed` (tagged by destination), `cmind.copy.skipped` (tagged by reason), + `cmind.copy.failed`. These make latency/slippage regression measurable, not just visible in log line — live suite asserts them against budget.
 
 ## API
 
-- `GET /api/copy/profiles` — Liste.
-- `POST /api/copy/profiles` — erstelle (mit optional Ziel-Konto-IDs).
-- `GET /api/copy/profiles/{id}` — vollständig Detail incl. jedes Ziel-Option.
-- `POST /api/copy/profiles/{id}/destinations` — füge Ziel mit dem vollständigen Option-Satz.
-- `DELETE /api/copy/profiles/{id}/destinations/{destinationId}` — entfernen.
-- `POST /api/copy/profiles/{id}/{start|pause|stop}` — Lebenszyklus.
+- `GET /api/copy/profiles` — list.
+- `POST /api/copy/profiles` — create (with optional destination account ids).
+- `GET /api/copy/profiles/{id}` — full detail incl. every destination option.
+- `POST /api/copy/profiles/{id}/destinations` — add a destination with the full option set.
+- `DELETE /api/copy/profiles/{id}/destinations/{destinationId}` — remove.
+- `POST /api/copy/profiles/{id}/{start|pause|stop}` — lifecycle.
 
 ## Tests
 
-- **Unit** (`tests/UnitTests/CopyTrading`) — Sizing-Modi, Entscheidungs-Filter, Bestellungstyp-Filter, Ablauf-Copy, Marktbereich/Stop-Limit Slippage, SL/TP Umschalter, Teilschließung, ausstehend Änderung/Stornierung, Start-mit-Öffnung, Trennung→Desync→Resync, an-Ort Token Tausch, Cross-cID Ungültigerklärung. Läuft gegen `FakeTradingSession`, cTrader-treuer in-Memory Simulator.
-- **Integration** (`tests/IntegrationTests/CopyLive`) — Knoten-Affinität/Anspruch Anspruch, Token-Version Propagation auf real Postgres.
-- **E2E** (`tests/E2ETests`) — Ziel-Option Rundfahrt durch API + UI, vollständig Lebenszyklus.
-- **Stress / DST** (`tests/StressTests`) — deterministisch-Simulation Prüfung: Besamt zufälliges Arbeitslasten + Fehler Injektion (Socket Flap, Bestellung Ablehnung, Marktbereich Ablehnung, Token Rotation, Knoten Tod) Fahren `CopyEngineHost` zu Ruhe + behaupten Konvergenz Invarianten. Siehe [testing/stress-testing.md](../testing/stress-testing.md). Diese Suite Oberfläche + behoben echten Startup Rasse: `OnReconnected` verkabelt bevor anfängliche Referenz-Last + Resync, daher Socket Flap während Startup könnte zweiten Resync gleichzeitig laufen + verderben Host Non-Concurrent Zustand Wörterbücher — Startup Last + erste Resync jetzt laufen unter `_stateGate`.
-- **Live** — echten cTrader Demo-Konten; siehe [testing/live-copy-trading.md](../testing/live-copy-trading.md).
+- **Unit** (`tests/UnitTests/CopyTrading`) — sizing modes, decision filters, order-type filter, expiry copy, market-range/stop-limit slippage, SL/TP toggles, partial close, pending amend/cancel, start-with-open, disconnect→desync→resync, in-place token swap, cross-cID invalidation. Runs against `FakeTradingSession`, cTrader-faithful in-memory simulator.
+- **Integration** (`tests/IntegrationTests/CopyLive`) — node-affinity/lease claim, token-version propagation on real Postgres.
+- **E2E** (`tests/E2ETests`) — destination-option round-trip through API + UI, full lifecycle.
+- **Stress / DST** (`tests/StressTests`) — deterministic-simulation testing: seeded randomized workloads + fault injection (socket flap, order rejection, market-range rejection, token rotation, node death) drive `CopyEngineHost` to quiescence + assert convergence invariants. See [testing/stress-testing.md](../testing/stress-testing.md). This suite surfaced + fixed real startup race: `OnReconnected` wired before initial reference-load + resync, so socket flap during startup could run second resync concurrently + corrupt host's non-concurrent state dictionaries — startup load + first resync now run under `_stateGate`.
+- **Live** — real cTrader demo accounts; see [testing/live-copy-trading.md](../testing/live-copy-trading.md).
 
-Siehe [dev-credentials.md](../testing/dev-credentials.md) für einzigen Anmeldedaten Datei Live + E2E Tier lesen.
+See [dev-credentials.md](../testing/dev-credentials.md) for single credentials file live + E2E tiers read.
+## Profil-Steuerung und Ziel-Verwaltung
+
+Start/stop are icon buttons on each profile row (disabled when the action does not apply). Source and
+destination accounts are shown by their **account number**, never an internal id. Clicking a profile
+opens a **dialog** to manage its destination accounts (add/remove with full per-destination settings).

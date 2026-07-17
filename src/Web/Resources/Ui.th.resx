@@ -200,4 +200,114 @@
   <data name="copyDetail.title" xml:space="preserve"><value>Copy Profile</value></data>
   <data name="copyDetail.notFound" xml:space="preserve"><value>This copy profile no longer exists - it may have been deleted or you do not have access to it.</value></data>
   <data name="copyDetail.back" xml:space="preserve"><value>Back to copy trading</value></data>
+  <data name="copy.symbols.add" xml:space="preserve"><value>เพิ่ม</value></data>
+  <data name="copy.symbols.none" xml:space="preserve"><value>ยังไม่มีสัญลักษณ์ที่เพิ่มเข้า</value></data>
+  <data name="copy.map.source" xml:space="preserve"><value>สัญลักษณ์ต้นทาง</value></data>
+  <data name="copy.map.destination" xml:space="preserve"><value>สัญลักษณ์ปลายทาง</value></data>
+  <data name="copy.map.multiplier" xml:space="preserve"><value>ปริมาณ ×</value></data>
+  <data name="copy.map.add" xml:space="preserve"><value>เพิ่ม</value></data>
+  <data name="copy.map.none" xml:space="preserve"><value>ยังไม่มีการแมปสัญลักษณ์</value></data>
+  <data name="copy.map.remove" xml:space="preserve"><value>ลบการแมป</value></data>
+  <data name="copy.map.exportCsv" xml:space="preserve"><value>ส่งออก CSV</value></data>
+  <data name="copy.map.importCsv" xml:space="preserve"><value>นำเข้า CSV</value></data>
+  <data name="copy.map.imported" xml:space="preserve"><value>นำเข้า {0} การแมป</value></data>
+  <data name="copy.map.importEmpty" xml:space="preserve"><value>ไม่พบการแมปในไฟล์</value></data>
+  <data name="copy.map.importFailed" xml:space="preserve"><value>ไม่สามารถอ่านไฟล์ CSV</value></data>
+  <data name="copyNew.title" xml:space="preserve"><value>โปรไฟล์การคัดลอกใหม่</value></data>
+  <data name="copyNew.back" xml:space="preserve"><value>กลับไปยังการคัดลอกการซื้อขาย</value></data>
+  <data name="copyNew.section.identity" xml:space="preserve"><value>โปรไฟล์และบัญชี</value></data>
+  <data name="copyNew.section.sizing" xml:space="preserve"><value>การปรับขนาดและความเสี่ยง</value></data>
+  <data name="copyNew.section.behaviour" xml:space="preserve"><value>พฤติกรรมการคัดลอก</value></data>
+  <data name="copyNew.section.orderTypes" xml:space="preserve"><value>ประเภทคำสั่ง</value></data>
+  <data name="copyNew.section.symbols" xml:space="preserve"><value>สัญลักษณ์</value></data>
+  <data name="copyNew.section.portability" xml:space="preserve"><value>นำเข้า / ส่งออกการตั้งค่า</value></data>
+  <data name="copyNew.name" xml:space="preserve"><value>ชื่อโปรไฟล์</value></data>
+  <data name="copyNew.name.required" xml:space="preserve"><value>จำเป็นต้องระบุชื่อโปรไฟล์</value></data>
+  <data name="copyNew.source" xml:space="preserve"><value>บัญชีต้นทาง (master)</value></data>
+  <data name="copyNew.source.required" xml:space="preserve"><value>จำเป็นต้องเลือกบัญชีต้นทาง</value></data>
+  <data name="copyNew.destinations" xml:space="preserve"><value>บัญชีปลายทาง (slave)</value></data>
+  <data name="copyNew.destinations.count" xml:space="preserve"><value>เลือก {0} บัญชี</value></data>
+  <data name="copyNew.destinations.help" xml:space="preserve"><value>เลือกบัญชีหนึ่งบัญชีหรือมากกว่า เพื่อคัดลอกการซื้อขาย (ยกเว้นบัญชีหลัก)</value></data>
+  <data name="copyNew.selectAll" xml:space="preserve"><value>เลือกทั้งหมด</value></data>
+  <data name="copyNew.clear" xml:space="preserve"><value>ล้าง</value></data>
+  <data name="copyNew.mode" xml:space="preserve"><value>การจัดการเงิน</value></data>
+  <data name="copyNew.parameter" xml:space="preserve"><value>พารามิเตอร์</value></data>
+  <data name="copyNew.slippage" xml:space="preserve"><value>Slippage (pips)</value></data>
+  <data name="copyNew.direction" xml:space="preserve"><value>ทิศทาง</value></data>
+  <data name="copyNew.minLot" xml:space="preserve"><value>จำนวน lot ขั้นต่ำ</value></data>
+  <data name="copyNew.maxLot" xml:space="preserve"><value>จำนวน lot สูงสุด</value></data>
+  <data name="copyNew.maxDelay" xml:space="preserve"><value>ความล่าช้าสูงสุด (วินาที)</value></data>
+  <data name="copyNew.maxDrawdown" xml:space="preserve"><value>ความหดตัวสูงสุด %</value></data>
+  <data name="copyNew.dailyLoss" xml:space="preserve"><value>ขีดจำกัดการสูญเสียรายวัน</value></data>
+  <data name="copyNew.reverse" xml:space="preserve"><value>สลับทิศทาง</value></data>
+  <data name="copyNew.forceMin" xml:space="preserve"><value>บังคับใช้ lot ขั้นต่ำ</value></data>
+  <data name="copyNew.copySl" xml:space="preserve"><value>คัดลอก SL</value></data>
+  <data name="copyNew.copyTp" xml:space="preserve"><value>คัดลอก TP</value></data>
+  <data name="copyNew.partialClose" xml:space="preserve"><value>ปิดบางส่วน</value></data>
+  <data name="copyNew.scaleIn" xml:space="preserve"><value>เพิ่มขนาดตำแหน่ง</value></data>
+  <data name="copyNew.pending" xml:space="preserve"><value>คำสั่งที่รอการทำงาน</value></data>
+  <data name="copyNew.trailing" xml:space="preserve"><value>Trailing stop</value></data>
+  <data name="copyNew.copyExpiry" xml:space="preserve"><value>คัดลอกวันหมดอายุ</value></data>
+  <data name="copyNew.copySlippage" xml:space="preserve"><value>คัดลอก slippage</value></data>
+  <data name="copyNew.market" xml:space="preserve"><value>Market</value></data>
+  <data name="copyNew.marketRange" xml:space="preserve"><value>Market range</value></data>
+  <data name="copyNew.limit" xml:space="preserve"><value>Limit</value></data>
+  <data name="copyNew.stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="copyNew.stopLimit" xml:space="preserve"><value>Stop limit</value></data>
+  <data name="copyNew.filterMode" xml:space="preserve"><value>ตัวกรองสัญลักษณ์</value></data>
+  <data name="copyNew.filterSymbols" xml:space="preserve"><value>ตัวกรองสัญลักษณ์</value></data>
+  <data name="copyNew.symbolMap" xml:space="preserve"><value>แมปสัญลักษณ์</value></data>
+  <data name="copyNew.exportSettings" xml:space="preserve"><value>ส่งออกการตั้งค่า</value></data>
+  <data name="copyNew.importSettings" xml:space="preserve"><value>นำเข้าการตั้งค่า</value></data>
+  <data name="copyNew.settingsImported" xml:space="preserve"><value>นำเข้าการตั้งค่าแล้ว</value></data>
+  <data name="copyNew.settingsImportFailed" xml:space="preserve"><value>ไม่สามารถอ่านไฟล์การตั้งค่า</value></data>
+  <data name="copyNew.cancel" xml:space="preserve"><value>ยกเลิก</value></data>
+  <data name="copyNew.create" xml:space="preserve"><value>สร้างโปรไฟล์</value></data>
+  <data name="copyNew.created" xml:space="preserve"><value>สร้างโปรไฟล์แล้ว</value></data>
+  <data name="copyNew.createFailed" xml:space="preserve"><value>ไม่สามารถสร้างโปรไฟล์</value></data>
+  <data name="copyNew.partialFailed" xml:space="preserve"><value>สร้างโปรไฟล์แล้ว แต่ไม่สามารถใช้การตั้งค่าปลายทางบางส่วน</value></data>
+  <data name="copyNew.tip.name" xml:space="preserve"><value>ชื่อสั้น ๆ เพื่อจดจำโปรไฟล์การคัดลอกนี้ในรายการ</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>บัญชี master ที่มีการซื้อขายที่ถูกคัดลอก</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>บัญชีหนึ่งบัญชีหรือมากกว่า ที่รับสำเนาการซื้อขายของ master บัญชี master เองจะถูกยกเว้น</value></data>
+  <data name="copyNew.tip.mode" xml:space="preserve"><value>วิธีการปรับขนาดการซื้อขายที่คัดลอกแต่ละรายการสัมพันธ์กับ master ได้แก่ lot คงที่ ตัวคูณ สัดส่วนของยอด/ทุน หรือเปอร์เซ็นต์ความเสี่ยงคงที่</value></data>
+  <data name="copyNew.tip.parameter" xml:space="preserve"><value>ตัวเลขที่โหมดการปรับขนาดใช้ เช่น ตัวคูณ (1 = ขนาดเดียวกัน) หรือเปอร์เซ็นต์ความเสี่ยง</value></data>
+  <data name="copyNew.tip.slippage" xml:space="preserve"><value>ความเบี่ยงเบนราคาสูงสุด (pips) ที่ยอมรับได้ เมื่อวางคำสั่งที่คัดลอก ก่อนที่จะถูกปฏิเสธ</value></data>
+  <data name="copyNew.tip.direction" xml:space="preserve"><value>คัดลอกทั้งสองทิศทาง หรือเฉพาะการซื้อขาย long หรือ short ของ master เท่านั้น</value></data>
+  <data name="copyNew.tip.minLot" xml:space="preserve"><value>ขนาด lot ที่เล็กที่สุดที่การคัดลอกอาจใช้ 0 = ไม่มีขั้นต่ำ</value></data>
+  <data name="copyNew.tip.maxLot" xml:space="preserve"><value>ขนาด lot ที่ใหญ่ที่สุดที่การคัดลอกอาจใช้ 0 = ไม่มีสูงสุด</value></data>
+  <data name="copyNew.tip.maxDelay" xml:space="preserve"><value>ข้ามการคัดลอกหากไม่สามารถวางไว้ได้ในเวลาที่กำหนดนี้หลังจากการเติมเต็ม master 0 = ไม่มีขีดจำกัด</value></data>
+  <data name="copyNew.tip.maxDrawdown" xml:space="preserve"><value>หยุดการคัดลอกไปยังปลายทาง หากความหดตัวของทุนเกินเปอร์เซ็นต์นี้ 0 = ปิดใช้งาน</value></data>
+  <data name="copyNew.tip.dailyLoss" xml:space="preserve"><value>หยุดการคัดลอกสำหรับวันนี้ หากการสูญเสียที่เกิดจริงของปลายทางถึงจำนวนนี้ 0 = ปิดใช้งาน</value></data>
+  <data name="copyNew.tip.reverse" xml:space="preserve"><value>สะท้อนการซื้อขายของ master ในทิศทางตรงกันข้าม (ซื้อกลายเป็นขาย)</value></data>
+  <data name="copyNew.tip.forceMin" xml:space="preserve"><value>หากขนาดที่คำนวณต่ำกว่าขั้นต่ำ lot ให้วาง lot ขั้นต่ำแทนที่จะข้าม</value></data>
+  <data name="copyNew.tip.copySl" xml:space="preserve"><value>คัดลอก stop-loss ของ master ไปยังคำสั่งปลายทาง</value></data>
+  <data name="copyNew.tip.copyTp" xml:space="preserve"><value>คัดลอก take-profit ของ master ไปยังคำสั่งปลายทาง</value></data>
+  <data name="copyNew.tip.partialClose" xml:space="preserve"><value>เมื่อ master ปิดตำแหน่งบางส่วน ให้ปิดสัดส่วนเดียวกันบนปลายทาง</value></data>
+  <data name="copyNew.tip.scaleIn" xml:space="preserve"><value>เมื่อ master เพิ่มตำแหน่ง ให้เพิ่มตามสัดส่วนบนปลายทาง</value></data>
+  <data name="copyNew.tip.pending" xml:space="preserve"><value>คัดลอกคำสั่งที่รอการทำงาน (limit/stop) ของ master ไม่ใช่เฉพาะการเติมเต็ม market</value></data>
+  <data name="copyNew.tip.trailing" xml:space="preserve"><value>คัดลอกการปรับ trailing-stop ของ master</value></data>
+  <data name="copyNew.tip.copyExpiry" xml:space="preserve"><value>คัดลอกเวลาหมดอายุของคำสั่งที่รอการทำงานของ master</value></data>
+  <data name="copyNew.tip.copySlippage" xml:space="preserve"><value>ใช้การตั้งค่า slippage ของ master เองแทนที่ค่าข้างบน</value></data>
+  <data name="copyNew.tip.orderTypes" xml:space="preserve"><value>ประเภทคำสั่งใดของ master ที่ถูกคัดลอก ปิดใช้งานประเภทหนึ่งเพื่อไม่สนใจคำสั่งเหล่านั้น</value></data>
+  <data name="copyNew.tip.market" xml:space="preserve"><value>คัดลอกคำสั่ง market</value></data>
+  <data name="copyNew.tip.marketRange" xml:space="preserve"><value>คัดลอกคำสั่ง market-range</value></data>
+  <data name="copyNew.tip.limit" xml:space="preserve"><value>คัดลอกคำสั่ง limit</value></data>
+  <data name="copyNew.tip.stop" xml:space="preserve"><value>คัดลอกคำสั่ง stop</value></data>
+  <data name="copyNew.tip.stopLimit" xml:space="preserve"><value>คัดลอกคำสั่ง stop-limit</value></data>
+  <data name="copyNew.tip.filterMode" xml:space="preserve"><value>ไม่มี = คัดลอกทุกสัญลักษณ์ Whitelist = คัดลอกเฉพาะสัญลักษณ์ที่ระบุไว้เท่านั้น Blacklist = คัดลอกทั้งหมดยกเว้นสัญลักษณ์ที่ระบุไว้</value></data>
+  <data name="copyNew.tip.symbolMap" xml:space="preserve"><value>แปลสัญลักษณ์ master เป็นสัญลักษณ์ของ broker ปลายทาง พร้อมกับตัวคูณปริมาณต่อสัญลักษณ์ (ตัวเลือก) นำเข้าหรือส่งออกแมปทั้งหมดเป็นไฟล์ CSV</value></data>
+  <data name="copyNew.tip.portability" xml:space="preserve"><value>บันทึกการตั้งค่าทั้งหมดในฟอร์มนี้ลงในไฟล์ หรือโหลดจากไฟล์ที่บันทึกไว้ก่อนหน้านี้</value></data>
+  <data name="copyNew.err.name" xml:space="preserve"><value>จำเป็นต้องระบุชื่อโปรไฟล์</value></data>
+  <data name="copyNew.err.source" xml:space="preserve"><value>เลือกบัญชีต้นทาง (master)</value></data>
+  <data name="copyNew.err.destinations" xml:space="preserve"><value>เลือกบัญชีปลายทาง (slave) อย่างน้อยหนึ่งบัญชี</value></data>
+  <data name="copyNew.err.parameter" xml:space="preserve"><value>พารามิเตอร์ต้องมากกว่าศูนย์</value></data>
+  <data name="copyNew.err.slippage" xml:space="preserve"><value>Slippage ไม่สามารถเป็นค่าลบได้</value></data>
+  <data name="copyNew.err.minLot" xml:space="preserve"><value>Min lot ไม่สามารถเป็นค่าลบได้</value></data>
+  <data name="copyNew.err.maxLot" xml:space="preserve"><value>Max lot ไม่สามารถเป็นค่าลบได้</value></data>
+  <data name="copyNew.err.lotOrder" xml:space="preserve"><value>Max lot ต้องมากกว่าหรือเท่ากับ min lot</value></data>
+  <data name="copyNew.err.maxDelay" xml:space="preserve"><value>Max delay ไม่สามารถเป็นค่าลบได้</value></data>
+  <data name="copyNew.err.drawdown" xml:space="preserve"><value>Max drawdown % ต้องอยู่ระหว่าง 0 ถึง 100</value></data>
+  <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Daily loss cap ไม่สามารถเป็นค่าลบได้</value></data>
+  <data name="copyNew.err.orderTypes" xml:space="preserve"><value>เปิดใช้งานประเภทคำสั่งอย่างน้อยหนึ่งประเภท</value></data>
+  <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>เพิ่มสัญลักษณ์อย่างน้อยหนึ่งตัว สำหรับตัวกรองสัญลักษณ์ที่เลือก</value></data>
 </root>

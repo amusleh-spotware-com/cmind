@@ -1,10 +1,10 @@
 ---
-description: "Mirror master cTrader account onto one+ slave accounts — cross-broker, cross-cID — with per-destination control + money-grade reconciliation."
+description: "Preslikaj master cTrader account onto one+ slave accounts — između brokera, između cID-eva — sa kontrolom po odredištu i usaglašavanjem na nivou novca."
 ---
 
 # Copy trading
 
-Mirror **master** cTrader account onto one+ **slave** accounts — cross-broker, cross-cID — with per-destination control + money-grade reconciliation.
+Mirror **master** cTrader account onto one+ **slave** accounts — između brokera, između cID-eva — sa kontrolom po odredištu i usaglašavanjem na nivou novca.
 
 ## Concepts
 
@@ -105,3 +105,4 @@ See [dev-credentials.md](../testing/dev-credentials.md) for single credentials f
 Start/stop are icon buttons on each profile row (disabled when the action does not apply). Source and
 destination accounts are shown by their **account number**, never an internal id. Clicking a profile
 opens a **dialog** to manage its destination accounts (add/remove with full per-destination settings).
+

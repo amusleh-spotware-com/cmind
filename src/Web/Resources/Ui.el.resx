@@ -200,4 +200,114 @@
   <data name="copyDetail.title" xml:space="preserve"><value>Copy Profile</value></data>
   <data name="copyDetail.notFound" xml:space="preserve"><value>This copy profile no longer exists - it may have been deleted or you do not have access to it.</value></data>
   <data name="copyDetail.back" xml:space="preserve"><value>Back to copy trading</value></data>
+  <data name="copy.symbols.add" xml:space="preserve"><value>Προσθήκη</value></data>
+  <data name="copy.symbols.none" xml:space="preserve"><value>Δεν έχουν προστεθεί σύμβολα ακόμα</value></data>
+  <data name="copy.map.source" xml:space="preserve"><value>Σύμβολο πηγής</value></data>
+  <data name="copy.map.destination" xml:space="preserve"><value>Σύμβολο προορισμού</value></data>
+  <data name="copy.map.multiplier" xml:space="preserve"><value>Όγκος ×</value></data>
+  <data name="copy.map.add" xml:space="preserve"><value>Προσθήκη</value></data>
+  <data name="copy.map.none" xml:space="preserve"><value>Δεν υπάρχουν αντιστοιχίσεις συμβόλων ακόμα</value></data>
+  <data name="copy.map.remove" xml:space="preserve"><value>Κατάργηση αντιστοίχισης</value></data>
+  <data name="copy.map.exportCsv" xml:space="preserve"><value>Εξαγωγή CSV</value></data>
+  <data name="copy.map.importCsv" xml:space="preserve"><value>Εισαγωγή CSV</value></data>
+  <data name="copy.map.imported" xml:space="preserve"><value>{0} αντιστοίχιση(ες) εισήχθη</value></data>
+  <data name="copy.map.importEmpty" xml:space="preserve"><value>Δεν βρέθηκαν αντιστοιχίσεις στο αρχείο</value></data>
+  <data name="copy.map.importFailed" xml:space="preserve"><value>Δεν ήταν δυνατή η ανάγνωση του αρχείου CSV</value></data>
+  <data name="copyNew.title" xml:space="preserve"><value>Νέο προφίλ αντιγραφής</value></data>
+  <data name="copyNew.back" xml:space="preserve"><value>Επιστροφή στην αντιγραφή συναλλαγών</value></data>
+  <data name="copyNew.section.identity" xml:space="preserve"><value>Προφίλ και λογαριασμοί</value></data>
+  <data name="copyNew.section.sizing" xml:space="preserve"><value>Μέγεθος και κίνδυνος</value></data>
+  <data name="copyNew.section.behaviour" xml:space="preserve"><value>Συμπεριφορά αντιγραφής</value></data>
+  <data name="copyNew.section.orderTypes" xml:space="preserve"><value>Τύποι εντολών</value></data>
+  <data name="copyNew.section.symbols" xml:space="preserve"><value>Σύμβολα</value></data>
+  <data name="copyNew.section.portability" xml:space="preserve"><value>Εισαγωγή / εξαγωγή ρυθμίσεων</value></data>
+  <data name="copyNew.name" xml:space="preserve"><value>Όνομα προφίλ</value></data>
+  <data name="copyNew.name.required" xml:space="preserve"><value>Το όνομα προφίλ είναι υποχρεωτικό</value></data>
+  <data name="copyNew.source" xml:space="preserve"><value>Λογαριασμός πηγής (master)</value></data>
+  <data name="copyNew.source.required" xml:space="preserve"><value>Ο λογαριασμός πηγής είναι υποχρεωτικός</value></data>
+  <data name="copyNew.destinations" xml:space="preserve"><value>Λογαριασμοί προορισμού (slave)</value></data>
+  <data name="copyNew.destinations.count" xml:space="preserve"><value>{0} λογαριασμός/ημοί επιλεγμένος/ημοί</value></data>
+  <data name="copyNew.destinations.help" xml:space="preserve"><value>Επιλέξτε έναν ή περισσότερους λογαριασμούς για αντιγραφή συναλλαγών (ο master αποκλείεται)</value></data>
+  <data name="copyNew.selectAll" xml:space="preserve"><value>Επιλογή όλων</value></data>
+  <data name="copyNew.clear" xml:space="preserve"><value>Εκκαθάριση</value></data>
+  <data name="copyNew.mode" xml:space="preserve"><value>Διαχείριση χρημάτων</value></data>
+  <data name="copyNew.parameter" xml:space="preserve"><value>Παράμετρος</value></data>
+  <data name="copyNew.slippage" xml:space="preserve"><value>Ολίσθηση (pips)</value></data>
+  <data name="copyNew.direction" xml:space="preserve"><value>Κατεύθυνση</value></data>
+  <data name="copyNew.minLot" xml:space="preserve"><value>Ελάχιστο lot</value></data>
+  <data name="copyNew.maxLot" xml:space="preserve"><value>Μέγιστο lot</value></data>
+  <data name="copyNew.maxDelay" xml:space="preserve"><value>Μέγιστη καθυστέρηση (s)</value></data>
+  <data name="copyNew.maxDrawdown" xml:space="preserve"><value>Μέγιστη πτώση %</value></data>
+  <data name="copyNew.dailyLoss" xml:space="preserve"><value>Όριο ημερήσιας απώλειας</value></data>
+  <data name="copyNew.reverse" xml:space="preserve"><value>Αντιστροφή</value></data>
+  <data name="copyNew.forceMin" xml:space="preserve"><value>Επιβολή ελάχιστου lot</value></data>
+  <data name="copyNew.copySl" xml:space="preserve"><value>Αντιγραφή SL</value></data>
+  <data name="copyNew.copyTp" xml:space="preserve"><value>Αντιγραφή TP</value></data>
+  <data name="copyNew.partialClose" xml:space="preserve"><value>Μερική κλείσιμο</value></data>
+  <data name="copyNew.scaleIn" xml:space="preserve"><value>Scale-in</value></data>
+  <data name="copyNew.pending" xml:space="preserve"><value>Εκκρεμείς εντολές</value></data>
+  <data name="copyNew.trailing" xml:space="preserve"><value>Trailing stop</value></data>
+  <data name="copyNew.copyExpiry" xml:space="preserve"><value>Αντιγραφή ημερομηνίας λήξης</value></data>
+  <data name="copyNew.copySlippage" xml:space="preserve"><value>Αντιγραφή ολίσθησης</value></data>
+  <data name="copyNew.market" xml:space="preserve"><value>Αγορά</value></data>
+  <data name="copyNew.marketRange" xml:space="preserve"><value>Εύρος αγοράς</value></data>
+  <data name="copyNew.limit" xml:space="preserve"><value>Limit</value></data>
+  <data name="copyNew.stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="copyNew.stopLimit" xml:space="preserve"><value>Stop limit</value></data>
+  <data name="copyNew.filterMode" xml:space="preserve"><value>Φίλτρο συμβόλου</value></data>
+  <data name="copyNew.filterSymbols" xml:space="preserve"><value>Φιλτράρισμα συμβόλων</value></data>
+  <data name="copyNew.symbolMap" xml:space="preserve"><value>Χάρτης συμβόλων</value></data>
+  <data name="copyNew.exportSettings" xml:space="preserve"><value>Εξαγωγή ρυθμίσεων</value></data>
+  <data name="copyNew.importSettings" xml:space="preserve"><value>Εισαγωγή ρυθμίσεων</value></data>
+  <data name="copyNew.settingsImported" xml:space="preserve"><value>Ρυθμίσεις εισήχθησαν</value></data>
+  <data name="copyNew.settingsImportFailed" xml:space="preserve"><value>Δεν ήταν δυνατή η ανάγνωση του αρχείου ρυθμίσεων</value></data>
+  <data name="copyNew.cancel" xml:space="preserve"><value>Ακύρωση</value></data>
+  <data name="copyNew.create" xml:space="preserve"><value>Δημιουργία προφίλ</value></data>
+  <data name="copyNew.created" xml:space="preserve"><value>Προφίλ δημιουργήθηκε</value></data>
+  <data name="copyNew.createFailed" xml:space="preserve"><value>Αποτυχία δημιουργίας προφίλ</value></data>
+  <data name="copyNew.partialFailed" xml:space="preserve"><value>Προφίλ δημιουργήθηκε, αλλά ορισμένες ρυθμίσεις προορισμού δεν μπορούσαν να εφαρμοστούν</value></data>
+  <data name="copyNew.tip.name" xml:space="preserve"><value>Ένα σύντομο όνομα για να αναγνωρίσετε αυτό το προφίλ αντιγραφής στη λίστα.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Ο λογαριασμός master του οποίου οι συναλλαγές αντιγράφονται.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Ένας ή περισσότεροι λογαριασμοί που λαμβάνουν αντίγραφα των συναλλαγών του master. Ο ίδιος ο master αποκλείεται.</value></data>
+  <data name="copyNew.tip.mode" xml:space="preserve"><value>Πώς κάθε αντιγραμμένη συναλλαγή διαστασιολογείται σε σχέση με τον master: ένα σταθερό lot, ένας πολλαπλασιαστής, ένα ποσοστό του υπολοίπου/κεφαλαίου ή ένα σταθερό ποσοστό κινδύνου.</value></data>
+  <data name="copyNew.tip.parameter" xml:space="preserve"><value>Ο αριθμός που χρησιμοποιεί η λειτουργία διαστασιολόγησης — για παράδειγμα ο πολλαπλασιαστής (1 = ίδιο μέγεθος) ή το ποσοστό κινδύνου.</value></data>
+  <data name="copyNew.tip.slippage" xml:space="preserve"><value>Μέγιστη απόκλιση τιμής, σε pips, που ανέχεται κατά την τοποθέτηση της αντιγραμμένης εντολής πριν απορριφθεί.</value></data>
+  <data name="copyNew.tip.direction" xml:space="preserve"><value>Αντιγραφή και των δύο κατευθύνσεων, ή μόνο τις πολύ αγορές ή μόνο τις πολύ πωλήσεις του master.</value></data>
+  <data name="copyNew.tip.minLot" xml:space="preserve"><value>Το μικρότερο μέγεθος lot που μπορεί να χρησιμοποιήσει ένα αντίγραφο. 0 = χωρίς ελάχιστο.</value></data>
+  <data name="copyNew.tip.maxLot" xml:space="preserve"><value>Το μεγαλύτερο μέγεθος lot που μπορεί να χρησιμοποιήσει ένα αντίγραφο. 0 = χωρίς μέγιστο.</value></data>
+  <data name="copyNew.tip.maxDelay" xml:space="preserve"><value>Παράλειψη αντιγραφής εάν δεν μπορεί να τοποθετηθεί εντός αυτών των δευτερολέπτων του γεμίσματος του master. 0 = χωρίς όριο.</value></data>
+  <data name="copyNew.tip.maxDrawdown" xml:space="preserve"><value>Παύση αντιγραφής σε έναν προορισμό εάν η πτώση κεφαλαίου του υπερβαίνει αυτό το ποσοστό. 0 = απενεργοποιημένο.</value></data>
+  <data name="copyNew.tip.dailyLoss" xml:space="preserve"><value>Διακοπή αντιγραφής για την ημέρα εάν η πραγματοποιηθείσα απώλεια του προορισμού φτάσει αυτό το ποσό. 0 = απενεργοποιημένο.</value></data>
+  <data name="copyNew.tip.reverse" xml:space="preserve"><value>Αντιγραφή των συναλλαγών του master προς την αντίθετη κατεύθυνση (η αγορά γίνεται πώληση).</value></data>
+  <data name="copyNew.tip.forceMin" xml:space="preserve"><value>Εάν ένα υπολογιζόμενο μέγεθος είναι κάτω από το ελάχιστο lot, τοποθετήστε το ελάχιστο αντί να παραλειφθεί.</value></data>
+  <data name="copyNew.tip.copySl" xml:space="preserve"><value>Αντιγραφή του stop-loss του master στην εντολή προορισμού.</value></data>
+  <data name="copyNew.tip.copyTp" xml:space="preserve"><value>Αντιγραφή του take-profit του master στην εντολή προορισμού.</value></data>
+  <data name="copyNew.tip.partialClose" xml:space="preserve"><value>Όταν ο master κλείνει μερικώς μια θέση, κλείστε το ίδιο ποσοστό στον προορισμό.</value></data>
+  <data name="copyNew.tip.scaleIn" xml:space="preserve"><value>Όταν ο master προσθέτει σε μια θέση, προσθέστε αναλογικά στον προορισμό.</value></data>
+  <data name="copyNew.tip.pending" xml:space="preserve"><value>Αντιγραφή των εκκρεμών (limit/stop) εντολών του master, όχι μόνο πληρώσεων αγοράς.</value></data>
+  <data name="copyNew.tip.trailing" xml:space="preserve"><value>Αντιγραφή των προσαρμογών trailing-stop του master.</value></data>
+  <data name="copyNew.tip.copyExpiry" xml:space="preserve"><value>Αντιγραφή του χρόνου λήξης των εκκρεμών εντολών του master.</value></data>
+  <data name="copyNew.tip.copySlippage" xml:space="preserve"><value>Χρήση της δικής του ρύθμισης ολίσθησης του master αντί της τιμής παραπάνω.</value></data>
+  <data name="copyNew.tip.orderTypes" xml:space="preserve"><value>Ποιοι από τους τύπους εντολών του master αντιγράφονται. Απενεργοποιήστε έναν τύπο για να αγνοήσετε αυτές τις εντολές.</value></data>
+  <data name="copyNew.tip.market" xml:space="preserve"><value>Αντιγραφή εντολών αγοράς.</value></data>
+  <data name="copyNew.tip.marketRange" xml:space="preserve"><value>Αντιγραφή εντολών εύρους αγοράς.</value></data>
+  <data name="copyNew.tip.limit" xml:space="preserve"><value>Αντιγραφή εντολών limit.</value></data>
+  <data name="copyNew.tip.stop" xml:space="preserve"><value>Αντιγραφή εντολών stop.</value></data>
+  <data name="copyNew.tip.stopLimit" xml:space="preserve"><value>Αντιγραφή εντολών stop-limit.</value></data>
+  <data name="copyNew.tip.filterMode" xml:space="preserve"><value>Κανένα = αντιγραφή κάθε συμβόλου. Whitelist = αντιγραφή μόνο των καταχωρισμένων συμβόλων. Blacklist = αντιγραφή όλων εκτός των καταχωρισμένων συμβόλων.</value></data>
+  <data name="copyNew.tip.symbolMap" xml:space="preserve"><value>Μεταφράστε ένα σύμβολο master στο σύμβολο του broker προορισμού, με ένα προαιρετικό πολλαπλασιαστή όγκου ανά σύμβολο. Εισάγετε ή εξάγετε ολόκληρο το χάρτη ως αρχείο CSV.</value></data>
+  <data name="copyNew.tip.portability" xml:space="preserve"><value>Αποθηκεύστε όλες τις ρυθμίσεις σε αυτή τη φόρμα σε ένα αρχείο, ή φορτώστε τις από ένα προηγουμένως αποθηκευμένο αρχείο.</value></data>
+  <data name="copyNew.err.name" xml:space="preserve"><value>Το όνομα προφίλ είναι υποχρεωτικό.</value></data>
+  <data name="copyNew.err.source" xml:space="preserve"><value>Επιλέξτε έναν λογαριασμό πηγής (master).</value></data>
+  <data name="copyNew.err.destinations" xml:space="preserve"><value>Επιλέξτε τουλάχιστον έναν λογαριασμό προορισμού (slave).</value></data>
+  <data name="copyNew.err.parameter" xml:space="preserve"><value>Η παράμετρος πρέπει να είναι μεγαλύτερη από το μηδέν.</value></data>
+  <data name="copyNew.err.slippage" xml:space="preserve"><value>Η ολίσθηση δεν μπορεί να είναι αρνητική.</value></data>
+  <data name="copyNew.err.minLot" xml:space="preserve"><value>Το ελάχιστο lot δεν μπορεί να είναι αρνητικό.</value></data>
+  <data name="copyNew.err.maxLot" xml:space="preserve"><value>Το μέγιστο lot δεν μπορεί να είναι αρνητικό.</value></data>
+  <data name="copyNew.err.lotOrder" xml:space="preserve"><value>Το μέγιστο lot πρέπει να είναι μεγαλύτερο ή ίσο με το ελάχιστο lot.</value></data>
+  <data name="copyNew.err.maxDelay" xml:space="preserve"><value>Η μέγιστη καθυστέρηση δεν μπορεί να είναι αρνητική.</value></data>
+  <data name="copyNew.err.drawdown" xml:space="preserve"><value>Η μέγιστη πτώση % πρέπει να είναι μεταξύ 0 και 100.</value></data>
+  <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Το όριο ημερήσιας απώλειας δεν μπορεί να είναι αρνητικό.</value></data>
+  <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Ενεργοποιήστε τουλάχιστον έναν τύπο εντολής.</value></data>
+  <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Προσθέστε τουλάχιστον ένα σύμβολο για το επιλεγμένο φίλτρο συμβόλου.</value></data>
 </root>

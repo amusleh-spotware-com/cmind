@@ -25,7 +25,6 @@ Dialogs/EditInstanceDialog.razor
 Dialogs/EnableTwoFactorDialog.razor
 Dialogs/McpKeyCreatedDialog.razor
 Dialogs/NewCidAccountDialog.razor
-Dialogs/NewCopyProfileDialog.razor
 Dialogs/NewMcpKeyDialog.razor
 Dialogs/NewNodeDialog.razor
 Dialogs/NewProjectDialog.razor

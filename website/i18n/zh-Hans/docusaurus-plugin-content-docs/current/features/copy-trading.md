@@ -1,101 +1,103 @@
 ---
-description: "Mirror master cTrader account onto one+ slave accounts — cross-broker, cross-cID — with per-destination control + money-grade reconciliation."
+description: "将主 cTrader 账户镜像到一个或多个从属账户——跨经纪商、跨 cID——支持逐目标控制和资金级别的对账。"
 ---
 
-# Copy trading
+# 复制交易
 
-Mirror **master** cTrader account onto one+ **slave** accounts — cross-broker, cross-cID — with per-destination control + money-grade reconciliation.
+将**主** cTrader 账户镜像到一个或多个**从属**账户——跨经纪商、跨 cID——支持逐目标控制和资金级别的对账。
 
-## Concepts
+## 概念
 
-- **Copy profile** — one master (`SourceAccountId`) + one+ **destinations**. Lifecycle: `Draft → Running → Paused → Stopped` (`Error` on failure). Aggregate root: `CopyProfile` (owns `CopyDestination`).
-- **Destination** — one slave account + full rule set for how master copied onto it. All config per-destination, so one master feeds conservative + aggressive slaves at once.
-- **Copy engine host** — running worker for profile (`CopyEngineHost`). Subscribes master execution stream, applies each event to every destination.
-- **Supervisor** — `CopyEngineSupervisor`, background service on each node. Hosts assigned profiles, self-heals across cluster (see [scaling](../deployment/scaling.md)).
+- **复制配置文件** — 一个主账户（`SourceAccountId`）加一个或多个**目标账户**。生命周期：`Draft → Running → Paused → Stopped`（失败时为 `Error`）。聚合根：`CopyProfile`（拥有 `CopyDestination`）。
+- **目标账户** — 一个从属账户加完整的规则集，定义如何将主账户的交易复制到该账户。所有配置都是针对目标账户的，因此一个主账户可同时为保守和激进的从属账户供应交易。
+- **复制引擎主机** — 运行配置文件的工作线程（`CopyEngineHost`）。订阅主账户执行流，对每个目标账户应用每个事件。
+- **监督器** — `CopyEngineSupervisor`，每个节点上的后台服务。托管分配的配置文件，在集群内自我修复（参见[扩展](../deployment/scaling.md)）。
 
-## What gets mirrored
+## 镜像的内容
 
-| Master event | Slave action |
+| 主账户事件 | 从属账户操作 |
 |--------------|--------------|
-| Market / market-range position open | Open a sized copy (labelled with the source position id) |
-| Limit / stop / stop-limit pending order | Place the matching pending order |
-| Pending order amend | Amend the mirrored pending order in place |
-| Pending order cancel / expiry | Cancel the mirrored pending order |
-| Partial close | Close the same proportion of the slave position |
-| Scale-in (volume increase) | Open the added volume (opt-in) |
-| Stop-loss / trailing-stop change | Amend the slave position's protection |
-| Full close | Close the slave copy |
+| 市场 / 市场范围头寸开仓 | 开启按大小调整的复制（用源头寸 id 标记） |
+| 限价 / 止损 / 止损限价待执行单 | 放置匹配的待执行单 |
+| 待执行单修改 | 就地修改镜像的待执行单 |
+| 待执行单取消 / 过期 | 取消镜像的待执行单 |
+| 部分平仓 | 关闭从属头寸的相同比例 |
+| 加仓（交易量增加） | 开启添加的交易量（可选） |
+| 止损 / 跟踪止损更改 | 修改从属头寸的保护 |
+| 全部平仓 | 关闭从属复制 |
 
-Every copy **labelled with source position/order id**. After reconnect host rebuilds state from reconcile: opens copies master holds but slave missing, closes slave "orphans" master no longer holds — **without duplicating trades**.
+每个复制都**用源头寸/单 id 标记**。重新连接后，主机从对账重建状态：开启主账户持有但从属账户缺失的复制，关闭从属账户的"孤立单"主账户不再持有的——**不重复交易**。
 
-## Creating a profile
+## 创建配置文件
 
-**New Profile** dialog on Copy Trading page collects all up front: profile name, source (master) account, destination (slave) accounts (multi-select with **Select all** button; chosen master excluded from slave list), + full per-destination option set below. All inputs **validated before saving** — missing name/source/destination, non-positive sizing param, negative/inconsistent lot bounds, out-of-range drawdown %, no order type enabled, empty symbol filter, or malformed symbol-map pairs surface as error list + block save. On confirm, profile created + every selected slave added with chosen settings.
+复制交易页面上的**新建配置文件**对话框预先收集所有内容：配置文件名、源（主）账户、目标（从属）账户（多选，带有**全选**按钮；选定的主账户从从属列表中排除），加下面完整的逐目标选项集。所有输入在保存前**验证** — 缺失名称/源/目标、非正的大小参数、负数/不一致的手数界限、超出范围的回撤 %、没有启用的单类型、空符号过滤器或格式错误的符号映射对都会显示为错误列表并阻止保存。确认时，配置文件被创建并且每个选定的从属账户都添加了选定的设置。
 
-Row actions respect lifecycle: **Start** enabled only when not running, **Stop** + **Pause** only when running, **Delete** disabled while running + asks confirmation before removing profile + destinations.
+行操作遵循生命周期：**启动**仅在未运行时启用，**停止** + **暂停**仅在运行时启用，**删除**在运行时禁用并在删除配置文件和目标账户前要求确认。
 
-## Per-destination options
+## 逐目标选项
 
-Set in New Profile dialog, on Copy Trading page's per-destination panel, or via `POST /api/copy/profiles/{id}/destinations`:
+在新建配置文件对话框、复制交易页面的逐目标面板或通过 `POST /api/copy/profiles/{id}/destinations` 设置：
 
-- **Sizing** (`MoneyManagementMode` + parameter): fixed lot, lot/notional multiplier, proportional balance/equity/free-margin, fixed risk %, fixed leverage, auto-proportional, **risk-%-from-stop** (M7). Plus min/max lot bounds + force-min-lot. **Risk-from-stop** sizes destination so it risks configured percent of *its own* balance, derived from **master's stop-loss distance** (`master risks 2% → slave auto-risks 2%`): `lots = balance×% ÷ (stopDistance ×
-  contractSize)`. Master open **without** stop-loss has no distance to size against → uses configured **max-risk fallback lot** (M7) if set, else skipped (`no_stop_loss`) not guessed. Proportional-**equity**/**free-margin** size off real account **equity** (`balance + Σ floating P&L`, derived per cTrader Open API which doesn't deliver equity), not plain balance — so master sitting on open profit/loss sizes copies right. Used margin not exposed by reconcile API, so free-margin treated as equity (honest available-funds proxy); other modes read balance + skip extra revaluation round-trip.
-- **Direction filter**: both / long-only / short-only. **Reverse**: flip side (+ swap SL↔TP) for contrarian copy.
-- **Manage-only** (Ignore-New-Trades / Close-Only): mirror closes, partial closes + protection changes on already-copied positions, but open **no** new positions/pending orders (skipped `manage_only`). Use to wind destination down without cutting existing copies.
-- **Sync-Open-on-start** / **Sync-Closed-on-start** (default on): on profile's **first** resync, whether to open copies for master's pre-existing positions, + whether to close copies master closed while profile stopped. Both apply only at start — mid-run reconnect always reconciles fully so desync recovers regardless.
-- **Symbol map** + **symbol filter** (whitelist / blacklist). Each symbol-map entry carries optional **per-symbol volume multiplier** (cMAM per-symbol override) scaling copy size for that symbol on top of destination's sizing (1 = no change). Whole map imports/exports as **CSV** (`GET …/symbol-map.csv`, `PUT …/symbol-map/csv`; columns `Source,Destination,VolumeMultiplier`) — each row validated through domain value objects, so malformed file can't produce invalid map.
-- **Trading-hours window** (C18) — per-destination daily UTC window (`start`/`end` minutes-of-day, end exclusive; `start == end` = all-day). New opens outside window skipped (`trading_hours`); window with `start > end` wraps past midnight (e.g. 22:00–06:00). Existing positions stay managed.
-- **Source-label filter** (C18, cTrader equivalent of MT magic-number filter) — when set, copy only master trades whose label matches **exactly** (e.g. one bot's trades, or manual-only label); else skipped (`source_label`). Empty = copy all. Carried on `ExecutionEvent.SourceLabel` from master position/order's `TradeData.Label`, honored on resync too.
-- **Account protection** (ZuluGuard / Global Account Protection) — watch destination's **live equity** (`balance + Σ floating P&L`, polled every `CopyDefaults.EquityGuardInterval`) against `StopEquity` floor and/or optional `TakeEquity` ceiling. On breach, apply mode: **CloseOnly** (stop new copies, keep managing existing), **Frozen** (stop opening), **SellOut** (close **every** copy on destination immediately). Once fired, destination latched — no new opens until host restarts — + `CopyAccountProtectionTriggered` alert raised. `SellOut` requires `StopEquity`; `TakeEquity` must sit above `StopEquity`. **No-guarantee caveat:** sell-out uses market execution — like every competitor's equivalent, can't guarantee fill price in fast/gapped market.
-- **Flatten-All panic button** (C8) — `POST /api/copy/profiles/{id}/flatten` immediately closes **every** copied position on every destination + locks against new opens. Routed cross-process: API sets flag, supervisor delivers to running host (reusing token-rotation channel), which flattens in place; flag cleared so fires exactly once (`CopyFlattenAll` alert). User then pauses/stops profile.
-- **Prop-firm rule guard** (C7) — enforcement prop-firm copier users ask for. Per destination, **daily-loss cap** (loss from day's opening equity) and/or **trailing-drawdown** limit (loss from running peak equity), both in deposit currency. On breach destination **auto-flattened** (every copy closed) + **locked out** rest of UTC day (new opens skipped `prop_lockout`); `CopyPropRuleBreached` alert fires. Lockout clears when UTC day rolls over (fresh baseline/peak taken). Shares same live-equity poll as account protection.
-- **Execution jitter** (C11, off by default) — random `0..N` ms delay before placing each copy, to de-correlate near-identical order timestamps across user's **own** accounts. **Compliance caveat:** aid for prop firms that *permit* copying — **not** tool to evade firm that forbids it; staying within your firm's rules is your responsibility.
-- **Config lock** (C9) — freeze destination's settings for period (`POST …/destinations/{id}/lock` with minutes). While locked, destination can't be removed (aggregate rejects with `CopyDestinationConfigLocked`) — deliberate guard against impulsive changes during drawdown. Lock expires automatically at its timestamp.
-- **Consistency pre-alert** (C10) — warn (once per UTC day) when destination's **daily profit** reaches configured percent of day's opening equity (`CopyConsistencyThresholdApproaching`), so prop-firm consistency rule respected *before* it trips. Profit-side, independent of loss-side lockout; runs off same day baseline as prop-rule guard.
-- **Order-type filter** — choose exactly which master order types to copy: market, market-range, limit, stop, stop-limit (`CopyOrderTypes` flags; default all). cMAM-style selectivity.
-- **Copy SL / Copy TP** — mirror master's stop-loss / take-profit, or manage protection independently.
-- **Copy trailing stop**, **mirror partial close**, **mirror scale-in** — each independently toggleable.
-- **Copy pending expiry** (default on) — mirror master pending order's Good-Till-Date expiry timestamp.
-- **Copy master slippage** (default on) — for market-range + stop-limit orders, place slave order with master's exact slippage-in-points (base price taken from slave's live spot).
-- **Guards**: max drawdown %, daily loss cap, max copy delay, slippage filter (skip copy if slave price moved beyond N pips from master entry). **Max copy delay** measured against master event's real server timestamp (`ExecutionEvent.ServerTimestamp`) via injected `TimeProvider`: signal older than configured max-lag skipped, so stale copy never placed late (previously delay always zero + guard dead).
-- **SL/TP precision normalization** (M6) — copied stop-loss/take-profit prices rounded to **destination** symbol's digit precision before amend, so master price at finer precision (or cross-broker digit mismatch) never trips server's `INVALID_STOPLOSS_TAKEPROFIT`.
-- **Rejection circuit breaker / Follower Guard** (G8) — destination rejecting `CopyDefaults.RejectionBudget` opens in a row is **tripped**: no new opens for cooldown window (`CopyDestinationTripped` alert fires), stopping rejection storm from hammering (prop-firm) account. Existing positions still managed + closed while tripped; breaker auto-resets after cooldown + successful copy clears counter.
-- **Lot sanity ceiling** (C14) — absolute max copy size and/or multiple-of-master cap. Computed copy exceeding absolute cap, or exceeding `N×` master's own lot size, **hard-blocked** (surfaced as `lot_sanity` skip, counted on `cmind.copy.skipped`) not placed — defends against catastrophic-oversize class (0.23-lot master turning into 3 lots on each receiver via runaway multiplier or rounding bug). Both dimensions default `0` (off).
+- **调整大小** (`MoneyManagementMode` + 参数)：固定手数、手数/名义乘数、按比例平衡/权益/可用保证金、固定风险 %、固定杠杆、自动按比例、**风险%-来自止损**(M7)。加上最小/最大手数界限和强制最小手数。**风险来自止损**调整大小目标，使其风险配置百分比的*其自身*余额，源自**主账户的止损距离** (`主账户风险 2% → 从属账户自动风险 2%`)：`手数 = 余额×% ÷ (止损距离 × 合约大小)`。主账户开仓**没有**止损时没有距离可用来调整大小 → 使用配置的**最大风险后备手数**(M7)（如果已设置），否则跳过 (`no_stop_loss`)。按比例**权益**/**可用保证金**以真实账户**权益** (`余额 + Σ 浮动 P&L`，由 cTrader 开放 API 派生，不提供权益)，而不是纯余额 — 所以主账户坐在开放利润/损失上调整大小会正确复制副本。使用的保证金不由对账 API 公开，所以可用保证金被视为权益（诚实可用资金代理）；其他模式读取余额并跳过额外的重新评估往返。
+- **方向过滤器**：双向 / 仅多头 / 仅空头。**反向**：翻转方向（加上交换 SL↔TP）进行反向复制。
+- **仅管理**（忽略新交易 / 仅平仓）：镜像已复制头寸的平仓、部分平仓和保护变更，但开仓**无**新头寸/待执行单（跳过 `manage_only`）。用于在不切断现有副本的情况下缩小目标账户。
+- **启动时同步开仓** / **启动时同步平仓**（默认开启）：在配置文件的**首次**对账时，是否为主账户的已存在头寸开启复制，以及是否关闭配置文件停止时主账户关闭的副本。两者仅在启动时适用——中途运行重新连接总是完全对账，所以无论如何都会从不同步中恢复。
+- **符号映射** + **符号过滤器**（白名单 / 黑名单）。每个符号映射项目都带有可选的**逐符号交易量倍数**（cMAM 逐符号覆盖）在目标账户大小调整之外缩放复制大小（1 = 无更改）。整个映射导入/导出为 **CSV**（`GET …/symbol-map.csv`, `PUT …/symbol-map/csv`；列 `Source,Destination,VolumeMultiplier`）— 每行通过域值对象验证，所以格式不正确的文件无法产生无效的映射。
+- **交易小时窗口**(C18) — 每个目标账户的日常 UTC 窗口（`开始`/`结束` 分钟-of-day，结束不含；`开始 == 结束` = 全天）。窗口外的新开仓被跳过 (`trading_hours`)；`开始 > 结束` 的窗口在午夜后换行（例如 22:00–06:00）。现有头寸保持受管理。
+- **源标签过滤器**(C18，cTrader 的 MT 幻数过滤器等价物) — 设置时，仅复制源标签**完全**匹配的主交易（例如一个机器人的交易或仅手动标签）；否则跳过 (`source_label`)。空 = 复制全部。在主头寸/单的 `TradeData.Label` 上通过 `ExecutionEvent.SourceLabel` 执行，在对账时也得到遵守。
+- **账户保护**(ZuluGuard / 全局账户保护) — 监视目标账户的**实时权益** (`余额 + Σ 浮动 P&L`，每 `CopyDefaults.EquityGuardInterval` 轮询一次) 对抗 `StopEquity` 底线和/或可选 `TakeEquity` 上限。突破时，应用模式：**仅平仓**（停止新复制，保持管理现有）、**冻结**（停止开仓）、**清仓**（立即关闭目标账户上的**每个**复制）。一旦触发，目标账户被锁定——直到主机重启才有新开仓——加 `CopyAccountProtectionTriggered` 警报被引发。`SellOut` 需要 `StopEquity`；`TakeEquity` 必须位于 `StopEquity` 上方。**无保证警告：**清仓使用市场执行——就像每个竞争对手的等价物，无法保证在快速/缺口市场中的成交价。
+- **平仓全部紧急按钮**(C8) — `POST /api/copy/profiles/{id}/flatten` 立即关闭**每个**目标账户上的每个复制头寸并锁定防止新开仓。跨进程路由：API 设置标志，监督器传递给运行中的主机（重用令牌轮转通道），它就地平仓；标志被清除，所以仅触发一次 (`CopyFlattenAll` 警报)。用户然后暂停/停止配置文件。
+- **专有公司规则守卫**(C7) — 执行专有公司复制器用户要求的。每个目标账户，**日损失上限**（来自该天开盘权益的损失）和/或**跟踪回撤**限制（来自运行峰值权益的损失），两者都以存款货币表示。突破时目标账户**自动平仓**（每个复制被关闭）加**锁定**该 UTC 日剩余时间（新开仓跳过 `prop_lockout`）；`CopyPropRuleBreached` 警报触发。当 UTC 日翻转时锁定解除（采用新的基线/峰值）。与账户保护共享相同的实时权益轮询。
+- **执行抖动**(C11，默认关闭) — 随机 `0..N` 毫秒延迟后放置每个复制，以去相关用户**自己**账户中的接近相同订单时间戳。**合规警告：**对许可复制的专有公司的帮助——**不是**逃避禁止它的公司的工具；遵守您公司的规则是您的责任。
+- **配置锁定**(C9) — 在期间冻结目标账户的设置（`POST …/destinations/{id}/lock` 含分钟）。被锁定时，目标账户无法被删除（聚合以 `CopyDestinationConfigLocked` 拒绝）— 故意防止在回撤期间冲动更改。锁定在其时间戳处自动过期。
+- **一致性预警**(C10) — 警告（每 UTC 日一次）当目标账户的**日收益**达到该日开盘权益的配置百分比时（`CopyConsistencyThresholdApproaching`），这样专有公司一致性规则在触发前被尊重。收益方，独立于损失方锁定；以与专有规则守卫相同的日基线运行。
+- **订单类型过滤器** — 选择精确要复制的主订单类型：市场、市场范围、限价、止损、止损限价（`CopyOrderTypes` 标志；默认全部）。cMAM 风格的选择性。
+- **复制 SL / 复制 TP** — 镜像主账户的止损 / 获利，或独立管理保护。
+- **复制跟踪止损**、**镜像部分平仓**、**镜像加仓** — 各自独立可切换。
+- **复制待执行单过期**（默认开启）— 镜像主待执行单的止期时间戳。
+- **复制主滑点**（默认开启）— 对于市场范围和止损限价单，用主账户的确切滑点-in-points 放置从属单（基价从从属账户的实时现价取得）。
+- **守卫**：最大回撤 %、日损失上限、最大复制延迟、滑点过滤器（如果从属价格从主账户进场价超过 N 点，跳过复制）。**最大复制延迟**针对主账户事件的真实服务器时间戳（`ExecutionEvent.ServerTimestamp`）通过注入的 `TimeProvider` 测量：比配置最大滞后时间更早的信号被跳过，所以陈旧的复制永不晚地被放置（以前延迟总是为零并且守卫死亡）。
+- **SL/TP 精度规范化**(M6) — 复制的止损/获利价格在修改前舍入到**目标**符号的数字精度，所以主账户价格在更细精度（或跨经纪商数字不匹配）永不触发服务器的 `INVALID_STOPLOSS_TAKEPROFIT`。
+- **拒绝断路器 / 追随者守卫**(G8) — 目标账户连续拒绝 `CopyDefaults.RejectionBudget` 开仓被**触发**：冷却窗口期间无新开仓（`CopyDestinationTripped` 警报触发），阻止拒绝风暴敲击（专有公司）账户。现有头寸仍被管理和在触发时关闭；断路器在冷却后自动重置加成功复制清除计数器。
+- **手数理智上限**(C14) — 绝对最大复制大小和/或倍数上限。计算的复制超过绝对上限，或超过主账户自身手数的 `N×`，被**硬阻止**（显示为 `lot_sanity` 跳过，计数在 `cmind.copy.skipped`）不被放置——防御对灾难性-超大类（0.23-手主变成每个接收者上 3 手通过失控倍数或舍入错误）。两个维度默认 `0`（关闭）。
 
-## Reliability & edge cases
+## 可靠性和边界情况
 
-Engine built for reality that anything can fail anytime:
+引擎为任何事物随时可能失败的现实构建：
 
-- **Slave-pending fill-correlation timeout** (C13) — mirrored slave pending whose master pending vanished (neither resting nor freshly filled) cancelled after correlation timeout, so slave copy can't fill uncorrelated into unmanaged position (`CopyPendingTimedOut`). Resync also cleans order-id-labelled filled-pending orphan.
-- **Robust close/flatten** (M8) — closing orphan on resync, or flattening on guard breach, tolerates position broker already closed (`POSITION_NOT_FOUND`): each close runs independently, so one stale id never aborts resync or leaves rest of account un-flattened.
+- **从属待执行单填充相关超时**(C13) — 镜像的从属待执行单其主待执行单消失（既不停留也非新填充）在相关超时后被取消，所以从属复制无法不相关地填充到非管理头寸（`CopyPendingTimedOut`）。对账也清理订单-id-标签的已填充待执行单孤立。
+- **强健的平仓/平仓**(M8) — 在对账时关闭孤立，或在守卫突破时平仓，容忍经纪商已关闭的头寸（`POSITION_NOT_FOUND`）：每个平仓独立运行，所以一个陈旧的 id 永不中止对账或留下账户的部分未平仓。
 
-- **Start with master already in trades** — on start host reconciles + opens copies for master's existing positions.
-- **Connection drops / desync** — on reconnect host reconciles: opens missing copies, closes orphans, re-labels pendings. No duplicate orders.
-- **Order placement failure** — failure on one destination logged, never blocks other destinations.
-- **Single valid token per cID** — cTrader invalidates cID's old access token moment new one issued. cMind swaps running host's token **in place** (re-auth on live socket) so copying continues without dropping stream. See [token lifecycle](token-lifecycle.md).
+- **启动时主账户已在交易中** — 在启动时主机对账和为主账户的现有头寸开启副本。
+- **连接掉线 / 不同步** — 重新连接时主机对账：开启缺失的副本，关闭孤立，重新标记待执行单。无重复订单。
+- **订单放置失败** — 一个目标账户的失败被记录，永不阻止其他目标账户。
+- **单个有效令牌每 cID** — cTrader 在发出新令牌时刻无效化 cID 的旧访问令牌。cMind 交换运行中主机的令牌**就地**（在实时插座上重新认证）所以复制继续无需掉线。参见[令牌生命周期](token-lifecycle.md)。
 
-## Auditability
+## 可审计性
 
-Every action emits structured, source-generated log event (`LogMessages`) with profile id, destination cID, order/position ids, + values — order placed/skipped (with reason), partial close, protection applied, trailing applied, pending placed/amended/cancelled, expiry mirrored, market-range slippage mirrored, token swapped, resync summary. This is the audit trail for compliance + dispute resolution.
+每个操作使用配置文件 id、目标 cID、订单/头寸 id 和值发出结构化的、源生成的日志事件（`LogMessages`）— 订单放置/跳过（带原因）、部分平仓、应用的保护、应用的跟踪、待执行单放置/修改/取消、镜像的过期、镜像的市场范围滑点、交换的令牌、对账摘要。这是用于合规和纠纷解决的审计跟踪。
 
-Alongside logs, engine emits **OpenTelemetry metrics** on `cMind.Copy` meter (registered in shared OTel pipeline, exported over OTLP / to Azure Monitor like rest): `cmind.copy.latency` (master-event → dispatch, ms), `cmind.copy.dispatch.duration` (fan-out to all destinations, ms), `cmind.copy.slippage.points`, `cmind.copy.placed` (tagged by destination), `cmind.copy.skipped` (tagged by reason), + `cmind.copy.failed`. These make latency/slippage regression measurable, not just visible in log line — live suite asserts them against budget.
+除日志外，引擎在 `cMind.Copy` 仪表盘上发出 **OpenTelemetry 指标**（在共享 OTel 管道中注册，通过 OTLP 导出 / 到 Azure Monitor 如其余部分）：`cmind.copy.latency`（主事件 → 分发，毫秒）、`cmind.copy.dispatch.duration`（扇出所有目标，毫秒）、`cmind.copy.slippage.points`、`cmind.copy.placed`（按目标标记）、`cmind.copy.skipped`（按原因标记）、加 `cmind.copy.failed`。这使延迟/滑点回归可测量，不仅在日志行中可见——实时测试套件断言其对抗预算。
 
 ## API
 
-- `GET /api/copy/profiles` — list.
-- `POST /api/copy/profiles` — create (with optional destination account ids).
-- `GET /api/copy/profiles/{id}` — full detail incl. every destination option.
-- `POST /api/copy/profiles/{id}/destinations` — add a destination with the full option set.
-- `DELETE /api/copy/profiles/{id}/destinations/{destinationId}` — remove.
-- `POST /api/copy/profiles/{id}/{start|pause|stop}` — lifecycle.
+- `GET /api/copy/profiles` — 列表。
+- `POST /api/copy/profiles` — 创建（带可选目标账户 id）。
+- `GET /api/copy/profiles/{id}` — 完整细节包含每个目标账户选项。
+- `POST /api/copy/profiles/{id}/destinations` — 用完整选项集添加目标账户。
+- `DELETE /api/copy/profiles/{id}/destinations/{destinationId}` — 删除。
+- `POST /api/copy/profiles/{id}/{start|pause|stop}` — 生命周期。
 
-## Tests
+## 测试
 
-- **Unit** (`tests/UnitTests/CopyTrading`) — sizing modes, decision filters, order-type filter, expiry copy, market-range/stop-limit slippage, SL/TP toggles, partial close, pending amend/cancel, start-with-open, disconnect→desync→resync, in-place token swap, cross-cID invalidation. Runs against `FakeTradingSession`, cTrader-faithful in-memory simulator.
-- **Integration** (`tests/IntegrationTests/CopyLive`) — node-affinity/lease claim, token-version propagation on real Postgres.
-- **E2E** (`tests/E2ETests`) — destination-option round-trip through API + UI, full lifecycle.
-- **Stress / DST** (`tests/StressTests`) — deterministic-simulation testing: seeded randomized workloads + fault injection (socket flap, order rejection, market-range rejection, token rotation, node death) drive `CopyEngineHost` to quiescence + assert convergence invariants. See [testing/stress-testing.md](../testing/stress-testing.md). This suite surfaced + fixed real startup race: `OnReconnected` wired before initial reference-load + resync, so socket flap during startup could run second resync concurrently + corrupt host's non-concurrent state dictionaries — startup load + first resync now run under `_stateGate`.
-- **Live** — real cTrader demo accounts; see [testing/live-copy-trading.md](../testing/live-copy-trading.md).
+- **单元** (`tests/UnitTests/CopyTrading`) — 调整大小模式、决策过滤器、订单类型过滤器、过期复制、市场范围/止损限价滑点、SL/TP 切换、部分平仓、待执行单修改/取消、启动-with-open、断开→不同步→对账、就地令牌交换、跨 cID 无效化。对 `FakeTradingSession` 运行，cTrader 忠实的内存模拟器。
+- **集成** (`tests/IntegrationTests/CopyLive`) — 节点亲和性/租赁索赔、令牌版本在真实 Postgres 上的传播。
+- **E2E** (`tests/E2ETests`) — 目标账户选项通过 API + UI 的往返、完整生命周期。
+- **压力 / DST** (`tests/StressTests`) — 确定性-模拟测试：种子随机工作负载 + 故障注入（插座翻转、订单拒绝、市场范围拒绝、令牌轮转、节点死亡）驱动 `CopyEngineHost` 到平息 + 断言收敛不变量。参见 [testing/stress-testing.md](../testing/stress-testing.md)。此测试套件发现 + 修复了真实启动竞态：`OnReconnected` 在初始引用加载和对账之前被连接，所以启动期间的插座翻转可以并发运行第二个对账并破坏主机的非并发状态字典——启动加载和首次对账现在在 `_stateGate` 下运行。
+- **实时** — 真实 cTrader 演示账户；参见 [testing/live-copy-trading.md](../testing/live-copy-trading.md)。
 
-See [dev-credentials.md](../testing/dev-credentials.md) for single credentials file live + E2E tiers read.
-<!-- [ZH-HANS] Translation needed -->
+参见 [dev-credentials.md](../testing/dev-credentials.md) 获取实时和 E2E 层读取的单一凭证文件。
+
+## 配置文件控制和目标账户管理
+
+启动/停止是每个配置文件行上的图标按钮（当操作不适用时禁用）。源和目标账户由其**账户号**显示，永远不是内部 id。单击配置文件打开**对话框**来管理其目标账户（用完整逐目标设置添加/删除）。

@@ -11,12 +11,13 @@ public sealed class CopyTradingTests(AppFixture app)
     private static readonly string Suffix = Guid.NewGuid().ToString("N")[..6];
     private static readonly LocatorAssertionsToBeVisibleOptions Slow = new() { Timeout = 15000 };
 
-    // ---------------- UI: profile creation is dialog-driven ----------------
+    // ---------------- UI: profile creation is a full page ----------------
 
     [Fact]
-    public async Task New_profile_dialog_creates_profile()
+    public async Task New_profile_page_creates_profile_with_symbol_map_from_proper_controls()
     {
         var page = await app.NewAuthedPageAsync();
+        var api = page.APIRequest;
 
         await GotoAsync(page, "/accounts");
         var cid = $"ui-cid-{Suffix}";
@@ -33,18 +34,52 @@ public sealed class CopyTradingTests(AppFixture app)
 
         await GotoAsync(page, "/copy-trading");
         var profileName = $"ui-profile-{Suffix}";
-        var dialog = await OpenDialogAsync(page, "New Profile");
-        await dialog.GetByLabel("Profile name").FillAsync(profileName);
-        // Pick the source (master) account from the first select.
-        await dialog.Locator(".mud-select").First.ClickAsync();
+
+        // The New Profile button navigates to the full-page create form (not a dialog).
+        await page.Locator("[data-testid=copy-new-profile]").ClickAsync();
+        await page.WaitForURLAsync("**/copy-trading/new");
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+
+        await page.GetByLabel("Profile name").FillAsync(profileName);
+        // Source (master) is the first select on the page.
+        await page.Locator(".mud-select").First.ClickAsync();
         await page.Locator($".mud-list-item:has-text('{master}')").First.ClickAsync();
-        // The enriched dialog requires at least one destination — select all remaining accounts.
-        await dialog.Locator("[data-testid=copy-select-all]").ClickAsync();
-        await SubmitAsync(dialog, "Create");
+        await page.Locator("[data-testid=copy-select-all]").ClickAsync();
+
+        // Symbol map via the proper add/remove controls (no comma-separated blob).
+        await page.Locator("[data-testid=symbol-map-source]").FillAsync("EURUSD");
+        await page.Locator("[data-testid=symbol-map-destination]").FillAsync("EUR.USD");
+        await page.Locator("[data-testid=symbol-map-add]").ClickAsync();
+        await Assertions.Expect(page.Locator("[data-testid=symbol-map-rows]"))
+            .ToContainTextAsync("EUR.USD", new() { Timeout = 15000 });
+
+        await page.Locator("[data-testid=copy-create]").ClickAsync();
+        await page.WaitForURLAsync("**/copy-trading");
 
         var row = page.Locator($"tr:has-text('{profileName}')");
         await Assertions.Expect(row).ToBeVisibleAsync(Slow);
         await Assertions.Expect(row.GetByText("Draft")).ToBeVisibleAsync(Slow);
+
+        // The map entered through the UI controls reached the destination.
+        var profiles = await GetJsonAsync(api, "/api/copy/profiles");
+        var id = profiles.EnumerateArray().First(p => p.GetProperty("name").GetString() == profileName)
+            .GetProperty("id").GetString()!;
+        var detail = await GetJsonAsync(api, $"/api/copy/profiles/{id}");
+        var dest = detail.GetProperty("destinations").EnumerateArray().Single();
+        var map = dest.GetProperty("symbolMaps").EnumerateArray().Single();
+        Assert.Equal("EURUSD", map.GetProperty("source").GetString());
+    }
+
+    [Fact]
+    public async Task New_profile_page_offers_import_export_controls()
+    {
+        var page = await app.NewAuthedPageAsync();
+        await GotoAsync(page, "/copy-trading/new");
+
+        // Import/export of the whole settings block and of the symbol map (CSV) are offered as controls.
+        await Assertions.Expect(page.Locator("[data-testid=copy-export-settings]")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.Locator("[data-testid=copy-import-settings]")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.Locator("[data-testid=symbol-map-import]")).ToBeVisibleAsync(Slow);
     }
 
     // ---------------- Non-UI (API): multi-slave, options, lifecycle ----------------

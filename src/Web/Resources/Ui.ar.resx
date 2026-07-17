@@ -200,4 +200,114 @@
   <data name="copyDetail.title" xml:space="preserve"><value>Copy Profile</value></data>
   <data name="copyDetail.notFound" xml:space="preserve"><value>This copy profile no longer exists - it may have been deleted or you do not have access to it.</value></data>
   <data name="copyDetail.back" xml:space="preserve"><value>Back to copy trading</value></data>
+  <data name="copy.symbols.add" xml:space="preserve"><value>إضافة</value></data>
+  <data name="copy.symbols.none" xml:space="preserve"><value>لم يتم إضافة رموز بعد</value></data>
+  <data name="copy.map.source" xml:space="preserve"><value>رمز المصدر</value></data>
+  <data name="copy.map.destination" xml:space="preserve"><value>رمز الوجهة</value></data>
+  <data name="copy.map.multiplier" xml:space="preserve"><value>الحجم ×</value></data>
+  <data name="copy.map.add" xml:space="preserve"><value>إضافة</value></data>
+  <data name="copy.map.none" xml:space="preserve"><value>لا توجد تعيينات رموز بعد</value></data>
+  <data name="copy.map.remove" xml:space="preserve"><value>إزالة التعيين</value></data>
+  <data name="copy.map.exportCsv" xml:space="preserve"><value>تصدير CSV</value></data>
+  <data name="copy.map.importCsv" xml:space="preserve"><value>استيراد CSV</value></data>
+  <data name="copy.map.imported" xml:space="preserve"><value>تم استيراد {0} تعيين(ات)</value></data>
+  <data name="copy.map.importEmpty" xml:space="preserve"><value>لم يتم العثور على تعيينات في الملف</value></data>
+  <data name="copy.map.importFailed" xml:space="preserve"><value>تعذر قراءة ملف CSV</value></data>
+  <data name="copyNew.title" xml:space="preserve"><value>ملف تعريف نسخ جديد</value></data>
+  <data name="copyNew.back" xml:space="preserve"><value>العودة إلى نسخ التداول</value></data>
+  <data name="copyNew.section.identity" xml:space="preserve"><value>الملف الشخصي والحسابات</value></data>
+  <data name="copyNew.section.sizing" xml:space="preserve"><value>تحديد الحجم والمخاطر</value></data>
+  <data name="copyNew.section.behaviour" xml:space="preserve"><value>سلوك النسخ</value></data>
+  <data name="copyNew.section.orderTypes" xml:space="preserve"><value>أنواع الطلبات</value></data>
+  <data name="copyNew.section.symbols" xml:space="preserve"><value>الرموز</value></data>
+  <data name="copyNew.section.portability" xml:space="preserve"><value>استيراد / تصدير الإعدادات</value></data>
+  <data name="copyNew.name" xml:space="preserve"><value>اسم الملف الشخصي</value></data>
+  <data name="copyNew.name.required" xml:space="preserve"><value>اسم الملف الشخصي مطلوب</value></data>
+  <data name="copyNew.source" xml:space="preserve"><value>حساب المصدر (الرئيسي)</value></data>
+  <data name="copyNew.source.required" xml:space="preserve"><value>حساب المصدر مطلوب</value></data>
+  <data name="copyNew.destinations" xml:space="preserve"><value>حسابات الوجهة (العبدة)</value></data>
+  <data name="copyNew.destinations.count" xml:space="preserve"><value>{0} حساب(ات) مختار(ة)</value></data>
+  <data name="copyNew.destinations.help" xml:space="preserve"><value>اختر حسابًا واحدًا أو أكثر لنسخ الصفقات إليها (الحساب الرئيسي مستثنى)</value></data>
+  <data name="copyNew.selectAll" xml:space="preserve"><value>تحديد الكل</value></data>
+  <data name="copyNew.clear" xml:space="preserve"><value>مسح</value></data>
+  <data name="copyNew.mode" xml:space="preserve"><value>إدارة الأموال</value></data>
+  <data name="copyNew.parameter" xml:space="preserve"><value>المعامل</value></data>
+  <data name="copyNew.slippage" xml:space="preserve"><value>الانزلاق (pips)</value></data>
+  <data name="copyNew.direction" xml:space="preserve"><value>الاتجاه</value></data>
+  <data name="copyNew.minLot" xml:space="preserve"><value>الحد الأدنى للحجم</value></data>
+  <data name="copyNew.maxLot" xml:space="preserve"><value>الحد الأقصى للحجم</value></data>
+  <data name="copyNew.maxDelay" xml:space="preserve"><value>الحد الأقصى للتأخير (ث)</value></data>
+  <data name="copyNew.maxDrawdown" xml:space="preserve"><value>الحد الأقصى للتراجع %</value></data>
+  <data name="copyNew.dailyLoss" xml:space="preserve"><value>حد الخسارة اليومية</value></data>
+  <data name="copyNew.reverse" xml:space="preserve"><value>عكس</value></data>
+  <data name="copyNew.forceMin" xml:space="preserve"><value>فرض الحد الأدنى للحجم</value></data>
+  <data name="copyNew.copySl" xml:space="preserve"><value>نسخ SL</value></data>
+  <data name="copyNew.copyTp" xml:space="preserve"><value>نسخ TP</value></data>
+  <data name="copyNew.partialClose" xml:space="preserve"><value>إغلاق جزئي</value></data>
+  <data name="copyNew.scaleIn" xml:space="preserve"><value>الإضافة التدريجية</value></data>
+  <data name="copyNew.pending" xml:space="preserve"><value>الطلبات المعلقة</value></data>
+  <data name="copyNew.trailing" xml:space="preserve"><value>وقف الخسارة المتحرك</value></data>
+  <data name="copyNew.copyExpiry" xml:space="preserve"><value>نسخ الانتهاء</value></data>
+  <data name="copyNew.copySlippage" xml:space="preserve"><value>نسخ الانزلاق</value></data>
+  <data name="copyNew.market" xml:space="preserve"><value>سوق</value></data>
+  <data name="copyNew.marketRange" xml:space="preserve"><value>نطاق السوق</value></data>
+  <data name="copyNew.limit" xml:space="preserve"><value>حد</value></data>
+  <data name="copyNew.stop" xml:space="preserve"><value>إيقاف</value></data>
+  <data name="copyNew.stopLimit" xml:space="preserve"><value>حد الإيقاف</value></data>
+  <data name="copyNew.filterMode" xml:space="preserve"><value>مرشح الرموز</value></data>
+  <data name="copyNew.filterSymbols" xml:space="preserve"><value>تصفية الرموز</value></data>
+  <data name="copyNew.symbolMap" xml:space="preserve"><value>خريطة الرموز</value></data>
+  <data name="copyNew.exportSettings" xml:space="preserve"><value>تصدير الإعدادات</value></data>
+  <data name="copyNew.importSettings" xml:space="preserve"><value>استيراد الإعدادات</value></data>
+  <data name="copyNew.settingsImported" xml:space="preserve"><value>تم استيراد الإعدادات</value></data>
+  <data name="copyNew.settingsImportFailed" xml:space="preserve"><value>تعذر قراءة ملف الإعدادات</value></data>
+  <data name="copyNew.cancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="copyNew.create" xml:space="preserve"><value>إنشاء ملف تعريف</value></data>
+  <data name="copyNew.created" xml:space="preserve"><value>تم إنشاء الملف الشخصي</value></data>
+  <data name="copyNew.createFailed" xml:space="preserve"><value>فشل في إنشاء الملف الشخصي</value></data>
+  <data name="copyNew.partialFailed" xml:space="preserve"><value>تم إنشاء الملف الشخصي، لكن لم يتمكن من تطبيق بعض إعدادات الوجهة</value></data>
+  <data name="copyNew.tip.name" xml:space="preserve"><value>اسم قصير للتعرف على ملف تعريف النسخ هذا في القائمة.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>الحساب الرئيسي الذي يتم نسخ صفقاته.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>حساب واحد أو أكثر يتلقى نسخًا من صفقات الحساب الرئيسي. الحساب الرئيسي نفسه مستثنى.</value></data>
+  <data name="copyNew.tip.mode" xml:space="preserve"><value>كيفية تحديد حجم كل صفقة تم نسخها بالنسبة للحساب الرئيسي: حجم ثابت، أو مضاعف، أو نسبة من الرصيد/الأسهم، أو نسبة مخاطر ثابتة.</value></data>
+  <data name="copyNew.tip.parameter" xml:space="preserve"><value>الرقم الذي يستخدمه وضع تحديد الحجم — مثلاً المضاعف (1 = نفس الحجم) أو نسبة المخاطر.</value></data>
+  <data name="copyNew.tip.slippage" xml:space="preserve"><value>الحد الأقصى لانحراف السعر، بالـ pips، المتسامح به عند وضع أمر النسخ قبل رفضه.</value></data>
+  <data name="copyNew.tip.direction" xml:space="preserve"><value>نسخ كلا الاتجاهين، أو فقط صفقات الشراء أو فقط صفقات البيع للحساب الرئيسي.</value></data>
+  <data name="copyNew.tip.minLot" xml:space="preserve"><value>أصغر حجم حد يمكن للنسخة أن تستخدمه. 0 = لا يوجد حد أدنى.</value></data>
+  <data name="copyNew.tip.maxLot" xml:space="preserve"><value>أكبر حجم حد يمكن للنسخة أن تستخدمه. 0 = لا يوجد حد أقصى.</value></data>
+  <data name="copyNew.tip.maxDelay" xml:space="preserve"><value>تخطي النسخ إذا لم تتمكن من وضعها خلال هذا العدد من الثواني من ملء الحساب الرئيسي. 0 = لا يوجد حد.</value></data>
+  <data name="copyNew.tip.maxDrawdown" xml:space="preserve"><value>إيقاف النسخ إلى وجهة معينة إذا تجاوز تراجع أسهمها هذه النسبة. 0 = معطل.</value></data>
+  <data name="copyNew.tip.dailyLoss" xml:space="preserve"><value>التوقف عن النسخ لهذا اليوم إذا وصلت الخسارة المحققة للوجهة إلى هذا المبلغ. 0 = معطل.</value></data>
+  <data name="copyNew.tip.reverse" xml:space="preserve"><value>عكس صفقات الحساب الرئيسي في الاتجاه المعاكس (الشراء يصبح البيع).</value></data>
+  <data name="copyNew.tip.forceMin" xml:space="preserve"><value>إذا كان الحجم المحسوب أقل من الحد الأدنى للحجم، ضع الحد الأدنى بدلاً من التخطي.</value></data>
+  <data name="copyNew.tip.copySl" xml:space="preserve"><value>نسخ وقف الخسارة للحساب الرئيسي إلى أمر الوجهة.</value></data>
+  <data name="copyNew.tip.copyTp" xml:space="preserve"><value>نسخ جني الأرباح للحساب الرئيسي إلى أمر الوجهة.</value></data>
+  <data name="copyNew.tip.partialClose" xml:space="preserve"><value>عندما يغلق الحساب الرئيسي جزئيًا موضعًا، أغلق نفس النسبة على الوجهة.</value></data>
+  <data name="copyNew.tip.scaleIn" xml:space="preserve"><value>عندما يضيف الحساب الرئيسي إلى موضع، أضف بنسبة متساوية على الوجهة.</value></data>
+  <data name="copyNew.tip.pending" xml:space="preserve"><value>نسخ أوامر الحساب الرئيسي المعلقة (الحد/الإيقاف)، وليس فقط ملء السوق.</value></data>
+  <data name="copyNew.tip.trailing" xml:space="preserve"><value>نسخ تعديلات وقف الخسارة المتحركة للحساب الرئيسي.</value></data>
+  <data name="copyNew.tip.copyExpiry" xml:space="preserve"><value>نسخ وقت انتهاء أوامر الحساب الرئيسي المعلقة.</value></data>
+  <data name="copyNew.tip.copySlippage" xml:space="preserve"><value>استخدم إعداد الانزلاق الخاص بالحساب الرئيسي بدلاً من القيمة أعلاه.</value></data>
+  <data name="copyNew.tip.orderTypes" xml:space="preserve"><value>أي من أنواع أوامر الحساب الرئيسي يتم نسخها. عطل النوع لتجاهل تلك الأوامر.</value></data>
+  <data name="copyNew.tip.market" xml:space="preserve"><value>نسخ أوامر السوق.</value></data>
+  <data name="copyNew.tip.marketRange" xml:space="preserve"><value>نسخ أوامر نطاق السوق.</value></data>
+  <data name="copyNew.tip.limit" xml:space="preserve"><value>نسخ أوامر الحد.</value></data>
+  <data name="copyNew.tip.stop" xml:space="preserve"><value>نسخ أوامر الإيقاف.</value></data>
+  <data name="copyNew.tip.stopLimit" xml:space="preserve"><value>نسخ أوامر حد الإيقاف.</value></data>
+  <data name="copyNew.tip.filterMode" xml:space="preserve"><value>بلا = نسخ كل رمز. القائمة البيضاء = نسخ الرموز المدرجة فقط. القائمة السوداء = نسخ جميع الرموز باستثناء الرموز المدرجة.</value></data>
+  <data name="copyNew.tip.symbolMap" xml:space="preserve"><value>ترجمة رمز الحساب الرئيسي إلى رمز وسيط الوجهة، مع مضاعف حجم اختياري لكل رمز. استيراد أو تصدير الخريطة بالكامل كملف CSV.</value></data>
+  <data name="copyNew.tip.portability" xml:space="preserve"><value>احفظ جميع الإعدادات في هذا النموذج في ملف، أو حمّلها من ملف تم حفظه مسبقًا.</value></data>
+  <data name="copyNew.err.name" xml:space="preserve"><value>اسم الملف الشخصي مطلوب.</value></data>
+  <data name="copyNew.err.source" xml:space="preserve"><value>اختر حساب مصدر (رئيسي).</value></data>
+  <data name="copyNew.err.destinations" xml:space="preserve"><value>اختر حساب وجهة واحد على الأقل (عبد).</value></data>
+  <data name="copyNew.err.parameter" xml:space="preserve"><value>يجب أن يكون المعامل أكبر من صفر.</value></data>
+  <data name="copyNew.err.slippage" xml:space="preserve"><value>لا يمكن أن يكون الانزلاق سالبًا.</value></data>
+  <data name="copyNew.err.minLot" xml:space="preserve"><value>لا يمكن أن يكون الحد الأدنى للحجم سالبًا.</value></data>
+  <data name="copyNew.err.maxLot" xml:space="preserve"><value>لا يمكن أن يكون الحد الأقصى للحجم سالبًا.</value></data>
+  <data name="copyNew.err.lotOrder" xml:space="preserve"><value>يجب أن يكون الحد الأقصى للحجم أكبر من أو يساوي الحد الأدنى للحجم.</value></data>
+  <data name="copyNew.err.maxDelay" xml:space="preserve"><value>لا يمكن أن يكون الحد الأقصى للتأخير سالبًا.</value></data>
+  <data name="copyNew.err.drawdown" xml:space="preserve"><value>يجب أن يكون الحد الأقصى للتراجع % بين 0 و 100.</value></data>
+  <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>لا يمكن أن يكون حد الخسارة اليومية سالبًا.</value></data>
+  <data name="copyNew.err.orderTypes" xml:space="preserve"><value>تفعيل نوع أمر واحد على الأقل.</value></data>
+  <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>أضف رمزًا واحدًا على الأقل لمرشح الرموز المحدد.</value></data>
 </root>

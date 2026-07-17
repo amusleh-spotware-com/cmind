@@ -200,4 +200,114 @@
   <data name="copyDetail.title" xml:space="preserve"><value>Copy Profile</value></data>
   <data name="copyDetail.notFound" xml:space="preserve"><value>This copy profile no longer exists - it may have been deleted or you do not have access to it.</value></data>
   <data name="copyDetail.back" xml:space="preserve"><value>Back to copy trading</value></data>
+  <data name="copy.symbols.add" xml:space="preserve"><value>Pridať</value></data>
+  <data name="copy.symbols.none" xml:space="preserve"><value>Zatiaľ neboli pridané žiadne symboly</value></data>
+  <data name="copy.map.source" xml:space="preserve"><value>Zdrojový symbol</value></data>
+  <data name="copy.map.destination" xml:space="preserve"><value>Cieľový symbol</value></data>
+  <data name="copy.map.multiplier" xml:space="preserve"><value>Objem ×</value></data>
+  <data name="copy.map.add" xml:space="preserve"><value>Pridať</value></data>
+  <data name="copy.map.none" xml:space="preserve"><value>Zatiaľ neboli vytvorené žiadne mapovania symbolov</value></data>
+  <data name="copy.map.remove" xml:space="preserve"><value>Odstrániť mapovanie</value></data>
+  <data name="copy.map.exportCsv" xml:space="preserve"><value>Exportovať CSV</value></data>
+  <data name="copy.map.importCsv" xml:space="preserve"><value>Importovať CSV</value></data>
+  <data name="copy.map.imported" xml:space="preserve"><value>{0} mapovanie(í) importované</value></data>
+  <data name="copy.map.importEmpty" xml:space="preserve"><value>Žiadne mapovania neboli nájdené v súbore</value></data>
+  <data name="copy.map.importFailed" xml:space="preserve"><value>Nepodarilo sa prečítať súbor CSV</value></data>
+  <data name="copyNew.title" xml:space="preserve"><value>Nový profil kopírovania</value></data>
+  <data name="copyNew.back" xml:space="preserve"><value>Späť na Copy Trading</value></data>
+  <data name="copyNew.section.identity" xml:space="preserve"><value>Profil a účty</value></data>
+  <data name="copyNew.section.sizing" xml:space="preserve"><value>Veľkosť a riziko</value></data>
+  <data name="copyNew.section.behaviour" xml:space="preserve"><value>Správanie kopírovania</value></data>
+  <data name="copyNew.section.orderTypes" xml:space="preserve"><value>Typy objednávok</value></data>
+  <data name="copyNew.section.symbols" xml:space="preserve"><value>Symboly</value></data>
+  <data name="copyNew.section.portability" xml:space="preserve"><value>Import / export nastavení</value></data>
+  <data name="copyNew.name" xml:space="preserve"><value>Názov profilu</value></data>
+  <data name="copyNew.name.required" xml:space="preserve"><value>Názov profilu je povinný</value></data>
+  <data name="copyNew.source" xml:space="preserve"><value>Zdrojový (master) účet</value></data>
+  <data name="copyNew.source.required" xml:space="preserve"><value>Zdrojový účet je povinný</value></data>
+  <data name="copyNew.destinations" xml:space="preserve"><value>Cieľové (slave) účty</value></data>
+  <data name="copyNew.destinations.count" xml:space="preserve"><value>{0} účet(ov) vybraný(ch)</value></data>
+  <data name="copyNew.destinations.help" xml:space="preserve"><value>Vyberte jeden alebo viac účtov, do ktorých sa majú kopírovať obchody (master je vylúčený)</value></data>
+  <data name="copyNew.selectAll" xml:space="preserve"><value>Vybrať všetko</value></data>
+  <data name="copyNew.clear" xml:space="preserve"><value>Vyčistiť</value></data>
+  <data name="copyNew.mode" xml:space="preserve"><value>Správa peňazí</value></data>
+  <data name="copyNew.parameter" xml:space="preserve"><value>Parameter</value></data>
+  <data name="copyNew.slippage" xml:space="preserve"><value>Sklz (pipy)</value></data>
+  <data name="copyNew.direction" xml:space="preserve"><value>Smer</value></data>
+  <data name="copyNew.minLot" xml:space="preserve"><value>Min lot</value></data>
+  <data name="copyNew.maxLot" xml:space="preserve"><value>Max lot</value></data>
+  <data name="copyNew.maxDelay" xml:space="preserve"><value>Max oneskorenie (s)</value></data>
+  <data name="copyNew.maxDrawdown" xml:space="preserve"><value>Max drawdown %</value></data>
+  <data name="copyNew.dailyLoss" xml:space="preserve"><value>Denný strop strát</value></data>
+  <data name="copyNew.reverse" xml:space="preserve"><value>Opačne</value></data>
+  <data name="copyNew.forceMin" xml:space="preserve"><value>Vynútiť min lot</value></data>
+  <data name="copyNew.copySl" xml:space="preserve"><value>Kopírovať SL</value></data>
+  <data name="copyNew.copyTp" xml:space="preserve"><value>Kopírovať TP</value></data>
+  <data name="copyNew.partialClose" xml:space="preserve"><value>Čiastočné uzavretie</value></data>
+  <data name="copyNew.scaleIn" xml:space="preserve"><value>Stupňovaný vstup</value></data>
+  <data name="copyNew.pending" xml:space="preserve"><value>Pending objednávky</value></data>
+  <data name="copyNew.trailing" xml:space="preserve"><value>Trailing stop</value></data>
+  <data name="copyNew.copyExpiry" xml:space="preserve"><value>Kopírovať expiraci</value></data>
+  <data name="copyNew.copySlippage" xml:space="preserve"><value>Kopírovať sklz</value></data>
+  <data name="copyNew.market" xml:space="preserve"><value>Trh</value></data>
+  <data name="copyNew.marketRange" xml:space="preserve"><value>Rozsah trhu</value></data>
+  <data name="copyNew.limit" xml:space="preserve"><value>Limitná objednávka</value></data>
+  <data name="copyNew.stop" xml:space="preserve"><value>Stop objednávka</value></data>
+  <data name="copyNew.stopLimit" xml:space="preserve"><value>Stop-limit objednávka</value></data>
+  <data name="copyNew.filterMode" xml:space="preserve"><value>Filter symbolov</value></data>
+  <data name="copyNew.filterSymbols" xml:space="preserve"><value>Filtrovať symboly</value></data>
+  <data name="copyNew.symbolMap" xml:space="preserve"><value>Mapa symbolov</value></data>
+  <data name="copyNew.exportSettings" xml:space="preserve"><value>Exportovať nastavenia</value></data>
+  <data name="copyNew.importSettings" xml:space="preserve"><value>Importovať nastavenia</value></data>
+  <data name="copyNew.settingsImported" xml:space="preserve"><value>Nastavenia boli importované</value></data>
+  <data name="copyNew.settingsImportFailed" xml:space="preserve"><value>Nepodarilo sa prečítať súbor s nastaveniami</value></data>
+  <data name="copyNew.cancel" xml:space="preserve"><value>Zrušiť</value></data>
+  <data name="copyNew.create" xml:space="preserve"><value>Vytvoriť profil</value></data>
+  <data name="copyNew.created" xml:space="preserve"><value>Profil bol vytvorený</value></data>
+  <data name="copyNew.createFailed" xml:space="preserve"><value>Nepodarilo sa vytvoriť profil</value></data>
+  <data name="copyNew.partialFailed" xml:space="preserve"><value>Profil bol vytvorený, ale niektoré nastavenia cieľa sa nepodarilo aplikovať</value></data>
+  <data name="copyNew.tip.name" xml:space="preserve"><value>Krátky názov na rozpoznanie tohto profilu kopírovania v zozname.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Účet master, ktorého obchody sú kopírované.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Jeden alebo viacero účtov, ktoré prijímajú kópie obchodov mastera. Samotný master je vylúčený.</value></data>
+  <data name="copyNew.tip.mode" xml:space="preserve"><value>Ako sa jednotlivé kopírované obchody škálujú vzhľadom na mastera: pevný lot, multiplikátor, podiel zvyšku/equity alebo pevné percento rizika.</value></data>
+  <data name="copyNew.tip.parameter" xml:space="preserve"><value>Číslo, ktoré režim zmeny veľkosti používa — napr. multiplikátor (1 = rovnaká veľkosť) alebo percento rizika.</value></data>
+  <data name="copyNew.tip.slippage" xml:space="preserve"><value>Maximálna odchýlka ceny v pipoch tolerovaná pri umiestnení kopírovanej objednávky predtým, ako bude zamietnutá.</value></data>
+  <data name="copyNew.tip.direction" xml:space="preserve"><value>Kopírovať oba smery alebo len dlhé alebo len krátke obchody mastera.</value></data>
+  <data name="copyNew.tip.minLot" xml:space="preserve"><value>Najmenší lot, ktorý môže kopírovanie použiť. 0 = bez minima.</value></data>
+  <data name="copyNew.tip.maxLot" xml:space="preserve"><value>Najväčší lot, ktorý môže kopírovanie použiť. 0 = bez maxima.</value></data>
+  <data name="copyNew.tip.maxDelay" xml:space="preserve"><value>Preskočiť kopírovanie, ak ho nie je možné umiestniť v priebehu tejto sekúndy od masterovho naplnenia. 0 = bez limitu.</value></data>
+  <data name="copyNew.tip.maxDrawdown" xml:space="preserve"><value>Pozastaviť kopírovanie do cieľa, ak jeho equity drawdown prekročí toto percento. 0 = vypnuté.</value></data>
+  <data name="copyNew.tip.dailyLoss" xml:space="preserve"><value>Zastaviť kopírovanie na deň, ak sa realizovaná strata cieľa dosiahne túto sumu. 0 = vypnuté.</value></data>
+  <data name="copyNew.tip.reverse" xml:space="preserve"><value>Zrkadliť obchody mastera v opačnom smere (nákup sa stane predajom).</value></data>
+  <data name="copyNew.tip.forceMin" xml:space="preserve"><value>Ak je vypočítaná veľkosť pod minimálnym lotom, umiestniť minimum namiesto preskočenia.</value></data>
+  <data name="copyNew.tip.copySl" xml:space="preserve"><value>Skopírovať stop-loss mastera na cieľovú objednávku.</value></data>
+  <data name="copyNew.tip.copyTp" xml:space="preserve"><value>Skopírovať take-profit mastera na cieľovú objednávku.</value></data>
+  <data name="copyNew.tip.partialClose" xml:space="preserve"><value>Keď master čiastočne uzavrie pozíciu, uzavrieť rovnaký podiel na cieli.</value></data>
+  <data name="copyNew.tip.scaleIn" xml:space="preserve"><value>Keď master prida do pozície, pridať proporčne na cieli.</value></data>
+  <data name="copyNew.tip.pending" xml:space="preserve"><value>Kopírovať pending (limit/stop) objednávky mastera, nielen trh zaplnenia.</value></data>
+  <data name="copyNew.tip.trailing" xml:space="preserve"><value>Kopírovať úpravy trailing-stop mastera.</value></data>
+  <data name="copyNew.tip.copyExpiry" xml:space="preserve"><value>Skopírovať dobu vypršania platnosti pending objednávok mastera.</value></data>
+  <data name="copyNew.tip.copySlippage" xml:space="preserve"><value>Použiť vlastný sklz setting mastera namiesto hodnoty vyššie.</value></data>
+  <data name="copyNew.tip.orderTypes" xml:space="preserve"><value>Ktoré typy objednávok mastera sú kopírované. Zakážte typ, aby ste ignorovali tieto objednávky.</value></data>
+  <data name="copyNew.tip.market" xml:space="preserve"><value>Kopírovať market objednávky.</value></data>
+  <data name="copyNew.tip.marketRange" xml:space="preserve"><value>Kopírovať market-range objednávky.</value></data>
+  <data name="copyNew.tip.limit" xml:space="preserve"><value>Kopírovať limit objednávky.</value></data>
+  <data name="copyNew.tip.stop" xml:space="preserve"><value>Kopírovať stop objednávky.</value></data>
+  <data name="copyNew.tip.stopLimit" xml:space="preserve"><value>Kopírovať stop-limit objednávky.</value></data>
+  <data name="copyNew.tip.filterMode" xml:space="preserve"><value>Nič = kopírovať každý symbol. Whitelist = kopírovať len uvedené symboly. Blacklist = kopírovať všetko okrem uvedených symbolov.</value></data>
+  <data name="copyNew.tip.symbolMap" xml:space="preserve"><value>Preložiť symbol mastera na symbol cieľovej makléri s voliteľným multiplikátorom na symbol za symbol. Importujte alebo exportujte celú mapu ako súbor CSV.</value></data>
+  <data name="copyNew.tip.portability" xml:space="preserve"><value>Uložiť všetky nastavenia na tomto formulári do súboru alebo ich načítať zo predtým uloženého súboru.</value></data>
+  <data name="copyNew.err.name" xml:space="preserve"><value>Názov profilu je povinný.</value></data>
+  <data name="copyNew.err.source" xml:space="preserve"><value>Vyberte zdrojový (master) účet.</value></data>
+  <data name="copyNew.err.destinations" xml:space="preserve"><value>Vyberte aspoň jeden cieľový (slave) účet.</value></data>
+  <data name="copyNew.err.parameter" xml:space="preserve"><value>Parameter musí byť väčší ako nula.</value></data>
+  <data name="copyNew.err.slippage" xml:space="preserve"><value>Sklz nemôže byť negatívny.</value></data>
+  <data name="copyNew.err.minLot" xml:space="preserve"><value>Min lot nemôže byť negatívny.</value></data>
+  <data name="copyNew.err.maxLot" xml:space="preserve"><value>Max lot nemôže byť negatívny.</value></data>
+  <data name="copyNew.err.lotOrder" xml:space="preserve"><value>Max lot musí byť väčší alebo rovný min lot.</value></data>
+  <data name="copyNew.err.maxDelay" xml:space="preserve"><value>Max oneskorenie nemôže byť negatívne.</value></data>
+  <data name="copyNew.err.drawdown" xml:space="preserve"><value>Max drawdown % musí byť medzi 0 a 100.</value></data>
+  <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Denný strop strát nemôže byť negatívny.</value></data>
+  <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Aktivujte aspoň jeden typ objednávky.</value></data>
+  <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Pridajte aspoň jeden symbol pre vybraný filter symbolov.</value></data>
 </root>

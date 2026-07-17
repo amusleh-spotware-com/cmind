@@ -200,4 +200,114 @@
   <data name="copyDetail.title" xml:space="preserve"><value>Copy Profile</value></data>
   <data name="copyDetail.notFound" xml:space="preserve"><value>This copy profile no longer exists - it may have been deleted or you do not have access to it.</value></data>
   <data name="copyDetail.back" xml:space="preserve"><value>Back to copy trading</value></data>
+  <data name="copy.symbols.add" xml:space="preserve"><value>追加</value></data>
+  <data name="copy.symbols.none" xml:space="preserve"><value>シンボルはまだ追加されていません</value></data>
+  <data name="copy.map.source" xml:space="preserve"><value>ソースシンボル</value></data>
+  <data name="copy.map.destination" xml:space="preserve"><value>デスティネーションシンボル</value></data>
+  <data name="copy.map.multiplier" xml:space="preserve"><value>ボリューム ×</value></data>
+  <data name="copy.map.add" xml:space="preserve"><value>追加</value></data>
+  <data name="copy.map.none" xml:space="preserve"><value>シンボルマッピングはまだありません</value></data>
+  <data name="copy.map.remove" xml:space="preserve"><value>マッピングを削除</value></data>
+  <data name="copy.map.exportCsv" xml:space="preserve"><value>CSVエクスポート</value></data>
+  <data name="copy.map.importCsv" xml:space="preserve"><value>CSVインポート</value></data>
+  <data name="copy.map.imported" xml:space="preserve"><value>{0}個のマッピングがインポートされました</value></data>
+  <data name="copy.map.importEmpty" xml:space="preserve"><value>ファイル内にマッピングが見つかりません</value></data>
+  <data name="copy.map.importFailed" xml:space="preserve"><value>CSVファイルを読み込むことができません</value></data>
+  <data name="copyNew.title" xml:space="preserve"><value>新規コピープロファイル</value></data>
+  <data name="copyNew.back" xml:space="preserve"><value>コピートレーディングに戻る</value></data>
+  <data name="copyNew.section.identity" xml:space="preserve"><value>プロファイルとアカウント</value></data>
+  <data name="copyNew.section.sizing" xml:space="preserve"><value>サイジングとリスク</value></data>
+  <data name="copyNew.section.behaviour" xml:space="preserve"><value>コピー動作</value></data>
+  <data name="copyNew.section.orderTypes" xml:space="preserve"><value>注文タイプ</value></data>
+  <data name="copyNew.section.symbols" xml:space="preserve"><value>シンボル</value></data>
+  <data name="copyNew.section.portability" xml:space="preserve"><value>インポート/エクスポート設定</value></data>
+  <data name="copyNew.name" xml:space="preserve"><value>プロファイル名</value></data>
+  <data name="copyNew.name.required" xml:space="preserve"><value>プロファイル名が必要です</value></data>
+  <data name="copyNew.source" xml:space="preserve"><value>ソース（マスター）アカウント</value></data>
+  <data name="copyNew.source.required" xml:space="preserve"><value>ソースアカウントが必要です</value></data>
+  <data name="copyNew.destinations" xml:space="preserve"><value>デスティネーション（slave）アカウント</value></data>
+  <data name="copyNew.destinations.count" xml:space="preserve"><value>{0}個のアカウントが選択されています</value></data>
+  <data name="copyNew.destinations.help" xml:space="preserve"><value>トレードをコピーするアカウントを1つ以上選択してください（マスターは除外されます）</value></data>
+  <data name="copyNew.selectAll" xml:space="preserve"><value>すべて選択</value></data>
+  <data name="copyNew.clear" xml:space="preserve"><value>クリア</value></data>
+  <data name="copyNew.mode" xml:space="preserve"><value>マネーマネジメント</value></data>
+  <data name="copyNew.parameter" xml:space="preserve"><value>パラメータ</value></data>
+  <data name="copyNew.slippage" xml:space="preserve"><value>スリッページ（pips）</value></data>
+  <data name="copyNew.direction" xml:space="preserve"><value>方向</value></data>
+  <data name="copyNew.minLot" xml:space="preserve"><value>最小ロット</value></data>
+  <data name="copyNew.maxLot" xml:space="preserve"><value>最大ロット</value></data>
+  <data name="copyNew.maxDelay" xml:space="preserve"><value>最大遅延（秒）</value></data>
+  <data name="copyNew.maxDrawdown" xml:space="preserve"><value>最大ドローダウン％</value></data>
+  <data name="copyNew.dailyLoss" xml:space="preserve"><value>1日の損失上限</value></data>
+  <data name="copyNew.reverse" xml:space="preserve"><value>逆方向</value></data>
+  <data name="copyNew.forceMin" xml:space="preserve"><value>最小ロットを強制</value></data>
+  <data name="copyNew.copySl" xml:space="preserve"><value>SLをコピー</value></data>
+  <data name="copyNew.copyTp" xml:space="preserve"><value>TPをコピー</value></data>
+  <data name="copyNew.partialClose" xml:space="preserve"><value>部分決済</value></data>
+  <data name="copyNew.scaleIn" xml:space="preserve"><value>スケールイン</value></data>
+  <data name="copyNew.pending" xml:space="preserve"><value>保留注文</value></data>
+  <data name="copyNew.trailing" xml:space="preserve"><value>トレーリングストップ</value></data>
+  <data name="copyNew.copyExpiry" xml:space="preserve"><value>有効期限をコピー</value></data>
+  <data name="copyNew.copySlippage" xml:space="preserve"><value>スリッページをコピー</value></data>
+  <data name="copyNew.market" xml:space="preserve"><value>マーケット</value></data>
+  <data name="copyNew.marketRange" xml:space="preserve"><value>マーケットレンジ</value></data>
+  <data name="copyNew.limit" xml:space="preserve"><value>リミット</value></data>
+  <data name="copyNew.stop" xml:space="preserve"><value>ストップ</value></data>
+  <data name="copyNew.stopLimit" xml:space="preserve"><value>ストップリミット</value></data>
+  <data name="copyNew.filterMode" xml:space="preserve"><value>シンボルフィルター</value></data>
+  <data name="copyNew.filterSymbols" xml:space="preserve"><value>シンボルをフィルター</value></data>
+  <data name="copyNew.symbolMap" xml:space="preserve"><value>シンボルマップ</value></data>
+  <data name="copyNew.exportSettings" xml:space="preserve"><value>設定をエクスポート</value></data>
+  <data name="copyNew.importSettings" xml:space="preserve"><value>設定をインポート</value></data>
+  <data name="copyNew.settingsImported" xml:space="preserve"><value>設定がインポートされました</value></data>
+  <data name="copyNew.settingsImportFailed" xml:space="preserve"><value>設定ファイルを読み込むことができません</value></data>
+  <data name="copyNew.cancel" xml:space="preserve"><value>キャンセル</value></data>
+  <data name="copyNew.create" xml:space="preserve"><value>プロファイルを作成</value></data>
+  <data name="copyNew.created" xml:space="preserve"><value>プロファイルが作成されました</value></data>
+  <data name="copyNew.createFailed" xml:space="preserve"><value>プロファイルの作成に失敗しました</value></data>
+  <data name="copyNew.partialFailed" xml:space="preserve"><value>プロファイルが作成されましたが、一部のデスティネーション設定を適用できません</value></data>
+  <data name="copyNew.tip.name" xml:space="preserve"><value>このコピープロファイルをリストで認識するための短い名前。</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>トレードがコピーされるマスターアカウント。</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>マスターのトレードのコピーを受け取る1つ以上のアカウント。マスター自体は除外されます。</value></data>
+  <data name="copyNew.tip.mode" xml:space="preserve"><value>コピーされた各トレードのサイズがマスターに対してどのようにスケーリングされるか: 固定ロット、乗数、残高/エクイティの割合、または固定リスク％。</value></data>
+  <data name="copyNew.tip.parameter" xml:space="preserve"><value>サイジングモードが使用する数値 — 例えば乗数（1 = 同じサイズ）またはリスク％。</value></data>
+  <data name="copyNew.tip.slippage" xml:space="preserve"><value>コピー注文を拒否する前に許容される最大価格偏差（pips）。</value></data>
+  <data name="copyNew.tip.direction" xml:space="preserve"><value>両方向をコピーするか、マスターのロングトレードのみまたはショートトレードのみをコピーするか。</value></data>
+  <data name="copyNew.tip.minLot" xml:space="preserve"><value>コピーが使用できる最小ロットサイズ。0 = 最小値なし。</value></data>
+  <data name="copyNew.tip.maxLot" xml:space="preserve"><value>コピーが使用できる最大ロットサイズ。0 = 最大値なし。</value></data>
+  <data name="copyNew.tip.maxDelay" xml:space="preserve"><value>マスターの約定から数秒以内にコピーを配置できない場合はスキップします。0 = 制限なし。</value></data>
+  <data name="copyNew.tip.maxDrawdown" xml:space="preserve"><value>デスティネーションのエクイティドローダウンがこのパーセンテージを超えた場合、そのデスティネーションへのコピーを一時停止します。0 = 無効。</value></data>
+  <data name="copyNew.tip.dailyLoss" xml:space="preserve"><value>デスティネーションの実現損失がこの金額に達した場合、その日のコピーを停止します。0 = 無効。</value></data>
+  <data name="copyNew.tip.reverse" xml:space="preserve"><value>マスターのトレードを反対方向でミラーリングします（買いは売りになります）。</value></data>
+  <data name="copyNew.tip.forceMin" xml:space="preserve"><value>計算されたサイズが最小ロットより小さい場合、スキップするのではなく最小値を配置します。</value></data>
+  <data name="copyNew.tip.copySl" xml:space="preserve"><value>マスターのストップロスをデスティネーション注文にコピーします。</value></data>
+  <data name="copyNew.tip.copyTp" xml:space="preserve"><value>マスターのテイクプロフィットをデスティネーション注文にコピーします。</value></data>
+  <data name="copyNew.tip.partialClose" xml:space="preserve"><value>マスターがポジションを部分的に決済すると、デスティネーションで同じ割合を決済します。</value></data>
+  <data name="copyNew.tip.scaleIn" xml:space="preserve"><value>マスターがポジションに追加すると、デスティネーションに比例して追加します。</value></data>
+  <data name="copyNew.tip.pending" xml:space="preserve"><value>マーケット約定だけでなく、マスターの保留（リミット/ストップ）注文をコピーします。</value></data>
+  <data name="copyNew.tip.trailing" xml:space="preserve"><value>マスターのトレーリングストップ調整をコピーします。</value></data>
+  <data name="copyNew.tip.copyExpiry" xml:space="preserve"><value>マスターの保留注文の有効期限をコピーします。</value></data>
+  <data name="copyNew.tip.copySlippage" xml:space="preserve"><value>上記の値の代わりにマスター自身のスリッページ設定を使用します。</value></data>
+  <data name="copyNew.tip.orderTypes" xml:space="preserve"><value>マスターの注文タイプのうち、どれがコピーされるか。タイプを無効にしてそれらの注文を無視します。</value></data>
+  <data name="copyNew.tip.market" xml:space="preserve"><value>マーケット注文をコピー。</value></data>
+  <data name="copyNew.tip.marketRange" xml:space="preserve"><value>マーケットレンジ注文をコピー。</value></data>
+  <data name="copyNew.tip.limit" xml:space="preserve"><value>リミット注文をコピー。</value></data>
+  <data name="copyNew.tip.stop" xml:space="preserve"><value>ストップ注文をコピー。</value></data>
+  <data name="copyNew.tip.stopLimit" xml:space="preserve"><value>ストップリミット注文をコピー。</value></data>
+  <data name="copyNew.tip.filterMode" xml:space="preserve"><value>なし = すべてのシンボルをコピー。ホワイトリスト = リストされたシンボルのみをコピー。ブラックリスト = リストされたシンボル以外のすべてをコピー。</value></data>
+  <data name="copyNew.tip.symbolMap" xml:space="preserve"><value>マスターシンボルをデスティネーションブローカーのシンボルに変換し、オプションでシンボル単位のボリューム乗数を含めます。マップ全体をCSVファイルとしてインポートまたはエクスポートします。</value></data>
+  <data name="copyNew.tip.portability" xml:space="preserve"><value>このフォーム上のすべての設定をファイルに保存するか、以前に保存したファイルから読み込みます。</value></data>
+  <data name="copyNew.err.name" xml:space="preserve"><value>プロファイル名が必要です。</value></data>
+  <data name="copyNew.err.source" xml:space="preserve"><value>ソース（マスター）アカウントを選択してください。</value></data>
+  <data name="copyNew.err.destinations" xml:space="preserve"><value>少なくとも1つのデスティネーション（slave）アカウントを選択してください。</value></data>
+  <data name="copyNew.err.parameter" xml:space="preserve"><value>パラメータはゼロより大きい値である必要があります。</value></data>
+  <data name="copyNew.err.slippage" xml:space="preserve"><value>スリッページは負にできません。</value></data>
+  <data name="copyNew.err.minLot" xml:space="preserve"><value>最小ロットは負にできません。</value></data>
+  <data name="copyNew.err.maxLot" xml:space="preserve"><value>最大ロットは負にできません。</value></data>
+  <data name="copyNew.err.lotOrder" xml:space="preserve"><value>最大ロットは最小ロット以上である必要があります。</value></data>
+  <data name="copyNew.err.maxDelay" xml:space="preserve"><value>最大遅延は負にできません。</value></data>
+  <data name="copyNew.err.drawdown" xml:space="preserve"><value>最大ドローダウン％は0～100の間である必要があります。</value></data>
+  <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>1日の損失上限は負にできません。</value></data>
+  <data name="copyNew.err.orderTypes" xml:space="preserve"><value>少なくとも1つの注文タイプを有効にしてください。</value></data>
+  <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>選択したシンボルフィルターに対して少なくとも1つのシンボルを追加してください。</value></data>
 </root>

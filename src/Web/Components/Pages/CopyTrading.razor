@@ -17,7 +17,7 @@
     <MudButton Color="Color.Secondary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.AutoAwesome"
                OnClick="OpenRecommendDialog" data-testid="ai-suggest">AI suggest</MudButton>
     <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
-               OnClick="OpenNewProfile">New Profile</MudButton>
+               Href="/copy-trading/new" data-testid="copy-new-profile">New Profile</MudButton>
 </MudStack>
 
 <MudDialog @bind-Visible="_recommendOpen" Options="_recommendDialogOptions">
@@ -127,86 +127,6 @@
         .Select(a => new CopyProfileDialog.AccountRef((Guid)a.id, (long)a.accountNumber))
         .ToList();
 
-    private async Task OpenNewProfile()
-    {
-        var options = ((IEnumerable<dynamic>)_accounts)
-            .Select(a => new NewCopyProfileDialog.CopyAccountOption((long)a.accountNumber, $"{a.accountNumber} ({a.broker})"))
-            .ToList();
-        var parameters = new DialogParameters
-        {
-            { nameof(NewCopyProfileDialog.Accounts), (IReadOnlyList<NewCopyProfileDialog.CopyAccountOption>)options }
-        };
-        var dlg = await Dialogs.ShowAsync<NewCopyProfileDialog>(null,
-            parameters, new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Large, FullWidth = true });
-        var res = await dlg.Result;
-        if (res is null || res.Canceled) return;
-        var data = (NewCopyProfileDialog.NewCopyProfileResult)res.Data!;
-
-        // Create the profile with no destinations, then add each with the chosen settings (adding via
-        // the create call would attach them with default settings and duplicate them below).
-        var create = await Http.PostAsJsonAsync("/api/copy/profiles", new
-        {
-            Name = data.Name,
-            SourceAccountId = SourceAccountGuid(data.SourceAccountNumber),
-            DestinationAccountIds = Array.Empty<Guid>()
-        });
-        if (!create.IsSuccessStatusCode) { Snack.Add("Failed to create profile", Severity.Error); return; }
-
-        var created = await create.Content.ReadFromJsonAsync<CreatedProfileDto>();
-        if (created is not null)
-        {
-            var failed = false;
-            foreach (var accountNumber in data.DestinationAccountNumbers)
-            {
-                var guid = SourceAccountGuid(accountNumber);
-                if (guid == Guid.Empty) continue;
-                if (!await AddDestinationAsync(created.id, guid, data.Settings)) failed = true;
-            }
-            if (failed) Snack.Add("Profile created, but some destination settings could not be applied", Severity.Warning);
-            else Snack.Add("Profile created", Severity.Success);
-        }
-        else
-        {
-            Snack.Add("Profile created", Severity.Success);
-        }
-        await Load();
-    }
-
-    private sealed record CreatedProfileDto(Guid id);
-
-    private async Task<bool> AddDestinationAsync(Guid profileId, Guid destinationAccountId,
-        NewCopyProfileDialog.CopyDestinationSettings s)
-    {
-        var r = await Http.PostAsJsonAsync($"/api/copy/profiles/{profileId}/destinations", new
-        {
-            DestinationAccountId = destinationAccountId,
-            Mode = s.Mode,
-            Parameter = s.Parameter,
-            SlippagePips = s.SlippagePips,
-            MaxDelaySeconds = s.MaxDelaySeconds,
-            Reverse = s.Reverse,
-            CopyStopLoss = s.CopyStopLoss,
-            CopyTakeProfit = s.CopyTakeProfit,
-            Direction = s.Direction,
-            MinLot = s.MinLot,
-            MaxLot = s.MaxLot,
-            ForceMinLot = s.ForceMinLot,
-            MaxDrawdownPercent = s.MaxDrawdownPercent,
-            DailyLossLimit = s.DailyLossLimit,
-            SymbolFilterMode = s.SymbolFilterMode,
-            SymbolFilters = ParseCsv(s.FilterText),
-            SymbolMap = ParseMap(s.SymbolMapText),
-            MirrorPartialClose = s.MirrorPartialClose,
-            MirrorScaleIn = s.MirrorScaleIn,
-            CopyPendingOrders = s.CopyPendingOrders,
-            CopyTrailingStop = s.CopyTrailingStop,
-            OrderTypes = s.OrderTypes == CopyOrderTypes.None ? CopyOrderTypes.All : s.OrderTypes,
-            CopyPendingExpiry = s.CopyPendingExpiry,
-            CopyMasterSlippage = s.CopyMasterSlippage
-        });
-        return r.IsSuccessStatusCode;
-    }
-
     private async Task RecommendSettings()
     {
         _recommending = true;
@@ -268,20 +188,4 @@
         await Load();
     }
 
-    private Guid SourceAccountGuid(long accountNumber)
-    {
-        foreach (var a in _accounts)
-            if ((long)a.accountNumber == accountNumber) return (Guid)a.id;
-        return Guid.Empty;
-    }
-
-    private static string[] ParseCsv(string text) => text
-        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-    private static object[] ParseMap(string text) => text
-        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-        .Select(pair => pair.Split('=', 2, StringSplitOptions.TrimEntries))
-        .Where(parts => parts.Length == 2)
-        .Select(parts => (object)new { Source = parts[0], Destination = parts[1] })
-        .ToArray();
 }

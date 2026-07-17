@@ -200,4 +200,114 @@
   <data name="copyDetail.title" xml:space="preserve"><value>Copy Profile</value></data>
   <data name="copyDetail.notFound" xml:space="preserve"><value>This copy profile no longer exists - it may have been deleted or you do not have access to it.</value></data>
   <data name="copyDetail.back" xml:space="preserve"><value>Back to copy trading</value></data>
+  <data name="copy.symbols.add" xml:space="preserve"><value>添加</value></data>
+  <data name="copy.symbols.none" xml:space="preserve"><value>暂未添加任何符号</value></data>
+  <data name="copy.map.source" xml:space="preserve"><value>源符号</value></data>
+  <data name="copy.map.destination" xml:space="preserve"><value>目标符号</value></data>
+  <data name="copy.map.multiplier" xml:space="preserve"><value>成交量 ×</value></data>
+  <data name="copy.map.add" xml:space="preserve"><value>添加</value></data>
+  <data name="copy.map.none" xml:space="preserve"><value>暂未添加任何符号映射</value></data>
+  <data name="copy.map.remove" xml:space="preserve"><value>移除映射</value></data>
+  <data name="copy.map.exportCsv" xml:space="preserve"><value>导出 CSV</value></data>
+  <data name="copy.map.importCsv" xml:space="preserve"><value>导入 CSV</value></data>
+  <data name="copy.map.imported" xml:space="preserve"><value>已导入 {0} 个映射</value></data>
+  <data name="copy.map.importEmpty" xml:space="preserve"><value>文件中未找到任何映射</value></data>
+  <data name="copy.map.importFailed" xml:space="preserve"><value>无法读取 CSV 文件</value></data>
+  <data name="copyNew.title" xml:space="preserve"><value>新建跟单配置</value></data>
+  <data name="copyNew.back" xml:space="preserve"><value>返回跟单交易</value></data>
+  <data name="copyNew.section.identity" xml:space="preserve"><value>配置与账户</value></data>
+  <data name="copyNew.section.sizing" xml:space="preserve"><value>头寸大小与风险</value></data>
+  <data name="copyNew.section.behaviour" xml:space="preserve"><value>跟单行为</value></data>
+  <data name="copyNew.section.orderTypes" xml:space="preserve"><value>订单类型</value></data>
+  <data name="copyNew.section.symbols" xml:space="preserve"><value>符号</value></data>
+  <data name="copyNew.section.portability" xml:space="preserve"><value>导入/导出设置</value></data>
+  <data name="copyNew.name" xml:space="preserve"><value>配置名称</value></data>
+  <data name="copyNew.name.required" xml:space="preserve"><value>配置名称为必填项</value></data>
+  <data name="copyNew.source" xml:space="preserve"><value>源账户（主账户）</value></data>
+  <data name="copyNew.source.required" xml:space="preserve"><value>源账户为必选项</value></data>
+  <data name="copyNew.destinations" xml:space="preserve"><value>目标账户（从账户）</value></data>
+  <data name="copyNew.destinations.count" xml:space="preserve"><value>已选择 {0} 个账户</value></data>
+  <data name="copyNew.destinations.help" xml:space="preserve"><value>选择一个或多个账户以接收主账户的跟单交易（主账户本身被排除）</value></data>
+  <data name="copyNew.selectAll" xml:space="preserve"><value>全选</value></data>
+  <data name="copyNew.clear" xml:space="preserve"><value>清除</value></data>
+  <data name="copyNew.mode" xml:space="preserve"><value>资金管理</value></data>
+  <data name="copyNew.parameter" xml:space="preserve"><value>参数</value></data>
+  <data name="copyNew.slippage" xml:space="preserve"><value>滑点（点数）</value></data>
+  <data name="copyNew.direction" xml:space="preserve"><value>方向</value></data>
+  <data name="copyNew.minLot" xml:space="preserve"><value>最小手数</value></data>
+  <data name="copyNew.maxLot" xml:space="preserve"><value>最大手数</value></data>
+  <data name="copyNew.maxDelay" xml:space="preserve"><value>最大延迟（秒）</value></data>
+  <data name="copyNew.maxDrawdown" xml:space="preserve"><value>最大回撤 %</value></data>
+  <data name="copyNew.dailyLoss" xml:space="preserve"><value>每日亏损上限</value></data>
+  <data name="copyNew.reverse" xml:space="preserve"><value>反向</value></data>
+  <data name="copyNew.forceMin" xml:space="preserve"><value>强制最小手数</value></data>
+  <data name="copyNew.copySl" xml:space="preserve"><value>复制止损</value></data>
+  <data name="copyNew.copyTp" xml:space="preserve"><value>复制止盈</value></data>
+  <data name="copyNew.partialClose" xml:space="preserve"><value>部分平仓</value></data>
+  <data name="copyNew.scaleIn" xml:space="preserve"><value>逐次建仓</value></data>
+  <data name="copyNew.pending" xml:space="preserve"><value>挂单</value></data>
+  <data name="copyNew.trailing" xml:space="preserve"><value>跟踪止损</value></data>
+  <data name="copyNew.copyExpiry" xml:space="preserve"><value>复制到期时间</value></data>
+  <data name="copyNew.copySlippage" xml:space="preserve"><value>复制滑点</value></data>
+  <data name="copyNew.market" xml:space="preserve"><value>市价单</value></data>
+  <data name="copyNew.marketRange" xml:space="preserve"><value>市价范围单</value></data>
+  <data name="copyNew.limit" xml:space="preserve"><value>限价单</value></data>
+  <data name="copyNew.stop" xml:space="preserve"><value>止损单</value></data>
+  <data name="copyNew.stopLimit" xml:space="preserve"><value>止损限价单</value></data>
+  <data name="copyNew.filterMode" xml:space="preserve"><value>符号过滤</value></data>
+  <data name="copyNew.filterSymbols" xml:space="preserve"><value>过滤符号</value></data>
+  <data name="copyNew.symbolMap" xml:space="preserve"><value>符号映射</value></data>
+  <data name="copyNew.exportSettings" xml:space="preserve"><value>导出设置</value></data>
+  <data name="copyNew.importSettings" xml:space="preserve"><value>导入设置</value></data>
+  <data name="copyNew.settingsImported" xml:space="preserve"><value>设置已导入</value></data>
+  <data name="copyNew.settingsImportFailed" xml:space="preserve"><value>无法读取设置文件</value></data>
+  <data name="copyNew.cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="copyNew.create" xml:space="preserve"><value>创建配置</value></data>
+  <data name="copyNew.created" xml:space="preserve"><value>配置已创建</value></data>
+  <data name="copyNew.createFailed" xml:space="preserve"><value>配置创建失败</value></data>
+  <data name="copyNew.partialFailed" xml:space="preserve"><value>配置已创建，但某些目标设置无法应用</value></data>
+  <data name="copyNew.tip.name" xml:space="preserve"><value>用于在列表中识别此跟单配置的简短名称。</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>其交易被跟单的主账户。</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>接收主账户跟单交易的一个或多个账户。主账户本身被排除。</value></data>
+  <data name="copyNew.tip.mode" xml:space="preserve"><value>如何根据主账户调整每个跟单交易的大小：固定手数、倍数、余额/权益比例或固定风险百分比。</value></data>
+  <data name="copyNew.tip.parameter" xml:space="preserve"><value>头寸大小模式使用的数字 —— 例如倍数（1 = 相同大小）或风险百分比。</value></data>
+  <data name="copyNew.tip.slippage" xml:space="preserve"><value>在拒绝跟单订单之前允许的最大价格偏差，以点数计。</value></data>
+  <data name="copyNew.tip.direction" xml:space="preserve"><value>复制双向交易，或仅复制主账户的做多或仅做空交易。</value></data>
+  <data name="copyNew.tip.minLot" xml:space="preserve"><value>跟单可使用的最小手数。0 = 无最小值。</value></data>
+  <data name="copyNew.tip.maxLot" xml:space="preserve"><value>跟单可使用的最大手数。0 = 无最大值。</value></data>
+  <data name="copyNew.tip.maxDelay" xml:space="preserve"><value>如果跟单无法在主账户成交后的此时间段内完成，则跳过。0 = 无限制。</value></data>
+  <data name="copyNew.tip.maxDrawdown" xml:space="preserve"><value>当目标账户的权益回撤超过此百分比时，暂停跟单。0 = 禁用。</value></data>
+  <data name="copyNew.tip.dailyLoss" xml:space="preserve"><value>当目标账户的已实现亏损达到此金额时，停止当日跟单。0 = 禁用。</value></data>
+  <data name="copyNew.tip.reverse" xml:space="preserve"><value>在相反方向镜像主账户的交易（买入变卖出）。</value></data>
+  <data name="copyNew.tip.forceMin" xml:space="preserve"><value>如果计算出的头寸大小低于最小手数，则使用最小手数而不是跳过。</value></data>
+  <data name="copyNew.tip.copySl" xml:space="preserve"><value>将主账户的止损复制到目标订单。</value></data>
+  <data name="copyNew.tip.copyTp" xml:space="preserve"><value>将主账户的止盈复制到目标订单。</value></data>
+  <data name="copyNew.tip.partialClose" xml:space="preserve"><value>当主账户部分平仓时，在目标账户上按相同比例平仓。</value></data>
+  <data name="copyNew.tip.scaleIn" xml:space="preserve"><value>当主账户增加头寸时，在目标账户上按比例增加。</value></data>
+  <data name="copyNew.tip.pending" xml:space="preserve"><value>复制主账户的挂单（限价单/止损单），而不仅仅是市价成交。</value></data>
+  <data name="copyNew.tip.trailing" xml:space="preserve"><value>复制主账户的跟踪止损调整。</value></data>
+  <data name="copyNew.tip.copyExpiry" xml:space="preserve"><value>复制主账户挂单的到期时间。</value></data>
+  <data name="copyNew.tip.copySlippage" xml:space="preserve"><value>使用主账户自身的滑点设置，而不是上述值。</value></data>
+  <data name="copyNew.tip.orderTypes" xml:space="preserve"><value>复制主账户哪些订单类型。禁用一个类型可忽略这些订单。</value></data>
+  <data name="copyNew.tip.market" xml:space="preserve"><value>复制市价单。</value></data>
+  <data name="copyNew.tip.marketRange" xml:space="preserve"><value>复制市价范围单。</value></data>
+  <data name="copyNew.tip.limit" xml:space="preserve"><value>复制限价单。</value></data>
+  <data name="copyNew.tip.stop" xml:space="preserve"><value>复制止损单。</value></data>
+  <data name="copyNew.tip.stopLimit" xml:space="preserve"><value>复制止损限价单。</value></data>
+  <data name="copyNew.tip.filterMode" xml:space="preserve"><value>无 = 复制所有符号。白名单 = 仅复制列出的符号。黑名单 = 复制除列出符号外的所有符号。</value></data>
+  <data name="copyNew.tip.symbolMap" xml:space="preserve"><value>将主账户符号转换为目标经纪商的符号，并可选择按符号成交量倍数。导入或导出整个映射为 CSV 文件。</value></data>
+  <data name="copyNew.tip.portability" xml:space="preserve"><value>将此表单上的所有设置保存到文件，或从先前保存的文件加载。</value></data>
+  <data name="copyNew.err.name" xml:space="preserve"><value>配置名称为必填项。</value></data>
+  <data name="copyNew.err.source" xml:space="preserve"><value>选择源（主）账户。</value></data>
+  <data name="copyNew.err.destinations" xml:space="preserve"><value>至少选择一个目标（从）账户。</value></data>
+  <data name="copyNew.err.parameter" xml:space="preserve"><value>参数必须大于零。</value></data>
+  <data name="copyNew.err.slippage" xml:space="preserve"><value>滑点不能为负。</value></data>
+  <data name="copyNew.err.minLot" xml:space="preserve"><value>最小手数不能为负。</value></data>
+  <data name="copyNew.err.maxLot" xml:space="preserve"><value>最大手数不能为负。</value></data>
+  <data name="copyNew.err.lotOrder" xml:space="preserve"><value>最大手数必须大于或等于最小手数。</value></data>
+  <data name="copyNew.err.maxDelay" xml:space="preserve"><value>最大延迟不能为负。</value></data>
+  <data name="copyNew.err.drawdown" xml:space="preserve"><value>最大回撤 % 必须在 0 到 100 之间。</value></data>
+  <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>每日亏损上限不能为负。</value></data>
+  <data name="copyNew.err.orderTypes" xml:space="preserve"><value>至少启用一种订单类型。</value></data>
+  <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>至少为选定的符号过滤器添加一个符号。</value></data>
 </root>

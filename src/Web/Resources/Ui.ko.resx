@@ -200,4 +200,114 @@
   <data name="copyDetail.title" xml:space="preserve"><value>Copy Profile</value></data>
   <data name="copyDetail.notFound" xml:space="preserve"><value>This copy profile no longer exists - it may have been deleted or you do not have access to it.</value></data>
   <data name="copyDetail.back" xml:space="preserve"><value>Back to copy trading</value></data>
+  <data name="copy.symbols.add" xml:space="preserve"><value>추가</value></data>
+  <data name="copy.symbols.none" xml:space="preserve"><value>아직 추가된 심볼이 없습니다</value></data>
+  <data name="copy.map.source" xml:space="preserve"><value>원본 심볼</value></data>
+  <data name="copy.map.destination" xml:space="preserve"><value>대상 심볼</value></data>
+  <data name="copy.map.multiplier" xml:space="preserve"><value>거래량 ×</value></data>
+  <data name="copy.map.add" xml:space="preserve"><value>추가</value></data>
+  <data name="copy.map.none" xml:space="preserve"><value>아직 심볼 매핑이 없습니다</value></data>
+  <data name="copy.map.remove" xml:space="preserve"><value>매핑 제거</value></data>
+  <data name="copy.map.exportCsv" xml:space="preserve"><value>CSV 내보내기</value></data>
+  <data name="copy.map.importCsv" xml:space="preserve"><value>CSV 가져오기</value></data>
+  <data name="copy.map.imported" xml:space="preserve"><value>{0}개 매핑 가져옴</value></data>
+  <data name="copy.map.importEmpty" xml:space="preserve"><value>파일에서 매핑을 찾을 수 없습니다</value></data>
+  <data name="copy.map.importFailed" xml:space="preserve"><value>CSV 파일을 읽을 수 없습니다</value></data>
+  <data name="copyNew.title" xml:space="preserve"><value>새 복사 프로필</value></data>
+  <data name="copyNew.back" xml:space="preserve"><value>복사 거래로 돌아가기</value></data>
+  <data name="copyNew.section.identity" xml:space="preserve"><value>프로필 및 계정</value></data>
+  <data name="copyNew.section.sizing" xml:space="preserve"><value>규모 및 위험</value></data>
+  <data name="copyNew.section.behaviour" xml:space="preserve"><value>복사 동작</value></data>
+  <data name="copyNew.section.orderTypes" xml:space="preserve"><value>주문 유형</value></data>
+  <data name="copyNew.section.symbols" xml:space="preserve"><value>심볼</value></data>
+  <data name="copyNew.section.portability" xml:space="preserve"><value>설정 가져오기 / 내보내기</value></data>
+  <data name="copyNew.name" xml:space="preserve"><value>프로필 이름</value></data>
+  <data name="copyNew.name.required" xml:space="preserve"><value>프로필 이름이 필요합니다</value></data>
+  <data name="copyNew.source" xml:space="preserve"><value>원본(마스터) 계정</value></data>
+  <data name="copyNew.source.required" xml:space="preserve"><value>원본 계정이 필요합니다</value></data>
+  <data name="copyNew.destinations" xml:space="preserve"><value>대상(슬레이브) 계정</value></data>
+  <data name="copyNew.destinations.count" xml:space="preserve"><value>{0}개 계정 선택됨</value></data>
+  <data name="copyNew.destinations.help" xml:space="preserve"><value>마스터의 거래를 복사할 하나 이상의 계정을 선택합니다(마스터는 제외됨)</value></data>
+  <data name="copyNew.selectAll" xml:space="preserve"><value>모두 선택</value></data>
+  <data name="copyNew.clear" xml:space="preserve"><value>삭제</value></data>
+  <data name="copyNew.mode" xml:space="preserve"><value>자금 관리</value></data>
+  <data name="copyNew.parameter" xml:space="preserve"><value>매개변수</value></data>
+  <data name="copyNew.slippage" xml:space="preserve"><value>슬리피지(pips)</value></data>
+  <data name="copyNew.direction" xml:space="preserve"><value>방향</value></data>
+  <data name="copyNew.minLot" xml:space="preserve"><value>최소 로트</value></data>
+  <data name="copyNew.maxLot" xml:space="preserve"><value>최대 로트</value></data>
+  <data name="copyNew.maxDelay" xml:space="preserve"><value>최대 지연(초)</value></data>
+  <data name="copyNew.maxDrawdown" xml:space="preserve"><value>최대 낙폭 %</value></data>
+  <data name="copyNew.dailyLoss" xml:space="preserve"><value>일일 손실 한도</value></data>
+  <data name="copyNew.reverse" xml:space="preserve"><value>역방향</value></data>
+  <data name="copyNew.forceMin" xml:space="preserve"><value>최소 로트 강제</value></data>
+  <data name="copyNew.copySl" xml:space="preserve"><value>SL 복사</value></data>
+  <data name="copyNew.copyTp" xml:space="preserve"><value>TP 복사</value></data>
+  <data name="copyNew.partialClose" xml:space="preserve"><value>부분 청산</value></data>
+  <data name="copyNew.scaleIn" xml:space="preserve"><value>스케일인</value></data>
+  <data name="copyNew.pending" xml:space="preserve"><value>미결제 주문</value></data>
+  <data name="copyNew.trailing" xml:space="preserve"><value>트레일링 스탑</value></data>
+  <data name="copyNew.copyExpiry" xml:space="preserve"><value>만료 복사</value></data>
+  <data name="copyNew.copySlippage" xml:space="preserve"><value>슬리피지 복사</value></data>
+  <data name="copyNew.market" xml:space="preserve"><value>시장가</value></data>
+  <data name="copyNew.marketRange" xml:space="preserve"><value>시장가 범위</value></data>
+  <data name="copyNew.limit" xml:space="preserve"><value>지정가</value></data>
+  <data name="copyNew.stop" xml:space="preserve"><value>스탑</value></data>
+  <data name="copyNew.stopLimit" xml:space="preserve"><value>스탑 지정가</value></data>
+  <data name="copyNew.filterMode" xml:space="preserve"><value>심볼 필터</value></data>
+  <data name="copyNew.filterSymbols" xml:space="preserve"><value>심볼 필터링</value></data>
+  <data name="copyNew.symbolMap" xml:space="preserve"><value>심볼 맵</value></data>
+  <data name="copyNew.exportSettings" xml:space="preserve"><value>설정 내보내기</value></data>
+  <data name="copyNew.importSettings" xml:space="preserve"><value>설정 가져오기</value></data>
+  <data name="copyNew.settingsImported" xml:space="preserve"><value>설정 가져옴</value></data>
+  <data name="copyNew.settingsImportFailed" xml:space="preserve"><value>설정 파일을 읽을 수 없습니다</value></data>
+  <data name="copyNew.cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="copyNew.create" xml:space="preserve"><value>프로필 생성</value></data>
+  <data name="copyNew.created" xml:space="preserve"><value>프로필 생성됨</value></data>
+  <data name="copyNew.createFailed" xml:space="preserve"><value>프로필을 생성하지 못했습니다</value></data>
+  <data name="copyNew.partialFailed" xml:space="preserve"><value>프로필이 생성되었으나 일부 대상 설정을 적용하지 못했습니다</value></data>
+  <data name="copyNew.tip.name" xml:space="preserve"><value>이 복사 프로필을 목록에서 인식하기 위한 짧은 이름입니다.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>거래를 복사할 마스터 계정입니다.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>마스터의 거래 사본을 받을 하나 이상의 계정입니다. 마스터 자신은 제외됩니다.</value></data>
+  <data name="copyNew.tip.mode" xml:space="preserve"><value>각 복사된 거래가 마스터를 기준으로 어떻게 규모 조정되는지: 고정 로트, 승수, 잔액/자산의 비율, 또는 고정 위험 백분율입니다.</value></data>
+  <data name="copyNew.tip.parameter" xml:space="preserve"><value>규모 조정 모드가 사용하는 숫자입니다. 예: 승수(1 = 동일 규모) 또는 위험 백분율입니다.</value></data>
+  <data name="copyNew.tip.slippage" xml:space="preserve"><value>복사된 주문이 거부되기 전에 허용되는 최대 가격 편차(pips)입니다.</value></data>
+  <data name="copyNew.tip.direction" xml:space="preserve"><value>양방향 모두를 복사하거나, 마스터의 롱만 또는 쇼트만 거래합니다.</value></data>
+  <data name="copyNew.tip.minLot" xml:space="preserve"><value>복사가 사용할 수 있는 최소 로트 크기입니다. 0 = 최소 없음입니다.</value></data>
+  <data name="copyNew.tip.maxLot" xml:space="preserve"><value>복사가 사용할 수 있는 최대 로트 크기입니다. 0 = 최대 없음입니다.</value></data>
+  <data name="copyNew.tip.maxDelay" xml:space="preserve"><value>마스터의 체결 후 이 시간 내에 복사를 배치할 수 없으면 건너뜁니다. 0 = 제한 없음입니다.</value></data>
+  <data name="copyNew.tip.maxDrawdown" xml:space="preserve"><value>대상의 자산 낙폭이 이 백분율을 초과하면 복사를 일시 중지합니다. 0 = 비활성화입니다.</value></data>
+  <data name="copyNew.tip.dailyLoss" xml:space="preserve"><value>대상의 실현 손실이 이 금액에 도달하면 하루 동안 복사를 중지합니다. 0 = 비활성화입니다.</value></data>
+  <data name="copyNew.tip.reverse" xml:space="preserve"><value>마스터의 거래를 반대 방향으로 미러링합니다(매수 → 매도).</value></data>
+  <data name="copyNew.tip.forceMin" xml:space="preserve"><value>계산된 크기가 최소 로트 미만이면, 건너뛰지 말고 최소값을 배치합니다.</value></data>
+  <data name="copyNew.tip.copySl" xml:space="preserve"><value>마스터의 손절매를 대상 주문에 복사합니다.</value></data>
+  <data name="copyNew.tip.copyTp" xml:space="preserve"><value>마스터의 익절매를 대상 주문에 복사합니다.</value></data>
+  <data name="copyNew.tip.partialClose" xml:space="preserve"><value>마스터가 포지션을 부분적으로 청산할 때, 대상에서도 동일 비율로 청산합니다.</value></data>
+  <data name="copyNew.tip.scaleIn" xml:space="preserve"><value>마스터가 포지션에 추가할 때, 대상에서도 비례하여 추가합니다.</value></data>
+  <data name="copyNew.tip.pending" xml:space="preserve"><value>마스터의 미결제(지정가/스탑) 주문도 복사합니다(시장가 체결만이 아님).</value></data>
+  <data name="copyNew.tip.trailing" xml:space="preserve"><value>마스터의 트레일링 스탑 조정을 복사합니다.</value></data>
+  <data name="copyNew.tip.copyExpiry" xml:space="preserve"><value>마스터의 미결제 주문의 만료 시간을 복사합니다.</value></data>
+  <data name="copyNew.tip.copySlippage" xml:space="preserve"><value>위의 값 대신 마스터의 자체 슬리피지 설정을 사용합니다.</value></data>
+  <data name="copyNew.tip.orderTypes" xml:space="preserve"><value>마스터의 어느 주문 유형이 복사되는지입니다. 유형을 비활성화하여 해당 주문을 무시합니다.</value></data>
+  <data name="copyNew.tip.market" xml:space="preserve"><value>시장가 주문을 복사합니다.</value></data>
+  <data name="copyNew.tip.marketRange" xml:space="preserve"><value>시장가 범위 주문을 복사합니다.</value></data>
+  <data name="copyNew.tip.limit" xml:space="preserve"><value>지정가 주문을 복사합니다.</value></data>
+  <data name="copyNew.tip.stop" xml:space="preserve"><value>스탑 주문을 복사합니다.</value></data>
+  <data name="copyNew.tip.stopLimit" xml:space="preserve"><value>스탑 지정가 주문을 복사합니다.</value></data>
+  <data name="copyNew.tip.filterMode" xml:space="preserve"><value>없음 = 모든 심볼을 복사합니다. 화이트리스트 = 나열된 심볼만 복사합니다. 블랙리스트 = 나열된 심볼을 제외한 모든 심볼을 복사합니다.</value></data>
+  <data name="copyNew.tip.symbolMap" xml:space="preserve"><value>마스터 심볼을 대상 브로커의 심볼로 변환하고, 선택적으로 심볼별 거래량 승수를 적용합니다. 전체 맵을 CSV 파일로 가져오거나 내보냅니다.</value></data>
+  <data name="copyNew.tip.portability" xml:space="preserve"><value>이 양식의 모든 설정을 파일에 저장하거나, 이전에 저장한 파일에서 로드합니다.</value></data>
+  <data name="copyNew.err.name" xml:space="preserve"><value>프로필 이름이 필요합니다.</value></data>
+  <data name="copyNew.err.source" xml:space="preserve"><value>원본(마스터) 계정을 선택합니다.</value></data>
+  <data name="copyNew.err.destinations" xml:space="preserve"><value>적어도 하나의 대상(슬레이브) 계정을 선택합니다.</value></data>
+  <data name="copyNew.err.parameter" xml:space="preserve"><value>매개변수는 0보다 커야 합니다.</value></data>
+  <data name="copyNew.err.slippage" xml:space="preserve"><value>슬리피지는 음수일 수 없습니다.</value></data>
+  <data name="copyNew.err.minLot" xml:space="preserve"><value>최소 로트는 음수일 수 없습니다.</value></data>
+  <data name="copyNew.err.maxLot" xml:space="preserve"><value>최대 로트는 음수일 수 없습니다.</value></data>
+  <data name="copyNew.err.lotOrder" xml:space="preserve"><value>최대 로트는 최소 로트보다 크거나 같아야 합니다.</value></data>
+  <data name="copyNew.err.maxDelay" xml:space="preserve"><value>최대 지연은 음수일 수 없습니다.</value></data>
+  <data name="copyNew.err.drawdown" xml:space="preserve"><value>최대 낙폭 %는 0에서 100 사이여야 합니다.</value></data>
+  <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>일일 손실 한도는 음수일 수 없습니다.</value></data>
+  <data name="copyNew.err.orderTypes" xml:space="preserve"><value>적어도 하나의 주문 유형을 활성화합니다.</value></data>
+  <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>선택한 심볼 필터에 대해 적어도 하나의 심볼을 추가합니다.</value></data>
 </root>

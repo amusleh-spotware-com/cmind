@@ -200,4 +200,114 @@
   <data name="copyDetail.title" xml:space="preserve"><value>Copy Profile</value></data>
   <data name="copyDetail.notFound" xml:space="preserve"><value>This copy profile no longer exists - it may have been deleted or you do not have access to it.</value></data>
   <data name="copyDetail.back" xml:space="preserve"><value>Back to copy trading</value></data>
+  <data name="copy.symbols.add" xml:space="preserve"><value>Hozzáadás</value></data>
+  <data name="copy.symbols.none" xml:space="preserve"><value>Még nincs szimbólum hozzáadva</value></data>
+  <data name="copy.map.source" xml:space="preserve"><value>Forrás szimbólum</value></data>
+  <data name="copy.map.destination" xml:space="preserve"><value>Cél szimbólum</value></data>
+  <data name="copy.map.multiplier" xml:space="preserve"><value>Mennyiség ×</value></data>
+  <data name="copy.map.add" xml:space="preserve"><value>Hozzáadás</value></data>
+  <data name="copy.map.none" xml:space="preserve"><value>Még nincs szimbólum leképezés</value></data>
+  <data name="copy.map.remove" xml:space="preserve"><value>Leképezés eltávolítása</value></data>
+  <data name="copy.map.exportCsv" xml:space="preserve"><value>CSV exportálás</value></data>
+  <data name="copy.map.importCsv" xml:space="preserve"><value>CSV importálás</value></data>
+  <data name="copy.map.imported" xml:space="preserve"><value>{0} leképezés importálva</value></data>
+  <data name="copy.map.importEmpty" xml:space="preserve"><value>Nincs leképezés a fájlban</value></data>
+  <data name="copy.map.importFailed" xml:space="preserve"><value>Nem sikerült a CSV fájl olvasása</value></data>
+  <data name="copyNew.title" xml:space="preserve"><value>Új másolási profil</value></data>
+  <data name="copyNew.back" xml:space="preserve"><value>Vissza a másolási kereskedéshez</value></data>
+  <data name="copyNew.section.identity" xml:space="preserve"><value>Profil és számlák</value></data>
+  <data name="copyNew.section.sizing" xml:space="preserve"><value>Méretezés és kockázat</value></data>
+  <data name="copyNew.section.behaviour" xml:space="preserve"><value>Másolási viselkedés</value></data>
+  <data name="copyNew.section.orderTypes" xml:space="preserve"><value>Rendelés típusok</value></data>
+  <data name="copyNew.section.symbols" xml:space="preserve"><value>Szimbólumok</value></data>
+  <data name="copyNew.section.portability" xml:space="preserve"><value>Beállítások importálása/exportálása</value></data>
+  <data name="copyNew.name" xml:space="preserve"><value>Profil neve</value></data>
+  <data name="copyNew.name.required" xml:space="preserve"><value>A profil neve kötelező</value></data>
+  <data name="copyNew.source" xml:space="preserve"><value>Forrás (master) számla</value></data>
+  <data name="copyNew.source.required" xml:space="preserve"><value>A forrás számla kötelező</value></data>
+  <data name="copyNew.destinations" xml:space="preserve"><value>Cél (slave) számlák</value></data>
+  <data name="copyNew.destinations.count" xml:space="preserve"><value>{0} számla kiválasztva</value></data>
+  <data name="copyNew.destinations.help" xml:space="preserve"><value>Válasszon egy vagy több számlát, amelyekre a kereskedéseket másolni szeretné (a master ki van zárva)</value></data>
+  <data name="copyNew.selectAll" xml:space="preserve"><value>Mindegyik kiválasztása</value></data>
+  <data name="copyNew.clear" xml:space="preserve"><value>Törlés</value></data>
+  <data name="copyNew.mode" xml:space="preserve"><value>Pénzkezelés</value></data>
+  <data name="copyNew.parameter" xml:space="preserve"><value>Paraméter</value></data>
+  <data name="copyNew.slippage" xml:space="preserve"><value>Slippage (pips)</value></data>
+  <data name="copyNew.direction" xml:space="preserve"><value>Irány</value></data>
+  <data name="copyNew.minLot" xml:space="preserve"><value>Minimális lot</value></data>
+  <data name="copyNew.maxLot" xml:space="preserve"><value>Maximális lot</value></data>
+  <data name="copyNew.maxDelay" xml:space="preserve"><value>Max késleltetés (mp)</value></data>
+  <data name="copyNew.maxDrawdown" xml:space="preserve"><value>Max DrawDown %</value></data>
+  <data name="copyNew.dailyLoss" xml:space="preserve"><value>Napi veszteség korlát</value></data>
+  <data name="copyNew.reverse" xml:space="preserve"><value>Fordított</value></data>
+  <data name="copyNew.forceMin" xml:space="preserve"><value>Minimális lot kikényszerítése</value></data>
+  <data name="copyNew.copySl" xml:space="preserve"><value>SL másolása</value></data>
+  <data name="copyNew.copyTp" xml:space="preserve"><value>TP másolása</value></data>
+  <data name="copyNew.partialClose" xml:space="preserve"><value>Részleges zárás</value></data>
+  <data name="copyNew.scaleIn" xml:space="preserve"><value>Lépcsőzetes beszálláss</value></data>
+  <data name="copyNew.pending" xml:space="preserve"><value>Függőben lévő rendelések</value></data>
+  <data name="copyNew.trailing" xml:space="preserve"><value>Trailing stop</value></data>
+  <data name="copyNew.copyExpiry" xml:space="preserve"><value>Lejárati idő másolása</value></data>
+  <data name="copyNew.copySlippage" xml:space="preserve"><value>Slippage másolása</value></data>
+  <data name="copyNew.market" xml:space="preserve"><value>Piaci</value></data>
+  <data name="copyNew.marketRange" xml:space="preserve"><value>Piaci tartomány</value></data>
+  <data name="copyNew.limit" xml:space="preserve"><value>Limit</value></data>
+  <data name="copyNew.stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="copyNew.stopLimit" xml:space="preserve"><value>Stop limit</value></data>
+  <data name="copyNew.filterMode" xml:space="preserve"><value>Szimbólum szűrő</value></data>
+  <data name="copyNew.filterSymbols" xml:space="preserve"><value>Szimbólumok szűrése</value></data>
+  <data name="copyNew.symbolMap" xml:space="preserve"><value>Szimbólum leképezés</value></data>
+  <data name="copyNew.exportSettings" xml:space="preserve"><value>Beállítások exportálása</value></data>
+  <data name="copyNew.importSettings" xml:space="preserve"><value>Beállítások importálása</value></data>
+  <data name="copyNew.settingsImported" xml:space="preserve"><value>Beállítások importálva</value></data>
+  <data name="copyNew.settingsImportFailed" xml:space="preserve"><value>Nem sikerült a beállítások fájl olvasása</value></data>
+  <data name="copyNew.cancel" xml:space="preserve"><value>Mégse</value></data>
+  <data name="copyNew.create" xml:space="preserve"><value>Profil létrehozása</value></data>
+  <data name="copyNew.created" xml:space="preserve"><value>Profil létrehozva</value></data>
+  <data name="copyNew.createFailed" xml:space="preserve"><value>Nem sikerült a profil létrehozása</value></data>
+  <data name="copyNew.partialFailed" xml:space="preserve"><value>A profil létrehozva, de egyes cél beállítások nem kerültek alkalmazásra</value></data>
+  <data name="copyNew.tip.name" xml:space="preserve"><value>Egy rövid név a másolási profil felismeréséhez a listában.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>A master számla, amelynek kereskedéseit másolni kell.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Egy vagy több számla, amely megkapja a master kereskedéseit. A master maga ki van zárva.</value></data>
+  <data name="copyNew.tip.mode" xml:space="preserve"><value>Hogyan méretezzük az egyes másolt kereskedéseket a masterhez képest: fix lot, szorzó, egyenleg/tőke aránya vagy rögzített kockázat százalék.</value></data>
+  <data name="copyNew.tip.parameter" xml:space="preserve"><value>A szám, amelyet a méretezési mód használ — pl. a szorzó (1 = ugyanaz a méret) vagy a kockázat százalék.</value></data>
+  <data name="copyNew.tip.slippage" xml:space="preserve"><value>Maximális áreltérés (pipben), amely tolerálható a másolt rendelés elhelyezésekor, mielőtt azt elutasítanák.</value></data>
+  <data name="copyNew.tip.direction" xml:space="preserve"><value>Mindkét irányban másol, vagy csak a master hosszú vagy csak a rövid kereskedéseit.</value></data>
+  <data name="copyNew.tip.minLot" xml:space="preserve"><value>A legkisebb lot méret, amelyet a másolás használhat. 0 = nincs minimum.</value></data>
+  <data name="copyNew.tip.maxLot" xml:space="preserve"><value>A legnagyobb lot méret, amelyet a másolás használhat. 0 = nincs maximum.</value></data>
+  <data name="copyNew.tip.maxDelay" xml:space="preserve"><value>Hagyja ki a másolatot, ha azt nem lehet az adott másodpercen belül elhelyezni a master kitöltése után. 0 = nincs korlát.</value></data>
+  <data name="copyNew.tip.maxDrawdown" xml:space="preserve"><value>Szüneteltesse a másolást egy célra, ha annak tőkekivonása meghaladja ezt a százalékot. 0 = letiltva.</value></data>
+  <data name="copyNew.tip.dailyLoss" xml:space="preserve"><value>Hagyja abba a másolást a napra, ha a cél valósított vesztesége eléri ezt az összeget. 0 = letiltva.</value></data>
+  <data name="copyNew.tip.reverse" xml:space="preserve"><value>Tükrözze a master kereskedéseit az ellenkező irányban (vásárlás eladásba válik).</value></data>
+  <data name="copyNew.tip.forceMin" xml:space="preserve"><value>Ha a számított méret a minimális lot alatt van, helyezze el a minimumot az átlépés helyett.</value></data>
+  <data name="copyNew.tip.copySl" xml:space="preserve"><value>Másolja a master stop-loss értékét a cél rendelésre.</value></data>
+  <data name="copyNew.tip.copyTp" xml:space="preserve"><value>Másolja a master take-profit értékét a cél rendelésre.</value></data>
+  <data name="copyNew.tip.partialClose" xml:space="preserve"><value>Amikor a master részlegesen zár egy pozíciót, zárja be ugyanezt az arányt a célon.</value></data>
+  <data name="copyNew.tip.scaleIn" xml:space="preserve"><value>Amikor a master egy pozícióhoz ad, adjon hozzá arányosan a célon.</value></data>
+  <data name="copyNew.tip.pending" xml:space="preserve"><value>Másolja a master függőben lévő (limit/stop) rendeléseit, nem csak piaci kitöltéseket.</value></data>
+  <data name="copyNew.tip.trailing" xml:space="preserve"><value>Másolja a master trailing-stop beállításait.</value></data>
+  <data name="copyNew.tip.copyExpiry" xml:space="preserve"><value>Másolja a master függőben lévő rendelésének lejárati idejét.</value></data>
+  <data name="copyNew.tip.copySlippage" xml:space="preserve"><value>Használja a master saját slippage beállítását a fenti érték helyett.</value></data>
+  <data name="copyNew.tip.orderTypes" xml:space="preserve"><value>A master melyik rendeléstípusait másolja. Tiltson le egy típust az adott rendelések figyelmen kívül hagyásához.</value></data>
+  <data name="copyNew.tip.market" xml:space="preserve"><value>Piaci rendelések másolása.</value></data>
+  <data name="copyNew.tip.marketRange" xml:space="preserve"><value>Piaci tartomány rendelések másolása.</value></data>
+  <data name="copyNew.tip.limit" xml:space="preserve"><value>Limit rendelések másolása.</value></data>
+  <data name="copyNew.tip.stop" xml:space="preserve"><value>Stop rendelések másolása.</value></data>
+  <data name="copyNew.tip.stopLimit" xml:space="preserve"><value>Stop-limit rendelések másolása.</value></data>
+  <data name="copyNew.tip.filterMode" xml:space="preserve"><value>Nincs = minden szimbólumot másoljon. Fehérlist = csak a felsorolt szimbólumok másolása. Feketeteljes = az összes szimbólum másolása, kivéve a felsoroltakat.</value></data>
+  <data name="copyNew.tip.symbolMap" xml:space="preserve"><value>Fordítson egy master szimbólumot a cél broker szimbólumára, opcionális per-szimbólum mennyiség szorzóval. Importálja vagy exportálja az egész térképet CSV fájlként.</value></data>
+  <data name="copyNew.tip.portability" xml:space="preserve"><value>Mentse az e forma összes beállítását egy fájlba, vagy töltse be őket egy korábban mentett fájlból.</value></data>
+  <data name="copyNew.err.name" xml:space="preserve"><value>A profil neve kötelező.</value></data>
+  <data name="copyNew.err.source" xml:space="preserve"><value>Válasszon egy forrás (master) számlát.</value></data>
+  <data name="copyNew.err.destinations" xml:space="preserve"><value>Válasszon ki legalább egy cél (slave) számlát.</value></data>
+  <data name="copyNew.err.parameter" xml:space="preserve"><value>A paraméter nullánál nagyobbnak kell lennie.</value></data>
+  <data name="copyNew.err.slippage" xml:space="preserve"><value>A slippage nem lehet negatív.</value></data>
+  <data name="copyNew.err.minLot" xml:space="preserve"><value>A minimális lot nem lehet negatív.</value></data>
+  <data name="copyNew.err.maxLot" xml:space="preserve"><value>A maximális lot nem lehet negatív.</value></data>
+  <data name="copyNew.err.lotOrder" xml:space="preserve"><value>A maximális lot nagyobbnak vagy egyenlőnek kell lennie, mint a minimális lot.</value></data>
+  <data name="copyNew.err.maxDelay" xml:space="preserve"><value>A maximális késleltetés nem lehet negatív.</value></data>
+  <data name="copyNew.err.drawdown" xml:space="preserve"><value>A maximális drawdown % értéknek 0 és 100 között kell lennie.</value></data>
+  <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>A napi veszteség korlát nem lehet negatív.</value></data>
+  <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Engedélyezze legalább egy rendeléstípust.</value></data>
+  <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Adjon hozzá legalább egy szimbólumot a kiválasztott szimbólumszűrőhöz.</value></data>
 </root>

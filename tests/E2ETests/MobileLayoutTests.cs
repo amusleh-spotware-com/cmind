@@ -13,7 +13,7 @@ public sealed class MobileLayoutTests(AppFixture app)
 {
     public static IEnumerable<object[]> MobileRoutes() => new[]
     {
-        "/", "/cbots", "/run", "/backtest", "/accounts", "/copy-trading",
+        "/", "/cbots", "/run", "/backtest", "/accounts", "/copy-trading", "/copy-trading/new",
         "/ai/build", "/nodes", "/users", "/account", "/settings/features", "/settings/deployment", "/economic-calendar",
         // F-03: the quant suite + journal were absent from the mobile census.
         "/quant/execution", "/quant/health", "/quant/integrity", "/quant/positioning",
@@ -24,7 +24,7 @@ public sealed class MobileLayoutTests(AppFixture app)
     public static IEnumerable<object[]> NoOverflowRoutes() => new[]
     {
         "/", "/account", "/settings/features", "/nodes", "/users", "/cbots", "/run", "/backtest",
-        "/mcp", "/prop-firm", "/settings/legal", "/copy-trading",
+        "/mcp", "/prop-firm", "/settings/legal", "/copy-trading", "/copy-trading/new",
         "/agent", "/alerts", "/prop-guard", "/settings/ai", "/settings/openapi", "/accounts",
         "/ai/build", "/ai/review", "/ai/optimize", "/optimize", "/economic-calendar", "/settings/deployment",
         // F-03: quant suite + journal (empty state) must not scroll sideways on a phone.

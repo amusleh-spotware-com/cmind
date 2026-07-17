@@ -1,0 +1,51 @@
+@* Editable add/remove list of symbol names (used for the whitelist/blacklist symbol filter). Replaces a
+   raw comma-separated text box (mandate 7): one validated chip per symbol, added via a field + button,
+   removed via a chip close. Culture-invariant symbol text; no delimiter parsing hostile on mobile. *@
+@inject IStringLocalizer<Ui> L
+
+<div>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+        <MudTextField T="string" @bind-Value="_pending" Label="@Label" Immediate="true"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" Class="flex-grow-1"
+                      OnKeyDown="@OnKeyDown" data-testid="@($"{TestId}-input")" />
+        <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="Add" data-testid="@($"{TestId}-add")">@L["copy.symbols.add"]</MudButton>
+    </MudStack>
+    @if (Symbols.Count == 0)
+    {
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">@L["copy.symbols.none"]</MudText>
+    }
+    else
+    {
+        <MudChipSet T="string" Class="mt-1" data-testid="@($"{TestId}-chips")">
+            @foreach (var symbol in Symbols)
+            {
+                <MudChip T="string" Size="Size.Small" OnClose="@(() => Remove(symbol))"
+                         CloseIcon="@Icons.Material.Filled.Close">@symbol</MudChip>
+            }
+        </MudChipSet>
+    }
+</div>
+
+@code {
+    [Parameter] public List<string> Symbols { get; set; } = [];
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string TestId { get; set; } = "symbol-list";
+
+    private string _pending = "";
+
+    private void Add()
+    {
+        var symbol = _pending.Trim();
+        if (symbol.Length == 0) return;
+        if (!Symbols.Contains(symbol, StringComparer.OrdinalIgnoreCase)) Symbols.Add(symbol);
+        _pending = "";
+    }
+
+    private void Remove(string symbol) => Symbols.Remove(symbol);
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key is "Enter") Add();
+    }
+}

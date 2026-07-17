@@ -200,4 +200,114 @@
   <data name="copyDetail.title" xml:space="preserve"><value>Copy Profile</value></data>
   <data name="copyDetail.notFound" xml:space="preserve"><value>This copy profile no longer exists - it may have been deleted or you do not have access to it.</value></data>
   <data name="copyDetail.back" xml:space="preserve"><value>Back to copy trading</value></data>
+  <data name="copy.symbols.add" xml:space="preserve"><value>Thêm</value></data>
+  <data name="copy.symbols.none" xml:space="preserve"><value>Chưa có ký hiệu nào được thêm</value></data>
+  <data name="copy.map.source" xml:space="preserve"><value>Ký hiệu nguồn</value></data>
+  <data name="copy.map.destination" xml:space="preserve"><value>Ký hiệu đích</value></data>
+  <data name="copy.map.multiplier" xml:space="preserve"><value>Khối lượng ×</value></data>
+  <data name="copy.map.add" xml:space="preserve"><value>Thêm</value></data>
+  <data name="copy.map.none" xml:space="preserve"><value>Chưa có ánh xạ ký hiệu nào</value></data>
+  <data name="copy.map.remove" xml:space="preserve"><value>Xóa ánh xạ</value></data>
+  <data name="copy.map.exportCsv" xml:space="preserve"><value>Xuất CSV</value></data>
+  <data name="copy.map.importCsv" xml:space="preserve"><value>Nhập CSV</value></data>
+  <data name="copy.map.imported" xml:space="preserve"><value>{0} ánh xạ đã được nhập</value></data>
+  <data name="copy.map.importEmpty" xml:space="preserve"><value>Không tìm thấy ánh xạ nào trong tệp</value></data>
+  <data name="copy.map.importFailed" xml:space="preserve"><value>Không thể đọc tệp CSV</value></data>
+  <data name="copyNew.title" xml:space="preserve"><value>Hồ sơ Sao chép Mới</value></data>
+  <data name="copyNew.back" xml:space="preserve"><value>Quay lại Sao chép Giao dịch</value></data>
+  <data name="copyNew.section.identity" xml:space="preserve"><value>Hồ sơ &amp; tài khoản</value></data>
+  <data name="copyNew.section.sizing" xml:space="preserve"><value>Kích thước &amp; rủi ro</value></data>
+  <data name="copyNew.section.behaviour" xml:space="preserve"><value>Hành động sao chép</value></data>
+  <data name="copyNew.section.orderTypes" xml:space="preserve"><value>Loại lệnh</value></data>
+  <data name="copyNew.section.symbols" xml:space="preserve"><value>Ký hiệu</value></data>
+  <data name="copyNew.section.portability" xml:space="preserve"><value>Nhập / xuất cài đặt</value></data>
+  <data name="copyNew.name" xml:space="preserve"><value>Tên hồ sơ</value></data>
+  <data name="copyNew.name.required" xml:space="preserve"><value>Tên hồ sơ là bắt buộc</value></data>
+  <data name="copyNew.source" xml:space="preserve"><value>Tài khoản nguồn (chủ)</value></data>
+  <data name="copyNew.source.required" xml:space="preserve"><value>Tài khoản nguồn là bắt buộc</value></data>
+  <data name="copyNew.destinations" xml:space="preserve"><value>Tài khoản đích (tôi tớ)</value></data>
+  <data name="copyNew.destinations.count" xml:space="preserve"><value>{0} tài khoản được chọn</value></data>
+  <data name="copyNew.destinations.help" xml:space="preserve"><value>Chọn một hoặc nhiều tài khoản để sao chép giao dịch vào (tài khoản chủ bị loại trừ)</value></data>
+  <data name="copyNew.selectAll" xml:space="preserve"><value>Chọn tất cả</value></data>
+  <data name="copyNew.clear" xml:space="preserve"><value>Xóa</value></data>
+  <data name="copyNew.mode" xml:space="preserve"><value>Quản lý tiền</value></data>
+  <data name="copyNew.parameter" xml:space="preserve"><value>Tham số</value></data>
+  <data name="copyNew.slippage" xml:space="preserve"><value>Trượt giá (pips)</value></data>
+  <data name="copyNew.direction" xml:space="preserve"><value>Hướng</value></data>
+  <data name="copyNew.minLot" xml:space="preserve"><value>Lot tối thiểu</value></data>
+  <data name="copyNew.maxLot" xml:space="preserve"><value>Lot tối đa</value></data>
+  <data name="copyNew.maxDelay" xml:space="preserve"><value>Độ trễ tối đa (s)</value></data>
+  <data name="copyNew.maxDrawdown" xml:space="preserve"><value>Drawdown tối đa %</value></data>
+  <data name="copyNew.dailyLoss" xml:space="preserve"><value>Giới hạn lỗ hàng ngày</value></data>
+  <data name="copyNew.reverse" xml:space="preserve"><value>Đảo ngược</value></data>
+  <data name="copyNew.forceMin" xml:space="preserve"><value>Bắt buộc lot tối thiểu</value></data>
+  <data name="copyNew.copySl" xml:space="preserve"><value>Sao chép SL</value></data>
+  <data name="copyNew.copyTp" xml:space="preserve"><value>Sao chép TP</value></data>
+  <data name="copyNew.partialClose" xml:space="preserve"><value>Đóng một phần</value></data>
+  <data name="copyNew.scaleIn" xml:space="preserve"><value>Tăng quy mô</value></data>
+  <data name="copyNew.pending" xml:space="preserve"><value>Lệnh chưa hoàn thành</value></data>
+  <data name="copyNew.trailing" xml:space="preserve"><value>Dừng theo dõi</value></data>
+  <data name="copyNew.copyExpiry" xml:space="preserve"><value>Sao chép thời hạn</value></data>
+  <data name="copyNew.copySlippage" xml:space="preserve"><value>Sao chép trượt giá</value></data>
+  <data name="copyNew.market" xml:space="preserve"><value>Thị trường</value></data>
+  <data name="copyNew.marketRange" xml:space="preserve"><value>Phạm vi thị trường</value></data>
+  <data name="copyNew.limit" xml:space="preserve"><value>Giới hạn</value></data>
+  <data name="copyNew.stop" xml:space="preserve"><value>Dừng</value></data>
+  <data name="copyNew.stopLimit" xml:space="preserve"><value>Dừng giới hạn</value></data>
+  <data name="copyNew.filterMode" xml:space="preserve"><value>Bộ lọc ký hiệu</value></data>
+  <data name="copyNew.filterSymbols" xml:space="preserve"><value>Lọc ký hiệu</value></data>
+  <data name="copyNew.symbolMap" xml:space="preserve"><value>Bản đồ ký hiệu</value></data>
+  <data name="copyNew.exportSettings" xml:space="preserve"><value>Xuất cài đặt</value></data>
+  <data name="copyNew.importSettings" xml:space="preserve"><value>Nhập cài đặt</value></data>
+  <data name="copyNew.settingsImported" xml:space="preserve"><value>Cài đặt đã được nhập</value></data>
+  <data name="copyNew.settingsImportFailed" xml:space="preserve"><value>Không thể đọc tệp cài đặt</value></data>
+  <data name="copyNew.cancel" xml:space="preserve"><value>Hủy</value></data>
+  <data name="copyNew.create" xml:space="preserve"><value>Tạo hồ sơ</value></data>
+  <data name="copyNew.created" xml:space="preserve"><value>Hồ sơ đã được tạo</value></data>
+  <data name="copyNew.createFailed" xml:space="preserve"><value>Không thể tạo hồ sơ</value></data>
+  <data name="copyNew.partialFailed" xml:space="preserve"><value>Hồ sơ đã được tạo, nhưng không thể áp dụng một số cài đặt đích</value></data>
+  <data name="copyNew.tip.name" xml:space="preserve"><value>Một tên ngắn để nhận biết hồ sơ sao chép này trong danh sách.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Tài khoản chủ có các giao dịch được sao chép.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Một hoặc nhiều tài khoản nhận bản sao của các giao dịch của chủ. Bản thân tài khoản chủ bị loại trừ.</value></data>
+  <data name="copyNew.tip.mode" xml:space="preserve"><value>Cách mỗi giao dịch được sao chép có kích thước so với chủ: một lot cố định, một bội số, một tỷ lệ của số dư/vốn chủ, hoặc một phần trăm rủi ro cố định.</value></data>
+  <data name="copyNew.tip.parameter" xml:space="preserve"><value>Số mà chế độ kích thước sử dụng — ví dụ: bội số (1 = cùng kích thước) hoặc phần trăm rủi ro.</value></data>
+  <data name="copyNew.tip.slippage" xml:space="preserve"><value>Độ lệch giá tối đa, tính bằng pips, được chấp nhận khi đặt lệnh sao chép trước khi nó bị từ chối.</value></data>
+  <data name="copyNew.tip.direction" xml:space="preserve"><value>Sao chép cả hai hướng, hoặc chỉ giao dịch dài hoặc chỉ giao dịch ngắn của chủ.</value></data>
+  <data name="copyNew.tip.minLot" xml:space="preserve"><value>Kích thước lot nhỏ nhất mà bản sao có thể sử dụng. 0 = không có giới hạn tối thiểu.</value></data>
+  <data name="copyNew.tip.maxLot" xml:space="preserve"><value>Kích thước lot lớn nhất mà bản sao có thể sử dụng. 0 = không có giới hạn tối đa.</value></data>
+  <data name="copyNew.tip.maxDelay" xml:space="preserve"><value>Bỏ qua bản sao nếu nó không thể được đặt trong bao nhiêu giây sau lần điền của chủ. 0 = không có giới hạn.</value></data>
+  <data name="copyNew.tip.maxDrawdown" xml:space="preserve"><value>Tạm dừng sao chép vào đích nếu rút vốn vốn chủ của nó vượt quá phần trăm này. 0 = bị vô hiệu hóa.</value></data>
+  <data name="copyNew.tip.dailyLoss" xml:space="preserve"><value>Dừng sao chép cho ngày nếu tổn thất thực hiện của đích đạt đến số tiền này. 0 = bị vô hiệu hóa.</value></data>
+  <data name="copyNew.tip.reverse" xml:space="preserve"><value>Phản chiếu các giao dịch của chủ theo hướng ngược lại (mua trở thành bán).</value></data>
+  <data name="copyNew.tip.forceMin" xml:space="preserve"><value>Nếu kích thước được tính toán dưới lot tối thiểu, hãy đặt mức tối thiểu thay vì bỏ qua.</value></data>
+  <data name="copyNew.tip.copySl" xml:space="preserve"><value>Sao chép điểm dừng lỗ của chủ vào lệnh đích.</value></data>
+  <data name="copyNew.tip.copyTp" xml:space="preserve"><value>Sao chép điểm lấy lợi nhuận của chủ vào lệnh đích.</value></data>
+  <data name="copyNew.tip.partialClose" xml:space="preserve"><value>Khi chủ đóng một phần vị thế, hãy đóng cùng một tỷ lệ trên đích.</value></data>
+  <data name="copyNew.tip.scaleIn" xml:space="preserve"><value>Khi chủ thêm vào vị thế, hãy thêm tương ứng vào đích.</value></data>
+  <data name="copyNew.tip.pending" xml:space="preserve"><value>Sao chép các lệnh chưa hoàn thành (giới hạn/dừng) của chủ, không chỉ những lần điền thị trường.</value></data>
+  <data name="copyNew.tip.trailing" xml:space="preserve"><value>Sao chép các điều chỉnh dừng theo dõi của chủ.</value></data>
+  <data name="copyNew.tip.copyExpiry" xml:space="preserve"><value>Sao chép thời hạn của các lệnh chưa hoàn thành của chủ.</value></data>
+  <data name="copyNew.tip.copySlippage" xml:space="preserve"><value>Sử dụng cài đặt trượt giá của riêng chủ thay vì giá trị ở trên.</value></data>
+  <data name="copyNew.tip.orderTypes" xml:space="preserve"><value>Loại lệnh nào của chủ được sao chép. Vô hiệu hóa một loại để bỏ qua những lệnh đó.</value></data>
+  <data name="copyNew.tip.market" xml:space="preserve"><value>Sao chép lệnh thị trường.</value></data>
+  <data name="copyNew.tip.marketRange" xml:space="preserve"><value>Sao chép các lệnh phạm vi thị trường.</value></data>
+  <data name="copyNew.tip.limit" xml:space="preserve"><value>Sao chép các lệnh giới hạn.</value></data>
+  <data name="copyNew.tip.stop" xml:space="preserve"><value>Sao chép các lệnh dừng.</value></data>
+  <data name="copyNew.tip.stopLimit" xml:space="preserve"><value>Sao chép các lệnh dừng-giới hạn.</value></data>
+  <data name="copyNew.tip.filterMode" xml:space="preserve"><value>Không = sao chép mọi ký hiệu. Danh sách cho phép = chỉ sao chép các ký hiệu được liệt kê. Danh sách từ chối = sao chép tất cả ngoại trừ các ký hiệu được liệt kê.</value></data>
+  <data name="copyNew.tip.symbolMap" xml:space="preserve"><value>Dịch một ký hiệu chủ sang ký hiệu của nhà môi giới đích, với tùy chọn bội số khối lượng trên mỗi ký hiệu. Nhập hoặc xuất toàn bộ bản đồ dưới dạng tệp CSV.</value></data>
+  <data name="copyNew.tip.portability" xml:space="preserve"><value>Lưu tất cả các cài đặt trong biểu mẫu này vào một tệp hoặc tải chúng từ một tệp đã lưu trước đó.</value></data>
+  <data name="copyNew.err.name" xml:space="preserve"><value>Tên hồ sơ là bắt buộc.</value></data>
+  <data name="copyNew.err.source" xml:space="preserve"><value>Chọn tài khoản nguồn (chủ).</value></data>
+  <data name="copyNew.err.destinations" xml:space="preserve"><value>Chọn ít nhất một tài khoản đích (tôi tớ).</value></data>
+  <data name="copyNew.err.parameter" xml:space="preserve"><value>Tham số phải lớn hơn không.</value></data>
+  <data name="copyNew.err.slippage" xml:space="preserve"><value>Trượt giá không thể là số âm.</value></data>
+  <data name="copyNew.err.minLot" xml:space="preserve"><value>Lot tối thiểu không thể là số âm.</value></data>
+  <data name="copyNew.err.maxLot" xml:space="preserve"><value>Lot tối đa không thể là số âm.</value></data>
+  <data name="copyNew.err.lotOrder" xml:space="preserve"><value>Lot tối đa phải lớn hơn hoặc bằng lot tối thiểu.</value></data>
+  <data name="copyNew.err.maxDelay" xml:space="preserve"><value>Độ trễ tối đa không thể là số âm.</value></data>
+  <data name="copyNew.err.drawdown" xml:space="preserve"><value>Drawdown tối đa % phải từ 0 đến 100.</value></data>
+  <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Giới hạn lỗ hàng ngày không thể là số âm.</value></data>
+  <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Bật ít nhất một loại lệnh.</value></data>
+  <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Thêm ít nhất một ký hiệu cho bộ lọc ký hiệu được chọn.</value></data>
 </root>

@@ -200,4 +200,114 @@
   <data name="copyDetail.title" xml:space="preserve"><value>Copy Profile</value></data>
   <data name="copyDetail.notFound" xml:space="preserve"><value>This copy profile no longer exists - it may have been deleted or you do not have access to it.</value></data>
   <data name="copyDetail.back" xml:space="preserve"><value>Back to copy trading</value></data>
+  <data name="copy.symbols.add" xml:space="preserve"><value>Aggiungi</value></data>
+  <data name="copy.symbols.none" xml:space="preserve"><value>Nessun simbolo aggiunto ancora</value></data>
+  <data name="copy.map.source" xml:space="preserve"><value>Simbolo sorgente</value></data>
+  <data name="copy.map.destination" xml:space="preserve"><value>Simbolo destinazione</value></data>
+  <data name="copy.map.multiplier" xml:space="preserve"><value>Volume ×</value></data>
+  <data name="copy.map.add" xml:space="preserve"><value>Aggiungi</value></data>
+  <data name="copy.map.none" xml:space="preserve"><value>Nessuna mappatura simbolo ancora</value></data>
+  <data name="copy.map.remove" xml:space="preserve"><value>Rimuovi mappatura</value></data>
+  <data name="copy.map.exportCsv" xml:space="preserve"><value>Esporta CSV</value></data>
+  <data name="copy.map.importCsv" xml:space="preserve"><value>Importa CSV</value></data>
+  <data name="copy.map.imported" xml:space="preserve"><value>{0} mappatura(e) importate</value></data>
+  <data name="copy.map.importEmpty" xml:space="preserve"><value>Nessuna mappatura trovata nel file</value></data>
+  <data name="copy.map.importFailed" xml:space="preserve"><value>Impossibile leggere il file CSV</value></data>
+  <data name="copyNew.title" xml:space="preserve"><value>Nuovo Profilo di Copia</value></data>
+  <data name="copyNew.back" xml:space="preserve"><value>Torna al Copy Trading</value></data>
+  <data name="copyNew.section.identity" xml:space="preserve"><value>Profilo e conti</value></data>
+  <data name="copyNew.section.sizing" xml:space="preserve"><value>Dimensionamento e rischio</value></data>
+  <data name="copyNew.section.behaviour" xml:space="preserve"><value>Comportamento copia</value></data>
+  <data name="copyNew.section.orderTypes" xml:space="preserve"><value>Tipi di ordine</value></data>
+  <data name="copyNew.section.symbols" xml:space="preserve"><value>Simboli</value></data>
+  <data name="copyNew.section.portability" xml:space="preserve"><value>Importa / esporta impostazioni</value></data>
+  <data name="copyNew.name" xml:space="preserve"><value>Nome profilo</value></data>
+  <data name="copyNew.name.required" xml:space="preserve"><value>Il nome del profilo è obbligatorio</value></data>
+  <data name="copyNew.source" xml:space="preserve"><value>Conto sorgente (master)</value></data>
+  <data name="copyNew.source.required" xml:space="preserve"><value>Il conto sorgente è obbligatorio</value></data>
+  <data name="copyNew.destinations" xml:space="preserve"><value>Conti destinazione (slave)</value></data>
+  <data name="copyNew.destinations.count" xml:space="preserve"><value>{0} conto/i selezionato/i</value></data>
+  <data name="copyNew.destinations.help" xml:space="preserve"><value>Seleziona uno o più conti nei quali copiare gli scambi (il master è escluso)</value></data>
+  <data name="copyNew.selectAll" xml:space="preserve"><value>Seleziona tutto</value></data>
+  <data name="copyNew.clear" xml:space="preserve"><value>Cancella</value></data>
+  <data name="copyNew.mode" xml:space="preserve"><value>Money management</value></data>
+  <data name="copyNew.parameter" xml:space="preserve"><value>Parametro</value></data>
+  <data name="copyNew.slippage" xml:space="preserve"><value>Slippage (pip)</value></data>
+  <data name="copyNew.direction" xml:space="preserve"><value>Direzione</value></data>
+  <data name="copyNew.minLot" xml:space="preserve"><value>Lotto minimo</value></data>
+  <data name="copyNew.maxLot" xml:space="preserve"><value>Lotto massimo</value></data>
+  <data name="copyNew.maxDelay" xml:space="preserve"><value>Ritardo massimo (s)</value></data>
+  <data name="copyNew.maxDrawdown" xml:space="preserve"><value>Drawdown massimo %</value></data>
+  <data name="copyNew.dailyLoss" xml:space="preserve"><value>Limite perdita giornaliero</value></data>
+  <data name="copyNew.reverse" xml:space="preserve"><value>Inverti</value></data>
+  <data name="copyNew.forceMin" xml:space="preserve"><value>Forza lotto minimo</value></data>
+  <data name="copyNew.copySl" xml:space="preserve"><value>Copia SL</value></data>
+  <data name="copyNew.copyTp" xml:space="preserve"><value>Copia TP</value></data>
+  <data name="copyNew.partialClose" xml:space="preserve"><value>Chiusura parziale</value></data>
+  <data name="copyNew.scaleIn" xml:space="preserve"><value>Scale-in</value></data>
+  <data name="copyNew.pending" xml:space="preserve"><value>Ordini in sospeso</value></data>
+  <data name="copyNew.trailing" xml:space="preserve"><value>Trailing stop</value></data>
+  <data name="copyNew.copyExpiry" xml:space="preserve"><value>Copia scadenza</value></data>
+  <data name="copyNew.copySlippage" xml:space="preserve"><value>Copia slippage</value></data>
+  <data name="copyNew.market" xml:space="preserve"><value>Market</value></data>
+  <data name="copyNew.marketRange" xml:space="preserve"><value>Market range</value></data>
+  <data name="copyNew.limit" xml:space="preserve"><value>Limit</value></data>
+  <data name="copyNew.stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="copyNew.stopLimit" xml:space="preserve"><value>Stop limit</value></data>
+  <data name="copyNew.filterMode" xml:space="preserve"><value>Filtro simbolo</value></data>
+  <data name="copyNew.filterSymbols" xml:space="preserve"><value>Filtra simboli</value></data>
+  <data name="copyNew.symbolMap" xml:space="preserve"><value>Mappatura simbolo</value></data>
+  <data name="copyNew.exportSettings" xml:space="preserve"><value>Esporta impostazioni</value></data>
+  <data name="copyNew.importSettings" xml:space="preserve"><value>Importa impostazioni</value></data>
+  <data name="copyNew.settingsImported" xml:space="preserve"><value>Impostazioni importate</value></data>
+  <data name="copyNew.settingsImportFailed" xml:space="preserve"><value>Impossibile leggere il file di impostazioni</value></data>
+  <data name="copyNew.cancel" xml:space="preserve"><value>Annulla</value></data>
+  <data name="copyNew.create" xml:space="preserve"><value>Crea profilo</value></data>
+  <data name="copyNew.created" xml:space="preserve"><value>Profilo creato</value></data>
+  <data name="copyNew.createFailed" xml:space="preserve"><value>Impossibile creare il profilo</value></data>
+  <data name="copyNew.partialFailed" xml:space="preserve"><value>Profilo creato, ma alcune impostazioni di destinazione non hanno potuto essere applicate</value></data>
+  <data name="copyNew.tip.name" xml:space="preserve"><value>Un nome breve per riconoscere questo profilo di copia nell'elenco.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Il conto master i cui scambi vengono copiati.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Uno o più conti che ricevono copie degli scambi del master. Il master stesso è escluso.</value></data>
+  <data name="copyNew.tip.mode" xml:space="preserve"><value>Come ogni scambio copiato viene dimensionato rispetto al master: un lotto fisso, un moltiplicatore, una proporzione del saldo/equity, o una percentuale di rischio fissa.</value></data>
+  <data name="copyNew.tip.parameter" xml:space="preserve"><value>Il numero che la modalità di dimensionamento utilizza — ad es. il moltiplicatore (1 = stessa dimensione) o la percentuale di rischio.</value></data>
+  <data name="copyNew.tip.slippage" xml:space="preserve"><value>Deviazione di prezzo massima, in pip, tollerata quando si piazza l'ordine copiato prima che venga rifiutato.</value></data>
+  <data name="copyNew.tip.direction" xml:space="preserve"><value>Copia entrambe le direzioni, o solo gli scambi long del master o solo i suoi short.</value></data>
+  <data name="copyNew.tip.minLot" xml:space="preserve"><value>Dimensione lotto più piccola che una copia può utilizzare. 0 = nessun minimo.</value></data>
+  <data name="copyNew.tip.maxLot" xml:space="preserve"><value>Dimensione lotto più grande che una copia può utilizzare. 0 = nessun massimo.</value></data>
+  <data name="copyNew.tip.maxDelay" xml:space="preserve"><value>Salta una copia se non può essere piazzata entro questo numero di secondi dal riempimento del master. 0 = nessun limite.</value></data>
+  <data name="copyNew.tip.maxDrawdown" xml:space="preserve"><value>Pausa la copia verso una destinazione se il suo drawdown equity supera questa percentuale. 0 = disabilitato.</value></data>
+  <data name="copyNew.tip.dailyLoss" xml:space="preserve"><value>Smetti di copiare per il giorno se la perdita realizzata della destinazione raggiunge questo importo. 0 = disabilitato.</value></data>
+  <data name="copyNew.tip.reverse" xml:space="preserve"><value>Rispecchia gli scambi del master nella direzione opposta (buy diventa sell).</value></data>
+  <data name="copyNew.tip.forceMin" xml:space="preserve"><value>Se una dimensione calcolata è inferiore al lotto minimo, piazza il minimo invece di saltare.</value></data>
+  <data name="copyNew.tip.copySl" xml:space="preserve"><value>Copia lo stop-loss del master sull'ordine di destinazione.</value></data>
+  <data name="copyNew.tip.copyTp" xml:space="preserve"><value>Copia il take-profit del master sull'ordine di destinazione.</value></data>
+  <data name="copyNew.tip.partialClose" xml:space="preserve"><value>Quando il master chiude parzialmente una posizione, chiudi la stessa proporzione sulla destinazione.</value></data>
+  <data name="copyNew.tip.scaleIn" xml:space="preserve"><value>Quando il master aggiunge a una posizione, aggiungi proporzionalmente sulla destinazione.</value></data>
+  <data name="copyNew.tip.pending" xml:space="preserve"><value>Copia gli ordini in sospeso (limit/stop) del master, non solo i riempimenti market.</value></data>
+  <data name="copyNew.tip.trailing" xml:space="preserve"><value>Copia gli adeguamenti del trailing-stop del master.</value></data>
+  <data name="copyNew.tip.copyExpiry" xml:space="preserve"><value>Copia l'ora di scadenza degli ordini in sospeso del master.</value></data>
+  <data name="copyNew.tip.copySlippage" xml:space="preserve"><value>Usa l'impostazione di slippage del master stesso invece del valore sopra.</value></data>
+  <data name="copyNew.tip.orderTypes" xml:space="preserve"><value>Quali tipi di ordine del master vengono copiati. Disabilita un tipo per ignorare quegli ordini.</value></data>
+  <data name="copyNew.tip.market" xml:space="preserve"><value>Copia ordini market.</value></data>
+  <data name="copyNew.tip.marketRange" xml:space="preserve"><value>Copia ordini market-range.</value></data>
+  <data name="copyNew.tip.limit" xml:space="preserve"><value>Copia ordini limit.</value></data>
+  <data name="copyNew.tip.stop" xml:space="preserve"><value>Copia ordini stop.</value></data>
+  <data name="copyNew.tip.stopLimit" xml:space="preserve"><value>Copia ordini stop-limit.</value></data>
+  <data name="copyNew.tip.filterMode" xml:space="preserve"><value>Nessuno = copia ogni simbolo. Whitelist = copia solo i simboli elencati. Blacklist = copia tutto tranne i simboli elencati.</value></data>
+  <data name="copyNew.tip.symbolMap" xml:space="preserve"><value>Traduci un simbolo master al simbolo del broker di destinazione, con un moltiplicatore di volume opzionale per simbolo. Importa o esporta l'intera mappatura come file CSV.</value></data>
+  <data name="copyNew.tip.portability" xml:space="preserve"><value>Salva tutte le impostazioni su questo modulo in un file, o caricale da un file salvato in precedenza.</value></data>
+  <data name="copyNew.err.name" xml:space="preserve"><value>Il nome del profilo è obbligatorio.</value></data>
+  <data name="copyNew.err.source" xml:space="preserve"><value>Seleziona un conto sorgente (master).</value></data>
+  <data name="copyNew.err.destinations" xml:space="preserve"><value>Seleziona almeno un conto di destinazione (slave).</value></data>
+  <data name="copyNew.err.parameter" xml:space="preserve"><value>Il parametro deve essere maggiore di zero.</value></data>
+  <data name="copyNew.err.slippage" xml:space="preserve"><value>Lo slippage non può essere negativo.</value></data>
+  <data name="copyNew.err.minLot" xml:space="preserve"><value>Il lotto minimo non può essere negativo.</value></data>
+  <data name="copyNew.err.maxLot" xml:space="preserve"><value>Il lotto massimo non può essere negativo.</value></data>
+  <data name="copyNew.err.lotOrder" xml:space="preserve"><value>Il lotto massimo deve essere maggiore o uguale al lotto minimo.</value></data>
+  <data name="copyNew.err.maxDelay" xml:space="preserve"><value>Il ritardo massimo non può essere negativo.</value></data>
+  <data name="copyNew.err.drawdown" xml:space="preserve"><value>Il drawdown massimo % deve essere tra 0 e 100.</value></data>
+  <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Il limite perdita giornaliero non può essere negativo.</value></data>
+  <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Abilita almeno un tipo di ordine.</value></data>
+  <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Aggiungi almeno un simbolo per il filtro simbolo selezionato.</value></data>
 </root>

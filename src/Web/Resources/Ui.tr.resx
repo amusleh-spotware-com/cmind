@@ -200,4 +200,114 @@
   <data name="copyDetail.title" xml:space="preserve"><value>Copy Profile</value></data>
   <data name="copyDetail.notFound" xml:space="preserve"><value>This copy profile no longer exists - it may have been deleted or you do not have access to it.</value></data>
   <data name="copyDetail.back" xml:space="preserve"><value>Back to copy trading</value></data>
+  <data name="copy.symbols.add" xml:space="preserve"><value>Ekle</value></data>
+  <data name="copy.symbols.none" xml:space="preserve"><value>Henüz sembol eklenmedi</value></data>
+  <data name="copy.map.source" xml:space="preserve"><value>Kaynak sembol</value></data>
+  <data name="copy.map.destination" xml:space="preserve"><value>Hedef sembol</value></data>
+  <data name="copy.map.multiplier" xml:space="preserve"><value>Hacim ×</value></data>
+  <data name="copy.map.add" xml:space="preserve"><value>Ekle</value></data>
+  <data name="copy.map.none" xml:space="preserve"><value>Henüz sembol eşlemesi yok</value></data>
+  <data name="copy.map.remove" xml:space="preserve"><value>Eşlemeyi kaldır</value></data>
+  <data name="copy.map.exportCsv" xml:space="preserve"><value>CSV'yi dışa aktar</value></data>
+  <data name="copy.map.importCsv" xml:space="preserve"><value>CSV'yi içe aktar</value></data>
+  <data name="copy.map.imported" xml:space="preserve"><value>{0} eşleme içe aktarıldı</value></data>
+  <data name="copy.map.importEmpty" xml:space="preserve"><value>Dosyada eşleme bulunamadı</value></data>
+  <data name="copy.map.importFailed" xml:space="preserve"><value>CSV dosyası okunamadı</value></data>
+  <data name="copyNew.title" xml:space="preserve"><value>Yeni Kopya Profili</value></data>
+  <data name="copyNew.back" xml:space="preserve"><value>Kopya Ticaretine Geri Dön</value></data>
+  <data name="copyNew.section.identity" xml:space="preserve"><value>Profil ve hesaplar</value></data>
+  <data name="copyNew.section.sizing" xml:space="preserve"><value>Boyutlandırma ve risk</value></data>
+  <data name="copyNew.section.behaviour" xml:space="preserve"><value>Kopya davranışı</value></data>
+  <data name="copyNew.section.orderTypes" xml:space="preserve"><value>Emir türleri</value></data>
+  <data name="copyNew.section.symbols" xml:space="preserve"><value>Semboller</value></data>
+  <data name="copyNew.section.portability" xml:space="preserve"><value>Ayarları içe/dışa aktar</value></data>
+  <data name="copyNew.name" xml:space="preserve"><value>Profil adı</value></data>
+  <data name="copyNew.name.required" xml:space="preserve"><value>Profil adı gereklidir</value></data>
+  <data name="copyNew.source" xml:space="preserve"><value>Kaynak (master) hesap</value></data>
+  <data name="copyNew.source.required" xml:space="preserve"><value>Kaynak hesap gereklidir</value></data>
+  <data name="copyNew.destinations" xml:space="preserve"><value>Hedef (slave) hesaplar</value></data>
+  <data name="copyNew.destinations.count" xml:space="preserve"><value>{0} hesap seçildi</value></data>
+  <data name="copyNew.destinations.help" xml:space="preserve"><value>Masterin işlemleri için bir veya daha fazla hesap seçin (master hariç)</value></data>
+  <data name="copyNew.selectAll" xml:space="preserve"><value>Tümünü seç</value></data>
+  <data name="copyNew.clear" xml:space="preserve"><value>Temizle</value></data>
+  <data name="copyNew.mode" xml:space="preserve"><value>Para yönetimi</value></data>
+  <data name="copyNew.parameter" xml:space="preserve"><value>Parametre</value></data>
+  <data name="copyNew.slippage" xml:space="preserve"><value>Kayma (pip)</value></data>
+  <data name="copyNew.direction" xml:space="preserve"><value>Yön</value></data>
+  <data name="copyNew.minLot" xml:space="preserve"><value>Min lot</value></data>
+  <data name="copyNew.maxLot" xml:space="preserve"><value>Max lot</value></data>
+  <data name="copyNew.maxDelay" xml:space="preserve"><value>Max gecikme (s)</value></data>
+  <data name="copyNew.maxDrawdown" xml:space="preserve"><value>Max düşüş %</value></data>
+  <data name="copyNew.dailyLoss" xml:space="preserve"><value>Günlük kayıp limiti</value></data>
+  <data name="copyNew.reverse" xml:space="preserve"><value>Tersine çevir</value></data>
+  <data name="copyNew.forceMin" xml:space="preserve"><value>Min lotu zorla</value></data>
+  <data name="copyNew.copySl" xml:space="preserve"><value>SL'yi kopyala</value></data>
+  <data name="copyNew.copyTp" xml:space="preserve"><value>TP'yi kopyala</value></data>
+  <data name="copyNew.partialClose" xml:space="preserve"><value>Kısmi kapatma</value></data>
+  <data name="copyNew.scaleIn" xml:space="preserve"><value>Ölçekli giriş</value></data>
+  <data name="copyNew.pending" xml:space="preserve"><value>Beklemede olan emirler</value></data>
+  <data name="copyNew.trailing" xml:space="preserve"><value>Izleyen stop</value></data>
+  <data name="copyNew.copyExpiry" xml:space="preserve"><value>Son kullanma tarihini kopyala</value></data>
+  <data name="copyNew.copySlippage" xml:space="preserve"><value>Kaymayı kopyala</value></data>
+  <data name="copyNew.market" xml:space="preserve"><value>Pazar</value></data>
+  <data name="copyNew.marketRange" xml:space="preserve"><value>Pazar aralığı</value></data>
+  <data name="copyNew.limit" xml:space="preserve"><value>Limit</value></data>
+  <data name="copyNew.stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="copyNew.stopLimit" xml:space="preserve"><value>Stop limit</value></data>
+  <data name="copyNew.filterMode" xml:space="preserve"><value>Sembol filtresi</value></data>
+  <data name="copyNew.filterSymbols" xml:space="preserve"><value>Sembolleri filtrele</value></data>
+  <data name="copyNew.symbolMap" xml:space="preserve"><value>Sembol eşlemesi</value></data>
+  <data name="copyNew.exportSettings" xml:space="preserve"><value>Ayarları dışa aktar</value></data>
+  <data name="copyNew.importSettings" xml:space="preserve"><value>Ayarları içe aktar</value></data>
+  <data name="copyNew.settingsImported" xml:space="preserve"><value>Ayarlar içe aktarıldı</value></data>
+  <data name="copyNew.settingsImportFailed" xml:space="preserve"><value>Ayarlar dosyası okunamadı</value></data>
+  <data name="copyNew.cancel" xml:space="preserve"><value>İptal</value></data>
+  <data name="copyNew.create" xml:space="preserve"><value>Profil oluştur</value></data>
+  <data name="copyNew.created" xml:space="preserve"><value>Profil oluşturuldu</value></data>
+  <data name="copyNew.createFailed" xml:space="preserve"><value>Profil oluşturulamadı</value></data>
+  <data name="copyNew.partialFailed" xml:space="preserve"><value>Profil oluşturuldu, ancak bazı hedef ayarları uygulanamadı</value></data>
+  <data name="copyNew.tip.name" xml:space="preserve"><value>Bu kopya profilini listede tanımak için kısa bir ad.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>İşlemleri kopyalanan master hesap.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Masterin işlemlerinin kopyalarını alan bir veya daha fazla hesap. Master'ın kendisi hariç tutulur.</value></data>
+  <data name="copyNew.tip.mode" xml:space="preserve"><value>Kopyalanan her işlemin mastere göre boyutlandırılması: sabit lot, çarpan, bakiye/özsermayenin oranı veya sabit risk yüzdesi.</value></data>
+  <data name="copyNew.tip.parameter" xml:space="preserve"><value>Boyutlandırma modunun kullandığı sayı — örneğin çarpan (1 = aynı boyut) veya risk yüzdesi.</value></data>
+  <data name="copyNew.tip.slippage" xml:space="preserve"><value>Kopyalanan emir reddedilmeden önce tolere edilen maksimum fiyat sapması (pip cinsinden).</value></data>
+  <data name="copyNew.tip.direction" xml:space="preserve"><value>Her iki yönü kopyala veya yalnızca master'ın long veya yalnızca short işlemlerini kopyala.</value></data>
+  <data name="copyNew.tip.minLot" xml:space="preserve"><value>Bir kopyalanın kullanabileceği en küçük lot boyutu. 0 = minimum yok.</value></data>
+  <data name="copyNew.tip.maxLot" xml:space="preserve"><value>Bir kopyalanın kullanabileceği en büyük lot boyutu. 0 = maksimum yok.</value></data>
+  <data name="copyNew.tip.maxDelay" xml:space="preserve"><value>Kopyalanan işlem master'ın doldurulmasından sonra bu kadar saniye içinde yerleştirilemezse atla. 0 = limit yok.</value></data>
+  <data name="copyNew.tip.maxDrawdown" xml:space="preserve"><value>Hedef hesabın özsermaye düşüşü bu yüzdeyi aşarsa kopyalamayı duraklat. 0 = devre dışı.</value></data>
+  <data name="copyNew.tip.dailyLoss" xml:space="preserve"><value>Hedef hesabın gerçekleşen kaybı bu tutara ulaşırsa gün için kopyalamayı durdur. 0 = devre dışı.</value></data>
+  <data name="copyNew.tip.reverse" xml:space="preserve"><value>Master'ın işlemlerini ters yönde yansıt (alım satışa döner).</value></data>
+  <data name="copyNew.tip.forceMin" xml:space="preserve"><value>Hesaplanan boyut minimum lot altındaysa, yerine minimum lotu yerleştir.</value></data>
+  <data name="copyNew.tip.copySl" xml:space="preserve"><value>Master'ın stop-loss'unu hedef emire kopyala.</value></data>
+  <data name="copyNew.tip.copyTp" xml:space="preserve"><value>Master'ın take-profit'ini hedef emire kopyala.</value></data>
+  <data name="copyNew.tip.partialClose" xml:space="preserve"><value>Master bir pozisyonu kısmen kapattığında, hedefte aynı oranı kapat.</value></data>
+  <data name="copyNew.tip.scaleIn" xml:space="preserve"><value>Master bir pozisyonuna eklediğinde, hedefte orantılı olarak ekle.</value></data>
+  <data name="copyNew.tip.pending" xml:space="preserve"><value>Master'ın beklemede olan (limit/stop) emirlerini kopyala, yalnızca pazar doldurmaları değil.</value></data>
+  <data name="copyNew.tip.trailing" xml:space="preserve"><value>Master'ın izleyen-stop ayarlamalarını kopyala.</value></data>
+  <data name="copyNew.tip.copyExpiry" xml:space="preserve"><value>Master'ın beklemede olan emirlerinin son kullanma tarihini kopyala.</value></data>
+  <data name="copyNew.tip.copySlippage" xml:space="preserve"><value>Yukarıdaki değer yerine master'ın kendi kayma ayarını kullan.</value></data>
+  <data name="copyNew.tip.orderTypes" xml:space="preserve"><value>Master'ın hangi emir türlerinin kopyalandığı. Bu emirleri yok saymak için bir türü devre dışı bırak.</value></data>
+  <data name="copyNew.tip.market" xml:space="preserve"><value>Pazar emirlerini kopyala.</value></data>
+  <data name="copyNew.tip.marketRange" xml:space="preserve"><value>Pazar aralığı emirlerini kopyala.</value></data>
+  <data name="copyNew.tip.limit" xml:space="preserve"><value>Limit emirlerini kopyala.</value></data>
+  <data name="copyNew.tip.stop" xml:space="preserve"><value>Stop emirlerini kopyala.</value></data>
+  <data name="copyNew.tip.stopLimit" xml:space="preserve"><value>Stop-limit emirlerini kopyala.</value></data>
+  <data name="copyNew.tip.filterMode" xml:space="preserve"><value>Hiçbiri = her sembolü kopyala. Beyaz liste = yalnızca listelenen sembolleri kopyala. Kara liste = listelenenler hariç tüm sembolleri kopyala.</value></data>
+  <data name="copyNew.tip.symbolMap" xml:space="preserve"><value>Master sembolünü hedef brokerın sembolüne çevir, isteğe bağlı olarak sembol başına hacim çarpanı. Tüm eşlemeyi bir CSV dosyası olarak içe aktar veya dışa aktar.</value></data>
+  <data name="copyNew.tip.portability" xml:space="preserve"><value>Bu formdaki tüm ayarları bir dosyaya kaydet veya daha önce kaydedilmiş bir dosyadan yükle.</value></data>
+  <data name="copyNew.err.name" xml:space="preserve"><value>Profil adı gereklidir.</value></data>
+  <data name="copyNew.err.source" xml:space="preserve"><value>Bir kaynak (master) hesap seçin.</value></data>
+  <data name="copyNew.err.destinations" xml:space="preserve"><value>En az bir hedef (slave) hesap seçin.</value></data>
+  <data name="copyNew.err.parameter" xml:space="preserve"><value>Parametre sıfırdan büyük olmalıdır.</value></data>
+  <data name="copyNew.err.slippage" xml:space="preserve"><value>Kayma negatif olamaz.</value></data>
+  <data name="copyNew.err.minLot" xml:space="preserve"><value>Min lot negatif olamaz.</value></data>
+  <data name="copyNew.err.maxLot" xml:space="preserve"><value>Max lot negatif olamaz.</value></data>
+  <data name="copyNew.err.lotOrder" xml:space="preserve"><value>Max lot min lot'tan büyük veya eşit olmalıdır.</value></data>
+  <data name="copyNew.err.maxDelay" xml:space="preserve"><value>Max gecikme negatif olamaz.</value></data>
+  <data name="copyNew.err.drawdown" xml:space="preserve"><value>Max düşüş % 0 ile 100 arasında olmalıdır.</value></data>
+  <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Günlük kayıp limiti negatif olamaz.</value></data>
+  <data name="copyNew.err.orderTypes" xml:space="preserve"><value>En az bir emir türünü etkinleştirin.</value></data>
+  <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Seçilen sembol filtresi için en az bir sembol ekleyin.</value></data>
 </root>

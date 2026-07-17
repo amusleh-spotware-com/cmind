@@ -200,4 +200,114 @@
   <data name="copyDetail.title" xml:space="preserve"><value>Copy Profile</value></data>
   <data name="copyDetail.notFound" xml:space="preserve"><value>This copy profile no longer exists - it may have been deleted or you do not have access to it.</value></data>
   <data name="copyDetail.back" xml:space="preserve"><value>Back to copy trading</value></data>
+  <data name="copy.symbols.add" xml:space="preserve"><value>Přidat</value></data>
+  <data name="copy.symbols.none" xml:space="preserve"><value>Dosud nebyly přidány žádné symboly</value></data>
+  <data name="copy.map.source" xml:space="preserve"><value>Zdrojový symbol</value></data>
+  <data name="copy.map.destination" xml:space="preserve"><value>Cílový symbol</value></data>
+  <data name="copy.map.multiplier" xml:space="preserve"><value>Objem ×</value></data>
+  <data name="copy.map.add" xml:space="preserve"><value>Přidat</value></data>
+  <data name="copy.map.none" xml:space="preserve"><value>Zatím nejsou namapovány žádné symboly</value></data>
+  <data name="copy.map.remove" xml:space="preserve"><value>Odstranit mapování</value></data>
+  <data name="copy.map.exportCsv" xml:space="preserve"><value>Exportovat CSV</value></data>
+  <data name="copy.map.importCsv" xml:space="preserve"><value>Importovat CSV</value></data>
+  <data name="copy.map.imported" xml:space="preserve"><value>{0} mapování(í) importováno</value></data>
+  <data name="copy.map.importEmpty" xml:space="preserve"><value>V souboru nebyla nalezena žádná mapování</value></data>
+  <data name="copy.map.importFailed" xml:space="preserve"><value>Nepodařilo se přečíst soubor CSV</value></data>
+  <data name="copyNew.title" xml:space="preserve"><value>Nový profil kopírování</value></data>
+  <data name="copyNew.back" xml:space="preserve"><value>Zpět na Kopírování obchodů</value></data>
+  <data name="copyNew.section.identity" xml:space="preserve"><value>Profil a účty</value></data>
+  <data name="copyNew.section.sizing" xml:space="preserve"><value>Velikost a riziko</value></data>
+  <data name="copyNew.section.behaviour" xml:space="preserve"><value>Chování kopírování</value></data>
+  <data name="copyNew.section.orderTypes" xml:space="preserve"><value>Typy objednávek</value></data>
+  <data name="copyNew.section.symbols" xml:space="preserve"><value>Symboly</value></data>
+  <data name="copyNew.section.portability" xml:space="preserve"><value>Importovat / exportovat nastavení</value></data>
+  <data name="copyNew.name" xml:space="preserve"><value>Název profilu</value></data>
+  <data name="copyNew.name.required" xml:space="preserve"><value>Název profilu je vyžadován</value></data>
+  <data name="copyNew.source" xml:space="preserve"><value>Zdrojový (master) účet</value></data>
+  <data name="copyNew.source.required" xml:space="preserve"><value>Zdrojový účet je vyžadován</value></data>
+  <data name="copyNew.destinations" xml:space="preserve"><value>Cílové (slave) účty</value></data>
+  <data name="copyNew.destinations.count" xml:space="preserve"><value>Vybráno {0} účtů</value></data>
+  <data name="copyNew.destinations.help" xml:space="preserve"><value>Vyberte jeden nebo více účtů, do kterých se mají kopírovat obchody (master je vyloučen)</value></data>
+  <data name="copyNew.selectAll" xml:space="preserve"><value>Vybrat vše</value></data>
+  <data name="copyNew.clear" xml:space="preserve"><value>Vymazat</value></data>
+  <data name="copyNew.mode" xml:space="preserve"><value>Správa prostředků</value></data>
+  <data name="copyNew.parameter" xml:space="preserve"><value>Parametr</value></data>
+  <data name="copyNew.slippage" xml:space="preserve"><value>Slippage (pips)</value></data>
+  <data name="copyNew.direction" xml:space="preserve"><value>Směr</value></data>
+  <data name="copyNew.minLot" xml:space="preserve"><value>Min. lot</value></data>
+  <data name="copyNew.maxLot" xml:space="preserve"><value>Max. lot</value></data>
+  <data name="copyNew.maxDelay" xml:space="preserve"><value>Max. zpoždění (s)</value></data>
+  <data name="copyNew.maxDrawdown" xml:space="preserve"><value>Max. drawdown %</value></data>
+  <data name="copyNew.dailyLoss" xml:space="preserve"><value>Denní limit ztrát</value></data>
+  <data name="copyNew.reverse" xml:space="preserve"><value>Obrátit</value></data>
+  <data name="copyNew.forceMin" xml:space="preserve"><value>Vynutit min. lot</value></data>
+  <data name="copyNew.copySl" xml:space="preserve"><value>Kopírovat SL</value></data>
+  <data name="copyNew.copyTp" xml:space="preserve"><value>Kopírovat TP</value></data>
+  <data name="copyNew.partialClose" xml:space="preserve"><value>Částečné uzavření</value></data>
+  <data name="copyNew.scaleIn" xml:space="preserve"><value>Scale-in</value></data>
+  <data name="copyNew.pending" xml:space="preserve"><value>Čekající objednávky</value></data>
+  <data name="copyNew.trailing" xml:space="preserve"><value>Trailing stop</value></data>
+  <data name="copyNew.copyExpiry" xml:space="preserve"><value>Kopírovat expiraci</value></data>
+  <data name="copyNew.copySlippage" xml:space="preserve"><value>Kopírovat slippage</value></data>
+  <data name="copyNew.market" xml:space="preserve"><value>Tržní</value></data>
+  <data name="copyNew.marketRange" xml:space="preserve"><value>Rozsah trhu</value></data>
+  <data name="copyNew.limit" xml:space="preserve"><value>Limitní</value></data>
+  <data name="copyNew.stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="copyNew.stopLimit" xml:space="preserve"><value>Stop-limit</value></data>
+  <data name="copyNew.filterMode" xml:space="preserve"><value>Filtr symbolů</value></data>
+  <data name="copyNew.filterSymbols" xml:space="preserve"><value>Filtrovat symboly</value></data>
+  <data name="copyNew.symbolMap" xml:space="preserve"><value>Mapování symbolů</value></data>
+  <data name="copyNew.exportSettings" xml:space="preserve"><value>Exportovat nastavení</value></data>
+  <data name="copyNew.importSettings" xml:space="preserve"><value>Importovat nastavení</value></data>
+  <data name="copyNew.settingsImported" xml:space="preserve"><value>Nastavení importováno</value></data>
+  <data name="copyNew.settingsImportFailed" xml:space="preserve"><value>Nepodařilo se přečíst soubor nastavení</value></data>
+  <data name="copyNew.cancel" xml:space="preserve"><value>Zrušit</value></data>
+  <data name="copyNew.create" xml:space="preserve"><value>Vytvořit profil</value></data>
+  <data name="copyNew.created" xml:space="preserve"><value>Profil vytvořen</value></data>
+  <data name="copyNew.createFailed" xml:space="preserve"><value>Nepodařilo se vytvořit profil</value></data>
+  <data name="copyNew.partialFailed" xml:space="preserve"><value>Profil byl vytvořen, ale některá nastavení destinace se nepovedlo použít</value></data>
+  <data name="copyNew.tip.name" xml:space="preserve"><value>Krátký název pro identifikaci tohoto profilu kopírování v seznamu.</value></data>
+  <data name="copyNew.tip.source" xml:space="preserve"><value>Hlavní účet, jehož obchody jsou kopírovány.</value></data>
+  <data name="copyNew.tip.destinations" xml:space="preserve"><value>Jeden nebo více účtů, které přijímají kopie obchodů mastera. Samotný master je vyloučen.</value></data>
+  <data name="copyNew.tip.mode" xml:space="preserve"><value>Jak je každý kopírovaný obchod zjemňován relativně k masteru: pevný lot, násobitel, podíl zůstatku/vlastního kapitálu nebo pevné procento rizika.</value></data>
+  <data name="copyNew.tip.parameter" xml:space="preserve"><value>Číslo, které používá režim velikosti — např. násobitel (1 = stejná velikost) nebo procento rizika.</value></data>
+  <data name="copyNew.tip.slippage" xml:space="preserve"><value>Maximální odchylka ceny v pipech tolerovaná při umísťování kopírované objednávky, než bude zamítnuta.</value></data>
+  <data name="copyNew.tip.direction" xml:space="preserve"><value>Kopírovat oba směry, nebo pouze dlouhé nebo pouze krátké obchody mastera.</value></data>
+  <data name="copyNew.tip.minLot" xml:space="preserve"><value>Nejmenší velikost lotu, kterou může kopie použít. 0 = bez minima.</value></data>
+  <data name="copyNew.tip.maxLot" xml:space="preserve"><value>Největší velikost lotu, kterou může kopie použít. 0 = bez maxima.</value></data>
+  <data name="copyNew.tip.maxDelay" xml:space="preserve"><value>Přeskočit kopii, pokud ji nelze umístit do několika sekund od vyplnění mastera. 0 = bez omezení.</value></data>
+  <data name="copyNew.tip.maxDrawdown" xml:space="preserve"><value>Pozastavit kopírování do destinace, pokud její drawdown vlastního kapitálu překročí toto procento. 0 = zakázáno.</value></data>
+  <data name="copyNew.tip.dailyLoss" xml:space="preserve"><value>Přestat kopírovat na den, pokud realizovaná ztráta destinace dosáhne této částky. 0 = zakázáno.</value></data>
+  <data name="copyNew.tip.reverse" xml:space="preserve"><value>Zrcadlit obchody mastera v opačném směru (nákup se stane prodejem).</value></data>
+  <data name="copyNew.tip.forceMin" xml:space="preserve"><value>Pokud je vypočítaná velikost nižší než minimální lot, umístěte místo toho minimum.</value></data>
+  <data name="copyNew.tip.copySl" xml:space="preserve"><value>Kopírovat stop-loss mastera do objednávky destinace.</value></data>
+  <data name="copyNew.tip.copyTp" xml:space="preserve"><value>Kopírovat take-profit mastera do objednávky destinace.</value></data>
+  <data name="copyNew.tip.partialClose" xml:space="preserve"><value>Když master částečně uzavře pozici, uzavřete stejný podíl na destinaci.</value></data>
+  <data name="copyNew.tip.scaleIn" xml:space="preserve"><value>Když master přidá do pozice, proporcionálně přidejte do destinace.</value></data>
+  <data name="copyNew.tip.pending" xml:space="preserve"><value>Kopírovat čekající (limitní/stop) objednávky mastera, ne pouze tržní vyplnění.</value></data>
+  <data name="copyNew.tip.trailing" xml:space="preserve"><value>Kopírovat úpravy trailing-stop mastera.</value></data>
+  <data name="copyNew.tip.copyExpiry" xml:space="preserve"><value>Kopírovat čas vypršení čekajících objednávek mastera.</value></data>
+  <data name="copyNew.tip.copySlippage" xml:space="preserve"><value>Místo hodnoty výše použijte vlastní nastavení slippage mastera.</value></data>
+  <data name="copyNew.tip.orderTypes" xml:space="preserve"><value>Které typy objednávek mastera jsou kopírovány. Zakažte typ, abyste tyto objednávky ignorovali.</value></data>
+  <data name="copyNew.tip.market" xml:space="preserve"><value>Kopírovat tržní objednávky.</value></data>
+  <data name="copyNew.tip.marketRange" xml:space="preserve"><value>Kopírovat objednávky na rozsah trhu.</value></data>
+  <data name="copyNew.tip.limit" xml:space="preserve"><value>Kopírovat limitní objednávky.</value></data>
+  <data name="copyNew.tip.stop" xml:space="preserve"><value>Kopírovat stop objednávky.</value></data>
+  <data name="copyNew.tip.stopLimit" xml:space="preserve"><value>Kopírovat stop-limit objednávky.</value></data>
+  <data name="copyNew.tip.filterMode" xml:space="preserve"><value>Žádný = kopírovat každý symbol. Whitelist = kopírovat pouze uvedené symboly. Blacklist = kopírovat vše kromě uvedených symbolů.</value></data>
+  <data name="copyNew.tip.symbolMap" xml:space="preserve"><value>Přeložit symbol mastera na symbol destinačního brokera s volitelným násobitelem objemu pro daný symbol. Importujte nebo exportujte celou mapu jako soubor CSV.</value></data>
+  <data name="copyNew.tip.portability" xml:space="preserve"><value>Uložte všechna nastavení z tohoto formuláře do souboru nebo je načtěte z dříve uloženého souboru.</value></data>
+  <data name="copyNew.err.name" xml:space="preserve"><value>Název profilu je vyžadován.</value></data>
+  <data name="copyNew.err.source" xml:space="preserve"><value>Vyberte zdrojový (master) účet.</value></data>
+  <data name="copyNew.err.destinations" xml:space="preserve"><value>Vyberte alespoň jeden cílový (slave) účet.</value></data>
+  <data name="copyNew.err.parameter" xml:space="preserve"><value>Parametr musí být větší než nula.</value></data>
+  <data name="copyNew.err.slippage" xml:space="preserve"><value>Slippage nemůže být negativní.</value></data>
+  <data name="copyNew.err.minLot" xml:space="preserve"><value>Min. lot nemůže být negativní.</value></data>
+  <data name="copyNew.err.maxLot" xml:space="preserve"><value>Max. lot nemůže být negativní.</value></data>
+  <data name="copyNew.err.lotOrder" xml:space="preserve"><value>Max. lot musí být větší než nebo rovno min. loту.</value></data>
+  <data name="copyNew.err.maxDelay" xml:space="preserve"><value>Max. zpoždění nemůže být negativní.</value></data>
+  <data name="copyNew.err.drawdown" xml:space="preserve"><value>Max. drawdown % musí být mezi 0 a 100.</value></data>
+  <data name="copyNew.err.dailyLoss" xml:space="preserve"><value>Denní limit ztrát nemůže být negativní.</value></data>
+  <data name="copyNew.err.orderTypes" xml:space="preserve"><value>Povolte alespoň jeden typ objednávky.</value></data>
+  <data name="copyNew.err.filterSymbols" xml:space="preserve"><value>Přidejte alespoň jeden symbol pro vybraný filtr symbolů.</value></data>
 </root>

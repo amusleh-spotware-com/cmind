@@ -26,6 +26,9 @@ internal sealed class FakeOpenApiTransport(Func<ProtoMessage, ProtoMessage?> res
             yield return item;
     }
 
+    // Inject an unsolicited inbound message (e.g. a server-pushed execution event) with no ClientMsgId.
+    public void Push(ProtoMessage message) => _inbound.Writer.TryWrite(message.ToByteArray());
+
     public void Drop() => _inbound.Writer.TryComplete(new IOException("simulated drop"));
 
     public ValueTask DisconnectAsync()

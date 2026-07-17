@@ -31,7 +31,7 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
         var runningId = await SeedRunningInstanceAsync(page);
 
         await page.GotoAsync($"/instance/{runningId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // A running instance shows Stop.
         await Assertions.Expect(page.Locator("[data-testid=instance-detail-stop]")).ToBeVisibleAsync(Slow);
@@ -54,7 +54,7 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
         var runningId = await SeedRunningInstanceAsync(page);
 
         await page.GotoAsync($"/instance/{runningId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         await Assertions.Expect(page.Locator("[data-testid=instance-detail-stop]")).ToBeVisibleAsync(Slow);
 
         // Transition the instance from OUTSIDE this page (simulating the completion poller / another client).
@@ -77,7 +77,7 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
 
         // Terminal backtest → Edit button visible; opens a dialog prefilled with the instance's symbol.
         await page.GotoAsync($"/instance/{completedBacktestId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         var edit = page.Locator("[data-testid=instance-detail-edit]");
         await Assertions.Expect(edit).ToBeVisibleAsync(Slow);
         await edit.ClickAsync();
@@ -86,7 +86,7 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
 
         // Running run → no Edit button (only a stopped instance can be edited).
         await page.GotoAsync($"/instance/{runningRunId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         await Assertions.Expect(page.Locator("[data-testid=instance-detail-stop]")).ToBeVisibleAsync(Slow);
         (await page.Locator("[data-testid=instance-detail-edit]").IsVisibleAsync())
             .Should().BeFalse("a running instance must not offer Edit");
@@ -105,7 +105,7 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
         var accountNumber = doc.RootElement.GetProperty("accountNumber").GetInt64();
 
         await page.GotoAsync($"/instance/{completedId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         var edit = page.Locator("[data-testid=instance-detail-edit]");
         await Assertions.Expect(edit).ToBeVisibleAsync(Slow);
         await edit.ClickAsync();
@@ -136,7 +136,7 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
         // Navigate with a STALE (non-existent) id but the real lineage — the page must resolve the backtest.
         await page.GotoAsync($"/instance/{Guid.NewGuid()}?lineage={lineage}",
             new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await Assertions.Expect(page.Locator("[data-testid=instance-detail-report-json]")).ToBeVisibleAsync(Slow);
         (await page.Locator("[data-testid=instance-not-found]").IsVisibleAsync())
@@ -151,7 +151,7 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
         var (completedBacktestId, runningRunId) = await SeedAsync(page);
 
         await page.GotoAsync($"/instance/{completedBacktestId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var jsonBtn = page.Locator("[data-testid=instance-detail-report-json]");
         await Assertions.Expect(jsonBtn).ToBeEnabledAsync(new() { Timeout = 30000 });
@@ -162,7 +162,7 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
 
         // A running RUN instance offers no report buttons (backtest-only).
         await page.GotoAsync($"/instance/{runningRunId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         await Assertions.Expect(page.Locator("[data-testid=instance-detail-stop]")).ToBeVisibleAsync(Slow);
         (await page.Locator("[data-testid=instance-detail-report-json]").IsVisibleAsync())
             .Should().BeFalse("a run has no backtest report");
@@ -178,7 +178,7 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
         var (completedBacktestId, runningRunId) = await SeedAsync(page);
 
         await page.GotoAsync($"/instance/{completedBacktestId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var integrity = page.Locator("[data-testid=instance-detail-integrity]");
         await Assertions.Expect(integrity).ToBeEnabledAsync(new() { Timeout = 30000 });
@@ -189,7 +189,7 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
 
         // A running RUN instance is not a backtest → no integrity control.
         await page.GotoAsync($"/instance/{runningRunId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         await Assertions.Expect(page.Locator("[data-testid=instance-detail-stop]")).ToBeVisibleAsync(Slow);
         (await page.Locator("[data-testid=instance-detail-integrity]").IsVisibleAsync())
             .Should().BeFalse("a run has no backtest report to check for integrity");
@@ -204,7 +204,7 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
         await SeedAsync(page);
 
         await page.GotoAsync("/backtest", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // The completed backtest row's integrity icon is enabled (a report exists); open it.
         var integrity = page.Locator("[data-testid=instance-integrity]:not([disabled])").First;
@@ -224,7 +224,7 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
         var (completedBacktestId, runningRunId) = await SeedAsync(page);
 
         await page.GotoAsync($"/instance/{completedBacktestId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var health = page.Locator("[data-testid=instance-detail-health]");
         await Assertions.Expect(health).ToBeEnabledAsync(new() { Timeout = 30000 });
@@ -235,7 +235,7 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
 
         // A running RUN instance is not a backtest → no health control.
         await page.GotoAsync($"/instance/{runningRunId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         await Assertions.Expect(page.Locator("[data-testid=instance-detail-stop]")).ToBeVisibleAsync(Slow);
         (await page.Locator("[data-testid=instance-detail-health]").IsVisibleAsync())
             .Should().BeFalse("a run has no backtest report to check strategy health");
@@ -250,7 +250,7 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
         await SeedAsync(page);
 
         await page.GotoAsync("/backtest", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // The completed backtest row's health icon is enabled (a report exists); open it.
         var health = page.Locator("[data-testid=instance-health]:not([disabled])").First;
@@ -269,7 +269,7 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
         var (completedBacktestId, _) = await SeedAsync(page);
 
         await page.GotoAsync($"/instance/{completedBacktestId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var copy = page.Locator("[data-testid=instance-detail-logs-copy]");
         await Assertions.Expect(copy).ToBeEnabledAsync(new() { Timeout = 30000 });
@@ -289,7 +289,7 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
         var runningId = await SeedRunningInstanceAsync(page);
 
         await page.GotoAsync($"/instance/{runningId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         await Assertions.Expect(page.Locator("[data-testid=instance-detail-stop]")).ToBeVisibleAsync(Slow);
 
         await page.WaitForFunctionAsync("() => document.title.includes('EURUSD')");
@@ -308,7 +308,7 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
         var (_, runningRunId) = await SeedAsync(page);
 
         await page.GotoAsync($"/instance/{runningRunId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         await Assertions.Expect(page.Locator("[data-testid=instance-detail-stop]")).ToBeVisibleAsync(Slow);
 
         // Let several 4s poll cycles run.
@@ -332,7 +332,7 @@ public sealed class InstanceLiveUpdateTests(AiLocalFixture app)
 
         // Open the completed backtest first (terminal → shows the Start control).
         await page.GotoAsync($"/instance/{completedBacktestId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         await Assertions.Expect(page.Locator("[data-testid=instance-detail-start]")).ToBeVisibleAsync(Slow);
 
         // Marker to confirm the next navigation is client-side (window survives SPA nav, is wiped by a full

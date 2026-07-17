@@ -15,7 +15,7 @@ public sealed class SettingsDialogTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await page.Locator("[data-testid=nav-settings]").ClickAsync();
 
@@ -41,7 +41,7 @@ public sealed class SettingsDialogTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await page.Locator("[data-testid=nav-settings]").ClickAsync();
         var dialog = page.Locator("[data-testid=settings-dialog]");
@@ -70,7 +70,7 @@ public sealed class SettingsDialogTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await page.Locator("[data-testid=nav-settings]").ClickAsync();
         var dialog = page.Locator("[data-testid=settings-dialog]");

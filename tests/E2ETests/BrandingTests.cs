@@ -15,7 +15,7 @@ public sealed class BrandingTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await Assertions.Expect(page.Locator("[data-testid=app-product-name]")).ToBeVisibleAsync(Slow);
         await Assertions.Expect(page.Locator("[data-testid=app-product-name]")).ToHaveTextAsync("cMind");
@@ -31,7 +31,7 @@ public sealed class BrandingTests(AppFixture app)
         try
         {
             await page.GotoAsync("/settings/deployment", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+            await page.WaitForAppReadyAsync();
             await Assertions.Expect(page.Locator("[data-testid=app-product-name]")).ToHaveTextAsync("cMind", new() { Timeout = 15000 });
 
             // Apply the override through the same authenticated owner context (no reload of the circuit).

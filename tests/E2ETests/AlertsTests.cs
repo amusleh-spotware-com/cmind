@@ -35,7 +35,7 @@ public sealed class AlertsTests(AppFixture app)
             catch (Exception) when (attempt < 7)
             {
                 await page.ReloadAsync();
-                await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+                await page.WaitForAppReadyAsync();
                 if (await page.GetByText(name).First.IsVisibleAsync()) break; // created, live update just missed it
             }
         }
@@ -46,7 +46,7 @@ public sealed class AlertsTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/alerts");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         return page;
     }
 }

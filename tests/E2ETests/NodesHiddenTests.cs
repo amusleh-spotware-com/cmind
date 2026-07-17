@@ -29,12 +29,12 @@ public sealed class NodesHiddenTests(NodesHiddenFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         (await page.Locator("a[href='/nodes']").CountAsync()).Should().Be(0);
 
         await page.GotoAsync("/nodes");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         // The page guard redirects a hidden Nodes surface back to the dashboard.
         await page.WaitForURLAsync(url => !url.EndsWith("/nodes"), new() { Timeout = 15000 });
         page.Url.Should().NotEndWith("/nodes");

@@ -15,7 +15,7 @@ public sealed class PropGuardTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/prop-guard");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await Assertions.Expect(page.GetByText("New rule")).ToBeVisibleAsync(Slow);
         // /api/prop/rules returned 200 and bound an empty result.
@@ -27,7 +27,7 @@ public sealed class PropGuardTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/prop-guard");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // D-01: creating a rule opens a MudBlazor dialog, not an inline page form.
         (await page.Locator(".mud-dialog").CountAsync()).Should().Be(0, "no dialog is open before clicking New rule");
@@ -42,7 +42,7 @@ public sealed class PropGuardTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/prop-guard");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // D-08: the page carries a HelpTip.
         await Assertions.Expect(page.Locator("[data-testid=help-tip]").First).ToBeVisibleAsync(Slow);
@@ -58,7 +58,7 @@ public sealed class PropGuardTests(AppFixture app)
         try
         {
             await page.GotoAsync("/prop-guard");
-            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+            await page.WaitForAppReadyAsync();
             await Assertions.Expect(page.GetByText("E2E guard rule").First).ToBeVisibleAsync(Slow);
 
             // D-09: with a rule present, the responsive table must not overflow at 360px.

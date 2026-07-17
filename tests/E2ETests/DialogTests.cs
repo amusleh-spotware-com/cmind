@@ -408,7 +408,7 @@ public sealed class DialogTests(AppFixture app)
     private static async Task GotoAsync(IPage page, string path)
     {
         await page.GotoAsync(path);
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
     }
 
     private static async Task<ILocator> OpenDialogAsync(IPage page, string buttonText)

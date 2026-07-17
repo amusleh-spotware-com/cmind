@@ -13,7 +13,7 @@ public sealed class JournalTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/journal");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // A fresh account has no runs/backtests → the coaching empty state renders (proves the wired path).
         await Assertions.Expect(page.Locator("[data-testid=journal-empty], [data-testid=journal-summary]").First)
@@ -25,7 +25,7 @@ public sealed class JournalTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/journal");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await Assertions.Expect(page.Locator("[data-testid=journal-notes-empty]")).ToBeVisibleAsync(Slow);
 
@@ -58,7 +58,7 @@ public sealed class JournalTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/journal");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await page.ClickUntilVisibleAsync("[data-testid=journal-new-entry]", page.Locator(".mud-dialog"));
         await Assertions.Expect(page.Locator(".mud-dialog")).ToBeVisibleAsync(Slow);

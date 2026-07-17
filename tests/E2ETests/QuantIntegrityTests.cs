@@ -13,7 +13,7 @@ public sealed class QuantIntegrityTests(AppFixture app)
     private static async Task OpenAsync(IPage page)
     {
         await page.GotoAsync("/quant/integrity");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
     }
 
     // Fills the structured numeric series controls (adding rows beyond the two defaults) — no free-text entry.

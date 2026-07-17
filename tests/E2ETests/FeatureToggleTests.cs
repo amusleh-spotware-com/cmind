@@ -16,7 +16,7 @@ public sealed class FeatureToggleTests(AppFixture app)
         try
         {
             await page.GotoAsync("/");
-            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+            await page.WaitForAppReadyAsync();
             await Assertions.Expect(page.Locator("a[href='/copy-trading']")).ToBeVisibleAsync(Slow);
 
             var disable = await page.APIRequest.PutAsync($"{app.BaseUrl}/api/features/CopyTrading",
@@ -27,7 +27,7 @@ public sealed class FeatureToggleTests(AppFixture app)
             copyWhileOff.Status.Should().Be(404);
 
             await page.GotoAsync("/");
-            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+            await page.WaitForAppReadyAsync();
             (await page.Locator("a[href='/copy-trading']").CountAsync()).Should().Be(0);
         }
         finally
@@ -48,7 +48,7 @@ public sealed class FeatureToggleTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/settings/features", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await Assertions.Expect(page.Locator("[data-testid=feature-label]").Filter(new() { HasTextString = "Portfolio Agent" }))
             .ToBeVisibleAsync(Slow);

@@ -27,7 +27,7 @@ public sealed class AiFeatureRealUserTests(AiLocalFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/copy-trading", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // "AI suggest" opens the dialog; type the risk profile in its large text box, then "Suggest".
         await page.GetByTestId("ai-suggest").ClickAsync();

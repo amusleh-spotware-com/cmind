@@ -15,7 +15,7 @@ public sealed class AgentStudioTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/agent-studio");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // Retry the dialog-open and submit until the roster row appears: a click issued before the Blazor
         // circuit is interactive is dropped, so a single-shot open/submit flakes under parallel-boot CI load.
@@ -33,7 +33,7 @@ public sealed class AgentStudioTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/agent-studio");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var name = "Detail " + Guid.NewGuid().ToString("N")[..6];
         var nameField = page.GetByLabel("Agent name");

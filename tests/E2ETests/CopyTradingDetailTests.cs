@@ -39,7 +39,7 @@ public sealed class CopyTradingDetailTests(AppFixture app)
         var profileId = await CreateProfileAsync(api, $"deep-{Suffix}");
 
         await page.GotoAsync($"/copy-trading/{profileId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // Editing a profile is a full page (like create), never a dialog.
         (await page.Locator(".mud-dialog").CountAsync())
@@ -60,7 +60,7 @@ public sealed class CopyTradingDetailTests(AppFixture app)
         var profileId = await CreateProfileAsync(api, $"dd-{Suffix}");
 
         await page.GotoAsync($"/copy-trading/{profileId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // The Money-management select (concrete enum items) opens and a value can be chosen inline on the
         // page — no dialog, no overlay trap.

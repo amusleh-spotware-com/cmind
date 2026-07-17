@@ -27,7 +27,7 @@ public sealed class ManualFindingsTests(ManualFindingsFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/run", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await Assertions.Expect(page.Locator("[data-testid=run-new]")).ToBeDisabledAsync(new() { Timeout = 15000 });
         await Assertions.Expect(page.Locator("[data-testid=run-no-accounts]")).ToBeVisibleAsync(Slow);
@@ -39,7 +39,7 @@ public sealed class ManualFindingsTests(ManualFindingsFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/backtest", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await Assertions.Expect(page.Locator("[data-testid=backtest-new]")).ToBeDisabledAsync(new() { Timeout = 15000 });
         await Assertions.Expect(page.Locator("[data-testid=backtest-no-accounts]")).ToBeVisibleAsync(Slow);
@@ -50,7 +50,7 @@ public sealed class ManualFindingsTests(ManualFindingsFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/copy-trading", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         (await page.Locator("text=Copy Trading").First.IsVisibleAsync()).Should().BeTrue();
         // The pointless Pause control was removed; lifecycle controls are icon buttons.
@@ -64,7 +64,7 @@ public sealed class ManualFindingsTests(ManualFindingsFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/agent-studio");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // The create dialog exposes the managed-accounts selector (issue 4: assign accounts to an agent).
         await page.ClickAsync("[data-testid=agent-new]");
@@ -90,7 +90,7 @@ public sealed class ManualFindingsTests(ManualFindingsFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/economic-calendar", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // Enabled by branding but no FRED/BLS key ⇒ the actionable source-required notice, not empty values.
         await Assertions.Expect(page.Locator("[data-testid=calendar-source-required]")).ToBeVisibleAsync(Slow);

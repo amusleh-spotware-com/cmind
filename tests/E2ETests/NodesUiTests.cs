@@ -16,12 +16,12 @@ public sealed class NodesUiTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await Assertions.Expect(page.Locator("a[href='/nodes']")).ToBeVisibleAsync(Slow);
 
         await page.GotoAsync("/nodes");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         page.Url.Should().EndWith("/nodes");
         await Assertions.Expect(page.Locator("button:has-text('New Node')")).ToBeVisibleAsync(Slow);
     }

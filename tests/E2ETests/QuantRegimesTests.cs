@@ -32,7 +32,7 @@ public sealed class QuantRegimesTests(AppFixture app)
 
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/quant/regimes");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var result = page.Locator("[data-testid=regimes-result]");
         await page.RunUntilVisibleAsync(async () =>
@@ -57,7 +57,7 @@ public sealed class QuantRegimesTests(AppFixture app)
 
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/quant/regimes");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var result = page.Locator("[data-testid=regimes-result]");
         await page.RunUntilVisibleAsync(async () =>

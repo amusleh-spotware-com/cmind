@@ -89,6 +89,12 @@
     <script src="_framework/blazor.web.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script>
+        // Mark the app interactive once the Blazor Server circuit has wired event handlers (first
+        // interactive render — set from Routes.OnAfterRenderAsync). E2E waits for this instead of merely
+        // "window.Blazor defined", so a freshly-loaded page's first click is never dropped into not-yet-
+        // interactive SSR.
+        window.markAppInteractive = function () { window.__appInteractive = true; };
+
         // Copy text to the clipboard. navigator.clipboard is only defined in a SECURE context (https or
         // localhost); on a plain-HTTP LAN deployment it is undefined, so fall back to a hidden-textarea +
         // execCommand('copy') which works there too. Returns true on success. (This is why "Copy logs"

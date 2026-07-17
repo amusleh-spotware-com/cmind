@@ -16,7 +16,7 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
     {
         var page = mobile ? await app.NewAuthedMobilePageAsync() : await app.NewAuthedPageAsync();
         await page.GotoAsync(route, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         return page;
     }
 
@@ -128,7 +128,7 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
 
             var page = await context.NewPageAsync();
             await page.GotoAsync("/ai/currency-strength", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+            await page.WaitForAppReadyAsync();
 
             var refresh = page.Locator("[data-testid=cs-refresh]");
             await Assertions.Expect(refresh).ToBeVisibleAsync(Slow);

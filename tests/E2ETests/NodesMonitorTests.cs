@@ -31,13 +31,13 @@ public sealed class NodesMonitorTests(NodesMonitorFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // The nav link and page are still reachable...
         await Assertions.Expect(page.Locator("a[href='/nodes']")).ToBeVisibleAsync(Slow);
 
         await page.GotoAsync("/nodes");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         page.Url.Should().EndWith("/nodes");
         // The page rendered (not redirected away): its node table is present.
         await Assertions.Expect(page.Locator(".mud-table").First).ToBeVisibleAsync(Slow);

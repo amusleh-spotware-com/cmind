@@ -36,7 +36,7 @@ public sealed class BrokerAllowlistTests(BrokerAllowlistFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/accounts");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // Create a cID to add accounts under.
         var cid = $"gate-cid-{Suffix}";

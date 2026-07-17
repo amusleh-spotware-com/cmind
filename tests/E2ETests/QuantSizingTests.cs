@@ -28,7 +28,7 @@ public sealed class QuantSizingTests(AppFixture app)
 
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/quant/sizing");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var recommendation = page.Locator("[data-testid=sizing-recommendation]");
         await page.RunUntilVisibleAsync(async () =>
@@ -49,7 +49,7 @@ public sealed class QuantSizingTests(AppFixture app)
 
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/quant/sizing");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var recommendation = page.Locator("[data-testid=sizing-recommendation]");
         await page.RunUntilVisibleAsync(async () =>
@@ -68,7 +68,7 @@ public sealed class QuantSizingTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/quant/sizing");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // The two default rows are empty, so there are zero valid values and the action is disabled.
         var calculate = page.Locator("[data-testid=sizing-calculate]");

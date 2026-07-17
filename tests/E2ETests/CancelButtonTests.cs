@@ -26,7 +26,7 @@ public sealed class CancelButtonTests(AppFixture app)
     private static async Task Assert_cancel_closes(IPage page)
     {
         await page.GotoAsync("/nodes", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await page.GetByRole(AriaRole.Button, new() { Name = "New Node" }).ClickAsync();
         var dialog = page.Locator(".mud-dialog").Last;

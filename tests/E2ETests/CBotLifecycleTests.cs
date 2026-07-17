@@ -66,7 +66,7 @@ public sealed class CBotLifecycleTests(AppFixture app)
         await CreateProjectAsync(page, name, "C#");
 
         await page.GotoAsync("/cbots");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var row = page.Locator($".cbots-list a:has-text('{name}')");
         await Assertions.Expect(row.First).ToBeVisibleAsync(Slow);
@@ -84,7 +84,7 @@ public sealed class CBotLifecycleTests(AppFixture app)
     private static async Task CreateProjectAsync(IPage page, string name, string language)
     {
         await page.GotoAsync("/cbots");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var dialog = await OpenDialogAsync(page, "New cBot");
         await dialog.GetByLabel("Title").FillAsync(name);

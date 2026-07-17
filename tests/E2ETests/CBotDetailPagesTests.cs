@@ -23,7 +23,7 @@ public sealed class CBotDetailPagesTests(AppFixture app)
         var projectId = await CreateProjectAsync(page, $"builder-{Suffix}", "C#");
 
         await page.GotoAsync($"/builder/{projectId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await Assertions.Expect(page.Locator(".monaco-editor").First).ToBeVisibleAsync(Slow);
         (await page.Locator(".blazor-error-ui").IsVisibleAsync())
@@ -40,7 +40,7 @@ public sealed class CBotDetailPagesTests(AppFixture app)
 
         var page = await app.NewAuthedMobilePageAsync();
         await page.GotoAsync($"/builder/{projectId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         await Assertions.Expect(page.Locator(".monaco-editor").First).ToBeVisibleAsync(Slow);
 
         var fits = await page.EvaluateAsync<bool>(
@@ -78,7 +78,7 @@ public sealed class CBotDetailPagesTests(AppFixture app)
         await CreateProjectAsync(page, $"run-nav-{Suffix}", "C#");
 
         await page.GotoAsync("/cbots", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // The Run (Play) icon is the third action button in the row (Build, Edit, Run, Tune, Delete).
         var row = page.Locator($"tr:has-text('run-nav-{Suffix}')");
@@ -124,7 +124,7 @@ public sealed class CBotDetailPagesTests(AppFixture app)
         var projectId = await CreateProjectAsync(page, $"run-dlg-{Suffix}", "C#");
 
         await page.GotoAsync($"/builder/{projectId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         await Assertions.Expect(page.Locator(".monaco-editor").First).ToBeVisibleAsync(Slow);
 
         var run = page.Locator("button:has-text('Run')").First;
@@ -181,10 +181,10 @@ public sealed class CBotDetailPagesTests(AppFixture app)
         var page = await app.NewAuthedPageAsync();
         // Arrive from the Backtest list, then open a missing instance; Back must return to /backtest.
         await page.GotoAsync("/backtest", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         var missingId = "00000000-0000-0000-0000-0000000000bb";
         await page.GotoAsync($"/instance/{missingId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var back = page.Locator("[data-testid=instance-back-btn]");
         await Assertions.Expect(back).ToBeVisibleAsync(Slow);
@@ -219,7 +219,7 @@ public sealed class CBotDetailPagesTests(AppFixture app)
     private static async Task<string> CreateProjectAsync(IPage page, string name, string language)
     {
         await page.GotoAsync("/cbots");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var dialog = await OpenDialogAsync(page, "New cBot");
         await dialog.GetByLabel("Title").FillAsync(name);

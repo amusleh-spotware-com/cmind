@@ -15,7 +15,7 @@ public sealed class PropFirmTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/prop-firm");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         await Assertions.Expect(page.GetByText("New Challenge")).ToBeVisibleAsync(Slow);
 
         var name = $"E2E {Guid.NewGuid():N}";
@@ -41,7 +41,7 @@ public sealed class PropFirmTests(AppFixture app)
         try
         {
             await page.GotoAsync("/prop-firm");
-            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+            await page.WaitForAppReadyAsync();
             await Assertions.Expect(page.GetByText(name)).ToBeVisibleAsync(Slow);
 
             var equity = await page.APIRequest.PostAsync($"{app.BaseUrl}/api/prop-firm/challenges/{id}/equity",
@@ -120,7 +120,7 @@ public sealed class PropFirmTests(AppFixture app)
         try
         {
             await page.GotoAsync("/prop-firm");
-            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+            await page.WaitForAppReadyAsync();
             await Assertions.Expect(page.GetByText(nameA)).ToBeVisibleAsync(Slow);
             await Assertions.Expect(page.GetByText(nameB)).ToBeVisibleAsync(Slow);
 
@@ -173,7 +173,7 @@ public sealed class PropFirmTests(AppFixture app)
             breach.Status.Should().Be(200);
 
             await page.GotoAsync("/prop-firm");
-            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+            await page.WaitForAppReadyAsync();
             await Assertions.Expect(page.GetByText(name)).ToBeVisibleAsync(Slow);
 
             // D-03: the breach cause is visible in the table for a failed challenge.
@@ -203,7 +203,7 @@ public sealed class PropFirmTests(AppFixture app)
         try
         {
             await page.GotoAsync("/prop-firm");
-            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+            await page.WaitForAppReadyAsync();
             await Assertions.Expect(page.GetByText(name)).ToBeVisibleAsync(Slow);
 
             var row = page.Locator("tr", new() { HasTextString = name });

@@ -52,7 +52,7 @@ public sealed class AiFeatureDataE2ETests(AiLocalFixture app)
         await SeedAsync(page);
 
         await page.GotoAsync("/ai/digest", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var button = page.Locator("button:has-text('Generate digest')");
         await Assertions.Expect(button).ToBeEnabledAsync(new() { Timeout = 20000 });
@@ -74,7 +74,7 @@ public sealed class AiFeatureDataE2ETests(AiLocalFixture app)
         await SeedAsync(page);
 
         await page.GotoAsync("/ai/exposure", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var button = page.Locator("button:has-text('Check live exposure')");
         await Assertions.Expect(button).ToBeEnabledAsync(new() { Timeout = 20000 });

@@ -61,7 +61,7 @@ public sealed class OnnxE2ETests(OnnxAppFixture app)
 
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/ai/review", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await page.GetByLabel("cBot source").FillAsync("public class Bot { }");
         var button = page.Locator("button:has-text('Review cBot')");

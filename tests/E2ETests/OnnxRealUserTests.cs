@@ -26,7 +26,7 @@ public sealed class OnnxRealUserTests(OnnxAppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync(route, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         return page;
     }
 

@@ -13,7 +13,7 @@ public sealed class QuantExecutionTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/quant/execution");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var schedule = page.Locator("[data-testid=execution-result]");
         await page.ClickUntilVisibleAsync("[data-testid=execution-build]", schedule);
@@ -26,7 +26,7 @@ public sealed class QuantExecutionTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/quant/execution");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // The Min="0.0001" numeric field clamps a literal 0 away — the user can never submit total 0 and
         // get the nonsensical all-zero schedule the bug produced. The field never reads back as "0".
@@ -42,7 +42,7 @@ public sealed class QuantExecutionTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/quant/execution");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await page.ClickAsync("[data-testid=execution-build]");
         await page.GotoAsync("/"); // navigate away immediately (disposes the component mid-request)

@@ -21,7 +21,7 @@ public sealed class RunBacktestFlowTests(AppFixture app)
 
         // Create a C# project (lands in the editor).
         await page.GotoAsync("/cbots");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         var dialog = await OpenDialogAsync(page, "New cBot");
         await dialog.GetByLabel("Title").FillAsync($"run-{Suffix}");
         await dialog.Locator(".mud-radio:has-text('C#')").First.ClickAsync();

@@ -67,7 +67,7 @@ public sealed class OpenApiTests(AppFixture app)
 
     private static async Task<ILocator> OpenDialogAsync(IPage page, string buttonText)
     {
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         var button = page.Locator($"button:has-text('{buttonText}')").First;
         await button.WaitForAsync(new() { Timeout = 15000 });
         var dialog = page.Locator(".mud-dialog").Last;

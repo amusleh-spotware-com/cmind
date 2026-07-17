@@ -1,4 +1,5 @@
 @using Microsoft.AspNetCore.Components.Authorization
+@inject IJSRuntime JS
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(Routes).Assembly">
         <Found Context="routeData">
@@ -7,3 +8,15 @@
         </Found>
     </Router>
 </CascadingAuthenticationState>
+
+@code {
+    // Signal to E2E that the Blazor Server circuit is interactive (handlers wired). OnAfterRenderAsync with
+    // firstRender fires only after the first interactive render in the circuit, so this is a truthful
+    // readiness marker — clicks dispatched after it are never dropped into non-interactive SSR.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try { await JS.InvokeVoidAsync("markAppInteractive"); }
+        catch { /* prerender / JS momentarily unavailable — E2E falls back to the script-present probe */ }
+    }
+}

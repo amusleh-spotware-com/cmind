@@ -15,7 +15,7 @@ public sealed class OpenApiSharedAppTests(AppFixture app)
         foreach (var page in new[] { await app.NewAuthedPageAsync(), await app.NewAuthedMobilePageAsync() })
         {
             await page.GotoAsync("/settings/openapi");
-            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+            await page.WaitForAppReadyAsync();
             await Assertions.Expect(page.GetByText("Deployment shared application")).ToBeVisibleAsync(Slow);
             await Assertions.Expect(page.GetByText("Client rate limits")).ToBeVisibleAsync(Slow);
             (await page.Locator("#blazor-error-ui:visible").CountAsync()).Should().Be(0);
@@ -79,7 +79,7 @@ public sealed class OpenApiSharedAppTests(AppFixture app)
         try
         {
             await page.GotoAsync("/settings/openapi");
-            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+            await page.WaitForAppReadyAsync();
             // Owner gets their own per-user application section (regression: it was hidden, leaving only the
             // deployment shared-app card) plus the shared-app admin below.
             await Assertions.Expect(page.GetByText("Your Open API application")).ToBeVisibleAsync(Slow);
@@ -115,7 +115,7 @@ public sealed class OpenApiSharedAppTests(AppFixture app)
             // Ensure the owner has no per-user app so the "Add Application" entrypoint is present.
             await page.APIRequest.DeleteAsync($"{app.BaseUrl}/api/openapi/application");
             await page.GotoAsync("/settings/openapi");
-            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+            await page.WaitForAppReadyAsync();
 
             await page.GetByRole(AriaRole.Button, new() { Name = "Add Application", Exact = true }).ClickAsync();
             var dialog = page.Locator(".mud-dialog");
@@ -168,7 +168,7 @@ public sealed class OpenApiSharedAppTests(AppFixture app)
 
             var page = await context.NewPageAsync();
             await page.GotoAsync("/settings/openapi");
-            await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+            await page.WaitForAppReadyAsync();
             await Assertions.Expect(page.GetByText("Open API is managed by your provider")).ToBeVisibleAsync(Slow);
             (await page.GetByText("Deployment shared application").CountAsync()).Should().Be(0);
             (await page.Locator("#blazor-error-ui:visible").CountAsync()).Should().Be(0);

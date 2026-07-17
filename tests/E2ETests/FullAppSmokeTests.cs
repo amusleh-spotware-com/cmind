@@ -48,7 +48,7 @@ public sealed class FullAppSmokeTests(AppFixture app, ITestOutputHelper output)
             response!.Status.Should().BeLessThan(500, $"GET {route} returned {response.Status} (prerender crash)");
 
             // Wait for the interactive circuit so button clicks actually dispatch.
-            try { await page.WaitForFunctionAsync("() => window.Blazor !== undefined", null, new() { Timeout = 15000 }); }
+            try { await page.WaitForAppReadyAsync(); }
             catch (TimeoutException) { /* a purely-static page is fine — nothing interactive to poke */ }
 
             await AssertHealthyAsync(page, route);

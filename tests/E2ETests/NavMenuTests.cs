@@ -14,7 +14,7 @@ public sealed class NavMenuTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // The cBots group is collapsed, so its child links are not visible until expanded.
         var runLink = page.GetByRole(AriaRole.Link, new() { Name = "Run", Exact = true });
@@ -29,7 +29,7 @@ public sealed class NavMenuTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // Expand both groups and confirm both Optimize entries exist and point at different routes.
         await page.Locator(".mud-nav-group button:has-text('cBots')").First.ClickAsync();
@@ -45,7 +45,7 @@ public sealed class NavMenuTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // The quant analytics pages now live under a dedicated "Tools" group, moved out of cBots. Assert
         // structurally (the links are inside the Tools group and no longer under cBots) — independent of the
@@ -65,7 +65,7 @@ public sealed class NavMenuTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // The Tools group is pinned below the Copy trading link in the drawer. Assert DOM order:
         // Copy trading precedes the Tools group (Node.DOCUMENT_POSITION_FOLLOWING == 4).

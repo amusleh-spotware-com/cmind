@@ -13,7 +13,7 @@ public sealed class AiCopyRecommendTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/copy-trading");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // "AI suggest" opens the recommendation dialog; the recommendation renders inside it after the
         // "Suggest" action. AI is not configured in the test environment, so the recommender degrades to a

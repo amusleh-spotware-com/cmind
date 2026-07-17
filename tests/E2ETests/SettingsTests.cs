@@ -17,7 +17,7 @@ public sealed class SettingsTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/settings/ai");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // No provider yet → AI disabled.
         await Assertions.Expect(page.Locator("[data-testid=ai-no-providers]")).ToBeVisibleAsync(Slow);

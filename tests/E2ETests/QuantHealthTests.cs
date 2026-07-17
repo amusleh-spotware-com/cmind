@@ -32,7 +32,7 @@ public sealed class QuantHealthTests(AppFixture app)
 
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/quant/health");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var verdict = page.Locator("[data-testid=health-verdict]");
         await page.RunUntilVisibleAsync(async () =>
@@ -54,7 +54,7 @@ public sealed class QuantHealthTests(AppFixture app)
 
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/quant/health");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var verdict = page.Locator("[data-testid=health-verdict]");
         await page.RunUntilVisibleAsync(async () =>

@@ -22,7 +22,7 @@ public sealed class QuantTcaTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/quant/tca");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         var result = page.Locator("[data-testid=tca-result]");
         await page.RunUntilVisibleAsync(async () =>
@@ -40,7 +40,7 @@ public sealed class QuantTcaTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/quant/tca");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // The two default fill rows are empty → no ready fills → the action is disabled.
         var analyze = page.Locator("[data-testid=tca-analyze]");
@@ -59,7 +59,7 @@ public sealed class QuantTcaTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/quant/tca");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // A price with a non-positive quantity is not a ready fill; the Min=0 field also clamps a negative.
         await page.FillAsync("[data-testid=fill-price-0]", "1.1005");
@@ -74,7 +74,7 @@ public sealed class QuantTcaTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/quant/tca");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await FillTwoFillsAsync(page);
         await page.ClickAsync("[data-testid=tca-analyze]");

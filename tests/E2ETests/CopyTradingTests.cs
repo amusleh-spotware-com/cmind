@@ -30,7 +30,7 @@ public sealed class CopyTradingTests(AppFixture app)
         // The New Profile button navigates to the full-page create form (not a dialog).
         await page.Locator("[data-testid=copy-new-profile]").ClickAsync();
         await page.WaitForURLAsync("**/copy-trading/new");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // Enum options render as human labels, not raw enum names (money management default = Lot multiplier).
         await Assertions.Expect(page.GetByText("Lot multiplier").First).ToBeVisibleAsync(Slow);
@@ -109,7 +109,7 @@ public sealed class CopyTradingTests(AppFixture app)
         await Assertions.Expect(edit).ToBeEnabledAsync(new() { Timeout = 15000 });
         await edit.ClickAsync();
         await page.WaitForURLAsync($"**/copy-trading/{profileId}");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
         Assert.Equal(0, await page.Locator(".mud-dialog").CountAsync());
         await Assertions.Expect(page.Locator("[data-testid=copy-add-destination]")).ToBeVisibleAsync(Slow);
         Assert.True(await page.GetByText(name).First.IsVisibleAsync(),
@@ -340,6 +340,6 @@ public sealed class CopyTradingTests(AppFixture app)
     private static async Task GotoAsync(IPage page, string path)
     {
         await page.GotoAsync(path);
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
     }
 }

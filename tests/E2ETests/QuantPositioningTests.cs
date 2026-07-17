@@ -13,7 +13,7 @@ public sealed class QuantPositioningTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/quant/positioning");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // Default 50% long → balanced → Neutral. Proves the UI → endpoint → domain path is wired.
         var bias = page.Locator("[data-testid=positioning-bias]");

@@ -45,7 +45,7 @@ public sealed class CurrencyStrengthTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/ai/currency-strength", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         // Controls render and the page does not crash.
         await page.Locator("[data-testid=cs-refresh]").WaitForAsync(new() { Timeout = 15000 });

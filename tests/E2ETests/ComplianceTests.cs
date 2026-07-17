@@ -19,7 +19,7 @@ public sealed partial class ComplianceTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/settings/legal");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await Assertions.Expect(page.GetByText("Your data (GDPR)")).ToBeVisibleAsync(Slow);
 
@@ -36,7 +36,7 @@ public sealed partial class ComplianceTests(AppFixture app)
     {
         var page = await app.NewAuthedPageAsync();
         await page.GotoAsync("/settings/legal");
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        await page.WaitForAppReadyAsync();
 
         await Assertions.Expect(page.GetByText("Your data (GDPR)")).ToBeVisibleAsync(Slow);
 

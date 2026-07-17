@@ -11,7 +11,13 @@ here. Full UI contract: [website/docs/ui-guidelines.md](website/docs/ui-guidelin
   the dialog owns the form + validation and returns a nested `public sealed record …Result(...)`; the
   page does the HTTP call, then reloads. Dialogs live in `Components/Dialogs/`. **Never** reintroduce
   the old "card with fields + Create button at top of page" pattern (removed on purpose). Row actions
-  (start/stop/delete) stay inline as icon buttons; destructive confirms may use a simple dialog.
+  (start/stop/delete/**edit**) stay inline as icon buttons; destructive confirms may use a simple dialog.
+  - **Exception — a large multi-section form is a full page, not a dialog** (and still not the banned
+    top-of-page card). The copy-profile **create** (`/copy-trading/new`) and **edit** (`/copy-trading/{id}`,
+    `CopyTradingDetail.razor`) are deliberate full pages reached by their own route (the Edit **row icon**
+    navigates there, disabled while the profile is Running). Do **not** "restore" them to a dialog to
+    satisfy the dialog rule. A full page is the *rare* exception justified by form size; the default for
+    add/create/edit stays a dialog.
 - **Mobile-first.** Author every page/dialog for a 360–430px phone, enhance upward. **No horizontal
   scroll at any width 320–1920px.** Touch targets ≥44px; inputs ≥16px. Bottom nav
   (`Components/Layout/BottomNav.razor`) is the primary phone nav.

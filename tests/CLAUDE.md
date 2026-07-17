@@ -76,6 +76,27 @@ dialog-opening button whose label isn't matched by `DialogOpeners`, a new close/
 text isn't in `CloseLabels`, or a new destructive verb missing from `Destructive` → update those lists in
 `FullAppSmokeTests` in the **same commit**. Never let this smoke walk drift behind the UI.
 
+## E2E isolation & locator hygiene — session-hardened (read before writing a Playwright test)
+
+The `AppFixture` collection **shares one app + one owner user + one Postgres** across every test in the
+collection. State accumulates: accounts, profiles, cBots seeded by one test are visible to the next, and
+xUnit does not guarantee order. Two traps that each shipped a red CI here:
+
+- **Never "select-all + assert exactly N".** A test that clicks a *select-all* control (or asserts "there
+  are exactly N rows") breaks the moment another test seeds more of that entity into the shared user
+  (`Sequence contains more than one element` on `.Single()`). **Select the specific rows this test created,
+  by their own seeded identifier / `Suffix` / name** — never rely on the shared set being only yours.
+- **Scope locators and pass `Exact` for short/generic names.** `GetByRole(Button, Name="Close")` and
+  `GetByLabel("Copy redirect URI")` each matched **two** elements — a `HelpTip` whose `aria-label`
+  *contains* the word, and the same adornment rendered on the page **and** an open dialog. A bare
+  accessible-name match is a substring match across the whole page. Fix: scope to the container first
+  (`page.Locator(".mud-dialog").GetByRole(...)`) **and** pass `new() { Name = "Close", Exact = true }`.
+  `:has-text('N')` is likewise a substring — fine for a distinct number, wrong for a short/near-duplicate.
+
+Saturation ≠ failure: when a whole slice fast-fails in ~5–40 ms on `AppFixture.InitializeAsync` (login-nav
+timeout), the machine is saturated from back-to-back runs — cool down and run a smaller `--filter`, don't
+"fix" the test. A *real* failure takes seconds and reproduces in isolation.
+
 ## Kubernetes — the app must work in-cluster
 
 The app is deployed to K8s (`deploy/helm/cmind`); "works locally" is not "works". Every feature is

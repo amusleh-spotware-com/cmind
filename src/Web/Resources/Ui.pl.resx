@@ -341,4 +341,27 @@
   <data name="copy.map.tip.source" xml:space="preserve"><value>Symbol jak nazwany na koncie mastera (źródła), np. EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Pasujący symbol u brokera docelowego, np. EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Dodatkowy mnożnik wolumenu dla tego symbolu oprócz zmiany wielkości celu (1 = bez zmian).</value></data>
+  <data name="copyDetail.destinations" xml:space="preserve"><value>Cele</value></data>
+  <data name="copyDetail.noDestinations" xml:space="preserve"><value>Brak celów — dodaj jeden poniżej.</value></data>
+  <data name="copyDetail.col.account" xml:space="preserve"><value>Konto</value></data>
+  <data name="copyDetail.col.mode" xml:space="preserve"><value>Tryb</value></data>
+  <data name="copyDetail.col.param" xml:space="preserve"><value>Parametr</value></data>
+  <data name="copyDetail.col.reverse" xml:space="preserve"><value>Odwróć</value></data>
+  <data name="copyDetail.col.direction" xml:space="preserve"><value>Kierunek</value></data>
+  <data name="copyDetail.col.partial" xml:space="preserve"><value>Częściowe</value></data>
+  <data name="copyDetail.col.pending" xml:space="preserve"><value>Oczekujące</value></data>
+  <data name="copyDetail.col.trailing" xml:space="preserve"><value>Śledzący</value></data>
+  <data name="copyDetail.removeDestination" xml:space="preserve"><value>Usuń cel</value></data>
+  <data name="copyDetail.remove" xml:space="preserve"><value>Usuń</value></data>
+  <data name="copyDetail.removeConfirm" xml:space="preserve"><value>Usunąć ten cel z profilu? Zatrzyma kopiowanie na to konto.</value></data>
+  <data name="copyDetail.addDestination" xml:space="preserve"><value>Dodaj cel</value></data>
+  <data name="copyDetail.destAccounts" xml:space="preserve"><value>Konta docelowe (slave)</value></data>
+  <data name="copyDetail.destinationsCount" xml:space="preserve"><value>{0} konto(a)</value></data>
+  <data name="copyDetail.tip.destAccounts" xml:space="preserve"><value>Jedno lub więcej kont docelowych (slave) do dodania, każde z poniższymi ustawieniami. Wyświetlane są tylko konta dodane za pośrednictwem interfejsu Open API cTrader — konta dodane ręcznie nie mogą kopiować transakcji.</value></data>
+  <data name="copyDetail.suggestSymbols" xml:space="preserve"><value>Zasugeruj symbole brokera</value></data>
+  <data name="copyDetail.tip.suggestSymbols" xml:space="preserve"><value>Załaduj symbole do handlu w brokerze docelowym. Kliknij chipę, aby dodać ją do filtru symboli.</value></data>
+  <data name="copyDetail.selectAccountWarning" xml:space="preserve"><value>Wybierz co najmniej jedno konto docelowe</value></data>
+  <data name="copyDetail.someFailed" xml:space="preserve"><value>Nie można było dodać niektórych celów</value></data>
+  <data name="copyDetail.yes" xml:space="preserve"><value>Tak</value></data>
+  <data name="copyDetail.no" xml:space="preserve"><value>Nie</value></data>
 </root>

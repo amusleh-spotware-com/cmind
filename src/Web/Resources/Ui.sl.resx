@@ -341,4 +341,27 @@
   <data name="copy.map.tip.source" xml:space="preserve"><value>Simbol kot imenovan na gospodarjevem (izvornem) računu, npr. EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Ustrezni simbol pri brokerju namenskega računa, npr. EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Dodatni volumski množilec za ta simbol nad spreminjanjem velikosti namenskega računa (1 = brez spremembe).</value></data>
+  <data name="copyDetail.destinations" xml:space="preserve"><value>Destinacije</value></data>
+  <data name="copyDetail.noDestinations" xml:space="preserve"><value>Brez destinacij — dodajte eno spodaj.</value></data>
+  <data name="copyDetail.col.account" xml:space="preserve"><value>Račun</value></data>
+  <data name="copyDetail.col.mode" xml:space="preserve"><value>Način</value></data>
+  <data name="copyDetail.col.param" xml:space="preserve"><value>Parameter</value></data>
+  <data name="copyDetail.col.reverse" xml:space="preserve"><value>Obrniti</value></data>
+  <data name="copyDetail.col.direction" xml:space="preserve"><value>Smer</value></data>
+  <data name="copyDetail.col.partial" xml:space="preserve"><value>Delno</value></data>
+  <data name="copyDetail.col.pending" xml:space="preserve"><value>V čakanju</value></data>
+  <data name="copyDetail.col.trailing" xml:space="preserve"><value>Sledilni</value></data>
+  <data name="copyDetail.removeDestination" xml:space="preserve"><value>Odstrani destinacijo</value></data>
+  <data name="copyDetail.remove" xml:space="preserve"><value>Odstrani</value></data>
+  <data name="copyDetail.removeConfirm" xml:space="preserve"><value>Odstraniti to destinacijo iz profila? Prenehalo bo kopirati na ta račun.</value></data>
+  <data name="copyDetail.addDestination" xml:space="preserve"><value>Dodaj destinacijo</value></data>
+  <data name="copyDetail.destAccounts" xml:space="preserve"><value>Ciljni (slave) računi</value></data>
+  <data name="copyDetail.destinationsCount" xml:space="preserve"><value>{0} račun(ov)</value></data>
+  <data name="copyDetail.tip.destAccounts" xml:space="preserve"><value>Enega ali več ciljnih (slave) računov za dodajanje, vsak z nastavitvami spodaj. Navedeni so le računi, dodani preko Open API cTrader — ročno dodani računi ne morejo kopirati trgov.</value></data>
+  <data name="copyDetail.suggestSymbols" xml:space="preserve"><value>Predlagaj brokerjeve simbole</value></data>
+  <data name="copyDetail.tip.suggestSymbols" xml:space="preserve"><value>Naložite trgovalne simbole svojega ciljnega brokreja. Kliknite na čip, da ga dodate v filter simbolov.</value></data>
+  <data name="copyDetail.selectAccountWarning" xml:space="preserve"><value>Izberite vsaj en cilnji račun</value></data>
+  <data name="copyDetail.someFailed" xml:space="preserve"><value>Nekaterih destinacij ni bilo mogoče dodati</value></data>
+  <data name="copyDetail.yes" xml:space="preserve"><value>Da</value></data>
+  <data name="copyDetail.no" xml:space="preserve"><value>Ne</value></data>
 </root>

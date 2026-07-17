@@ -341,4 +341,27 @@
   <data name="copy.map.tip.source" xml:space="preserve"><value>在主账户（来源）上命名的符号，例如 EURUSD。</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>目标经纪商上的匹配符号，例如 EUR.USD。</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>此符号在目标交易量调整之上的额外体积倍数（1 = 无变化）。</value></data>
+  <data name="copyDetail.destinations" xml:space="preserve"><value>目的地</value></data>
+  <data name="copyDetail.noDestinations" xml:space="preserve"><value>还没有目的地 — 请在下方添加一个。</value></data>
+  <data name="copyDetail.col.account" xml:space="preserve"><value>账户</value></data>
+  <data name="copyDetail.col.mode" xml:space="preserve"><value>模式</value></data>
+  <data name="copyDetail.col.param" xml:space="preserve"><value>参数</value></data>
+  <data name="copyDetail.col.reverse" xml:space="preserve"><value>反向</value></data>
+  <data name="copyDetail.col.direction" xml:space="preserve"><value>方向</value></data>
+  <data name="copyDetail.col.partial" xml:space="preserve"><value>部分</value></data>
+  <data name="copyDetail.col.pending" xml:space="preserve"><value>待处理</value></data>
+  <data name="copyDetail.col.trailing" xml:space="preserve"><value>跟踪</value></data>
+  <data name="copyDetail.removeDestination" xml:space="preserve"><value>删除目的地</value></data>
+  <data name="copyDetail.remove" xml:space="preserve"><value>删除</value></data>
+  <data name="copyDetail.removeConfirm" xml:space="preserve"><value>从配置文件中删除此目的地？它将停止复制到该账户。</value></data>
+  <data name="copyDetail.addDestination" xml:space="preserve"><value>添加目的地</value></data>
+  <data name="copyDetail.destAccounts" xml:space="preserve"><value>目标（从）账户</value></data>
+  <data name="copyDetail.destinationsCount" xml:space="preserve"><value>{0} 个账户</value></data>
+  <data name="copyDetail.tip.destAccounts" xml:space="preserve"><value>要添加的一个或多个目标（从）账户，每个账户都有以下设置。仅列出通过 cTrader Open API 添加的账户 — 手动添加的账户无法复制交易。</value></data>
+  <data name="copyDetail.suggestSymbols" xml:space="preserve"><value>建议经纪商符号</value></data>
+  <data name="copyDetail.tip.suggestSymbols" xml:space="preserve"><value>加载目标经纪商的可交易符号。点击芯片将其添加到符号筛选器。</value></data>
+  <data name="copyDetail.selectAccountWarning" xml:space="preserve"><value>至少选择一个目标账户</value></data>
+  <data name="copyDetail.someFailed" xml:space="preserve"><value>无法添加某些目的地</value></data>
+  <data name="copyDetail.yes" xml:space="preserve"><value>是</value></data>
+  <data name="copyDetail.no" xml:space="preserve"><value>否</value></data>
 </root>

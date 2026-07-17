@@ -1,7 +1,6 @@
 @page "/copy-trading"
 @using System.Net.Http.Json
 @using Core.Domain
-@using Web.Components.Dialogs
 @using Web.Json
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
@@ -71,7 +70,7 @@
             <MudTooltip Text="@(IsRunning((string)context.status) ? "Stop the profile before editing" : "Edit profile & destinations")">
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary"
                                Disabled="@IsRunning((string)context.status)" aria-label="Edit profile"
-                               OnClick="@(() => OpenDetail((Guid)context.id, (string)context.name))" data-testid="copy-edit" />
+                               Href="@($"/copy-trading/{(Guid)context.id}")" data-testid="copy-edit" />
             </MudTooltip>
             <MudTooltip Text="@(IsRunning((string)context.status) ? "Stop the profile before deleting" : "Delete profile")">
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
@@ -127,14 +126,6 @@
         return "—";
     }
 
-    // Only Open-API-linked accounts can copy trades (they carry the token used to place orders), so the
-    // destination picker in the dialog is limited to them — manually added accounts are excluded.
-    private IReadOnlyList<CopyProfileDialog.AccountRef> AccountRefs() =>
-        ((IEnumerable<dynamic>)_accounts)
-        .Where(a => (bool)a.linkedViaOpenApi)
-        .Select(a => new CopyProfileDialog.AccountRef((Guid)a.id, (long)a.accountNumber))
-        .ToList();
-
     private async Task RecommendSettings()
     {
         _recommending = true;
@@ -179,20 +170,6 @@
         var r = await Http.DeleteAsync($"/api/copy/profiles/{id}");
         if (!r.IsSuccessStatusCode) { Snack.Add("Failed to delete profile", Severity.Error); return; }
         Snack.Add("Profile deleted", Severity.Success);
-        await Load();
-    }
-
-    private async Task OpenDetail(Guid id, string name)
-    {
-        var parameters = new DialogParameters<CopyProfileDialog>
-        {
-            { x => x.ProfileId, id },
-            { x => x.Name, name },
-            { x => x.Accounts, AccountRefs() }
-        };
-        var dlg = await Dialogs.ShowAsync<CopyProfileDialog>(null, parameters,
-            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Large, FullWidth = true });
-        await dlg.Result;
         await Load();
     }
 

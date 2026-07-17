@@ -341,4 +341,27 @@
   <data name="copy.map.tip.source" xml:space="preserve"><value>Το σύμβολο όπως ονομάζεται στο master (πηγή) λογαριασμό, π.χ. EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Το αντίστοιχο σύμβολο στον broker προορισμού, π.χ. EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Επιπλέον πολλαπλασιαστής όγκου για αυτό το σύμβολο πάνω από το μέγεθος του προορισμού (1 = καμία αλλαγή).</value></data>
+  <data name="copyDetail.destinations" xml:space="preserve"><value>Προορισμοί</value></data>
+  <data name="copyDetail.noDestinations" xml:space="preserve"><value>Κανένας προορισμός ακόμα — προσθέστε έναν παρακάτω.</value></data>
+  <data name="copyDetail.col.account" xml:space="preserve"><value>Λογαριασμός</value></data>
+  <data name="copyDetail.col.mode" xml:space="preserve"><value>Λειτουργία</value></data>
+  <data name="copyDetail.col.param" xml:space="preserve"><value>Παράμετρος</value></data>
+  <data name="copyDetail.col.reverse" xml:space="preserve"><value>Αντιστροφή</value></data>
+  <data name="copyDetail.col.direction" xml:space="preserve"><value>Κατεύθυνση</value></data>
+  <data name="copyDetail.col.partial" xml:space="preserve"><value>Μερικώς</value></data>
+  <data name="copyDetail.col.pending" xml:space="preserve"><value>Εκκρεμές</value></data>
+  <data name="copyDetail.col.trailing" xml:space="preserve"><value>Ακολουθούν</value></data>
+  <data name="copyDetail.removeDestination" xml:space="preserve"><value>Αφαίρεση προορισμού</value></data>
+  <data name="copyDetail.remove" xml:space="preserve"><value>Αφαίρεση</value></data>
+  <data name="copyDetail.removeConfirm" xml:space="preserve"><value>Αφαιρέστε αυτόν τον προορισμό από το προφίλ; Θα σταματήσει η αντιγραφή σε αυτόν τον λογαριασμό.</value></data>
+  <data name="copyDetail.addDestination" xml:space="preserve"><value>Προσθήκη προορισμού</value></data>
+  <data name="copyDetail.destAccounts" xml:space="preserve"><value>Λογαριασμοί προορισμού (δούλος)</value></data>
+  <data name="copyDetail.destinationsCount" xml:space="preserve"><value>{0} λογαριασμό(ς)</value></data>
+  <data name="copyDetail.tip.destAccounts" xml:space="preserve"><value>Ένας ή περισσότεροι λογαριασμοί προορισμού (δούλος) για προσθήκη, ο καθένας με τις παρακάτω ρυθμίσεις. Παραθέτονται μόνο λογαριασμοί που προστέθηκαν μέσω του Open API της cTrader — ο χειροκίνητα προστιθέμενοι λογαριασμοί δεν μπορούν να αντιγράψουν συναλλαγές.</value></data>
+  <data name="copyDetail.suggestSymbols" xml:space="preserve"><value>Προτείνετε σύμβολα μεσίτη</value></data>
+  <data name="copyDetail.tip.suggestSymbols" xml:space="preserve"><value>Φορτώστε τα εμπορεύσιμα σύμβολα του μεσίτη προορισμού σας. Κάντε κλικ σε ένα chip για να το προσθέσετε στο φίλτρο συμβόλων.</value></data>
+  <data name="copyDetail.selectAccountWarning" xml:space="preserve"><value>Επιλέξτε τουλάχιστον έναν λογαριασμό προορισμού</value></data>
+  <data name="copyDetail.someFailed" xml:space="preserve"><value>Ορισμένοι προορισμοί δεν μπορούσαν να προστεθούν</value></data>
+  <data name="copyDetail.yes" xml:space="preserve"><value>Ναι</value></data>
+  <data name="copyDetail.no" xml:space="preserve"><value>Όχι</value></data>
 </root>

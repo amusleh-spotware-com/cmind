@@ -200,6 +200,29 @@
   <data name="copyDetail.title" xml:space="preserve"><value>Copy Profile</value></data>
   <data name="copyDetail.notFound" xml:space="preserve"><value>This copy profile no longer exists - it may have been deleted or you do not have access to it.</value></data>
   <data name="copyDetail.back" xml:space="preserve"><value>Back to copy trading</value></data>
+  <data name="copyDetail.destinations" xml:space="preserve"><value>Destinations</value></data>
+  <data name="copyDetail.noDestinations" xml:space="preserve"><value>No destinations yet — add one below.</value></data>
+  <data name="copyDetail.col.account" xml:space="preserve"><value>Account</value></data>
+  <data name="copyDetail.col.mode" xml:space="preserve"><value>Mode</value></data>
+  <data name="copyDetail.col.param" xml:space="preserve"><value>Param</value></data>
+  <data name="copyDetail.col.reverse" xml:space="preserve"><value>Reverse</value></data>
+  <data name="copyDetail.col.direction" xml:space="preserve"><value>Direction</value></data>
+  <data name="copyDetail.col.partial" xml:space="preserve"><value>Partial</value></data>
+  <data name="copyDetail.col.pending" xml:space="preserve"><value>Pending</value></data>
+  <data name="copyDetail.col.trailing" xml:space="preserve"><value>Trailing</value></data>
+  <data name="copyDetail.removeDestination" xml:space="preserve"><value>Remove destination</value></data>
+  <data name="copyDetail.remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="copyDetail.removeConfirm" xml:space="preserve"><value>Remove this destination from the profile? It will stop copying to that account.</value></data>
+  <data name="copyDetail.addDestination" xml:space="preserve"><value>Add destination</value></data>
+  <data name="copyDetail.destAccounts" xml:space="preserve"><value>Destination (slave) accounts</value></data>
+  <data name="copyDetail.destinationsCount" xml:space="preserve"><value>{0} account(s)</value></data>
+  <data name="copyDetail.tip.destAccounts" xml:space="preserve"><value>One or more destination (slave) accounts to add, each with the settings below. Only accounts added through the cTrader Open API are listed — accounts added manually can't copy trades.</value></data>
+  <data name="copyDetail.suggestSymbols" xml:space="preserve"><value>Suggest broker symbols</value></data>
+  <data name="copyDetail.tip.suggestSymbols" xml:space="preserve"><value>Load the destination broker's tradable symbols. Click a chip to add it to the symbol filter.</value></data>
+  <data name="copyDetail.selectAccountWarning" xml:space="preserve"><value>Select at least one destination account</value></data>
+  <data name="copyDetail.someFailed" xml:space="preserve"><value>Some destinations could not be added</value></data>
+  <data name="copyDetail.yes" xml:space="preserve"><value>Yes</value></data>
+  <data name="copyDetail.no" xml:space="preserve"><value>No</value></data>
   <data name="copy.symbols.add" xml:space="preserve"><value>Add</value></data>
   <data name="copy.symbols.none" xml:space="preserve"><value>No symbols added yet</value></data>
   <data name="copy.map.source" xml:space="preserve"><value>Source symbol</value></data>

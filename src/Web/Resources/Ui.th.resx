@@ -341,4 +341,27 @@
   <data name="copy.map.tip.source" xml:space="preserve"><value>สัญลักษณ์ตามชื่อบนบัญชีมาสเตอร์ (แหล่งที่มา) เช่น EURUSD</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>สัญลักษณ์ที่ตรงกันที่โบรกเกอร์ปลายทาง เช่น EUR.USD</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>ตัวคูณปริมาณเพิ่มเติมสำหรับสัญลักษณ์นี้นอกเหนือจากการเปลี่ยนขนาดปลายทาง (1 = ไม่มีการเปลี่ยนแปลง)</value></data>
+  <data name="copyDetail.destinations" xml:space="preserve"><value>ปลายทาง</value></data>
+  <data name="copyDetail.noDestinations" xml:space="preserve"><value>ยังไม่มีปลายทาง — เพิ่มหนึ่งดังต่อไปนี้</value></data>
+  <data name="copyDetail.col.account" xml:space="preserve"><value>บัญชี</value></data>
+  <data name="copyDetail.col.mode" xml:space="preserve"><value>โหมด</value></data>
+  <data name="copyDetail.col.param" xml:space="preserve"><value>พารามิเตอร์</value></data>
+  <data name="copyDetail.col.reverse" xml:space="preserve"><value>กลับด้าน</value></data>
+  <data name="copyDetail.col.direction" xml:space="preserve"><value>ทิศทาง</value></data>
+  <data name="copyDetail.col.partial" xml:space="preserve"><value>บางส่วน</value></data>
+  <data name="copyDetail.col.pending" xml:space="preserve"><value>รอดำเนิน</value></data>
+  <data name="copyDetail.col.trailing" xml:space="preserve"><value>ติดตาม</value></data>
+  <data name="copyDetail.removeDestination" xml:space="preserve"><value>ลบปลายทาง</value></data>
+  <data name="copyDetail.remove" xml:space="preserve"><value>ลบ</value></data>
+  <data name="copyDetail.removeConfirm" xml:space="preserve"><value>ลบปลายทางนี้ออกจากโปรไฟล์หรือไม่ จะหยุดการคัดลอกไปยังบัญชีนั้น</value></data>
+  <data name="copyDetail.addDestination" xml:space="preserve"><value>เพิ่มปลายทาง</value></data>
+  <data name="copyDetail.destAccounts" xml:space="preserve"><value>บัญชีปลายทาง (slave)</value></data>
+  <data name="copyDetail.destinationsCount" xml:space="preserve"><value>{0} บัญชี</value></data>
+  <data name="copyDetail.tip.destAccounts" xml:space="preserve"><value>บัญชีปลายทาง (slave) หนึ่งบัญชีหรือมากกว่าที่ต้องเพิ่ม แต่ละบัญชีมีการตั้งค่าดังต่อไปนี้ มีเพียงบัญชีที่เพิ่มผ่าน Open API ของ cTrader เท่านั้นที่ระบุไว้ — บัญชีที่เพิ่มด้วยตนเองไม่สามารถคัดลอกการค้นหาได้</value></data>
+  <data name="copyDetail.suggestSymbols" xml:space="preserve"><value>แนะนำสัญลักษณ์ของนายหน้า</value></data>
+  <data name="copyDetail.tip.suggestSymbols" xml:space="preserve"><value>โหลดสัญลักษณ์ที่สามารถซื้อขายของนายหน้าปลายทางของคุณ คลิกชิปเพื่อเพิ่มลงในตัวกรองสัญลักษณ์</value></data>
+  <data name="copyDetail.selectAccountWarning" xml:space="preserve"><value>เลือกบัญชีปลายทางอย่างน้อยหนึ่งบัญชี</value></data>
+  <data name="copyDetail.someFailed" xml:space="preserve"><value>ไม่สามารถเพิ่มปลายทางบางแห่งได้</value></data>
+  <data name="copyDetail.yes" xml:space="preserve"><value>ใช่</value></data>
+  <data name="copyDetail.no" xml:space="preserve"><value>ไม่</value></data>
 </root>

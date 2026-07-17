@@ -341,4 +341,27 @@
   <data name="copy.map.tip.source" xml:space="preserve"><value>Ana (kaynak) hesapta adlandırıldığı şekilde sembol, ör. EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Hedef brokerdeki eşleşen sembol, ör. EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Hedef boyut değişikliğinin üzerine bu sembol için ek hacim çarpanı (1 = değişiklik yok).</value></data>
+  <data name="copyDetail.destinations" xml:space="preserve"><value>Hedefler</value></data>
+  <data name="copyDetail.noDestinations" xml:space="preserve"><value>Henüz hedef yok — aşağıya bir tane ekleyin.</value></data>
+  <data name="copyDetail.col.account" xml:space="preserve"><value>Hesap</value></data>
+  <data name="copyDetail.col.mode" xml:space="preserve"><value>Mod</value></data>
+  <data name="copyDetail.col.param" xml:space="preserve"><value>Parametre</value></data>
+  <data name="copyDetail.col.reverse" xml:space="preserve"><value>Ters</value></data>
+  <data name="copyDetail.col.direction" xml:space="preserve"><value>Yön</value></data>
+  <data name="copyDetail.col.partial" xml:space="preserve"><value>Kısmi</value></data>
+  <data name="copyDetail.col.pending" xml:space="preserve"><value>Beklemede</value></data>
+  <data name="copyDetail.col.trailing" xml:space="preserve"><value>İzleyen</value></data>
+  <data name="copyDetail.removeDestination" xml:space="preserve"><value>Hedefi kaldır</value></data>
+  <data name="copyDetail.remove" xml:space="preserve"><value>Kaldır</value></data>
+  <data name="copyDetail.removeConfirm" xml:space="preserve"><value>Bu hedefi profıldan kaldırmak ister misiniz? O hesaba kopyalamayı durduracaktır.</value></data>
+  <data name="copyDetail.addDestination" xml:space="preserve"><value>Hedef ekle</value></data>
+  <data name="copyDetail.destAccounts" xml:space="preserve"><value>Hedef (slave) hesaplar</value></data>
+  <data name="copyDetail.destinationsCount" xml:space="preserve"><value>{0} hesap</value></data>
+  <data name="copyDetail.tip.destAccounts" xml:space="preserve"><value>Eklenecek bir veya daha fazla hedef (slave) hesap; her biri aşağıdaki ayarlarla. Yalnızca cTrader Open API aracılığıyla eklenen hesaplar listelenir — manuel olarak eklenen hesaplar işlemleri kopyalayamaz.</value></data>
+  <data name="copyDetail.suggestSymbols" xml:space="preserve"><value>Broker sembollerini öner</value></data>
+  <data name="copyDetail.tip.suggestSymbols" xml:space="preserve"><value>Hedef brokerinizin işlem görebilir sembollerini yükleyin. Sembol filtresine eklemek için bir çipe tıklayın.</value></data>
+  <data name="copyDetail.selectAccountWarning" xml:space="preserve"><value>En az bir hedef hesap seçin</value></data>
+  <data name="copyDetail.someFailed" xml:space="preserve"><value>Bazı hedefler eklenemedi</value></data>
+  <data name="copyDetail.yes" xml:space="preserve"><value>Evet</value></data>
+  <data name="copyDetail.no" xml:space="preserve"><value>Hayır</value></data>
 </root>

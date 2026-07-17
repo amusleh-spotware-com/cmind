@@ -1,30 +1,231 @@
-@* Deep-link page for a single copy profile (C-05): navigating to /copy-trading/{id} loads the profile
-   and opens its detail dialog (mandate 7/11 — detail is a dialog, not an inline page form). A missing or
-   unauthorized id renders an actionable notice with a back link, never a blank shell or a crash. *@
+@* Full-page editor for a single copy profile (/copy-trading/{id}): manage the destination (slave)
+   accounts of a profile — list, remove, and add with the full copy settings — as a full page like the
+   create form (mandate: large forms are full pages, not dialogs). A missing or unauthorized id renders an
+   actionable notice with a back link, never a blank shell or a crash. Account identity is shown as the
+   human account number, never the internal GUID. *@
 @page "/copy-trading/{Id:guid}"
+@using System.Globalization
 @using System.Net.Http.Json
-@using Web.Components.Dialogs
+@using Core.Domain
+@using Web.Components.Copy
 @using Web.Json
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
+@inject ISnackbar Snack
 @inject IDialogService Dialogs
 @inject NavigationManager Nav
 @inject IStringLocalizer<Ui> L
 
 <PageTitle>@L["copyDetail.title"]</PageTitle>
-<MudText Typo="Typo.h5" Class="mb-2">@(_name is { Length: > 0 } ? _name : L["copyDetail.title"])</MudText>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" aria-label="@L["copyDetail.back"]"
+                   Href="/copy-trading" data-testid="copy-detail-back" />
+    <MudText Typo="Typo.h5">@(_name is { Length: > 0 } ? _name : L["copyDetail.title"])</MudText>
+</MudStack>
 
 @if (_loaded && _missing)
 {
     <MudAlert Severity="Severity.Warning" Class="mb-3" data-testid="copy-not-found">
         @L["copyDetail.notFound"]
         <MudButton Class="ms-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
-                   Href="/copy-trading" data-testid="copy-detail-back">@L["copyDetail.back"]</MudButton>
+                   Href="/copy-trading" data-testid="copy-detail-back-notice">@L["copyDetail.back"]</MudButton>
     </MudAlert>
 }
 else if (!_loaded)
 {
     <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else
+{
+    <MudPaper Class="pa-4 mb-3" Elevation="0" Outlined="true">
+        <MudText Typo="Typo.subtitle1" Class="mb-2">@L["copyDetail.destinations"]</MudText>
+        @if (_destinations.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info" Dense="true" data-testid="copy-no-destinations">@L["copyDetail.noDestinations"]</MudAlert>
+        }
+        else
+        {
+            <MudTable Items="_destinations" Dense="true" Breakpoint="Breakpoint.Sm" data-testid="copy-destinations">
+                <HeaderContent>
+                    <MudTh>@L["copyDetail.col.account"]</MudTh><MudTh>@L["copyDetail.col.mode"]</MudTh><MudTh>@L["copyDetail.col.param"]</MudTh><MudTh>@L["copyDetail.col.reverse"]</MudTh><MudTh>@L["copyDetail.col.direction"]</MudTh><MudTh>@L["copyDetail.col.partial"]</MudTh><MudTh>@L["copyDetail.col.pending"]</MudTh><MudTh>@L["copyDetail.col.trailing"]</MudTh><MudTh /></HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@L["copyDetail.col.account"]">@AccountNumber((Guid)context.destinationAccountId)</MudTd>
+                    <MudTd DataLabel="@L["copyDetail.col.mode"]">@context.mode</MudTd>
+                    <MudTd DataLabel="@L["copyDetail.col.param"]">@context.riskParameter</MudTd>
+                    <MudTd DataLabel="@L["copyDetail.col.reverse"]">@YesNo(context.reverse)</MudTd>
+                    <MudTd DataLabel="@L["copyDetail.col.direction"]">@context.direction</MudTd>
+                    <MudTd DataLabel="@L["copyDetail.col.partial"]">@YesNo(context.mirrorPartialClose)</MudTd>
+                    <MudTd DataLabel="@L["copyDetail.col.pending"]">@YesNo(context.copyPendingOrders)</MudTd>
+                    <MudTd DataLabel="@L["copyDetail.col.trailing"]">@YesNo(context.copyTrailingStop)</MudTd>
+                    <MudTd DataLabel=""><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                          aria-label="@L["copyDetail.removeDestination"]" OnClick="@(() => RemoveDestination((Guid)context.id))"
+                                          data-testid="copy-remove-destination" /></MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </MudPaper>
+
+    <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+        <MudText Typo="Typo.subtitle1" Class="mb-2">@L["copyDetail.addDestination"]</MudText>
+        <MudGrid>
+            <MudItem xs="12" md="4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudSelect T="long" MultiSelection="true" @bind-SelectedValues="_destAccounts" Class="flex-grow-1"
+                               Label="@L["copyDetail.destAccounts"]"
+                               MultiSelectionTextFunc="@(v => string.Format(CultureInfo.CurrentCulture, L["copyDetail.destinationsCount"], v?.Count ?? 0))"
+                               data-testid="copy-dest-accounts">
+                        @foreach (var a in _accountRefs)
+                        {
+                            <MudSelectItem T="long" Value="@a.Number">@a.Number</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <HelpTip Text="@L["copyDetail.tip.destAccounts"]" />
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudSelect T="MoneyManagementMode" @bind-Value="_mode" Label="@L["copyNew.mode"]" Class="flex-grow-1"
+                               ToStringFunc="@(m => MmName(m))">
+                        @foreach (var m in Enum.GetValues<MoneyManagementMode>())
+                        {
+                            <MudSelectItem T="MoneyManagementMode" Value="@m">@MmName(m)</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <HelpTip Text="@L["copyNew.tip.mode"]">
+                        <TooltipBody>
+                            <MudText Typo="Typo.body2">@L["copyNew.tip.mode"]</MudText>
+                            <ul>
+                                @foreach (var m in Enum.GetValues<MoneyManagementMode>())
+                                {
+                                    <li><strong>@MmName(m)</strong> — @L[$"copyNew.mm.desc.{m}"]</li>
+                                }
+                            </ul>
+                        </TooltipBody>
+                    </HelpTip>
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudNumericField T="double" @bind-Value="_param" Label="@L["copyNew.parameter"]" Class="flex-grow-1" />
+                    <HelpTip Text="@L["copyNew.tip.parameter"]" />
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudNumericField T="double" @bind-Value="_slippage" Label="@L["copyNew.slippage"]" Class="flex-grow-1" />
+                    <HelpTip Text="@L["copyNew.tip.slippage"]" />
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudSelect T="CopyDirectionFilter" @bind-Value="_direction" Label="@L["copyNew.direction"]" Class="flex-grow-1"
+                               ToStringFunc="@(d => DirName(d))">
+                        @foreach (var d in Enum.GetValues<CopyDirectionFilter>())
+                        {
+                            <MudSelectItem T="CopyDirectionFilter" Value="@d">@DirName(d)</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <HelpTip Text="@L["copyNew.tip.direction"]" />
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudNumericField T="double" @bind-Value="_minLot" Label="@L["copyNew.minLot"]" Class="flex-grow-1" />
+                    <HelpTip Text="@L["copyNew.tip.minLot"]" />
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudNumericField T="double" @bind-Value="_maxLot" Label="@L["copyNew.maxLot"]" Class="flex-grow-1" />
+                    <HelpTip Text="@L["copyNew.tip.maxLot"]" />
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudNumericField T="int" @bind-Value="_maxDelay" Label="@L["copyNew.maxDelay"]" Class="flex-grow-1" />
+                    <HelpTip Text="@L["copyNew.tip.maxDelay"]" />
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudNumericField T="double" @bind-Value="_maxDrawdown" Label="@L["copyNew.maxDrawdown"]" Class="flex-grow-1" />
+                    <HelpTip Text="@L["copyNew.tip.maxDrawdown"]" />
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudNumericField T="double" @bind-Value="_dailyLoss" Label="@L["copyNew.dailyLoss"]" Class="flex-grow-1" />
+                    <HelpTip Text="@L["copyNew.tip.dailyLoss"]" />
+                </MudStack>
+            </MudItem>
+
+            @SwitchTip(_reverse, v => _reverse = v, L["copyNew.reverse"], L["copyNew.tip.reverse"])
+            @SwitchTip(_forceMin, v => _forceMin = v, L["copyNew.forceMin"], L["copyNew.tip.forceMin"])
+            @SwitchTip(_copyStopLoss, v => _copyStopLoss = v, L["copyNew.copySl"], L["copyNew.tip.copySl"])
+            @SwitchTip(_copyTakeProfit, v => _copyTakeProfit = v, L["copyNew.copyTp"], L["copyNew.tip.copyTp"])
+            @SwitchTip(_mirrorPartialClose, v => _mirrorPartialClose = v, L["copyNew.partialClose"], L["copyNew.tip.partialClose"])
+            @SwitchTip(_mirrorScaleIn, v => _mirrorScaleIn = v, L["copyNew.scaleIn"], L["copyNew.tip.scaleIn"])
+            @SwitchTip(_copyPending, v => _copyPending = v, L["copyNew.pending"], L["copyNew.tip.pending"])
+            @SwitchTip(_copyTrailing, v => _copyTrailing = v, L["copyNew.trailing"], L["copyNew.tip.trailing"])
+            @SwitchTip(_copyPendingExpiry, v => _copyPendingExpiry = v, L["copyNew.copyExpiry"], L["copyNew.tip.copyExpiry"])
+            @SwitchTip(_copyMasterSlippage, v => _copyMasterSlippage = v, L["copyNew.copySlippage"], L["copyNew.tip.copySlippage"])
+
+            <MudItem xs="12">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudText Typo="Typo.subtitle2" Class="mt-2">@L["copyNew.section.orderTypes"]</MudText>
+                    <HelpTip Text="@L["copyNew.tip.orderTypes"]" />
+                </MudStack>
+            </MudItem>
+            @SwitchTip(_copyMarket, v => _copyMarket = v, L["copyNew.market"], L["copyNew.tip.market"])
+            @SwitchTip(_copyMarketRange, v => _copyMarketRange = v, L["copyNew.marketRange"], L["copyNew.tip.marketRange"])
+            @SwitchTip(_copyLimit, v => _copyLimit = v, L["copyNew.limit"], L["copyNew.tip.limit"])
+            @SwitchTip(_copyStop, v => _copyStop = v, L["copyNew.stop"], L["copyNew.tip.stop"])
+            @SwitchTip(_copyStopLimit, v => _copyStopLimit = v, L["copyNew.stopLimit"], L["copyNew.tip.stopLimit"])
+
+            <MudItem xs="12" md="4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudSelect T="SymbolFilterMode" @bind-Value="_filterMode" Label="@L["copyNew.filterMode"]" Class="flex-grow-1"
+                               ToStringFunc="@(f => FilterName(f))">
+                        @foreach (var f in Enum.GetValues<SymbolFilterMode>())
+                        {
+                            <MudSelectItem T="SymbolFilterMode" Value="@f">@FilterName(f)</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <HelpTip Text="@L["copyNew.tip.filterMode"]" />
+                </MudStack>
+            </MudItem>
+            @if (_filterMode != SymbolFilterMode.None)
+            {
+                <MudItem xs="12" md="8">
+                    <SymbolListEditor Symbols="_filterSymbols" Label="@L["copyNew.filterSymbols"]" TestId="copy-dest-filter" />
+                </MudItem>
+            }
+            <MudItem xs="12">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+                    <MudText Typo="Typo.subtitle2">@L["copyNew.symbolMap"]</MudText>
+                    <HelpTip Text="@L["copyNew.tip.symbolMap"]" />
+                </MudStack>
+                <SymbolMapEditor Rows="_symbolMap" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="SuggestSymbols"
+                           data-testid="copy-suggest-symbols">@L["copyDetail.suggestSymbols"]</MudButton>
+                <HelpTip Text="@L["copyDetail.tip.suggestSymbols"]" />
+                <MudChipSet T="string" Class="mt-1">
+                    @foreach (var s in _suggested)
+                    {
+                        <MudChip T="string" Size="Size.Small" OnClick="@(() => AddSuggested(s))">@s</MudChip>
+                    }
+                </MudChipSet>
+            </MudItem>
+        </MudGrid>
+
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-3">
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddDestination"
+                       data-testid="copy-add-destination">@L["copyDetail.addDestination"]</MudButton>
+        </MudStack>
+    </MudPaper>
 }
 
 @code {
@@ -33,7 +234,38 @@ else if (!_loaded)
     private bool _loaded;
     private bool _missing;
     private string _name = "";
-    private bool _opened;
+    private List<dynamic> _destinations = [];
+    private AccountRef[] _accountRefs = [];
+
+    private IEnumerable<long> _destAccounts = new HashSet<long>();
+    private MoneyManagementMode _mode = MoneyManagementMode.LotMultiplier;
+    private double _param = 1;
+    private double _slippage;
+    private CopyDirectionFilter _direction = CopyDirectionFilter.Both;
+    private double _minLot;
+    private double _maxLot;
+    private int _maxDelay;
+    private double _maxDrawdown;
+    private double _dailyLoss;
+    private bool _reverse;
+    private bool _forceMin;
+    private bool _copyStopLoss = true;
+    private bool _copyTakeProfit = true;
+    private bool _mirrorPartialClose = true;
+    private bool _mirrorScaleIn;
+    private bool _copyPending;
+    private bool _copyTrailing;
+    private bool _copyPendingExpiry = true;
+    private bool _copyMasterSlippage = true;
+    private bool _copyMarket = true;
+    private bool _copyMarketRange = true;
+    private bool _copyLimit = true;
+    private bool _copyStop = true;
+    private bool _copyStopLimit = true;
+    private List<SymbolMapRow> _symbolMap = [];
+    private List<string> _filterSymbols = [];
+    private SymbolFilterMode _filterMode = SymbolFilterMode.None;
+    private string[] _suggested = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -49,28 +281,133 @@ else if (!_loaded)
         }
 
         _name = (string)profile.name;
+        _destinations = ((IEnumerable<dynamic>)profile.destinations).ToList();
+
+        var accounts = await Http.GetDynamicArrayAsync("/api/accounts");
+        _accountRefs = ((IEnumerable<dynamic>)accounts)
+            .Where(a => (bool)a.linkedViaOpenApi)
+            .Select(a => new AccountRef((Guid)a.id, (long)a.accountNumber))
+            .ToArray();
         _loaded = true;
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private RenderFragment SwitchTip(bool value, Action<bool> setter, string label, string tip) => __builder =>
     {
-        if (!_loaded || _missing || _opened) return;
-        _opened = true;
+        <MudItem xs="6" sm="4" md="3">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudSwitch T="bool" Value="value" ValueChanged="@(v => setter(v))" Label="@label" Color="Color.Primary" />
+                <HelpTip Text="@tip" />
+            </MudStack>
+        </MudItem>
+    };
 
-        var accounts = await Http.GetDynamicArrayAsync("/api/accounts");
-        var refs = ((IEnumerable<dynamic>)accounts)
-            .Select(a => new CopyProfileDialog.AccountRef((Guid)a.id, (long)a.accountNumber))
-            .ToList();
-
-        var parameters = new DialogParameters<CopyProfileDialog>
-        {
-            { x => x.ProfileId, Id },
-            { x => x.Name, _name },
-            { x => x.Accounts, refs }
-        };
-        var dlg = await Dialogs.ShowAsync<CopyProfileDialog>(null, parameters,
-            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Large, FullWidth = true });
-        await dlg.Result;
-        Nav.NavigateTo("/copy-trading");
+    private void AddSuggested(string symbol)
+    {
+        if (!_filterSymbols.Contains(symbol, StringComparer.OrdinalIgnoreCase))
+            _filterSymbols.Add(symbol);
     }
+
+    private string MmName(MoneyManagementMode mode) => L[$"copyNew.mm.{mode}"];
+    private string DirName(CopyDirectionFilter direction) => L[$"copyNew.dir.{direction}"];
+    private string FilterName(SymbolFilterMode filter) => L[$"copyNew.filter.{filter}"];
+
+    private async Task Reload()
+    {
+        dynamic? profile = await Http.GetDynamicAsync($"/api/copy/profiles/{Id}");
+        _destinations = profile is null ? [] : ((IEnumerable<dynamic>)profile.destinations).ToList();
+    }
+
+    private string AccountNumber(Guid id)
+    {
+        foreach (var a in _accountRefs)
+            if (a.Id == id) return a.Number.ToString(CultureInfo.CurrentCulture);
+        return "—";
+    }
+
+    // Render booleans as human Yes/No, not raw "True"/"False" (C-07).
+    private string YesNo(dynamic value) => (bool)value ? L["copyDetail.yes"] : L["copyDetail.no"];
+
+    private Guid AccountGuid(long number)
+    {
+        foreach (var a in _accountRefs)
+            if (a.Number == number) return a.Id;
+        return Guid.Empty;
+    }
+
+    private async Task AddDestination()
+    {
+        var accounts = _destAccounts.ToArray();
+        if (accounts.Length == 0) { Snack.Add(L["copyDetail.selectAccountWarning"], Severity.Warning); return; }
+
+        var failed = false;
+        foreach (var number in accounts)
+        {
+            var r = await Http.PostAsJsonAsync($"/api/copy/profiles/{Id}/destinations", new
+            {
+                DestinationAccountId = AccountGuid(number),
+                Mode = _mode,
+                Parameter = _param,
+                SlippagePips = _slippage,
+                MaxDelaySeconds = _maxDelay,
+                Reverse = _reverse,
+                CopyStopLoss = _copyStopLoss,
+                CopyTakeProfit = _copyTakeProfit,
+                Direction = _direction,
+                MinLot = _minLot,
+                MaxLot = _maxLot,
+                ForceMinLot = _forceMin,
+                MaxDrawdownPercent = _maxDrawdown,
+                DailyLossLimit = _dailyLoss,
+                SymbolFilterMode = _filterMode,
+                SymbolFilters = _filterSymbols.ToArray(),
+                SymbolMap = _symbolMap
+                    .Select(m => (object)new { m.Source, m.Destination, VolumeMultiplier = m.VolumeMultiplier })
+                    .ToArray(),
+                MirrorPartialClose = _mirrorPartialClose,
+                MirrorScaleIn = _mirrorScaleIn,
+                CopyPendingOrders = _copyPending,
+                CopyTrailingStop = _copyTrailing,
+                OrderTypes = SelectedOrderTypes(),
+                CopyPendingExpiry = _copyPendingExpiry,
+                CopyMasterSlippage = _copyMasterSlippage
+            });
+            if (!r.IsSuccessStatusCode) failed = true;
+        }
+
+        if (failed) Snack.Add(L["copyDetail.someFailed"], Severity.Error);
+        _destAccounts = new HashSet<long>();
+        await Reload();
+    }
+
+    private CopyOrderTypes SelectedOrderTypes()
+    {
+        var types = CopyOrderTypes.None;
+        if (_copyMarket) types |= CopyOrderTypes.Market;
+        if (_copyMarketRange) types |= CopyOrderTypes.MarketRange;
+        if (_copyLimit) types |= CopyOrderTypes.Limit;
+        if (_copyStop) types |= CopyOrderTypes.Stop;
+        if (_copyStopLimit) types |= CopyOrderTypes.StopLimit;
+        return types == CopyOrderTypes.None ? CopyOrderTypes.All : types;
+    }
+
+    private async Task RemoveDestination(Guid destinationId)
+    {
+        var ok = await Dialogs.ShowMessageBox(L["copyDetail.removeDestination"], L["copyDetail.removeConfirm"],
+            yesText: L["copyDetail.remove"], cancelText: L["common.cancel"]);
+        if (ok != true) return;
+        await Http.DeleteAsync($"/api/copy/profiles/{Id}/destinations/{destinationId}");
+        await Reload();
+    }
+
+    private async Task SuggestSymbols()
+    {
+        var first = _destAccounts.FirstOrDefault();
+        if (first == 0) return;
+        var guid = AccountGuid(first);
+        if (guid == Guid.Empty) return;
+        try { _suggested = await Http.GetFromJsonAsync<string[]>($"/api/copy/accounts/{guid}/symbols") ?? []; }
+        catch { _suggested = []; }
+    }
+
+    private sealed record AccountRef(Guid Id, long Number);
 }

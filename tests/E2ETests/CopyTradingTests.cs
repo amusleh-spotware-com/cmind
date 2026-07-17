@@ -98,15 +98,16 @@ public sealed class CopyTradingTests(AppFixture app)
         var row = page.Locator($"tr:has-text('{name}')");
         await Assertions.Expect(row).ToBeVisibleAsync(Slow);
 
-        // Draft: the edit control opens the manage-destinations dialog (row-click no longer does).
+        // Draft: the edit control navigates to the full-page editor (like create), not a dialog.
         var edit = row.Locator("[data-testid=copy-edit]");
         await Assertions.Expect(edit).ToBeEnabledAsync(new() { Timeout = 15000 });
         await edit.ClickAsync();
-        var dialog = page.Locator(".mud-dialog").Last;
-        await dialog.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 15000 });
-        Assert.True(await dialog.GetByText(name).First.IsVisibleAsync(),
-            "the edit dialog must show the profile name");
-        await dialog.GetByRole(AriaRole.Button, new() { Name = "Close", Exact = true }).ClickAsync(new() { Force = true });
+        await page.WaitForURLAsync($"**/copy-trading/{profileId}");
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
+        Assert.Equal(0, await page.Locator(".mud-dialog").CountAsync());
+        await Assertions.Expect(page.Locator("[data-testid=copy-add-destination]")).ToBeVisibleAsync(Slow);
+        Assert.True(await page.GetByText(name).First.IsVisibleAsync(),
+            "the editor page must show the profile name");
 
         // Running: editing is invalid, so the control is disabled (mandate 11: state-correct controls).
         Assert.Equal("Running", await ActAsync(api, profileId, "start"));

@@ -341,4 +341,27 @@
   <data name="copy.map.tip.source" xml:space="preserve"><value>Симбол како је назван на мајсторском (извору) рачуну, нпр. EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Одговарајући симбол на брокеру одредишта, нпр. EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Додатни множитељ волумена за овај симбол преко промене величине одредишта (1 = без промене).</value></data>
+  <data name="copyDetail.destinations" xml:space="preserve"><value>Одредишта</value></data>
+  <data name="copyDetail.noDestinations" xml:space="preserve"><value>Нема одредишта — додајте једно испод.</value></data>
+  <data name="copyDetail.col.account" xml:space="preserve"><value>Рачун</value></data>
+  <data name="copyDetail.col.mode" xml:space="preserve"><value>Режим</value></data>
+  <data name="copyDetail.col.param" xml:space="preserve"><value>Параметар</value></data>
+  <data name="copyDetail.col.reverse" xml:space="preserve"><value>Обнути</value></data>
+  <data name="copyDetail.col.direction" xml:space="preserve"><value>Смер</value></data>
+  <data name="copyDetail.col.partial" xml:space="preserve"><value>Делимично</value></data>
+  <data name="copyDetail.col.pending" xml:space="preserve"><value>На чекању</value></data>
+  <data name="copyDetail.col.trailing" xml:space="preserve"><value>Пратећи</value></data>
+  <data name="copyDetail.removeDestination" xml:space="preserve"><value>Уклони одредиште</value></data>
+  <data name="copyDetail.remove" xml:space="preserve"><value>Уклони</value></data>
+  <data name="copyDetail.removeConfirm" xml:space="preserve"><value>Уклонити ово одредиште из профила? Престаће да копира на тај рачун.</value></data>
+  <data name="copyDetail.addDestination" xml:space="preserve"><value>Додај одредиште</value></data>
+  <data name="copyDetail.destAccounts" xml:space="preserve"><value>Одредишни (робни) рачуни</value></data>
+  <data name="copyDetail.destinationsCount" xml:space="preserve"><value>{0} рачун(а)</value></data>
+  <data name="copyDetail.tip.destAccounts" xml:space="preserve"><value>Један или више одредишних (робних) рачуна за додавање, сваки са подешавањима испод. Наведени су само рачуни додати преко Open API cTrader — ручно додани рачуни не могу копирати трговине.</value></data>
+  <data name="copyDetail.suggestSymbols" xml:space="preserve"><value>Предложи симболе брокера</value></data>
+  <data name="copyDetail.tip.suggestSymbols" xml:space="preserve"><value>Учитајте трговане симболе вашег одредишног брокера. Кликните на чип да би га додали у филтер симбола.</value></data>
+  <data name="copyDetail.selectAccountWarning" xml:space="preserve"><value>Изаберите најмање један одредишни рачун</value></data>
+  <data name="copyDetail.someFailed" xml:space="preserve"><value>Нека одредишта није било могуће додати</value></data>
+  <data name="copyDetail.yes" xml:space="preserve"><value>Да</value></data>
+  <data name="copyDetail.no" xml:space="preserve"><value>Не</value></data>
 </root>

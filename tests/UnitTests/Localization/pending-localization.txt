@@ -18,7 +18,6 @@ Dialogs/AiProviderDialog.razor
 Dialogs/BacktestDialog.razor
 Dialogs/CBotParamSetsDialog.razor
 Dialogs/CalendarFilterDialog.razor
-Dialogs/CopyProfileDialog.razor
 Dialogs/DashboardCustomizeDialog.razor
 Dialogs/DisableTwoFactorDialog.razor
 Dialogs/EditInstanceDialog.razor

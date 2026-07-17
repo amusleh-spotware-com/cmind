@@ -341,4 +341,27 @@
   <data name="copy.map.tip.source" xml:space="preserve"><value>Symbol tak, jak je pojmenován na hlavním (zdrojovém) účtu, např. EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Odpovídající symbol u destinačního brokera, např. EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Dodatečný násobitel objemu pro tento symbol nad rámec nastavení velikosti destinace (1 = bez změny).</value></data>
+  <data name="copyDetail.destinations" xml:space="preserve"><value>Cíle</value></data>
+  <data name="copyDetail.noDestinations" xml:space="preserve"><value>Zatím žádné cíle — přidejte jeden níže.</value></data>
+  <data name="copyDetail.col.account" xml:space="preserve"><value>Účet</value></data>
+  <data name="copyDetail.col.mode" xml:space="preserve"><value>Režim</value></data>
+  <data name="copyDetail.col.param" xml:space="preserve"><value>Parametr</value></data>
+  <data name="copyDetail.col.reverse" xml:space="preserve"><value>Obrácení</value></data>
+  <data name="copyDetail.col.direction" xml:space="preserve"><value>Směr</value></data>
+  <data name="copyDetail.col.partial" xml:space="preserve"><value>Částečné</value></data>
+  <data name="copyDetail.col.pending" xml:space="preserve"><value>Čeká se</value></data>
+  <data name="copyDetail.col.trailing" xml:space="preserve"><value>Sledovací</value></data>
+  <data name="copyDetail.removeDestination" xml:space="preserve"><value>Odebrat cíl</value></data>
+  <data name="copyDetail.remove" xml:space="preserve"><value>Odebrat</value></data>
+  <data name="copyDetail.removeConfirm" xml:space="preserve"><value>Odebrat tento cíl z profilu? Přestane se kopírovat na tento účet.</value></data>
+  <data name="copyDetail.addDestination" xml:space="preserve"><value>Přidat cíl</value></data>
+  <data name="copyDetail.destAccounts" xml:space="preserve"><value>Cílové (slave) účty</value></data>
+  <data name="copyDetail.destinationsCount" xml:space="preserve"><value>{0} účet(y)</value></data>
+  <data name="copyDetail.tip.destAccounts" xml:space="preserve"><value>Jeden nebo více cílových (slave) účtů k přidání, každý s níže uvedenými nastavením. Jsou uvedeny pouze účty přidané prostřednictvím cTrader Open API — manuálně přidané účty nemohou kopírovat obchody.</value></data>
+  <data name="copyDetail.suggestSymbols" xml:space="preserve"><value>Navrhnout symboly brokera</value></data>
+  <data name="copyDetail.tip.suggestSymbols" xml:space="preserve"><value>Načtěte obchodovatelné symboly vašeho cílového brokera. Kliknutím na žeton jej přidejte do filtru symbolů.</value></data>
+  <data name="copyDetail.selectAccountWarning" xml:space="preserve"><value>Vyberte alespoň jeden cílový účet</value></data>
+  <data name="copyDetail.someFailed" xml:space="preserve"><value>Některé cíle se nepodařilo přidat</value></data>
+  <data name="copyDetail.yes" xml:space="preserve"><value>Ano</value></data>
+  <data name="copyDetail.no" xml:space="preserve"><value>Ne</value></data>
 </root>

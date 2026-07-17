@@ -341,4 +341,27 @@
   <data name="copy.map.tip.source" xml:space="preserve"><value>Символ как именуется на счете мастера (источник), например EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Соответствующий символ у брокера назначения, например EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Дополнительный множитель объема для этого символа поверх изменения размера назначения (1 = без изменений).</value></data>
+  <data name="copyDetail.destinations" xml:space="preserve"><value>Направления</value></data>
+  <data name="copyDetail.noDestinations" xml:space="preserve"><value>Пока нет направлений — добавьте одно ниже.</value></data>
+  <data name="copyDetail.col.account" xml:space="preserve"><value>Счет</value></data>
+  <data name="copyDetail.col.mode" xml:space="preserve"><value>Режим</value></data>
+  <data name="copyDetail.col.param" xml:space="preserve"><value>Параметр</value></data>
+  <data name="copyDetail.col.reverse" xml:space="preserve"><value>Обратный</value></data>
+  <data name="copyDetail.col.direction" xml:space="preserve"><value>Направление</value></data>
+  <data name="copyDetail.col.partial" xml:space="preserve"><value>Частичное</value></data>
+  <data name="copyDetail.col.pending" xml:space="preserve"><value>Ожидание</value></data>
+  <data name="copyDetail.col.trailing" xml:space="preserve"><value>Отслеживание</value></data>
+  <data name="copyDetail.removeDestination" xml:space="preserve"><value>Удалить направление</value></data>
+  <data name="copyDetail.remove" xml:space="preserve"><value>Удалить</value></data>
+  <data name="copyDetail.removeConfirm" xml:space="preserve"><value>Удалить это направление из профиля? Копирование на этот счет прекратится.</value></data>
+  <data name="copyDetail.addDestination" xml:space="preserve"><value>Добавить направление</value></data>
+  <data name="copyDetail.destAccounts" xml:space="preserve"><value>Целевые (подчиненные) счета</value></data>
+  <data name="copyDetail.destinationsCount" xml:space="preserve"><value>{0} счет(ов)</value></data>
+  <data name="copyDetail.tip.destAccounts" xml:space="preserve"><value>Один или несколько целевых (подчиненных) счетов для добавления, каждый с параметрами ниже. Перечисляются только счета, добавленные через Open API cTrader — вручную добавленные счета не могут копировать сделки.</value></data>
+  <data name="copyDetail.suggestSymbols" xml:space="preserve"><value>Предложить символы брокера</value></data>
+  <data name="copyDetail.tip.suggestSymbols" xml:space="preserve"><value>Загрузите торгуемые символы вашего целевого брокера. Нажмите на чип, чтобы добавить его в фильтр символов.</value></data>
+  <data name="copyDetail.selectAccountWarning" xml:space="preserve"><value>Выберите хотя бы один целевой счет</value></data>
+  <data name="copyDetail.someFailed" xml:space="preserve"><value>Некоторые направления не удалось добавить</value></data>
+  <data name="copyDetail.yes" xml:space="preserve"><value>Да</value></data>
+  <data name="copyDetail.no" xml:space="preserve"><value>Нет</value></data>
 </root>

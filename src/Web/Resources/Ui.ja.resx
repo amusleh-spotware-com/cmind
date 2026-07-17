@@ -341,4 +341,27 @@
   <data name="copy.map.tip.source" xml:space="preserve"><value>マスター（ソース）アカウントで名付けられたシンボル。例：EURUSD。</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>宛先ブローカーの対応するシンボル。例：EUR.USD。</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>宛先のサイジングに加えて、このシンボルの追加ボリューム乗数（1 = 変更なし）。</value></data>
+  <data name="copyDetail.destinations" xml:space="preserve"><value>目的地</value></data>
+  <data name="copyDetail.noDestinations" xml:space="preserve"><value>目的地がまだありません — 以下に追加してください。</value></data>
+  <data name="copyDetail.col.account" xml:space="preserve"><value>アカウント</value></data>
+  <data name="copyDetail.col.mode" xml:space="preserve"><value>モード</value></data>
+  <data name="copyDetail.col.param" xml:space="preserve"><value>パラメータ</value></data>
+  <data name="copyDetail.col.reverse" xml:space="preserve"><value>逆方向</value></data>
+  <data name="copyDetail.col.direction" xml:space="preserve"><value>方向</value></data>
+  <data name="copyDetail.col.partial" xml:space="preserve"><value>部分的</value></data>
+  <data name="copyDetail.col.pending" xml:space="preserve"><value>保留中</value></data>
+  <data name="copyDetail.col.trailing" xml:space="preserve"><value>トレーリング</value></data>
+  <data name="copyDetail.removeDestination" xml:space="preserve"><value>目的地を削除</value></data>
+  <data name="copyDetail.remove" xml:space="preserve"><value>削除</value></data>
+  <data name="copyDetail.removeConfirm" xml:space="preserve"><value>このプロフィールから目的地を削除しますか？そのアカウントへのコピー取引が停止されます。</value></data>
+  <data name="copyDetail.addDestination" xml:space="preserve"><value>目的地を追加</value></data>
+  <data name="copyDetail.destAccounts" xml:space="preserve"><value>目的地（スレーブ）アカウント</value></data>
+  <data name="copyDetail.destinationsCount" xml:space="preserve"><value>{0}アカウント</value></data>
+  <data name="copyDetail.tip.destAccounts" xml:space="preserve"><value>追加する1つ以上の目的地（スレーブ）アカウント。各アカウントは以下の設定で構成されます。cTrader Open APIを通じて追加されたアカウントのみがリストされます。手動で追加されたアカウントは取引をコピーできません。</value></data>
+  <data name="copyDetail.suggestSymbols" xml:space="preserve"><value>ブローカーのシンボルを提案</value></data>
+  <data name="copyDetail.tip.suggestSymbols" xml:space="preserve"><value>目的のブローカーで取引可能なシンボルを読み込みます。チップをクリックしてシンボルフィルターに追加します。</value></data>
+  <data name="copyDetail.selectAccountWarning" xml:space="preserve"><value>少なくとも1つの目的地アカウントを選択してください</value></data>
+  <data name="copyDetail.someFailed" xml:space="preserve"><value>一部の目的地を追加できませんでした</value></data>
+  <data name="copyDetail.yes" xml:space="preserve"><value>はい</value></data>
+  <data name="copyDetail.no" xml:space="preserve"><value>いいえ</value></data>
 </root>

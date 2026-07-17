@@ -341,4 +341,27 @@
   <data name="copy.map.tip.source" xml:space="preserve"><value>A szimbólum a mester (forrás) számlán megnevezve, pl. EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>A megfelelő szimbólum a célbrókeré, pl. EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Extra térfogat szorzó erre a szimbólumra a cél méretezésén felül (1 = nincs változás).</value></data>
+  <data name="copyDetail.destinations" xml:space="preserve"><value>Célpontok</value></data>
+  <data name="copyDetail.noDestinations" xml:space="preserve"><value>Még nincs célpont — adjon hozzá egyet alább.</value></data>
+  <data name="copyDetail.col.account" xml:space="preserve"><value>Számla</value></data>
+  <data name="copyDetail.col.mode" xml:space="preserve"><value>Mód</value></data>
+  <data name="copyDetail.col.param" xml:space="preserve"><value>Paraméter</value></data>
+  <data name="copyDetail.col.reverse" xml:space="preserve"><value>Fordított</value></data>
+  <data name="copyDetail.col.direction" xml:space="preserve"><value>Irány</value></data>
+  <data name="copyDetail.col.partial" xml:space="preserve"><value>Részleges</value></data>
+  <data name="copyDetail.col.pending" xml:space="preserve"><value>Függőben</value></data>
+  <data name="copyDetail.col.trailing" xml:space="preserve"><value>Követő</value></data>
+  <data name="copyDetail.removeDestination" xml:space="preserve"><value>Célpont eltávolítása</value></data>
+  <data name="copyDetail.remove" xml:space="preserve"><value>Eltávolítás</value></data>
+  <data name="copyDetail.removeConfirm" xml:space="preserve"><value>Eltávolítja ezt a célpontot a profilból? Többé nem másol majd erre a számlára.</value></data>
+  <data name="copyDetail.addDestination" xml:space="preserve"><value>Célpont hozzáadása</value></data>
+  <data name="copyDetail.destAccounts" xml:space="preserve"><value>Célszámla (slave) számlák</value></data>
+  <data name="copyDetail.destinationsCount" xml:space="preserve"><value>{0} számla</value></data>
+  <data name="copyDetail.tip.destAccounts" xml:space="preserve"><value>Egy vagy több céls (slave) számla hozzáadásához, mindegyik az alábbi beállításokkal. Csak a cTrader Open API-n keresztül hozzáadott számlák jelennek meg — a manuálisan hozzáadott számlák nem tudnak kereskedéseket másolni.</value></data>
+  <data name="copyDetail.suggestSymbols" xml:space="preserve"><value>Broker szimbólumok javaslása</value></data>
+  <data name="copyDetail.tip.suggestSymbols" xml:space="preserve"><value>Töltse be a céll broker kereskedhető szimbólumait. Kattintson egy chipre, hogy hozzáadja a szimbólumszűrőhöz.</value></data>
+  <data name="copyDetail.selectAccountWarning" xml:space="preserve"><value>Válasszon legalább egy célszámlát</value></data>
+  <data name="copyDetail.someFailed" xml:space="preserve"><value>Egyes célpontok nem tudtak hozzáadódni</value></data>
+  <data name="copyDetail.yes" xml:space="preserve"><value>Igen</value></data>
+  <data name="copyDetail.no" xml:space="preserve"><value>Nem</value></data>
 </root>

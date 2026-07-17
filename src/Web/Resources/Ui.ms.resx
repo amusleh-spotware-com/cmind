@@ -341,4 +341,27 @@
   <data name="copy.map.tip.source" xml:space="preserve"><value>Simbol seperti dinamakan pada akaun master (sumber), cth EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Simbol sepadan pada broker tujuan, cth EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Pengganda volum tambahan untuk simbol ini di atas pengubahan saiz tujuan (1 = tiada perubahan).</value></data>
+  <data name="copyDetail.destinations" xml:space="preserve"><value>Destinasi</value></data>
+  <data name="copyDetail.noDestinations" xml:space="preserve"><value>Tiada destinasi lagi — tambah satu di bawah.</value></data>
+  <data name="copyDetail.col.account" xml:space="preserve"><value>Akaun</value></data>
+  <data name="copyDetail.col.mode" xml:space="preserve"><value>Mod</value></data>
+  <data name="copyDetail.col.param" xml:space="preserve"><value>Param</value></data>
+  <data name="copyDetail.col.reverse" xml:space="preserve"><value>Terbalik</value></data>
+  <data name="copyDetail.col.direction" xml:space="preserve"><value>Arah</value></data>
+  <data name="copyDetail.col.partial" xml:space="preserve"><value>Separa</value></data>
+  <data name="copyDetail.col.pending" xml:space="preserve"><value>Tertangguh</value></data>
+  <data name="copyDetail.col.trailing" xml:space="preserve"><value>Penjejak</value></data>
+  <data name="copyDetail.removeDestination" xml:space="preserve"><value>Alih keluar destinasi</value></data>
+  <data name="copyDetail.remove" xml:space="preserve"><value>Alih keluar</value></data>
+  <data name="copyDetail.removeConfirm" xml:space="preserve"><value>Alih keluar destinasi ini daripada profil? Ia akan berhenti menyalin perdagangan ke akaun itu.</value></data>
+  <data name="copyDetail.addDestination" xml:space="preserve"><value>Tambah destinasi</value></data>
+  <data name="copyDetail.destAccounts" xml:space="preserve"><value>Akaun destinasi (hamba)</value></data>
+  <data name="copyDetail.destinationsCount" xml:space="preserve"><value>{0} akaun</value></data>
+  <data name="copyDetail.tip.destAccounts" xml:space="preserve"><value>Satu atau lebih akaun destinasi (hamba) untuk ditambah, masing-masing dengan tetapan di bawah. Hanya akaun yang ditambah melalui Open API cTrader yang disenaraikan — akaun yang ditambah secara manual tidak dapat menyalin perdagangan.</value></data>
+  <data name="copyDetail.suggestSymbols" xml:space="preserve"><value>Cadangkan simbol broker</value></data>
+  <data name="copyDetail.tip.suggestSymbols" xml:space="preserve"><value>Muatkan simbol yang boleh didagangkan bagi broker destinasi anda. Klik cip untuk menambahkannya ke penapis simbol.</value></data>
+  <data name="copyDetail.selectAccountWarning" xml:space="preserve"><value>Pilih sekurang-kurangnya satu akaun destinasi</value></data>
+  <data name="copyDetail.someFailed" xml:space="preserve"><value>Beberapa destinasi tidak dapat ditambah</value></data>
+  <data name="copyDetail.yes" xml:space="preserve"><value>Ya</value></data>
+  <data name="copyDetail.no" xml:space="preserve"><value>Tidak</value></data>
 </root>

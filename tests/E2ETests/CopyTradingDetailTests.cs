@@ -31,7 +31,7 @@ public sealed class CopyTradingDetailTests(AppFixture app)
     }
 
     [Fact]
-    public async Task Deep_link_to_existing_profile_opens_detail_dialog()
+    public async Task Deep_link_to_existing_profile_renders_full_page_editor()
     {
         var page = await app.NewAuthedPageAsync();
         var api = page.APIRequest;
@@ -41,52 +41,36 @@ public sealed class CopyTradingDetailTests(AppFixture app)
         await page.GotoAsync($"/copy-trading/{profileId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        var dialog = page.Locator(".mud-dialog").Last;
-        await dialog.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 15000 });
-        (await dialog.GetByText($"deep-{Suffix}").First.IsVisibleAsync())
-            .Should().BeTrue("the deep-linked profile's detail dialog must show its name");
+        // Editing a profile is a full page (like create), never a dialog.
+        (await page.Locator(".mud-dialog").CountAsync())
+            .Should().Be(0, "the copy-profile editor is a full page, not a dialog");
+        (await page.GetByText($"deep-{Suffix}").First.IsVisibleAsync())
+            .Should().BeTrue("the full-page editor must show the profile name in its header");
+        await Assertions.Expect(page.Locator("[data-testid=copy-add-destination]")).ToBeVisibleAsync(Slow);
         (await page.Locator(".blazor-error-ui").IsVisibleAsync())
-            .Should().BeFalse("the deep-link page must not trip the Blazor error UI");
+            .Should().BeFalse("the editor page must not trip the Blazor error UI");
     }
 
     [Fact]
-    public async Task Cancel_is_reachable_after_opening_a_dropdown_in_the_profile_dialog()
+    public async Task Money_management_dropdown_opens_on_the_full_page_without_crashing()
     {
         var page = await app.NewAuthedPageAsync();
         var api = page.APIRequest;
 
-        var profileId = await CreateProfileAsync(api, $"cancel-{Suffix}");
+        var profileId = await CreateProfileAsync(api, $"dd-{Suffix}");
 
         await page.GotoAsync($"/copy-trading/{profileId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
 
-        var dialog = page.Locator(".mud-dialog").Last;
-        await dialog.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 15000 });
+        // The Money-management select (concrete enum items) opens and a value can be chosen inline on the
+        // page — no dialog, no overlay trap.
+        await page.Locator(".mud-select:has-text('Money management')").First.ClickAsync();
+        var item = page.Locator(".mud-list-item").First;
+        await item.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
+        await item.ClickAsync();
 
-        // Open a MudSelect dropdown inside the dialog (the Money-management select, which has concrete
-        // items). Click the select's input control by its surrounding label text.
-        await dialog.Locator(".mud-select:has-text('Money management')").First.ClickAsync();
-        await page.Locator(".mud-list-item").First.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
-
-        // With the dropdown open, the dialog's Close button must still dismiss the dialog. MudBlazor's
-        // click-away overlay closes the dropdown first; a second click reaches Close — but Close must
-        // never be permanently trapped under the overlay.
-        var close = dialog.GetByRole(AriaRole.Button, new() { Name = "Close", Exact = true });
-        for (var attempt = 0; attempt < 5; attempt++)
-        {
-            await close.ClickAsync(new() { Force = true });
-            try
-            {
-                await dialog.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 3000 });
-                break;
-            }
-            catch (TimeoutException) { /* first click dismissed the dropdown overlay — retry Close */ }
-        }
-
-        (await page.Locator(".mud-dialog").IsVisibleAsync())
-            .Should().BeFalse("Close must remain reachable after a dropdown was opened (C-06)");
         (await page.Locator(".blazor-error-ui").IsVisibleAsync())
-            .Should().BeFalse("dismissing the dialog must not trip the Blazor error UI");
+            .Should().BeFalse("selecting a sizing mode on the page must not trip the Blazor error UI");
     }
 
     private string U(string path) => app.BaseUrl + path;

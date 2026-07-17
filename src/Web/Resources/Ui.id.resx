@@ -341,4 +341,27 @@
   <data name="copy.map.tip.source" xml:space="preserve"><value>Simbol seperti yang dinamai di akun master (sumber), misalnya EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Simbol yang cocok di broker tujuan, misalnya EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Pengganda volume tambahan untuk simbol ini di atas ukuran tujuan (1 = tidak ada perubahan).</value></data>
+  <data name="copyDetail.destinations" xml:space="preserve"><value>Tujuan</value></data>
+  <data name="copyDetail.noDestinations" xml:space="preserve"><value>Belum ada tujuan — tambahkan satu di bawah.</value></data>
+  <data name="copyDetail.col.account" xml:space="preserve"><value>Akun</value></data>
+  <data name="copyDetail.col.mode" xml:space="preserve"><value>Mode</value></data>
+  <data name="copyDetail.col.param" xml:space="preserve"><value>Param</value></data>
+  <data name="copyDetail.col.reverse" xml:space="preserve"><value>Balik</value></data>
+  <data name="copyDetail.col.direction" xml:space="preserve"><value>Arah</value></data>
+  <data name="copyDetail.col.partial" xml:space="preserve"><value>Sebagian</value></data>
+  <data name="copyDetail.col.pending" xml:space="preserve"><value>Tertunda</value></data>
+  <data name="copyDetail.col.trailing" xml:space="preserve"><value>Mengikuti</value></data>
+  <data name="copyDetail.removeDestination" xml:space="preserve"><value>Hapus tujuan</value></data>
+  <data name="copyDetail.remove" xml:space="preserve"><value>Hapus</value></data>
+  <data name="copyDetail.removeConfirm" xml:space="preserve"><value>Hapus tujuan ini dari profil? Akan berhenti menyalin ke akun itu.</value></data>
+  <data name="copyDetail.addDestination" xml:space="preserve"><value>Tambah tujuan</value></data>
+  <data name="copyDetail.destAccounts" xml:space="preserve"><value>Akun tujuan (slave)</value></data>
+  <data name="copyDetail.destinationsCount" xml:space="preserve"><value>{0} akun</value></data>
+  <data name="copyDetail.tip.destAccounts" xml:space="preserve"><value>Satu atau lebih akun tujuan (slave) untuk ditambahkan, masing-masing dengan pengaturan di bawah. Hanya akun yang ditambahkan melalui Open API cTrader yang terdaftar — akun yang ditambahkan secara manual tidak dapat menyalin perdagangan.</value></data>
+  <data name="copyDetail.suggestSymbols" xml:space="preserve"><value>Sarankan simbol broker</value></data>
+  <data name="copyDetail.tip.suggestSymbols" xml:space="preserve"><value>Muat simbol yang dapat diperdagangkan dari broker tujuan Anda. Klik chip untuk menambahkannya ke filter simbol.</value></data>
+  <data name="copyDetail.selectAccountWarning" xml:space="preserve"><value>Pilih setidaknya satu akun tujuan</value></data>
+  <data name="copyDetail.someFailed" xml:space="preserve"><value>Beberapa tujuan tidak dapat ditambahkan</value></data>
+  <data name="copyDetail.yes" xml:space="preserve"><value>Ya</value></data>
+  <data name="copyDetail.no" xml:space="preserve"><value>Tidak</value></data>
 </root>

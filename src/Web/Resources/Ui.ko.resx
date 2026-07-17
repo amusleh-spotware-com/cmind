@@ -341,4 +341,27 @@
   <data name="copy.map.tip.source" xml:space="preserve"><value>마스터(소스) 계좌에 명명된 기호입니다(예: EURUSD).</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>대상 브로커의 해당 기호입니다(예: EUR.USD).</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>대상의 크기 조정 위에 이 기호에 대한 추가 거래량 승수(1 = 변경 없음).</value></data>
+  <data name="copyDetail.destinations" xml:space="preserve"><value>대상</value></data>
+  <data name="copyDetail.noDestinations" xml:space="preserve"><value>아직 대상이 없습니다 — 아래에 하나를 추가하세요.</value></data>
+  <data name="copyDetail.col.account" xml:space="preserve"><value>계정</value></data>
+  <data name="copyDetail.col.mode" xml:space="preserve"><value>모드</value></data>
+  <data name="copyDetail.col.param" xml:space="preserve"><value>매개변수</value></data>
+  <data name="copyDetail.col.reverse" xml:space="preserve"><value>역방향</value></data>
+  <data name="copyDetail.col.direction" xml:space="preserve"><value>방향</value></data>
+  <data name="copyDetail.col.partial" xml:space="preserve"><value>부분</value></data>
+  <data name="copyDetail.col.pending" xml:space="preserve"><value>대기 중</value></data>
+  <data name="copyDetail.col.trailing" xml:space="preserve"><value>추적</value></data>
+  <data name="copyDetail.removeDestination" xml:space="preserve"><value>대상 제거</value></data>
+  <data name="copyDetail.remove" xml:space="preserve"><value>제거</value></data>
+  <data name="copyDetail.removeConfirm" xml:space="preserve"><value>이 대상을 프로필에서 제거하시겠습니까? 해당 계정으로의 복사가 중지됩니다.</value></data>
+  <data name="copyDetail.addDestination" xml:space="preserve"><value>대상 추가</value></data>
+  <data name="copyDetail.destAccounts" xml:space="preserve"><value>목표(slave) 계정</value></data>
+  <data name="copyDetail.destinationsCount" xml:space="preserve"><value>{0}개 계정</value></data>
+  <data name="copyDetail.tip.destAccounts" xml:space="preserve"><value>추가할 1개 이상의 목표(slave) 계정, 각 계정은 아래 설정을 포함합니다. cTrader Open API를 통해 추가된 계정만 나열됩니다. 수동으로 추가된 계정은 거래를 복사할 수 없습니다.</value></data>
+  <data name="copyDetail.suggestSymbols" xml:space="preserve"><value>브로커 기호 제안</value></data>
+  <data name="copyDetail.tip.suggestSymbols" xml:space="preserve"><value>대상 브로커의 거래 가능한 기호를 로드합니다. 칩을 클릭하여 기호 필터에 추가합니다.</value></data>
+  <data name="copyDetail.selectAccountWarning" xml:space="preserve"><value>최소한 하나의 대상 계정을 선택하세요</value></data>
+  <data name="copyDetail.someFailed" xml:space="preserve"><value>일부 대상을 추가할 수 없습니다</value></data>
+  <data name="copyDetail.yes" xml:space="preserve"><value>예</value></data>
+  <data name="copyDetail.no" xml:space="preserve"><value>아니오</value></data>
 </root>

@@ -341,4 +341,27 @@
   <data name="copy.map.tip.source" xml:space="preserve"><value>Le symbole tel que nommé sur le compte maître (source), par exemple EURUSD.</value></data>
   <data name="copy.map.tip.destination" xml:space="preserve"><value>Le symbole correspondant chez le courtier de destination, par exemple EUR.USD.</value></data>
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Multiplicateur de volume supplémentaire pour ce symbole en plus du dimensionnement de la destination (1 = aucun changement).</value></data>
+  <data name="copyDetail.destinations" xml:space="preserve"><value>Destinations</value></data>
+  <data name="copyDetail.noDestinations" xml:space="preserve"><value>Aucune destination pour l'instant — ajoutez-en une ci-dessous.</value></data>
+  <data name="copyDetail.col.account" xml:space="preserve"><value>Compte</value></data>
+  <data name="copyDetail.col.mode" xml:space="preserve"><value>Mode</value></data>
+  <data name="copyDetail.col.param" xml:space="preserve"><value>Paramètre</value></data>
+  <data name="copyDetail.col.reverse" xml:space="preserve"><value>Inverser</value></data>
+  <data name="copyDetail.col.direction" xml:space="preserve"><value>Direction</value></data>
+  <data name="copyDetail.col.partial" xml:space="preserve"><value>Partiel</value></data>
+  <data name="copyDetail.col.pending" xml:space="preserve"><value>En attente</value></data>
+  <data name="copyDetail.col.trailing" xml:space="preserve"><value>Traçant</value></data>
+  <data name="copyDetail.removeDestination" xml:space="preserve"><value>Supprimer la destination</value></data>
+  <data name="copyDetail.remove" xml:space="preserve"><value>Supprimer</value></data>
+  <data name="copyDetail.removeConfirm" xml:space="preserve"><value>Supprimer cette destination du profil ? Elle cessera de copier les opérations vers ce compte.</value></data>
+  <data name="copyDetail.addDestination" xml:space="preserve"><value>Ajouter une destination</value></data>
+  <data name="copyDetail.destAccounts" xml:space="preserve"><value>Comptes de destination (esclave)</value></data>
+  <data name="copyDetail.destinationsCount" xml:space="preserve"><value>{0} compte(s)</value></data>
+  <data name="copyDetail.tip.destAccounts" xml:space="preserve"><value>Un ou plusieurs comptes de destination (esclave) à ajouter, chacun avec les paramètres ci-dessous. Seuls les comptes ajoutés via l'Open API de cTrader sont répertoriés — les comptes ajoutés manuellement ne peuvent pas copier les opérations.</value></data>
+  <data name="copyDetail.suggestSymbols" xml:space="preserve"><value>Suggérer les symboles du courtier</value></data>
+  <data name="copyDetail.tip.suggestSymbols" xml:space="preserve"><value>Chargez les symboles négociables de votre courtier de destination. Cliquez sur une puce pour l'ajouter au filtre de symboles.</value></data>
+  <data name="copyDetail.selectAccountWarning" xml:space="preserve"><value>Sélectionnez au moins un compte de destination</value></data>
+  <data name="copyDetail.someFailed" xml:space="preserve"><value>Certaines destinations n'ont pas pu être ajoutées</value></data>
+  <data name="copyDetail.yes" xml:space="preserve"><value>Oui</value></data>
+  <data name="copyDetail.no" xml:space="preserve"><value>Non</value></data>
 </root>

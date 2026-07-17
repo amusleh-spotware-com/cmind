@@ -13,7 +13,7 @@ public static class PageExtensions
     // script-present guarantee so this can never hang a test it replaced — strictly safer, never worse.
     public static async Task WaitForAppReadyAsync(this IPage page)
     {
-        await page.WaitForAppReadyAsync();
+        await page.WaitForFunctionAsync("() => window.Blazor !== undefined");
         try
         {
             await page.WaitForFunctionAsync("() => window.__appInteractive === true", null,

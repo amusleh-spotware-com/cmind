@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Core.Domain;
 using Microsoft.Playwright;
 using Xunit;
@@ -154,16 +155,21 @@ public sealed class CopyTradingTests(AppFixture app)
             new() { DataObject = new { SourceAccountId = slaveId } });
         Assert.Equal(400, invalid.Status);
 
-        // The full-page editor exposes the source (master) selector.
+        // The full-page editor exposes the source (master) selector, reflecting the changed master.
+        // NB: MudSelect's data-testid lands on a hidden <input> — assert its VALUE, never its visibility.
         await GotoAsync(page, $"/copy-trading/{profileId}");
-        await Assertions.Expect(page.Locator("[data-testid=copy-source-select]")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.Locator("[data-testid=copy-source-select]"))
+            .ToHaveValueAsync(master2.ToString(), new() { Timeout = 15000 });
 
-        // The browser tab title shows the profile name.
-        Assert.Contains($"src-{Suffix}", await page.TitleAsync());
+        // The browser tab title shows the profile name (polled — the title updates once the profile loads).
+        await Assertions.Expect(page).ToHaveTitleAsync(
+            new Regex(Regex.Escape($"src-{Suffix}")), new() { Timeout = 15000 });
 
         // The destination picker excludes the current source and any already-added destination — only free
-        // accounts are offered (master1 was freed when the source moved to master2).
-        await page.Locator("[data-testid=copy-dest-accounts]").ClickAsync();
+        // accounts are offered (master1 was freed when the source moved to master2). Open the select by its
+        // visible control (the testid is on the hidden input, which can't be clicked).
+        await page.Locator(".mud-select").Filter(new() { HasTextString = "Destination (slave) accounts" })
+            .First.ClickAsync();
         await page.Locator(".mud-list-item").First.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
         Assert.True(await page.Locator($".mud-list-item:has-text('{master1}')").CountAsync() > 0, "a free account must be offered");
         Assert.Equal(0, await page.Locator($".mud-list-item:has-text('{slave}')").CountAsync());   // already a destination

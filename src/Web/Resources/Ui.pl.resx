@@ -368,4 +368,5 @@
   <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Nie udało się zmienić konta źródłowego</value></data>
   <data name="copyDetail.editDestination" xml:space="preserve"><value>Edytuj cel</value></data>
   <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Cel zaktualizowany</value></data>
+  <data name="nav.ai.tasks" xml:space="preserve"><value>Zadania</value></data>
 </root>

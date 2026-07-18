@@ -368,4 +368,5 @@
   <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Не удалось изменить исходящий аккаунт</value></data>
   <data name="copyDetail.editDestination" xml:space="preserve"><value>Изменить назначение</value></data>
   <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Назначение обновлено</value></data>
+  <data name="nav.ai.tasks" xml:space="preserve"><value>Задачи</value></data>
 </root>

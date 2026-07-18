@@ -368,4 +368,5 @@
   <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Impossibile modificare l'account sorgente</value></data>
   <data name="copyDetail.editDestination" xml:space="preserve"><value>Modifica destinazione</value></data>
   <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Destinazione aggiornata</value></data>
+  <data name="nav.ai.tasks" xml:space="preserve"><value>Attività</value></data>
 </root>

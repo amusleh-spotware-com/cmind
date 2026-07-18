@@ -368,4 +368,5 @@
   <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Không thể thay đổi tài khoản nguồn</value></data>
   <data name="copyDetail.editDestination" xml:space="preserve"><value>Chỉnh sửa đích đến</value></data>
   <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Đích đến đã được cập nhật</value></data>
+  <data name="nav.ai.tasks" xml:space="preserve"><value>Công việc</value></data>
 </root>

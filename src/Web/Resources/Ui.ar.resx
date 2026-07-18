@@ -368,4 +368,5 @@
   <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>تعذر تغيير الحساب المصدر</value></data>
   <data name="copyDetail.editDestination" xml:space="preserve"><value>تعديل الوجهة</value></data>
   <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>تم تحديث الوجهة</value></data>
+  <data name="nav.ai.tasks" xml:space="preserve"><value>المهام</value></data>
 </root>

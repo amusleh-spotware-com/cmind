@@ -44,6 +44,10 @@
         {
             <MudNavGroup Title="@L["nav.group.ai"]" Icon="@Icons.Material.Filled.AutoAwesome" Expanded="false">
                 <MudNavLink Href="/ai/build" Icon="@Icons.Material.Filled.Bolt">@L["nav.ai.build"]</MudNavLink>
+                @if (AllowAiTasks)
+                {
+                    <MudNavLink Href="/ai/tasks" Icon="@Icons.Material.Filled.Checklist">@L["nav.ai.tasks"]</MudNavLink>
+                }
                 <MudNavLink Href="/ai/review" Icon="@Icons.Material.Filled.RateReview">@L["nav.ai.review"]</MudNavLink>
                 <MudNavLink Href="/ai/debate" Icon="@Icons.Material.Filled.Forum">@L["nav.ai.debate"]</MudNavLink>
                 <MudNavLink Href="/ai/sentiment" Icon="@Icons.Material.Filled.Insights">@L["nav.ai.sentiment"]</MudNavLink>
@@ -136,6 +140,8 @@
 
     private bool AnyProp =>
         Gate.IsEnabled(FeatureFlag.PropGuard) || Gate.IsEnabled(FeatureFlag.PropFirm);
+
+    private bool AllowAiTasks => AppOptionsMonitor.CurrentValue.Branding.AllowAiTasks;
 
     private bool CalendarOn =>
         CalendarEnablement.IsVisible(AppOptionsMonitor.CurrentValue.Branding, Gate, AppOptionsMonitor.CurrentValue.Calendar);

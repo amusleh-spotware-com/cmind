@@ -368,4 +368,5 @@
   <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Не могу да променим извор рачуна</value></data>
   <data name="copyDetail.editDestination" xml:space="preserve"><value>Izmeni odredište</value></data>
   <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Odredište je ažurirano</value></data>
+  <data name="nav.ai.tasks" xml:space="preserve"><value>Задаци</value></data>
 </root>

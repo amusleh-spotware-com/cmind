@@ -368,4 +368,5 @@
   <data name="copy.map.tip.multiplier" xml:space="preserve"><value>Extra volume multiplier for this symbol on top of the destination's sizing (1 = no change).</value></data>
   <data name="copyDetail.editDestination" xml:space="preserve"><value>Edit destination</value></data>
   <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Destination updated</value></data>
+  <data name="nav.ai.tasks" xml:space="preserve"><value>Tasks</value></data>
 </root>

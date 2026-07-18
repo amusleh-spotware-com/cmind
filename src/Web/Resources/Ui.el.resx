@@ -368,4 +368,5 @@
   <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Δεν ήταν δυνατό να αλλαχθεί ο λογαριασμός προέλευσης</value></data>
   <data name="copyDetail.editDestination" xml:space="preserve"><value>Επεξεργασία προορισμού</value></data>
   <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Ο προορισμός ενημερώθηκε</value></data>
+  <data name="nav.ai.tasks" xml:space="preserve"><value>Εργασίες</value></data>
 </root>

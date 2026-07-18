@@ -75,11 +75,12 @@ public sealed class AiTaskRunner(
     }
 
     // Atomically pick + claim the oldest claimable task under a row lock so concurrent web replicas can't
-    // both run it. FOR UPDATE SKIP LOCKED hands each replica a different row (or none).
+    // both run it. FOR UPDATE SKIP LOCKED hands each replica a different row (or none). The transaction is
+    // run through the context's execution strategy because the app enables connection retry, which forbids a
+    // user-initiated transaction unless it is wrapped in the strategy (otherwise every claim throws).
     private async Task<AiTask?> ClaimAsync(DataContext db, CancellationToken ct)
     {
         var now = timeProvider.GetUtcNow();
-        await using var tx = await db.Database.BeginTransactionAsync(ct);
 
         const string sql = """
             SELECT * FROM "AiTasks"
@@ -91,17 +92,23 @@ public sealed class AiTaskRunner(
             FOR UPDATE SKIP LOCKED
             """;
 
-        var task = await db.AiTasks.FromSqlRaw(sql, now).FirstOrDefaultAsync(ct);
-        if (task is null)
+        var strategy = db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
         {
-            await tx.RollbackAsync(ct);
-            return null;
-        }
+            await using var tx = await db.Database.BeginTransactionAsync(ct);
 
-        task.Claim(_node, now, AiConstants.AiTaskLeaseTtl);
-        await db.SaveChangesAsync(ct);
-        await tx.CommitAsync(ct);
-        return task;
+            var task = await db.AiTasks.FromSqlRaw(sql, now).FirstOrDefaultAsync(ct);
+            if (task is null)
+            {
+                await tx.RollbackAsync(ct);
+                return null;
+            }
+
+            task.Claim(_node, now, AiConstants.AiTaskLeaseTtl);
+            await db.SaveChangesAsync(ct);
+            await tx.CommitAsync(ct);
+            return task;
+        });
     }
 
     private async Task RunAsync(IServiceProvider services, DataContext db, AiTask task, CancellationToken ct)

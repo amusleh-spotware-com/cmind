@@ -133,6 +133,19 @@ public static class AiEndpoints
             return Results.Ok(new { success = result.Success, latencyMs = sw.ElapsedMilliseconds, error = result.Error });
         }).RequireAuthorization(AuthPolicies.Owner);
 
+        // The models a user may target for a task/binding: their own providers plus the deployment defaults
+        // (id + model + kind only — never a key). Powers the task create-dialog's model multi-select.
+        g.MapGet("/usable-models", async (IAiProviderStore store, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var mine = await store.ListForUserAsync(uid, ct);
+            var deployment = await store.ListAsync(ct);
+            var models = deployment.Concat(mine)
+                .Select(p => new { id = p.Id, model = p.Model, kind = p.Kind.ToString(), isActive = p.IsActive })
+                .ToList();
+            return Results.Ok(models);
+        });
+
         // Per-user providers: any signed-in user may add their own AI provider, which overrides the
         // deployment default for their own AI features (UserOrAbove — inherited from the group).
         g.MapGet("/my-providers", async (IAiProviderStore store, ICurrentUser u, CancellationToken ct) =>

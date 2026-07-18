@@ -368,4 +368,5 @@
   <data name="copyDetail.sourceChangeFailed" xml:space="preserve"><value>Ni mogoče spremeniti izvirnega računa</value></data>
   <data name="copyDetail.editDestination" xml:space="preserve"><value>Uredi namen</value></data>
   <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Namen posodobljen</value></data>
+  <data name="nav.ai.tasks" xml:space="preserve"><value>Naloge</value></data>
 </root>

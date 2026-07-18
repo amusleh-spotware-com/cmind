@@ -365,7 +365,8 @@
       "copy.map.tip.destination": "The matching symbol on the destination broker, e.g. EUR.USD.",
       "copy.map.tip.multiplier": "Extra volume multiplier for this symbol on top of the destination's sizing (1 = no change).",
       "copyDetail.editDestination": "Edit destination",
-      "copyDetail.destinationUpdated": "Destination updated"
+      "copyDetail.destinationUpdated": "Destination updated",
+      "nav.ai.tasks": "Tasks"
     },
     "ar": {
       "integrity.row.sharpe": "شارب (لكل فترة)",
@@ -731,7 +732,8 @@
       "copyDetail.sourceChanged": "تم تحديث الحساب المصدر",
       "copyDetail.sourceChangeFailed": "تعذر تغيير الحساب المصدر",
       "copyDetail.editDestination": "تعديل الوجهة",
-      "copyDetail.destinationUpdated": "تم تحديث الوجهة"
+      "copyDetail.destinationUpdated": "تم تحديث الوجهة",
+      "nav.ai.tasks": "المهام"
     },
     "cs": {
       "integrity.row.sharpe": "Sharpe (za období)",
@@ -1097,7 +1099,8 @@
       "copyDetail.sourceChanged": "Zdrojový účet aktualizován",
       "copyDetail.sourceChangeFailed": "Nepodařilo se změnit zdrojový účet",
       "copyDetail.editDestination": "Upravit cíl",
-      "copyDetail.destinationUpdated": "Cíl aktualizován"
+      "copyDetail.destinationUpdated": "Cíl aktualizován",
+      "nav.ai.tasks": "Úkoly"
     },
     "de": {
       "integrity.row.sharpe": "Sharpe (pro Periode)",
@@ -1463,7 +1466,8 @@
       "copyDetail.sourceChanged": "Quellkonto aktualisiert",
       "copyDetail.sourceChangeFailed": "Quellkonto konnte nicht geändert werden",
       "copyDetail.editDestination": "Ziel bearbeiten",
-      "copyDetail.destinationUpdated": "Ziel aktualisiert"
+      "copyDetail.destinationUpdated": "Ziel aktualisiert",
+      "nav.ai.tasks": "Aufgaben"
     },
     "el": {
       "integrity.row.sharpe": "Sharpe (ανά περίοδο)",
@@ -1829,7 +1833,8 @@
       "copyDetail.sourceChanged": "Ο λογαριασμός προέλευσης ενημερώθηκε",
       "copyDetail.sourceChangeFailed": "Δεν ήταν δυνατό να αλλαχθεί ο λογαριασμός προέλευσης",
       "copyDetail.editDestination": "Επεξεργασία προορισμού",
-      "copyDetail.destinationUpdated": "Ο προορισμός ενημερώθηκε"
+      "copyDetail.destinationUpdated": "Ο προορισμός ενημερώθηκε",
+      "nav.ai.tasks": "Εργασίες"
     },
     "es": {
       "integrity.row.sharpe": "Sharpe (por período)",
@@ -2195,7 +2200,8 @@
       "copyDetail.sourceChanged": "Cuenta de origen actualizada",
       "copyDetail.sourceChangeFailed": "No se pudo cambiar la cuenta de origen",
       "copyDetail.editDestination": "Editar destino",
-      "copyDetail.destinationUpdated": "Destino actualizado"
+      "copyDetail.destinationUpdated": "Destino actualizado",
+      "nav.ai.tasks": "Tareas"
     },
     "fr": {
       "integrity.row.sharpe": "Sharpe (par période)",
@@ -2561,7 +2567,8 @@
       "copyDetail.sourceChanged": "Compte source mis à jour",
       "copyDetail.sourceChangeFailed": "Impossible de changer le compte source",
       "copyDetail.editDestination": "Modifier la destination",
-      "copyDetail.destinationUpdated": "Destination mise à jour"
+      "copyDetail.destinationUpdated": "Destination mise à jour",
+      "nav.ai.tasks": "Tâches"
     },
     "hu": {
       "integrity.row.sharpe": "Sharpe (periódusonként)",
@@ -2927,7 +2934,8 @@
       "copyDetail.sourceChanged": "Forrásfiókok frissítve",
       "copyDetail.sourceChangeFailed": "Nem sikerült módosítani a forrásfiókon",
       "copyDetail.editDestination": "Cél szerkesztése",
-      "copyDetail.destinationUpdated": "Cél frissítve"
+      "copyDetail.destinationUpdated": "Cél frissítve",
+      "nav.ai.tasks": "Feladatok"
     },
     "id": {
       "integrity.row.sharpe": "Sharpe (per periode)",
@@ -3293,7 +3301,8 @@
       "copyDetail.sourceChanged": "Akun sumber diperbarui",
       "copyDetail.sourceChangeFailed": "Tidak dapat mengubah akun sumber",
       "copyDetail.editDestination": "Edit destinasi",
-      "copyDetail.destinationUpdated": "Destinasi diperbarui"
+      "copyDetail.destinationUpdated": "Destinasi diperbarui",
+      "nav.ai.tasks": "Tugas"
     },
     "it": {
       "integrity.row.sharpe": "Sharpe (per periodo)",
@@ -3659,7 +3668,8 @@
       "copyDetail.sourceChanged": "Account sorgente aggiornato",
       "copyDetail.sourceChangeFailed": "Impossibile modificare l'account sorgente",
       "copyDetail.editDestination": "Modifica destinazione",
-      "copyDetail.destinationUpdated": "Destinazione aggiornata"
+      "copyDetail.destinationUpdated": "Destinazione aggiornata",
+      "nav.ai.tasks": "Attività"
     },
     "ja": {
       "integrity.row.sharpe": "シャープ（期間あたり）",
@@ -4025,7 +4035,8 @@
       "copyDetail.sourceChanged": "ソースアカウントが更新されました",
       "copyDetail.sourceChangeFailed": "ソースアカウントを変更できませんでした",
       "copyDetail.editDestination": "送信先を編集",
-      "copyDetail.destinationUpdated": "送信先が更新されました"
+      "copyDetail.destinationUpdated": "送信先が更新されました",
+      "nav.ai.tasks": "タスク"
     },
     "ko": {
       "integrity.row.sharpe": "샤프 (기간당)",
@@ -4391,7 +4402,8 @@
       "copyDetail.sourceChanged": "소스 계정이 업데이트됨",
       "copyDetail.sourceChangeFailed": "소스 계정을 변경할 수 없습니다",
       "copyDetail.editDestination": "대상 편집",
-      "copyDetail.destinationUpdated": "대상이 업데이트됨"
+      "copyDetail.destinationUpdated": "대상이 업데이트됨",
+      "nav.ai.tasks": "작업"
     },
     "ms": {
       "integrity.row.sharpe": "Sharpe (setiap tempoh)",
@@ -4757,7 +4769,8 @@
       "copyDetail.sourceChanged": "Akaun sumber dikemas kini",
       "copyDetail.sourceChangeFailed": "Tidak dapat menukar akaun sumber",
       "copyDetail.editDestination": "Edit destinasi",
-      "copyDetail.destinationUpdated": "Destinasi dikemas kini"
+      "copyDetail.destinationUpdated": "Destinasi dikemas kini",
+      "nav.ai.tasks": "Tugas"
     },
     "pl": {
       "integrity.row.sharpe": "Sharpe (na okres)",
@@ -5123,7 +5136,8 @@
       "copyDetail.sourceChanged": "Konto źródłowe zaktualizowane",
       "copyDetail.sourceChangeFailed": "Nie udało się zmienić konta źródłowego",
       "copyDetail.editDestination": "Edytuj cel",
-      "copyDetail.destinationUpdated": "Cel zaktualizowany"
+      "copyDetail.destinationUpdated": "Cel zaktualizowany",
+      "nav.ai.tasks": "Zadania"
     },
     "pt-BR": {
       "integrity.row.sharpe": "Sharpe (por período)",
@@ -5489,7 +5503,8 @@
       "copyDetail.sourceChanged": "Conta de origem atualizada",
       "copyDetail.sourceChangeFailed": "Não foi possível alterar a conta de origem",
       "copyDetail.editDestination": "Editar destino",
-      "copyDetail.destinationUpdated": "Destino atualizado"
+      "copyDetail.destinationUpdated": "Destino atualizado",
+      "nav.ai.tasks": "Tarefas"
     },
     "ru": {
       "integrity.row.sharpe": "Шарп (за период)",
@@ -5855,7 +5870,8 @@
       "copyDetail.sourceChanged": "Исходящий аккаунт обновлен",
       "copyDetail.sourceChangeFailed": "Не удалось изменить исходящий аккаунт",
       "copyDetail.editDestination": "Изменить назначение",
-      "copyDetail.destinationUpdated": "Назначение обновлено"
+      "copyDetail.destinationUpdated": "Назначение обновлено",
+      "nav.ai.tasks": "Задачи"
     },
     "sk": {
       "integrity.row.sharpe": "Sharpe (za obdobie)",
@@ -6221,7 +6237,8 @@
       "copyDetail.sourceChanged": "Zdrojový účet aktualizovaný",
       "copyDetail.sourceChangeFailed": "Nepodarilo sa zmeniť zdrojový účet",
       "copyDetail.editDestination": "Upraviť cieľ",
-      "copyDetail.destinationUpdated": "Cieľ aktualizovaný"
+      "copyDetail.destinationUpdated": "Cieľ aktualizovaný",
+      "nav.ai.tasks": "Úlohy"
     },
     "sl": {
       "integrity.row.sharpe": "Sharpe (na obdobje)",
@@ -6587,7 +6604,8 @@
       "copyDetail.sourceChanged": "Izvirni račun je posodobljen",
       "copyDetail.sourceChangeFailed": "Ni mogoče spremeniti izvirnega računa",
       "copyDetail.editDestination": "Uredi namen",
-      "copyDetail.destinationUpdated": "Namen posodobljen"
+      "copyDetail.destinationUpdated": "Namen posodobljen",
+      "nav.ai.tasks": "Naloge"
     },
     "sr": {
       "integrity.row.sharpe": "Шарп (по периоду)",
@@ -6953,7 +6971,8 @@
       "copyDetail.sourceChanged": "Извор рачуна ажуриран",
       "copyDetail.sourceChangeFailed": "Не могу да променим извор рачуна",
       "copyDetail.editDestination": "Izmeni odredište",
-      "copyDetail.destinationUpdated": "Odredište je ažurirano"
+      "copyDetail.destinationUpdated": "Odredište je ažurirano",
+      "nav.ai.tasks": "Задаци"
     },
     "th": {
       "integrity.row.sharpe": "ชาร์ป (ต่อช่วง)",
@@ -7319,7 +7338,8 @@
       "copyDetail.sourceChanged": "อัปเดตบัญชีต้นทาง",
       "copyDetail.sourceChangeFailed": "ไม่สามารถเปลี่ยนบัญชีต้นทางได้",
       "copyDetail.editDestination": "แก้ไขปลายทาง",
-      "copyDetail.destinationUpdated": "ปลายทางได้รับการอัปเดต"
+      "copyDetail.destinationUpdated": "ปลายทางได้รับการอัปเดต",
+      "nav.ai.tasks": "งาน"
     },
     "tr": {
       "integrity.row.sharpe": "Sharpe (dönem başına)",
@@ -7685,7 +7705,8 @@
       "copyDetail.sourceChanged": "Kaynak hesabı güncellendi",
       "copyDetail.sourceChangeFailed": "Kaynak hesabı değiştirilemedi",
       "copyDetail.editDestination": "Hedefi düzenle",
-      "copyDetail.destinationUpdated": "Hedef güncellendi"
+      "copyDetail.destinationUpdated": "Hedef güncellendi",
+      "nav.ai.tasks": "Görevler"
     },
     "vi": {
       "integrity.row.sharpe": "Sharpe (mỗi kỳ)",
@@ -8051,7 +8072,8 @@
       "copyDetail.sourceChanged": "Tài khoản nguồn đã được cập nhật",
       "copyDetail.sourceChangeFailed": "Không thể thay đổi tài khoản nguồn",
       "copyDetail.editDestination": "Chỉnh sửa đích đến",
-      "copyDetail.destinationUpdated": "Đích đến đã được cập nhật"
+      "copyDetail.destinationUpdated": "Đích đến đã được cập nhật",
+      "nav.ai.tasks": "Công việc"
     },
     "zh-Hans": {
       "integrity.row.sharpe": "夏普（每期）",
@@ -8417,7 +8439,8 @@
       "copyDetail.sourceChanged": "源账户已更新",
       "copyDetail.sourceChangeFailed": "无法更改源账户",
       "copyDetail.editDestination": "编辑目标",
-      "copyDetail.destinationUpdated": "目标已更新"
+      "copyDetail.destinationUpdated": "目标已更新",
+      "nav.ai.tasks": "任务"
     }
   }
 }

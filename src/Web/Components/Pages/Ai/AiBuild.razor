@@ -4,6 +4,7 @@
 @inherits AiFeaturePageBase
 @inject NavigationManager Nav
 @inject IJSRuntime JS
+@inject IDialogService Dialogs
 
 <PageTitle>AI · Build cBot</PageTitle>
 
@@ -32,10 +33,17 @@
     </MudGrid>
     <MudTextField @bind-Value="_description" Label="Describe your strategy" Lines="5" Class="mt-3"
                   Placeholder="e.g. RSI mean-reversion on EURUSD h1, 1.5% risk, ATR stop-loss" />
-    <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
-               StartIcon="@Icons.Material.Filled.Bolt" OnClick="BuildBot" Disabled="Busy">
-        Build my bot
-    </MudButton>
+    <MudStack Row="true" Spacing="2" Class="mt-3" Wrap="Wrap.Wrap">
+        <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.Bolt" OnClick="BuildBot" Disabled="Busy">
+            Build my bot
+        </MudButton>
+        <MudButton Color="Color.Secondary" Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.Checklist" OnClick="CreateTask" Disabled="Busy"
+                   data-testid="ai-build-as-task">
+            Run as background task
+        </MudButton>
+    </MudStack>
 
     @if (Loading)
     {
@@ -147,6 +155,13 @@
         {
             Loading = false;
         }
+    }
+
+    private async Task CreateTask()
+    {
+        var dialog = await Dialogs.ShowAsync<Web.Components.Dialogs.AiTaskCreateDialog>("Create cBot task");
+        var result = await dialog.Result;
+        if (result is { Canceled: false }) Nav.NavigateTo("/ai/tasks");
     }
 
     private async Task CopyCode()

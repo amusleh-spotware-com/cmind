@@ -14,7 +14,7 @@ public sealed class PageSmokeTests(AppFixture app)
     {
         "/", "/accounts", "/cbots", "/run", "/backtest", "/nodes", "/copy-trading", "/copy-trading/new", "/agent", "/alerts",
         "/prop-firm", "/prop-guard", "/mcp", "/users", "/account", "/optimize", "/quant/integrity", "/quant/sizing", "/quant/health", "/quant/regimes", "/quant/tca", "/quant/positioning", "/quant/execution",
-        "/ai/build", "/ai/review", "/ai/debate", "/ai/sentiment", "/ai/exposure", "/ai/digest",
+        "/ai/build", "/ai/tasks", "/ai/review", "/ai/debate", "/ai/sentiment", "/ai/exposure", "/ai/digest",
         "/ai/tune", "/ai/optimize", "/ai/currency-strength", "/agent-studio", "/journal", "/economic-calendar",
         "/economic-calendar/series/US.CPI",
         "/settings/ai", "/settings/openapi", "/settings/features", "/settings/deployment", "/settings/legal",

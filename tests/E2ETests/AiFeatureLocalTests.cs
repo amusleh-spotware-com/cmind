@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using FluentAssertions;
 using Microsoft.Playwright;
 using Xunit;
@@ -181,6 +182,42 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
         // The AI generates the bot (canned reply as source) and the build pipeline runs; the result panel
         // must render (success or a build-log failure) without tripping the error UI.
         await Assertions.Expect(page.Locator("[data-testid=ai-build-result]")).ToBeVisibleAsync(new() { Timeout = 120000 });
+        (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Create_cbot_task_runs_in_background_and_is_viewable_after_navigating_away()
+    {
+        var page = await OpenAsync("/ai/tasks");
+        (await page.Locator("[data-testid=tasks-disabled]").IsVisibleAsync()).Should().BeFalse();
+
+        // Open the create dialog and submit a build task (the active fake model is preselected).
+        await page.Locator("[data-testid=task-new]").ClickAsync();
+        await Assertions.Expect(page.Locator("[data-testid=task-create-confirm]")).ToBeVisibleAsync(Slow);
+        await page.GetByLabel("Describe your strategy").FillAsync("RSI mean-reversion on EURUSD h1");
+        await page.Locator("[data-testid=task-create-confirm]").ClickAsync();
+
+        // Creation succeeded → the dialog closes and a task row (with its model name) appears immediately
+        // (the request returns without waiting for the build).
+        await Assertions.Expect(page.Locator("[data-testid=task-create-confirm]")).ToBeHiddenAsync(new() { Timeout = 20000 });
+        var table = page.Locator("[data-testid=tasks-table]");
+        await Assertions.Expect(table).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.Locator("[data-testid=task-model]").First).ToBeVisibleAsync(Slow);
+
+        // Navigate away and back — the background task survives navigation.
+        await page.GotoAsync("/ai/build", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForAppReadyAsync();
+        await page.GotoAsync("/ai/tasks", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForAppReadyAsync();
+
+        // The worker claims + runs it; the row polls to a terminal status (the canned reply is not valid
+        // source, so the self-repair build ends Failed — a terminal state with a visible activity log).
+        await Assertions.Expect(table.GetByText(new Regex("Succeeded|Failed")))
+            .ToBeVisibleAsync(new() { Timeout = 180000 });
+
+        // The detail dialog renders for the terminal task without crashing the circuit, showing its activity.
+        await page.Locator("[data-testid=task-view]").First.ClickAsync();
+        await Assertions.Expect(page.Locator("[data-testid=task-log]")).ToBeVisibleAsync(Slow);
         (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
     }
 

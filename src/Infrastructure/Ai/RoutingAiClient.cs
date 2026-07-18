@@ -25,7 +25,10 @@ public sealed class RoutingAiClient : IAiClient
 
     public Task<AiResult> CompleteAsync(AiTextRequest request, CancellationToken ct)
     {
-        if (_store.Active is not { } active) return Task.FromResult(AiResult.Fail(AiConstants.DisabledMessage));
+        // Route to the provider bound to this request's feature (or the caller-forced credential), falling
+        // back to the scope's active provider when the feature is unbound.
+        if (_store.ResolveFor(request.Feature, request.CredentialId) is not { } active)
+            return Task.FromResult(AiResult.Fail(AiConstants.DisabledMessage));
         if (!_providers.TryGetValue(active.Kind, out var provider))
             return Task.FromResult(AiResult.Fail(AiConstants.DisabledMessage));
 

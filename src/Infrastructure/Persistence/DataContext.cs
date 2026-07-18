@@ -33,6 +33,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
     public DbSet<AiProviderCredential> AiProviderCredentials => Set<AiProviderCredential>();
+    public DbSet<Core.Domain.AiFeatureBinding> AiFeatureBindings => Set<Core.Domain.AiFeatureBinding>();
     public DbSet<UserDashboard> UserDashboards => Set<UserDashboard>();
     public DbSet<AgentMandate> AgentMandates => Set<AgentMandate>();
     public DbSet<AgentProposal> AgentProposals => Set<AgentProposal>();
@@ -118,6 +119,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<ConsentRecordId>().HaveConversion<StrongIdConverter<ConsentRecordId>>();
         configurationBuilder.Properties<UserDashboardId>().HaveConversion<StrongIdConverter<UserDashboardId>>();
         configurationBuilder.Properties<AiProviderCredentialId>().HaveConversion<StrongIdConverter<AiProviderCredentialId>>();
+        configurationBuilder.Properties<AiFeatureBindingId>().HaveConversion<StrongIdConverter<AiFeatureBindingId>>();
         configurationBuilder.Properties<CurrencyStrengthSnapshotId>().HaveConversion<StrongIdConverter<CurrencyStrengthSnapshotId>>();
     }
 
@@ -281,6 +283,17 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.Property(x => x.Kind).HasConversion<string>().HasMaxLength(24);
             e.Property(x => x.BaseUrl).HasMaxLength(512);
             e.Property(x => x.Model).HasMaxLength(256);
+        });
+
+        modelBuilder.Entity<Core.Domain.AiFeatureBinding>(e =>
+        {
+            // At most one binding per (scope, feature): one deployment default (OwnerUserId IS NULL) and one
+            // per user (OwnerUserId IS NOT NULL) for each feature. Two partial unique indexes enforce it.
+            e.HasIndex(x => x.Feature).IsUnique()
+                .HasFilter("\"OwnerUserId\" IS NULL AND \"IsDeleted\" = false");
+            e.HasIndex(x => new { x.OwnerUserId, x.Feature }).IsUnique()
+                .HasFilter("\"OwnerUserId\" IS NOT NULL AND \"IsDeleted\" = false");
+            e.Property(x => x.Feature).HasConversion<string>().HasMaxLength(32);
         });
 
         modelBuilder.Entity<UserDashboard>(e =>

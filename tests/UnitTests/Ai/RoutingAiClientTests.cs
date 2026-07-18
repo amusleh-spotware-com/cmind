@@ -12,6 +12,12 @@ public sealed class RoutingAiClientTests
     {
         public bool HasActive => active is not null;
         public ActiveAiProvider? Active => active;
+        public ActiveAiProvider? ResolveFor(AiFeature? feature, Core.AiProviderCredentialId? credentialId) => active;
+        public Task<IReadOnlyList<AiFeatureBindingView>> ListBindingsAsync(Core.UserId? owner, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<AiFeatureBindingView>>([]);
+        public Task SetBindingAsync(Core.UserId? owner, AiFeature feature, Core.AiProviderCredentialId credentialId, CancellationToken ct) =>
+            Task.CompletedTask;
+        public Task ClearBindingAsync(Core.UserId? owner, AiFeature feature, CancellationToken ct) => Task.CompletedTask;
         public Task<IReadOnlyList<AiProviderView>> ListAsync(CancellationToken ct) =>
             Task.FromResult<IReadOnlyList<AiProviderView>>([]);
         public Task<Guid> UpsertAsync(UpsertAiProviderCommand command, CancellationToken ct) => Task.FromResult(Guid.NewGuid());

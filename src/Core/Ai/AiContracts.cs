@@ -7,7 +7,13 @@ public sealed record AiTextRequest(
     string User,
     int? MaxTokens = null,
     bool EnableWebSearch = false,
-    AiImage? Image = null);
+    AiImage? Image = null,
+    // Which AI feature this request serves — used to route to the per-feature bound provider (falls back to
+    // the scope's active provider when null or unbound). Stamped by AiFeatureService per operation.
+    AiFeature? Feature = null,
+    // Forces a specific provider credential regardless of bindings — the async-task path uses this to run a
+    // feature on a user-chosen model. Null = resolve by Feature/active as usual.
+    Core.AiProviderCredentialId? CredentialId = null);
 
 public sealed record AiResult(bool Success, string Text, string? Error = null)
 {

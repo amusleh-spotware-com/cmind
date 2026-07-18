@@ -9,28 +9,33 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
 
     public bool Enabled => client.Enabled;
 
+    // Every operation routes through here so its AiFeature is stamped on the request — the routing client then
+    // resolves the per-feature bound provider (or the scope's active provider when the feature is unbound).
+    private Task<AiResult> Complete(AiFeature feature, AiTextRequest request, CancellationToken ct) =>
+        client.CompleteAsync(request with { Feature = feature }, ct);
+
     public Task<AiResult> GenerateCBotAsync(string language, string description, CancellationToken ct) =>
-        client.CompleteAsync(new AiTextRequest(
+        Complete(AiFeature.GenerateCBot, new AiTextRequest(
             AiPrompts.CodegenSystem(language),
             $"Strategy description:\n{Clip(description)}"), ct);
 
     public Task<AiResult> ReviewCBotAsync(string language, string source, CancellationToken ct) =>
-        client.CompleteAsync(new AiTextRequest(
+        Complete(AiFeature.ReviewCBot, new AiTextRequest(
             AiPrompts.ReviewSystem,
             $"Language: {language}\n\nSource:\n{Clip(source)}"), ct);
 
     public Task<AiResult> FixCBotAsync(string language, string source, string buildLog, CancellationToken ct) =>
-        client.CompleteAsync(new AiTextRequest(
+        Complete(AiFeature.FixCBot, new AiTextRequest(
             AiPrompts.FixSystem(language),
             $"Build log:\n{Clip(buildLog)}\n\nCurrent source:\n{Clip(source)}"), ct);
 
     public Task<AiResult> ProposeParamSetSuiteAsync(string cBotName, string currentParamsJson, int count, CancellationToken ct) =>
-        client.CompleteAsync(new AiTextRequest(
+        Complete(AiFeature.ProposeParamSetSuite, new AiTextRequest(
             AiPrompts.SuiteSystem(count),
             $"cBot: {cBotName}\nCount: {count}\nCurrent parameters (JSON):\n{Clip(currentParamsJson)}"), ct);
 
     public Task<AiResult> AnalyzeBacktestAsync(string cBotName, string reportJson, CancellationToken ct) =>
-        client.CompleteAsync(new AiTextRequest(
+        Complete(AiFeature.AnalyzeBacktest, new AiTextRequest(
             AiPrompts.AnalyzeBacktestSystem,
             $"cBot: {cBotName}\n\nBacktest report JSON:\n{Clip(reportJson)}"), ct);
 
@@ -41,11 +46,11 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
         user.AppendLine($"Current parameters (JSON):\n{Clip(currentParamsJson)}");
         if (!string.IsNullOrWhiteSpace(backtestReportJson))
             user.AppendLine($"\nLatest backtest report JSON:\n{Clip(backtestReportJson)}");
-        return client.CompleteAsync(new AiTextRequest(AiPrompts.OptimizeSystem, user.ToString()), ct);
+        return Complete(AiFeature.ProposeParamSets, new AiTextRequest(AiPrompts.OptimizeSystem, user.ToString()), ct);
     }
 
     public Task<AiResult> PostMortemAsync(AiInstanceContext context, CancellationToken ct) =>
-        client.CompleteAsync(new AiTextRequest(
+        Complete(AiFeature.PostMortem, new AiTextRequest(
             AiPrompts.PostMortemSystem,
             $"cBot: {context.CBotName}\nKind: {context.Kind}\nStatus: {context.Status}\n" +
             $"Symbol: {context.Symbol ?? "?"}\nTimeframe: {context.Timeframe ?? "?"}\n" +
@@ -58,7 +63,7 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
             user.AppendLine(
                 $"- {i.CBotName} [{i.Kind}] {i.Symbol ?? "?"} {i.Timeframe ?? "?"} status={i.Status}" +
                 (i.Detail is null ? "" : $" {i.Detail}"));
-        return client.CompleteAsync(new AiTextRequest(AiPrompts.RiskGuardSystem, user.ToString()), ct);
+        return Complete(AiFeature.AssessRisk, new AiTextRequest(AiPrompts.RiskGuardSystem, user.ToString()), ct);
     }
 
     public Task<AiResult> AssessRiskActionsAsync(IReadOnlyList<AiInstanceContext> running, int maxTokens, CancellationToken ct)
@@ -71,7 +76,7 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
                 $"[{index}] {i.CBotName} [{i.Kind}] {i.Symbol ?? "?"} {i.Timeframe ?? "?"} status={i.Status}" +
                 (i.Detail is null ? "" : $" {i.Detail}"));
         }
-        return client.CompleteAsync(new AiTextRequest(AiPrompts.RiskActionSystem, user.ToString(), MaxTokens: maxTokens), ct);
+        return Complete(AiFeature.AssessRiskActions, new AiTextRequest(AiPrompts.RiskActionSystem, user.ToString(), MaxTokens: maxTokens), ct);
     }
 
     public Task<AiResult> AssessLiveExposureAsync(IReadOnlyList<AiInstanceContext> live, int maxTokens, CancellationToken ct)
@@ -82,33 +87,33 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
         user.AppendLine("Live bots:");
         foreach (var i in live)
             user.AppendLine($"- {i.CBotName} {i.Symbol ?? "?"} {i.Timeframe ?? "?"}");
-        return client.CompleteAsync(new AiTextRequest(
+        return Complete(AiFeature.AssessLiveExposure, new AiTextRequest(
             AiPrompts.ExposureSystem, user.ToString(), MaxTokens: maxTokens, EnableWebSearch: true), ct);
     }
 
     public Task<AiResult> MarketSentimentAsync(string symbol, CancellationToken ct) =>
-        client.CompleteAsync(new AiTextRequest(
+        Complete(AiFeature.MarketSentiment, new AiTextRequest(
             AiPrompts.SentimentSystem,
             $"Symbol: {symbol}", EnableWebSearch: true), ct);
 
     public Task<AiResult> AssessSymbolAlertAsync(string symbol, int maxTokens, CancellationToken ct) =>
-        client.CompleteAsync(new AiTextRequest(
+        Complete(AiFeature.AssessSymbolAlert, new AiTextRequest(
             AiPrompts.AlertSystem,
             $"Symbol: {symbol}", MaxTokens: maxTokens, EnableWebSearch: true), ct);
 
     public Task<AiResult> VisionToStrategyAsync(AiImage chart, string? note, CancellationToken ct) =>
-        client.CompleteAsync(new AiTextRequest(
+        Complete(AiFeature.VisionToStrategy, new AiTextRequest(
             AiPrompts.VisionSystem,
             string.IsNullOrWhiteSpace(note) ? "Describe this chart and design a cBot strategy for it." : Clip(note),
             Image: chart), ct);
 
     public Task<AiResult> DebateStrategyAsync(string name, string language, string source, int maxTokens, CancellationToken ct) =>
-        client.CompleteAsync(new AiTextRequest(
+        Complete(AiFeature.DebateStrategy, new AiTextRequest(
             AiPrompts.DebateSystem,
             $"Name: {name}\nLanguage: {language}\n\nSource:\n{Clip(source)}", MaxTokens: maxTokens), ct);
 
     public Task<AiResult> CurateStrategyAsync(string name, string language, string source, CancellationToken ct) =>
-        client.CompleteAsync(new AiTextRequest(
+        Complete(AiFeature.CurateStrategy, new AiTextRequest(
             AiPrompts.CurateSystem,
             $"Name: {name}\nLanguage: {language}\n\nSource:\n{Clip(source)}"), ct);
 
@@ -121,7 +126,7 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
         user.AppendLine($"Current parameters (JSON):\n{Clip(currentParamsJson)}");
         if (!string.IsNullOrWhiteSpace(lastReportJson))
             user.AppendLine($"\nMost recent backtest report JSON:\n{Clip(lastReportJson)}");
-        return client.CompleteAsync(new AiTextRequest(AiPrompts.AgentSystem, user.ToString(), MaxTokens: maxTokens), ct);
+        return Complete(AiFeature.ProposeAgentAction, new AiTextRequest(AiPrompts.AgentSystem, user.ToString(), MaxTokens: maxTokens), ct);
     }
 
     public Task<AiResult> AssessStrategyDecayAsync(
@@ -133,7 +138,7 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
         if (!string.IsNullOrWhiteSpace(previousReportJson))
             user.AppendLine($"\nPrevious backtest report JSON:\n{Clip(previousReportJson)}");
         user.AppendLine($"\nLatest backtest report JSON:\n{Clip(latestReportJson)}");
-        return client.CompleteAsync(new AiTextRequest(AiPrompts.DecaySystem, user.ToString(), MaxTokens: maxTokens), ct);
+        return Complete(AiFeature.AssessStrategyDecay, new AiTextRequest(AiPrompts.DecaySystem, user.ToString(), MaxTokens: maxTokens), ct);
     }
 
     public Task<AiResult> PortfolioDigestAsync(IReadOnlyList<AiInstanceContext> portfolio, int maxTokens, CancellationToken ct)
@@ -143,22 +148,22 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
             user.AppendLine(
                 $"- {i.CBotName} [{i.Kind}] {i.Symbol ?? "?"} {i.Timeframe ?? "?"} status={i.Status}" +
                 (i.Detail is null ? "" : $" {i.Detail}"));
-        return client.CompleteAsync(new AiTextRequest(AiPrompts.DigestSystem, user.ToString(), MaxTokens: maxTokens), ct);
+        return Complete(AiFeature.PortfolioDigest, new AiTextRequest(AiPrompts.DigestSystem, user.ToString(), MaxTokens: maxTokens), ct);
     }
 
     public Task<AiResult> RecommendCopyProfileAsync(string riskProfile, string sourceDescription, CancellationToken ct) =>
-        client.CompleteAsync(new AiTextRequest(
+        Complete(AiFeature.RecommendCopyProfile, new AiTextRequest(
             AiPrompts.CopyProfileSystem,
             $"Follower risk profile: {Clip(riskProfile)}\n\nSource (master) account / strategy description:\n{Clip(sourceDescription)}"), ct);
 
     public Task<AiResult> GatherCurrencyForwardAsync(string calendarContextJson, int maxTokens, CancellationToken ct) =>
-        client.CompleteAsync(new AiTextRequest(
+        Complete(AiFeature.GatherCurrencyForward, new AiTextRequest(
             AiPrompts.CurrencyForwardSystem,
             $"Point-in-time calendar actuals + surprises per currency (JSON):\n{Clip(calendarContextJson)}",
             MaxTokens: maxTokens, EnableWebSearch: true), ct);
 
     public Task<AiResult> ExplainCurrencyOutlookAsync(string rankingJson, string pairOutlookJson, int maxTokens, CancellationToken ct) =>
-        client.CompleteAsync(new AiTextRequest(
+        Complete(AiFeature.ExplainCurrencyOutlook, new AiTextRequest(
             AiPrompts.CurrencyExplainSystem,
             $"Deterministic current ranking (JSON):\n{Clip(rankingJson)}\n\n" +
             $"Deterministic forward pair-outlook matrix (JSON):\n{Clip(pairOutlookJson)}",

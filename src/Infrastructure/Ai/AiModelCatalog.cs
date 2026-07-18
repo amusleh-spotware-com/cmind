@@ -75,7 +75,7 @@ public sealed class AiModelCatalog(
 
     // Enumerate installed built-in ONNX model directories (each folder with a genai_config.json is one
     // selectable local model). The configured ModelPath may itself be a model dir or a parent of several.
-    private IReadOnlyList<AiModelInfo> ListBuiltInOnnx()
+    private List<AiModelInfo> ListBuiltInOnnx()
     {
         var configured = options.CurrentValue.Ai.BuiltIn.ModelPath;
         var root = Path.IsPathRooted(configured) ? configured : Path.Combine(AppContext.BaseDirectory, configured);

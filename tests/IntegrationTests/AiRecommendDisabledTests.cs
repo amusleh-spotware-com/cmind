@@ -37,5 +37,11 @@ public class AiRecommendDisabledTests
         public Task ActivateForUserAsync(Core.UserId user, Guid id, CancellationToken ct) => Task.CompletedTask;
         public Task RemoveForUserAsync(Core.UserId user, Guid id, CancellationToken ct) => Task.CompletedTask;
         public Task SeedFromConfigAsync(CancellationToken ct) => Task.CompletedTask;
+        public ActiveAiProvider? ResolveFor(AiFeature? feature, Core.AiProviderCredentialId? credentialId) => null;
+        public Task<IReadOnlyList<AiFeatureBindingView>> ListBindingsAsync(Core.UserId? owner, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<AiFeatureBindingView>>([]);
+        public Task SetBindingAsync(Core.UserId? owner, AiFeature feature, Core.AiProviderCredentialId credentialId, CancellationToken ct) =>
+            Task.CompletedTask;
+        public Task ClearBindingAsync(Core.UserId? owner, AiFeature feature, CancellationToken ct) => Task.CompletedTask;
     }
 }

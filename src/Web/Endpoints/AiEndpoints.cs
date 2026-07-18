@@ -165,6 +165,48 @@ public static class AiEndpoints
             return Results.Ok(new { enabled = store.HasActive });
         });
 
+        // Per-feature model bindings (deployment scope, owner-managed): bind each AI feature to a provider.
+        g.MapGet("/feature-bindings", async (IAiProviderStore store, CancellationToken ct) =>
+            Results.Ok(await store.ListBindingsAsync(null, ct))).RequireAuthorization(AuthPolicies.Owner);
+
+        g.MapPut("/feature-bindings", async (SetFeatureBindingRequest req, IAiProviderStore store, CancellationToken ct) =>
+        {
+            try
+            {
+                await store.SetBindingAsync(null, req.Feature, Core.AiProviderCredentialId.From(req.CredentialId), ct);
+                return Results.Ok(new { ok = true });
+            }
+            catch (InvalidOperationException ex) { return Results.BadRequest(ex.Message); }
+        }).RequireAuthorization(AuthPolicies.Owner);
+
+        g.MapDelete("/feature-bindings/{feature}", async (AiFeature feature, IAiProviderStore store, CancellationToken ct) =>
+        {
+            await store.ClearBindingAsync(null, feature, ct);
+            return Results.Ok(new { ok = true });
+        }).RequireAuthorization(AuthPolicies.Owner);
+
+        // Per-user feature bindings: a user's own binding overrides the deployment default for that feature.
+        g.MapGet("/my-feature-bindings", async (IAiProviderStore store, ICurrentUser u, CancellationToken ct) =>
+            u.UserId is { } uid ? Results.Ok(await store.ListBindingsAsync(uid, ct)) : Results.Unauthorized());
+
+        g.MapPut("/my-feature-bindings", async (SetFeatureBindingRequest req, IAiProviderStore store, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            try
+            {
+                await store.SetBindingAsync(uid, req.Feature, Core.AiProviderCredentialId.From(req.CredentialId), ct);
+                return Results.Ok(new { ok = true });
+            }
+            catch (InvalidOperationException ex) { return Results.BadRequest(ex.Message); }
+        });
+
+        g.MapDelete("/my-feature-bindings/{feature}", async (AiFeature feature, IAiProviderStore store, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            await store.ClearBindingAsync(uid, feature, ct);
+            return Results.Ok(new { ok = true });
+        });
+
         g.MapPost("/generate", async (GenerateCBotRequest req, IAiFeatureService ai, CancellationToken ct) =>
             Results.Ok(await ai.GenerateCBotAsync(req.Language ?? "CSharp", req.Description ?? "", ct)));
 
@@ -567,6 +609,7 @@ public sealed record UpsertProviderRequest(
 public sealed record CapabilitiesRequest(
     bool SupportsWebSearch, bool SupportsVision, bool SupportsSystemRole, bool SupportsTools);
 public sealed record ProbeModelsRequest(Core.Ai.AiProviderKind Kind, string? BaseUrl, string? ApiKey);
+public sealed record SetFeatureBindingRequest(Core.Ai.AiFeature Feature, Guid CredentialId);
 public sealed record GenerateCBotRequest(string? Language, string? Description);
 public sealed record ReviewCBotRequest(string? Language, string? Source);
 public sealed record DebateRequest(string? Name, string? Language, string? Source);

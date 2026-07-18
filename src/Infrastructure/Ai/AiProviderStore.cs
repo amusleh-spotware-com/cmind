@@ -2,6 +2,7 @@
 using Core;
 using Core.Ai;
 using Core.Constants;
+using Core.Domain;
 using Core.Options;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -70,6 +71,80 @@ public sealed class AiProviderStore(
 
     private ActiveAiProvider ToActive(AiProviderCredential c) =>
         new(c.Kind, c.BaseUrl, c.Model, Decrypt(c.EncryptedApiKey), c.Capabilities, c.MaxTokens);
+
+    public ActiveAiProvider? ResolveFor(AiFeature? feature, AiProviderCredentialId? credentialId)
+    {
+        var user = currentUser.UserId;
+        if (credentialId is { } cid && LoadCredential(cid, user) is { } byId) return byId;
+        if (feature is { } f && ResolveByFeature(f, user) is { } byFeature) return byFeature;
+        return Active;
+    }
+
+    private ActiveAiProvider? ResolveByFeature(AiFeature feature, UserId? user)
+    {
+        if (user is { } uid)
+        {
+            var mine = db.Set<AiFeatureBinding>().AsNoTracking()
+                .FirstOrDefault(b => b.OwnerUserId == uid && b.Feature == feature);
+            if (mine is not null && LoadCredential(mine.CredentialId, uid) is { } p) return p;
+        }
+
+        var deployment = db.Set<AiFeatureBinding>().AsNoTracking()
+            .FirstOrDefault(b => b.OwnerUserId == null && b.Feature == feature);
+        if (deployment is not null && LoadCredential(deployment.CredentialId, null) is { } dp) return dp;
+
+        return null;
+    }
+
+    // Load a credential the given scope may use: a user's own or the deployment default; deployment scope
+    // (user == null) sees only deployment credentials.
+    private ActiveAiProvider? LoadCredential(AiProviderCredentialId credentialId, UserId? owner)
+    {
+        var query = db.Set<AiProviderCredential>().AsNoTracking().Where(x => x.Id == credentialId);
+        var credential = owner is { } uid
+            ? query.FirstOrDefault(x => x.OwnerUserId == uid || x.OwnerUserId == null)
+            : query.FirstOrDefault(x => x.OwnerUserId == null);
+        return credential is null ? null : ToActive(credential);
+    }
+
+    public async Task<IReadOnlyList<AiFeatureBindingView>> ListBindingsAsync(UserId? owner, CancellationToken ct)
+    {
+        var query = db.Set<AiFeatureBinding>().AsNoTracking();
+        var rows = owner is { } uid
+            ? await query.Where(b => b.OwnerUserId == uid).ToListAsync(ct)
+            : await query.Where(b => b.OwnerUserId == null).ToListAsync(ct);
+        return rows.Select(b => new AiFeatureBindingView(b.Feature, b.CredentialId.Value)).ToList();
+    }
+
+    public async Task SetBindingAsync(UserId? owner, AiFeature feature, AiProviderCredentialId credentialId, CancellationToken ct)
+    {
+        var usable = owner is { } uid
+            ? await db.Set<AiProviderCredential>()
+                .AnyAsync(c => c.Id == credentialId && (c.OwnerUserId == uid || c.OwnerUserId == null), ct)
+            : await db.Set<AiProviderCredential>()
+                .AnyAsync(c => c.Id == credentialId && c.OwnerUserId == null, ct);
+        if (!usable) throw new InvalidOperationException("Provider credential not found.");
+
+        var now = timeProvider.GetUtcNow();
+        var existing = owner is { } u2
+            ? await db.Set<AiFeatureBinding>().FirstOrDefaultAsync(b => b.OwnerUserId == u2 && b.Feature == feature, ct)
+            : await db.Set<AiFeatureBinding>().FirstOrDefaultAsync(b => b.OwnerUserId == null && b.Feature == feature, ct);
+        if (existing is null)
+            db.Set<AiFeatureBinding>().Add(AiFeatureBinding.Create(owner, feature, credentialId, now));
+        else
+            existing.Retarget(credentialId, now);
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task ClearBindingAsync(UserId? owner, AiFeature feature, CancellationToken ct)
+    {
+        var existing = owner is { } uid
+            ? await db.Set<AiFeatureBinding>().FirstOrDefaultAsync(b => b.OwnerUserId == uid && b.Feature == feature, ct)
+            : await db.Set<AiFeatureBinding>().FirstOrDefaultAsync(b => b.OwnerUserId == null && b.Feature == feature, ct);
+        if (existing is null) return;
+        db.Set<AiFeatureBinding>().Remove(existing);
+        await db.SaveChangesAsync(ct);
+    }
 
     private static string CacheKey(UserId? user) =>
         user is { } u ? $"{AiConstants.ActiveProviderCacheKey}:{u.Value}" : AiConstants.ActiveProviderCacheKey;

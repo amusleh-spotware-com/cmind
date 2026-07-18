@@ -260,6 +260,13 @@ public readonly record struct AiProviderCredentialId(Guid Value) : IStronglyType
     public override string ToString() => Value.ToString();
 }
 
+public readonly record struct AiFeatureBindingId(Guid Value) : IStronglyTypedId<AiFeatureBindingId>
+{
+    public static AiFeatureBindingId New() => new(Guid.NewGuid());
+    public static AiFeatureBindingId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct EconomicSeriesId(Guid Value) : IStronglyTypedId<EconomicSeriesId>
 {
     public static EconomicSeriesId New() => new(Guid.NewGuid());

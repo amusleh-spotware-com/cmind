@@ -55,6 +55,9 @@ public sealed record AiProviderView(
     int MaxTokens,
     AiProviderCapabilities Capabilities);
 
+/// <summary>A feature-to-provider binding for the management UI (which model serves a given AI feature).</summary>
+public sealed record AiFeatureBindingView(AiFeature Feature, Guid CredentialId);
+
 /// <summary>Command to create or update a provider credential (id absent = create).</summary>
 public sealed record UpsertAiProviderCommand(
     Guid? Id,
@@ -78,6 +81,20 @@ public interface IAiProviderStore
     /// <summary>The provider resolved for the current request user: their own active credential if any,
     /// else the deployment default, else the legacy config key.</summary>
     ActiveAiProvider? Active { get; }
+
+    /// <summary>
+    /// Resolves the provider for one AI call: an explicit <paramref name="credentialId"/> wins (the
+    /// async-task path forcing a chosen model), else the per-<paramref name="feature"/> binding (the current
+    /// user's, then the deployment default), else the scope's <see cref="Active"/> provider. Returns
+    /// <c>null</c> when nothing resolves (AI disabled).
+    /// </summary>
+    ActiveAiProvider? ResolveFor(AiFeature? feature, Core.AiProviderCredentialId? credentialId);
+
+    // Per-feature model bindings: a scope (deployment when user is null, else a specific user) may bind each
+    // AI feature to a specific credential so several models serve different features at once.
+    Task<IReadOnlyList<AiFeatureBindingView>> ListBindingsAsync(UserId? owner, CancellationToken ct);
+    Task SetBindingAsync(UserId? owner, AiFeature feature, Core.AiProviderCredentialId credentialId, CancellationToken ct);
+    Task ClearBindingAsync(UserId? owner, AiFeature feature, CancellationToken ct);
 
     // Deployment-scope management (owner-managed white-label default).
     Task<IReadOnlyList<AiProviderView>> ListAsync(CancellationToken ct);

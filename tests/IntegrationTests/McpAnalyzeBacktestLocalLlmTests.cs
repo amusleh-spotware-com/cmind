@@ -51,6 +51,12 @@ public sealed class McpAnalyzeBacktestLocalLlmTests(PostgresFixture fixture) : I
         public Task ActivateForUserAsync(UserId user, Guid id, CancellationToken ct) => Task.CompletedTask;
         public Task RemoveForUserAsync(UserId user, Guid id, CancellationToken ct) => Task.CompletedTask;
         public Task SeedFromConfigAsync(CancellationToken ct) => Task.CompletedTask;
+        public ActiveAiProvider? ResolveFor(AiFeature? feature, AiProviderCredentialId? credentialId) => Active;
+        public Task<IReadOnlyList<AiFeatureBindingView>> ListBindingsAsync(UserId? owner, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<AiFeatureBindingView>>([]);
+        public Task SetBindingAsync(UserId? owner, AiFeature feature, AiProviderCredentialId credentialId, CancellationToken ct) =>
+            Task.CompletedTask;
+        public Task ClearBindingAsync(UserId? owner, AiFeature feature, CancellationToken ct) => Task.CompletedTask;
     }
 
     private sealed class NullCurrencyStrengthQuery : Core.Ai.CurrencyStrength.ICurrencyStrengthQuery

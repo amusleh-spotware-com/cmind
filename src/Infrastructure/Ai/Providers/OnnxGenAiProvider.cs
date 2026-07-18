@@ -31,21 +31,25 @@ public sealed class OnnxGenAiProvider(
 
     public AiProviderKind Kind => AiProviderKind.BuiltInOnnx;
 
-    /// <summary>True when a usable model directory is present — cheap check, safe to call on the request path.</summary>
-    public bool IsModelPresent()
+    /// <summary>True when the default model directory is present — cheap check, safe on the request path.</summary>
+    public bool IsModelPresent() => IsModelPresent(null);
+
+    /// <summary>True when the model directory for the given credential Model (a built-in submodel key, or the
+    /// generic/default when null) is present and usable.</summary>
+    public bool IsModelPresent(string? model)
     {
-        var dir = ResolveModelDir();
+        var dir = ResolveModelDir(model);
         return Directory.Exists(dir) && File.Exists(Path.Combine(dir, "genai_config.json"));
     }
 
     public async Task<AiResult> CompleteAsync(AiProviderRequest request, CancellationToken ct)
     {
-        if (!IsModelPresent()) return AiResult.Fail(NotPresentMessage());
+        if (!IsModelPresent(request.Model)) return AiResult.Fail(NotPresentMessage(request.Model));
 
         var maxTokens = Math.Clamp(request.MaxTokens, 16, options.CurrentValue.Ai.BuiltIn.MaxTokens);
         try
         {
-            return await Task.Run(() => Generate(request, maxTokens, ct), ct);
+            return await Task.Run(() => Generate(request, maxTokens, request.Model, ct), ct);
         }
         catch (OperationCanceledException)
         {
@@ -58,25 +62,27 @@ public sealed class OnnxGenAiProvider(
         }
     }
 
-    // The model is absent: when auto-download is enabled, kick off the one-time background install and tell
-    // the caller it is downloading (a retryable, informative failure) instead of the bare "not installed".
-    private string NotPresentMessage()
+    // The model is absent: when auto-download is enabled, kick off the one-time background install of the
+    // requested built-in model and tell the caller it is downloading (a retryable, informative failure)
+    // instead of the bare "not installed".
+    private string NotPresentMessage(string? model)
     {
         if (installer is null || !options.CurrentValue.Ai.BuiltIn.AutoDownload)
             return AiConstants.BuiltInUnavailableMessage;
 
-        installer.EnsureInstalling();
-        return installer.State == BuiltInModelInstallState.Failed
+        var key = BuiltInModelCatalog.ForKey(model).Key;
+        installer.EnsureInstalling(key);
+        return installer.StateOf(key) == BuiltInModelInstallState.Failed
             ? AiConstants.BuiltInUnavailableMessage
             : AiConstants.BuiltInDownloadingMessage;
     }
 
-    private AiResult Generate(AiProviderRequest request, int maxTokens, CancellationToken ct)
+    private AiResult Generate(AiProviderRequest request, int maxTokens, string? model, CancellationToken ct)
     {
         _gate.Wait(ct);
         try
         {
-            if (!EnsureLoaded()) return AiResult.Fail(AiConstants.BuiltInUnavailableMessage);
+            if (!EnsureLoaded(model)) return AiResult.Fail(AiConstants.BuiltInUnavailableMessage);
 
             var prompt = BuildPrompt(request.System, request.User);
             using var sequences = _tokenizer!.Encode(prompt);
@@ -117,9 +123,9 @@ public sealed class OnnxGenAiProvider(
         }
     }
 
-    private bool EnsureLoaded()
+    private bool EnsureLoaded(string? model)
     {
-        var dir = ResolveModelDir();
+        var dir = ResolveModelDir(model);
         if (_model is not null && _loadedPath == dir) return true;
         if (_loadFailed && _loadedPath == dir) return false;
 
@@ -145,10 +151,24 @@ public sealed class OnnxGenAiProvider(
         }
     }
 
-    private string ResolveModelDir()
+    private string ResolveModelDir(string? model)
     {
         var path = options.CurrentValue.Ai.BuiltIn.ModelPath;
-        return Path.IsPathRooted(path) ? path : Path.Combine(AppContext.BaseDirectory, path);
+        var root = Path.IsPathRooted(path) ? path : Path.Combine(AppContext.BaseDirectory, path);
+        return SelectModelDir(root, model);
+    }
+
+    // Map a credential's Model to its on-disk directory: the generic/default/blank id (or an unknown /
+    // not-yet-installed submodel) loads the ModelPath root; a submodel key whose ModelPath/<key> directory
+    // is an installed model loads that sub-directory — so several built-in models coexist and are selectable.
+    public static string SelectModelDir(string root, string? model)
+    {
+        if (string.IsNullOrWhiteSpace(model)
+            || string.Equals(model, AiConstants.BuiltInModel, StringComparison.OrdinalIgnoreCase))
+            return root;
+
+        var sub = Path.Combine(root, model);
+        return Directory.Exists(sub) && File.Exists(Path.Combine(sub, "genai_config.json")) ? sub : root;
     }
 
     // The total sequence budget (prompt + generated tokens) for ORT GenAI's "max_length", clamped to the

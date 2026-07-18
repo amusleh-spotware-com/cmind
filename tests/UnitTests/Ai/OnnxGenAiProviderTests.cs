@@ -46,13 +46,13 @@ public sealed class OnnxGenAiProviderTests
     public async Task Auto_download_kicks_off_install_and_reports_downloading()
     {
         var installer = Substitute.For<IBuiltInModelInstaller>();
-        installer.State.Returns(BuiltInModelInstallState.Downloading);
+        installer.StateOf(BuiltInModelCatalog.Default.Key).Returns(BuiltInModelInstallState.Downloading);
         using var provider = Create(Path.Combine(Path.GetTempPath(), "no-such-onnx-model-dir"),
             autoDownload: true, installer: installer);
 
         var result = await provider.CompleteAsync(Request(), CancellationToken.None);
 
-        installer.Received(1).EnsureInstalling();
+        installer.Received(1).EnsureInstalling(BuiltInModelCatalog.Default.Key);
         result.Success.Should().BeFalse();
         result.Error.Should().Be(AiConstants.BuiltInDownloadingMessage);
     }
@@ -61,7 +61,7 @@ public sealed class OnnxGenAiProviderTests
     public async Task Failed_download_falls_back_to_install_hint()
     {
         var installer = Substitute.For<IBuiltInModelInstaller>();
-        installer.State.Returns(BuiltInModelInstallState.Failed);
+        installer.StateOf(BuiltInModelCatalog.Default.Key).Returns(BuiltInModelInstallState.Failed);
         using var provider = Create(Path.Combine(Path.GetTempPath(), "no-such-onnx-model-dir"),
             autoDownload: true, installer: installer);
 

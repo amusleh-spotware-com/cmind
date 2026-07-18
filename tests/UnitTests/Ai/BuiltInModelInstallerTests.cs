@@ -78,6 +78,41 @@ public sealed class BuiltInModelInstallerTests
     }
 
     [Fact]
+    public async Task Installs_a_non_default_curated_model_into_its_own_sub_directory()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "onnx-keyed-" + Guid.NewGuid().ToString("N"));
+        var options = Substitute.For<IOptionsMonitor<AppOptions>>();
+        options.CurrentValue.Returns(new AppOptions
+        {
+            Ai = new AiOptions { BuiltIn = new AiBuiltInOptions { ModelPath = root, AutoDownload = true } }
+        });
+
+        var second = BuiltInModelCatalog.All.First(s => !s.IsDefault);
+        var installer = new BuiltInModelInstaller(Factory(), options, NullLogger<BuiltInModelInstaller>.Instance);
+
+        try
+        {
+            installer.IsInstalled(second.Key).Should().BeFalse();
+            installer.EnsureInstalling(second.Key);
+            var deadline = DateTime.UtcNow.AddSeconds(10);
+            while (installer.StateOf(second.Key) == BuiltInModelInstallState.Downloading && DateTime.UtcNow < deadline)
+                await Task.Delay(50);
+
+            installer.StateOf(second.Key).Should().Be(BuiltInModelInstallState.Installed);
+            installer.IsInstalled(second.Key).Should().BeTrue();
+            // Non-default models install under ModelPath/<key>, not the root (which holds the default model).
+            File.Exists(Path.Combine(root, second.Key, "genai_config.json")).Should().BeTrue();
+            File.Exists(Path.Combine(root, "genai_config.json")).Should().BeFalse();
+
+            installer.Catalog().Should().Contain(m => m.Spec.Key == second.Key && m.Installed);
+        }
+        finally
+        {
+            try { if (Directory.Exists(root)) Directory.Delete(root, recursive: true); } catch { /* best effort */ }
+        }
+    }
+
+    [Fact]
     public void Does_not_install_when_auto_download_disabled()
     {
         var dir = Path.Combine(Path.GetTempPath(), "onnx-noinstall-" + Guid.NewGuid().ToString("N"));

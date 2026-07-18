@@ -66,16 +66,31 @@ public static class AiEndpoints
             return Results.Ok(new { enabled = store.HasActive });
         }).RequireAuthorization(AuthPolicies.Owner);
 
-        // Built-in ONNX local model install state + a manual trigger, so the owner can see whether the
-        // model is present/downloading/failed and kick the one-time background download from the UI.
+        // Built-in ONNX local model install state + a manual trigger, so the owner can see whether each
+        // curated model is present/downloading/failed and kick the one-time background download from the UI.
+        // The top-level installed/state stay for the shipped default (back-compat); models[] lists the whole
+        // curated catalog so the user can install and switch between several local models.
         g.MapGet("/built-in/status", (IBuiltInModelInstaller installer) =>
-            Results.Ok(new { installed = installer.IsInstalled(), state = installer.State.ToString() }))
+            Results.Ok(new
+            {
+                installed = installer.IsInstalled(),
+                state = installer.State.ToString(),
+                models = installer.Catalog().Select(m => new
+                {
+                    key = m.Spec.Key,
+                    name = m.Spec.DisplayName,
+                    isDefault = m.Spec.IsDefault,
+                    installed = m.Installed,
+                    state = m.State.ToString()
+                })
+            }))
             .RequireAuthorization(AuthPolicies.Owner);
 
-        g.MapPost("/built-in/install", (IBuiltInModelInstaller installer) =>
+        g.MapPost("/built-in/install", (string? key, IBuiltInModelInstaller installer) =>
         {
-            installer.EnsureInstalling();
-            return Results.Ok(new { installed = installer.IsInstalled(), state = installer.State.ToString() });
+            var target = string.IsNullOrWhiteSpace(key) ? Core.Ai.BuiltInModelCatalog.Default.Key : key!;
+            installer.EnsureInstalling(target);
+            return Results.Ok(new { installed = installer.IsInstalled(target), state = installer.StateOf(target).ToString() });
         }).RequireAuthorization(AuthPolicies.Owner);
 
         // Browse the models an endpoint advertises so the user picks one instead of hand-typing a model id.

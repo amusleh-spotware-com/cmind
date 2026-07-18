@@ -58,6 +58,14 @@ public sealed class FakeLocalLlmServer : IDisposable
             try { ctx = await _listener.GetContextAsync(); }
             catch { return; }
 
+            // GET /v1/models — the OpenAI-compatible model-discovery endpoint (LM Studio / Ollama / vLLM
+            // all serve it). Return a deterministic list so the browse-models UI can pick one.
+            if (ctx.Request.Url?.AbsolutePath.EndsWith("/models", StringComparison.Ordinal) == true)
+            {
+                await WriteJsonAsync(ctx, ModelsListJson);
+                continue;
+            }
+
             string requestBody;
             using (var reader = new System.IO.StreamReader(ctx.Request.InputStream, Encoding.UTF8))
                 requestBody = await reader.ReadToEndAsync();
@@ -68,13 +76,24 @@ public sealed class FakeLocalLlmServer : IDisposable
                 : _reply;
 
             var body = "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"" + content + "\"}}]}";
-            var bytes = Encoding.UTF8.GetBytes(body);
-            ctx.Response.ContentType = "application/json";
-            ctx.Response.StatusCode = (int)HttpStatusCode.OK;
-            ctx.Response.ContentLength64 = bytes.Length;
-            try { await ctx.Response.OutputStream.WriteAsync(bytes); } catch { /* client gone */ }
-            ctx.Response.Close();
+            await WriteJsonAsync(ctx, body);
         }
+    }
+
+    // The single model id this fake advertises on GET /v1/models — E2E asserts it appears in the browse list.
+    public const string AdvertisedModelId = "fake-local-model";
+
+    private const string ModelsListJson =
+        "{\"object\":\"list\",\"data\":[{\"id\":\"" + AdvertisedModelId + "\",\"object\":\"model\"}]}";
+
+    private static async Task WriteJsonAsync(HttpListenerContext ctx, string body)
+    {
+        var bytes = Encoding.UTF8.GetBytes(body);
+        ctx.Response.ContentType = "application/json";
+        ctx.Response.StatusCode = (int)HttpStatusCode.OK;
+        ctx.Response.ContentLength64 = bytes.Length;
+        try { await ctx.Response.OutputStream.WriteAsync(bytes); } catch { /* client gone */ }
+        ctx.Response.Close();
     }
 
     // A minimal, deterministic forward-gather payload covering the majors, JSON-escaped for embedding in the

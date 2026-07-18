@@ -78,6 +78,27 @@ public static class AiEndpoints
             return Results.Ok(new { installed = installer.IsInstalled(), state = installer.State.ToString() });
         }).RequireAuthorization(AuthPolicies.Owner);
 
+        // Browse the models an endpoint advertises so the user picks one instead of hand-typing a model id.
+        // Probes an UNSAVED endpoint (kind + base URL + optional key from the dialog) — the built-in kind
+        // ignores base URL/key and enumerates installed local model directories. Any signed-in user may
+        // probe (UserOrAbove, inherited) since a user adds their own provider. Never throws — degrades to [].
+        g.MapPost("/models/probe", async (ProbeModelsRequest req, IAiModelCatalog catalog, CancellationToken ct) =>
+        {
+            try
+            {
+                var baseUrl = req.Kind is AiProviderKind.BuiltInOnnx or AiProviderKind.Demo
+                              || string.IsNullOrWhiteSpace(req.BaseUrl)
+                    ? new AiEndpoint(AiConstants.BuiltInBaseUrl)
+                    : new AiEndpoint(req.BaseUrl!);
+                var models = await catalog.ListModelsAsync(req.Kind, baseUrl, req.ApiKey, ct);
+                return Results.Ok(models);
+            }
+            catch (Core.Domain.DomainException ex)
+            {
+                return Results.BadRequest(ex.Code);
+            }
+        });
+
         // Ping the active provider with a tiny completion and report success + latency — handy for
         // verifying a local endpoint after adding it.
         g.MapPost("/providers/test", async (IAiClient client, CancellationToken ct) =>
@@ -530,6 +551,7 @@ public sealed record UpsertProviderRequest(
     int? MaxTokens, CapabilitiesRequest? Capabilities, bool Activate);
 public sealed record CapabilitiesRequest(
     bool SupportsWebSearch, bool SupportsVision, bool SupportsSystemRole, bool SupportsTools);
+public sealed record ProbeModelsRequest(Core.Ai.AiProviderKind Kind, string? BaseUrl, string? ApiKey);
 public sealed record GenerateCBotRequest(string? Language, string? Description);
 public sealed record ReviewCBotRequest(string? Language, string? Source);
 public sealed record DebateRequest(string? Name, string? Language, string? Source);

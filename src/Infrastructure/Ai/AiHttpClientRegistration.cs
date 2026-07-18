@@ -42,6 +42,12 @@ public static class AiHttpClientRegistration
             Client(sp), sp.GetRequiredService<ILogger<AzureOpenAiProvider>>()));
         services.AddTransient<IAiProvider>(sp => new GeminiAiProvider(
             Client(sp), sp.GetRequiredService<ILogger<GeminiAiProvider>>()));
+        // Model discovery (browse an endpoint's models) reuses the same resilient "ai" client.
+        services.AddTransient<IAiModelCatalog>(sp => new AiModelCatalog(
+            Client(sp),
+            sp.GetRequiredService<Microsoft.Extensions.Options.IOptionsMonitor<Core.Options.AppOptions>>(),
+            sp.GetRequiredService<ILogger<AiModelCatalog>>()));
+
         // Built-in demo — no HttpClient, no key, no endpoint.
         services.AddTransient<IAiProvider, DemoAiProvider>();
         // Built-in real local LLM (ONNX) — singleton so the model loads once and is reused.

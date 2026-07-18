@@ -33,7 +33,11 @@ public sealed class FakeLocalLlmServer : IDisposable
             try { ctx = await _listener.GetContextAsync(); }
             catch { return; }
 
-            var body = "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"" + _reply + "\"}}]}";
+            // GET /v1/models — the OpenAI-compatible model-discovery endpoint (LM Studio / Ollama / vLLM
+            // all serve it). Return a deterministic single-model list for the catalog/probe tests.
+            var body = ctx.Request.Url?.AbsolutePath.EndsWith("/models", StringComparison.Ordinal) == true
+                ? ModelsListJson
+                : "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"" + _reply + "\"}}]}";
             var bytes = Encoding.UTF8.GetBytes(body);
             ctx.Response.ContentType = "application/json";
             ctx.Response.StatusCode = (int)HttpStatusCode.OK;
@@ -42,6 +46,12 @@ public sealed class FakeLocalLlmServer : IDisposable
             ctx.Response.Close();
         }
     }
+
+    // The single model id this fake advertises on GET /v1/models.
+    public const string AdvertisedModelId = "fake-local-model";
+
+    private const string ModelsListJson =
+        "{\"object\":\"list\",\"data\":[{\"id\":\"" + AdvertisedModelId + "\",\"object\":\"model\"}]}";
 
     private static int GetFreePort()
     {

@@ -32,7 +32,7 @@ cMind는 **기본적으로 활성화된 실제 인프로세스 로컬 LLM** (Mic
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-4k-instruct-onnx \
+  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
     --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
     --local-dir ./models
   # 그 다음 App:Ai:BuiltIn:ModelPath를 해당 폴더로 설정 (genai_config.json 포함)

@@ -39,7 +39,7 @@ default** — nessuna chiave, nessun servizio esterno. Al primo avvio, quando ne
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-4k-instruct-onnx \
+  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
     --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
     --local-dir ./models
   # poi impostare App:Ai:BuiltIn:ModelPath sulla cartella (contiene genai_config.json)

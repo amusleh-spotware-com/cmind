@@ -68,4 +68,21 @@ public sealed class OnnxGenAiProviderTests
         var result = await provider.CompleteAsync(Request(), CancellationToken.None);
         result.Error.Should().Be(AiConstants.BuiltInUnavailableMessage);
     }
+
+    // max_length must never exceed the model's context window (ORT GenAI throws otherwise). A short prompt
+    // gets prompt + output budget; a prompt near the window is capped at the window.
+    [Theory]
+    [InlineData(100, 1024, 4096, 1124)]     // fits with headroom
+    [InlineData(4000, 1024, 4096, 4096)]    // capped at the window
+    [InlineData(18000, 1024, 131072, 19024)] // large cBot-gen prompt fits a 128k model
+    public void ComputeMaxLength_caps_at_context_window(int promptTokens, int maxTokens, int contextLength, int expected)
+        => OnnxGenAiProvider.ComputeMaxLength(promptTokens, maxTokens, contextLength).Should().Be(expected);
+
+    // A prompt that alone fills/exceeds the window can't generate — the caller degrades to a typed failure
+    // instead of ORT GenAI throwing (the reported "max_length (19337) > context_length (4096)" crash).
+    [Theory]
+    [InlineData(4096, 10, 4096)]     // prompt exactly fills the window
+    [InlineData(18313, 1024, 4096)]  // the reported crash: 18k prompt on a 4k model
+    public void ComputeMaxLength_returns_null_when_prompt_does_not_fit(int promptTokens, int maxTokens, int contextLength)
+        => OnnxGenAiProvider.ComputeMaxLength(promptTokens, maxTokens, contextLength).Should().BeNull();
 }

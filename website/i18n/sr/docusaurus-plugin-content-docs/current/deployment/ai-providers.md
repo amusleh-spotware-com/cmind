@@ -32,7 +32,7 @@ cMind доставља **прави LLM у процесу** (Microsoft.ML.OnnxRu
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-4k-instruct-onnx \
+  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
     --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
     --local-dir ./models
   # затим поставите App:Ai:BuiltIn:ModelPath нату фасциклу (садржи genai_config.json)

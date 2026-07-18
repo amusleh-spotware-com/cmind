@@ -41,7 +41,7 @@ description: "كتالوج الإعداد لكل مزود AI تدعمه cMind �
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-4k-instruct-onnx \
+  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
     --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
     --local-dir ./models
   # ثم قم بتعيين App:Ai:BuiltIn:ModelPath إلى هذا المجلد (يحتوي على genai_config.json)

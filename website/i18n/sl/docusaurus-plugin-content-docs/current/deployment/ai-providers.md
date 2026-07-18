@@ -41,7 +41,7 @@ konfiguriranega in je `App:Branding:AllowBuiltInAi` `true`, se seed in aktivira 
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-4k-instruct-onnx \
+  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
     --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
     --local-dir ./models
   # nato nastavite App:Ai:BuiltIn:ModelPath na ta mapa (vsebuje genai_config.json)

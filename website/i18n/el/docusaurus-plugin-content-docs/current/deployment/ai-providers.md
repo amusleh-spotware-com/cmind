@@ -42,7 +42,7 @@ description: "Κατάλογος ρύθμισης για κάθε παροχέα
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-4k-instruct-onnx \
+  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
     --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
     --local-dir ./models
   # στη συνέχεια ορίστε App:Ai:BuiltIn:ModelPath σε αυτόν τον φάκελο (περιέχει genai_config.json)

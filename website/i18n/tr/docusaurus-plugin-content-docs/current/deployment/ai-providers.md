@@ -32,7 +32,7 @@ cMind, **varsayilan olarak etkin** olan **gercek bir islem ici yerel LLM** (Micr
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-4k-instruct-onnx     --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/*     --local-dir ./models
+  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx     --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/*     --local-dir ./models
   # ardindan App:Ai:BuiltIn:ModelPathi o klasore ayarlayin (genai_config.json icerir)
   ```
 

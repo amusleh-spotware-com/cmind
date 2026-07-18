@@ -32,7 +32,7 @@ cMind gửi một **LLM cục bộ trong quy trình thực (Microsoft.ML.OnnxRun
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-4k-instruct-onnx \
+  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
     --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
     --local-dir ./models
   # sau đó đặt App:Ai:BuiltIn:ModelPath thành thư mục đó (chứa genai_config.json)

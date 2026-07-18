@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.Json;
 using Core.Ai;
 using Core.Constants;
 using Core.Logging;
@@ -26,6 +27,7 @@ public sealed class OnnxGenAiProvider(
     private Tokenizer? _tokenizer;
     private string? _loadedPath;
     private bool _loadFailed;
+    private int _contextLength = AiConstants.BuiltInDefaultContextLength;
 
     public AiProviderKind Kind => AiProviderKind.BuiltInOnnx;
 
@@ -81,10 +83,15 @@ public sealed class OnnxGenAiProvider(
             // ONNX GenAI "max_length" is the TOTAL sequence budget (prompt + generated tokens), NOT the
             // number of tokens to generate. Setting it to just the output budget throws
             // "input sequence_length (N) is >= max_length (M)" whenever the prompt is longer than the
-            // budget (e.g. the multi-line currency-strength prompt). Size it as prompt + output budget.
+            // budget (e.g. the multi-line currency-strength prompt). Size it as prompt + output budget,
+            // but never above the model's context window — ORT GenAI throws
+            // "max_length cannot be greater than model context_length" otherwise. A large code-generation
+            // prompt can exceed a small local model's window entirely; fail cleanly rather than crash.
             var promptTokens = sequences[0].Length;
+            if (ComputeMaxLength(promptTokens, maxTokens, _contextLength) is not { } maxLength)
+                return AiResult.Fail(AiConstants.BuiltInContextTooSmallMessage);
             using var generatorParams = new GeneratorParams(_model!);
-            generatorParams.SetSearchOption("max_length", promptTokens + maxTokens);
+            generatorParams.SetSearchOption("max_length", maxLength);
             generatorParams.SetInputSequences(sequences);
 
             using var generator = new Generator(_model!, generatorParams);
@@ -122,6 +129,7 @@ public sealed class OnnxGenAiProvider(
             _tokenizer?.Dispose();
             _model = new Model(dir);
             _tokenizer = new Tokenizer(_model);
+            _contextLength = ReadContextLength(dir);
             _loadedPath = dir;
             _loadFailed = false;
             return true;
@@ -141,6 +149,32 @@ public sealed class OnnxGenAiProvider(
     {
         var path = options.CurrentValue.Ai.BuiltIn.ModelPath;
         return Path.IsPathRooted(path) ? path : Path.Combine(AppContext.BaseDirectory, path);
+    }
+
+    // The total sequence budget (prompt + generated tokens) for ORT GenAI's "max_length", clamped to the
+    // model's context window. Returns null when the prompt alone already fills/exceeds the window — the
+    // caller then degrades to a typed failure instead of letting ORT GenAI throw
+    // "max_length cannot be greater than model context_length" / "input sequence_length >= max_length".
+    public static int? ComputeMaxLength(int promptTokens, int maxTokens, int contextLength) =>
+        promptTokens >= contextLength ? null : Math.Min(promptTokens + maxTokens, contextLength);
+
+    // The model's token context window, read from genai_config.json (model.context_length). Bounds
+    // max_length so ORT GenAI never throws on a prompt that would exceed the window.
+    private static int ReadContextLength(string dir)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(dir, "genai_config.json")));
+            if (doc.RootElement.TryGetProperty("model", out var model)
+                && model.TryGetProperty("context_length", out var ctx)
+                && ctx.TryGetInt32(out var value) && value > 0)
+                return value;
+        }
+        catch (Exception)
+        {
+            // Fall back to the conservative default when the config is absent/unreadable.
+        }
+        return AiConstants.BuiltInDefaultContextLength;
     }
 
     // Phi-3 style chat template (the canonical bundled model). Harmless on other instruct models.

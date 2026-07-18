@@ -33,7 +33,7 @@ A cMind egy **valo folyamatban levo helyi LLM-t** szallit (Microsoft.ML.OnnxRunt
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-4k-instruct-onnx     --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/*     --local-dir ./models
+  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx     --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/*     --local-dir ./models
   # aztán állítsd az App:Ai:BuiltIn:ModelPath-ot erre a mappára (tartalmazza a genai_config.json-t)
   ```
 

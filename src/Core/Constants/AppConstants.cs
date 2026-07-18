@@ -332,14 +332,26 @@ public static class AiConstants
     public const string BuiltInBaseUrl = "https://builtin.local/";
     public const string BuiltInModel = "built-in-onnx";
     public const string BuiltInModelDefaultPath = "models/onnx";
+
+    // Fallback token context window when genai_config.json can't be read; the shipped Phi-3-mini is 4k.
+    public const int BuiltInDefaultContextLength = 4096;
+
     public const string BuiltInUnavailableMessage =
         "The built-in local AI model is not installed. Add an ONNX GenAI model under the configured path " +
         "(App:Ai:BuiltIn:ModelPath) or configure another provider in Settings → AI.";
 
-    // Built-in model auto-download: the canonical Phi-3-mini 4k instruct int4 ONNX model folder + its files.
-    // When the model directory is absent the app fetches these once in the background (App:Ai:BuiltIn:AutoDownload).
+    // The request's prompt is longer than the built-in local model's context window — a large
+    // code-generation prompt on a small local model. Degrade cleanly with an actionable hint.
+    public const string BuiltInContextTooSmallMessage =
+        "This request is too large for the built-in local AI model's context window. It needs a larger-context " +
+        "model — configure a cloud provider (or a larger local model) in Settings → AI for this feature.";
+
+    // Built-in model auto-download: the canonical Phi-3-mini 128k instruct int4 ONNX model folder + its
+    // files. The 128k context window (vs the 4k variant) is what lets long-prompt features — cBot code
+    // generation, currency-strength — run on the built-in model instead of overflowing its context. When
+    // the model directory is absent the app fetches these once in the background (App:Ai:BuiltIn:AutoDownload).
     public const string BuiltInModelDownloadBaseUrl =
-        "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-onnx/resolve/main/cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/";
+        "https://huggingface.co/microsoft/Phi-3-mini-128k-instruct-onnx/resolve/main/cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/";
 
     public static readonly string[] BuiltInModelDownloadFiles =
     [
@@ -349,8 +361,8 @@ public static class AiConstants
         "tokenizer.json",
         "tokenizer_config.json",
         "added_tokens.json",
-        "phi3-mini-4k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx",
-        "phi3-mini-4k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx.data"
+        "phi3-mini-128k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx",
+        "phi3-mini-128k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx.data"
     ];
 
     public const string BuiltInDownloadingMessage =

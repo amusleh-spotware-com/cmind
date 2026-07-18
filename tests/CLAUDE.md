@@ -75,6 +75,17 @@ matter how many E2E tests exist. The same rule applies to any future broker-medi
 tracking, agent order execution): assert the observable effect through its simulator/fake, not through a
 UI that can't reach it.
 
+**The raw-protocol WIRE seam needs its own tests — `FakeTradingSession` bypasses it.** The fake yields
+`ExecutionEvent`s directly, so it never exercises `OpenApiTradingSession.SourceExecutionsAsync`, the
+`ProtoOAExecutionEvent`→`ExecutionEvent` classification (is this a pending order? a fill? a close? a
+partial? which `OrderKind`?). Two live bugs hid exactly here (take-profit; the pending-order suspicion).
+Any change to how a wire event is classified — or a new execution type — gets a test that pushes a **real
+`ProtoOAExecutionEvent`** through the session and asserts the resulting `ExecutionEvent`
+(`OpenApiTradingSessionWireTests` + `FakeOpenApiTransport.Push(...)` for the unsolicited server event).
+When a "copy X doesn't work" report survives green engine tests, write the wire test to prove/disprove the
+classification before re-reading the engine — the answer is usually there or in the stored per-destination
+config, not in the (already-covered) engine.
+
 ## Coverage — target 100%, never regress
 
 Coverage is **100% line/branch** across unit + integration + E2E, and it **only ratchets up**. A change

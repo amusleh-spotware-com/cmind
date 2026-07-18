@@ -96,6 +96,21 @@ here. Full UI contract: [website/docs/ui-guidelines.md](website/docs/ui-guidelin
 - `Slow` (a `LocatorAssertionsToBeVisibleOptions`) is **not** accepted by `ToBeEnabledAsync` /
   `ToBeHiddenAsync` — each assertion has its own options type; pass `new() { Timeout = … }`.
 
+## Dynamic-JSON traps in `.razor` (runtime, not compile — each cost a debug loop)
+
+- **`Http.GetDynamicAsync`/`GetDynamicArrayAsync` box whole numbers as `long`.** The `ExpandoObject` reader
+  (`Web.Json.JsonDefaults`) stores an integral JSON number as a boxed **`long`**, a fractional one as
+  `double`. `(double)row.someNumber` / `(int)row.someCount` then throws `InvalidCastException` at runtime
+  (can't unbox `long`→`double`/`int`) — the handler silently dies, no compile error. Use
+  `Convert.ToDouble(...)` / `Convert.ToInt32(...)` (accept boxed `long` **or** `double`). Only
+  `(string)`/`(bool)`/`(Guid)`/`(long)` are safe direct casts off the dynamic.
+- **A `dynamic` arg to a `void` method in an expression-bodied lambda throws at click time.**
+  `OnClick="@(() => SomeVoid(context))"` with `context` dynamic fails the runtime binder with
+  `"Cannot implicitly convert type 'void' to 'object'"`. Use a block body: `@(() => { SomeVoid(context); })`.
+- **A silently-ignored failed write is a mandate-11 violation.** `if (r.IsSuccessStatusCode) await Load();`
+  with no `else` swallows a failed POST/PUT — the user sees nothing and an E2E waits 30s for a row that
+  never comes. Show a `Snack.Add(L["…failed"], Severity.Error)` on the failure branch.
+
 ## E2E — blocking (`tests/E2ETests`, Playwright)
 
 - Every new page/dialog/action/nav entry/endpoint-a-page-calls ships a Playwright test driving the

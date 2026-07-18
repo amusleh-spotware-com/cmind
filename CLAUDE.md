@@ -379,6 +379,40 @@ Each of these burned real tokens/time in a past session. They are not style — 
   — don't discover it a commit later.
 - **Don't guess external-tool CLI flags — discover them** (see the cTrader CLI facts above). A wrong flag
   can break every backtest; probing the image once is cheaper than a bad guess shipped.
+- **Dynamic JSON (`Http.GetDynamicAsync`) boxes whole numbers as `long`.** The `ExpandoObject` reader
+  (`Web.Json.JsonDefaults`) stores an integral JSON number as a **boxed `long`**, a fractional one as
+  `double`. So `(double)row.someNumber` / `(int)row.someCount` throws `InvalidCastException` at runtime
+  (you can't unbox `long`→`double`/`int`) — the page silently breaks, not a compile error. Use
+  `Convert.ToDouble(...)` / `Convert.ToInt32(...)` (they accept a boxed `long` **or** `double`). Only
+  `(string)`/`(bool)`/`(Guid)`/`(long)` are safe direct casts. (Bit the copy-destination edit form.)
+- **A `dynamic` argument to a `void` method inside an expression-bodied lambda throws at runtime.**
+  `OnClick="@(() => BeginEdit(context))"` where `context` is `dynamic` and `BeginEdit` returns `void` fails
+  with the runtime-binder `"Cannot implicitly convert type 'void' to 'object'"` (the dynamic call is
+  evaluated as an expression expecting a value). Use a **block-bodied** lambda: `@(() => { BeginEdit(context); })`.
+  Compiles fine either way — the trap only fires at click time.
+- **E2E `--no-build` can run against a STALE `Web.dll`.** `AppFixture` launches the app from the `Web.dll`
+  **copied into `tests/E2ETests/bin`** at E2E build time. If you edit `src/Web`, then `dotnet build
+  src/Web/Web.csproj` and immediately `dotnet test tests/E2ETests --no-build`, the E2E bin still holds the
+  OLD Web.dll → your change isn't under test and the failure looks unchanged. **Rebuild the E2E project**
+  (`dotnet build tests/E2ETests/E2ETests.csproj`) after touching Web so the fresh Web.dll is copied, then
+  run. (Cost several confused reruns chasing a "still failing" test that was actually the old binary.)
+- **Default a behaviour-gating flag CONSISTENT with its siblings — an off-by-default flag silently
+  suppresses a whole feature.** `CopyPendingOrders` shipped defaulting `false` while every sibling copy
+  flag (market open, `CopyStopLoss`, `CopyTakeProfit`, `MirrorPartialClose`) defaulted `true`, so pending
+  orders silently never copied and a user reasonably enabling "Limit"/"Stop" in a *separate* order-types
+  filter saw nothing. When you add a per-thing toggle that gates a behaviour class, default it the same as
+  the peers unless there is a written reason, and don't split one concept across two independent toggles a
+  user must both find. Flipping a domain default → also flip the request-record defaults, the UI field
+  defaults, the portability model, and update the tests that asserted the old default.
+- **"Feature X doesn't work" — check the untested SEAM and the stored config BEFORE re-reading tested
+  code.** When a well-tested path (market copy works, 267 copy tests green) has one broken variant (pending
+  didn't copy), the bug is almost always (a) a per-instance **stored config/default** — inspect the DB
+  (`execute_sql_query`, or `docker exec … psql` from inside the container — never dump creds), the change
+  only affects *new* rows, existing rows keep the old value; or (b) an **untested seam the simulator
+  bypasses** — the raw-protocol classification (`OpenApiTradingSession.SourceExecutionsAsync`,
+  `ProtoOAExecutionEvent`→`ExecutionEvent`) or a serialization edge. Prove it with a seam test
+  (`OpenApiTradingSessionWireTests` + `FakeOpenApiTransport.Push`) instead of re-reading the engine, which
+  `FakeTradingSession` already covers. Don't assume a fresh engine bug when the engine is green.
 
 ## Deliberately not done
 

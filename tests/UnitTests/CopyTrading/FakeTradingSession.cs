@@ -62,9 +62,11 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
         int? SlippageInPoints = null, double? BaseSlippagePrice = null);
     public sealed record PendingCall(long Ctid, long SymbolId, bool IsBuy, long Volume, CopyOrderKind Kind, double Price,
         string Label, long? ExpirationTimestamp = null, int? SlippageInPoints = null,
-        double? StopLoss = null, double? TakeProfit = null);
+        double? StopLoss = null, double? TakeProfit = null,
+        long? RelativeStopLoss = null, long? RelativeTakeProfit = null, bool Trailing = false);
     public sealed record AmendPendingCall(long Ctid, long OrderId, CopyOrderKind Kind, long Volume, double Price,
-        long? ExpirationTimestamp, int? SlippageInPoints, double? StopLoss = null, double? TakeProfit = null);
+        long? ExpirationTimestamp, int? SlippageInPoints, double? StopLoss = null, double? TakeProfit = null,
+        long? RelativeStopLoss = null, long? RelativeTakeProfit = null, bool Trailing = false);
     public sealed record CancelCall(long Ctid, long OrderId);
     public sealed record CloseCall(long Ctid, long PositionId, long Volume);
     public sealed record AmendCall(long Ctid, long PositionId, double? StopLoss, double? TakeProfit, bool Trailing);
@@ -196,25 +198,31 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
 
     public void PushPending(long ctid, long orderId, long symbolId, bool isBuy, long volume,
         CopyOrderKind kind, double price, long? expirationTimestamp = null, int? slippageInPoints = null,
-        long? serverTimestamp = null, string? sourceLabel = null, double? stopLoss = null, double? takeProfit = null)
+        long? serverTimestamp = null, string? sourceLabel = null, double? stopLoss = null, double? takeProfit = null,
+        long? relativeStopLoss = null, long? relativeTakeProfit = null, bool trailing = false)
     {
         _sourceOrderExpiry[orderId] = expirationTimestamp;
         _source.Writer.TryWrite(new ExecutionEvent(ctid, "ORDER_ACCEPTED", 0, symbolId, isBuy, volume,
             price, stopLoss, takeProfit, IsOpen: false, OrderId: orderId, IsPendingOrder: true, OrderKind: kind,
             LimitPrice: kind is CopyOrderKind.Limit ? price : null,
             StopPrice: kind is CopyOrderKind.Stop or CopyOrderKind.StopLimit ? price : null,
+            TrailingStopLoss: trailing,
             ExpirationTimestamp: expirationTimestamp, SlippageInPoints: slippageInPoints,
-            ServerTimestamp: serverTimestamp, SourceLabel: sourceLabel));
+            ServerTimestamp: serverTimestamp, SourceLabel: sourceLabel,
+            RelativeStopLoss: relativeStopLoss, RelativeTakeProfit: relativeTakeProfit));
     }
 
     public void PushPendingReplaced(long ctid, long orderId, long symbolId, bool isBuy, long volume,
         CopyOrderKind kind, double price, long? expirationTimestamp = null, int? slippageInPoints = null,
-        double? stopLoss = null, double? takeProfit = null)
+        double? stopLoss = null, double? takeProfit = null,
+        long? relativeStopLoss = null, long? relativeTakeProfit = null, bool trailing = false)
         => _source.Writer.TryWrite(new ExecutionEvent(ctid, "OrderReplaced", 0, symbolId, isBuy, volume,
             price, stopLoss, takeProfit, IsOpen: false, OrderId: orderId, IsPendingOrder: true, OrderKind: kind,
             LimitPrice: kind is CopyOrderKind.Limit ? price : null,
             StopPrice: kind is CopyOrderKind.Stop or CopyOrderKind.StopLimit ? price : null,
-            ExpirationTimestamp: expirationTimestamp, SlippageInPoints: slippageInPoints));
+            TrailingStopLoss: trailing,
+            ExpirationTimestamp: expirationTimestamp, SlippageInPoints: slippageInPoints,
+            RelativeStopLoss: relativeStopLoss, RelativeTakeProfit: relativeTakeProfit));
 
     public void PushPendingCancel(long ctid, long orderId, long symbolId, bool isBuy, long volume, CopyOrderKind kind)
     {
@@ -303,7 +311,8 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
     public Task SendPendingOrderAsync(long ctidTraderAccountId, long symbolId, bool isBuy, long volume,
         CopyOrderKind kind, double price, string label, CancellationToken ct,
         long? expirationTimestamp = null, int? slippageInPoints = null,
-        double? stopLoss = null, double? takeProfit = null)
+        double? stopLoss = null, double? takeProfit = null,
+        long? relativeStopLoss = null, long? relativeTakeProfit = null, bool trailingStopLoss = false)
     {
         lock (_gate)
         {
@@ -313,7 +322,8 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
                 throw new InvalidOperationException("simulated order rejection");
             var normalized = NormalizeVolume(ctidTraderAccountId, volume);
             Pendings.Add(new PendingCall(ctidTraderAccountId, symbolId, isBuy, volume, kind, price, label,
-                expirationTimestamp, slippageInPoints, stopLoss, takeProfit));
+                expirationTimestamp, slippageInPoints, stopLoss, takeProfit,
+                relativeStopLoss, relativeTakeProfit, trailingStopLoss));
             PendingStore(ctidTraderAccountId).Add(new PendingOrderSnapshot(++_orderSeq, symbolId, isBuy, normalized, kind, price, label));
         }
         return Task.CompletedTask;
@@ -321,12 +331,14 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
 
     public Task AmendPendingOrderAsync(long ctidTraderAccountId, long orderId, CopyOrderKind kind, long volume,
         double price, long? expirationTimestamp, int? slippageInPoints, CancellationToken ct,
-        double? stopLoss = null, double? takeProfit = null)
+        double? stopLoss = null, double? takeProfit = null,
+        long? relativeStopLoss = null, long? relativeTakeProfit = null, bool trailingStopLoss = false)
     {
         lock (_gate)
         {
             EnsureTokenValid(ctidTraderAccountId);
-            AmendedPendings.Add(new AmendPendingCall(ctidTraderAccountId, orderId, kind, volume, price, expirationTimestamp, slippageInPoints, stopLoss, takeProfit));
+            AmendedPendings.Add(new AmendPendingCall(ctidTraderAccountId, orderId, kind, volume, price, expirationTimestamp, slippageInPoints, stopLoss, takeProfit,
+                relativeStopLoss, relativeTakeProfit, trailingStopLoss));
             var store = PendingStore(ctidTraderAccountId);
             var index = store.FindIndex(o => o.OrderId == orderId);
             if (index >= 0) store[index] = store[index] with { Price = price, Volume = volume };

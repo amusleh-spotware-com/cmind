@@ -344,6 +344,167 @@ public sealed class CopyAdvancedScenariosTests
     }
 
     [Fact]
+    public async Task Pending_amend_mirrors_updated_relative_protection()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(d => d.SetPendingOrderCopying(true))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushPending(Source, orderId: 7040, SymbolId, isBuy: true, volume: 100, CopyOrderKind.Limit,
+                price: 1.09, relativeStopLoss: 100_000, relativeTakeProfit: 200_000);
+            await WaitUntil(() => session.Pendings.Count == 1);
+            session.PushPendingReplaced(Source, orderId: 7040, SymbolId, isBuy: true, volume: 100, CopyOrderKind.Limit,
+                price: 1.085, relativeStopLoss: 120_000, relativeTakeProfit: 240_000);
+            await WaitUntil(() => session.AmendedPendings.Count == 1);
+        });
+
+        var amend = session.AmendedPendings.Single();
+        amend.RelativeStopLoss.Should().Be(120_000);
+        amend.RelativeTakeProfit.Should().Be(240_000);
+    }
+
+    [Fact]
+    public async Task Pending_amend_under_reverse_swaps_relative_protection()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
+            Destination(d => { d.SetPendingOrderCopying(true); d.SetReverse(true); })));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushPending(Source, orderId: 7041, SymbolId, isBuy: true, volume: 100, CopyOrderKind.Limit,
+                price: 1.09, relativeStopLoss: 100_000, relativeTakeProfit: 200_000);
+            await WaitUntil(() => session.Pendings.Count == 1);
+            session.PushPendingReplaced(Source, orderId: 7041, SymbolId, isBuy: true, volume: 100, CopyOrderKind.Limit,
+                price: 1.085, relativeStopLoss: 120_000, relativeTakeProfit: 240_000);
+            await WaitUntil(() => session.AmendedPendings.Count == 1);
+        });
+
+        var amend = session.AmendedPendings.Single();
+        amend.RelativeStopLoss.Should().Be(240_000, "Reverse swaps SL<->TP on amend too");
+        amend.RelativeTakeProfit.Should().Be(120_000);
+    }
+
+    [Fact]
+    public async Task Pending_trailing_carries_its_stop_distance_even_when_plain_copy_sl_is_off()
+    {
+        // A trailing stop is a stop-loss; it must ship its (relative) stop distance so cTrader can trail it,
+        // even if plain Copy-SL is disabled — otherwise TrailingStopLoss=true arrives with no distance.
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(d =>
+        {
+            d.SetPendingOrderCopying(true);
+            d.SetTrailingStopCopying(true);
+            d.SetCopyProtection(copyStopLoss: false, copyTakeProfit: false);
+        })));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushPending(Source, orderId: 7042, SymbolId, isBuy: true, volume: 100, CopyOrderKind.Stop,
+                price: 1.12, relativeStopLoss: 100_000, trailing: true);
+            await WaitUntil(() => session.Pendings.Count == 1);
+        });
+
+        var pending = session.Pendings.Single();
+        pending.Trailing.Should().BeTrue();
+        pending.RelativeStopLoss.Should().Be(100_000, "the trail distance ships even with plain Copy-SL off");
+    }
+
+    [Fact]
+    public async Task Pending_relative_stop_loss_and_take_profit_are_both_mirrored()
+    {
+        // Regression: a pending order carries its protection as RELATIVE distances (absolute prices are null
+        // until it fills). Reading only the absolute fields copied nothing — a pending placed with both an SL
+        // and a TP reached the destination with neither.
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(d => d.SetPendingOrderCopying(true))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushPending(Source, orderId: 7030, SymbolId, isBuy: true, volume: 100, CopyOrderKind.Limit,
+                price: 1.09, relativeStopLoss: 100_000, relativeTakeProfit: 200_000);
+            await WaitUntil(() => session.Pendings.Count == 1);
+        });
+
+        var pending = session.Pendings.Single();
+        pending.RelativeStopLoss.Should().Be(100_000);
+        pending.RelativeTakeProfit.Should().Be(200_000);
+    }
+
+    [Fact]
+    public async Task Reverse_swaps_pending_relative_stop_loss_and_take_profit()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
+            Destination(d => { d.SetPendingOrderCopying(true); d.SetReverse(true); })));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushPending(Source, orderId: 7031, SymbolId, isBuy: true, volume: 100, CopyOrderKind.Limit,
+                price: 1.09, relativeStopLoss: 100_000, relativeTakeProfit: 200_000);
+            await WaitUntil(() => session.Pendings.Count == 1);
+        });
+
+        var pending = session.Pendings.Single();
+        pending.IsBuy.Should().BeFalse("Reverse flips the side");
+        pending.RelativeStopLoss.Should().Be(200_000, "Reverse swaps the relative SL and TP");
+        pending.RelativeTakeProfit.Should().Be(100_000);
+    }
+
+    [Fact]
+    public async Task Pending_relative_take_profit_is_dropped_when_take_profit_copying_is_off()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
+            Destination(d => { d.SetPendingOrderCopying(true); d.SetCopyProtection(copyStopLoss: true, copyTakeProfit: false); })));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushPending(Source, orderId: 7032, SymbolId, isBuy: true, volume: 100, CopyOrderKind.Limit,
+                price: 1.09, relativeStopLoss: 100_000, relativeTakeProfit: 200_000);
+            await WaitUntil(() => session.Pendings.Count == 1);
+        });
+
+        var pending = session.Pendings.Single();
+        pending.RelativeStopLoss.Should().Be(100_000);
+        pending.RelativeTakeProfit.Should().BeNull("take-profit copying is off");
+    }
+
+    [Fact]
+    public async Task Pending_trailing_stop_is_mirrored_when_trailing_copying_is_on()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
+            Destination(d => { d.SetPendingOrderCopying(true); d.SetTrailingStopCopying(true); })));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushPending(Source, orderId: 7033, SymbolId, isBuy: true, volume: 100, CopyOrderKind.Stop,
+                price: 1.12, relativeStopLoss: 100_000, trailing: true);
+            await WaitUntil(() => session.Pendings.Count == 1);
+        });
+
+        session.Pendings.Single().Trailing.Should().BeTrue("the master pending's trailing stop must copy");
+    }
+
+    [Fact]
+    public async Task Pending_trailing_stop_is_dropped_when_trailing_copying_is_off()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(d => d.SetPendingOrderCopying(true))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushPending(Source, orderId: 7034, SymbolId, isBuy: true, volume: 100, CopyOrderKind.Stop,
+                price: 1.12, relativeStopLoss: 100_000, trailing: true);
+            await WaitUntil(() => session.Pendings.Count == 1);
+        });
+
+        session.Pendings.Single().Trailing.Should().BeFalse("trailing-stop copying defaults off");
+    }
+
+    [Fact]
     public async Task Master_pending_fill_does_not_double_when_the_slave_pending_filled_first()
     {
         // Cross-broker race: the slave's own pending fills before the host processes the master's fill. The

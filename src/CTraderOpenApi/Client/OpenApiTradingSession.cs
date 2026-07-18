@@ -34,7 +34,12 @@ public sealed record ExecutionEvent(
     int? SlippageInPoints = null,
     double? BaseSlippagePrice = null,
     long? ServerTimestamp = null,
-    string? SourceLabel = null);
+    string? SourceLabel = null,
+    // Pending orders carry their protection as RELATIVE distances (in 1/100_000 of a price unit, relative to
+    // the entry) — the absolute StopLoss/TakeProfit above are only populated once a position exists. So a
+    // resting limit/stop copy must read and mirror these, not the (null) absolute prices.
+    long? RelativeStopLoss = null,
+    long? RelativeTakeProfit = null);
 
 public sealed record OpenPositionSnapshot(
     long PositionId, long SymbolId, bool IsBuy, long Volume, string Label,
@@ -64,10 +69,12 @@ public interface IOpenApiTradingSession : IAsyncDisposable
     Task SendPendingOrderAsync(long ctidTraderAccountId, long symbolId, bool isBuy, long volume,
         CopyOrderKind kind, double price, string label, CancellationToken ct,
         long? expirationTimestamp = null, int? slippageInPoints = null,
-        double? stopLoss = null, double? takeProfit = null);
+        double? stopLoss = null, double? takeProfit = null,
+        long? relativeStopLoss = null, long? relativeTakeProfit = null, bool trailingStopLoss = false);
     Task AmendPendingOrderAsync(long ctidTraderAccountId, long orderId, CopyOrderKind kind, long volume, double price,
         long? expirationTimestamp, int? slippageInPoints, CancellationToken ct,
-        double? stopLoss = null, double? takeProfit = null);
+        double? stopLoss = null, double? takeProfit = null,
+        long? relativeStopLoss = null, long? relativeTakeProfit = null, bool trailingStopLoss = false);
     Task<(double Bid, double Ask)> LoadSpotPriceAsync(long ctidTraderAccountId, long symbolId, CancellationToken ct);
     Task CancelOrderAsync(long ctidTraderAccountId, long orderId, CancellationToken ct);
     Task ClosePositionAsync(long ctidTraderAccountId, long positionId, long volume, CancellationToken ct);
@@ -155,7 +162,11 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
                     SlippageInPoints: pendingOrder.HasSlippageInPoints ? (int)pendingOrder.SlippageInPoints : null,
                     BaseSlippagePrice: pendingOrder.HasBaseSlippagePrice ? pendingOrder.BaseSlippagePrice : null,
                     ServerTimestamp: executionEvent.Deal is { HasExecutionTimestamp: true } pendingDeal ? pendingDeal.ExecutionTimestamp : null,
-                    SourceLabel: tradeData.Label);
+                    SourceLabel: tradeData.Label,
+                    // A resting pending's SL/TP live here as relative distances (the absolute fields above stay
+                    // null until it fills), so these are what actually carry the master's protection to copy.
+                    RelativeStopLoss: pendingOrder.HasRelativeStopLoss ? pendingOrder.RelativeStopLoss : null,
+                    RelativeTakeProfit: pendingOrder.HasRelativeTakeProfit ? pendingOrder.RelativeTakeProfit : null);
                 continue;
             }
 
@@ -240,7 +251,8 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
     public async Task SendPendingOrderAsync(long ctidTraderAccountId, long symbolId, bool isBuy, long volume,
         CopyOrderKind kind, double price, string label, CancellationToken ct,
         long? expirationTimestamp = null, int? slippageInPoints = null,
-        double? stopLoss = null, double? takeProfit = null)
+        double? stopLoss = null, double? takeProfit = null,
+        long? relativeStopLoss = null, long? relativeTakeProfit = null, bool trailingStopLoss = false)
     {
         var request = new ProtoOANewOrderReq
         {
@@ -259,8 +271,13 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
         if (kind is CopyOrderKind.Stop or CopyOrderKind.StopLimit) request.StopPrice = price;
         else request.LimitPrice = price;
         if (kind == CopyOrderKind.StopLimit && slippageInPoints.HasValue) request.SlippageInPoints = slippageInPoints.Value;
-        if (stopLoss.HasValue) request.StopLoss = stopLoss.Value;
-        if (takeProfit.HasValue) request.TakeProfit = takeProfit.Value;
+        // A pending order's protection is set as relative distances (cTrader computes the absolute price once
+        // it fills); absolute SL/TP is only used on the rare path where the master supplied one.
+        if (relativeStopLoss.HasValue) request.RelativeStopLoss = relativeStopLoss.Value;
+        else if (stopLoss.HasValue) request.StopLoss = stopLoss.Value;
+        if (relativeTakeProfit.HasValue) request.RelativeTakeProfit = relativeTakeProfit.Value;
+        else if (takeProfit.HasValue) request.TakeProfit = takeProfit.Value;
+        if (trailingStopLoss) request.TrailingStopLoss = true;
         if (expirationTimestamp.HasValue)
         {
             request.TimeInForce = ProtoOATimeInForce.GoodTillDate;
@@ -271,7 +288,8 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
 
     public async Task AmendPendingOrderAsync(long ctidTraderAccountId, long orderId, CopyOrderKind kind, long volume,
         double price, long? expirationTimestamp, int? slippageInPoints, CancellationToken ct,
-        double? stopLoss = null, double? takeProfit = null)
+        double? stopLoss = null, double? takeProfit = null,
+        long? relativeStopLoss = null, long? relativeTakeProfit = null, bool trailingStopLoss = false)
     {
         var request = new ProtoOAAmendOrderReq
         {
@@ -282,8 +300,11 @@ public sealed class OpenApiTradingSession(OpenApiConnection connection) : IOpenA
         if (kind is CopyOrderKind.Stop or CopyOrderKind.StopLimit) request.StopPrice = price;
         else request.LimitPrice = price;
         if (kind == CopyOrderKind.StopLimit && slippageInPoints.HasValue) request.SlippageInPoints = slippageInPoints.Value;
-        if (stopLoss.HasValue) request.StopLoss = stopLoss.Value;
-        if (takeProfit.HasValue) request.TakeProfit = takeProfit.Value;
+        if (relativeStopLoss.HasValue) request.RelativeStopLoss = relativeStopLoss.Value;
+        else if (stopLoss.HasValue) request.StopLoss = stopLoss.Value;
+        if (relativeTakeProfit.HasValue) request.RelativeTakeProfit = relativeTakeProfit.Value;
+        else if (takeProfit.HasValue) request.TakeProfit = takeProfit.Value;
+        if (trailingStopLoss) request.TrailingStopLoss = true;
         if (expirationTimestamp.HasValue) request.ExpirationTimestamp = expirationTimestamp.Value;
         await connection.SendAsync(request, (int)ProtoOAPayloadType.ProtoOaAmendOrderReq, ct);
     }

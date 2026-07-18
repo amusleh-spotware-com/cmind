@@ -86,6 +86,41 @@ public sealed class OpenApiTradingSessionWireTests
     }
 
     [Fact]
+    public async Task Pending_order_relative_sltp_and_trailing_are_classified_onto_the_execution_event()
+    {
+        // A resting pending carries its protection as RELATIVE distances + a trailing flag on the ProtoOAOrder
+        // (the absolute StopLoss/TakeProfit stay unset until it fills). This is the seam where "a pending with
+        // both SL and TP copied neither" and "trailing never copies" lived — assert the raw parse.
+        var (session, transport) = await ConnectedAsync();
+        await using var _ = session;
+
+        transport.Push(ExecutionMessage(new ProtoOAExecutionEvent
+        {
+            CtidTraderAccountId = Account,
+            ExecutionType = ProtoOAExecutionType.OrderAccepted,
+            Order = new ProtoOAOrder
+            {
+                OrderId = 5003,
+                OrderType = ProtoOAOrderType.Stop,
+                StopPrice = 1.2345,
+                RelativeStopLoss = 100_000,
+                RelativeTakeProfit = 200_000,
+                TrailingStopLoss = true,
+                TradeData = new ProtoOATradeData { SymbolId = 42, TradeSide = ProtoOATradeSide.Buy, Volume = 100 }
+            }
+        }));
+
+        var execution = await FirstExecutionAsync(session);
+
+        execution.IsPendingOrder.Should().BeTrue();
+        execution.RelativeStopLoss.Should().Be(100_000, "a pending's stop-loss rides RelativeStopLoss, not the absolute field");
+        execution.RelativeTakeProfit.Should().Be(200_000);
+        execution.TrailingStopLoss.Should().BeTrue("the pending's trailing-stop flag must reach the engine");
+        execution.StopLoss.Should().BeNull("the absolute price is unset on a resting pending");
+        execution.TakeProfit.Should().BeNull();
+    }
+
+    [Fact]
     public async Task Pending_order_cancel_is_classified_as_a_cancelled_pending_event()
     {
         var (session, transport) = await ConnectedAsync();

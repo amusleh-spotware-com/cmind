@@ -141,8 +141,16 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
    `FakeTradingSession.PendingCall`/`AmendPendingCall` didn't even record SL/TP, so the cell was
    *unassertable*. Lesson: when the simulator drops a field the source carries, the census gate has a hole —
    every field on a source `ExecutionEvent` that can change a destination must be captured on the fake's
-   recorded call **and** asserted, positions **and** pendings alike). Add a source action, a transform, or a
-   mirrored field ⇒ add its cells same commit. → `tests/CLAUDE.md`.
+   recorded call **and** asserted, positions **and** pendings alike. And even that first pending-SL/TP fix was
+   *still* half-wrong: a pending order carries its protection as **RELATIVE distances** (`RelativeStopLoss`/
+   `RelativeTakeProfit`, 1/100_000 of price) **and** a trailing flag on the `ProtoOAOrder` — the absolute
+   `StopLoss`/`TakeProfit` stay null until it fills — so reading only the absolute fields copied nothing (a
+   pending placed with both an SL and a TP reached the destination with neither, and trailing never copied at
+   all). The fake yields `ExecutionEvent`s directly, so it can NEVER catch a wrong protocol read — the
+   `ProtoOAExecutionEvent`→`ExecutionEvent` classification needs its own `OpenApiTradingSessionWireTests`
+   asserting SL/TP/trailing off the raw order. Whenever a "copy X doesn't work" report survives green engine
+   tests, suspect the wire seam or the stored per-destination config, not the (already-covered) engine).
+   Add a source action, a transform, or a mirrored field ⇒ add its cells same commit. → `tests/CLAUDE.md`.
 4. **Never `DateTime.UtcNow`/`.Now`/`DateTimeOffset.UtcNow`.** Inject `TimeProvider`, read
    `GetUtcNow()`; domain methods take a `DateTimeOffset now` param from the caller. Tests use
    `FakeTimeProvider` or hardcoded timestamps — never the real clock. Touch time-dependent code →

@@ -734,10 +734,11 @@ public sealed class CopyEngineHost(
         var slippage = execution.OrderKind == CopyOrderKind.StopLimit && destination.Config.CopyMasterSlippage
             ? execution.SlippageInPoints
             : null;
-        var (stopLoss, takeProfit) = ResolvePendingProtection(destination.Config, execution, destinationDetail);
+        var protection = ResolvePendingProtection(destination.Config, execution, destinationDetail);
         await session.SendPendingOrderAsync(destination.CtidTraderAccountId, destinationSymbolId, effectiveBuy,
             wireVolume, execution.OrderKind, price, execution.OrderId.ToString(), ct, expiry, slippage,
-            stopLoss, takeProfit);
+            protection.StopLoss, protection.TakeProfit,
+            protection.RelativeStopLoss, protection.RelativeTakeProfit, protection.Trailing);
         logger.CopyPendingOrderPlaced(plan.ProfileId.Value, destination.CtidTraderAccountId, destinationName,
             execution.OrderKind.ToString(), effectiveBuy ? "Buy" : "Sell", wireVolume, price, execution.OrderId);
         Activity($"→ {destination.CtidTraderAccountId}: placed pending {execution.OrderKind} {(effectiveBuy ? "Buy" : "Sell")} {destinationName} @ {FormatPrice(price)} (source order {execution.OrderId}).");
@@ -746,17 +747,35 @@ public sealed class CopyEngineHost(
         return true;
     }
 
-    // Mirror a resting pending order's stop-loss / take-profit onto the destination copy, honouring the
-    // per-destination Copy SL/TP toggles and Reverse (which swaps the two, exactly as for an open position),
-    // rounded to the destination symbol's price precision. A source SL/TP set on a pending order shipped
-    // uncopied because the placement/amend path omitted SL/TP entirely.
-    private static (double? StopLoss, double? TakeProfit) ResolvePendingProtection(
+    private readonly record struct PendingProtection(
+        double? StopLoss, double? TakeProfit, long? RelativeStopLoss, long? RelativeTakeProfit, bool Trailing);
+
+    // Mirror a resting pending order's stop-loss / take-profit / trailing onto the destination copy, honouring
+    // the per-destination Copy SL/TP/trailing toggles and Reverse (which swaps SL<->TP exactly as for an open
+    // position). A pending order carries its protection as RELATIVE distances (the absolute prices stay null
+    // until it fills), so those are what actually propagate — reading only the absolute fields copied nothing.
+    // Absolute prices, when the master did supply them, are rounded to the destination symbol's precision.
+    private static PendingProtection ResolvePendingProtection(
         CopyDestination config, ExecutionEvent execution, SymbolDetails destinationDetail)
     {
-        double? stopLoss = config.CopyStopLoss ? execution.StopLoss : null;
+        var trailing = config.CopyTrailingStop && execution.TrailingStopLoss;
+        // A trailing stop IS a stop-loss and needs the stop distance to trail — so carry the (relative) SL
+        // whenever plain Copy-SL OR trailing is on, else cTrader gets TrailingStopLoss=true with no distance
+        // and rejects the order.
+        var copyStop = config.CopyStopLoss || trailing;
+        double? stopLoss = copyStop ? execution.StopLoss : null;
         double? takeProfit = config.CopyTakeProfit ? execution.TakeProfit : null;
-        if (config.Reverse) (stopLoss, takeProfit) = (takeProfit, stopLoss);
-        return (RoundToDigits(stopLoss, destinationDetail.Digits), RoundToDigits(takeProfit, destinationDetail.Digits));
+        long? relativeStopLoss = copyStop ? execution.RelativeStopLoss : null;
+        long? relativeTakeProfit = config.CopyTakeProfit ? execution.RelativeTakeProfit : null;
+        if (config.Reverse)
+        {
+            (stopLoss, takeProfit) = (takeProfit, stopLoss);
+            (relativeStopLoss, relativeTakeProfit) = (relativeTakeProfit, relativeStopLoss);
+        }
+        return new PendingProtection(
+            RoundToDigits(stopLoss, destinationDetail.Digits),
+            RoundToDigits(takeProfit, destinationDetail.Digits),
+            relativeStopLoss, relativeTakeProfit, trailing);
     }
 
     private async Task HandlePendingAmendedAsync(IOpenApiTradingSession session, ExecutionEvent execution, CancellationToken ct)
@@ -779,9 +798,11 @@ public sealed class CopyEngineHost(
                 foreach (var pending in pendings.Where(o => o.Label == label))
                 {
                     var detail = await SymbolDetailAsync(session, destination.CtidTraderAccountId, pending.SymbolId, token);
-                    var (stopLoss, takeProfit) = ResolvePendingProtection(destination.Config, execution, detail);
+                    var protection = ResolvePendingProtection(destination.Config, execution, detail);
                     await session.AmendPendingOrderAsync(destination.CtidTraderAccountId, pending.OrderId,
-                        execution.OrderKind, pending.Volume, price, expiry, slippage, token, stopLoss, takeProfit);
+                        execution.OrderKind, pending.Volume, price, expiry, slippage, token,
+                        protection.StopLoss, protection.TakeProfit,
+                        protection.RelativeStopLoss, protection.RelativeTakeProfit, protection.Trailing);
                     logger.CopyPendingOrderAmended(plan.ProfileId.Value, destination.CtidTraderAccountId,
                         pending.OrderId, execution.OrderId);
                 }

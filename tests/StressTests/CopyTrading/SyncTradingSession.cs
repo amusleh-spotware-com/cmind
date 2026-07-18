@@ -89,13 +89,15 @@ internal sealed class SyncTradingSession(FakeTradingSession inner) : IOpenApiTra
     public Task SendPendingOrderAsync(long ctid, long symbolId, bool isBuy, long volume,
         CopyOrderKind kind, double price, string label, CancellationToken ct,
         long? expirationTimestamp = null, int? slippageInPoints = null,
-        double? stopLoss = null, double? takeProfit = null)
-    { lock (_gate) return inner.SendPendingOrderAsync(ctid, symbolId, isBuy, volume, kind, price, label, ct, expirationTimestamp, slippageInPoints, stopLoss, takeProfit); }
+        double? stopLoss = null, double? takeProfit = null,
+        long? relativeStopLoss = null, long? relativeTakeProfit = null, bool trailingStopLoss = false)
+    { lock (_gate) return inner.SendPendingOrderAsync(ctid, symbolId, isBuy, volume, kind, price, label, ct, expirationTimestamp, slippageInPoints, stopLoss, takeProfit, relativeStopLoss, relativeTakeProfit, trailingStopLoss); }
 
     public Task AmendPendingOrderAsync(long ctid, long orderId, CopyOrderKind kind, long volume, double price,
         long? expirationTimestamp, int? slippageInPoints, CancellationToken ct,
-        double? stopLoss = null, double? takeProfit = null)
-    { lock (_gate) return inner.AmendPendingOrderAsync(ctid, orderId, kind, volume, price, expirationTimestamp, slippageInPoints, ct, stopLoss, takeProfit); }
+        double? stopLoss = null, double? takeProfit = null,
+        long? relativeStopLoss = null, long? relativeTakeProfit = null, bool trailingStopLoss = false)
+    { lock (_gate) return inner.AmendPendingOrderAsync(ctid, orderId, kind, volume, price, expirationTimestamp, slippageInPoints, ct, stopLoss, takeProfit, relativeStopLoss, relativeTakeProfit, trailingStopLoss); }
 
     public Task<(double Bid, double Ask)> LoadSpotPriceAsync(long ctid, long symbolId, CancellationToken ct)
     { lock (_gate) return inner.LoadSpotPriceAsync(ctid, symbolId, ct); }

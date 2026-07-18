@@ -55,7 +55,7 @@ A cMind egy **valódi lokális LLM-et szállít, amely folyamaton belül fut** a
 
 - A modell könyvtár (`genai_config.json` + tokenizer + súlyok) az `App:Ai:BuiltIn:ModelPath` által konfigurált (alapértelmezés: `models/onnx`, az alkalmazás alapkönyvtárához viszonyítva). Amikor a modell fájlok hiányoznak, a szolgáltató **degradál egy típusolt hibaüzenetre egy telepítési tippel** — soha nem dob kivételt, és az alkalmazás többi része érintetlen marad.
 - Minden szöveges AI funkciót működtet. Mivel kompakt modell, csak szöveges (nincs szerveroldali web keresés vagy vision) és a generálás serializált (egy modell példány, újrafelhasználva lazy load után).
-- Megszerzés/csomagolás a modell: lásd [AI szolgáltatók → beépített](../deployment/ai-providers.md#built-in-local-ai-onnx-shipped).
+- **Több beépített modell is egyszerre létezhet.** Minden letöltött modell az `ModelPath/<key>` alatt élhet; egy kurátált katalógus (Phi-3.5-mini alapértelmezett, valamint Phi-3-mini-128k) letölthető és választható a **Beállítások → AI** menüből. Egy beépített almodell kiválasztása in-process-ben betölti azt. Modell beszerzése/csomagolása: lásd [AI szolgáltatók → beépített](../deployment/ai-providers.md#built-in-local-ai-onnx-shipped).
 
 ## White-label vezérlők
 
@@ -64,6 +64,8 @@ Egy white-label telepítés korlátozza az AI-t az `App:Branding` révén (szerv
 - `AllowBuiltInAi` (alapértelmezés `true`) — állítsd `false`-ra a **beépített modell teljes eltávolításához**.
 - `AllowLocalProviders` (alapértelmezés `true`) — állítsd `false`-ra a lokális/saját-gazda végpontok tiltásához (loopback / privát OpenAI-kompatibilis, pl. Ollama/LM Studio/vLLM).
 - `AllowedAiProviderKinds` (alapértelmezés üres = mind) — csak azokat a fajtákat listázd, amelyeket a telepítés engedélyez (pl. `["Anthropic","OpenAiCompatible"]`), hogy zárold, mely szolgáltatókat adhatnak hozzá a felhasználók.
+- `AllowAiTasks` (alapértelmezés `true`) — állítsd `false`-ra a **háttérben futó AI feladat** funkció eltávolításához (az `/ai/tasks` oldal és a feladat API 404-et ad vissza; az futó leállítja a feldolgozást); szinkron AI funkciók továbbra is működnek.
+- `AllowAiModelManagement` (alapértelmezés `true`) — állítsd `false`-ra a **modell böngészés** és **funkciónként model kötés** elrejtéséhez. Mindkettő a tulajdonos által futásidőben hangolható a **Beállítások → Telepítés** menüből (élőben átfedett az `IOptionsMonitor`-on) és katalógusban van az `WhiteLabelCatalog`-ban.
 
 ## Bővítés: jövőbeli beépített modellek
 
@@ -72,6 +74,8 @@ Az AI réteg **adapter-alapú és bővíthető**. Minden szolgáltató egy `IAiP
 ## Képességek
 
 - **cBot építése** — egyszerű angol prompt → futtatható cBot via **generál → épít → AI-javítás** ön-javító hurok (`build-strategy`), `/ai/build` címen. A **generált forráskód megjelenik** amikor az épület befejeződik (másolás gombbal), az építési naplóval együtt — siker és kudarc esetén is — így mindig látod, mit írt az AI, nem csak hibákat.
+- **Háttérben futó AI feladatok** — indítson el egy hosszan futó AI munkát (pl. cBot építése) a választott modell(ek)kel, majd hagyja el az oldalt és visszatérhet az eredményhez. Válasszon ki több modellt az összehasonlítás céljából — mindegyik saját feladatként fut (`/ai/tasks`). Egy web-host worker igényli fel a feladatokat egy öngyógyító bérleten (visszavéve, ha egy node meghal) és továbbítja a folyamatot egy feladatonkénti tevékenységnaplóba.
+- **Modellek böngészése és kiválasztása funkciónként** — böngésszen azokat a modelleket, amelyeket egy szolgáltató végpontja meghirdet (`GET /v1/models` az LM Studio / Ollama / vLLM / llama.cpp között, vagy a beépített katalógus), ahelyett hogy kézzel beírna egy id-t, és **kösse az egyes AI funkciókat egy másik modellhez** így több modell szolgál egyszerre más-más funkciókat (egy kötetlen funkció visszaáll a hatókör aktív szolgáltatójára).
 - **Paraméter optimalizálás** — zárt hurok: AI javasol paraméterkészleteket, mindegyik perzisztálva + backtesztelve a node-okon (`optimize-run` / `optimize-params`).
 - **Autonóm portfólió ügynök** — mandátum-vezérelt javaslatok teljes döntési naplóval (`AgentMandate` → `AgentProposal`).
 - **Kockázati őr működésben** — `AiRiskGuard` háttérszolgáltatás értékeli a futó botokat, képes **automatikusan leállítani** kritikus kockázat esetén (opcionális).
@@ -81,9 +85,9 @@ Az AI réteg **adapter-alapú és bővíthető**. Minden szolgáltató egy `IAiP
 
 ## Felületek
 
-- Web végpontok `/api/ai/*` alatt (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …).
+- Web végpontok `/api/ai/*` alatt (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), valamint **háttérben futó feladatok** (`/api/ai/tasks` create/list/detail/cancel/delete), **modell felfedezés** (`/api/ai/models/probe`, `/api/ai/usable-models`) és **funkciónként kötések** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - MCP eszközök (`AiTools`) AI kliensek számára — lásd [mcp.md](mcp.md). A szolgáltató kiválasztás átlátszó az MCP kliensek számára.
-- **AI** nav csoport — egy Blazor **oldal funkciónként**: cBot építése (`/ai/build`), Értékelés (`/ai/review`), Vita (`/ai/debate`), Piaci Szentimentum (`/ai/sentiment`), Kitettség ellenőrzés (`/ai/exposure`), Portfólió Áttekintés (`/ai/digest`), Hangolási Tanácsadó (`/ai/tune`), Optimalizálás (`/ai/optimize`), plusz Portfólió Ügynök, Riasztások, MCP Kulcsok. Az oldalak megosztják az `AiFeaturePageBase` + `AiOutputPanel`; mindegyik megmutatja az `AiFeatureNotice`-t, ha nincs szolgáltató konfigurálva.
+- **AI** nav csoport — egy Blazor **oldal funkciónként**: cBot építése (`/ai/build`), Értékelés (`/ai/review`), Vita (`/ai/debate`), Piaci Szentimentum (`/ai/sentiment`), Kitettség ellenőrzés (`/ai/exposure`), Portfólió Áttekintés (`/ai/digest`), Hangolási Tanácsadó (`/ai/tune`), Optimalizálás (`/ai/optimize`), **AI feladatok** (`/ai/tasks`), valamint Portfólió Ügynök, Riasztások, MCP Kulcsok. Az oldalak megosztják az `AiFeaturePageBase` + `AiOutputPanel`; mindegyik megmutatja az `AiFeatureNotice`-t, ha nincs szolgáltató konfigurálva.
 - **Beállítások → AI** (`/settings/ai`, csak tulajdonos) — szolgáltató lista egy **Hozzáadás / szerkesztés szolgáltató dialog-kal** (fajta, base URL fajta-specifikus tippekkel, beleértve egy Ollama/LM Studio localhost presetet, modell, opcionális kulcs, képesség togglek, "állítsd aktívra") és egy **Tesztelés kapcsolat** gombbal.
 
 ## Konfiguráció

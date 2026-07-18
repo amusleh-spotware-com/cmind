@@ -83,7 +83,7 @@ Guide di setup per-provider complete (chiavi, URL, id modello, passi UI): vedere
 
 cMind spedisce un **vero LLM locale che gira in-process** tramite
 [Microsoft.ML.OnnxRuntimeGenAI](https://onnxruntime.ai/docs/genai/) (un compact instruct model come
-Phi-3-mini). Non ha bisogno **di nessuna API key e nessun servizio esterno**, e al primo avvio — quando nessun
+Phi-3.5-mini). Non ha bisogno **di nessuna API key e nessun servizio esterno**, e al primo avvio — quando nessun
 provider è configurato e il white-label gate lo permette — viene **seeded e attivato automaticamente**, così
 ogni deployment ha AI funzionante out of the box.
 
@@ -93,7 +93,7 @@ ogni deployment ha AI funzionante out of the box.
   e il resto dell'app non è affected.
 - Alimenta ogni feature AI testuale. Essendo un modello compact, è solo testo (no ricerca web lato server o
   vision) e la generazione è serializzata (una istanza modello, riusata dopo un lazy load).
-- Acquisire/bundle del modello: vedere [Provider AI → built-in](../deployment/ai-providers.md#built-in-local-ai-onnx-shipped).
+- **Più modelli integrati possono coesistere.** Ogni modello scaricato risiede sotto `ModelPath/<key>`; un catalogo curato (Phi-3.5-mini predefinito, più Phi-3-mini-128k) può essere scaricato e scambiato da **Settings → AI**. Selezionando un submodel integrato lo carica in-process. Acquisire/bundle un modello: vedere [Provider AI → built-in](../deployment/ai-providers.md#built-in-local-ai-onnx-shipped).
 
 ## Controlli white-label
 
@@ -104,6 +104,11 @@ Un deployment white-label restringe AI via `App:Branding` (applicato server-side
   (loopback / OpenAI-compatibile privato, es. Ollama/LM Studio/vLLM).
 - `AllowedAiProviderKinds` (default empty = tutti) — elencare solo i tipi che il deployment sanziona (es.
   `["Anthropic","OpenAiCompatible"]`) per bloccare quali provider gli utenti possono aggiungere.
+- `AllowAiTasks` (default `true`) — impostare `false` per rimuovere la funzionalità **task AI in background** (la
+  pagina `/ai/tasks` e l'API task ritornano 404; il runner smette di rivendicare); funzionalità AI sincrone funzionano ancora.
+- `AllowAiModelManagement` (default `true`) — impostare `false` per nascondere **navigazione modelli** e **binding
+  modelli per-feature**. Entrambi sono owner-tunable a runtime da **Settings → Deployment** (sovrapposti live su
+  `IOptionsMonitor`) e catalogati in `WhiteLabelCatalog`.
 
 ## Estendere: futuri modelli integrati
 
@@ -117,6 +122,8 @@ di feature, endpoint o tool MCP. Il provider ONNX integrato è l'implementazione
 ## Funzionalità
 
 - **Build cBot** — prompt in inglese semplice → cBot runnable via **generate → build → AI-fix** self-repair loop (`build-strategy`), a `/ai/build`. Il **codice sorgente generato viene mostrato** quando la build finisce (con un pulsante di copia), insieme al build log — in caso di successo *e* in caso di fallimento — così vedi sempre quello che l'AI ha scritto, non solo errori.
+- **Task AI in background** — avvia un lavoro AI di lunga durata (es. build un cBot) con il/i modello/i di tua scelta, poi lascia la pagina e torna per il risultato. Scegli diversi modelli per confrontare — ciascuno esegue come il suo proprio task (`/ai/tasks`). Un worker web-host rivendica task su un lease auto-curativo (rivendicato se un nodo muore) e trasmette il progresso in un log di attività per-task.
+- **Sfoglia e seleziona modelli, per feature** — sfoglia i modelli che un endpoint provider pubblicizza (`GET /v1/models` su LM Studio / Ollama / vLLM / llama.cpp, o il catalogo integrato) invece di digitare manualmente un id, e **vincolare ogni feature AI a un modello diverso** così più modelli servono feature diverse contemporaneamente (una feature non vincolata ricade al provider attivo dello scope).
 - **Ottimizzazione parametri** — closed loop: AI propone param set, ciascuno persistito + backtestato attraverso nodi (`optimize-run` / `optimize-params`).
 - **Agente portfolio autonomo** — proposte mandate-driven con journal decisionale completo (`AgentMandate` → `AgentProposal`).
 - **Acting risk guard** — servizio background `AiRiskGuard` valuta i bot in esecuzione, può **auto-stop** su rischio critico (opt-in).
@@ -126,9 +133,9 @@ di feature, endpoint o tool MCP. Il provider ONNX integrato è l'implementazione
 
 ## Superfici
 
-- Endpoint Web sotto `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …).
+- Endpoint Web sotto `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), più **task in background** (`/api/ai/tasks` create/list/detail/cancel/delete), **scoperta modelli** (`/api/ai/models/probe`, `/api/ai/usable-models`) e **binding per-feature** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - Tool MCP (`AiTools`) per client AI — vedere [mcp.md](mcp.md). La selezione provider è trasparente ai client MCP.
-- **Nav group AI** — una Blazor **page per feature**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), più Portfolio Agent, Alerts, MCP Keys. Le pagine condividono `AiFeaturePageBase` + `AiOutputPanel`; ciascuna mostra `AiFeatureNotice` quando nessun provider è configurato.
+- **Nav group AI** — una Blazor **page per feature**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), **AI Tasks** (`/ai/tasks`), più Portfolio Agent, Alerts, MCP Keys. Le pagine condividono `AiFeaturePageBase` + `AiOutputPanel`; ciascuna mostra `AiFeatureNotice` quando nessun provider è configurato.
 - **Settings → AI** (`/settings/ai`, solo owner) — lista provider con dialog **Add / edit provider** (kind, base URL con hint per-kind incluso preset Ollama/LM Studio localhost, modello, key opzionale, toggle capacità, "set active") e pulsante **Test connection**.
 
 ## Configurazione

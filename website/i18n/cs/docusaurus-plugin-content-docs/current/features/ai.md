@@ -11,7 +11,7 @@ klíč); každá existující funkce funguje nezměněná se stejným gatingem, 
 degradací.
 
 **Baterie v ceně:** **vestavěný lokální LLM je součástí aplikace a je defaultně zapnutý**
-(Microsoft.ML.OnnxRuntimeGenAI, např. Phi-3-mini) — takže každé nasazení má fungující AI **bez API klíče
+(Microsoft.ML.OnnxRuntimeGenAI, např. Phi-3.5-mini) — takže každé nasazení má fungující AI **bez API klíče
 a bez externí služby**. White-label nasazení ho může odstranit a omezit, které providery mohou uživatelé
 přidávat. Kromě vestavěného, připojte jakéhokoliv externího providera.
 
@@ -82,7 +82,7 @@ Full per-provider setup guides (keys, URLs, model ids, UI steps): viz
 
 cMind shipuje **reálný lokální LLM běžící in-process** přes
 [Microsoft.ML.OnnxRuntimeGenAI](https://onnxruntime.ai/docs/genai/) (compact instruct model jako
-Phi-3-mini). Nepotřebuje **žádný API klíč a žádnou externí službu**, a při prvním startu — když žádný provider není
+Phi-3.5-mini). Nepotřebuje **žádný API klíč a žádnou externí službu**, a při prvním startu — když žádný provider není
 nakonfigurován a white-label gate to povoluje — je **seeded a activated automaticky**, takže každé
 nasazení má fungující AI out of the box.
 
@@ -92,7 +92,7 @@ nasazení má fungující AI out of the box.
   a zbytek aplikace je unaffected.
 - Pohání každou textovou AI funkci. Jako compact model, je text-only (žádný server-side web search nebo
   vision) a generace je serializovaná (jedna model instance, znovupoužitá po lazy load).
-- Získejte/bundle model: viz [AI providers → built-in](../deployment/ai-providers.md#built-in-local-ai-onnx-shipped).
+- **Více vestavěných modelů může koexistovat.** Každý stažený model žije pod `ModelPath/<key>`; kurátorský katalog (Phi-3.5-mini default, plus Phi-3-mini-128k) lze stáhnout a přepínat z **Settings → AI**. Výběr vestavěného submodelu jej načte in-process. Získejte/bundle model: viz [AI providers → built-in](../deployment/ai-providers.md#built-in-local-ai-onnx-shipped).
 
 ## White-label ovládací prvky
 
@@ -103,6 +103,8 @@ White-label nasazení omezuje AI přes `App:Branding` (enforced server-side na k
   privátní OpenAI-kompatibilní, např. Ollama/LM Studio/vLLM).
 - `AllowedAiProviderKinds` (default empty = all) — vyjmenujte pouze kinds, které deployment sanctionuje (např.
   `["Anthropic","OpenAiCompatible"]`) pro lockdown které providery mohou uživatelé přidávat.
+- `AllowAiTasks` (default `true`) — nastavte `false` pro odstranění funkce **background AI task** (stránka `/ai/tasks` a task API vrátí 404; runner přestane claimat); synchronní AI funkce stále pracují.
+- `AllowAiModelManagement` (default `true`) — nastavte `false` pro skrytí **procházení modelů** a **per-feature model binding**. Obě jsou owner-tunable v runtime z **Settings → Deployment** (overlaid live na `IOptionsMonitor`) a katalogizovány v `WhiteLabelCatalog`.
 
 ## Rozšiřování: budoucí vestavěné modely
 
@@ -116,6 +118,8 @@ Vestavěný ONNX provider je reference implementation tohoto patternu.
 ## Capabilities
 
 - **Build cBot** — plain-English prompt → runnable cBot přes **generate → build → AI-fix** self-repair loop (`build-strategy`), na `/ai/build`. **Vygenerovaný zdrojový kód je zobrazen** po dokončení buildu (s tlačítkem kopírování), vedle build logu — při úspěchu *i* při selhání — takže vždy vidíte, co AI napsala, nikoli jen chyby.
+- **Background AI tasks** — spusťte dlouhodobý AI job (např. build cBot) s modely vaší volby, pak opusťte stránku a vraťte se k výsledku. Vyberte několik modelů k porovnání — každý běží jako vlastní task (`/ai/tasks`). Web-host worker claimuje tasky na self-healing lease (reclaimed pokud node zemře) a streamuje progress do per-task activity logu.
+- **Browse & select models, per feature** — procházejte modely, které provider endpoint inzeruje (`GET /v1/models` na LM Studio / Ollama / vLLM / llama.cpp, nebo vestavěný katalog) místo ručního psaní id, a **bindujte každou AI funkci k jinému modelu** tak několik modelů slouží různým funkcím najednou (unbound funkce se fallbackují na scope's aktivní provider).
 - **Parameter optimization** — closed loop: AI navrhuje param sets, každý persisted + backtested across nodes (`optimize-run` / `optimize-params`).
 - **Autonomní portfolio agent** — mandate-driven proposals s full decision journal (`AgentMandate` → `AgentProposal`).
 - **Acting risk guard** — `AiRiskGuard` background service hodnotí běžící boty, může **auto-stop** na critical risk (opt-in).
@@ -125,9 +129,9 @@ Vestavěný ONNX provider je reference implementation tohoto patternu.
 
 ## Surfaces
 
-- Web endpoints under `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …).
+- Web endpoints under `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), plus **background tasks** (`/api/ai/tasks` create/list/detail/cancel/delete), **model discovery** (`/api/ai/models/probe`, `/api/ai/usable-models`) a **per-feature bindings** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - MCP tools (`AiTools`) pro AI klienty — viz [mcp.md](mcp.md). Provider selection je transparentní pro MCP klienty.
-- **AI** nav group — jedna Blazor **stránka per funkce**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), plus Portfolio Agent, Alerts, MCP Keys. Stránky sdílejí `AiFeaturePageBase` + `AiOutputPanel`; každá ukazuje `AiFeatureNotice` když žádný provider nakonfigurován.
+- **AI** nav group — jedna Blazor **stránka per funkce**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), **AI Tasks** (`/ai/tasks`), plus Portfolio Agent, Alerts, MCP Keys. Stránky sdílejí `AiFeaturePageBase` + `AiOutputPanel`; každá ukazuje `AiFeatureNotice` když žádný provider nakonfigurován.
 - **Settings → AI** (`/settings/ai`, pouze owner) — seznam providerů s **Add / edit provider dialog** (kind, base URL s per-kind hints incl. Ollama/LM Studio localhost preset, model, volitelný klíč, capability toggles, "set active") a tlačítko **Test connection**.
 
 ## Konfigurace

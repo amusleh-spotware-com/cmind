@@ -28,12 +28,12 @@ cMind의 AI 계층은 공급자 독립적입니다 ([AI 기능](../features/ai.m
 cMind는 **기본적으로 활성화된 실제 인프로세스 로컬 LLM** (Microsoft.ML.OnnxRuntimeGenAI)을 제공합니다 — 키 없음, 외부 서비스 없음. 첫 시작 시 공급자가 구성되지 않았고 `App:Branding:AllowBuiltInAi`이 `true`인 경우 자동으로 시드되고 활성화됩니다.
 
 - **구성:** `App:Ai:BuiltIn:Enabled` (기본값 `true`), `App:Ai:BuiltIn:ModelPath` (기본값 `models/onnx`, 앱 기본 디렉토리에 상대), `App:Ai:BuiltIn:MaxTokens` (기본값 `1024`).
-- **모델 파일:** `ModelPath`를 ONNX GenAI 모델을 포함하는 디렉토리로 지정 — `genai_config.json`, 토크나이저 및 `.onnx` 가중치. CPU **Phi-3-mini** 빌드가 잘 작동합니다. 예를 들어:
+- **모델 파일:** `ModelPath`를 ONNX GenAI 모델을 포함하는 디렉토리로 지정 — `genai_config.json`, 토크나이저 및 `.onnx` 가중치. CPU **Phi-3.5-mini-instruct** 빌드가 잘 작동합니다. 예를 들어:
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
-    --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
     --local-dir ./models
   # 그 다음 App:Ai:BuiltIn:ModelPath를 해당 폴더로 설정 (genai_config.json 포함)
   ```

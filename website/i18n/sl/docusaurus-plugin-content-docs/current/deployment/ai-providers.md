@@ -37,12 +37,12 @@ konfiguriranega in je `App:Branding:AllowBuiltInAi` `true`, se seed in aktivira 
 - **Konfiguracija:** `App:Ai:BuiltIn:Enabled` (privzeto `true`), `App:Ai:BuiltIn:ModelPath` (privzeto
   `models/onnx`, relativno na osnovno direktorije aplikacije), `App:Ai:BuiltIn:MaxTokens` (privzeto `1024`).
 - **Datoteke modela:** imenik `ModelPath` na direktoriju, ki vsebuje model ONNX GenAi — `genai_config.json`,
-  tokenizer in uteži `.onnx`. Gradnja CPU **Phi-3-mini** dobro deluje, npr.:
+  tokenizer in uteži `.onnx`. Gradnja CPU **Phi-3.5-mini-instruct** dobro deluje, npr.:
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
-    --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
     --local-dir ./models
   # nato nastavite App:Ai:BuiltIn:ModelPath na ta mapa (vsebuje genai_config.json)
   ```

@@ -28,12 +28,12 @@ Klartext `http://` wird **nur** für Loopback/Private (Intranet) Hosts akzeptier
 cMind versendet ein **echtes In-Process lokales LLM** (Microsoft.ML.OnnxRuntimeGenAI), das **standardmäßig aktiviert** ist – kein Schlüssel, kein externer Service. Beim ersten Start, wenn kein Provider konfiguriert ist und `App:Branding:AllowBuiltInAi` ist `true`, wird es automatisch geseedet und aktiviert.
 
 - **Config:** `App:Ai:BuiltIn:Enabled` (Standard `true`), `App:Ai:BuiltIn:ModelPath` (Standard `models/onnx`, relativ zum App-Basis-Verzeichnis), `App:Ai:BuiltIn:MaxTokens` (Standard `1024`).
-- **Model-Dateien:** zeige `ModelPath` auf ein Verzeichnis mit einem ONNX GenAI-Modell – `genai_config.json`, der Tokenizer und die `.onnx`-Gewichte. Eine CPU **Phi-3-mini** Build funktioniert gut, z.B.:
+- **Model-Dateien:** zeige `ModelPath` auf ein Verzeichnis mit einem ONNX GenAI-Modell – `genai_config.json`, der Tokenizer und die `.onnx`-Gewichte. Eine CPU **Phi-3.5-mini-instruct** Build funktioniert gut, z.B.:
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
-    --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
     --local-dir ./models
   # dann setze App:Ai:BuiltIn:ModelPath zu diesem Ordner (enthält genai_config.json)
   ```
@@ -57,13 +57,13 @@ Der Provider-Layer ist Adapter-basiert (`IAiProvider` schlüsselt durch `AiProvi
 
 ### Anthropic (Claude)
 
-- Schlüssel: <https://console.anthropic.com/> → API keys.
+- Schlüssel: https://console.anthropic.com/ → API keys.
 - Base URL: `https://api.anthropic.com/` · Model: z.B. `claude-opus-4-8`.
 - Capabilities: Web-Suche + Vision standardmäßig an.
 
 ### OpenAI
 
-- Schlüssel: <https://platform.openai.com/api-keys>.
+- Schlüssel: https://platform.openai.com/api-keys.
 - Base URL: `https://api.openai.com/v1/` · Model: z.B. `gpt-4o`.
 - Kind: **OpenAiCompatible**. Aktiviere Vision im Dialog, wenn du ein Vision-Modell verwendest.
 
@@ -75,7 +75,7 @@ Der Provider-Layer ist Adapter-basiert (`IAiProvider` schlüsselt durch `AiProvi
 
 ### Google Gemini
 
-- Schlüssel: <https://aistudio.google.com/app/apikey>.
+- Schlüssel: https://aistudio.google.com/app/apikey.
 - Base URL: `https://generativelanguage.googleapis.com/` · Model: z.B. `gemini-2.0-flash`.
 - Kind: **Gemini**. Web-Suche Grounding + Vision standardmäßig an.
 

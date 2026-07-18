@@ -11,7 +11,7 @@ bir anahtar) seçersiniz; her mevcut özellik aynı geçitleme, şifreleme, daya
 değişmeden çalışır.
 
 **Piller dahil:** **uygulamayla birlikte gelen ve varsayılan olarak etkin bir yerleşik yerel LLM**
-(Microsoft.ML.OnnxRuntimeGenAI, örn. Phi-3-mini) — böylece her dağıtım **API anahtarı ve harici servis
+(Microsoft.ML.OnnxRuntimeGenAI, örn. Phi-3.5-mini) — böylece her dağıtım **API anahtarı ve harici servis
 olmadan** çalışan AI'ya sahiptir. Bir white-label dağıtımı bunu kaldırabilir ve kullanıcıların hangi
 sağlayıcıları ekleyebileceğini kısıtlayabilir. Yerleşiğin ötesinde, herhangi bir harici sağlayıcı bağlayın.
 
@@ -87,7 +87,7 @@ Sağlayıcı başına tam kurulum kılavuzları (anahtarlar, URL'ler, model id'l
 ## Yerleşik yerel AI (gönderildi, varsayılan-açık)
 
 cMind, [Microsoft.ML.OnnxRuntimeGenAI](https://onnxruntime.ai/docs/genai/) aracılığıyla **süreç içinde
-çalışan gerçek bir yerel LLM** (Phi-3-mini gibi kompakt bir instruct modeli) gönderir. **API anahtarı ve
+çalışan gerçek bir yerel LLM** (Phi-3.5-mini gibi kompakt bir instruct modeli) gönderir. **API anahtarı ve
 harici servis gerektirmez** ve ilk başlangıçta — hiçbir sağlayıcı yapılandırılmadığında ve white-label
 geçidi buna izin verdiğinde — **otomatik olarak seed edilir ve etkinleştirilir**, böylece her dağıtım
 kutudan çıktığı gibi çalışan AI'ya sahiptir.
@@ -99,7 +99,7 @@ kutudan çıktığı gibi çalışan AI'ya sahiptir.
 - Her metin AI özelliğini destekler. Kompakt bir model olduğu için yalnızca metindir (sunucu tarafı web
   araması veya vision yok) ve üretim serileştirilir (bir model instance'ı, tembel bir yükleme sonrası
   yeniden kullanılır).
-- Modeli edinin/paketleyin: bkz. [AI sağlayıcıları → yerleşik](../deployment/ai-providers.md#built-in-local-ai-onnx-shipped).
+- **Yerleşik modeller birlikte var olabilir.** Her indirilen model `ModelPath/<key>` altında yaşar; kuratörlü bir katalog (Phi-3.5-mini varsayılanı, artı Phi-3-mini-128k) indirilip **Settings → AI**'den değiştirilebilir. Yerleşik bir alt modeli seçmek onu süreçte yükler. Modeli edinin/paketleyin: bkz. [AI sağlayıcıları → yerleşik](../deployment/ai-providers.md#built-in-local-ai-onnx-shipped).
 
 ## White-label kontrolleri
 
@@ -111,6 +111,11 @@ tarafında zorlanır):
   özel OpenAI uyumlu, örn. Ollama/LM Studio/vLLM) yasaklamak için `false` ayarlayın.
 - `AllowedAiProviderKinds` (varsayılan boş = tümü) — kullanıcıların hangi sağlayıcıları ekleyebileceğini
   kilitlemek için yalnızca dağıtımın onayladığı türleri listeleyin (örn. `["Anthropic","OpenAiCompatible"]`).
+- `AllowAiTasks` (varsayılan `true`) — **arka plan AI görevi** özelliğini **kaldırmak** için `false` ayarlayın (`/ai/tasks`
+  sayfası ve görev API 404 döndürür; runner talepleri durdurur); eş zamanlı AI özellikleri yine de çalışır.
+- `AllowAiModelManagement` (varsayılan `true`) — **model taraması** ve **özellik başına model bağlama**
+  **gizlemek** için `false` ayarlayın. Her ikisi de **Settings → Deployment**'ten owner tarafından çalışma zamanında
+  ayarlanabilir (canlı olarak `IOptionsMonitor` üzerine yerleştirilir) ve `WhiteLabelCatalog`'da kataloglanır.
 
 ## Genişletme: gelecekteki yerleşik modeller
 
@@ -125,6 +130,8 @@ sağlayıcısı bu desenin referans uygulamasıdır.
 ## Yetenekler
 
 - **cBot Oluştur** — düz İngilizce prompt → **generate → build → AI-fix** kendi kendini onarma döngüsü aracılığıyla çalıştırılabilir cBot (`build-strategy`), `/ai/build`'da. **Oluşturulan kaynak kodu, derleme bittiğinde gösterilir** (kopyala düğmesi ile), derleme günlüğünün yanında — başarıda *ve* başarısızlıkta — böylece her zaman AI'ın ne yazdığını görürsünüz, sadece hataları değil.
+- **Arka plan AI görevleri** — uzun çalışan bir AI işi başlatın (örn. cBot oluşturun) seçtiğiniz modelle, sonra sayfayı ayrılın ve sonuç için geri dönün. Karşılaştırmak için birden fazla model seçin — her biri kendi görevi olarak çalışır (`/ai/tasks`). Bir web-host çalışanı görevleri self-healing bir kiralama üzerinde talep eder (bir düğüm ölürse geri alınır) ve ilerlemeyi bir per-görev etkinlik günlüğüne akışla aktarır.
+- **Modelleri tarayın ve seçin, özellik başına** — bir sağlayıcı uç noktası (`GET /v1/models` LM Studio / Ollama / vLLM / llama.cpp üzerinde veya yerleşik kataloğ) reklamını yaptığı modelleri tarayın, elle bir id yazarak yerine, ve **her AI özelliğini farklı bir modele bağlayın**, böylece birden fazla model aynı anda farklı özellikleri sunabilir (bağlı olmayan bir özellik kapsam'ın aktif sağlayıcısına geri döner).
 - **Parametre optimizasyonu** — kapalı döngü: AI param setleri önerir, her biri node'lar arasında kalıcılaştırılır + backtest edilir (`optimize-run` / `optimize-params`).
 - **Otonom portföy ajanı** — tam karar günlüğüyle mandat odaklı öneriler (`AgentMandate` → `AgentProposal`).
 - **Hareket eden risk muhafızı** — `AiRiskGuard` arka plan servisi çalışan botları değerlendirir, kritik riskte **otomatik-durdurabilir** (opt-in).
@@ -134,9 +141,9 @@ sağlayıcısı bu desenin referans uygulamasıdır.
 
 ## Yüzeyler
 
-- `/api/ai/*` altında Web uç noktaları (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …).
+- `/api/ai/*` altında Web uç noktaları (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …) artı **arka plan görevleri** (`/api/ai/tasks` create/list/detail/cancel/delete), **model keşfi** (`/api/ai/models/probe`, `/api/ai/usable-models`) ve **özellik başına bağlamalar** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - AI istemcileri için MCP araçları (`AiTools`) — bkz. [mcp.md](mcp.md). Sağlayıcı seçimi MCP istemcileri için şeffaftır.
-- **AI** nav grubu — özellik başına bir Blazor **sayfası**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), artı Portfolio Agent, Alerts, MCP Keys. Sayfalar `AiFeaturePageBase` + `AiOutputPanel` paylaşır; her biri hiçbir sağlayıcı yapılandırılmadığında `AiFeatureNotice` gösterir.
+- **AI** nav grubu — özellik başına bir Blazor **sayfası**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), **AI Tasks** (`/ai/tasks`), artı Portfolio Agent, Alerts, MCP Keys. Sayfalar `AiFeaturePageBase` + `AiOutputPanel` paylaşır; her biri hiçbir sağlayıcı yapılandırılmadığında `AiFeatureNotice` gösterir.
 - **Settings → AI** (`/settings/ai`, yalnızca owner) — **Add / edit provider dialog** ile sağlayıcı listesi (kind, tür başına ipuçlarıyla temel URL bir Ollama/LM Studio localhost ön ayarı dahil, model, isteğe bağlı anahtar, yetenek geçişleri, "set active") ve bir **Test connection** düğmesi.
 
 ## Yapılandırma

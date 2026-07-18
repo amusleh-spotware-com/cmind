@@ -9,7 +9,7 @@ Lapisan AI cMind ialah **agnostik pembekal**. Setiap ciri bercakap dengan satu c
 kunci); setiap ciri sedia ada berfungsi tidak berubah dengan gerbang, penyulitan, keteguhan, dan kemerosotan yang sama.
 
 **Bateri incluida:** **LLM tempatan terbina dalam dihantar dengan apl dan dilaktifkan secara lalai**
-(Microsoft.ML.OnnxRuntimeGenAI, cth Phi-3-mini) — jadi setiap penempatan mempunyai AI yang berfungsi **tanpa kunci API dan tanpa perkhidmatan luaran**. Penempatan white-label boleh mengalihkannya dan mengekang pembekal yang boleh ditambah oleh pengguna. Melampaui terbina dalam, sambungkan mana-mana pembekal luaran.
+(Microsoft.ML.OnnxRuntimeGenAI, cth Phi-3.5-mini) — jadi setiap penempatan mempunyai AI yang berfungsi **tanpa kunci API dan tanpa perkhidmatan luaran**. Penempatan white-label boleh mengalihkannya dan mengekang pembekal yang boleh ditambah oleh pengguna. Melampaui terbina dalam, sambungkan mana-mana pembekal luaran.
 
 Pembekal yang disokong:
 
@@ -31,7 +31,7 @@ dilumpuhkan dan baki apl berjalan tidak berubah (tiada kunci diperlukan untuk bi
 AI tidak dikonfigur → halaman AI meredupkan tindakan dan menunjukkan sepanduk serta segera gesaan untuk menambah pembekal dalam
 **Tetapan → AI** (`AiFeatureNotice`). Status di `GET /api/ai/status` (`{ enabled, kind, model }`);
 pembekal diurus (pemilik sahaja) melalui `GET/PUT /api/ai/providers`, `POST /api/ai/providers/{id}/activate`,
-`DELETE /api/ai/providers/{id}`, dan `POST /api/ai/providers/{id}/test` conectividad ping.
+`DELETE /api/ai/providers/{id}`, dan `POST /api/ai/providers/test` ping sambungan.
 
 ## Lalai penempatan vs pembekal sendiri pengguna
 
@@ -39,7 +39,7 @@ Kredensi AI mempunyai dua skop:
 
 - **Lalai penempatan (diurus pemilik).** Pemilik mengkonfigur pembekal (atau menghantar satu melalui
   `App:Ai:Providers[]` / `App:Ai:ApiKey` legacy). Ia menjadi **lalai kongsi untuk setiap pengguna** —
-  jadi broker atau pembekal hosted boleh membiayai AI untuk semua pengguna mereka dengan **tiada persediaan setiap pengguna dan tanpa had setiap pengguna**. Diurus melalui laluan `/api/ai/providers`所有者 sahaja di atas.
+  jadi broker atau pembekal hosted boleh membiayai AI untuk semua pengguna mereka dengan **tiada persediaan setiap pengguna dan tanpa had setiap pengguna**. Diurus melalui laluan `/api/ai/providers` pemilik sahaja di atas.
 - **Pembekal sendiri pengguna (layanan diri).** Mana-mana pengguna yang daftar masuk boleh menambah pembekal mereka sendiri di bawah
   `GET/PUT /api/ai/my-providers`, `POST /api/ai/my-providers/{id}/activate`,
   `DELETE /api/ai/my-providers/{id}`. Apabila hadir, **pembekal aktif mereka sendiri mengatasi lalai penempatan
@@ -75,7 +75,7 @@ Panduan persediaan setiap pembekal (kunci, URL, ID model, langkah UI): lihat
 
 cMind menghantar **LLM tempatan sebenar yang berjalan dalam-proses** melalui
 [Microsoft.ML.OnnxRuntimeGenAI](https://onnxruntime.ai/docs/genai/) (model instruct padat seperti
-Phi-3-mini). Ia memerlukan **tiada kunci API dan tiada perkhidmatan luaran**, dan pada permulaan pertama — apabila tiada pembekal dikonfigur dan gerbang white-label membenarkannya — nó **dibibit dan diaktifkan secara automatik**, jadi setiap penempatan mempunyai AI yang berfungsi di luar kotak.
+Phi-3.5-mini). Ia memerlukan **tiada kunci API dan tiada perkhidmatan luaran**, dan pada permulaan pertama — apabila tiada pembekal dikonfigur dan gerbang white-label membenarkannya — nó **dibibit dan diaktifkan secara automatik**, jadi setiap penempatan mempunyai AI yang berfungsi di luar kotak.
 
 - Direktori model (`genai_config.json` + tokenizer + pemberat) dikonfigur oleh
   `App:Ai:BuiltIn:ModelPath` (lalai `models/onnx`, relatif kepada direktori asas apl). Apabila fail model
@@ -83,7 +83,7 @@ Phi-3-mini). Ia memerlukan **tiada kunci API dan tiada perkhidmatan luaran**, da
   dan baki apl tidak terjejas.
 - Ia menggerakkan setiap ciri AI teks. Menjadi model padat, nó teks sahaja (tiada carian web pelayan atau
   visi) dan penjanaan disiri (satu contoh model, digunakan semula selepas muat malas).
-- Perolehi/bundle model: lihat [Pembekal AI → terbina dalam](../deployment/ai-providers.md#built-in-local-ai-onnx-shipped).
+- **Beberapa model terbina dalam boleh wujud bersama.** Setiap model yang dimuat turun tinggal di bawah `ModelPath/<key>`; katalog terkurasi (Phi-3.5-mini lalai, tambah Phi-3-mini-128k) boleh dimuat turun dan ditukar dari **Tetapan → AI**. Memilih submodel terbina dalam memuatkan ia dalam-proses. Perolehi/bundle model: lihat [Pembekal AI → terbina dalam](../deployment/ai-providers.md#built-in-local-ai-onnx-shipped).
 
 ## Kawalan white-label
 
@@ -94,6 +94,8 @@ Penempatan white-label mengekang AI melalui `App:Branding` (dikuatkuasakan pelay
   OpenAI-serasakan peribadi, cth Ollama/LM Studio/vLLM).
 - `AllowedAiProviderKinds` (lalai kosong = semua) — senaraikan hanya jenis yang diluluskan penempatan (cth.
   `["Anthropic","OpenAiCompatible"]`) untuk mengunci pembekal yang boleh ditambah pengguna.
+- `AllowAiTasks` (lalai `true`) — tetapkan `false` untuk mengalih ciri **tugas AI latar belakang** (halaman `/ai/tasks` dan API tugas mengembalikan 404; pelari berhenti menuntut); ciri AI segerak masih berfungsi.
+- `AllowAiModelManagement` (lalai `true`) — tetapkan `false` untuk menyembunyikan **pelayaran model** dan **pengikatan model setiap ciri**. Kedua-duanya boleh diselaras pemilik pada masa larian dari **Tetapan → Penempatan** (disarungkan hidup pada `IOptionsMonitor`) dan dikatalogkan dalam `WhiteLabelCatalog`.
 
 ## Memperluaskan: model terbina dalam masa depan
 
@@ -106,18 +108,20 @@ Pembekal ONNX terbina dalam ialah pelaksanaan rujukan corak ini.
 ## Keupayaan
 
 - **Bina cBot** — prompt bahasa Inggeris biasa → cBot yang boleh lari melalui **jana → bina → pembaikan AI** gelung pembaikan diri (`build-strategy`), di `/ai/build`. **Kod sumber yang dijana ditunjukkan** apabila pembinaan selesai (dengan butang salin), bersama-sama log pembinaan — pada kejayaan *dan* pada kegagalan — supaya anda sentiasa melihat apa yang AI tulis, bukan sekadar ralat.
+- **Tugas AI latar belakang** — mulai pekerjaan AI jangka panjang (cth. bina cBot) dengan model pilihan anda, kemudian tinggalkan halaman dan kembali ke hasilnya. Pilih beberapa model untuk dibandingkan — setiap berjalan sebagai tugasnya sendiri (`/ai/tasks`). Pekerja hos web menuntut tugas pada sewa pembedahan diri (diambil semula jika nod mati) dan mengalirkan kemajuan ke log aktiviti setiap tugas.
+- **Pelayaran & pilih model, setiap ciri** — pelayaran model yang titik akhir pembekal iklankan (`GET /v1/models` pada LM Studio / Ollama / vLLM / llama.cpp, atau katalog terbina dalam) daripada mengetik id tangan, dan **ikat setiap ciri AI ke model berbeza** supaya beberapa model melayani ciri berbeza pada masa yang sama (ciri tidak terikat jatuh kembali ke pembekal aktif skop).
 - **Pengoptimuman parameter** — gelung tertutup: AI cadangkan set parameter, setiap dikekalkan + di-backtest merentasi nod (`optimize-run` / `optimize-params`).
 - **Ejen portfolio autonomic** — cadangan bermotivasi mandat dengan jurnal keputusan penuh (`AgentMandate` → `AgentProposal`).
 - **Penjaga risiko bertindak** — perkhidmatan latar `AiRiskGuard` menilai bot yang berjalan, boleh **auto-berhenti** pada risiko kritikal (pilihan masuk).
 - **Penjaga pendedahan prop-firm** — had undur/pendedahan dengan ratakan automatik.
 - **Makluman pasaran** — enjin `AlertRule` dengan sentimen AI (pembingkaian carian web di mana pembekal menyokongnya).
-- **Analisis** — ulasan cBot, analesis backtest, post-mortem, sentimen pasaran, reka bentuk carta-penglihatan, kurasi marketplace.
+- **Analisis** — ulasan cBot, analisis backtest, post-mortem, sentimen pasaran, reka bentuk carta-penglihatan, kurasi marketplace.
 
 ## Permukaan
 
-- Titik akhir Web di bawah `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …).
+- Titik akhir Web di bawah `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), tambah **tugas latar belakang** (`/api/ai/tasks` buat/senarai/terperinci/batalkan/padam), **penemuan model** (`/api/ai/models/probe`, `/api/ai/usable-models`) dan **pengikatan setiap ciri** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - Alat MCP (`AiTools`) untuk klien AI — lihat [mcp.md](mcp.md). Pemilihan pembekal telus kepada klien MCP.
-- Kumpulan nav **AI** — satu halaman Blazor **setiap ciri**: Bina cBot (`/ai/build`), Semak (`/ai/review`), Perdebatan (`/ai/debate`), Sentimen Pasaran (`/ai/sentiment`), Semakan Pendedahan (`/ai/exposure`), Ringkasan Portfolio (`/ai/digest`), Penasihat Tune (`/ai/tune`), Optimimum (`/ai/optimize`), tambah Ejen Portfolio, Makluman, Kunci MCP. Halaman kongsi `AiFeaturePageBase` + `AiOutputPanel`; setiap menunjukkan `AiFeatureNotice` apabila tiada pembekal dikonfigur.
+- Kumpulan nav **AI** — satu halaman Blazor **setiap ciri**: Bina cBot (`/ai/build`), Semak (`/ai/review`), Perdebatan (`/ai/debate`), Sentimen Pasaran (`/ai/sentiment`), Semakan Pendedahan (`/ai/exposure`), Ringkasan Portfolio (`/ai/digest`), Penasihat Tune (`/ai/tune`), Optimimum (`/ai/optimize`), **Tugas AI** (`/ai/tasks`), tambah Ejen Portfolio, Makluman, Kunci MCP. Halaman kongsi `AiFeaturePageBase` + `AiOutputPanel`; setiap menunjukkan `AiFeatureNotice` apabila tiada pembekal dikonfigur.
 - **Tetapan → AI** (`/settings/ai`, pemilik sahaja) — senarai pembekal dengan **dialog tambah/edit pembekal** (jenis, URL asas dengan hint setiap jenis termasuk preset localhost Ollama/LM Studio, model, kunci pilihan, togolan keupayaan, "tetap aktif") dan butang **Uji sambungan**.
 
 ## Konfigurasi

@@ -28,19 +28,19 @@ endpoint internal Anda (loopback atau private IP) dan biarkan key kosong jika ru
 
 ## Built-in local AI (ONNX, shipped)
 
-cMind mengiri **real in-process local LLM** (Microsoft.ML.OnnxRuntimeGenAI) yang **enabled by
+cMind mengirim **real in-process local LLM** (Microsoft.ML.OnnxRuntimeGenAI) yang **enabled by
 default** — tidak ada key, tidak ada layanan eksternal. Pada startup pertama, ketika tidak ada penyedia yang dikonfigurasi dan
 `App:Branding:AllowBuiltInAi` adalah `true`, itu seeded dan activated secara otomatis.
 
 - **Config:** `App:Ai:BuiltIn:Enabled` (default `true`), `App:Ai:BuiltIn:ModelPath` (default
   `models/onnx`, relative ke app base directory), `App:Ai:BuiltIn:MaxTokens` (default `1024`).
 - **File model:** arahkan `ModelPath` ke direktori yang berisi model ONNX GenAI — `genai_config.json`,
-  tokenizer, dan weight `.onnx`. Build CPU **Phi-3-mini** bekerja dengan baik, misalnya:
+  tokenizer, dan weight `.onnx`. Build CPU **Phi-3.5-mini-instruct** bekerja dengan baik, misalnya:
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
-    --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
     --local-dir ./models
   # lalu atur App:Ai:BuiltIn:ModelPath ke folder itu (berisi genai_config.json)
   ```

@@ -82,7 +82,7 @@ Phi-3-mini). Tidak membutuhkan **kunci API dan layanan eksternal**, dan pada sta
 - Direktori model (`genai_config.json` + tokenizer + bobot) dikonfigurasi oleh
   `App:Ai:BuiltIn:ModelPath` (default `models/onnx`, relatif ke direktori dasar aplikasi). Ketika file model tidak ada provider **merosot menjadi kegagalan typed dengan petunjuk install** — tidak pernah melempar, dan sisa aplikasi tidak terpengaruh.
 - Ini menggerakkan setiap fitur AI teks. Menjadi model kompak, ia hanya teks (tidak ada pencarian web sisi server atau visi) dan generasi diserialisasi (satu instance model, digunakan kembali setelah lazy load).
-- Akuisisi/bundel model: lihat [AI providers → built-in](../deployment/ai-providers.md#built-in-local-ai-onnx-shipped).
+- **Beberapa model bawaan dapat hidup berdampingan.** Setiap model yang diunduh tinggal di bawah `ModelPath/<key>`; katalog yang dikurasi (Phi-3.5-mini default, ditambah Phi-3-mini-128k) dapat diunduh dan dialihkan dari **Settings → AI**. Memilih submodel bawaan memuat dalam proses. Akuisisi/bundel model: lihat [AI providers → built-in](../deployment/ai-providers.md#built-in-local-ai-onnx-shipped).
 
 ## Kontrol white-label
 
@@ -93,6 +93,8 @@ Deployment white-label membatasi AI melalui `App:Branding` (diterapkan sisi serv
   private OpenAI-compatible, misalnya Ollama/LM Studio/vLLM).
 - `AllowedAiProviderKinds` (default kosong = semua) — daftar hanya jenis yang deployment setujui (misalnya
   `["Anthropic","OpenAiCompatible"]`) untuk mengunci provider mana yang dapat ditambahkan pengguna.
+- `AllowAiTasks` (default `true`) — setel `false` untuk menghapus fitur **tugas AI latar belakang** (halaman `/ai/tasks` dan API tugas mengembalikan 404; pelari berhenti mengklaim); fitur AI sinkron masih bekerja.
+- `AllowAiModelManagement` (default `true`) — setel `false` untuk menyembunyikan **menjelajahi model** dan **pengikatan model per fitur**. Keduanya dapat disesuaikan pemilik pada waktu runtime dari **Settings → Deployment** (overlay live pada `IOptionsMonitor`) dan dikatalog dalam `WhiteLabelCatalog`.
 
 ## Memperluas: model bawaan masa depan
 
@@ -103,6 +105,8 @@ dalam proc, dll) adalah perubahan terlokalisasi: tambahkan `AiProviderKind`, imp
 ## Kemampuan
 
 - **Build cBot** — prompt bahasa Inggris biasa → runnable cBot melalui **generate → build → AI-fix** self-repair loop (`build-strategy`), di `/ai/build`. **Kode sumber yang dihasilkan ditampilkan** ketika build selesai (dengan tombol copy), bersama log build — saat sukses *dan* saat gagal — jadi Anda selalu melihat apa yang ditulis AI, bukan hanya error.
+- **Tugas AI latar belakang** — mulai pekerjaan AI yang berjalan lama (misalnya membangun cBot) dengan model pilihan Anda, kemudian tinggalkan halaman dan kembali ke hasilnya. Pilih beberapa model untuk dibandingkan — masing-masing berjalan sebagai tugasnya sendiri (`/ai/tasks`). Pekerja host web mengklaim tugas pada lease penyembuhan diri (didapatkan kembali jika node mati) dan streaming progress ke log aktivitas per tugas.
+- **Telusuri & pilih model, per fitur** — telusuri model yang diiklankan endpoint provider (`GET /v1/models` di LM Studio / Ollama / vLLM / llama.cpp, atau katalog bawaan) bukan tangan-ketik id, dan **ikat setiap fitur AI ke model yang berbeda** jadi beberapa model melayani fitur berbeda sekaligus (fitur tidak terikat kembali ke provider aktif scope).
 - **Optimasi parameter** — loop tertutup: AI mengusulkan set param, masing-masing persisted + backtested di seluruh node (`optimize-run` / `optimize-params`).
 - **Agen portfolio otonom** — proposal berbasis mandat dengan jurnal keputusan lengkap (`AgentMandate` → `AgentProposal`).
 - **Penjaga risiko yang bertindak** — `AiRiskGuard` layanan latar belakang menilai bot yang berjalan, dapat **auto-stop** pada risiko kritis (opt-in).
@@ -112,9 +116,9 @@ dalam proc, dll) adalah perubahan terlokalisasi: tambahkan `AiProviderKind`, imp
 
 ## Permukaan
 
-- Endpoint web di bawah `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …).
+- Endpoint web di bawah `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), ditambah **tugas latar belakang** (`/api/ai/tasks` create/list/detail/cancel/delete), **penemuan model** (`/api/ai/models/probe`, `/api/ai/usable-models`) dan **pengikatan per fitur** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - Alat MCP (`AiTools`) untuk klien AI — lihat [mcp.md](mcp.md). Pemilihan provider transparan untuk klien MCP.
-- Grup nav **AI** — satu halaman Blazor **per fitur**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), ditambah Portfolio Agent, Alerts, MCP Keys. Halaman berbagi `AiFeaturePageBase` + `AiOutputPanel`; masing-masing menampilkan `AiFeatureNotice` ketika tidak ada provider yang dikonfigurasi.
+- Grup nav **AI** — satu halaman Blazor **per fitur**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), **AI Tasks** (`/ai/tasks`), ditambah Portfolio Agent, Alerts, MCP Keys. Halaman berbagi `AiFeaturePageBase` + `AiOutputPanel`; masing-masing menampilkan `AiFeatureNotice` ketika tidak ada provider yang dikonfigurasi.
 - **Settings → AI** (`/settings/ai`, hanya pemilik) — daftar provider dengan dialog **Add / edit provider** (jenis, base URL dengan petunjuk per jenis incl. preset localhost Ollama/LM Studio, model, kunci opsional, toggle kemampuan, "set active") dan tombol **Test connection**.
 
 ## Konfigurasi

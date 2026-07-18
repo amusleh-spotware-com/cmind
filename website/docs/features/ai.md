@@ -92,7 +92,7 @@ deployment has working AI out of the box.
   and the rest of the app is unaffected.
 - It powers every text AI feature. Being a compact model, it is text-only (no server-side web search or
   vision) and generation is serialised (one model instance, reused after a lazy load).
-- Acquire/bundle the model: see [AI providers → built-in](../deployment/ai-providers.md#built-in-local-ai-onnx-shipped).
+- **Multiple built-in models can coexist.** Each downloaded model lives under `ModelPath/<key>`; a curated catalog (Phi-3.5-mini default, plus Phi-3-mini-128k) can be downloaded and switched from **Settings → AI**. Selecting a built-in submodel loads it in-process. Acquire/bundle a model: see [AI providers → built-in](../deployment/ai-providers.md#built-in-local-ai-onnx-shipped).
 
 ## White-label controls
 
@@ -103,6 +103,11 @@ A white-label deployment restricts AI via `App:Branding` (enforced server-side o
   private OpenAI-compatible, e.g. Ollama/LM Studio/vLLM).
 - `AllowedAiProviderKinds` (default empty = all) — list only the kinds the deployment sanctions (e.g.
   `["Anthropic","OpenAiCompatible"]`) to lock down which providers users may add.
+- `AllowAiTasks` (default `true`) — set `false` to remove the **background AI task** feature (the
+  `/ai/tasks` page and task API return 404; the runner stops claiming); synchronous AI features still work.
+- `AllowAiModelManagement` (default `true`) — set `false` to hide **model browsing** and **per-feature
+  model binding**. Both are owner-tunable at runtime from **Settings → Deployment** (overlaid live on
+  `IOptionsMonitor`) and catalogued in `WhiteLabelCatalog`.
 
 ## Extending: future built-in models
 
@@ -116,6 +121,8 @@ changes. The built-in ONNX provider is the reference implementation of this patt
 ## Capabilities
 
 - **Build cBot** — plain-English prompt → runnable cBot via **generate → build → AI-fix** self-repair loop (`build-strategy`), at `/ai/build`. The **generated source code is shown** when the build finishes (with a copy button), alongside the build log — on success *and* on failure — so you always see what the AI wrote, not just errors.
+- **Background AI tasks** — start a long-running AI job (e.g. build a cBot) with the model(s) of your choice, then leave the page and come back to the result. Pick several models to compare — each runs as its own task (`/ai/tasks`). A web-host worker claims tasks on a self-healing lease (reclaimed if a node dies) and streams progress into a per-task activity log.
+- **Browse & select models, per feature** — browse the models a provider endpoint advertises (`GET /v1/models` on LM Studio / Ollama / vLLM / llama.cpp, or the built-in catalog) instead of hand-typing an id, and **bind each AI feature to a different model** so several models serve different features at once (an unbound feature falls back to the scope's active provider).
 - **Parameter optimization** — closed loop: AI proposes param sets, each persisted + backtested across nodes (`optimize-run` / `optimize-params`).
 - **Autonomous portfolio agent** — mandate-driven proposals with full decision journal (`AgentMandate` → `AgentProposal`).
 - **Acting risk guard** — `AiRiskGuard` background service assesses running bots, can **auto-stop** on critical risk (opt-in).
@@ -125,9 +132,9 @@ changes. The built-in ONNX provider is the reference implementation of this patt
 
 ## Surfaces
 
-- Web endpoints under `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …).
+- Web endpoints under `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), plus **background tasks** (`/api/ai/tasks` create/list/detail/cancel/delete), **model discovery** (`/api/ai/models/probe`, `/api/ai/usable-models`) and **per-feature bindings** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - MCP tools (`AiTools`) for AI clients — see [mcp.md](mcp.md). Provider selection is transparent to MCP clients.
-- **AI** nav group — one Blazor **page per feature**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), plus Portfolio Agent, Alerts, MCP Keys. Pages share `AiFeaturePageBase` + `AiOutputPanel`; each shows `AiFeatureNotice` when no provider is configured.
+- **AI** nav group — one Blazor **page per feature**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), **AI Tasks** (`/ai/tasks`), plus Portfolio Agent, Alerts, MCP Keys. Pages share `AiFeaturePageBase` + `AiOutputPanel`; each shows `AiFeatureNotice` when no provider is configured.
 - **Settings → AI** (`/settings/ai`, owner-only) — provider list with an **Add / edit provider dialog** (kind, base URL with per-kind hints incl. an Ollama/LM Studio localhost preset, model, optional key, capability toggles, "set active") and a **Test connection** button.
 
 ## Configuration

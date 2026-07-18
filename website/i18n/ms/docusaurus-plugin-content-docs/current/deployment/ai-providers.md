@@ -28,12 +28,12 @@ Plaintext `http://` diterima **hanya** untuk hos loopback / pribadi (intranet) �
 cMind menghantar **LLM lokal dalam proses sebenar** (Microsoft.ML.OnnxRuntimeGenAI) yang **didayakan secara lalai** — tiada kunci, tiada perkhidmatan luaran. Pada permulaan pertama, apabila tiada penyedia dikonfigurasi dan `App:Branding:AllowBuiltInAi` ialah `true`, ia ditanam dan diaktifkan secara automatik.
 
 - **Konfigurasi:** `App:Ai:BuiltIn:Enabled` (lalai `true`), `App:Ai:BuiltIn:ModelPath` (lalai `models/onnx`, relatif kepada direktori asas apl), `App:Ai:BuiltIn:MaxTokens` (lalai `1024`).
-- **Fail model:** arahkan `ModelPath` pada direktori yang mengandungi model GenAI ONNX — `genai_config.json`, tokenizer, dan berat `.onnx`. Binaan CPU **Phi-3-mini** berfungsi dengan baik, cth.:
+- **Fail model:** arahkan `ModelPath` pada direktori yang mengandungi model GenAI ONNX — `genai_config.json`, tokenizer, dan berat `.onnx`. Binaan CPU **Phi-3.5-mini-instruct** berfungsi dengan baik, cth.:
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
-    --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
     --local-dir ./models
   # kemudian tetapkan App:Ai:BuiltIn:ModelPath ke folder itu (mengandungi genai_config.json)
   ```

@@ -38,12 +38,12 @@ padrão** — sem chave, sem serviço externo. Na primeira inicialização, quan
 - **Config:** `App:Ai:BuiltIn:Enabled` (padrão `true`), `App:Ai:BuiltIn:ModelPath` (padrão
   `models/onnx`, relativo ao diretório base do app), `App:Ai:BuiltIn:MaxTokens` (padrão `1024`).
 - **Arquivos de modelo:** aponte `ModelPath` para um diretório contendo um modelo ONNX GenAI — `genai_config.json`,
-  o tokenizador e os pesos `.onnx`. Uma compilação CPU **Phi-3-mini** funciona bem, por exemplo:
+  o tokenizador e os pesos `.onnx`. Uma compilação CPU **Phi-3.5-mini-instruct** funciona bem, por exemplo:
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
-    --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
     --local-dir ./models
   # depois defina App:Ai:BuiltIn:ModelPath para essa pasta (contém genai_config.json)
   ```

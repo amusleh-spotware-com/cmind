@@ -84,7 +84,7 @@ Guides de configuration par fournisseur (clés, URLs, IDs de modèle, étapes UI
 
 cMind livre un **vrai LLM local qui s'exécute in-process** via
 [Microsoft.ML.OnnxRuntimeGenAI](https://onnxruntime.ai/docs/genai/) (un modèle instruct compact tel que
-Phi-3-mini). Il n'a **pas besoin de clé API ni de service externe**, et au premier démarrage — quand aucun fournisseur
+Phi-3.5-mini). Il n'a **pas besoin de clé API ni de service externe**, et au premier démarrage — quand aucun fournisseur
 n'est configuré et que le gate white-label le permet — il est **ensemencé et activé automatiquement**, ainsi chaque
 déploiement dispose d'une IA fonctionnelle dès le départ.
 
@@ -94,7 +94,7 @@ déploiement dispose d'une IA fonctionnelle dès le départ.
   il ne lève jamais d'exception, et le reste de l'application n'est pas affecté.
 - Il alimente chaque fonctionnalité IA textuelle. Étant un modèle compact, il est text-only (pas de recherche web
   ni de vision côté serveur) et la génération est sérialisée (une instance du modèle, réutilisée après un lazy load).
-- Acquérir/grouper le modèle : voir [AI providers → intégré](../deployment/ai-providers.md#built-in-local-ai-onnx-shipped).
+- **Plusieurs modèles intégrés peuvent coexister.** Chaque modèle téléchargé vit sous `ModelPath/<key>` ; un catalogue curé (Phi-3.5-mini par défaut, plus Phi-3-mini-128k) peut être téléchargé et basculé depuis **Settings → AI**. Sélectionner un sous-modèle intégré le charge in-process. Acquérir/regrouper un modèle : voir [AI providers → intégré](../deployment/ai-providers.md#built-in-local-ai-onnx-shipped).
 
 ## Contrôles white-label
 
@@ -105,6 +105,11 @@ Un déploiement white-label restreint l'IA via `App:Branding` (appliqué côté 
   (loopback / compatible OpenAI privé, p. ex. Ollama/LM Studio/vLLM).
 - `AllowedAiProviderKinds` (par défaut vide = tous) — lister uniquement les kinds que le déploiement autorise (p. ex.
   `["Anthropic","OpenAiCompatible"]`) pour verrouiller les fournisseurs que les utilisateurs peuvent ajouter.
+- `AllowAiTasks` (par défaut `true`) — mettre `false` pour supprimer la fonctionnalité de **tâche IA en arrière-plan** (la
+  page `/ai/tasks` et l'API des tâches retournent 404 ; le worker cesse de réclamer) ; les fonctionnalités IA synchrone fonctionnent toujours.
+- `AllowAiModelManagement` (par défaut `true`) — mettre `false` pour masquer **l'exploration de modèles** et la **liaison par fonctionnalité
+  de modèle**. Les deux sont réglables par le propriétaire à l'exécution depuis **Settings → Deployment** (superposés en direct sur
+  `IOptionsMonitor`) et catalogués dans `WhiteLabelCatalog`.
 
 ## Extension : futurs modèles intégrés
 
@@ -118,6 +123,8 @@ fonctionnalité, endpoint ou outil MCP. Le fournisseur ONNX intégré est l'impl
 ## Capacités
 
 - **Build cBot** — prompt en anglais plain → cBot exécutable via **génération → build → boucle d'auto-réparation AI-fix** (`build-strategy`), sur `/ai/build`. Le **code source généré est affiché** quand le build se termine (avec un bouton copier), à côté du journal de build — en succès *et* en échec — vous voyez toujours ce que l'IA a écrit, pas seulement les erreurs.
+- **Tâches IA en arrière-plan** — démarrez un travail IA de longue durée (p. ex. construire un cBot) avec les modèles de votre choix, puis quittez la page et revenez au résultat. Choisissez plusieurs modèles pour comparer — chacun s'exécute en tant que sa propre tâche (`/ai/tasks`). Un worker de l'hôte web réclame les tâches sur un bail auto-cicatrisant (réclamé si un nœud meurt) et diffuse la progression dans un journal d'activité par tâche.
+- **Parcourir et sélectionner les modèles, par fonctionnalité** — parcourez les modèles qu'un point de terminaison de fournisseur annonce (`GET /v1/models` sur LM Studio / Ollama / vLLM / llama.cpp, ou le catalogue intégré) au lieu de taper à la main une id, et **liez chaque fonctionnalité IA à un modèle différent** afin que plusieurs modèles servent différentes fonctionnalités à la fois (une fonctionnalité non liée revient au fournisseur actif du scope).
 - **Optimisation des paramètres** — boucle fermée : l'IA propose des ensembles de paramètres, chacun persisté + backtesté
   sur les nœuds (`optimize-run` / `optimize-params`).
 - **Agent de portfolio autonome** — propositions pilotées par un mandat avec journal de décision complet
@@ -131,13 +138,12 @@ fonctionnalité, endpoint ou outil MCP. Le fournisseur ONNX intégré est l'impl
 
 ## Surfaces
 
-- Endpoints web sous `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params,
-  optimize-run, post-mortem, sentiment, vision, curate, …).
+- Endpoints web sous `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), plus **background tasks** (`/api/ai/tasks` create/list/detail/cancel/delete), **model discovery** (`/api/ai/models/probe`, `/api/ai/usable-models`) and **per-feature bindings** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - Outils MCP (`AiTools`) pour les clients IA — voir [mcp.md](mcp.md). La sélection du fournisseur est
   transparente pour les clients MCP.
 - **Navigation IA** — une Blazor **page par fonctionnalité** : Build cBot (`/ai/build`), Review (`/ai/review`),
   Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest
-  (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), plus Portfolio Agent, Alerts, MCP Keys.
+  (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), **AI Tasks** (`/ai/tasks`), plus Portfolio Agent, Alerts, MCP Keys.
   Les pages partagent `AiFeaturePageBase` + `AiOutputPanel` ; chacune affiche `AiFeatureNotice` quand aucun
   fournisseur n'est configuré.
 - **Settings → AI** (`/settings/ai`, propriétaire uniquement) — liste des fournisseurs avec un **dialogue Ajouter/éditer

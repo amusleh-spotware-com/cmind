@@ -28,12 +28,12 @@ AI слој cMind је независан од добављача (вид [AI к
 cMind доставља **прави LLM у процесу** (Microsoft.ML.OnnxRuntimeGenAI) који је **подразумевано омогућен** — без кључа, без спољне услуге. При првом стартовању, када није конфигуриран ниједан добављач и `App:Branding:AllowBuiltInAi` је `true`, аутоматски се сеедује и активира.
 
 - **Config:** `App:Ai:BuiltIn:Enabled` (подразумевано `true`), `App:Ai:BuiltIn:ModelPath` (подразумевано `models/onnx`, релативно према основном директоријуму апликације), `App:Ai:BuiltIn:MaxTokens` (подразумевано `1024`).
-- **Датотеке модела:** упутите `ModelPath` на директоријум који садржи ONNX GenAI модел — `genai_config.json`, токенизер и тежине `.onnx`. CPU **Phi-3-mini** изградња добро функционише, на пример:
+- **Датотеке модела:** упутите `ModelPath` на директоријум који садржи ONNX GenAI модел — `genai_config.json`, токенизер и тежине `.onnx`. CPU **Phi-3.5-mini-instruct** изградња добро функционише, на пример:
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
-    --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
     --local-dir ./models
   # затим поставите App:Ai:BuiltIn:ModelPath нату фасциклу (садржи genai_config.json)
   ```

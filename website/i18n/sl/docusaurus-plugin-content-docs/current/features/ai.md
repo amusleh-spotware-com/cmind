@@ -98,7 +98,9 @@ ima vsaka implementacija delujočo AI iz škatle.
 - Napaja vsako besedilno značilnost AI. Ker je kompaktni model besedilo samo (brez serverskeganega
   spletnega iskanja ali vida) in generiranje je serijalizirano (ena instanca modela, ponovno
   rabljena po lenivem natovarjanju).
-- Pridobite/pakete model: poglejte [Ponudniki AI → vgrajeni](../deployment/ai-providers.md#vgrajeni-lokalni-ai-onnx-odpremljeni).
+- **Več vgrajenih modelov se lahko sočasno nahaja.** Vsak preneseni model se nahaja pod `ModelPath/<key>`; kurirana
+  katalog (Phi-3.5-mini privzeto, plus Phi-3-mini-128k) se lahko prenese in preklopi iz **Nastavitve → AI**. Izbira
+  vgrajenega pomodela naloži v postopku. Pridobite/pakete model: poglejte [Ponudniki AI → vgrajeni](../deployment/ai-providers.md#vgrajeni-lokalni-ai-onnx-odpremljeni).
 
 ## Nadzori belo oznake
 
@@ -112,6 +114,11 @@ ponudnika):
 - `AllowedAiProviderKinds` (privzeto prazno = vse) — seznam samo tistih vrst, ki jih
   implementacija sankcionira (npr. `["Anthropic","OpenAiCompatible"]`) za zaklučanje kateri
   ponudniki jih smejo dodati.
+- `AllowAiTasks` (privzeto `true`) — nastavite `false` za odstranitev značilnosti **naloge AI v ozadju** (stran
+  `/ai/tasks` in API nalog vrnejo 404; tevalec soproga neha trditi); sočasne značilnosti AI še vedno delujejo.
+- `AllowAiModelManagement` (privzeto `true`) — nastavite `false` za skriovanje **pregledovanja modelov** in **vezave modelov na značilnost**.
+  Oba sta upravičiteljna lastnika ob času izvajanja iz **Nastavitve → Uvrstitev** (prekriti živahno na
+  `IOptionsMonitor`) in katalogizirana v `WhiteLabelCatalog`.
 
 ## Razširjanje: prihodnji vgrajeni modeli
 
@@ -125,6 +132,8 @@ je referenčna izvedba tega vzorca.
 
 ## Zmožnosti
 
+- **Naloge AI v ozadju** — začnite dolgotrajno nalogo AI (npr. zgradite cBot) z izbrano modeli, nato zapustite stran in se vrnite k rezultatu. Izberite več modelov za primerjavo — vsak deluje kot lastno nalogo (`/ai/tasks`). Delavec web-gostitelja zahteva naloge na samopopravljajočem lizingu (vrnjeni, če vozlišče umre) in preusmeri napredek v dnevnik dejavnosti na nalogo.
+- **Brskajte in izberite modele, po značilnosti** — brskajte po modelih, ki jih končna točka ponudnika oglašuje (`GET /v1/models` na LM Studio / Ollama / vLLM / llama.cpp, ali vgrajeni katalog) namesto ročnega tipkanja ID, in **vsaki značilnosti AI vezati drugačen model** tako da več modelov služi različnim značilnostim hkrati (nevezana značilnost se vrne na aktivni ponudnik obsega).
 - **Gradnja cBota** — navaden-angleški poziv → tečeči cBot prek **generira → gradnja → AI-popravek** samopopravljajoče zanke (`build-strategy`), na `/ai/build`. **Generirani izvorna koda je prikazana** ko se gradnja zaključi (z gumbom za kopiranje), skupaj z dnevnikom gradnje — ob uspehu *in* ob neuspehu — tako da vedno vidite, kaj je AI napisal, ne samo napake.
 - **Optimizacija parametra** — zaprta zanka: AI predlaga komplete parametrov, vsak obstojni +
   testirani čez vozlišča (`optimize-run` / `optimize-params`).
@@ -141,13 +150,13 @@ je referenčna izvedba tega vzorca.
 ## Površine
 
 - Spletne končne točke pod `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest,
-  optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …).
+  optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), plus **naloge v ozadju** (`/api/ai/tasks` ustvariti/seznam/podrobnosti/preklicati/izbrisati), **odkrivanje modelov** (`/api/ai/models/probe`, `/api/ai/usable-models`) in **vezave po značilnosti** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - Orodja MCP (`AiTools`) za odjemalce AI — poglejte [mcp.md](mcp.md). Izbor ponudnika je
   transparenten za odjemalce MCP.
 - **AI** navigacijska skupina — ena stran Blazor **na značilnost**: Gradnja cBota (`/ai/build`),
   Pregled (`/ai/review`), Razprava (`/ai/debate`), Sentiment trga (`/ai/sentiment`), Preverjanje
   izpostave (`/ai/exposure`), Povzetek portfelja (`/ai/digest`), Svetovalec Tune (`/ai/tune`),
-  Optimizacija (`/ai/optimize`), skupaj Agent portfelja, Obvestila, Ključi MCP. Stranice delijo
+  Optimizacija (`/ai/optimize`), **Naloge AI** (`/ai/tasks`), skupaj Agent portfelja, Obvestila, Ključi MCP. Stranice delijo
   `AiFeaturePageBase` + `AiOutputPanel`; vsaka prikazuje `AiFeatureNotice`, ko ni ponudnika
   nastavljenega.
 - **Nastavitve → AI** (`/settings/ai`, samo lastnik) — seznam ponudnika z **Dodaj / uredi dialogom

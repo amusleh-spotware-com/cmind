@@ -28,12 +28,12 @@ description: "Каталог настройки для каждого подде
 cMind поставляется с **реальной встроенной LLM внутри процесса** (Microsoft.ML.OnnxRuntimeGenAI), которая **включена по умолчанию** — без ключа, без внешних сервисов. При первом запуске, когда поставщик не настроен и `App:Branding:AllowBuiltInAi` равен `true`, он автоматически инициализируется и активируется.
 
 - **Конфиг:** `App:Ai:BuiltIn:Enabled` (по умолчанию `true`), `App:Ai:BuiltIn:ModelPath` (по умолчанию `models/onnx`, относительно базового каталога приложения), `App:Ai:BuiltIn:MaxTokens` (по умолчанию `1024`).
-- **Файлы модели:** укажите `ModelPath` на каталог, содержащий модель ONNX GenAI — `genai_config.json`, токенизатор и веса `.onnx`. CPU **Phi-3-mini** работает хорошо, например:
+- **Файлы модели:** укажите `ModelPath` на каталог, содержащий модель ONNX GenAI — `genai_config.json`, токенизатор и веса `.onnx`. CPU **Phi-3.5-mini-instruct** работает хорошо (поставляется по умолчанию), например:
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
-    --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
     --local-dir ./models
   # затем установите App:Ai:BuiltIn:ModelPath на этот каталог (содержит genai_config.json)
   ```

@@ -35,12 +35,13 @@ default** — nessuna chiave, nessun servizio esterno. Al primo avvio, quando ne
 - **Configurazione:** `App:Ai:BuiltIn:Enabled` (default `true`), `App:Ai:BuiltIn:ModelPath` (default
   `models/onnx`, relativo alla directory base dell'app), `App:Ai:BuiltIn:MaxTokens` (default `1024`).
 - **File del modello:** puntare `ModelPath` a una directory contenente un modello ONNX GenAI — `genai_config.json`,
-  il tokenizer e i pesi `.onnx`. Una build CPU **Phi-3-mini** funziona bene, ad es.:
+  il tokenizer e i pesi `.onnx`. Una build CPU **Phi-3.5-mini-instruct** funziona bene (il shipped
+  default), ad es.:
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
-    --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
     --local-dir ./models
   # poi impostare App:Ai:BuiltIn:ModelPath sulla cartella (contiene genai_config.json)
   ```

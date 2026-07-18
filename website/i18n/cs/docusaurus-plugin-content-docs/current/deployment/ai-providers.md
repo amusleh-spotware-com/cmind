@@ -28,12 +28,12 @@ Prostý text `http://` je přijat **pouze** pro loopback / privátní (intranet)
 cMind dodává **skutečné lokální LLM v procesu** (Microsoft.ML.OnnxRuntimeGenAI), které je **povoleno ve výchozím nastavení** — žádný klíč, žádná externí služba. Při prvním spuštění, když není nakonfigurován žádný poskytovatel a `App:Branding:AllowBuiltInAi` je `true`, je automaticky inicializován a aktivován.
 
 - **Konfigurace:** `App:Ai:BuiltIn:Enabled` (výchozí `true`), `App:Ai:BuiltIn:ModelPath` (výchozí `models/onnx`, relativní k základnímu adresáři aplikace), `App:Ai:BuiltIn:MaxTokens` (výchozí `1024`).
-- **Soubory modelu:** nasměrujte `ModelPath` na adresář obsahující model ONNX GenAI — `genai_config.json`, tokenizer a `.onnx` váhy. Build CPU **Phi-3-mini** funguje dobře, například:
+- **Soubory modelu:** nasměrujte `ModelPath` na adresář obsahující model ONNX GenAI — `genai_config.json`, tokenizer a `.onnx` váhy. Build CPU **Phi-3.5-mini-instruct** funguje dobře (dodaný default), například:
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
-    --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
     --local-dir ./models
   # poté nastavte App:Ai:BuiltIn:ModelPath na tuto složku (obsahuje genai_config.json)
   ```

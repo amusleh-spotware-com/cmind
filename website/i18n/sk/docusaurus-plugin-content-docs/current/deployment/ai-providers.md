@@ -36,12 +36,12 @@ cMind dodáva **reálny lokálny LLM v procese** (Microsoft.ML.OnnxRuntimeGenAI)
 - **Config:** `App:Ai:BuiltIn:Enabled` (štandardne `true`), `App:Ai:BuiltIn:ModelPath` (štandardne
   `models/onnx`, relatívne k základnému adresáru aplikácie), `App:Ai:BuiltIn:MaxTokens` (štandardne `1024`).
 - **Súbory modelov:** nasmerujte `ModelPath` na adresár obsahujúci model ONNX GenAI — `genai_config.json`,
-  tokenizer a váhy `.onnx`. Zostavo CPU **Phi-3-mini** funguje dobre, napr.:
+  tokenizer a váhy `.onnx`. CPU **Phi-3.5-mini-instruct** funguje dobre (dodané štandardne), napr.:
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
-    --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
     --local-dir ./models
   # potom nastavte App:Ai:BuiltIn:ModelPath na tento priečinok (obsahuje genai_config.json)
   ```

@@ -28,12 +28,13 @@ cMindのAIレイヤーはプロバイダー非依存です（[AI機能](../featu
 cMindは、**デフォルトで有効**である**実際のプロセス内ローカルLLM**（Microsoft.ML.OnnxRuntimeGenAI）を出荷します。キーなし、外部サービスなし。初回起動時に、プロバイダーが設定されておらず`App:Branding:AllowBuiltInAi`が`true`の場合、それは自動的にシードおよびアクティベートされます。
 
 - **設定：** `App:Ai:BuiltIn:Enabled`（デフォルト`true`）、`App:Ai:BuiltIn:ModelPath`（デフォルト`models/onnx`、アプリベースディレクトリに対して相対）、`App:Ai:BuiltIn:MaxTokens`（デフォルト`1024`）。
-- **モデルファイル：** `ModelPath`をONNX GenAIモデルを含むディレクトリに指定します。`genai_config.json`、トークナイザー、`.onnx`の重み。CPU **Phi-3-mini**ビルドがうまくいきます。例：
+- **モデルファイル：** `ModelPath`をONNX GenAIモデルを含むディレクトリに指定します。`genai_config.json`、トークナイザー、`.onnx`の重み。CPU **Phi-3.5-mini-instruct** ビルドがうまくいきます（船載
+  デフォルト）。例：
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
-    --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
     --local-dir ./models
   # その後、App:Ai:BuiltIn:ModelPathをそのフォルダに設定します（genai_config.jsonを含む）
   ```

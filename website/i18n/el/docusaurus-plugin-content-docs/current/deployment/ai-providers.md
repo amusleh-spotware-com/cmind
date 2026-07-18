@@ -38,12 +38,12 @@ description: "Κατάλογος ρύθμισης για κάθε παροχέα
 - **Config:** `App:Ai:BuiltIn:Enabled` (προεπιλογή `true`), `App:Ai:BuiltIn:ModelPath` (προεπιλογή
   `models/onnx`, σχετικά με τον κατάλογο βάσης εφαρμογής), `App:Ai:BuiltIn:MaxTokens` (προεπιλογή `1024`).
 - **Αρχεία μοντέλου:** δείχνας `ModelPath` σε έναν κατάλογο που περιέχει μοντέλο ONNX GenAI — `genai_config.json`,
-  το tokenizer και τα βάρη `.onnx`. Ένα κτίριο CPU **Phi-3-mini** λειτουργεί καλά, π.χ.:
+  το tokenizer και τα βάρη `.onnx`. Ένα κτίριο CPU **Phi-3.5-mini-instruct** λειτουργεί καλά, π.χ.:
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
-    --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
     --local-dir ./models
   # στη συνέχεια ορίστε App:Ai:BuiltIn:ModelPath σε αυτόν τον φάκελο (περιέχει genai_config.json)
   ```
@@ -72,13 +72,13 @@ description: "Κατάλογος ρύθμισης για κάθε παροχέα
 
 ### Anthropic (Claude)
 
-- Κλειδί: <https://console.anthropic.com/> → κλειδιά API.
+- Κλειδί: https://console.anthropic.com/ → κλειδιά API.
 - Βασικό URL: `https://api.anthropic.com/` · Μοντέλο: π.χ. `claude-opus-4-8`.
 - Ικανότητες: αναζήτηση ιστού + όραση ενεργή από προεπιλογή.
 
 ### OpenAI
 
-- Κλειδί: <https://platform.openai.com/api-keys>.
+- Κλειδί: https://platform.openai.com/api-keys.
 - Βασικό URL: `https://api.openai.com/v1/` · Μοντέλο: π.χ. `gpt-4o`.
 - Είδος: **OpenAiCompatible**. Ενεργοποιήστε την όραση στο διάλογο εάν χρησιμοποιείτε μοντέλο όρασης.
 
@@ -90,7 +90,7 @@ description: "Κατάλογος ρύθμισης για κάθε παροχέα
 
 ### Google Gemini
 
-- Κλειδί: <https://aistudio.google.com/app/apikey>.
+- Κλειδί: https://aistudio.google.com/app/apikey.
 - Βασικό URL: `https://generativelanguage.googleapis.com/` · Μοντέλο: π.χ. `gemini-2.0-flash`.
 - Είδος: **Gemini**. Αγκύρωση αναζήτησης ιστού + όραση ενεργή από προεπιλογή.
 

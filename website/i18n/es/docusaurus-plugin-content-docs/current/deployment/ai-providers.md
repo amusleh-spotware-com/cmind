@@ -38,12 +38,13 @@ defecto** — sin clave, sin servicio externo. Al primer inicio, cuando no hay p
 - **Config:** `App:Ai:BuiltIn:Enabled` (defecto `true`), `App:Ai:BuiltIn:ModelPath` (defecto
   `models/onnx`, relativo al directorio base de la aplicación), `App:Ai:BuiltIn:MaxTokens` (defecto `1024`).
 - **Archivos de modelo:** apunta `ModelPath` a un directorio que contenga un modelo ONNX GenAI — `genai_config.json`,
-  el tokenizador y los pesos `.onnx`. Una compilación CPU **Phi-3-mini** funciona bien, por ejemplo:
+  el tokenizador y los pesos `.onnx`. Una compilación CPU **Phi-3.5-mini-instruct** funciona bien (el
+  predeterminado enviado), por ejemplo:
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
-    --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
     --local-dir ./models
   # luego establece App:Ai:BuiltIn:ModelPath a esa carpeta (contiene genai_config.json)
   ```
@@ -118,3 +119,25 @@ ollama pull llama3.1:8b
 
 - Inicia el servidor local (Desarrollador → Iniciar servidor).
 - URL base: `http://localhost:1234/v1/` · Modelo: el id del modelo cargado. Sin clave API.
+
+### vLLM / llama.cpp `server` / LocalAI
+
+- Sirve un punto final compatible con OpenAI (cada uno envía uno).
+- URL base: tu URL servida (ej. `http://localhost:8000/v1/`) · Modelo: el nombre del modelo servido. Sin clave
+  a menos que pongas auth al frente.
+
+## Verificación
+
+- **Prueba de conexión** en el diálogo ejecuta una pequeña finalización de ping e informa éxito + latencia — ideal
+  para confirmar un punto final local.
+- Automatizado: la suite E2E de la aplicación impulsa cada característica de IA contra un servidor OpenAI-compatible falso integrado
+  por defecto, o tu proveedor real cuando `AI_E2E_BASEURL` (+ opcional `AI_E2E_API_KEY` /
+  `AI_E2E_KIND` / `AI_E2E_MODEL`) está configurado. Ver [Características de IA → Pruebas](../features/ai.md#testing-with-the-fake-local-llm).
+
+## Cambio / rotación
+
+- **Cambiar proveedor activo:** Configuración → IA → **Establecer activo** en otra tarjeta (activar una desactiva
+  las demás).
+- **Rotar una clave:** edita el proveedor y suministra una nueva clave (deja en blanco para mantener la almacenada).
+- **Eliminar:** elimina la tarjeta. Sin proveedor activo, las características de IA se deshabilitan y el resto de la aplicación se ejecuta
+  sin cambios.

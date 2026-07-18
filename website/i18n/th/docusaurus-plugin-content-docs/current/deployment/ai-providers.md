@@ -28,12 +28,12 @@ Plaintext `http://` ยอมรับ **เท่านั้น** สำหร
 cMind ships a **real in-process local LLM** (Microsoft.ML.OnnxRuntimeGenAI) ที่ **enabled by default** — ไม่มีคีย์ ไม่มีบริการภายนอก ในการ startup ครั้งแรกเมื่อไม่มีการกำหนดค่า provider และ `App:Branding:AllowBuiltInAi` คือ `true` มันจะถูกปลูกแล้วและ activate โดยอัตโนมัติ
 
 - **Config:** `App:Ai:BuiltIn:Enabled` (default `true`) `App:Ai:BuiltIn:ModelPath` (default `models/onnx` relative ต่อโฮสต์แอป base directory) `App:Ai:BuiltIn:MaxTokens` (default `1024`)
-- **Model files:** ชี้ `ModelPath` ที่ไดเรกทอรี่ที่มี ONNX GenAI model — `genai_config.json` tokenizer และ `.onnx` weights CPU **Phi-3-mini** build ทำงานได้ดี เช่น:
+- **Model files:** ชี้ `ModelPath` ที่ไดเรกทอรี่ที่มี ONNX GenAI model — `genai_config.json` tokenizer และ `.onnx` weights CPU **Phi-3.5-mini-instruct** build ทำงานได้ดี เช่น:
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
-    --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
     --local-dir ./models
   # then set App:Ai:BuiltIn:ModelPath to that folder (contains genai_config.json)
   ```

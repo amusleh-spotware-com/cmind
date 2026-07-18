@@ -1,144 +1,137 @@
 ---
-description: "Setup catalog for every AI provider cMind supports — Anthropic, OpenAI, Azure OpenAI, Google Gemini, and every OpenAI-compatible endpoint including local models (Ollama, LM Studio, vLLM, llama.cpp, LocalAI) and OpenAI-compatible clouds."
+description: "每个cMind支持的AI提供商的设置目录——Anthropic、OpenAI、Azure OpenAI、Google Gemini和每个OpenAI兼容的终点，包括本地模型（Ollama、LM Studio、vLLM、llama.cpp、LocalAI）和OpenAI兼容的云。"
 ---
 
-# AI providers — setup catalog
+# AI提供商——设置目录
 
-cMind's AI layer is provider-agnostic (see [AI features](../features/ai.md)). Configure a provider two
-ways:
+cMind的AI层是提供商无关的（请参阅[AI功能](../features/ai.md)）。通过两种方式配置提供商：
 
-1. **UI (owner):** Settings → AI → **Add provider** → pick kind, base URL, model, key (optional for
-   local), capability toggles, **Set active** → **Test connection**.
-2. **Config/env (ops):** seed `App:Ai:Providers[]` and `App:Ai:ActiveProvider` — imported into the store
-   on first startup when no credentials exist. Example (env, provider index `0`):
+1. **UI（所有者）：** Settings → AI → **添加提供商** → 选择类型、基本URL、模型、密钥（本地可选）、能力切换、**设置活跃** → **测试连接**。
+2. **配置/env（ops）：** 种子`App:Ai:Providers[]`和`App:Ai:ActiveProvider`——在首次启动时导入到存储中，当不存在凭证时。示例（env，提供商索引`0`）：
 
    ```
    App__Ai__ActiveProvider=OpenAiCompatible
    App__Ai__Providers__0__Kind=OpenAiCompatible
    App__Ai__Providers__0__BaseUrl=http://localhost:11434/v1/
    App__Ai__Providers__0__Model=llama3.1:8b
-   # App__Ai__Providers__0__ApiKey=...   (omit for keyless local endpoints)
+   # App__Ai__Providers__0__ApiKey=...   (对于无密钥的本地终点省略)
    ```
 
-Exactly one provider is active at a time. Keys are stored encrypted; a local endpoint needs none.
+正好一个提供商在任何时候处于活跃状态。密钥被加密存储；本地终点不需要任何。
 
-## Security: http vs https
+## 安全性：http vs https
 
-Plaintext `http://` is accepted **only** for loopback / private (intranet) hosts — the local-LLM case
-(Ollama, LM Studio, vLLM, an on-prem box). Any host routable on the public internet **must** be
-`https://`, so an API key is never sent in the clear. Air-gapped/on-prem: point the base URL at your
-internal endpoint (loopback or private IP) and leave the key blank if the runtime is unauthenticated.
+纯文本`http://`**仅**被接受用于环回/私有（内网）主机——本地LLM情况
+（Ollama、LM Studio、vLLM、本地部署盒）。任何在公共互联网上可路由的主机**必须**是
+`https://`，所以API密钥永远不会以明文发送。空网络/本地部署：指向您的
+内部终点（环回或私有IP）的基本URL，如果运行时未认证，则将密钥留空。
 
-## Built-in local AI (ONNX, shipped)
+## 内置本地AI（ONNX，已发送）
 
-cMind ships a **real in-process local LLM** (Microsoft.ML.OnnxRuntimeGenAI) that is **enabled by
-default** — no key, no external service. On first startup, when no provider is configured and
-`App:Branding:AllowBuiltInAi` is `true`, it is seeded and activated automatically.
+cMind发送一个**真实的进程内本地LLM**（Microsoft.ML.OnnxRuntimeGenAI），**默认启用**——无密钥，无外部服务。在首次启动时，当没有配置提供商且
+`App:Branding:AllowBuiltInAi`是`true`时，它被种子化并自动激活。
 
-- **Config:** `App:Ai:BuiltIn:Enabled` (default `true`), `App:Ai:BuiltIn:ModelPath` (default
-  `models/onnx`, relative to the app base directory), `App:Ai:BuiltIn:MaxTokens` (default `1024`).
-- **Model files:** point `ModelPath` at a directory containing an ONNX GenAI model — `genai_config.json`,
-  the tokenizer, and the `.onnx` weights. A CPU **Phi-3-mini** build works well, e.g.:
+- **配置：** `App:Ai:BuiltIn:Enabled`（默认`true`）、`App:Ai:BuiltIn:ModelPath`（默认
+  `models/onnx`，相对于应用程序基本目录）、`App:Ai:BuiltIn:MaxTokens`（默认`1024`）。
+- **模型文件：** 指向`ModelPath`到包含ONNX GenAI模型的目录——`genai_config.json`、
+  分词器和`.onnx`权重。CPU **Phi-3.5-mini-instruct**构建工作良好，例如：
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
-    --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
     --local-dir ./models
-  # then set App:Ai:BuiltIn:ModelPath to that folder (contains genai_config.json)
+  # 然后将App:Ai:BuiltIn:ModelPath设置到该文件夹（包含genai_config.json）
   ```
 
-  Bundle the folder with your deployment image / Helm volume, or mount it at runtime. When the files are
-  absent the built-in degrades to a clear "model not installed" message — the app still runs; configure
-  another provider or install the model.
-- **GPU:** swap the CPU package/model for a CUDA/DirectML ONNX GenAI build; the code path is unchanged.
+  将文件夹与您的部署镜像/Helm卷捆绑，或在运行时挂载它。当文件
+  不存在时，内置降级为清晰的"模型未安装"消息——应用仍然运行；配置
+  另一个提供商或安装模型。
+- **GPU：** 用CUDA/DirectML ONNX GenAI构建交换CPU包/模型；代码路径不变。
 
-## White-label: limiting AI
+## 白标签：限制AI
 
-Set under `App:Branding` (enforced server-side — a forbidden upsert returns `400`):
+在`App:Branding`下设置（服务器端强制执行——禁止的upsert返回`400`）：
 
-- `AllowBuiltInAi: false` — remove the shipped built-in model entirely.
-- `AllowLocalProviders: false` — forbid local/self-hosted endpoints (Ollama/LM Studio/vLLM and any
-  loopback/private OpenAI-compatible URL).
-- `AllowedAiProviderKinds: ["Anthropic","OpenAiCompatible"]` — allow only these kinds (empty = all).
+- `AllowBuiltInAi: false`——完全移除已发送的内置模型。
+- `AllowLocalProviders: false`——禁止本地/自托管终点（Ollama/LM Studio/vLLM和任何
+  环回/私有OpenAI兼容URL）。
+- `AllowedAiProviderKinds: ["Anthropic","OpenAiCompatible"]`——仅允许这些类型（空=全部）。
 
-## Extending with future built-in models
+## 用未来的内置模型扩展
 
-The provider layer is adapter-based (`IAiProvider` keyed by `AiProviderKind`), so a future built-in model
-runtime is added without touching any AI feature: add a kind, implement one adapter, register it. The
-ONNX built-in is the reference implementation. See [AI features → Extending](../features/ai.md#extending-future-built-in-models).
+提供商层是基于适配器的（`IAiProvider`由`AiProviderKind`键控），所以未来内置模型
+运行时可以添加而不触及任何AI功能：添加一种类型、实现一个适配器、注册它。
+ONNX内置是参考实现。请参阅[AI功能→扩展](../features/ai.md#extending-future-built-in-models)。
 
-## Cloud providers
+## 云提供商
 
 ### Anthropic (Claude)
 
-- Key: <https://console.anthropic.com/> → API keys.
-- Base URL: `https://api.anthropic.com/` · Model: e.g. `claude-opus-4-8`.
-- Capabilities: web search + vision on by default.
+- 密钥：[console.anthropic.com](https://console.anthropic.com/) → API keys。
+- 基本URL：`https://api.anthropic.com/` · 模型：例如`claude-opus-4-8`。
+- 能力：网络搜索+视觉默认启用。
 
 ### OpenAI
 
-- Key: <https://platform.openai.com/api-keys>.
-- Base URL: `https://api.openai.com/v1/` · Model: e.g. `gpt-4o`.
-- Kind: **OpenAiCompatible**. Enable vision in the dialog if using a vision model.
+- 密钥：[platform.openai.com/api-keys](https://platform.openai.com/api-keys)。
+- 基本URL：`https://api.openai.com/v1/` · 模型：例如`gpt-4o`。
+- 类型：**OpenAiCompatible**。如果使用视觉模型，在对话框中启用视觉。
 
 ### Azure OpenAI
 
-- Key + endpoint: Azure portal → your Azure OpenAI resource.
-- Base URL: `https://<resource>.openai.azure.com/` · Model: your **deployment name**.
-- Kind: **AzureOpenAi** (uses the `api-key` header + `api-version` query and the deployment path).
+- 密钥+终点：Azure门户→您的Azure OpenAI资源。
+- 基本URL：`https://<resource>.openai.azure.com/` · 模型：您的**部署名称**。
+- 类型：**AzureOpenAi**（使用`api-key`头+`api-version`查询和部署路径）。
 
 ### Google Gemini
 
-- Key: <https://aistudio.google.com/app/apikey>.
-- Base URL: `https://generativelanguage.googleapis.com/` · Model: e.g. `gemini-2.0-flash`.
-- Kind: **Gemini**. Web-search grounding + vision on by default.
+- 密钥：[aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)。
+- 基本URL：`https://generativelanguage.googleapis.com/` · 模型：例如`gemini-2.0-flash`。
+- 类型：**Gemini**。网络搜索接地+视觉默认启用。
 
-### Other OpenAI-compatible clouds (OpenRouter, Groq, Together, Mistral, DeepSeek)
+### 其他OpenAI兼容的云（OpenRouter、Groq、Together、Mistral、DeepSeek）
 
-- Kind: **OpenAiCompatible**. Base URL = the provider's OpenAI-compatible endpoint, Model = its model id,
-  ApiKey = the provider key. No cMind change needed — one adapter serves them all.
+- 类型：**OpenAiCompatible**。基本URL=提供商的OpenAI兼容终点，模型=其模型ID，
+  ApiKey=提供商密钥。不需要cMind改变——一个适配器为所有提供服务。
 
-## Local models (no key)
+## 本地模型（无密钥）
 
-All local runtimes expose the OpenAI Chat Completions wire, so use **Kind: OpenAiCompatible** with the
-runtime's base URL and served model name; leave the key blank.
+所有本地运行时都暴露OpenAI Chat Completions线路，所以使用**Kind: OpenAiCompatible**与运行时的
+基本URL和提供的模型名称；将密钥留空。
 
 ### Ollama
 
 ```
-# install from https://ollama.com, then:
+# 从https://ollama.com安装，然后：
 ollama pull llama3.1:8b
 ```
 
-- Base URL: `http://localhost:11434/v1/` · Model: the pulled name (e.g. `llama3.1:8b`, `qwen2.5-coder`).
-- No API key. Capabilities default to text-only; enable vision only for a vision model.
+- 基本URL：`http://localhost:11434/v1/` · 模型：拉取的名称（例如`llama3.1:8b`、`qwen2.5-coder`）。
+- 无API密钥。能力默认为仅文本；仅对视觉模型启用视觉。
 
 ### LM Studio
 
-- Start the local server (Developer → Start server).
-- Base URL: `http://localhost:1234/v1/` · Model: the loaded model id. No API key.
+- 启动本地服务器（开发者→启动服务器）。
+- 基本URL：`http://localhost:1234/v1/` · 模型：加载的模型ID。无API密钥。
 
 ### vLLM / llama.cpp `server` / LocalAI
 
-- Serve an OpenAI-compatible endpoint (each ships one).
-- Base URL: your served URL (e.g. `http://localhost:8000/v1/`) · Model: the served model name. No key
-  unless you put auth in front.
+- 服务一个OpenAI兼容的终点（每个都发送一个）。
+- 基本URL：您的提供的URL（例如`http://localhost:8000/v1/`）· 模型：提供的模型名称。无密钥
+  除非您在前面放置认证。
 
-## Verifying
+## 验证
 
-- **Test connection** in the dialog runs a tiny ping completion and reports success + latency — ideal
-  for confirming a local endpoint.
-- Automated: the app's E2E suite drives every AI feature against an in-process fake OpenAI-compatible
-  server by default, or your real provider when `AI_E2E_BASEURL` (+ optional `AI_E2E_API_KEY` /
-  `AI_E2E_KIND` / `AI_E2E_MODEL`) is set. See [AI features → Testing](../features/ai.md#testing-with-the-fake-local-llm).
+- 对话框中的**测试连接**运行一个小的ping完成并报告成功+延迟——对于
+  确认本地终点理想。
+- 自动化：应用的E2E套件默认针对进程内假OpenAI兼容
+  服务器驱动每个AI功能，或当设置`AI_E2E_BASEURL`（+可选`AI_E2E_API_KEY`/
+  `AI_E2E_KIND`/`AI_E2E_MODEL`）时的您的真实提供商。请参阅[AI功能→测试](../features/ai.md#testing-with-the-fake-local-llm)。
 
-## Switching / rotating
+## 切换/旋转
 
-- **Switch active provider:** Settings → AI → **Set active** on another card (activating one deactivates
-  the rest).
-- **Rotate a key:** edit the provider and supply a new key (leave blank to keep the stored one).
-- **Remove:** delete the card. With no active provider, AI features disable and the rest of the app runs
-  unchanged.
-
-<!-- [ZH-HANS] Translation needed -->
+- **切换活跃提供商：** Settings → AI → 另一卡上**设置活跃**（激活一个停用其余）。
+- **旋转密钥：** 编辑提供商并提供新密钥（留空以保持存储的）。
+- **移除：** 删除卡。没有活跃提供商时，AI功能禁用，应用的其余部分
+  保持不变。

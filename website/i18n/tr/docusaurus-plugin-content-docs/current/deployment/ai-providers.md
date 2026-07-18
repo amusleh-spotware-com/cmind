@@ -28,11 +28,13 @@ Duz `http://` yalnizca geri dongu / ozel (intranet) ana bilgisayarlar icin kabul
 cMind, **varsayilan olarak etkin** olan **gercek bir islem ici yerel LLM** (Microsoft.ML.OnnxRuntimeGenAI) gonderir - anahtar yok, harici hizmet yok. Ilk baslatmada, hicbir saglayici yapilandirilmamisken ve `App:Branding:AllowBuiltInAi` `true` iken, otomatik olarak tohum eklenir ve etkinlestirilir.
 
 - **Yapilandirma:** `App:Ai:BuiltIn:Enabled` (varsayilan `true`), `App:Ai:BuiltIn:ModelPath` (varsayilan `models/onnx`, uygulama base dizinine gore), `App:Ai:BuiltIn:MaxTokens` (varsayilan `1024`).
-- **Model dosyalari:** `ModelPath`i bir ONNX GenAI modeli iceren bir dizine isaret edin - `genai_config.json`, tokenizer ve `.onnx` agirliklari. Bir CPU **Phi-3-mini** derlemesi iyi calisir, or.:
+- **Model dosyalari:** `ModelPath`i bir ONNX GenAI modeli iceren bir dizine isaret edin - `genai_config.json`, tokenizer ve `.onnx` agirliklari. Bir CPU **Phi-3.5-mini-instruct** derlemesi iyi calisir, or.:
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx     --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/*     --local-dir ./models
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
+    --local-dir ./models
   # ardindan App:Ai:BuiltIn:ModelPathi o klasore ayarlayin (genai_config.json icerir)
   ```
 

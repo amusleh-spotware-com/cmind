@@ -1,9 +1,9 @@
 ---
-title: AI szolgaltatok - beallitasi katalogus
-description: "Beallitasi katalogus minden AI szolgaltatohoz, amelyet a cMind tamogat - Anthropic, OpenAI, Azure OpenAI, Google Gemini, es minden OpenAI-kompatibilis vegpont, beleertve a helyi modelleket."
+title: AI szolgaltatok - beallitati katalogus
+description: "Beallitati katalogus minden AI szolgaltatohoz, amelyet a cMind tamogat - Anthropic, OpenAI, Azure OpenAI, Google Gemini, es minden OpenAI-kompatibilis vegpont, beleertve a helyi modelleket."
 ---
 
-# AI szolgaltatok - beallitasi katalogus
+# AI szolgaltatok - beallitati katalogus
 
 A cMind AI retege szolgaltatofuggetlen (laskad [AI funkciok](../features/ai.md)). Konfigurálj egy szolgaltatot ket modon:
 
@@ -29,11 +29,13 @@ A purlic text `http://` csak loopback / privat (intranet) hostokhoz elfogadott -
 A cMind egy **valo folyamatban levo helyi LLM-t** szallit (Microsoft.ML.OnnxRuntimeGenAI), amely **alapertelmezes szerint be van kapcsolva** - nincs kulcs, nincs kulso szolgalatas. Az elso inditaskan, amikor nincs szolgaltato konfiguralva es az `App:Branding:AllowBuiltInAi` `true`, automatikusan seedelesre es aktivaclasra kerul.
 
 - **Konfig:** `App:Ai:BuiltIn:Enabled` (alapertelmezett `true`), `App:Ai:BuiltIn:ModelPath` (alapertelmezett `models/onnx`, az alkalmazas alapkonyvtarahoz viszonyitva), `App:Ai:BuiltIn:MaxTokens` (alapertelmezett `1024`).
-- **Modell fajlok:** ird a `ModelPath`-ot egy konyvtarra, ami egy ONNX GenAI modellt tartalmaz - `genai_config.json`, a tokenizer es a `.onnx` sulyok. Egy CPU **Phi-3-mini** build jól működik, pl.:
+- **Modell fajlok:** ird a `ModelPath`-ot egy konyvtarra, ami egy ONNX GenAI modellt tartalmaz - `genai_config.json`, a tokenizer es a `.onnx` sulyok. Egy CPU **Phi-3.5-mini-instruct** build jól működik, pl.:
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx     --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/*     --local-dir ./models
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
+    --local-dir ./models
   # aztán állítsd az App:Ai:BuiltIn:ModelPath-ot erre a mappára (tartalmazza a genai_config.json-t)
   ```
 

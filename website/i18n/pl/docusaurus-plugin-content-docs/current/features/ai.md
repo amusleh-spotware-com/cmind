@@ -82,7 +82,7 @@ Pełne przewodniki instalacji na dostawcę (klucze, URLe, ID modeli, kroki UI): 
 
 cMind dostarcza **rzeczywisty lokalny LLM który uruchamia się w procesie** przez
 [Microsoft.ML.OnnxRuntimeGenAI](https://onnxruntime.ai/docs/genai/) (kompaktowy model instrukcji taki jak
-Phi-3-mini). Potrzebuje **brak klucza API i brak usługi zewnętrznej**, i na pierwszym starcie — gdy żaden dostawca nie jest
+Phi-3.5-mini). Potrzebuje **brak klucza API i brak usługi zewnętrznej**, i na pierwszym starcie — gdy żaden dostawca nie jest
 skonfigurowany i brama white-label zezwala — jest **seeded i aktywowany automatycznie**, więc każde
 wdrożenie ma działające AI od razu z pudełka.
 
@@ -92,7 +92,7 @@ wdrożenie ma działające AI od razu z pudełka.
   i reszta aplikacji jest nienaruszona.
 - Wspiera każdą funkcję AI tekstu. Będąc kompaktowym modelem, jest tekstem tylko (brak web search po stronie serwera ani
   vision) i generacja jest serializowana (jedna instancja modelu, ponownie użyta po leniwym ładowaniu).
-- Nabyj/bundle model: zobacz [Dostawcy AI → wbudowany](../deployment/ai-providers.md#wbudowany-lokalny-ai-onnx-dostarczony).
+- **Wiele wbudowanych modeli może istnieć równocześnie.** Każdy pobrany model znajduje się pod `ModelPath/<key>`; kuratowana katalog (Phi-3.5-mini domyślnie, plus Phi-3-mini-128k) można pobrać i przełączyć z **Ustawienia → AI**. Wybranie wbudowanego podmodelu ładuje go w procesie. Aby pobrać/spakować model: zobacz [Dostawcy AI → wbudowany](../deployment/ai-providers.md#wbudowany-lokalny-ai-onnx-wysłany).
 
 ## Kontrole white-label
 
@@ -103,6 +103,10 @@ Wdrożenie white-label ogranicza AI przez `App:Branding` (wymuszane po stronie s
   prywatne kompatybilne z OpenAI, np. Ollama/LM Studio/vLLM).
 - `AllowedAiProviderKinds` (domyślnie puste = wszystko) — wypisz tylko rodzaje które wdrożenie sankcjonuje (np.
   `["Anthropic","OpenAiCompatible"]`) aby zablokować które dostawcy użytkownicy mogą dodać.
+- `AllowAiTasks` (domyślnie `true`) — ustaw `false` aby usunąć funkcję **zadania w tle AI** (strona
+  `/ai/tasks` i API zadań zwracają 404; runner przestaje się twierdzi); synchroniczne funkcje AI wciąż pracują.
+- `AllowAiModelManagement` (domyślnie `true`) — ustaw `false` aby ukryć **przeglądanie modeli** i **wiązanie modelu na funkcję**.
+  Oba są tunable przez właściciela w runtime z **Ustawienia → Deployment** (nałożone na żywo na `IOptionsMonitor`) i skatalogowane w `WhiteLabelCatalog`.
 
 ## Rozszerzanie: przyszłe wbudowane modele
 
@@ -116,6 +120,8 @@ dostawca ONNX jest implementacją referencyjną tego wzorca.
 ## Możliwości
 
 - **Zbuduj cBot** — zwykły angielski prompt → uruchamiany cBot przez **generate → build → AI-fix** self-repair pętla (`build-strategy`), na `/ai/build`. **Wygenerowany kod źródłowy jest pokazywany** gdy build się kończy (z przyciskiem kopiuj), razem z logiem buildu — zarówno na sukces *jak i* na porażkę — więc zawsze widzisz co AI napisało, nie tylko błędy.
+- **Zadania AI w tle** — rozpocznij długotrwałe zadanie AI (np. zbuduj cBot) z wybranym modelem(ami), a następnie opuść stronę i wróć do wyniku. Wybierz kilka modeli do porównania — każdy uruchamia się jako własne zadanie (`/ai/tasks`). Worker hosta sieci web twierdzi o zadaniach na samoleczącym dzierżawę (odbieranym jeśli węzeł umrze) i transmituje postęp do dziennika aktywności na zadanie.
+- **Przeglądaj i wybieraj modele dla każdej funkcji** — przeglądaj modele, które reklamuje endpoint dostawcy (`GET /v1/models` na LM Studio / Ollama / vLLM / llama.cpp, lub katalog wbudowany) zamiast ręcznego pisania id, i **wiąż każdą funkcję AI do innego modelu** aby kilka modeli obsługiwało różne funkcje jednocześnie (niezwiązana funkcja powraca do aktywnego dostawcy zakresu).
 - **Optymalizacja parametrów** — zamknięta pętla: AI proponuje param sets, każdy persystentny + backtestowany przez nodes (`optimize-run` / `optimize-params`).
 - **Agent portfolio autonomiczny** — proposal napędzane mandatem z pełnym dziennikiem decyzji (`AgentMandate` → `AgentProposal`).
 - **Acting risk guard** — `AiRiskGuard` usługa w tle ocenia uruchomione boty, może **auto-stop** na krytycznym ryzyku (opt-in).
@@ -125,9 +131,9 @@ dostawca ONNX jest implementacją referencyjną tego wzorca.
 
 ## Powierzchnie
 
-- Web endpoints pod `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …).
+- Web endpoints pod `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), plus **zadania w tle** (`/api/ai/tasks` create/list/detail/cancel/delete), **odkrywanie modeli** (`/api/ai/models/probe`, `/api/ai/usable-models`) i **wiązania na funkcję** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - Narzędzia MCP (`AiTools`) dla klientów AI — zobacz [mcp.md](mcp.md). Wybór dostawcy jest transparentny dla klientów MCP.
-- **AI** grupa nav — jedna strona Blazor **na funkcję**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), plus Portfolio Agent, Alerts, MCP Keys. Strony dzielą `AiFeaturePageBase` + `AiOutputPanel`; każda pokazuje `AiFeatureNotice` gdy żaden dostawca nie jest skonfigurowany.
+- **AI** grupa nav — jedna strona Blazor **na funkcję**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), **Zadania AI** (`/ai/tasks`), plus Portfolio Agent, Alerts, MCP Keys. Strony dzielą `AiFeaturePageBase` + `AiOutputPanel`; każda pokazuje `AiFeatureNotice` gdy żaden dostawca nie jest skonfigurowany.
 - **Ustawienia → AI** (`/settings/ai`, tylko właściciel) — lista dostawcy z **Add / edit provider dialog** (rodzaj, base URL z wskazówkami per-kind incl. Ollama/LM Studio localhost preset, model, opcjonalny klucz, toggles możliwości, "set active") i przycisk **Test connection**.
 
 ## Konfiguracja

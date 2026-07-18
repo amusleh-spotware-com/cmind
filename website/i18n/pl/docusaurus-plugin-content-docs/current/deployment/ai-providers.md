@@ -42,12 +42,12 @@ aktywowany.
   `models/onnx`, relatywnie do katalogu bazowego aplikacji), `App:Ai:BuiltIn:MaxTokens` (domyślnie
   `1024`).
 - **Pliki modelu:** wskaż `ModelPath` na katalog zawierający model ONNX GenAI — `genai_config.json`,
-  tokenizer i wagi `.onnx`. Build CPU **Phi-3-mini** działa dobrze, np.:
+  tokenizer i wagi `.onnx`. Build CPU **Phi-3.5-mini-instruct** działa dobrze, np.:
 
   ```bash
   pip install huggingface_hub
-  huggingface-cli download microsoft/Phi-3-mini-128k-instruct-onnx \
-    --include cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/* \
+  huggingface-cli download microsoft/Phi-3.5-mini-instruct-onnx \
+    --include cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/* \
     --local-dir ./models
   # następnie ustaw App:Ai:BuiltIn:ModelPath na ten folder (zawiera genai_config.json)
   ```

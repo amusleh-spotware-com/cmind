@@ -1,6 +1,7 @@
 ﻿using Core;
 using Core.Ai;
 using Core.Domain;
+using Core.Options;
 using FluentAssertions;
 using Infrastructure.Ai;
 using Infrastructure.Persistence;
@@ -33,7 +34,7 @@ public class AiTaskRunnerTests(PostgresFixture fixture) : IClassFixture<Postgres
             .AddInterceptors(new AuditStampingInterceptor(TimeProvider.System)));
         var sp = services.BuildServiceProvider();
         return new AiTaskRunner(sp.GetRequiredService<IServiceScopeFactory>(), TimeProvider.System,
-            NullLogger<AiTaskRunner>.Instance);
+            new StaticOptionsMonitor<AppOptions>(new AppOptions()), NullLogger<AiTaskRunner>.Instance);
     }
 
     private static async Task<UserId> SeedUserAsync(DataContext db)

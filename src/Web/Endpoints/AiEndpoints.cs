@@ -3,6 +3,7 @@ using System.Text.Json;
 using Core;
 using Core.Ai;
 using Core.Constants;
+using Core.Options;
 using Infrastructure.Ai;
 using Infrastructure.Builder;
 using Infrastructure.Persistence;
@@ -10,6 +11,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Web.Endpoints;
 
@@ -22,14 +25,17 @@ public static class AiEndpoints
 
         // Status keeps its { enabled } shape (the gate JS/E2E depend on it) and adds the active
         // provider kind + model for display when configured.
-        g.MapGet("/status", (IAiProviderStore store) =>
+        g.MapGet("/status", (IAiProviderStore store, IOptionsMonitor<AppOptions> options) =>
         {
             var active = store.Active;
+            var branding = options.CurrentValue.Branding;
             return Results.Ok(new
             {
                 enabled = active is not null,
                 kind = active?.Kind.ToString(),
-                model = active?.Model
+                model = active?.Model,
+                allowTasks = branding.AllowAiTasks,
+                allowModelManagement = branding.AllowAiModelManagement
             });
         });
 
@@ -113,7 +119,7 @@ public static class AiEndpoints
             {
                 return Results.BadRequest(ex.Code);
             }
-        });
+        }).AddEndpointFilter(BrandingGate(b => b.AllowAiModelManagement));
 
         // Ping the active provider with a tiny completion and report success + latency — handy for
         // verifying a local endpoint after adding it.
@@ -166,11 +172,16 @@ public static class AiEndpoints
             return Results.Ok(new { enabled = store.HasActive });
         });
 
-        // Per-feature model bindings (deployment scope, owner-managed): bind each AI feature to a provider.
-        g.MapGet("/feature-bindings", async (IAiProviderStore store, CancellationToken ct) =>
-            Results.Ok(await store.ListBindingsAsync(null, ct))).RequireAuthorization(AuthPolicies.Owner);
+        // Per-feature model bindings — model management, white-label/owner-gated by Branding.AllowAiModelManagement.
+        // Deployment scope (owner-managed): bind each AI feature to a provider.
+        var ownerBindings = g.MapGroup("/feature-bindings")
+            .RequireAuthorization(AuthPolicies.Owner)
+            .AddEndpointFilter(BrandingGate(b => b.AllowAiModelManagement));
 
-        g.MapPut("/feature-bindings", async (SetFeatureBindingRequest req, IAiProviderStore store, CancellationToken ct) =>
+        ownerBindings.MapGet("", async (IAiProviderStore store, CancellationToken ct) =>
+            Results.Ok(await store.ListBindingsAsync(null, ct)));
+
+        ownerBindings.MapPut("", async (SetFeatureBindingRequest req, IAiProviderStore store, CancellationToken ct) =>
         {
             try
             {
@@ -178,19 +189,22 @@ public static class AiEndpoints
                 return Results.Ok(new { ok = true });
             }
             catch (InvalidOperationException ex) { return Results.BadRequest(ex.Message); }
-        }).RequireAuthorization(AuthPolicies.Owner);
+        });
 
-        g.MapDelete("/feature-bindings/{feature}", async (AiFeature feature, IAiProviderStore store, CancellationToken ct) =>
+        ownerBindings.MapDelete("/{feature}", async (AiFeature feature, IAiProviderStore store, CancellationToken ct) =>
         {
             await store.ClearBindingAsync(null, feature, ct);
             return Results.Ok(new { ok = true });
-        }).RequireAuthorization(AuthPolicies.Owner);
+        });
 
         // Per-user feature bindings: a user's own binding overrides the deployment default for that feature.
-        g.MapGet("/my-feature-bindings", async (IAiProviderStore store, ICurrentUser u, CancellationToken ct) =>
+        var userBindings = g.MapGroup("/my-feature-bindings")
+            .AddEndpointFilter(BrandingGate(b => b.AllowAiModelManagement));
+
+        userBindings.MapGet("", async (IAiProviderStore store, ICurrentUser u, CancellationToken ct) =>
             u.UserId is { } uid ? Results.Ok(await store.ListBindingsAsync(uid, ct)) : Results.Unauthorized());
 
-        g.MapPut("/my-feature-bindings", async (SetFeatureBindingRequest req, IAiProviderStore store, ICurrentUser u, CancellationToken ct) =>
+        userBindings.MapPut("", async (SetFeatureBindingRequest req, IAiProviderStore store, ICurrentUser u, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             try
@@ -201,7 +215,7 @@ public static class AiEndpoints
             catch (InvalidOperationException ex) { return Results.BadRequest(ex.Message); }
         });
 
-        g.MapDelete("/my-feature-bindings/{feature}", async (AiFeature feature, IAiProviderStore store, ICurrentUser u, CancellationToken ct) =>
+        userBindings.MapDelete("/{feature}", async (AiFeature feature, IAiProviderStore store, ICurrentUser u, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             await store.ClearBindingAsync(uid, feature, ct);
@@ -209,8 +223,11 @@ public static class AiEndpoints
         });
 
         // Async AI tasks: create one background task PER selected model (fan-out to compare), then the user
-        // navigates away and comes back. The AiTaskRunner on the web host claims + runs them.
-        g.MapPost("/tasks", async (CreateTasksRequest req, DataContext db, ICurrentUser u, TimeProvider clock, CancellationToken ct) =>
+        // navigates away and comes back. The AiTaskRunner on the web host claims + runs them. The whole
+        // surface is white-label/owner-gated by Branding.AllowAiTasks (404 when disabled).
+        var tasks = g.MapGroup("/tasks").AddEndpointFilter(BrandingGate(b => b.AllowAiTasks));
+
+        tasks.MapPost("", async (CreateTasksRequest req, DataContext db, ICurrentUser u, TimeProvider clock, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             if (string.IsNullOrWhiteSpace(req.Description)) return Results.BadRequest("describe the task first");
@@ -235,21 +252,21 @@ public static class AiEndpoints
             return created.Count == 0 ? Results.BadRequest("no valid model selected") : Results.Ok(new { taskIds = created });
         });
 
-        g.MapGet("/tasks", async (DataContext db, ICurrentUser u, CancellationToken ct) =>
+        tasks.MapGet("", async (DataContext db, ICurrentUser u, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
-            var tasks = await db.AiTasks.AsNoTracking().Where(t => t.UserId == uid)
+            var rows = await db.AiTasks.AsNoTracking().Where(t => t.UserId == uid)
                 .OrderByDescending(t => t.CreatedAt).Take(100).ToListAsync(ct);
-            var credIds = tasks.Select(t => t.CredentialId).Distinct().ToList();
+            var credIds = rows.Select(t => t.CredentialId).Distinct().ToList();
             var models = await db.AiProviderCredentials.AsNoTracking()
                 .Where(c => credIds.Contains(c.Id)).ToDictionaryAsync(c => c.Id, c => c.Model, ct);
-            var views = tasks.Select(t => new AiTaskView(
+            var views = rows.Select(t => new AiTaskView(
                 t.Id.Value, t.Feature.ToString(), t.Status.ToString(), models.GetValueOrDefault(t.CredentialId, "(model)"),
                 t.Attempts, t.CreatedAt, t.FinishedAt, t.Error)).ToList();
             return Results.Ok(views);
         });
 
-        g.MapGet("/tasks/{id:guid}", async (Guid id, DataContext db, ICurrentUser u, CancellationToken ct) =>
+        tasks.MapGet("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             var tid = AiTaskId.From(id);
@@ -263,7 +280,7 @@ public static class AiEndpoints
                 t.FinishedAt, t.Error, t.ResultText, t.ResultRefsJson, logs));
         });
 
-        g.MapPost("/tasks/{id:guid}/cancel", async (Guid id, DataContext db, ICurrentUser u, TimeProvider clock, CancellationToken ct) =>
+        tasks.MapPost("/{id:guid}/cancel", async (Guid id, DataContext db, ICurrentUser u, TimeProvider clock, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             var tid = AiTaskId.From(id);
@@ -275,7 +292,7 @@ public static class AiEndpoints
             return Results.Ok(new { ok = true });
         });
 
-        g.MapDelete("/tasks/{id:guid}", async (Guid id, DataContext db, ICurrentUser u, CancellationToken ct) =>
+        tasks.MapDelete("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             var tid = AiTaskId.From(id);
@@ -558,6 +575,16 @@ public static class AiEndpoints
     }
 
     private const int MaxLogChars = 4000;
+
+    // White-label gate for a branding bool (overlaid by the owner's runtime override on IOptionsMonitor).
+    // A disabled surface returns 404 so it looks entirely absent, matching RequireFeature's behaviour.
+    private static Func<EndpointFilterInvocationContext, EndpointFilterDelegate, ValueTask<object?>> BrandingGate(
+        Func<BrandingOptions, bool> allowed) =>
+        async (ctx, next) =>
+        {
+            var options = ctx.HttpContext.RequestServices.GetRequiredService<IOptionsMonitor<AppOptions>>();
+            return allowed(options.CurrentValue.Branding) ? await next(ctx) : Results.NotFound();
+        };
 
     private static string ClipLog(string value) => value.Length <= MaxLogChars ? value : value[^MaxLogChars..];
 

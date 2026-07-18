@@ -127,6 +127,45 @@ public class AiTaskEndpointTests(PostgresFixture fixture) : IClassFixture<Postgr
     }
 
     [Fact]
+    public async Task Task_endpoints_are_404_when_disabled_by_white_label()
+    {
+        await using var app = new WebApplicationFactory<Program>().WithWebHostBuilder(b =>
+        {
+            b.UseEnvironment("Development");
+            b.UseSetting("ConnectionStrings:appdb", fixture.Container.GetConnectionString());
+            b.UseSetting("App:OwnerEmail", Owner);
+            b.UseSetting("App:OwnerPassword", Password);
+            b.UseSetting("App:Ai:BuiltIn:AutoDownload", "false");
+            b.UseSetting("App:Ai:RunTasks", "false");
+            b.UseSetting("App:Branding:AllowAiTasks", "false");
+        });
+        var client = await LoginAsync(app);
+
+        (await client.GetAsync("/api/ai/tasks")).StatusCode.Should().Be(HttpStatusCode.NotFound);
+        var create = await client.PostAsJsonAsync("/api/ai/tasks", new { Description = "x", CredentialIds = new[] { Guid.NewGuid() } });
+        create.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Model_management_endpoints_are_404_when_disabled_by_white_label()
+    {
+        await using var app = new WebApplicationFactory<Program>().WithWebHostBuilder(b =>
+        {
+            b.UseEnvironment("Development");
+            b.UseSetting("ConnectionStrings:appdb", fixture.Container.GetConnectionString());
+            b.UseSetting("App:OwnerEmail", Owner);
+            b.UseSetting("App:OwnerPassword", Password);
+            b.UseSetting("App:Ai:BuiltIn:AutoDownload", "false");
+            b.UseSetting("App:Branding:AllowAiModelManagement", "false");
+        });
+        var client = await LoginAsync(app);
+
+        var probe = await client.PostAsJsonAsync("/api/ai/models/probe", new { Kind = 5, BaseUrl = (string?)null, ApiKey = (string?)null });
+        probe.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await client.GetAsync("/api/ai/my-feature-bindings")).StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
     public async Task Delete_is_rejected_while_the_task_is_active()
     {
         await using var app = CreateApp();

@@ -3,11 +3,13 @@ using Core.Ai;
 using Core.Constants;
 using Core.Domain;
 using Core.Logging;
+using Core.Options;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Ai;
 
@@ -21,7 +23,8 @@ namespace Infrastructure.Ai;
 /// cBot build needs its Docker socket.
 /// </summary>
 public sealed class AiTaskRunner(
-    IServiceScopeFactory scopeFactory, TimeProvider timeProvider, ILogger<AiTaskRunner> logger) : BackgroundService
+    IServiceScopeFactory scopeFactory, TimeProvider timeProvider,
+    IOptionsMonitor<AppOptions> options, ILogger<AiTaskRunner> logger) : BackgroundService
 {
     private readonly string _node = Environment.MachineName;
 
@@ -57,6 +60,9 @@ public sealed class AiTaskRunner(
     /// manual trigger) can drive a single cycle deterministically.</summary>
     public async Task<bool> RunOnceAsync(CancellationToken ct)
     {
+        // White-label/owner can disable the async task feature at runtime — stop claiming when off.
+        if (!options.CurrentValue.Branding.AllowAiTasks) return false;
+
         await using var scope = scopeFactory.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
 

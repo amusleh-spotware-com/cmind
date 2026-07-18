@@ -97,6 +97,11 @@ public static class WhiteLabelCatalog
                 "Hard gate for the economic calendar feature (build-level). Off removes it entirely."),
             Bool("ai.builtIn.enabled", "Ai.BuiltIn.Enabled", WhiteLabelCategory.Ai, "Built-in AI seeded",
                 "Whether the built-in ONNX local LLM is seeded/offered (combined with Allow built-in AI)."),
+            Bool("branding.allowAiTasks", "Branding.AllowAiTasks", WhiteLabelCategory.Ai, "Allow AI tasks",
+                "Whether the background AI task engine (build-a-cBot task, the /ai/tasks page + API) is offered."),
+            Bool("branding.allowAiModelManagement", "Branding.AllowAiModelManagement", WhiteLabelCategory.Ai,
+                "Allow AI model management",
+                "Whether users can browse an endpoint's models and bind AI features to specific models."),
 
             // ---- Accounts ----
             List("accounts.allowedBrokers", "Accounts.AllowedBrokers", WhiteLabelCategory.Accounts, "Allowed brokers",

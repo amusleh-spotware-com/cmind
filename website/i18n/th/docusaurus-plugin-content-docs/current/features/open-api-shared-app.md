@@ -30,7 +30,7 @@ shared application ได้รับ provisioned จาก deployment config **
 
 ### 2 Owner settings (runtime ไม่มี redeploy)
 
-**Settings → Open API** (owner เท่านั้น) shows **Deployment shared application** card: add / edit / delete shared app ด้วย redirect URL displayed สำหรับ copy-paste Changes take effect สำหรับ new authorizations ทันที
+**Settings → Open API** (owner เท่านั้น) แสดง สอง สิ่ง: **Your Open API application** section — owner registers edits และ authorizes **own** per-user app ของพวกเขา เหมือนกับ user ใดก็ได้ (available ขณะที่ ไม่มี shared app configured) — และ **Deployment shared application** card เพื่อ add / edit / delete shared app ด้วย redirect URL displayed สำหรับ copy-paste Changes take effect สำหรับ new authorizations ทันที Once shared app configured มัน supersedes owner's own app และ **Your Open API application** section switches ไป notice ที่ accounts ปัจจุบัน authorize ผ่าน shared app
 
 ## redirect URL (register นี้ ใน cTrader)
 

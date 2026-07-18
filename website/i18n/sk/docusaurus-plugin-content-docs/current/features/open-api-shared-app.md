@@ -35,9 +35,7 @@ neprepíše owner-editovanú runtime hodnotu, a re-seeding je no-op).
 
 ### 2. Owner settings (runtime, bez redeployu)
 
-**Settings → Open API** (len owner) zobrazuje **Deployment shared application** card: pridajte / upravte /
-vymažte zdieľanú aplikáciu, s redirect URL zobrazenou na copy-paste. Zmeny naberajú účinnosť pre nové
-autorizácie okamžite.
+**Settings → Open API** (len owner) zobrazuje dve veci: sekcia **Vaša Open API aplikácia** — owner registruje, upravuje a autorizuje svoju **vlastnú** per-user aplikáciu presne ako hocikto iný používateľ (dostupná pokiaľ nie je nakonfigurovaná žiadna shared app) — a **Deployment shared application** card na pridanie / úpravu / vymazanie zdieľanej aplikácie, s redirect URL zobrazenou na copy-paste. Zmeny naberajú účinnosť pre nové autorizácie okamžite. Keď je shared app nakonfigurovaná, superseduje owner vlastnú aplikáciu a sekcia **Vaša Open API aplikácia** sa zmení na upozornenie, že účty sa teraz autorizujú cez shared app.
 
 ## Redirect URL (zaregistrujte to v cTrader)
 

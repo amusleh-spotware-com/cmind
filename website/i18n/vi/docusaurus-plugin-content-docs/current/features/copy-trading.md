@@ -18,8 +18,8 @@ Sao chép **master** cTrader tài khoản sang một hoặc nhiều tài khoản
 | Master event | Slave action |
 |--------------|--------------|
 | Market / market-range position open | Open a sized copy (labelled with the source position id) |
-| Limit / stop / stop-limit pending order | Place the matching pending order |
-| Pending order amend | Amend the mirrored pending order in place |
+| Limit / stop / stop-limit pending order | Place the matching pending order, carrying the master's stop-loss / take-profit |
+| Pending order amend | Amend the mirrored pending order in place (including its stop-loss / take-profit) |
 | Pending order cancel / expiry | Cancel the mirrored pending order |
 | Partial close | Close the same proportion of the slave position |
 | Scale-in (volume increase) | Open the added volume (opt-in) |
@@ -35,6 +35,8 @@ Mỗi bản sao được **gắn nhãn bằng id vị trí/đơn hàng nguồn**
 **Xuất / Nhập.** Toàn bộ khối cài đặt có thể được **xuất vào tệp JSON** và **nhập lại** để điền trước biểu mẫu, vì vậy một điều chỉnh có thể được sử dụng lại trên các hồ sơ mà không cần gõ lại. Bản đồ ký hiệu cũng có thể **xuất / nhập dưới dạng tệp CSV** (`Nguồn,Đích,HệSốThểTích`) — chuẩn bị bản đồ ký hiệu broker lớn trong bảng tính và tải nó trong một bước. Các kiểm soát ký hiệu và xuất/nhập CSV tương tự cũng có sẵn trong hộp thoại đích đến trên trang Copy Trading.
 
 Hành động hàng tôn trọng vòng đời: **Bắt đầu** chỉ được bật khi không chạy, **Dừng** + **Tạm dừng** chỉ khi chạy, **Xóa** bị vô hiệu hóa khi đang chạy + yêu cầu xác nhận trước khi xóa hồ sơ + đích đến.
+
+Một hồ sơ vừa được bắt đầu sẽ hiển thị ngắn gọn trạng thái **Starting** (không phải green *Running*) trong khi host của nó tải dữ liệu tham chiếu và chạy resync đầu tiên — nó chưa sao chép đơn hàng trên các đích đến. Nó chuyển sang **Running** khi resync đầu tiên hoàn thành và engine có thể sao chép. Starting được coi là running cho các điều khiển hàng (Start disabled, Stop và live-logs enabled, Edit/Delete blocked), vì vậy một hồ sơ warming không thể được khởi động lại hoặc chỉnh sửa mid-startup. Giai đoạn warm-up được theo dõi trong quá trình trên nút lưu trữ hồ sơ; một hồ sơ được lưu trữ trên replica khác (hoặc một hồ sơ không thể được lưu trữ — tài khoản nguồn/đích đến không được liên kết qua Open API) hiển thị trạng thái thuần túy của nó.
 
 ## Per-destination options
 
@@ -54,12 +56,12 @@ Hành động hàng tôn trọng vòng đời: **Bắt đầu** chỉ được b
 - **Config lock** (C9) — freeze destination's settings cho khoảng thời gian (`POST …/destinations/{id}/lock` với phút). Trong khi bị khóa, đích đến không thể bị xóa (aggregate reject với `CopyDestinationConfigLocked`) — guard có ý chống lại những thay đổi thoáng qua trong lúc drawdown. Khóa hết hạn tự động vào dấu thời gian của nó.
 - **Consistency pre-alert** (C10) — cảnh báo (một lần trên mỗi ngày UTC) khi **lợi nhuận hàng ngày** đích đến đạt đến phần trăm được cấu hình của equity opening day (`CopyConsistencyThresholdApproaching`), vì vậy prop-firm consistency rule respected *trước* nó trips. Profit-side, độc lập với loss-side lockout; chạy ngoài cùng day baseline như prop-rule guard.
 - **Order-type filter** — chọn chính xác loại đơn hàng master nào để sao chép: market, market-range, limit, stop, stop-limit (`CopyOrderTypes` flags; default all). cMAM-style selectivity.
-- **Copy SL / Copy TP** — mirror master's stop-loss / take-profit, hoặc manage protection một cách độc lập.
+- **Copy SL / Copy TP** — mirror master's stop-loss / take-profit, hoặc manage protection một cách độc lập. Áp dụng cho **cả** vị trí mở **và** lệnh đang chờ xử lý resting — một bản sao limit/stop/stop-limit được đặt và sửa đổi với SL/TP của master order (hoán đổi dưới **Reverse**), vì vậy bảo vệ được đính kèm từ thời điểm order đang chờ fills, không chỉ sau.
 - **Copy trailing stop**, **mirror partial close**, **mirror scale-in** — mỗi cái độc lập toggleable.
 - **Copy pending expiry** (default on) — mirror master pending order's Good-Till-Date expiry timestamp.
 - **Copy master slippage** (default on) — for market-range + stop-limit orders, place slave order với master's exact slippage-in-points (base price lấy từ slave's live spot).
 - **Guards**: max drawdown %, daily loss cap, max copy delay, slippage filter (skip copy nếu slave price di chuyển ngoài N pips từ master entry). **Max copy delay** đo lường so với master event's real server timestamp (`ExecutionEvent.ServerTimestamp`) qua injected `TimeProvider`: signal cũ hơn configured max-lag bỏ qua, vì vậy stale copy không bao giờ được đặt muộn (trước đây delay luôn bằng không + guard chết).
-- **SL/TP precision normalization** (M6) — copied stop-loss/take-profit prices làm tròn đến **destination** symbol's digit precision trước khi amend, vì vậy master price ở fine precision (hoặc cross-broker digit mismatch) không bao giờ trips server's `INVALID_STOPLOSS_TAKEPROFIT`.
+- **SL/TP precision normalization** (M6) — copied stop-loss/take-profit prices làm tròn đến **destination** symbol's digit precision trước khi amend (on positions **and** pending-order placement/amend), vì vậy master price ở fine precision (hoặc cross-broker digit mismatch) không bao giờ trips server's `INVALID_STOPLOSS_TAKEPROFIT`.
 - **Rejection circuit breaker / Follower Guard** (G8) — đích đến rejecting `CopyDefaults.RejectionBudget` opens in a row bị **tripped**: không có opens mới cho cooldown window (`CopyDestinationTripped` alert fires), dừng rejection storm từ hammering (prop-firm) account. Vị trí hiện có vẫn được quản lý + đóng trong khi tripped; breaker auto-resets sau cooldown + successful copy clears counter.
 - **Lot sanity ceiling** (C14) — absolute max copy size và/hoặc multiple-of-master cap. Tính toán copy vượt quá absolute cap, hoặc vượt quá `N×` master's own lot size, **hard-blocked** (surfaced as `lot_sanity` skip, counted on `cmind.copy.skipped`) không được đặt — defends chống lại catastrophic-oversize class (0.23-lot master turning into 3 lots trên mỗi receiver qua runaway multiplier hoặc rounding bug). Cả hai chiều mặc định `0` (off).
 
@@ -68,6 +70,7 @@ Hành động hàng tôn trọng vòng đời: **Bắt đầu** chỉ được b
 Engine được xây dựng cho thực tế rằng bất cứ điều gì có thể thất bại bất kỳ lúc nào:
 
 - **Slave-pending fill-correlation timeout** (C13) — mirrored slave pending mà master pending biến mất (không resting cũng không newly filled) cancelled sau correlation timeout, vì vậy slave copy không thể điền uncorrelated thành unmanaged position (`CopyPendingTimedOut`). Resync cũng làm sạch order-id-labelled filled-pending orphan.
+- **Cross-broker pending-fill race** — một slave's own pending có thể fill (giá của nó hit) trong cửa sổ nhỏ trước khi master's fill/cancel event được xử lý. Điều đó để lại một slave position được gắn nhãn bằng source **order** id, mà các canonical close/SL-TP paths (keyed by source **position** id) sẽ miss. Trên master **fill** early slave fill được loại bỏ và thay thế bằng một market copy được gắn nhãn đúng cách — vì vậy đích đến kết thúc với chính xác **one** copy, không bao giờ doubled position; trên master **cancel** nó được đóng ngay lập tức (master không bao giờ lấy giao dịch). Cả hai hành động ngay lập tức, không chỉ trên resync tiếp theo. Một slave-side SL/TP hit mà đóng một bản sao mà master vẫn nắm giữ là source-driven và được mở lại trên reconcile tiếp theo (engine mirrors **master** events; nó không tiêu thụ destination-side executions).
 - **Robust close/flatten** (M8) — closing orphan trên resync, hoặc flattening trên guard breach, tolerates position broker đã đóng (`POSITION_NOT_FOUND`): mỗi close chạy một cách độc lập, vì vậy một stale id không bao giờ abort resync hoặc để lại phần còn lại của account un-flattened.
 
 - **Start với master đã có giao dịch** — khi bắt đầu host reconciles + mở bản sao cho vị trí hiện có của master.

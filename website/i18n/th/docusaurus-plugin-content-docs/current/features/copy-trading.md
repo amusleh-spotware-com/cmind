@@ -18,8 +18,8 @@ description: "ส่งบัญชี cTrader หลักไปยังบั
 | Master event | Slave action |
 |--------------|--------------|
 | Market / market-range position open | Open a sized copy (labelled with the source position id) |
-| Limit / stop / stop-limit pending order | Place the matching pending order |
-| Pending order amend | Amend the mirrored pending order in place |
+| Limit / stop / stop-limit pending order | Place the matching pending order, carrying the master's stop-loss / take-profit |
+| Pending order amend | Amend the mirrored pending order in place (including its stop-loss / take-profit) |
 | Pending order cancel / expiry | Cancel the mirrored pending order |
 | Partial close | Close the same proportion of the slave position |
 | Scale-in (volume increase) | Open the added volume (opt-in) |
@@ -35,6 +35,8 @@ description: "ส่งบัญชี cTrader หลักไปยังบั
 **ส่งออก / นำเข้า** บล็อกการตั้งค่าเต็มหมด **ส่งออกเป็นไฟล์ JSON** และ **นำเข้า** ใหม่เพื่อเติมข้อมูลแบบฟอร์ม เพื่อให้การปรับแต่งสามารถนำกลับมาใช้ในโปรไฟล์โดยไม่ต้องพิมพ์ใหม่ แผนที่สัญลักษณ์สามารถในทำนองเดียวกัน **ส่งออก / นำเข้าเป็นไฟล์ CSV** (`Source,Destination,VolumeMultiplier`) — เตรียมแผนที่สัญลักษณ์โบรกเกอร์ขนาดใหญ่ในสเปรดชีตและโหลดในขั้นตอนเดียว ตัวควบคุมสัญลักษณ์เดียวกันและนำเข้า/ส่งออก CSV ยังพร้อมใช้งานในกล่องโต้ตอบปลายทางบนหน้า Copy Trading
 
 การดำเนินการแถวให้สัมมติ วงจรชีวิต: **เริ่ม** เปิดใช้งานเฉพาะเมื่อไม่ทำงาน **หยุด** + **หยุดชั่วคราว** เฉพาะเมื่อทำงาน **ลบ** ปิดใช้งานในขณะทำงาน + ขอการยืนยันก่อนลบโปรไฟล์ + ปลายทาง
+
+โปรไฟล์ที่เพิ่งเริ่มแสดง **Starting** status สั้นๆ (ไม่ใช่ **Running** สีเขียว) ขณะที่โฮสต์ของมันโหลดข้อมูลอ้างอิงและรันการตรวจสอบซิงค์ครั้งแรก — ยังไม่มีการสะท้อนคำสั่งข้ามปลายทาง มันเปลี่ยนเป็น **Running** ในขณะที่ resync ครั้งแรกนั้นเสร็จสิ้นและเครื่องสามารถคัดลอกได้ Starting ถูกประมวลผลเป็นการทำงานสำหรับการควบคุมแถว (เริ่มปิดใช้งาน หยุดและบันทึกสดเปิดใช้งาน แก้ไข/ลบถูกบล็อก) ดังนั้นโปรไฟล์ที่อบอุ่นไม่สามารถเริ่มใหม่หรือแก้ไขในระหว่างการเริ่มต้น ระยะเวลาการเตรียมความพร้อมถูกติดตามในกระบวนการบนโหนดที่โฮสต์โปรไฟล์; โปรไฟล์ที่โฮสต์บนตัวจำลองอื่น (หรือตัวที่ไม่สามารถโฮสต์ได้ — บัญชีต้นทาง/ปลายทางของมันไม่ได้เชื่อมโยงผ่าน Open API) แสดงสถานะธรรมดาของมัน
 
 ## Per-destination options
 
@@ -54,12 +56,12 @@ description: "ส่งบัญชี cTrader หลักไปยังบั
 - **Config lock** (C9) — การตั้งค่าปลายทางด้าน freeze สำหรับช่วงเวลา (`POST …/destinations/{id}/lock` ด้วยนาที) ในขณะที่ล็อก ปลายทางไม่สามารถลบได้ (aggregate เห็นปฏิเสธด้วย `CopyDestinationConfigLocked`) — guard ตั้งใจต้านแนวโน้มหลายเท่าเสียใจในช่วง drawdown ระยะเวลาการล็อคหมดอายุโดยอัตโนมัติ
 - **Consistency pre-alert** (C10) — เตือน (หนึ่งครั้งต่อวัน UTC) เมื่อ **ส่วนลาภของวันปลายทาง** ถึงเปอร์เซ็นต์ที่กำหนดของวันที่เปิด equity (`CopyConsistencyThresholdApproaching`) เพื่อให้กฎความสอดคล้องกัน prop-firm เคารพ *ก่อน* มันจำนวน ด้านกำไรอิสระของด้านขาดทุน; วิ่งปิด baseline วันเดียวกับ prop-rule guard
 - **Order-type filter** — เลือกว่ากำลังคำสั่งใด ของหลัก เพื่อ copy: market market-range limit stop stop-limit (`CopyOrderTypes` flags; default all) cMAM-style selectivity
-- **Copy SL / Copy TP** — mirror master's stop-loss / take-profit หรือจัดการการป้องกันอย่างอิสระ
+- **Copy SL / Copy TP** — mirror master's stop-loss / take-profit หรือจัดการการป้องกันอย่างอิสระ นำไปใช้กับ **ตำแหน่งที่เปิดทั้งคู่** **และ** คำสั่งที่ค้างอยู่นิ่ง — สำเนา limit/stop/stop-limit วางและแก้ไขด้วย SL/TP ของลำดับหลัก (สลับภายใต้ **Reverse**) เพื่อให้การป้องกันแนบมาในขณะที่การค้างอยู่ก็เต็มไป ไม่ใช่เพียงหลังจากนั้น
 - **Copy trailing stop** **mirror partial close** **mirror scale-in** — แต่ละ independently toggleable
 - **Copy pending expiry** (default on) — mirror master pending order's Good-Till-Date expiry timestamp
 - **Copy master slippage** (default on) — for market-range + stop-limit orders place slave order with master's exact slippage-in-points (base price taken from slave's live spot)
 - **Guards**: max drawdown % daily loss cap max copy delay slippage filter (skip copy if slave price moved beyond N pips from master entry) **Max copy delay** measured against master event's real server timestamp (`ExecutionEvent.ServerTimestamp`) via injected `TimeProvider`: signal older than configured max-lag skipped so stale copy never placed late (previously delay always zero + guard dead)
-- **SL/TP precision normalization** (M6) — copied stop-loss/take-profit prices rounded to **destination** symbol's digit precision before amend so master price at finer precision (or cross-broker digit mismatch) never trips server's `INVALID_STOPLOSS_TAKEPROFIT`
+- **SL/TP precision normalization** (M6) — copied stop-loss/take-profit prices rounded to **destination** symbol's digit precision before amend (on positions **and** pending-order placement/amend) so master price at finer precision (or cross-broker digit mismatch) never trips server's `INVALID_STOPLOSS_TAKEPROFIT`
 - **Rejection circuit breaker / Follower Guard** (G8) — destination rejecting `CopyDefaults.RejectionBudget` opens in a row is **tripped**: no new opens for cooldown window (`CopyDestinationTripped` alert fires) stopping rejection storm from hammering (prop-firm) account. Existing positions still managed + closed while tripped; breaker auto-resets after cooldown + successful copy clears counter.
 - **Lot sanity ceiling** (C14) — absolute max copy size and/or multiple-of-master cap. Computed copy exceeding absolute cap or exceeding `N×` master's own lot size **hard-blocked** (surfaced as `lot_sanity` skip counted on `cmind.copy.skipped`) not placed — defends against catastrophic-oversize class (0.23-lot master turning into 3 lots on each receiver via runaway multiplier or rounding bug). Both dimensions default `0` (off).
 
@@ -68,6 +70,7 @@ description: "ส่งบัญชี cTrader หลักไปยังบั
 Engine สร้างสำหรับความจริงที่อะไรก็ได้ล้มเหลวได้ตลอดเวลา:
 
 - **Slave-pending fill-correlation timeout** (C13) — สำเนา slave pending ที่มีหลัก pending หายไป (ไม่นอน หรือ freshly filled) ยกเลิกหลังจาก correlation timeout ดังนั้นสำเนา slave ไม่สามารถเติมเต็ม uncorrelated เข้า unmanaged position (`CopyPendingTimedOut`) Resync ยังเก็บความสะอาด order-id-labelled filled-pending orphan
+- **Cross-broker pending-fill race** — pending ของเสมาของมันเองสามารถเติมเต็ม (ราคา hit) ในหน้าต่างเล็กน้อยก่อนที่เหตุการณ์ fill/cancel ของหลักจะได้รับการประมวลผล ที่ทำให้ตำแหน่ง slave ติดป้ายกำกับด้วย **order** id จากแหล่ง ซึ่งเส้นทาง close/SL-TP canonical (keyed by source **position** id) จะพลาด ใน master **fill** early slave fill จะเกษียณและแทนที่ด้วยสำเนา market ที่ติดป้ายกำกับในรูปแบบบัญชี — เพื่อให้ destination จบลงด้วย **exactly one** copy ไม่มี position ที่เพิ่มขึ้นเป็นสองเท่า; ใน master **cancel** มันถูกปิดทันที (หลักไม่เคยใช้การค้า) ทั้งสอง act ทันที ไม่เพียง on the next resync slave-side SL/TP hit ที่ปิด copy ที่หลักยังถือกำลังเป็น source-driven และ re-opened บน reconcile ต่อไป (engine mirrors **master** events; มันไม่ consume destination-side executions)
 - **Robust close/flatten** (M8) — ปิด orphan บน resync หรือการปรับเสียง على guard breach ความอดทนตำแหน่ง broker ปิดแล้ว (`POSITION_NOT_FOUND`): ปิดแต่ละตำแหน่งทำงานอย่างอิสระ ดังนั้นไม่มี id เก่าเลย aborts resync หรือปล่อยให้ส่วนที่เหลือของบัญชี un-flattened
 
 - **Start with master already in trades** — บน start host reconciles + opens copies for master's existing positions

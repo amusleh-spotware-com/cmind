@@ -35,9 +35,7 @@ prepiše lastnikovo-urejene runtime vrednosti, in re-seeding je brez-učinka).
 
 ### 2. Lastnik nastavitve (runtime, brez ponovnega uvajanja)
 
-**Settings → Open API** (samo lastnik) prikazuje **Deployment shared application** kartico: dodaj / uredi /
-izbriši skupno aplikacijo, z redirect URL prikazano za copy-paste. Spremembe učinkujejo za nove
-avtorizacije takoj.
+**Settings → Open API** (samo lastnik) prikazuje dve stvari: sekcijo **Vaša Open API aplikacija** — lastnik registrira, ureja in avtorizira svojo **lastno** per-user aplikacijo točno kot kateri koli uporabnik (razpoložljivo medtem ko ni konfigurirana skupna aplikacija) — in **Deployment shared application** kartico za dodajanje / urejanje / brisanje skupne aplikacije, z redirect URL prikazano za copy-paste. Spremembe učinkujejo za nove avtorizacije takoj. Ko je skupna aplikacija konfigurirana, nadomesti lastnikovo lastno aplikacijo, in sekcija **Vaša Open API aplikacija** se preslika v obvestilo, da se računi sedaj avtorizirajo prek skupne aplikacije.
 
 ## Redirect URL (to registrirajte v cTrader)
 
@@ -54,7 +52,7 @@ na primer `https://cmind.yourbroker.com/openapi/callback`.
   v cTrader partnerski portal ko ustvarjate Open API aplikacijo.
 - Sestavljena je iz `App:OpenApi:PublicBaseUrl` tako da ostane stabilna za reverse proxy / CDN;
   ko je to nenastavljeno, pade nazaj na inbound request host.
-- Izkušnja vabija proti normalnemu uporabniku se razlikuje samo v tem kam uporabnik pristane **po** callbacku
+- Izkušnja vabiji proti normalnemu uporabniku se razlikuje samo v tem kam uporabnik pristane **po** callbacku
   (njihov seznam računov proti potrditvi "računi dodani") — registriran redirect URL je nespremenjen.
 
 ## Kaj uporabniki vidijo v skupnem načinu

@@ -1,179 +1,85 @@
 ---
-description: "Shared Open API App — satu aplikasi OAuth terpusat untuk semua user, dengan rate limit per-message-type."
+description: "Ship one cTrader Open API application for every user (white-label shared mode), the single redirect URL to register, and per-message-type client rate limits."
 ---
 
-# Open API Shared App
+# Shared Open API application & rate limits
 
-Shared Open API App — satu aplikasi OAuth terpusat untuk semua user, dengan rate limit per-message-type.
+Secara default setiap user mendaftarkan **aplikasi Open API mereka sendiri** di
+**Settings → Open API**. Operator white-label (biasanya broker cTrader atau reseller) dapat sebaliknya
+mengirim **satu aplikasi Open API bersama untuk semua user** — tidak ada yang mendaftarkan aplikasi mereka sendiri; semua orang mengotorisasi akun mereka melalui aplikasi tunggal operator.
 
-## Arsitektur
+## Two ways to provide the shared application
 
-Alih-alih setiap user membuat aplikasi OAuth sendiri, cMind menggunakan satu aplikasi OAuth terpusat:
+Aplikasi bersama disediakan baik dari konfigurasi deployment **atau** dari UI pengaturan pemilik
+(nilai yang ditetapkan pemilik menang). Sediakan sekali dan mode bersama aktif untuk semua orang.
 
-```
-User → cMind (OAuth) → cTrader Open API
-```
+### 1. Deployment config (seeded on startup)
 
-Ini menyederhanakan:
-
-- **Credential management** — satu set kredensial.
-- **Rate limiting** — dikelola per-message-type.
-- **Compliance** — satu aplikasi, satu persetujuan.
-
-## Setup
-
-### Initial Setup
-
-1. Buat aplikasi di cTrader Developer Portal.
-2. Dapatkan `client_id` dan `client_secret`.
-3. Masukkan ke cMind configuration:
-
-```json
-{
+```jsonc
+"App": {
   "OpenApi": {
-    "ClientId": "your-client-id",
-    "ClientSecret": "your-client-secret"
+    "PublicBaseUrl": "https://cmind.yourbroker.com",   // canonical public URL of THIS deployment
+    "SharedApp": {
+      "Enabled": true,
+      "Name": "YourBroker Open API",
+      "ClientId": "1234_abcd...",
+      "ClientSecret": "…"                                // encrypted at rest; never logged
+    }
   }
 }
 ```
 
-### User Connection
+Saat startup aplikasi seed satu aplikasi bersama yang dimiliki oleh akun pemilik (idempotent — tidak pernah
+menimpa nilai yang diedit pemilik saat runtime, dan re-seeding adalah no-op).
 
-User menghubungkan akun cTrader mereka:
+### 2. Owner settings (runtime, no redeploy)
 
-1. Buka **Settings → Connected Accounts**.
-2. Klik **Connect cTrader Account**.
-3. Diarahkan ke OAuth flow cTrader.
-4. Berikan persetujuan.
-5. Akun tertaut.
+**Settings → Open API** (owner only) menampilkan dua hal: bagian **Your Open API application** — pemilik mendaftarkan, mengedit, dan mengotorisasi aplikasi per-user mereka **sendiri** persis seperti user lain (tersedia saat tidak ada aplikasi bersama yang dikonfigurasi) — dan kartu **Deployment shared application** untuk menambah / mengedit / menghapus aplikasi bersama, dengan URL redirect ditampilkan untuk copy-paste. Perubahan berlaku untuk otorisasi baru segera. Setelah aplikasi bersama dikonfigurasi, aplikasi bersama menggantikan aplikasi pemilik mereka, dan bagian **Your Open API application** beralih ke pemberitahuan bahwa akun sekarang mengotorisasi melalui aplikasi bersama.
 
-## Token Management
+## The redirect URL (register this in cTrader)
 
-### Storage
-
-Token dienkripsi menggunakan `ISecretProtector`:
-
-```csharp
-var encryptedToken = _protector.Protect(oauthToken);
-await _db.SaveAsync(encryptedToken);
-```
-
-### Refresh
-
-Token di-refresh otomatis sebelum expiry:
-
-```csharp
-if (token.ExpiresAt < DateTime.UtcNow.AddMinutes(5))
-{
-    var newToken = await _openApiClient.RefreshTokenAsync(token.RefreshToken);
-    await SaveTokenAsync(newToken);
-}
-```
-
-### Rotation
-
-Token di-rotasi reguler:
-
-- **Access token** — 1 jam validity, refresh setiap 30 menit.
-- **Refresh token** — 30 hari validity, rotate setiap use.
-
-## Rate Limiting
-
-### Per-Message-Type
-
-| Message Type | Limit/minute |
-|--------------|--------------|
-| `orderCreate` | 30 |
-| `orderModify` | 60 |
-| `orderCancel` | 60 |
-| `positionClose` | 30 |
-| `positionModify` | 60 |
-| `balanceRequest` | 120 |
-
-### Implementation
-
-Rate limiter menggunakan token bucket:
-
-```csharp
-public class RateLimiter
-{
-    private readonly ConcurrentDictionary<string, TokenBucket> _buckets;
-
-    public async Task<bool> TryAcquire(string key, int cost = 1)
-    {
-        var bucket = _buckets.GetOrAdd(key, _ => new TokenBucket(60, 60));
-        return await bucket.TryConsumeAsync(cost);
-    }
-}
-```
-
-### Handling 429
-
-```csharp
-if (response.StatusCode == 429)
-{
-    var retryAfter = response.Headers.RetryAfter;
-    await Task.Delay(retryAfter);
-    // Retry
-}
-```
-
-## User Isolation
-
-Meskipun satu aplikasi, setiap user tetap terisolasi:
-
-### Data Access
-
-```csharp
-// Cek ownership
-var account = await _db.Accounts
-    .Where(a => a.UserId == userId && a.Id == accountId)
-    .FirstOrDefaultAsync();
-
-if (account == null)
-    throw new UnauthorizedAccessException();
-```
-
-### Webhook Verification
-
-Webhook signature diverifikasi:
-
-```csharp
-public bool VerifyWebhook(OpenApiWebhook webhook)
-{
-    var signature = ComputeHmacSha256(webhook.Payload, _clientSecret);
-    return signature == webhook.Signature;
-}
-```
-
-## Monitoring
-
-Dashboard menampilkan:
-
-- **Token status** — valid/expired/refreshing.
-- **Rate limit usage** — penggunaan per user dan per message type.
-- **API errors** — error rate dan type.
-- **Latency** — response time ke Open API.
-
-## Troubleshooting
-
-### Token Expired
+Setiap aplikasi Open API cTrader mendaftarkan **satu** URL redirect — nilai **yang sama** untuk
+aplikasi bersama dan untuk aplikasi per-user:
 
 ```
-Error: token_expired
-Fix: Token akan di-refresh otomatis. Jika persist, reconnect akun.
+{your deployment URL}/openapi/callback
 ```
 
-### Rate Limited
+misalnya `https://cmind.yourbroker.com/openapi/callback`.
 
-```
-Error: rate_limit_exceeded
-Fix: Kurangi request rate atau upgrade tier.
-```
+- Aplikasi **menampilkan nilai yang tepat** di halaman pengaturan Open API (dengan tombol copy) — tempel ke
+  portal mitra cTrader saat Anda membuat aplikasi Open API.
+- Ini disusun dari `App:OpenApi:PublicBaseUrl` sehingga tetap stabil di belakang reverse proxy / CDN;
+  saat tidak disetel, kembali ke host permintaan inbound.
+- Pengalaman undangan vs normal-user berbeda hanya di mana user mendarat **setelah** callback
+  (daftar akun mereka vs konfirmasi "akun ditambahkan") — URL redirect yang terdaftar tidak berubah.
 
-### Webhook Signature Invalid
+## What users see under shared mode
 
-```
-Error: invalid_signature
-Fix: Verifikasi client secret dan webhook payload.
-```
+Ketika aplikasi bersama ada:
+
+- User **tidak mendapat opsi** untuk mendaftarkan aplikasi Open API mereka sendiri — halaman pengaturan menampilkan
+  **"Open API dikelola oleh penyedia Anda"** dan tombol **Authorize accounts** yang menggunakan aplikasi bersama.
+- Aplikasi pribadi yang sudah ada **dihapus**; akun otorisasi mereka dialihkan ke
+  aplikasi bersama dan harus **diotorisasi ulang** (token lama mereka dikeluarkan di bawah
+  id klien yang berbeda). Mencoba membuat aplikasi pribadi mengembalikan error "dikelola oleh penyedia Anda".
+
+## Client rate limits (per message type)
+
+Klien melaju pesan Open API cTrader keluar sehingga ledakan tidak pernah memicu pemblokan batas laju sisi server. Batas adalah **per tipe pesan**, cocok dengan dokumen Open API cTrader:
+
+| Category | What it covers | Default |
+|---|---|---|
+| `General` | trading + read messages (orders, symbols, account queries) | 45 msg/s |
+| `HistoricalData` | trendbar / tick-data requests (throttled harder by cTrader) | 5 msg/s |
+
+Permintaan data historis dihitung terhadap **kedua** bucket-nya sendiri dan bucket umum. Pesan detak jantung dan
+autentikasi tidak pernah dipacing. Pesan antri dan mengalir pada tingkat yang tersedia — tidak ada yang
+dijatuhkan dan urutan dipertahankan.
+
+Sesuaikan jika broker Anda bernegosiasi **lebih tinggi** batas cTrader, atau tetapkan kategori ke **`0`** untuk menonaktifkan
+pacing sepenuhnya (unlimited):
+
+- **Config:** `App:OpenApi:RateLimits:General` / `App:OpenApi:RateLimits:HistoricalData` (msgs/sec).
+- **Owner settings:** kartu **Client rate limits** di **Settings → Open API** (override pemilik menang,
+  berlaku untuk koneksi baru / saat reconnect).

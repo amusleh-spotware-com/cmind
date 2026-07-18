@@ -35,9 +35,7 @@ Başlangıçta uygulama, sahip hesabına ait bir paylaşılan uygulama tohumlar 
 
 ### 2. Sahip ayarları (çalışma zamanı, yeniden dağıtım yok)
 
-**Settings → Open API** (yalnızca sahip), bir **Deployment shared application** kartı gösterir: paylaşılan
-uygulamayı ekle / düzenle / sil, kopyala-yapıştır için görüntülenen yönlendirme URL'siyle. Değişiklikler yeni
-yetkilendirmeler için hemen etkili olur.
+**Settings → Open API** (yalnızca sahip) iki şey gösterir: bir **Your Open API application** bölümü — sahip, herhangi bir kullanıcı gibi kendi **per-user** uygulamasını kaydeder, düzenler ve yetkilendirir (paylaşılan uygulama yapılandırılmadığı sürece kullanılabilir) — ve paylaşılan uygulamayı ekle / düzenle / sil için bir **Deployment shared application** kartı, kopyala-yapıştır için görüntülenen yönlendirme URL'siyle. Değişiklikler yeni yetkilendirmeler için hemen etkili olur. Paylaşılan uygulama yapılandırıldıktan sonra sahibin kendi uygulamasının yerini alır ve **Your Open API application** bölümü, hesapların artık paylaşılan uygulama aracılığıyla yetkilendirileceğini bildiren bir metne dönüşür.
 
 ## Yönlendirme URL'si (bunu cTrader'da kaydedin)
 

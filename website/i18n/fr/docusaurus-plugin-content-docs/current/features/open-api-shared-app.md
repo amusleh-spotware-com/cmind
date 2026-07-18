@@ -30,7 +30,7 @@ Au démarrage, l'application amorce une application partagée détenue par le co
 
 ### 2. Paramètres du propriétaire (runtime, pas de redéploiement)
 
-**Paramètres → Open API** (propriétaire uniquement) affiche une carte **Application partagée de déploiement** : ajouter / modifier / supprimer l'application partagée, avec l'URL de redirection affichée pour copier-coller. Les modifications prennent effet pour les nouvelles autorisations immédiatement.
+**Paramètres → Open API** (propriétaire uniquement) affiche deux choses : une section **Votre application Open API** — le propriétaire enregistre, modifie et autorise sa **propre** application par utilisateur exactement comme n'importe quel utilisateur (disponible tant qu'aucune application partagée n'est configurée) — et une carte **Application partagée de déploiement** pour ajouter / modifier / supprimer l'application partagée, avec l'URL de redirection affichée pour copier-coller. Les modifications prennent effet pour les nouvelles autorisations immédiatement. Une fois qu'une application partagée est configurée, elle remplace l'application propre du propriétaire, et la section **Votre application Open API** bascule vers un avis indiquant que les comptes autorisent maintenant via l'application partagée.
 
 ## L'URL de redirection (enregistrez ceci dans cTrader)
 

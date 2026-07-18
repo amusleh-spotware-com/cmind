@@ -30,7 +30,7 @@ Na inicialização o aplicativo semeia um aplicativo compartilhado possuído pel
 
 ### 2. Configurações de proprietário (tempo de execução, sem reimplantação)
 
-**Settings → Open API** (somente proprietário) mostra um cartão **Aplicativo compartilhado de implantação**: adicione / edite / delete o aplicativo compartilhado, com a URL de redirecionamento exibida para copiar e colar. As mudanças entram em vigor para novas autorizações imediatamente.
+**Settings → Open API** (somente proprietário) mostra duas coisas: uma seção **Seu aplicativo Open API** — o proprietário registra, edita e autoriza seu **próprio** aplicativo por usuário exatamente como qualquer usuário (disponível enquanto nenhum aplicativo compartilhado está configurado) — e um cartão **Aplicativo compartilhado de implantação** para adicionar / editar / excluir o aplicativo compartilhado, com a URL de redirecionamento exibida para copiar e colar. As mudanças entram em vigor para novas autorizações imediatamente. Depois que um aplicativo compartilhado é configurado, ele substitui o próprio aplicativo do proprietário, e a seção **Seu aplicativo Open API** muda para um aviso de que as contas agora autorizam através do aplicativo compartilhado.
 
 ## A URL de redirecionamento (registre isto em cTrader)
 

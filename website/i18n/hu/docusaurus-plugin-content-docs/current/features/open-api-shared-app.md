@@ -30,7 +30,7 @@ Inditasnal az alkalmazas seed-el egy megosztott alkalmazast a tulajdonos fiok al
 
 ### 2. Tulajdonos beallitasok (runtime, nincs redeploy)
 
-**Beallitasok → Open API** (csak tulajdonos) mutat egy **Deployment megosztott alkalmazas** kartyat: hozzaadas / szerkesztes / torles a megosztott alkalmazashoz, a redirect URL megjelenitve masolas-illesszteshez. A valtoztatasok az uj engedelyezesekhez azonnal hatasosak.
+**Beallitasok → Open API** (csak tulajdonos) ket dolgot mutat: egy **Sajat Open API alkalmazas** szakasz — a tulajdonos regisztralja, szerkeszti es engedelmezi a **sajat** per-felhasznalo alkalmazasat, pontosan mint barmelyik felhasznalo (elerheto, amig nincs megosztott alkalmazas konfiguralsva) — es egy **Deployment megosztott alkalmazas** kartya a megosztott alkalmazas hozzaadasahoz / szerkesztesehez / torlesehez, a redirect URL megjelenitve masolas-illestzeshez. A valtoztatasok az uj engedelyezesekhez azonnal hatasosak. Amint egy megosztott alkalmazas konfiguralsva van, felulirja a tulajdonos sajat alkalmazasat, es a **Sajat Open API alkalmazas** szakasz egy ertesitesre valt, hogy a fiok mostantol a megosztott alkalmazason keresztul engedelyeznek.
 
 ## A redirect URL (regisztrald a cTrader-ben)
 

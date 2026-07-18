@@ -18,8 +18,8 @@ Cerminkan akaun **master** cTrader ke satu atau lebih akaun **slave** — lintas
 | Peristiwa Master | Tindakan Slave |
 |--------------|--------------|
 | Buka kedudukan pasaran / jarak pasaran | Buka salinan bersaiz (berlabel dengan id kedudukan sumber) |
-| Pesanan pending had / henti / had-henti | Tempat pesanan pending yang sepadan |
-| Pinda pesanan pending | Pinda pesanan pending yang dicerminkan di tempat |
+| Pesanan pending had / henti / had-henti | Letakkan pesanan pending yang sepadan, membawa had-rugi/keuntungan-ambil master |
+| Pinda pesanan pending | Pinda pesanan pending yang dicerminkan di tempat (termasuk had-rugi/keuntungan-ambil) |
 | Batalkan pesanan pending / luput | Batalkan pesanan pending yang dicerminkan |
 | Tutup separa | Tutup bahagian yang sama dari kedudukan slave |
 | Skala-masuk (kenaikan volum) | Buka volum yang ditambah (opsional) |
@@ -35,6 +35,8 @@ Setiap salinan **berlabel dengan id kedudukan/pesanan sumber**. Selepas sambung 
 **Import / eksport.** Blok tetapan keseluruhan boleh **dieksport ke fail JSON** dan **diimport semula** untuk mengisi bentuk terlebih dahulu, jadi penalaan boleh digunakan semula merentasi profil tanpa penaipan semula. Peta simbol juga boleh **dieksport / diimport sebagai fail CSV** (`Source,Destination,VolumeMultiplier`) — sediakan peta simbol broker besar dalam hamparan dan muatkannya dalam satu langkah. Kawalan simbol dan import/eksport CSV yang sama juga tersedia dalam dialog destinasi di halaman Perdagangan Salinan.
 
 Tindakan baris menghormati kitaran hayat: **Mulai** hanya didayakan apabila tidak berjalan, **Henti** + **Jeda** hanya apabila berjalan, **Padam** dilumpuhkan semasa berjalan + meminta pengesahan sebelum membuang profil + destinasi.
+
+Profil yang baru dimulai secara ringkas menunjukkan status **Starting** (bukan *Running* hijau) semasa hos memuatkan data rujukan dan menjalankan resinkronisasi pertama — ia belum mencerminkan pesanan di seluruh destinasi. Ia bertukar kepada **Running** sebaik sahaja resinkronisasi pertama itu selesai dan enjin boleh menyalin. Starting diperlakukan sebagai berjalan untuk kawalan baris (Mulai dilumpuhkan, Henti dan log langsung didayakan, Edit/Padam disekat), jadi profil yang memanaskan tidak boleh dimulai semula atau diedit di tengah-tengah permulaan. Fasa pemanasan dijejaki dalam-proses pada nod yang menghoskan profil; profil yang dihos pada replika lain (atau satu yang tidak boleh dihos — akaun sumber/destinasinya tidak dipaut melalui API Terbuka) menunjukkan status biasanya.
 
 ## Pilihan per-destinasi
 
@@ -54,12 +56,12 @@ Tetapkan pada halaman Profil Baru, dalam dialog destinasi di halaman Perdagangan
 - **Kunci konfigurasi** (C9) — beku tetapan destinasi untuk tempoh (`POST …/destinations/{id}/lock` dengan minit). Semasa dikunci, destinasi tidak boleh dikeluarkan (agregat menolak dengan `CopyDestinationConfigLocked`) — penjaga yang disengajakan terhadap perubahan impulsif semasa penurunan. Kunci tamat secara automatik pada cap waktunya.
 - **Konsistensi pra-amaran** (C10) — amaran (sekali per hari UTC) apabila **keuntungan harian** destinasi mencapai peratusan terkonfigurasi bagi ekuiti pembukaan hari (`CopyConsistencyThresholdApproaching`), jadi peraturan konsistensi firma-sokongan dihormati *sebelum* ia api. Sisi untung, bebas daripada kunci sisi rugi; dijalankan daripada asas hari yang sama seperti penjaga peraturan sokongan.
 - **Penapis jenis pesanan** — pilih tepat jenis pesanan master mana untuk disalin: pasaran, jarak pasaran, had, henti, had-henti (`CopyOrderTypes` bendera; lalai semua). Selektiviti gaya cMAM.
-- **Salin SL / Salin TP** — cerminkan had-rugi/keuntungan-ambil master, atau urus perlindungan secara bebas.
+- **Salin SL / Salin TP** — cerminkan had-rugi/keuntungan-ambil master, atau urus perlindungan secara bebas. Applies to **both** open positions **and** resting pending orders — a limit/stop/stop-limit copy is placed and amended with the master order's SL/TP (swapped under **Reverse**), so the protection is attached the moment the pending fills, not only after.
 - **Salin henti surut**, **cerminkan tutupan separa**, **cerminkan skala-masuk** — masing-masing boleh diubah secara bebas.
 - **Salin luput pending** (lalai hidup) — cerminkan cap waktu luput pesanan pending master Good-Till-Date.
 - **Salin gelincir master** (lalai hidup) — untuk pesanan jarak pasaran + had-henti, letakkan pesanan slave dengan gelincir tepat master-dalam-poin (harga asas diambil daripada tempat langsung slave).
 - **Penjaga**: peratusan penurunan maksimum, had kehilangan harian, lengah salinan maksimum, penapis gelincir (lewatkan salinan jika harga slave bergerak melampaui N pip daripada kemasukan master). **Lengah salinan maksimum** diukur terhadap cap waktu pelayan sebenar peristiwa master (`ExecutionEvent.ServerTimestamp`) melalui `TimeProvider` yang disuntik: isyarat lebih lama daripada lengah maksimum terkonfigurasi dilangkau, jadi salinan tua tidak pernah diletakkan lewat (sebelum ini lengah selalu sifar + penjaga mati).
-- **Normalisasi ketepatan SL/TP** (M6) — harga had-rugi/keuntungan-ambil salinan dibundarkan ke **ketepatan digit** simbol destinasi sebelum pinda, jadi harga master pada ketepatan lebih halus (atau ketidakpadanan digit lintas-broker) tidak pernah api pelayan `INVALID_STOPLOSS_TAKEPROFIT`.
+- **Normalisasi ketepatan SL/TP** (M6) — harga had-rugi/keuntungan-ambil salinan dibundarkan ke **ketepatan digit** simbol destinasi sebelum pinda (on positions **and** pending-order placement/amend), jadi harga master pada ketepatan lebih halus (atau ketidakpadanan digit lintas-broker) tidak pernah api pelayan `INVALID_STOPLOSS_TAKEPROFIT`.
 - **Pemutus litar penolakan / Penjaga Pengikut** (G8) — destinasi menolak pembukaan `CopyDefaults.RejectionBudget` berturut-turut **api**: tiada pembukaan baru untuk tetingkap penyejukan (`CopyDestinationTripped` amaran api), menghenti ribut penolakan daripada menimpa (firma-sokongan) akaun. Kedudukan yang ada masih diurus + ditutup semasa api; pemutus auto-set semula selepas penyejukan + salinan berjaya jelas pembilang.
 - **Siling akal lot** (C14) — saiz salinan maksimum mutlak dan/atau cap pengganda-master. Salinan yang dikira melebihi had mutlak, atau melebihi pengganda `N×` lot master sendiri, **keras-diblok** (dipermukakan sebagai `lot_sanity` melangkau, dikira pada `cmind.copy.skipped`) tidak diletakkan — mempertahankan melawan kelas oversize bencana (lot master 0.23 bertukar kepada 3 lot pada setiap penerima melalui pengganda melarikan diri atau pepijat pembundaran). Kedua-dua dimensi lalai `0` (matikan).
 
@@ -68,6 +70,7 @@ Tetapkan pada halaman Profil Baru, dalam dialog destinasi di halaman Perdagangan
 Enjin dibina untuk realiti bahawa apa pun boleh gagal pada masa-masa:
 
 - **Timeout korelasi isian pending-slave** (C13) — pending slave yang dicerminkan yang pending master hilang (bukan berehat mahupun baru diisi) dibatalkan selepas timeout korelasi, jadi salinan slave tidak boleh diisi tidak berkorelasi ke kedudukan tidak terurus (`CopyPendingTimedOut`). Resinkronisasi juga membersihkan yatim piatu pending-diisi berlabel id-pesanan.
+- **Perlumbaan isian pending lintas-broker** — pending slave sendiri boleh diisi (harganya mencecah) dalam tingkap kecil sebelum peristiwa isi/batal master diproses. Itu meninggalkan kedudukan slave dilabel oleh id pesanan sumber, yang laluan tutup/SL-TP kanonik (kunci oleh id kedudukan sumber) akan terlepas. Pada pengisian master salinan slave yang awal dihentikan dan diganti oleh satu salinan pasaran berlabel kanonik — jadi destinasi berakhir dengan betul-betul **satu** salinan, tidak pernah kedudukan berganda; semasa pembatalan master ditutup terus-terang (master tidak pernah mengambil dagangan). Kedua-duanya bertindak segera, bukan hanya pada resinkronisasi seterusnya. Pukulan SL/TP sisi slave yang menutup salinan yang master masih pegang didorong sumber dan dibuka semula pada rekonsiliasi seterusnya (enjin mencerminkan peristiwa **master**; ia tidak menggunakan pelaksanaan sisi destinasi).
 - **Tutupan/ratakan yang kuat** (M8) — menutup yatim piatu pada resinkronisasi, atau meratakannya semasa pelanggaran penjaga, bertoleransi terhadap kedudukan broker sudah ditutup (`POSITION_NOT_FOUND`): setiap tutupan dijalankan secara bebas, jadi satu id basi tidak pernah menggugurkan resinkronisasi atau meninggalkan akaun un-ratakan yang lain.
 
 - **Mulai dengan master sudah dalam dagangan** — pada mulai hos rekonsiliasi + membuka salinan untuk kedudukan yang ada master.

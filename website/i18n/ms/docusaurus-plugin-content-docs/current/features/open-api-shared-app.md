@@ -35,8 +35,7 @@ nilai masa jalan yang diedit pemilik, dan pembibitan semula ialah no-op).
 
 ### 2. Tetapan pemilik (masa jalan, tanpa pengambilan semula)
 
-**Tetapan → Open API** (pemilik sahaja) menunjukkan kad **Aplikasi kongsi penempatan**: tambah / edit /
-padam apl kongsi, dengan URL Pengarah semula dipaparkan untuk salin-lekat. Perubahan berkuatkuasa untuk pengesahan baharu secara serta-merta.
+**Tetapan → Open API** (pemilik sahaja) menunjukkan dua perkara: bahagian **Aplikasi Open API Anda Sendiri** — pemilik mendaftarkan, menyunting, dan membenarkan apl **mereka sendiri** setiap pengguna dengan tepat seperti mana-mana pengguna (tersedia manakala tiada apl kongsi dikonfigurasi) — dan kad **Aplikasi kongsi penempatan** untuk tambah / sunting / padam apl kongsi, dengan URL Pengarah semula dipaparkan untuk salin-lekat. Perubahan berkuatkuasa untuk pengesahan baharu secara serta-merta. Apabila apl kongsi dikonfigurasi ia menggantikan apl pemilik mereka sendiri, dan bahagian **Aplikasi Open API Anda Sendiri** bertukar kepada notis bahawa akaun kini membenarkan melalui apl kongsi.
 
 ## URL Pengarah semula (daftarkan ini dalam cTrader)
 

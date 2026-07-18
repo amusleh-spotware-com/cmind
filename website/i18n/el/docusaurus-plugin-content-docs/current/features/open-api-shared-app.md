@@ -34,9 +34,7 @@ By default κάθε user εγγράφει δικό τους **own** cTrader Open
 
 ### 2. Owner settings (runtime, χωρίς redeploy)
 
-**Settings → Open API** (owner μόνο) εμφανίζει **Deployment shared application** card: add / edit /
-delete το shared app, με redirect URL εμφανιζόμενο για copy-paste. Οι Changes παίρνουν effect για νέα
-authorizations αμέσως.
+**Settings → Open API** (owner μόνο) εμφανίζει δύο πράγματα: ένα **Your Open API application** section — ο owner εγγράφει, επεξεργάζεται, και εξουσιοδοτεί τη δικιά του **own** per-user app ακριβώς όπως κάθε user (διαθέσιμο ενώ δεν υπάρχει configured shared app) — και ένα **Deployment shared application** card για να add / edit / delete το shared app, με redirect URL εμφανιζόμενο για copy-paste. Οι Changes παίρνουν effect για νέα authorizations αμέσως. Αφού ένα shared app είναι configured, αντικαθιστά τη δικιά του app, και το **Your Open API application** section αλλάζει σε ένα notice ότι τα accounts τώρα εξουσιοδοτούν μέσω του shared app.
 
 ## Το redirect URL (εγγραφείτε αυτό σε cTrader)
 
@@ -76,3 +74,14 @@ block. Τα Limits είναι **per message type**, matching cTrader Open API do
 |---|---|---|
 | `General` | trading + read messages (orders, symbols, account queries) | 45 msg/s |
 | `HistoricalData` | trendbar / tick-data requests (throttled harder από cTrader) | 5 msg/s |
+
+A historical-data request counts against **both** its own bucket and the general bucket. Heartbeat and
+authentication messages are never paced. Messages queue and drain at the available rate — nothing is
+dropped and order is preserved.
+
+Tune them if your broker negotiated **higher** cTrader limits, or set a category to **`0`** to disable
+pacing entirely (unlimited):
+
+- **Config:** `App:OpenApi:RateLimits:General` / `App:OpenApi:RateLimits:HistoricalData` (msgs/sec).
+- **Owner settings:** the **Client rate limits** card on **Settings → Open API** (owner override wins,
+  applies to new connections / on reconnect).

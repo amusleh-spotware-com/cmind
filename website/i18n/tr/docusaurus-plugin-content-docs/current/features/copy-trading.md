@@ -18,8 +18,8 @@ description: "Master cTrader hesabını bir veya daha fazla slave hesaba yansıt
 | Master olayı | Slave işlemi |
 |--------------|--------------|
 | Pazar / pazar aralığı pozisyon açılması | Boyutlu bir kopya aç (kaynak pozisyon kimliği ile etiketli) |
-| Limit / stop / stop-limit beklemede olan emir | Eşleşen beklemede olan emri yaz |
-| Beklemede olan emir değiştirme | Yansıtılan beklemede olan emri yerinde değiştir |
+| Limit / stop / stop-limit beklemede olan emir | Eşleşen beklemede olan emri yaz, master'ın stop-loss / take-profit'ini taşıyarak |
+| Beklemede olan emir değiştirme | Yansıtılan beklemede olan emri yerinde değiştir (stop-loss / take-profit dahil) |
 | Beklemede olan emir iptal / sona erme | Yansıtılan beklemede olan emri iptal et |
 | Kısmi kapatma | Slave pozisyonun aynı oranını kapat |
 | Ölçekte giriş (hacim artırma) | Eklenen hacmi aç (katılım seçeneği) |
@@ -35,6 +35,8 @@ Her kopya **kaynak pozisyon/emir kimliği ile etiketli**. Yeniden bağlantıdan 
 **Dışarı Aktar / İçeri Aktar.** Tüm ayarlar bloğu **bir JSON dosyasına aktarılabilir** ve **tekrar yüklenebilir** formla ön doldurulabilir, böylece ayarlama birden fazla profilde yeniden yazılmadan yeniden kullanılabilir. Sembol haritası da benzer şekilde **bir CSV dosyası olarak dışarı aktarılabilir/içeri aktarılabilir** (`Kaynak,Hedef,HacimÇarpanı`) — geniş bir broker-sembol haritasını bir elektronik tablodan hazırlayın ve tek adımda yükleyin. Aynı sembol kontrolleri ve CSV dışarı/içeri aktar, Kopya Ticaret sayfasında hedef iletişim kutusunda da mevcuttur.
 
 Satır işlemleri yaşam döngüsünü saygı duyar: **Başla** sadece çalışmadığında etkinleştirilir, **Durdur** + **Duraklat** sadece çalışırken, **Sil** çalışırken devre dışı + profili ve hedefleri silmeden önce onay ister.
+
+Yeni başlatılan bir profil kısaca **Starting** durumunu gösterir (yeşil *Running* değil) ana bilgisayarı referans verileri yüklerken ve ilk resenkronizasyonu çalıştırırken — henüz hedefler arasında emirleri yansıtmamaktadır. İlk resenkronizasyon tamamlandığı ve motor kopya kopyalayabileceği anda **Running** durumuna dönüşür. Starting, satır kontrolleri için çalışan olarak işlem görür (Start devre dışı, Stop ve canlı günlükler etkinleştirildi, Düzenle/Sil engellendi), bu yüzden ısınan bir profil başlangıçta yeniden başlatılamaz veya düzenlenemez. Isınma aşaması profili barındıran düğüm üzerinde işlem içi takip edilir; başka bir replikada barındırılan bir profil (veya barındırılamayan — kaynak/hedef hesapları Açık API aracılığıyla bağlantılı değil) düz durumunu gösterir.
 
 ## Hedef başına seçenekler
 
@@ -54,12 +56,12 @@ Yeni Profil sayfasında, Kopya Ticaret sayfasında hedef iletişim kutusunda vey
 - **Yapılandırma kilidi** (C9) — hedef'in ayarlarını dönem için dondur (`POST …/destinations/{id}/lock` dakikalarla). Kilitli iken, hedef kaldırılamaz (toplam `CopyDestinationConfigLocked` ile reddeder) — çekiliş sırasında dürtüsel değişikliklere karşı kasıtlı koruma. Kilit zaman damgasında otomatik olarak sona erer.
 - **Tutarlılık ön uyarısı** (C10) — uyar (UTC günde bir kez) hedef'in **günlük kar** yapılandırılmış yüzdesine ulaştığında günün açılış öz sermayesinin (`CopyConsistencyThresholdApproaching`), bu yüzden prop-firma tutarlılık kuralı *öncesinde* saygı duyulur. Kar tarafı, kayıp tarafı kilidi bağımsız; prop-kural koruması ile aynı gün tabanında çalışır.
 - **Emir türü filtresi** — tam olarak hangi master emir türlerinin kopyalanacağını seçin: pazar, pazar-aralığı, limit, stop, stop-limit (`CopyOrderTypes` bayrakları; varsayılan tümü). cMAM tarzı seçicilik.
-- **SL Kopyala / TP Kopyala** — master'ın stop-loss / take-profit'i yansıt, veya korumayı bağımsız olarak yönet.
+- **SL Kopyala / TP Kopyala** — master'ın stop-loss / take-profit'i yansıt, veya korumayı bağımsız olarak yönet. **Hem** açık pozisyonlar **ve** beklemede olan emirler için geçerli — limit/stop/stop-limit kopya master emirinin SL/TP ile yerleştirilir ve değiştirilir (**Tersine Çevir** altında değiştirilir), böylece koruma beklemede emri doldurduğu anda eklenir, sadece sonrasında değil.
 - **Trailing stop Kopyala**, **kısmi kapatmayı yansıt**, **ölçek girişi yansıt** — her biri bağımsız olarak açılıp kapatılabilir.
 - **Sona ermeyi Kopyala** (varsayılan açık) — master beklemede olan emir'in Good-Till-Date sona erme zaman damgasını yansıt.
 - **Master kaymasını Kopyala** (varsayılan açık) — pazar-aralığı + stop-limit emirleri için, slave emrini master'ın tam kayma-puan (taban fiyat slave'in canlı spottan alınır) ile yaz.
 - **Korumalar**: max çekiliş %, günlük kayıp sınırı, max kopya gecikmesi, kayma filtresi (slave fiyat master girişinden N pips ötesine taşınmışsa kopyayı atla). **Max kopya gecikmesi** master olayı'nın gerçek sunucu zaman damgasına (`ExecutionEvent.ServerTimestamp`) karşı enjekte `TimeProvider` aracılığıyla ölçülür: yapılandırılan max-lag'dan daha eski sinyal atlanır, bu yüzden bayat kopya hiçbir zaman geç yürütülmez (daha önce gecikme her zaman sıfır + koruma ölü).
-- **SL/TP hassas normalizasyonu** (M6) — kopyalanan stop-loss/take-profit fiyatları amend öncesinde **hedef** sembolün basamak hassasiyetine yuvarlanır, bu yüzden master fiyat daha ince hassasiyet (veya broker arası basamak uyuşmazlığı) asla sunucunun `INVALID_STOPLOSS_TAKEPROFIT` tetiklemez.
+- **SL/TP hassas normalizasyonu** (M6) — kopyalanan stop-loss/take-profit fiyatları amend öncesinde **hedef** sembolün basamak hassasiyetine yuvarlanır (pozisyonlar **ve** beklemede olan emir yerleşimi/amend), bu yüzden master fiyat daha ince hassasiyet (veya broker arası basamak uyuşmazlığı) asla sunucunun `INVALID_STOPLOSS_TAKEPROFIT` tetiklemez.
 - **İmza devresi kırıcı / Takipçi Koruması** (G8) — hedef `CopyDefaults.RejectionBudget` emirleri sırasında reddediliyor **tetiklendi**: cooldown penceresi için yeni açılış yok (`CopyDestinationTripped` uyarısı ateşlenir), reddetme fırtınasının (prop-firma) hesabını çekiçlemesini durdurur. Mevcut pozisyonlar tetiklenirken yönetilir + kapatılır; devre breaker cooldown sonrasında ve başarılı kopya sonrasında otomatik olarak sıfırlanır.
 - **Lot sağduyu tavanı** (C14) — mutlak maksimum kopya boyutu ve/veya multiple-of-master sınırı. Hesaplanan kopya mutlak sınırı aşan, veya master'ın kendi lot boyutunun `N×`sini aşan, **zor blok** (`lot_sanity` atla olarak yüzeylenmiş, `cmind.copy.skipped` sayılır) değil yürütülür — felaket-oversize sınıfına karşı savunur (0,23-lot master her alıcıda runaway çarpanı veya yuvarlama hatası aracılığıyla 3 lota dönüştürülür). Her iki boyut varsayılan `0` (kapalı).
 
@@ -68,6 +70,7 @@ Yeni Profil sayfasında, Kopya Ticaret sayfasında hedef iletişim kutusunda vey
 Motor herhangi bir zaman her şeyin başarısız olabileceği gerçeğine göre inşa edilmiştir:
 
 - **Slave-pending doldurma-korelasyon zaman aşımı** (C13) — yansıtılan slave beklemede olan master beklemede olan kaybolmuş (ne istirahat ne de taze doldurulmuş) korelasyon zaman aşımından sonra iptal edilir, bu yüzden slave kopya korelasyonsuz yönetilmeyen pozisyona dolduramaz (`CopyPendingTimedOut`). Resenkronizasyon ayrıca emir-kimliği-etiketli doldurulmuş-beklemede olan yetimi temizler.
+- **Broker arası pending-doldurma yarışı** — bir slave'in kendi beklemede olan emri doldurabilir (fiyatı harita) master'ın doldurma/iptal olayı işlenmeden önceki küçük pencerede. Bu kaynak **emir** kimliği tarafından etiketli slave pozisyon bırakır, düşük/TP yollarını kanonikleme (anahtar kaynak **pozisyon** kimliğine göre) kaçırıyor olacaktır. Master **doldurmada** erken slave doldurmesi emekli edilir ve bir kanonik etiketli pazar kopya ile değiştirilir — bu yüzden hedef tam bir kopya ile sonuçlanır, asla bir çoğaltılmış pozisyon; master **iptalde** doğrudan kapatılır (master hiçbir zaman ticareti almadı). Her ikisi hemen hareket eder, sadece sonraki resenkronizasyonda değil. Master hala tuttuğu bir kopyayı kapatın bir slave-side SL/TP isabet kaynağı tarafından yönlendirilir ve sonraki uzlaştırma üzerine yeniden açılır (motor **master** olaylarını yansıtır; hedef tarafı uygulamalarını tüketmez).
 - **Güçlü kapatma/düzleştirme** (M8) — resenkronizasyonda yetimi kapatma, veya koruma ihlali üzerine düzleştirme, broker zaten kapatmış (`POSITION_NOT_FOUND`) tolere eder: her kapatma bağımsız çalışır, bu yüzden bir bayat kimlik hiçbir zaman resenkronizasyonu durdurmuyor veya hesabı un-flattened bırakmıyor.
 
 - **Master zaten işlemlerde başla** — başlangıçta host mutabakat + master'ın mevcut pozisyonları için kopyaları açar.

@@ -30,7 +30,7 @@ Al inicio, la app siembra una aplicación compartida propiedad de la cuenta del 
 
 ### 2. Configuración del propietario (tiempo de ejecución, sin redeploy)
 
-**Configuración → Open API** (solo propietario) muestra una tarjeta **Aplicación compartida de despliegue**: agregar / editar / eliminar la app compartida, con la URL de redirección mostrada para copy-paste. Los cambios toman efecto para autorizaciones nuevas inmediatamente.
+**Configuración → Open API** (solo propietario) muestra dos cosas: una sección **Tu aplicación Open API** — el propietario registra, edita y autoriza su **propia** app por usuario exactamente como cualquier usuario (disponible mientras no hay app compartida configurada) — y una tarjeta **Aplicación compartida de despliegue** para agregar / editar / eliminar la app compartida, con la URL de redirección mostrada para copy-paste. Los cambios toman efecto para autorizaciones nuevas inmediatamente. Una vez que se configura una app compartida, supera la propia app del propietario, y la sección **Tu aplicación Open API** cambia a un aviso de que las cuentas ahora autorizan a través de la app compartida.
 
 ## La URL de redirección (registra esto en cTrader)
 

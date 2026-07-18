@@ -35,9 +35,7 @@ mai un valore runtime edited dall'owner, e re-seeding è un no-op).
 
 ### 2. Owner settings (runtime, no redeploy)
 
-**Settings → Open API** (solo owner) mostra una card **Deployment shared application**: aggiungi / modifica /
-elimina l'app condivisa, con l'redirect URL displayed per copy-paste. I cambiamenti hanno effetto per le
-nuove autorizzazioni immediatamente.
+**Settings → Open API** (solo owner) mostra due cose: una sezione **Your Open API application** — il proprietario registra, modifica e autorizza la **propria** app per-user esattamente come qualsiasi utente (disponibile mentre nessuna app condivisa è configurata) — e una card **Deployment shared application** per aggiungere / modificare / eliminare l'app condivisa, con l'redirect URL displayed per copy-paste. I cambiamenti hanno effetto per le nuove autorizzazioni immediatamente. Una volta che un'app condivisa è configurata, sostituisce l'app personale del proprietario, e la sezione **Your Open API application** passa a un avviso che gli account ora autorizzano attraverso l'app condivisa.
 
 ## L'redirect URL (registralo in cTrader)
 

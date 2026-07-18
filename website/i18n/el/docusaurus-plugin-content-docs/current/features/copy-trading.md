@@ -9,7 +9,7 @@ description: "Αντιγραφή λογαριασμού master cTrader σε έν
 ## Concepts
 
 - **Copy profile** — ένα master (`SourceAccountId`) + ένας ή περισσότεροι **προορισμοί**. Κύκλος ζωής: `Draft → Running → Paused → Stopped` (`Error` σε περίπτωση αποτυχίας). Aggregate root: `CopyProfile` (ιδιοκτησία `CopyDestination`).
-- **Destination** — ένας slave λογαριασμός + πλήρο σύνολο κανόνων για το πώς αντιγράφεται το master σε αυτόν. Όλη η ρύθμιση ανά προορισμό, οπότε ένα master μπορεί να τροφοδοτήσει συντηρητικά + επιθετικά slave λογαριασμάτα ταυτόχρονα.
+- **Destination** — ένας slave λογαριασμός + πλήρες σύνολο κανόνων για το πώς αντιγράφεται το master σε αυτόν. Όλη η ρύθμιση ανά προορισμό, οπότε ένα master μπορεί να τροφοδοτήσει συντηρητικά + επιθετικά slave λογαριασμάτα ταυτόχρονα.
 - **Copy engine host** — εργαζόμενος που εκτελείται για profile (`CopyEngineHost`). Συνδρομή στο stream εκτέλεσης του master, εφαρμογή κάθε γεγονότος σε κάθε προορισμό.
 - **Supervisor** — `CopyEngineSupervisor`, background service σε κάθε node. Φιλοξενεί αναθεμένα profiles, αυτό-διορθώνει στο cluster (δείτε [scaling](../deployment/scaling.md)).
 
@@ -18,8 +18,8 @@ description: "Αντιγραφή λογαριασμού master cTrader σε έν
 | Master event | Slave action |
 |--------------|--------------|
 | Market / market-range position open | Άνοιγμα μιας σταθμισμένης αντιγραφής (επισημασμένης με το ID της πηγαίας θέσης) |
-| Limit / stop / stop-limit pending order | Τοποθέτηση της αντίστοιχης pending order |
-| Pending order amend | Τροποποίηση της αντιγραφής pending order στη θέση της |
+| Limit / stop / stop-limit pending order | Τοποθέτηση της αντίστοιχης pending order, φέρνοντας το stop-loss / take-profit του master |
+| Pending order amend | Τροποποίηση της αντιγραφής pending order στη θέση της (συμπεριλαμβανομένου του stop-loss / take-profit του master) |
 | Pending order cancel / expiry | Ακύρωση της αντιγραφής pending order |
 | Partial close | Κλείσιμο του ίδιου ποσοστού της slave θέσης |
 | Scale-in (volume increase) | Άνοιγμα του πρόσθετου όγκου (opt-in) |
@@ -35,6 +35,8 @@ description: "Αντιγραφή λογαριασμού master cTrader σε έν
 **Εισαγωγή / εξαγωγή.** Ολόκληρο το σύνολο ρυθμίσεων μπορεί να **εξαχθεί σε αρχείο JSON** και να **εισαχθεί** ξανά για προ-συμπλήρωση του φόρμας, έτσι ώστε μια συνήθεια να μπορεί να επαναχρησιμοποιηθεί σε διαφορετικά προφίλ χωρίς επανατύπωση. Ο χάρτης συμβόλων μπορεί επίσης να **εξαχθεί / εισαχθεί ως αρχείο CSV** (`Source,Destination,VolumeMultiplier`) — προετοιμάστε έναν μεγάλο χάρτη συμβόλων του broker σε ένα υπολογιστικό φύλλο και φορτώστε τον σε ένα βήμα. Οι ίδιοι έλεγχοι συμβόλων και η εισαγωγή/εξαγωγή CSV είναι επίσης διαθέσιμα στο διάλογο προορισμού στη σελίδα Copy Trading.
 
 Οι ενέργειες σειράς σέβονται τον κύκλο ζωής: **Εκκίνηση** ενεργοποιημένη μόνο όταν δεν εκτελείται, **Σταματήστε** + **Παύση** μόνο όταν εκτελείται, **Διαγραφή** απενεργοποιημένη κατά την εκτέλεση + ζητά επιβεβαίωση πριν αφαιρέσει το προφίλ + τους προορισμούς.
+
+Ένα νέο πρόσφατα ξεκινημένο προφίλ εμφανίζει συνήθως την κατάσταση **Starting** (όχι ένα πράσινο *Running*) ενώ το host του φορτώνει δεδομένα αναφοράς και εκτελεί την πρώτη resync — δεν κατοπτρίζει ακόμη παραγγελίες στους προορισμούς. Αλλάζει σε **Running** τη στιγμή που ολοκληρώνεται αυτή η πρώτη resync και η engine μπορεί να αντιγράψει. Το Starting αντιμετωπίζεται ως running για τα control στη σειρά (Start απενεργοποιημένο, Stop και live-logs ενεργοποιημένα, Edit/Delete αποκλεισμένα), έτσι ένα warming προφίλ δεν μπορεί να επανεκκινηθεί ή να επεξεργαστεί mid-startup. Η φάση θέρμανσης παρακολουθείται in-process στον node που φιλοξενεί το προφίλ· ένα προφίλ που φιλοξενείται σε άλλο replica (ή ένα που δεν μπορεί να φιλοξενηθεί — οι λογαριασμοί πηγαίας/προορισμού δεν είναι συνδεδεμένοι μέσω του Open API) εμφανίζει την απλή κατάστασή του.
 
 ## Per-destination options
 
@@ -54,12 +56,12 @@ description: "Αντιγραφή λογαριασμού master cTrader σε έν
 - **Config lock** (C9) — freeze ρυθμίσεων προορισμού για περίοδο (`POST …/destinations/{id}/lock` με λεπτά). Κατά την κλείδωση, προορισμός δεν μπορεί να αφαιρεθεί (aggregate απορρίπτει με `CopyDestinationConfigLocked`) — σκόπιμος φυλάκας εναντίον ωμής αλλαγής κατά drawdown. Κλείδωμα λήγει αυτόματα στο timestamp του.
 - **Consistency pre-alert** (C10) — προειδοποίηση (μία φορά ανά UTC day) όταν **daily profit** προορισμού φτάνει ρυθμιστέο ποσοστό ημερήσιας equity αγοράς (`CopyConsistencyThresholdApproaching`), έτσι prop-firm consistency rule σεβαστός *πριν* εμπλακεί. Profit-side, ανεξάρτητο από loss-side lockout; εκτελείται από ίδιο day baseline με prop-rule guard.
 - **Order-type filter** — επιλογή ακριβώς ποιοι master order types να αντιγράφονται: market, market-range, limit, stop, stop-limit (`CopyOrderTypes` flags; default all). cMAM-style selectivity.
-- **Copy SL / Copy TP** — αντιγραφή stop-loss / take-profit του master, ή ανεξάρτητη διαχείριση προστασίας.
+- **Copy SL / Copy TP** — αντιγραφή stop-loss / take-profit του master, ή ανεξάρτητη διαχείριση προστασίας. Εφαρμόζεται σε **κάθε** ανοικτές θέσεις **και** resting pending orders — μια limit/stop/stop-limit αντιγραφή τοποθετείται και τροποποιείται με το SL/TP της master order (ανταλλάσσεται κάτω από **Reverse**), έτσι η προστασία συνδέεται τη στιγμή που η pending γεμίζει, όχι μόνο μετά.
 - **Copy trailing stop**, **mirror partial close**, **mirror scale-in** — κάθε ανεξάρτητα toggleable.
 - **Copy pending expiry** (default on) — αντιγραφή master pending order's Good-Till-Date expiry timestamp.
 - **Copy master slippage** (default on) — για market-range + stop-limit orders, τοποθέτηση slave order με ακριβές slippage-in-points του master (base price λαμβάνεται από slave's live spot).
 - **Guards**: max drawdown %, daily loss cap, max copy delay, slippage filter (skip copy αν slave price μετακινήθηκε πέρα από N pips από master entry). **Max copy delay** μετρημένο εναντίον master event's real server timestamp (`ExecutionEvent.ServerTimestamp`) μέσω injected `TimeProvider`: signal παλαιότερο του ρυθμιστέου max-lag παραλείπεται, έτσι stale copy ποτέ δεν τοποθετείται καθυστερημένο (πρέπει delay πάντα μηδέν + guard νεκρό).
-- **SL/TP precision normalization** (M6) — αντιγραφή stop-loss/take-profit τιμές στρογγυλεμένες σε **destination** symbol's digit precision πριν amend, έτσι master price σε λεπτότερη precision (ή cross-broker digit mismatch) ποτέ δεν ενεργοποιεί server's `INVALID_STOPLOSS_TAKEPROFIT`.
+- **SL/TP precision normalization** (M6) — αντιγραφή stop-loss/take-profit τιμές στρογγυλεμένες σε **destination** symbol's digit precision πριν amend (on positions **και** pending-order placement/amend), έτσι master price σε λεπτότερη precision (ή cross-broker digit mismatch) ποτέ δεν ενεργοποιεί server's `INVALID_STOPLOSS_TAKEPROFIT`.
 - **Rejection circuit breaker / Follower Guard** (G8) — προορισμός απορρίπτων `CopyDefaults.RejectionBudget` ανοίγματα σε σειρά **tripped**: χωρίς νέα άνοιγματα για cooldown window (`CopyDestinationTripped` alert πυροδοτείται), σταματώντας απορρίψεις άνοιγμα από hammering (prop-firm) λογαριασμό. Υπάρχουσες θέσεις ακόμα διαχειρίσιμες + κλειστές κατά tripped; breaker auto-resets μετά cooldown + successful copy καθαρίζει counter.
 - **Lot sanity ceiling** (C14) — απόλυτο μέγιστο copy size και/ή multiple-of-master cap. Υπολογισμένη αντιγραφή υπέρβαση absolute cap, ή υπέρβαση `N×` master's own lot size, **hard-blocked** (επιφανές ως `lot_sanity` skip, μετρημένο σε `cmind.copy.skipped`) δεν τοποθετείται — υπερασπίζει εναντίον catastrophic-oversize class (0.23-lot master γίνεται 3 lots σε κάθε receiver μέσω runaway multiplier ή rounding bug). Και τα δύο dimensions default `0` (off).
 
@@ -68,6 +70,7 @@ description: "Αντιγραφή λογαριασμού master cTrader σε έν
 Engine κατασκευασμένο για πραγματικότητα ότι τίποτα δεν μπορεί να αποτύχει οποιαδήποτε στιγμή:
 
 - **Slave-pending fill-correlation timeout** (C13) — αντιγραμμένη slave pending του οποίου master pending εξαφανίστηκε (ούτε ξεκουράζεται ούτε φρεσκοπληρωθεί) ακυρώθηκε μετά correlation timeout, έτσι slave copy δεν μπορεί να πληρωθεί αλλοιωμένη σε unmanaged position (`CopyPendingTimedOut`). Resync επίσης καθαρίζει order-id-labelled filled-pending orphan.
+- **Cross-broker pending-fill race** — ένα slave's δικό του pending μπορεί να γεμίσει (η τιμή του χτυπήθηκε) στο μικρό παράθυρο πριν το γεγονός fill/cancel του master επεξεργαστεί. Αυτό αφήνει μια slave θέση επισημασμένη από το source **order** id, το οποίο τα canonical close/SL-TP paths (keyed by source **position** id) θα έχασε. Σε master **fill** το early slave fill αποσύρεται και αντικαθίσταται από ένα canonically-labelled market copy — έτσι ο προορισμός τελειώνει με ακριβώς **ένα** copy, ποτέ διπλή θέση; σε master **cancel** κλείνει εντελώς (το master δεν έπαιρε ποτέ το trade). Και τα δύο δρουν αμέσως, όχι μόνο κατά το resync. Ένα slave-side SL/TP hit που κλείνει ένα copy που ο master διατηρεί ακόμη είναι source-driven και ανοίγεται ξανά κατά το reconcile (η engine κατοπτρίζει **master** events; δεν καταναλώνει destination-side executions).
 - **Robust close/flatten** (M8) — κλείσιμο orphan σε resync, ή ισοπέδωση σε guard breach, ανοχή position broker ήδη κλειστή (`POSITION_NOT_FOUND`): κάθε κλείσιμο εκτελείται ανεξάρτητα, έτσι μία stale id ποτέ δεν αποτυγχάνει resync ή αφήνει rest του λογαριασμού un-flattened.
 
 - **Start με master ήδη σε trades** — σε start host reconciles + ανοίγει αντιγραφές για υπάρχουσες θέσεις του master.

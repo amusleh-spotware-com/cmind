@@ -18,8 +18,8 @@ Cerminkan akun **master** cTrader ke satu atau lebih akun **slave** — lintas b
 | Acara Master | Aksi Slave |
 |--------------|-----------|
 | Posisi pasar / pasar-jangkauan terbuka | Buka salinan berukuran (dengan label id posisi sumber) |
-| Perintah pending limit / stop / stop-limit | Tempatkan perintah pending yang sesuai |
-| Amend perintah pending | Amend perintah pending yang dicerminkan di tempat |
+| Perintah pending limit / stop / stop-limit | Tempatkan perintah pending yang sesuai, membawa stop-loss / take-profit master |
+| Amend perintah pending | Amend perintah pending yang dicerminkan di tempat (termasuk stop-loss / take-profit-nya) |
 | Batal perintah pending / kedaluwarsa | Batalkan perintah pending yang dicerminkan |
 | Penutupan parsial | Tutup proporsi yang sama dari posisi slave |
 | Scale-in (peningkatan volume) | Buka volume yang ditambahkan (opt-in) |
@@ -35,6 +35,8 @@ Setiap salinan **diberi label dengan id posisi/perintah sumber**. Setelah sambun
 **Impor / ekspor.** Seluruh blok pengaturan dapat **dieksport ke file JSON** dan di-**impor kembali** untuk mengisi formulir sebelumnya, jadi penyetelan dapat digunakan kembali di seluruh profil tanpa pengetikan ulang. Peta simbol dapat demikian pula **dieksport / diimpor sebagai file CSV** (`Source,Destination,VolumeMultiplier`) — siapkan peta simbol broker besar di spreadsheet dan muat dalam satu langkah. Kontrol simbol dan impor/ekspor CSV yang sama juga tersedia dalam dialog tujuan di halaman Copy Trading.
 
 Tindakan baris menghormati siklus hidup: **Start** diaktifkan hanya jika tidak berjalan, **Stop** + **Pause** hanya saat berjalan, **Delete** dinonaktifkan saat berjalan + minta konfirmasi sebelum menghapus profil + tujuan.
+
+Profil yang baru dimulai secara singkat menampilkan status **Starting** (bukan *Running* hijau) sambil hostnya memuat data referensi dan menjalankan resync pertama — belum mencerminkan pesanan di seluruh tujuan. Itu berubah menjadi **Running** pada saat resync pertama itu selesai dan mesin dapat menyalin. Starting diperlakukan sebagai berjalan untuk kontrol baris (Start dinonaktifkan, Stop dan log langsung diaktifkan, Edit/Delete diblokir), jadi profil yang sedang menghangat tidak dapat dimulai ulang atau diedit saat startup. Fase warm-up dilacak in-process pada node yang menampung profil; profil yang dihosting pada replika lain (atau satu yang tidak dapat dihosting — akun sumber/tujuannya tidak ditautkan melalui Open API) menampilkan status polosnya.
 
 ## Opsi per-tujuan
 
@@ -54,12 +56,12 @@ Diatur pada halaman Profil Baru, dalam dialog tujuan di halaman Copy Trading, at
 - **Kunci konfigurasi** (C9) — bekukan pengaturan tujuan untuk periode (`POST …/destinations/{id}/lock` dengan menit). Saat terkunci, tujuan tidak dapat dihapus (agregat menolak dengan `CopyDestinationConfigLocked`) — penjaga yang disengaja terhadap perubahan impulsif selama drawdown. Kunci kedaluwarsa secara otomatis pada timestamp-nya.
 - **Pra-alert konsistensi** (C10) — peringatan (sekali per hari UTC) saat **keuntungan harian** tujuan mencapai persen yang dikonfigurasi dari ekuitas pembukaan hari (`CopyConsistencyThresholdApproaching`), jadi aturan konsistensi prop-firm dihormati *sebelum* api. Sisi keuntungan, independen dari lockout sisi kerugian; berjalan dari baseline hari yang sama dengan penjaga aturan prop.
 - **Filter tipe pesanan** — pilih tepat jenis pesanan master mana yang akan disalin: pasar, jangkauan pasar, batas, berhenti, stop-limit (`CopyOrderTypes` flag; default semua). Selektivitas gaya cMAM.
-- **Salin SL / Salin TP** — cerminkan stop-loss / take-profit master, atau kelola perlindungan secara independen.
+- **Salin SL / Salin TP** — cerminkan stop-loss / take-profit master, atau kelola perlindungan secara independen. Berlaku untuk **kedua-duanya** posisi terbuka **dan** perintah pending yang sedang istirahat — salinan limit/stop/stop-limit ditempatkan dan diamend dengan SL/TP pesanan master (ditukar di bawah **Reverse**), jadi perlindungan terpasang saat pending mengisi, tidak hanya setelahnya.
 - **Salin trailing stop**, **cerminkan penutupan parsial**, **cerminkan scale-in** — masing-masing dapat dialihkan secara independen.
 - **Salin kedaluwarsa pending** (default aktif) — cerminkan timestamp kedaluwarsa Good-Till-Date perintah pending master.
 - **Salin slippage master** (default aktif) — untuk perintah pasar-jangkauan + stop-limit, tempatkan pesanan slave dengan slippage-in-points master yang tepat (harga dasar diambil dari spot langsung slave).
 - **Penjaga**: drawdown maks %, batas kerugian harian, keterlambatan salinan maks, filter slippage (lewati salinan jika harga slave bergerak melampaui N pip dari entri master). **Max copy delay** diukur terhadap timestamp server nyata acara master (`ExecutionEvent.ServerTimestamp`) melalui `TimeProvider` yang disuntikkan: sinyal lebih tua dari max-lag yang dikonfigurasi dilewati, jadi stale copy tidak pernah ditempatkan terlambat (sebelumnya delay selalu nol + penjaga mati).
-- **Normalisasi presisi SL/TP** (M6) — stop-loss/take-profit yang disalin dibulatkan ke presisi digit simbol **tujuan** sebelum amend, jadi harga master pada presisi lebih halus (atau ketidakcocokan digit lintas-broker) tidak pernah api server `INVALID_STOPLOSS_TAKEPROFIT`.
+- **Normalisasi presisi SL/TP** (M6) — stop-loss/take-profit yang disalin dibulatkan ke presisi digit simbol **tujuan** sebelum amend (pada posisi **dan** penempatan/amend perintah pending), jadi harga master pada presisi lebih halus (atau ketidakcocokan digit lintas-broker) tidak pernah api server `INVALID_STOPLOSS_TAKEPROFIT`.
 - **Pemutus sirkuit penolakan / Penjaga Pengikut** (G8) — tujuan menolak pembukaan `CopyDefaults.RejectionBudget` berturut-turut **dipicu**: tidak ada pembukaan baru untuk jendela cooldown (`CopyDestinationTripped` alert api), menghentikan badai penolakan dari menghantam (prop-firm) akun. Posisi yang ada masih dikelola + ditutup saat dipicu; pemutus auto-reset setelah cooldown + salinan yang berhasil menghapus counter.
 - **Batas akal banyak** (C14) — ukuran salinan maks absolut dan/atau batas kelipatan-master. Salinan yang dihitung melampaui batas absolut, atau melampaui `N×` ukuran banyak master sendiri, **hard-blocked** (ditampilkan sebagai skip `lot_sanity`, dihitung pada `cmind.copy.skipped`) tidak ditempatkan — mempertahankan terhadap kelas oversize bencana (master 0.23-lot berubah menjadi 3 banyak pada setiap penerima melalui pengganda pelarian atau bug pembulatan). Kedua dimensi default `0` (off).
 
@@ -68,6 +70,7 @@ Diatur pada halaman Profil Baru, dalam dialog tujuan di halaman Copy Trading, at
 Mesin dibangun untuk kenyataan bahwa apa pun dapat gagal kapan saja:
 
 - **Timeout korelasi pengisian pending slave** (C13) — pending slave yang dicerminkan yang pending master menghilang (baik tidak diam atau baru saja diisi) dibatalkan setelah timeout korelasi, jadi salinan slave tidak dapat diisi tidak berkorelasi ke posisi yang tidak dikelola (`CopyPendingTimedOut`). Resync juga membersihkan yatim piatu pending-id-labelled yang diisi.
+- **Balap pengisian pending lintas-broker** — pending slave sendiri dapat diisi (harganya terpukul) dalam jendela kecil sebelum acara fill/cancel master diproses. Itu meninggalkan posisi slave berlabel dengan id **pesanan** sumber, yang jalur close/SL-TP kanonik (dikunci dengan id **posisi** sumber) akan kehilangan. Pada **fill** master, fill slave awal pensiun dan diganti dengan salinan pasar yang berlabel kanonik — jadi tujuan berakhir dengan tepat **satu** salinan, tidak pernah posisi ganda; pada **cancel** master ditutup langsung (master tidak pernah mengambil perdagangan). Keduanya bertindak segera, tidak hanya pada resync berikutnya. Hit SL/TP sisi slave yang menutup salinan yang master masih tahan adalah driven-sumber dan dibuka kembali pada rekonsiliasi berikutnya (mesin mencerminkan acara **master**; tidak mengonsumsi eksekusi sisi tujuan).
 - **Penutupan/flatten yang kuat** (M8) — menutup yatim piatu pada resync, atau meratakan pada pelanggaran penjaga, mentoleransi posisi broker sudah ditutup (`POSITION_NOT_FOUND`): setiap penutupan berjalan secara independen, jadi satu id stale tidak pernah menghentikan resync atau meninggalkan sisa akun yang tidak diratakan.
 
 - **Mulai dengan master sudah dalam perdagangan** — saat mulai host merekonsiliasi + membuka salinan untuk posisi yang ada dari master.

@@ -30,7 +30,7 @@ Beim Start besät die App eine gemeinsame Anwendung, die vom Owner-Konto besesse
 
 ### 2. Owner-Einstellungen (Runtime, kein Redeploy)
 
-**Einstellungen → Open API** (nur Owner) zeigt eine **Deployment Shared Application**-Karte: Fügen Sie hinzu / bearbeiten Sie / löschen Sie die gemeinsame App, mit der Umleitungs-URL zur Anzeige für Copy-Paste. Änderungen treten für neue Autorisierungen sofort in Kraft.
+**Einstellungen → Open API** (nur Owner) zeigt zwei Dinge: einen **Ihre Open-API-Anwendung**-Bereich — der Owner registriert, bearbeitet und autorisiert seine **eigene** Pro-Benutzer-App genau wie jeder Benutzer (verfügbar, während keine gemeinsame App konfiguriert ist) — und eine **Deployment Shared Application**-Karte zum Hinzufügen / Bearbeiten / Löschen der gemeinsamen App, mit der Umleitungs-URL zur Anzeige für Copy-Paste. Änderungen treten für neue Autorisierungen sofort in Kraft. Sobald eine gemeinsame App konfiguriert ist, setzt sie die eigene App des Owners außer Kraft, und der **Ihre Open-API-Anwendung**-Bereich wechselt zu einer Benachrichtigung, dass Konten sich jetzt über die gemeinsame App autorisieren.
 
 ## Die Umleitungs-URL (registrieren Sie dies in cTrader)
 

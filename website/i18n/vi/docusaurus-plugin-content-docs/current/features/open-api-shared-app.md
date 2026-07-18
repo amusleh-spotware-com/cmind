@@ -35,9 +35,7 @@ overwrites an owner-edited runtime value, và re-seeding là no-op).
 
 ### 2. Owner settings (runtime, no redeploy)
 
-**Settings → Open API** (owner only) shows **Deployment shared application** card: add / edit /
-delete shared app, với redirect URL displayed for copy-paste. Changes take effect cho new
-authorizations immediately.
+**Settings → Open API** (owner only) hiển thị hai điều: một mục **Your Open API application** — chủ sở hữu đăng ký, chỉnh sửa và xác thực ứng dụng **riêng** của họ theo mỗi người dùng giống như bất kỳ người dùng nào (có sẵn trong khi không có ứng dụng được chia sẻ được định cấu hình) — và một thẻ **Deployment shared application** để thêm / chỉnh sửa / xóa ứng dụng được chia sẻ, với URL chuyển hướng được hiển thị để sao chép dán. Các thay đổi có hiệu lực cho các xác thực mới ngay lập tức. Khi ứng dụng được chia sẻ được định cấu hình, nó sẽ thay thế ứng dụng của chủ sở hữu và mục **Your Open API application** chuyển sang thông báo rằng các tài khoản bây giờ xác thực thông qua ứng dụng được chia sẻ.
 
 ## The redirect URL (register this in cTrader)
 

@@ -34,7 +34,8 @@ public sealed class CopyEngineSupervisor(
     TimeProvider timeProvider,
     Core.CopyTrading.ICopyEventSink copyEventSink,
     Core.CopyTrading.ICopyNotificationSink copyNotificationSink,
-    Core.CopyTrading.ICopyLogSink copyLogSink) : BackgroundService
+    Core.CopyTrading.ICopyLogSink copyLogSink,
+    Core.CopyTrading.ICopyHostingStatus copyHostingStatus) : BackgroundService
 {
     private readonly ConcurrentDictionary<CopyProfileId, HostHandle> _running = new();
 
@@ -104,6 +105,7 @@ public sealed class CopyEngineSupervisor(
             {
                 await handle.Cts.CancelAsync();
                 _running.TryRemove(id, out _);
+                copyHostingStatus.Clear(id);
             }
 
             return;
@@ -130,6 +132,7 @@ public sealed class CopyEngineSupervisor(
             if (mineIds.Contains(id)) continue;
             await handle.Cts.CancelAsync();
             _running.TryRemove(id, out _);
+            copyHostingStatus.Clear(id);
         }
 
         // Watchdog (M2): a host whose task has exited or faulted while its profile is still ours is wedged
@@ -140,6 +143,8 @@ public sealed class CopyEngineSupervisor(
             if (!IsHostDead(handle.Task, id, mineIds)) continue;
             await handle.Cts.CancelAsync();
             if (_running.TryRemove(id, out _)) log.CopyHostRestarted(id.Value);
+            // A restart re-warms: drop the phase so the UI shows "Starting" again until the fresh host is ready.
+            copyHostingStatus.Clear(id);
         }
 
         foreach (var profile in mine)
@@ -168,7 +173,7 @@ public sealed class CopyEngineSupervisor(
             var host = new CopyEngineHost(plan, sessionFactory,
                 new CopyDecisionEngine(new CopySizingCalculator()), timeProvider,
                 loggerFactory.CreateLogger<CopyEngineHost>(), copyEventSink, copyNotificationSink,
-                NewsBlackoutHook(), copyLogSink);
+                NewsBlackoutHook(), copyLogSink, copyHostingStatus);
             var task = Task.Run(() => host.RunAsync(cts.Token), CancellationToken.None);
             _running[profile.Id] = new HostHandle(task, cts, host, signature);
             log.CopyProfileHosted(profile.Id.Value);

@@ -100,7 +100,7 @@ public static class CopyEndpoints
         var g = app.MapGroup("/api/copy").RequireAuthorization(AuthPolicies.UserOrAbove)
             .RequireFeature(Core.Features.FeatureFlag.CopyTrading);
 
-        g.MapGet("/profiles", async (DataContext db, ICurrentUser u) =>
+        g.MapGet("/profiles", async (DataContext db, ICurrentUser u, ICopyHostingStatus hosting) =>
         {
             var uid = u.UserId!.Value;
             var profiles = await db.CopyProfiles.Include(p => p.Destinations)
@@ -110,7 +110,12 @@ public static class CopyEndpoints
                 p.Id,
                 p.Name,
                 SourceAccountId = p.SourceAccountId.Value,
-                Status = p.Status.ToString(),
+                // A profile is marked Running the instant it is started, but its host first loads reference
+                // data and runs a resync before it can mirror. Surface that warm-up as "Starting" so the UI
+                // doesn't claim a green "Running" while no order would yet be copied.
+                Status = p.Status == CopyProfileStatus.Running && hosting.PhaseOf(p.Id) == CopyHostingPhase.Warming
+                    ? "Starting"
+                    : p.Status.ToString(),
                 DestinationCount = p.Destinations.Count
             });
         });

@@ -36,6 +36,8 @@ Every copy **labelled with source position/order id**. After reconnect host rebu
 
 Row actions respect lifecycle: **Start** enabled only when not running, **Stop** + **Pause** only when running, **Delete** disabled while running + asks confirmation before removing profile + destinations.
 
+A just-started profile briefly shows a **Starting** status (not a green *Running*) while its host loads reference data and runs the first resync — it is not yet mirroring orders across the destinations. It flips to **Running** the moment that first resync completes and the engine can copy. Starting is treated as running for the row controls (Start disabled, Stop and live-logs enabled, Edit/Delete blocked), so a warming profile can't be re-started or edited mid-startup. The warm-up phase is tracked in-process on the node hosting the profile; a profile hosted on another replica (or one that can't be hosted — its source/destination accounts aren't linked via the Open API) shows its plain status.
+
 ## Per-destination options
 
 Set on the New Profile page, in the destination dialog on the Copy Trading page, or via `POST /api/copy/profiles/{id}/destinations`:

@@ -1,8 +1,10 @@
 using Core;
 using Core.Constants;
+using Core.CopyTrading;
 using Core.Domain;
 using CopyEngine;
 using CTraderOpenApi.Client;
+using Nodes.CopyTrading;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -64,6 +66,27 @@ public sealed class CopyAdvancedScenariosTests
             await Task.Delay(20);
         }
         condition().Should().BeTrue("the expected host action did not occur in time");
+    }
+
+    // Records the order of phase transitions the host reports, so a test can assert warming-then-ready.
+    private sealed class RecordingHostingStatus : ICopyHostingStatus
+    {
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<CopyProfileId, CopyHostingPhase> _phases = new();
+        private readonly List<CopyHostingPhase> _order = [];
+
+        public IReadOnlyList<CopyHostingPhase> Phases { get { lock (_order) return _order.ToList(); } }
+
+        public void MarkWarming(CopyProfileId profileId) => Set(profileId, CopyHostingPhase.Warming);
+        public void MarkReady(CopyProfileId profileId) => Set(profileId, CopyHostingPhase.Ready);
+        public void Clear(CopyProfileId profileId) => _phases.TryRemove(profileId, out _);
+        public CopyHostingPhase PhaseOf(CopyProfileId profileId)
+            => _phases.TryGetValue(profileId, out var phase) ? phase : CopyHostingPhase.NotHosted;
+
+        private void Set(CopyProfileId profileId, CopyHostingPhase phase)
+        {
+            _phases[profileId] = phase;
+            lock (_order) _order.Add(phase);
+        }
     }
 
     [Fact]
@@ -280,6 +303,44 @@ public sealed class CopyAdvancedScenariosTests
         var amend = session.AmendedPendings.Single();
         amend.StopLoss.Should().Be(1.075);
         amend.TakeProfit.Should().Be(1.13);
+    }
+
+    [Fact]
+    public void Hosting_status_registry_reports_warming_ready_and_nothosted()
+    {
+        var status = new InMemoryCopyHostingStatus();
+        var id = CopyProfileId.New();
+
+        status.PhaseOf(id).Should().Be(CopyHostingPhase.NotHosted, "an unhosted profile is NotHosted");
+        status.MarkWarming(id);
+        status.PhaseOf(id).Should().Be(CopyHostingPhase.Warming);
+        status.MarkReady(id);
+        status.PhaseOf(id).Should().Be(CopyHostingPhase.Ready);
+        status.Clear(id);
+        status.PhaseOf(id).Should().Be(CopyHostingPhase.NotHosted, "a cleared profile falls back to NotHosted");
+    }
+
+    [Fact]
+    public async Task Host_marks_the_profile_warming_then_ready_then_clears_on_shutdown()
+    {
+        var session = NewSession();
+        var status = new RecordingHostingStatus();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination()));
+        var host = new CopyEngineHost(plan, new FakeTradingSessionFactory(session),
+            new CopyDecisionEngine(new CopySizingCalculator()), TimeProvider.System, NullLogger.Instance,
+            hostingStatus: status);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var run = Task.Run(() => host.RunAsync(cts.Token), CancellationToken.None);
+        try
+        {
+            await WaitUntil(() => status.PhaseOf(plan.ProfileId) == CopyHostingPhase.Ready);
+        }
+        finally { cts.Cancel(); try { await run; } catch { /* cancellation */ } }
+
+        status.Phases.Should().ContainInOrder(new[] { CopyHostingPhase.Warming, CopyHostingPhase.Ready },
+            "the host warms up before it is ready to copy");
+        status.PhaseOf(plan.ProfileId).Should().Be(CopyHostingPhase.NotHosted,
+            "the host clears its phase when it stops");
     }
 
     [Fact]

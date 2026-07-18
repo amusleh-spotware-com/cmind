@@ -40,7 +40,8 @@ public sealed class CopyEngineHost(
     ICopyEventSink? sink = null,
     ICopyNotificationSink? notifications = null,
     Func<string, CancellationToken, ValueTask<bool>>? newsBlackout = null,
-    ICopyLogSink? logSink = null)
+    ICopyLogSink? logSink = null,
+    ICopyHostingStatus? hostingStatus = null)
 {
     // Optional, opt-in news-window pause: when supplied, a source open whose symbol is inside a high-impact
     // economic-calendar blackout is skipped (not mirrored). Null (the default) leaves the engine unchanged.
@@ -54,6 +55,10 @@ public sealed class CopyEngineHost(
     // Live activity log for the owner's log viewer (the copy equivalent of a cBot run's console tail). No-op
     // by default so the engine and every test are unchanged; the supervisor passes the in-process broker.
     private readonly ICopyLogSink _logSink = logSink ?? NullCopyLogSink.Instance;
+    // Live warming/ready phase for the owner's UI (no-op by default so the engine and tests are unchanged;
+    // the supervisor passes the in-process registry). Marked warming at startup and ready after the first
+    // resync, so a just-started profile shows "Starting" until it can actually mirror across destinations.
+    private readonly ICopyHostingStatus _hostingStatus = hostingStatus ?? NullCopyHostingStatus.Instance;
     private readonly Dictionary<long, string> _sourceSymbolNames = new();
     private readonly Dictionary<long, IReadOnlyDictionary<string, long>> _destinationSymbolIds = new();
     // Thread-safe: read+populated from the G4 bounded-parallel destination fan-out (distinct keys per
@@ -123,6 +128,9 @@ public sealed class CopyEngineHost(
 
     public async Task RunAsync(CancellationToken ct)
     {
+        // Warming: marked Running in the DB but not yet mirroring — the UI shows "Starting" until the first
+        // resync below completes and the profile can actually copy across every destination.
+        _hostingStatus.MarkWarming(plan.ProfileId);
         await using var session = sessionFactory.Create(plan.Live, plan.ClientId, plan.ClientSecret);
 
         session.AttachAccount(plan.SourceCtidTraderAccountId, plan.SourceAccessToken);
@@ -152,6 +160,10 @@ public sealed class CopyEngineHost(
         {
             _stateGate.Release();
         }
+
+        // Reference data loaded + first resync done: the host can now mirror across every destination, so the
+        // profile flips from "Starting" to "Running" in the UI.
+        _hostingStatus.MarkReady(plan.ProfileId);
 
         using var loopCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         var tokenSwapLoop = Task.Run(() => ConsumeTokenUpdatesAsync(session, loopCts.Token), CancellationToken.None);
@@ -195,6 +207,9 @@ public sealed class CopyEngineHost(
             // Release the live-log buffer and end any open viewer tails: the profile is no longer running, so
             // its logs control is disabled and nothing more can be viewed (prevents a per-profile ring leak).
             _logSink.Complete(plan.ProfileId);
+            // The host is no longer running: drop its warming/ready phase so the UI stops showing this node's
+            // stale state (a stopped/reclaimed profile reads back as NotHosted → falls back to persisted status).
+            _hostingStatus.Clear(plan.ProfileId);
         }
     }
 

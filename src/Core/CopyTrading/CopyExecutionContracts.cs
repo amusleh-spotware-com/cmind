@@ -49,3 +49,44 @@ public sealed class NullCopyEventSink : ICopyEventSink
     private NullCopyEventSink() { }
     public void Record(CopyExecutionRecord record) { }
 }
+
+/// <summary>
+/// Where a hosted copy profile is in its startup lifecycle on the node currently running it. A profile is
+/// <see cref="Warming"/> while the host loads reference data and runs its first resync — it is marked
+/// Running in the database but is not yet mirroring orders across the destinations — and becomes
+/// <see cref="Ready"/> once that first resync completes. A profile no node is actively hosting (never
+/// started, hosted on another replica, or unhostable) is <see cref="NotHosted"/>.
+/// </summary>
+public enum CopyHostingPhase
+{
+    NotHosted = 0,
+    Warming = 1,
+    Ready = 2
+}
+
+/// <summary>
+/// In-process registry of the live warming/ready phase of each hosted copy profile, written by the copy
+/// host as it starts and read by the Web layer so the UI can show a "Starting" state until the engine is
+/// actually ready to copy (rather than a green "Running" the instant the profile is started). Runtime-only
+/// and node-local: a profile hosted on another replica reads back as <see cref="CopyHostingPhase.NotHosted"/>
+/// there, so the caller falls back to the persisted status. Implementations MUST be thread-safe and never
+/// throw — the host calls them on its hot path.
+/// </summary>
+public interface ICopyHostingStatus
+{
+    void MarkWarming(CopyProfileId profileId);
+    void MarkReady(CopyProfileId profileId);
+    void Clear(CopyProfileId profileId);
+    CopyHostingPhase PhaseOf(CopyProfileId profileId);
+}
+
+/// <summary>No-op hosting status: the copy engine's default when no registry is wired (unit/stress tests).</summary>
+public sealed class NullCopyHostingStatus : ICopyHostingStatus
+{
+    public static readonly NullCopyHostingStatus Instance = new();
+    private NullCopyHostingStatus() { }
+    public void MarkWarming(CopyProfileId profileId) { }
+    public void MarkReady(CopyProfileId profileId) { }
+    public void Clear(CopyProfileId profileId) { }
+    public CopyHostingPhase PhaseOf(CopyProfileId profileId) => CopyHostingPhase.NotHosted;
+}

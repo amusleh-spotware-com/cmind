@@ -350,6 +350,16 @@ Architecture facts you can't read off the code — the rest lives in nested `CLA
   (`CloseDestinationPendingFillsAsync`, FRESH reconcile — the fill isn't in the cached book). The engine
   mirrors **master** events only; it does not consume destination-side executions, so a slave-side SL/TP hit
   on a copy the master still holds re-opens on the next reconcile (by design, not a bug).
+- **Copy profile "Running" is set on start, but the host isn't ready for seconds.** `Start()` flips the
+  profile to `Running` immediately; the `CopyEngineHost` then loads reference data + runs its first resync
+  before it can mirror. So a plain `Status == Running` UI lies for those seconds. The host reports its live
+  phase to the in-process, node-local `ICopyHostingStatus` (`InMemoryCopyHostingStatus`, singleton shared by
+  the supervisor/host writers and the Web endpoint readers): `MarkWarming` at startup, `MarkReady` after the
+  first resync, `Clear` on stop/reclaim/restart. The `/api/copy/profiles` list derives **"Starting"** when
+  `Status == Running && PhaseOf(id) == Warming`, else the plain status — so a profile hosted on another
+  replica or one that can't be hosted (unlinkable accounts, never warmed) correctly reads back plain
+  `Running`, not a stuck "Starting". Don't persist this phase to the DB (it is runtime, node-local) and don't
+  add a `CopyProfileStatus.Starting` enum value (it would ripple through every status filter/claim query).
 - **cTrader Console CLI — verified facts (discover, don't guess; re-probe with the commands below):**
   `docker run --rm ghcr.io/spotware/ctrader-console backtest --help` (usage/flags),
   `… periods` (the full timeframe list), and grep the image DLL for an enum

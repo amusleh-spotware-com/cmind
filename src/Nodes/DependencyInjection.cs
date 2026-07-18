@@ -30,6 +30,12 @@ public static class DependencyInjection
         services.AddSingleton<Core.CopyTrading.ICopyLogSink>(sp => sp.GetRequiredService<Nodes.CopyTrading.CopyLogBroker>());
         services.AddSingleton<Core.CopyTrading.ICopyLogFeed>(sp => sp.GetRequiredService<Nodes.CopyTrading.CopyLogBroker>());
 
+        // Live copy-profile hosting phase (in-process, node-local): the copy host marks a profile warming
+        // while it loads reference data + runs its first resync and ready once it can mirror; the Web copy
+        // endpoints read it so the UI shows "Starting" until the engine is actually ready. Registered
+        // unconditionally so the endpoints resolve it even when copy trading is disabled (reads NotHosted).
+        services.AddSingleton<Core.CopyTrading.ICopyHostingStatus, Nodes.CopyTrading.InMemoryCopyHostingStatus>();
+
         services.AddHostedService<NodeStatsPoller>();
         services.AddHostedService<NodeHeartbeatMonitor>();
         services.AddHostedService<NodeInstanceReclaimer>();

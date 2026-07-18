@@ -264,12 +264,18 @@
     private static Color StatusColor(string status) => status switch
     {
         "Running" => Color.Success,
+        "Starting" => Color.Info,
         "Paused" => Color.Warning,
         "Error" => Color.Error,
         _ => Color.Default
     };
 
-    private static bool IsRunning(string status) => string.Equals(status, "Running", StringComparison.OrdinalIgnoreCase);
+    // "Starting" is a running profile whose host is still warming up (loading reference data + first resync);
+    // the lifecycle controls treat it exactly like Running (start disabled, stop/logs enabled, edit/delete
+    // blocked) so the user can't re-start or edit a profile that is already coming up.
+    private static bool IsRunning(string status)
+        => string.Equals(status, "Running", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(status, "Starting", StringComparison.OrdinalIgnoreCase);
 
     private string AccountNumber(Guid id)
     {

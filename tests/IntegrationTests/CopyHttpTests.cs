@@ -1,10 +1,15 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Core;
+using Core.CopyTrading;
 using Core.Domain;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Xunit;
 
 namespace IntegrationTests;
@@ -121,5 +126,47 @@ public class CopyHttpTests(PostgresFixture fixture) : IClassFixture<PostgresFixt
             .BeTrue("an advanced field not on the editor must be preserved across an edit");
         destination.GetProperty("executionJitterMaxMs").GetInt32().Should()
             .Be(250, "advanced fields the editor doesn't expose are preserved, not reset");
+    }
+
+    [Fact]
+    public async Task A_started_profile_reads_as_Starting_while_its_host_is_warming_up()
+    {
+        await using var app = new WebApplicationFactory<Program>().WithWebHostBuilder(b =>
+        {
+            b.UseEnvironment("Development");
+            b.UseSetting("ConnectionStrings:appdb", fixture.Container.GetConnectionString());
+            b.UseSetting("App:OwnerEmail", Owner);
+            b.UseSetting("App:OwnerPassword", Password);
+            b.UseSetting("App:Features:CopyTrading", "true");
+            // Force the hosting registry to report the profile as still warming, so the list endpoint's
+            // Running→"Starting" derivation is asserted deterministically (a real host needs a live broker).
+            b.ConfigureTestServices(s =>
+            {
+                s.RemoveAll<ICopyHostingStatus>();
+                s.AddSingleton<ICopyHostingStatus>(new AlwaysWarmingHostingStatus());
+            });
+        });
+        var client = await LoginAsync(app);
+
+        var create = await client.PostAsJsonAsync("/api/copy/profiles",
+            new { Name = "warming-int", SourceAccountId = Guid.NewGuid() });
+        create.EnsureSuccessStatusCode();
+        var profileId = (await create.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+
+        (await client.PostAsync($"/api/copy/profiles/{profileId}/start", null)).EnsureSuccessStatusCode();
+
+        var profiles = await (await client.GetAsync("/api/copy/profiles")).Content.ReadFromJsonAsync<JsonElement>();
+        var mine = profiles.EnumerateArray().Single(p => p.GetProperty("id").GetGuid() == profileId);
+        mine.GetProperty("status").GetString().Should().Be("Starting",
+            "a Running profile whose host is still warming shows Starting, not a green Running");
+    }
+
+    // Reports every profile as warming, so the endpoint's Running→"Starting" mapping is deterministic.
+    private sealed class AlwaysWarmingHostingStatus : ICopyHostingStatus
+    {
+        public void MarkWarming(CopyProfileId profileId) { }
+        public void MarkReady(CopyProfileId profileId) { }
+        public void Clear(CopyProfileId profileId) { }
+        public CopyHostingPhase PhaseOf(CopyProfileId profileId) => CopyHostingPhase.Warming;
     }
 }

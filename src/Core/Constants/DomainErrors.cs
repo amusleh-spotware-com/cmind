@@ -133,6 +133,9 @@ public static class DomainErrors
     public const string AiProviderKindNotAllowed = "domain.ai.provider_kind_not_allowed";
     public const string AiLocalProviderNotAllowed = "domain.ai.local_provider_not_allowed";
     public const string AiBuiltInNotAllowed = "domain.ai.built_in_not_allowed";
+    public const string AiTaskAlreadyTerminal = "domain.ai.task_already_terminal";
+    public const string AiTaskNotClaimable = "domain.ai.task_not_claimable";
+    public const string AiTaskPromptRequired = "domain.ai.task_prompt_required";
 
     public const string CalendarSeriesCodeRequired = "domain.calendar.series_code_required";
     public const string CalendarCountryCodeInvalid = "domain.calendar.country_code_invalid";

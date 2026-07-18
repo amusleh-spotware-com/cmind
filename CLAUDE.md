@@ -134,9 +134,15 @@ Each is binding. Nested `CLAUDE.md` files and the `ddd-dotnet` skill carry the l
    scale in, trail, or place/amend/cancel a pending; those are covered by `FakeTradingSession` assertions on
    the destination effect, and "everything is E2E-tested" is false confidence for them. **Every source
    `ExecutionEvent` branch that changes a destination has a `FakeTradingSession` `[Fact]` — the full
-   open/close · SL/TP set·move·clear · trailing · partial/scale · pending matrix, × `Reverse`/`Copy*`
-   transforms** (a source take-profit set on an open position shipped uncopied because that cell was missing).
-   Add a source action or a transform ⇒ add its cells same commit. → `tests/CLAUDE.md`.
+   open/close · SL/TP set·move·clear · trailing · partial/scale · **pending (place+amend) × SL/TP** matrix,
+   × `Reverse`/`Copy*` transforms** (a source take-profit set on an open position shipped uncopied because
+   that cell was missing; then the SAME class recurred on **pending orders** — a limit/stop placed with an
+   SL/TP mirrored the side/price/expiry but **dropped SL/TP entirely**, and no test caught it because
+   `FakeTradingSession.PendingCall`/`AmendPendingCall` didn't even record SL/TP, so the cell was
+   *unassertable*. Lesson: when the simulator drops a field the source carries, the census gate has a hole —
+   every field on a source `ExecutionEvent` that can change a destination must be captured on the fake's
+   recorded call **and** asserted, positions **and** pendings alike). Add a source action, a transform, or a
+   mirrored field ⇒ add its cells same commit. → `tests/CLAUDE.md`.
 4. **Never `DateTime.UtcNow`/`.Now`/`DateTimeOffset.UtcNow`.** Inject `TimeProvider`, read
    `GetUtcNow()`; domain methods take a `DateTimeOffset now` param from the caller. Tests use
    `FakeTimeProvider` or hardcoded timestamps — never the real clock. Touch time-dependent code →

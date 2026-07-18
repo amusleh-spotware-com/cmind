@@ -718,14 +718,29 @@ public sealed class CopyEngineHost(
         var slippage = execution.OrderKind == CopyOrderKind.StopLimit && destination.Config.CopyMasterSlippage
             ? execution.SlippageInPoints
             : null;
+        var (stopLoss, takeProfit) = ResolvePendingProtection(destination.Config, execution, destinationDetail);
         await session.SendPendingOrderAsync(destination.CtidTraderAccountId, destinationSymbolId, effectiveBuy,
-            wireVolume, execution.OrderKind, price, execution.OrderId.ToString(), ct, expiry, slippage);
+            wireVolume, execution.OrderKind, price, execution.OrderId.ToString(), ct, expiry, slippage,
+            stopLoss, takeProfit);
         logger.CopyPendingOrderPlaced(plan.ProfileId.Value, destination.CtidTraderAccountId, destinationName,
             execution.OrderKind.ToString(), effectiveBuy ? "Buy" : "Sell", wireVolume, price, execution.OrderId);
         Activity($"→ {destination.CtidTraderAccountId}: placed pending {execution.OrderKind} {(effectiveBuy ? "Buy" : "Sell")} {destinationName} @ {FormatPrice(price)} (source order {execution.OrderId}).");
         if (expiry is { } expiryTimestamp)
             logger.CopyPendingExpiryMirrored(plan.ProfileId.Value, destination.CtidTraderAccountId, execution.OrderId, expiryTimestamp);
         return true;
+    }
+
+    // Mirror a resting pending order's stop-loss / take-profit onto the destination copy, honouring the
+    // per-destination Copy SL/TP toggles and Reverse (which swaps the two, exactly as for an open position),
+    // rounded to the destination symbol's price precision. A source SL/TP set on a pending order shipped
+    // uncopied because the placement/amend path omitted SL/TP entirely.
+    private static (double? StopLoss, double? TakeProfit) ResolvePendingProtection(
+        CopyDestination config, ExecutionEvent execution, SymbolDetails destinationDetail)
+    {
+        double? stopLoss = config.CopyStopLoss ? execution.StopLoss : null;
+        double? takeProfit = config.CopyTakeProfit ? execution.TakeProfit : null;
+        if (config.Reverse) (stopLoss, takeProfit) = (takeProfit, stopLoss);
+        return (RoundToDigits(stopLoss, destinationDetail.Digits), RoundToDigits(takeProfit, destinationDetail.Digits));
     }
 
     private async Task HandlePendingAmendedAsync(IOpenApiTradingSession session, ExecutionEvent execution, CancellationToken ct)
@@ -747,8 +762,10 @@ public sealed class CopyEngineHost(
                 var pendings = await session.ReconcilePendingOrdersAsync(destination.CtidTraderAccountId, token);
                 foreach (var pending in pendings.Where(o => o.Label == label))
                 {
+                    var detail = await SymbolDetailAsync(session, destination.CtidTraderAccountId, pending.SymbolId, token);
+                    var (stopLoss, takeProfit) = ResolvePendingProtection(destination.Config, execution, detail);
                     await session.AmendPendingOrderAsync(destination.CtidTraderAccountId, pending.OrderId,
-                        execution.OrderKind, pending.Volume, price, expiry, slippage, token);
+                        execution.OrderKind, pending.Volume, price, expiry, slippage, token, stopLoss, takeProfit);
                     logger.CopyPendingOrderAmended(plan.ProfileId.Value, destination.CtidTraderAccountId,
                         pending.OrderId, execution.OrderId);
                 }

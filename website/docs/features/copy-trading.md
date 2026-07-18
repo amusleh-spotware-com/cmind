@@ -18,8 +18,8 @@ Mirror **master** cTrader account onto one+ **slave** accounts — cross-broker,
 | Master event | Slave action |
 |--------------|--------------|
 | Market / market-range position open | Open a sized copy (labelled with the source position id) |
-| Limit / stop / stop-limit pending order | Place the matching pending order |
-| Pending order amend | Amend the mirrored pending order in place |
+| Limit / stop / stop-limit pending order | Place the matching pending order, carrying the master's stop-loss / take-profit |
+| Pending order amend | Amend the mirrored pending order in place (including its stop-loss / take-profit) |
 | Pending order cancel / expiry | Cancel the mirrored pending order |
 | Partial close | Close the same proportion of the slave position |
 | Scale-in (volume increase) | Open the added volume (opt-in) |
@@ -55,12 +55,12 @@ Set on the New Profile page, in the destination dialog on the Copy Trading page,
 - **Config lock** (C9) — freeze destination's settings for period (`POST …/destinations/{id}/lock` with minutes). While locked, destination can't be removed (aggregate rejects with `CopyDestinationConfigLocked`) — deliberate guard against impulsive changes during drawdown. Lock expires automatically at its timestamp.
 - **Consistency pre-alert** (C10) — warn (once per UTC day) when destination's **daily profit** reaches configured percent of day's opening equity (`CopyConsistencyThresholdApproaching`), so prop-firm consistency rule respected *before* it trips. Profit-side, independent of loss-side lockout; runs off same day baseline as prop-rule guard.
 - **Order-type filter** — choose exactly which master order types to copy: market, market-range, limit, stop, stop-limit (`CopyOrderTypes` flags; default all). cMAM-style selectivity.
-- **Copy SL / Copy TP** — mirror master's stop-loss / take-profit, or manage protection independently.
+- **Copy SL / Copy TP** — mirror master's stop-loss / take-profit, or manage protection independently. Applies to **both** open positions **and** resting pending orders — a limit/stop/stop-limit copy is placed and amended with the master order's SL/TP (swapped under **Reverse**), so the protection is attached the moment the pending fills, not only after.
 - **Copy trailing stop**, **mirror partial close**, **mirror scale-in** — each independently toggleable.
 - **Copy pending expiry** (default on) — mirror master pending order's Good-Till-Date expiry timestamp.
 - **Copy master slippage** (default on) — for market-range + stop-limit orders, place slave order with master's exact slippage-in-points (base price taken from slave's live spot).
 - **Guards**: max drawdown %, daily loss cap, max copy delay, slippage filter (skip copy if slave price moved beyond N pips from master entry). **Max copy delay** measured against master event's real server timestamp (`ExecutionEvent.ServerTimestamp`) via injected `TimeProvider`: signal older than configured max-lag skipped, so stale copy never placed late (previously delay always zero + guard dead).
-- **SL/TP precision normalization** (M6) — copied stop-loss/take-profit prices rounded to **destination** symbol's digit precision before amend, so master price at finer precision (or cross-broker digit mismatch) never trips server's `INVALID_STOPLOSS_TAKEPROFIT`.
+- **SL/TP precision normalization** (M6) — copied stop-loss/take-profit prices rounded to **destination** symbol's digit precision before amend (on positions **and** pending-order placement/amend), so master price at finer precision (or cross-broker digit mismatch) never trips server's `INVALID_STOPLOSS_TAKEPROFIT`.
 - **Rejection circuit breaker / Follower Guard** (G8) — destination rejecting `CopyDefaults.RejectionBudget` opens in a row is **tripped**: no new opens for cooldown window (`CopyDestinationTripped` alert fires), stopping rejection storm from hammering (prop-firm) account. Existing positions still managed + closed while tripped; breaker auto-resets after cooldown + successful copy clears counter.
 - **Lot sanity ceiling** (C14) — absolute max copy size and/or multiple-of-master cap. Computed copy exceeding absolute cap, or exceeding `N×` master's own lot size, **hard-blocked** (surfaced as `lot_sanity` skip, counted on `cmind.copy.skipped`) not placed — defends against catastrophic-oversize class (0.23-lot master turning into 3 lots on each receiver via runaway multiplier or rounding bug). Both dimensions default `0` (off).
 

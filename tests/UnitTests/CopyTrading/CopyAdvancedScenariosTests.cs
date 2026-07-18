@@ -185,6 +185,104 @@ public sealed class CopyAdvancedScenariosTests
     }
 
     [Fact]
+    public async Task Pending_stop_loss_and_take_profit_are_mirrored_by_default()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(d => d.SetPendingOrderCopying(true))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushPending(Source, orderId: 7010, SymbolId, isBuy: true, volume: 100,
+                CopyOrderKind.Limit, price: 1.09, stopLoss: 1.08, takeProfit: 1.12);
+            await WaitUntil(() => session.Pendings.Count == 1);
+        });
+
+        var pending = session.Pendings.Single();
+        pending.StopLoss.Should().Be(1.08);
+        pending.TakeProfit.Should().Be(1.12);
+    }
+
+    [Fact]
+    public async Task Pending_take_profit_is_mirrored_when_only_take_profit_is_set()
+    {
+        // Regression: a source take-profit set on a resting pending shipped uncopied because the placement
+        // path omitted SL/TP entirely.
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(d => d.SetPendingOrderCopying(true))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushPending(Source, orderId: 7011, SymbolId, isBuy: true, volume: 100,
+                CopyOrderKind.Limit, price: 1.09, takeProfit: 1.12);
+            await WaitUntil(() => session.Pendings.Count == 1);
+        });
+
+        var pending = session.Pendings.Single();
+        pending.StopLoss.Should().BeNull();
+        pending.TakeProfit.Should().Be(1.12);
+    }
+
+    [Fact]
+    public async Task Reverse_swaps_pending_stop_loss_and_take_profit()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
+            Destination(d => { d.SetPendingOrderCopying(true); d.SetReverse(true); })));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushPending(Source, orderId: 7012, SymbolId, isBuy: true, volume: 100,
+                CopyOrderKind.Limit, price: 1.09, stopLoss: 1.08, takeProfit: 1.12);
+            await WaitUntil(() => session.Pendings.Count == 1);
+        });
+
+        var pending = session.Pendings.Single();
+        pending.IsBuy.Should().BeFalse("Reverse flips the side");
+        pending.StopLoss.Should().Be(1.12, "Reverse swaps SL and TP");
+        pending.TakeProfit.Should().Be(1.08);
+    }
+
+    [Fact]
+    public async Task Pending_take_profit_is_dropped_when_take_profit_copying_is_off()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1,
+            Destination(d => { d.SetPendingOrderCopying(true); d.SetCopyProtection(copyStopLoss: true, copyTakeProfit: false); })));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushPending(Source, orderId: 7013, SymbolId, isBuy: true, volume: 100,
+                CopyOrderKind.Limit, price: 1.09, stopLoss: 1.08, takeProfit: 1.12);
+            await WaitUntil(() => session.Pendings.Count == 1);
+        });
+
+        var pending = session.Pendings.Single();
+        pending.StopLoss.Should().Be(1.08);
+        pending.TakeProfit.Should().BeNull("take-profit copying is off");
+    }
+
+    [Fact]
+    public async Task Pending_amend_mirrors_updated_stop_loss_and_take_profit()
+    {
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(d => d.SetPendingOrderCopying(true))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushPending(Source, orderId: 7014, SymbolId, isBuy: true, volume: 100,
+                CopyOrderKind.Limit, price: 1.09, stopLoss: 1.08, takeProfit: 1.12);
+            await WaitUntil(() => session.Pendings.Count == 1);
+            session.PushPendingReplaced(Source, orderId: 7014, SymbolId, isBuy: true, volume: 100,
+                CopyOrderKind.Limit, price: 1.085, stopLoss: 1.075, takeProfit: 1.13);
+            await WaitUntil(() => session.AmendedPendings.Count == 1);
+        });
+
+        var amend = session.AmendedPendings.Single();
+        amend.StopLoss.Should().Be(1.075);
+        amend.TakeProfit.Should().Be(1.13);
+    }
+
+    [Fact]
     public async Task Pending_order_type_filter_skips_an_excluded_stop()
     {
         var session = NewSession();

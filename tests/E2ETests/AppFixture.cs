@@ -139,6 +139,10 @@ public class AppFixture : IAsyncLifetime
         // (mirrors IntegrationTests' TestBootstrap).
         psi.Environment["App__Calendar__IngestionEnabled"] = "false";
         psi.Environment["App__CurrencyStrength__RefreshEnabled"] = "false";
+        // The async AI task runner polls the DB every few seconds against the shared app; no non-AI E2E
+        // creates a task, so keep it OFF here to avoid the same background-load flakiness. The AI-local
+        // fixture (which drives the task UI) turns it back on.
+        psi.Environment["App__Ai__RunTasks"] = "false";
         // Copy hosting is gated on the single CopyTrading feature flag (on by default) so the copy UI stays
         // available for the copy E2E tests, but the background supervisor would otherwise reconcile every
         // 30s against the shared app. A long reconcile interval keeps it inert for the run (one boot-time

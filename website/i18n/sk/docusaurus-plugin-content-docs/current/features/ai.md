@@ -115,7 +115,7 @@ zmeny. Vstavaný ONNX poskytovať je referenčná implementácia tohto vzoru.
 
 ## Schopnosti
 
-- **Vytvorenie cBot** — plain-English prompt → runnable cBot cez **generate → build → AI-fix** samoreparácia loop (`build-strategy`), na `/ai/build`.
+- **Vytvorenie cBot** — plain-English prompt → runnable cBot cez **generate → build → AI-fix** samoreparácia loop (`build-strategy`), na `/ai/build`. **Generovaný zdrojový kód sa zobrazuje** keď je build hotov (s tlačidlom kopírovania), spolu s logg buildu — pri úspechu *a* pri zlyhaniu — takže vždy vidíte, čo AI napísala, nie len chyby.
 - **Optimalizácia parametrov** — uzavretá slučka: AI navrhuje sady param, každý trvalý + backtestovaný naprieč uzlami (`optimize-run` / `optimize-params`).
 - **Autonómny agent portfólia** — mandátované návrhy s úplným rozhodovacím denníkom (`AgentMandate` → `AgentProposal`).
 - **Pôsobiaci strážca rizika** — `AiRiskGuard` background služba posudzuje bežiace boty, môžu **auto-stop** na kritické riziko (opt-in).
@@ -169,3 +169,7 @@ Ollama/LM Studio/vLLM. Záloha:
   reálne poverenia vyhrávajú) a spúšťa každú funkciu AI cez reálny UI. Pridávanie alebo zmena akejkoľvek funkcie AI
   **vyžaduje** E2E test cez túto armatúru (pozrite si test mandát repo). Opt-in pás
   (`AI_LOCAL_LLM=1`) spúšťa jeden reálny completion cez **Ollama** Testcontainer.
+
+## Vstavaný lokálny AI — nulové nastavenie štandardne
+
+Sťahovanie je tiež **predbežne prehrievané pri spustení**, keď je vstavaný model aktívnym poskytovateľom, takže je pripravený pred prvým kliknutím AI namiesto zlyhania tohto kliknutia s „sťahovávaním…". **Nastavenia → AI** zobrazuje stav live inštalácie na karte vstavaného poskytovateľa — *Model je pripravený* / *Sťahovanie modelu…* / *Model nie je nainštalovaný* / *Sťahovanie zlyhalo* — s tlačidlom **Sťahovať model** (alebo **Znova skúsiť sťahovanie**), ktoré spúšťa jednorazové pozadie sťahovanie na požiadavku (`GET /api/ai/built-in/status`, `POST /api/ai/built-in/install`). Povolenie vstavaného poskytovateľa z Nastavení opätovne používa už nasemenený riadok namiesto pridávania duplikátu, takže sa nikdy nedostane do konfliktu s obmedzením jediného aktívneho poskytovateľa.

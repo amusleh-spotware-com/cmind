@@ -18,6 +18,7 @@ Der **Neuer Agent**-Dialog sammelt, ohne Code:
 - **Name** und **Archetyp** — Scalper, Day Trader, Swing Trader, Position Trader, News Trader,
   Contrarian, Mean Reversion oder Breakout/Momentum. Jedes Preset legt eine sinnvolle Kadenz und Haltung fest.
 - **Haltung** — Aggressivitäts-, Geduld- und Trendfolgen-Slider.
+- **Verwaltete Konto(s)** — **mindestens ein ist erforderlich, um den Agenten zu erstellen** (ein Agent ohne Konto könnte nie starten, daher bleibt *Erstellen* deaktiviert, bis du einen auswählst). Wenn du noch kein Handelskonto verknüpft hast, teilt dir der Dialog dies mit und weist dich an, zuerst eines zu verknüpfen.
 - **Autonomie-Stufe** — **Advisory** (schlägt nur vor) oder **Approval-gated** (handelt erst nach
   Ihrer Genehmigung pro Aktion). **Full Auto** (keine per-Trade-Genehmigung) erfordert zusätzlich eine
   **Risikohülle** und die Annahme des Risiko-Haftungsausschlusses, bevor es scharf geschaltet werden kann.
@@ -93,3 +94,7 @@ verknüpft ist. **Erfordert den Anthropic-API-Schlüssel**, damit das Modell Ord
 dahin hält die Engine); noch ausstehend sind Multi-Agenten-Debatte-Rollen und Schichtgedächtnis/Reflexion.
 Die Runtime ist aus, solange nicht `App:Ai:AgentRuntimeEnabled` gesetzt ist, sodass Live-Trading nur auf
 einer expliziten, vollständig konsentierten Opt-in-Basis geschieht.
+
+## Verwaltete Konten und Bearbeitung
+
+Bei der Erstellung eines Agenten wählst du die Handelskonto(s), die er verwaltet – **mindestens eines ist bei der Erstellung erforderlich** (die *Erstellen*-Schaltfläche ist deaktiviert, bis eines ausgewählt ist, und der create-Endpunkt lehnt eine leere Auswahl ab). Jeder Agent kann später **bearbeitet** werden (Name, Temperament, Autonomie und verwaltete Konten) vom Stiftsymbol auf seiner Rosterzeile. Lifecycle-Steuerungen (Details, Bearbeitung, Start, Stop, Kill) sind Icon-Schaltflächen, jede in Zuständen deaktiviert, in denen die Aktion nicht anwendbar ist.

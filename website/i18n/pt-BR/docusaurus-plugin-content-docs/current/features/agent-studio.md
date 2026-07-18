@@ -17,6 +17,7 @@ O dialogo **New agent** coleta, sem codigo:
 - **Nome** e **arquetipo** — Scalper, Day Trader, Swing Trader, Position Trader, News Trader,
   Contrarian, Mean Reversion ou Breakout/Momentum. Cada preset fixa uma cadencia e postura sensata.
 - **Atitude** — deslizadores de agressividade, paciencia e tendencia.
+- **Conta(s) gerenciada(s)** — **pelo menos uma e necessaria para criar o agente** (um agente sem conta nunca poderia iniciar, entao *Create* fica desabilitado ate voce escolher uma). Se voce ainda nao vinculou uma conta de trading, o dialogo diz isso e aponta voce para vincular uma primeiro.
 - **Nivel de autonomia** — **Advisory** (apenas propoe) ou **Approval-gated** (age apenas apos sua
   aprovacao por-acao). **Full Auto** (sem aprovacao por-negociacao) adicionalmente requer um **envelope de risco**
   e aceitacao do disclaimer de risco antes de poder armar.
@@ -82,7 +83,6 @@ acontece apenas em um opt-in explicito e totalmente consentido.
 
 ## Contas gerenciadas e edicao
 
-Ao criar um agente, voce escolhe a(s) conta(s) de trading que ele gerencia (necessario antes de poder iniciar).
-Todo agente pode ser **editado** depois (nome, temperamento, autonomia e contas gerenciadas) pelo icone de lapis
+Ao criar um agente voce escolhe a(s) conta(s) de trading que ele gerencia — **pelo menos uma e necessaria na criacao** (o botao *Create* fica desabilitado ate uma ser selecionada, e o endpoint de criacao rejeita uma selecao vazia). Todo agente pode ser **editado** depois (nome, temperamento, autonomia e contas gerenciadas) pelo icone de lapis
 na linha da tabela de agentes. Controles de ciclo de vida (details, edit, start, stop, kill) sao botoes de icone,
 cada um desabilitado em estados onde a acao nao se aplica.

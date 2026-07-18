@@ -87,7 +87,7 @@ Polnih na ponudnika nastavitvenih vodičev (ključi, URL, ID modelov, koraki UI)
 
 cMind pošilja **pravi lokalni LLM, ki teče v postopku** prek
 [Microsoft.ML.OnnxRuntimeGenAI](https://onnxruntime.ai/docs/genai/) (kompaktni model obuke, kot je
-Phi-3-mini). Ne potrebuje **ključa API in brez eksterne storitve**, in ob prvem zagonu — ko ni
+Phi-3-mini). Ne potrebuje **ključa API in brez zunanje storitve**, in ob prvem zagonu — ko ni
 ponudnika nastavljen in vrata belo oznake to dovolijo — je **sejan in avtomatično aktiviran**, torej
 ima vsaka implementacija delujočo AI iz škatle.
 
@@ -125,8 +125,7 @@ je referenčna izvedba tega vzorca.
 
 ## Zmožnosti
 
-- **Gradnja cBota** — besedilo v navadnem jeziku → tečeči cBot prek **generira → gradnja → AI-popravek**
-  samopopravljajoče zanke (`build-strategy`), na `/ai/build`.
+- **Gradnja cBota** — navaden-angleški poziv → tečeči cBot prek **generira → gradnja → AI-popravek** samopopravljajoče zanke (`build-strategy`), na `/ai/build`. **Generirani izvorna koda je prikazana** ko se gradnja zaključi (z gumbom za kopiranje), skupaj z dnevnikom gradnje — ob uspehu *in* ob neuspehu — tako da vedno vidite, kaj je AI napisal, ne samo napake.
 - **Optimizacija parametra** — zaprta zanka: AI predlaga komplete parametrov, vsak obstojni +
   testirani čez vozlišča (`optimize-run` / `optimize-params`).
 - **Avtonomni agent za portfelj** — predlogi z naročilom z celotnim dnevnikom odločitve (`AgentMandate` →
@@ -200,3 +199,21 @@ Raven AI je dokazana od konca do konca **brez katere koli zunanje odvisnosti** s
   ali spreminjanje kakršne koli značilnosti AI **zahteva** E2E preskus prek te naprave (poglejte
   obveznost preskusa repa). Naročilna proga (`AI_LOCAL_LLM=1`) tečuje en pravi zaključek prek
   **Ollama** Testcontainerja.
+
+## Vgrajeni lokalni AI — nič-nastave privzeto
+
+Vgrajeni ONNX lokalni LLM deluje izven škatle: ko je njegov direktorij modelov odsoten in
+`App:Ai:BuiltIn:AutoDownload` je `true` (privzeto), aplikacija prenese model enkrat v
+ozadju iz `App:Ai:BuiltIn:DownloadBaseUrl`. Medtem ko poteka prenos, klic AI (in **preskus
+povezave** v Nastavitve → AI) vrnejo jasno sporočilo »model se prenaša (prvi-čas nastavka)«
+namesto trdega neuspeha. Prezračeni/merilni implementaciji nastavite `AutoDownload=false` in
+pred-oskrba direktorij modela (`App:Ai:BuiltIn:ModelPath`). Vrata belo oznake
+`App:Branding:AllowBuiltInAi` še vedno veljajo.
+
+Prenos je tudi **pred-ogrevan ob zagonu** ko je vgrajeni model aktivni ponudnik, torej je
+pripravljen pred prvim klikom AI namesto da bi z njim propadel »prenašam…«. **Nastavitve → AI**
+površine stanja živega namestitve na kartici vgrajenega ponudnika — *Model pripravljen* / *Prenašam model…* /
+*Model ni nameščen* / *Prenos ni uspel* — z gumbom **Prenesite model** (ali **Poskusite ponovno prenos**) ki
+sproži enkratni prenos v ozadju na zahtevo (`GET /api/ai/built-in/status`, `POST /api/ai/built-in/install`).
+Omogočanje vgrajenega ponudnika iz Nastavitve ponovno uporabi že sejan red namesto dodajanja dvojnika,
+zato nikoli ne pride do konflikta z enim-aktivnim-ponudnikom omejitev.

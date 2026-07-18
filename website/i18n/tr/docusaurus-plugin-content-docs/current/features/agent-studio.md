@@ -18,6 +18,7 @@ altında çalışır.
 - **Name** ve **archetype** — Scalper, Day Trader, Swing Trader, Position Trader, News Trader,
   Contrarian, Mean Reversion veya Breakout/Momentum. Her ön ayar mantıklı bir tempo ve duruş belirler.
 - **Attitude** — agresiflik, sabır ve trend takip kaydırıcıları.
+- **Managed account(s)** — **ajanı oluşturmak için en az biri gereklidir** (hesabı olmayan bir ajan asla başlayamaz, bu yüzden bir tane seçene kadar *Create* devre dışı kalır). Henüz bir ticaret hesabı bağlamadıysanız, iletişim kutusu bunu söyler ve önce bir tane bağlamanız için sizi yönlendirir.
 - **Autonomy level** — **Advisory** (yalnızca önerir) veya **Approval-gated** (yalnızca eylem başına
   onayınızdan sonra hareket eder). **Full Auto** (ticaret başına onay yok) ek olarak arm edilmeden önce
   bir **risk zarfı** ve risk sorumluluk reddinin kabulünü gerektirir.
@@ -89,7 +90,4 @@ ayarlanmadıkça kapalıdır, bu yüzden canlı ticaret yalnızca açık, tam on
 
 ## Yönetilen hesaplar ve düzenleme
 
-Bir ajan oluştururken yönettiği ticaret hesabını/hesaplarını seçersiniz (başlayabilmesi için gereklidir).
-Her ajan daha sonra kadro satırındaki kalem simgesinden **düzenlenebilir** (ad, mizaç, otonomi ve yönetilen
-hesaplar). Yaşam döngüsü kontrolleri (details, edit, start, stop, kill) simge düğmeleridir, her biri
-eylemin geçerli olmadığı durumlarda devre dışıdır.
+Bir ajan oluştururken yönettiği ticaret hesabını/hesaplarını seçersiniz — **oluşturulurken en az biri gereklidir** (*Create* düğmesi bir tane seçilene kadar devre dışı kalır ve create endpoint boş bir seçimi reddeder). Her ajan daha sonra kadro satırındaki kalem simgesinden **düzenlenebilir** (ad, mizaç, otonomi ve yönetilen hesaplar). Yaşam döngüsü kontrolleri (details, edit, start, stop, kill) simge düğmeleridir, her biri eylemin geçerli olmadığı durumlarda devre dışıdır.

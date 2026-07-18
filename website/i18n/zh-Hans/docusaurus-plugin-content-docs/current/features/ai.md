@@ -115,7 +115,7 @@ changes. The built-in ONNX provider is the reference implementation of this patt
 
 ## Capabilities
 
-- **Build cBot** — plain-English prompt → runnable cBot via **generate → build → AI-fix** self-repair loop (`build-strategy`), at `/ai/build`.
+- **Build cBot** — plain-English prompt → runnable cBot via **generate → build → AI-fix** self-repair loop (`build-strategy`), at `/ai/build`. The **generated source code is shown** when the build finishes (with a copy button), alongside the build log — on success *and* on failure — so you always see what the AI wrote, not just errors.
 - **Parameter optimization** — closed loop: AI proposes param sets, each persisted + backtested across nodes (`optimize-run` / `optimize-params`).
 - **Autonomous portfolio agent** — mandate-driven proposals with full decision journal (`AgentMandate` → `AgentProposal`).
 - **Acting risk guard** — `AiRiskGuard` background service assesses running bots, can **auto-stop** on critical risk (opt-in).
@@ -170,4 +170,14 @@ Ollama/LM Studio/vLLM. It backs:
   **requires** an E2E test through this fixture (see the repo test mandate). An opt-in lane
   (`AI_LOCAL_LLM=1`) runs one real completion through an **Ollama** Testcontainer.
 
-<!-- [ZH-HANS] Translation needed -->
+## Built-in local AI — zero-setup by default
+
+The built-in ONNX local LLM works out of the box: when its model directory is absent and
+`App:Ai:BuiltIn:AutoDownload` is `true` (the default), the app downloads the model once in the
+background from `App:Ai:BuiltIn:DownloadBaseUrl`. While the download runs, AI calls (and **Test
+connection** in Settings → AI) return a clear "model is downloading (first-time setup)" message
+rather than a hard failure. Air-gapped/metered deployments set `AutoDownload=false` and
+pre-provision the model directory (`App:Ai:BuiltIn:ModelPath`). The white-label
+`App:Branding:AllowBuiltInAi` gate still applies.
+
+The download is also **pre-warmed on startup** when the built-in model is the active provider, so it is ready before the first AI click instead of failing that click with "downloading…". **Settings → AI** surfaces the live install state on the built-in provider card — *Model ready* / *Downloading model…* / *Model not installed* / *Download failed* — with a **Download model** (or **Retry download**) button that kicks the one-time background fetch on demand (`GET /api/ai/built-in/status`, `POST /api/ai/built-in/install`). Enabling the built-in provider from Settings reuses the already-seeded row instead of adding a duplicate, so it never conflicts on the single-active-provider constraint.

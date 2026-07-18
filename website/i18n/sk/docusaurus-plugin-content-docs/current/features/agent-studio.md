@@ -15,6 +15,7 @@ Dialóg **Nový agent** zhromažďuje, bez kódu:
 - **Názov** a **archetype** — Scalper, Day Trader, Swing Trader, Position Trader, News Trader,
   Contrarian, Mean Reversion alebo Breakout/Momentum. Každý predvolený nastavenie fixuje rozumný rytmus a postoj.
 - **Postoj** — agresivita, trpezlivosť a posuvníky trend-followingu.
+- **Spravované účty** — **aspoň jeden je potrebný na vytvorenie agenta** (agent bez účtu nikdy nemôže spustiť, takže *Vytvoriť* zostáva zakázaný, kým si nevyberiete jeden). Ak ste ešte neprepojili obchodný účet, dialóg vám to povie a upozorní vás, aby ste ho najskôr prepojili.
 - **Úroveň autonómie** — **Advisory** (navrhuje iba) alebo **Approval-gated** (koná iba po vašom
   schválení za každú akciu). **Full Auto** (bez schvaľovania za každý obchod) navyše vyžaduje **bezpečnostnú obálku**
   a prijatie vylúčenia zodpovednosti pred tým, ako sa môže ozbrojiť.
@@ -82,3 +83,7 @@ gracefully degradujú, keď účet nie je prepojený. **Vyžaduje Anthropic API 
 generovanie objednávok (do vtedy engine drží); ešte prísť sú multi-agent debate role a layered
 pamäť/reflexia. Runtime je vypnutý, pokiaľ nie je nastavené `App:Ai:AgentRuntimeEnabled`, takže živé obchodovanie sa len
 deje na explicitný, plne-súhlasný opt-in.
+
+## Spravované účty a úprava
+
+Pri vytváraní agenta si vyberiete obchodný účet(y), ktoré spravuje — **aspoň jeden je potrebný pri vytváraní** (tlačidlo *Vytvoriť* je zakázané, kým si nevyberiete jeden, a koncový bod vytvorenia odmietne prázdny výber). Každého agenta je možné neskôr **upraviť** (názov, temperament, autonómia a spravované účty) z ikony ceruzky na riadku jeho zoznamu. Životný cyklus ovládacích prvkov (detaily, úprava, spustenie, zastavenie, zabíjanie) sú ikony tlačidiel, z ktorých je každé zakázané v stavoch, kde sa akcia neuplatňuje.

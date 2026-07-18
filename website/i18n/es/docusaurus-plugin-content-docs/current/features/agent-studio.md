@@ -18,6 +18,9 @@ El diálogo **Nuevo agente** recopila, sin código:
 - **Nombre** y **arquetipo** — Scalper, Day Trader, Swing Trader, Position Trader, News Trader,
   Contrarian, Mean Reversion o Breakout/Momentum. Cada preconfiguración establece un ritmo y postura sensatos.
 - **Actitud** — controles deslizantes de agresividad, paciencia y seguimiento de tendencias.
+- **Cuenta(s) gestionada(s)** — **se requiere al menos una para crear el agente** (un agente sin cuenta
+  nunca podría iniciarse, por lo que *Crear* permanece deshabilitado hasta que elijas una). Si aún no has
+  vinculado una cuenta de trading, el diálogo te lo dice y te señala que primero debes vincular una.
 - **Nivel de autonomía** — **Asesor** (solo propone) o **Aprobación requerida** (actúa solo después de tu
   aprobación por acción). **Totalmente automático** (sin aprobación por operación) requiere además un **envolvente de riesgo**
   y aceptación del descargo de responsabilidad antes de poder activarse.
@@ -85,3 +88,9 @@ degradándose de forma segura cuando una cuenta no está vinculada. **Requiere l
 genere órdenes (hasta entonces el motor se detiene); lo que aún está por venir son roles de debate multiagente y
 memoria/reflexión en capas. El tiempo de ejecución está desactivado a menos que `App:Ai:AgentRuntimeEnabled` esté configurado, por lo que el trading en vivo solo
 ocurre en una aceptación de participación totalmente consentida y explícita.
+
+## Cuentas gestionadas y edición
+
+Al crear un agente, eliges la(s) cuenta(s) de trading que gestiona — **se requiere al menos una en la creación** (el botón
+*Crear* está deshabilitado hasta que se selecciona una, y el punto final de creación rechaza una selección vacía). Cada agente se puede **editar** después (nombre, temperamento, autonomía y cuentas gestionadas) desde el icono de lápiz en la fila del registro. Los controles de ciclo de vida (detalles, edición, inicio, parada, parada) son botones de icono,
+cada uno deshabilitado en estados donde la acción no se aplica.

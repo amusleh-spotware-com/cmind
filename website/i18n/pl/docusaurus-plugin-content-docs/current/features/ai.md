@@ -115,7 +115,7 @@ dostawca ONNX jest implementacją referencyjną tego wzorca.
 
 ## Możliwości
 
-- **Zbuduj cBot** — zwykły angielski prompt → uruchamiany cBot przez **generate → build → AI-fix** self-repair pętla (`build-strategy`), na `/ai/build`.
+- **Zbuduj cBot** — zwykły angielski prompt → uruchamiany cBot przez **generate → build → AI-fix** self-repair pętla (`build-strategy`), na `/ai/build`. **Wygenerowany kod źródłowy jest pokazywany** gdy build się kończy (z przyciskiem kopiuj), razem z logiem buildu — zarówno na sukces *jak i* na porażkę — więc zawsze widzisz co AI napisało, nie tylko błędy.
 - **Optymalizacja parametrów** — zamknięta pętla: AI proponuje param sets, każdy persystentny + backtestowany przez nodes (`optimize-run` / `optimize-params`).
 - **Agent portfolio autonomiczny** — proposal napędzane mandatem z pełnym dziennikiem decyzji (`AgentMandate` → `AgentProposal`).
 - **Acting risk guard** — `AiRiskGuard` usługa w tle ocenia uruchomione boty, może **auto-stop** na krytycznym ryzyku (opt-in).
@@ -169,3 +169,14 @@ Ollama/LM Studio/vLLM. To wspiera:
   rzeczywiste poświadczenia wygrywają) i prowadzi każdą funkcję AI przez rzeczywisty UI. Dodawanie lub zmiana każdej funkcji AI
   **wymaga** testu E2E przez ten fixture (zobacz test mandate repo). Opt-in lane
   (`AI_LOCAL_LLM=1`) uruchamia jeden prawdziwy completion przez Testcontainer **Ollama**.
+
+## Wbudowany lokalny AI — zero-setup domyślnie
+
+Wbudowany lokalny LLM ONNX działa od razu: gdy jego katalog modelu jest nieobecny i
+`App:Ai:BuiltIn:AutoDownload` jest `true` (domyślnie), aplikacja pobiera model raz w tle
+z `App:Ai:BuiltIn:DownloadBaseUrl`. Podczas pobierania, wezwania AI (i **Test connection** w Ustawienia → AI)
+zwracają jasne "model jest pobierany (konfiguracja jednorazowa)" zamiast twardej porażki. Air-gapped/metered wdrożenia
+ustawiają `AutoDownload=false` i pre-provision katalog modelu (`App:Ai:BuiltIn:ModelPath`). Brama white-label
+`App:Branding:AllowBuiltInAi` wciąż się stosuje.
+
+Pobieranie jest również **wstępnie ogrzewane przy starcie** gdy wbudowany model jest aktywnym dostawcą, więc jest gotowy przed pierwszym kliknięciem AI zamiast niepowodzenia tego kliknięcia z "downloading…". **Ustawienia → AI** wyświetla live stan instalacji na karcie wbudowanego dostawcy — *Model gotowy* / *Pobieranie modelu…* / *Model nie zainstalowany* / *Pobieranie nie powiodło się* — z przyciskiem **Pobierz model** (lub **Ponów pobieranie**) który aktywuje jednorazowe pobieranie w tle na żądanie (`GET /api/ai/built-in/status`, `POST /api/ai/built-in/install`). Włączenie wbudowanego dostawcy z Ustawień ponownie używa już seeded wiersza zamiast dodawania duplikatu, więc nigdy nie konfliktuje z ograniczeniem single-active-provider.

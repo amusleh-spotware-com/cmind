@@ -114,7 +114,7 @@ Aenderungen. Der integrierte ONNX-Anbieter ist die Referenzimplementierung diese
 
 ## Faehigkeiten
 
-- **cBot erstellen** – Klartext-Prompt → lauffaehiger cBot ueber **generieren → bauen → KI-reparieren** Selbstreparaturschleife (`build-strategy`), unter `/ai/build`.
+- **cBot erstellen** – Klartext-Prompt → lauffaehiger cBot ueber **generieren → bauen → KI-reparieren** Selbstreparaturschleife (`build-strategy`), unter `/ai/build`. Der **generierte Quellcode wird angezeigt**, wenn der Bau abgeschlossen ist (mit einer Schaltflaeche zum Kopieren), zusammen mit dem Bau-Log – bei Erfolg *und* bei Fehler – damit du immer siehst, was die KI geschrieben hat, nicht nur Fehler.
 - **Parameteroptimierung** – geschlossene Schleife: KI schlaegt Parametersaetze vor, jeder persistiert + ueber Nodes getestet (`optimize-run` / `optimize-params`).
 - **Autonomer Portfolio-Agent** – mandategetriebene Vorschlaege mit vollstaendigem Entscheidungstagebuch (`AgentMandate` → `AgentProposal`).
 - **Agierender Risikowächter** – `AiRiskGuard`-Hintergrunddienst bewertet laufende Bots, kann kritische Risiken **auto-stoppen** (Opt-in).
@@ -178,3 +178,5 @@ Verbindung** in Einstellungen → KI) eine klare "Modell wird heruntergeladen (E
 zurueck anstatt eines harten Fehlers. Air-gapped/Metered-Bereitstellungen setzen `AutoDownload=false` und
 stellen das Modellverzeichnis vor (`App:Ai:BuiltIn:ModelPath`). Das White-Label-
 `App:Branding:AllowBuiltInAi`-Gate gilt weiterhin.
+
+Der Download wird auch **bei Startup vorab erwaermt**, wenn das integrierte Modell der aktive Anbieter ist, damit es vor dem ersten KI-Klick bereit ist, anstatt diesen Klick mit "wird heruntergeladen…" zu sabotieren. **Einstellungen → KI** zeigt den Live-Installationsstatus auf der integrierten Anbieter-Karte – *Modell bereit* / *Modell wird heruntergeladen…* / *Modell nicht installiert* / *Download fehlgeschlagen* – mit einer Schaltflaeche **Modell herunterladen** (oder **Download erneut versuchen**), die den One-Time-Hintergrund-Abruf auf Anfrage startet (`GET /api/ai/built-in/status`, `POST /api/ai/built-in/install`). Das Aktivieren des integrierten Anbieters aus Einstellungen verwendet die bereits gesaete Reihe, anstatt ein Duplikat hinzuzufuegen, damit es nie mit der Single-Active-Provider-Beschraenkung in Konflikt geraet.

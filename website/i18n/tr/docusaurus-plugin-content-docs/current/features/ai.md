@@ -124,7 +124,7 @@ sağlayıcısı bu desenin referans uygulamasıdır.
 
 ## Yetenekler
 
-- **cBot Oluştur** — düz İngilizce prompt → **generate → build → AI-fix** kendi kendini onarma döngüsü aracılığıyla çalıştırılabilir cBot (`build-strategy`), `/ai/build`'da.
+- **cBot Oluştur** — düz İngilizce prompt → **generate → build → AI-fix** kendi kendini onarma döngüsü aracılığıyla çalıştırılabilir cBot (`build-strategy`), `/ai/build`'da. **Oluşturulan kaynak kodu, derleme bittiğinde gösterilir** (kopyala düğmesi ile), derleme günlüğünün yanında — başarıda *ve* başarısızlıkta — böylece her zaman AI'ın ne yazdığını görürsünüz, sadece hataları değil.
 - **Parametre optimizasyonu** — kapalı döngü: AI param setleri önerir, her biri node'lar arasında kalıcılaştırılır + backtest edilir (`optimize-run` / `optimize-params`).
 - **Otonom portföy ajanı** — tam karar günlüğüyle mandat odaklı öneriler (`AgentMandate` → `AgentProposal`).
 - **Hareket eden risk muhafızı** — `AiRiskGuard` arka plan servisi çalışan botları değerlendirir, kritik riskte **otomatik-durdurabilir** (opt-in).
@@ -190,3 +190,11 @@ Yerleşik ONNX yerel LLM kutudan çıktığı gibi çalışır: model dizini yok
 (ilk kez kurulum)" mesajı döndürür. Hava boşluklu/ölçülü dağıtımlar `AutoDownload=false` ayarlar ve
 model dizinini önceden hazırlar (`App:Ai:BuiltIn:ModelPath`). White-label
 `App:Branding:AllowBuiltInAi` geçidi hâlâ geçerlidir.
+
+İndirme ayrıca **başlangıçta önceden ısıtılmıştır** yerleşik model aktif sağlayıcı olduğunda, böylece ilk
+AI tıklamasından önce hazır olup, "indiriliyor…" ile bu tıklamayı başarısız kılmak yerine. **Settings → AI**
+yerleşik sağlayıcı kartında canlı kurulum durumunu yüzeylere çıkarır — *Model ready* / *Downloading model…* /
+*Model not installed* / *Download failed* — model indirmeyi (veya indirmeyi **yeniden denemeyi**) istek üzerine
+bir kez arka planda getiren **Download model** (veya **Retry download**) düğmesi ile (`GET /api/ai/built-in/status`,
+`POST /api/ai/built-in/install`). Settings'den yerleşik sağlayıcıyı etkinleştirmek, bir kopya eklemek yerine
+zaten seed yapılmış satırı yeniden kullanır, böylece asla tek-aktif-sağlayıcı kısıtlamasında çakışmaz.

@@ -115,7 +115,7 @@ El proveedor ONNX integrado es la implementación de referencia de este patrón.
 
 ## Capacidades
 
-- **Construir cBot** — mensaje en inglés simple → cBot ejecutable vía **generar → compilar → auto-reparación de IA** bucle (`build-strategy`), en `/ai/build`.
+- **Construir cBot** — mensaje en inglés simple → cBot ejecutable vía **generar → compilar → auto-reparación de IA** bucle (`build-strategy`), en `/ai/build`. El **código fuente generado se muestra** cuando la compilación finaliza (con un botón de copiar), junto al registro de compilación — en caso de éxito *y* en caso de fallo — para que siempre veas lo que escribió la IA, no solo errores.
 - **Optimización de parámetros** — bucle cerrado: IA propone conjuntos de parámetros, cada uno persiste + backtested en nodos (`optimize-run` / `optimize-params`).
 - **Agente de cartera autónomo** — propuestas impulsadas por mandato con diario de decisión completo (`AgentMandate` → `AgentProposal`).
 - **Guardia de riesgo actuante** — servicio de fondo `AiRiskGuard` evalúa bots en ejecución, puede **detener automáticamente** en riesgo crítico (opt-in).
@@ -169,3 +169,20 @@ Ollama/LM Studio/vLLM. Respalda:
   ganan credenciales reales) e impulsa cada característica de IA a través de la interfaz de usuario real. Agregar o cambiar cualquier característica de IA
   **requiere** una prueba E2E a través de este dispositivo (ver el mandato de prueba del repositorio). Un carril opt-in
   (`AI_LOCAL_LLM=1`) ejecuta una completación real a través de un Contenedor de prueba **Ollama**.
+
+## IA local integrada — cero configuración por defecto
+
+El LLM local ONNX integrado funciona fuera de la caja: cuando su directorio de modelo está ausente y
+`App:Ai:BuiltIn:AutoDownload` es `true` (el predeterminado), la aplicación descarga el modelo una vez en el
+fondo desde `App:Ai:BuiltIn:DownloadBaseUrl`. Mientras se ejecuta la descarga, las llamadas de IA (y **Probar conexión** en Configuración → IA) devuelven un claro "el modelo se está descargando (configuración de primera vez)" mensaje
+en lugar de un fallo duro. Los despliegues aislados de aire/medidos establecen `AutoDownload=false` y
+pre-provisionan el directorio del modelo (`App:Ai:BuiltIn:ModelPath`). La puerta de etiqueta blanca
+`App:Branding:AllowBuiltInAi` todavía se aplica.
+
+La descarga también es **pre-calentada al inicio** cuando el modelo integrado es el proveedor activo, por lo que está
+lista antes del primer clic de IA en lugar de fallar ese clic con "descargando…". **Configuración → IA**
+expone el estado de instalación activo en la tarjeta del proveedor integrado — *Modelo listo* / *Descargando modelo…* /
+*Modelo no instalado* / *Descarga fallida* — con un botón **Descargar modelo** (o **Reintentar descarga**) que inicia
+la búsqueda de fondo única bajo demanda (`GET /api/ai/built-in/status`, `POST /api/ai/built-in/install`).
+Habilitar el proveedor integrado desde Configuración reutiliza la fila ya sembrada en lugar de agregar un duplicado,
+por lo que nunca entra en conflicto con la restricción de un único proveedor activo.

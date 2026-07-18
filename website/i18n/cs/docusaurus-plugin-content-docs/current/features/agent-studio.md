@@ -14,6 +14,7 @@ Dialog **Nový agent** sbírá, bez kódu:
 
 - **Název** a **archetyp** — Scalper, Denní obchodník, Swing obchodník, Poziční obchodník, News Trader, Contrarian, Mean Reversion nebo Breakout/Momentum. Každá předvolba nastavuje rozumnou kadenci a držení.
 - **Temperament** — posuvníky pro agresivitu, trpělivost a sledování trendu.
+- **Spravované účty** — **alespoň jeden je vyžadován pro vytvoření agenta** (agent bez účtu by se nikdy nemohl spustit, takže *Create* zůstane zakázán, dokud si jeden nevyberete). Pokud jste ještě nepropojili obchodní účet, dialog vám to řekne a ukáže vám, abyste ho nejdříve propojili.
 - **Úroveň autonomie** — **Advisory** (pouze navrhuje) nebo **Approval-gated** (jedná pouze po vašem schválení každé akce). **Full Auto** (bez schválení každého obchodu) navíc vyžaduje **rizikový obál** a přijetí vyloučení odpovědnosti před aktivací.
 
 Persona se **deterministicky** kompiluje do system promptu agenta (žádný LLM ji netvoří), takže stejná konfigurace vždy produkuje stejné instrukce — reprodukovatelné a auditovatelné.
@@ -52,4 +53,4 @@ Odesláno: úplný životní cyklus agenta, deterministická bezpečnostní brá
 
 ## Spravované účty a úpravy
 
-Při vytváření agenta si vyberete obchodní účet(y), které spravuje (vyžadováno před jeho spuštěním). Každého agenta lze потом **upravit** (název, temperament, autonomii a spravované účty) z ikonky tužky na jeho řádku v seznamu. Ovládací prvky životního cyklu (details, edit, start, stop, kill) jsou ikonová tlačítka, každé zakázané ve stavech, kde akce neplatí.
+Při vytváření agenta si vyberete obchodní účet(y), které spravuje — **alespoň jeden je vyžadován při vytvoření** (tlačítko *Create* je zakázáno, dokud si nevyberete jednu, a create endpoint odmítá prázdný výběr). Každého agenta lze potom **upravit** (název, temperament, autonomii a spravované účty) z ikonky tužky na jeho řádku v seznamu. Ovládací prvky životního cyklu (details, edit, start, stop, kill) jsou ikonová tlačítka, každé zakázané ve stavech, kde akce neplatí.

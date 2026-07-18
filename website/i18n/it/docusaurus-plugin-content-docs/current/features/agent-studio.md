@@ -17,6 +17,7 @@ Il dialogo **Nuovo agente** raccoglie, senza codice:
 - **Nome** e **archetipo** — Scalper, Day Trader, Swing Trader, Position Trader, News Trader,
   Contrarian, Mean Reversion o Breakout/Momentum. Ogni preset fissa una cadenza e postura sensata.
 - **Attitudine** — sliders di aggressività, pazienza e trend-following.
+- **Account gestiti** — **almeno uno è richiesto per creare l'agente** (un agente senza account non potrebbe mai avviarsi, così *Crea* resta disabilitato finché non ne scegli uno). Se non hai ancora collegato un account di trading, il dialogo lo dice e ti rimanda a collegarne uno prima.
 - **Livello di autonomia** — **Advisory** (solo propone) oppure **Approval-gated** (agisce solo dopo la tua
   approvazione per-azione). **Full Auto** (nessuna approvazione per-trade) richiede in più un **risk envelope**
   e accettazione del disclaimer di rischio prima di potersi armare.
@@ -87,7 +88,4 @@ il trading live succede solo su un opt-in esplicito e fully-consented.
 
 ## Account gestiti e modifica
 
-Quando crei un agente scegli gli account di trading che gestisce (richiesto prima che possa avviarsi).
-Ogni agente può essere **modificato** successivamente (nome, temperamento, autonomia e account gestiti) dall'icona
-matita sulla sua riga nella rosa. I controlli del ciclo di vita (details, edit, start, stop, kill) sono pulsanti
-icona, ciascuno disabilitato negli stati dove l'azione non si applica.
+Quando crei un agente scegli gli account di trading che gestisce — **almeno uno è richiesto alla creazione** (il pulsante *Crea* è disabilitato finché non ne selezioni uno, e l'endpoint di creazione rifiuta una selezione vuota). Ogni agente può essere **modificato** successivamente (nome, temperamento, autonomia e account gestiti) dall'icona matita sulla sua riga nella rosa. I controlli del ciclo di vita (details, edit, start, stop, kill) sono pulsanti icona, ciascuno disabilitato negli stati dove l'azione non si applica.

@@ -17,6 +17,7 @@ Dialog **Ejen baharu** mengumpul, tanpa kod:
 - **Nama** dan **archetype** — Scalper, Day Trader, Swing Trader, Position Trader, News Trader,
   Contrarian, Mean Reversion atau Breakout/Momentum. Setiap preset memperbaiki irama dan postur yang masuk akal.
 - **Sikap** — slider agresiviti, kesabaran dan trend-following.
+- **Akaun yang diurus** — **sekurang-kurangnya satu diperlukan untuk cipta ejen** (ejen tanpa akaun tidak pernah boleh bermula, jadi *Cipta* tetap dilumpuhkan sehingga anda pilih satu). Jika anda belum pautkan akaun perdagangan lagi, dialog berkata demikian dan arahkan anda untuk pautkan satu dahulu.
 - **Tahap autonomi** — **Nasihat** (cadangkan sahaja) atau **Kelulusan-digerbang** (bertindak hanya selepas kelulusan setiap tindakan). **Auto Penuh** (tiada kelulusan setiap dagangan) tambahan memerlukan **sampul risiko**
   dan penerimaan penafian risiko sebelum boleh mengaktifkan.
 
@@ -74,3 +75,7 @@ memori nó, dan tab Lari-debat.
 Dihantar: kitaran hayat ejen penuh, gerbang keselamatan deterministik, masa jalan 24/7, gerbang kelulusan manusia-dalam-gelung,
 buku audit, dan **integrasi langsung cTrader Open API** — kedai keadaan akaun (membaca baki sebenar, posisi dan pendedahan terbuka dalam lot) dan pelaksanaan pesanan (meletakkan pesanan pasaran sebenar, lot→volum melalui saiz lot simbol), kedua-duanya menyelesaikan bukti OAuth setiap akaun yang diurus dan mundur dengan selamat apabila akaun tidak dipautkan. **Memerlukan kunci API Anthropic** untuk model menjana pesanan (sehingga nó enjin tahan); yang masih akan datang ialah peranan debat ejen berbilang dan ingatan/ refleksi berlapis. Masa jalan dimatikan melainkan `App:Ai:AgentRuntimeEnabled` ditetapkan, jadi perdagangan langsung hanya
 berlaku pada pilihan masuk yang dipersetujui sepenuhnya.
+
+## Akaun yang diurus dan penyuntingan
+
+Apabila cipta ejen anda pilih akaun perdagangan yang ia urus — **sekurang-kurangnya satu diperlukan pada penciptaan** (butang *Cipta* dilumpuhkan sehingga satu dipilih, dan titik akhir cipta menolak pemilihan kosong). Setiap ejen boleh **diedit** selepas itu (nama, temperamen, autonomi, dan akaun yang diurus) daripada ikon pensil pada baris barisan nó. Kawalan kitaran hayat (butiran, edit, mula, henti, bunuh) ialah butang ikon, setiap dilumpuhkan dalam keadaan di mana tindakan tidak terpakai.

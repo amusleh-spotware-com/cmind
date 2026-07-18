@@ -15,6 +15,7 @@ Le dialogue **Nouvel agent** collecte, sans code :
 - **Nom** et **archétype** — Scalper, Day Trader, Swing Trader, Position Trader, News Trader,
   Contrarien, Mean Reversion ou Breakout/Momentum. Chaque préréglage fixe une cadence et une posture cohérentes.
 - **Attitude** — curseurs d'agressivité, de patience et de suivi de tendance.
+- **Compte(s) gérés** — **au moins un est requis pour créer l'agent** (un agent sans compte ne pourrait jamais démarrer, donc *Créer* reste désactivé jusqu'à ce que vous en choisissiez un). Si vous n'avez pas encore lié un compte de trading, le dialogue le dit et vous pointe pour en lier un en premier.
 - **Niveau d'autonomie** — **Advisory** (propose uniquement) ou **Approval-gated** (n'agit qu'après votre
   approbation par action). **Full Auto** (sans approbation par transaction) nécessite en outre une **enveloppe de risque**
   et l'acceptation de l'avertissement de risque avant de pouvoir s'armer.
@@ -81,7 +82,4 @@ et pleinement consenti.
 
 ## Comptes gérés et modification
 
-Lors de la création d'un agent, vous choisissez le(s) compte(s) de trading qu'il gère (requis avant qu'il puisse démarrer).
-Chaque agent peut être **modifié** par la suite (nom, tempérament, autonomie et comptes gérés) depuis l'icône crayon sur sa ligne du tableau.
-Les contrôles de cycle de vie (détails, modifier, démarrer, arrêter, kill) sont des boutons icône,
-chacun désactivé dans les états où l'action ne s'applique pas.
+Lors de la création d'un agent, vous choisissez le(s) compte(s) de trading qu'il gère — **au moins un est requis à la création** (le bouton *Créer* est désactivé jusqu'à ce qu'un soit sélectionné, et le endpoint de création rejette une sélection vide). Chaque agent peut être **modifié** par la suite (nom, tempérament, autonomie et comptes gérés) depuis l'icône crayon sur sa ligne du tableau. Les contrôles de cycle de vie (détails, modifier, démarrer, arrêter, kill) sont des boutons icône, chacun désactivé dans les états où l'action ne s'applique pas.

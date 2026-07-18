@@ -17,6 +17,7 @@ Dialog **Nowy agent** zbiera, bez kodowania:
 - **Nazwa** i **archetyp** — Scalper, Day Trader, Swing Trader, Position Trader, News Trader,
   Contrarian, Mean Reversion lub Breakout/Momentum. Każdy preset ustala sensowny rhythm i postawę.
 - **Nastawienie** — suwakami agresywności, cierpliwości i podążania za trendem.
+- **Zarządzane konto(a)** — **co najmniej jedno jest wymagane do utworzenia agenta** (agent bez konta nigdy nie mógłby się uruchomić, więc *Utwórz* pozostaje wyłączony dopóki nie wybierzesz jedno). Jeśli jeszcze nie połączyłeś konta handlowego, dialog mówi o tym i wskazuje najpierw połączyć jedno.
 - **Poziom autonomii** — **Doradczy** (tylko proponuje) lub **Z zatwierdzeniem** (działa dopiero po Twojej
   aprobacie każdego działania). **Pełna automatyka** (bez zgody na każdą transakcję) dodatkowo wymaga **zakonczenia ryzyka**
   i akceptacji disclaimer'u ryzyka przed uzbrojeniem.
@@ -84,3 +85,7 @@ degradujące się bezpiecznie gdy konto nie jest połączone. **Wymaga klucza AP
 generował zamówienia (dopóki silnik się wstrzymuje); jeszcze do przyjścia to role wieloagentowej debaty i warstwowa
 pamięć/refleksja. Runtime jest wyłączony chyba że `App:Ai:AgentRuntimeEnabled` jest ustawiony, więc live trading
 tylko zachodzi na explicit, w pełni wyraża, opt-in.
+
+## Zarządzane konta i edycja
+
+Tworząc agenta wybierasz konto(a) handlowe którymi zarządza — **co najmniej jedno jest wymagane przy tworzeniu** (*Utwórz* przycisk jest wyłączony dopóki żaden nie jest wybrany, i endpoint tworzenia odrzuca pustą selekcję). Każdy agent może być **edytowany** potem (nazwa, temperament, autonomia i zarządzane konta) z ikony ołówka w wierszu jego rejestru. Kontrolki cyklu życia (szczegóły, edycja, start, stop, kill) to ikony przycisków, każde wyłączone w stanach gdzie działanie nie stosuje się.

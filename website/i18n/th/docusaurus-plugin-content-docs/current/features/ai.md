@@ -115,8 +115,7 @@ changes Built-in ONNX provider คือ reference implementation ของ patt
 
 ## Capabilities
 
-- **Build cBot** — prompt เป็นภาษาอังกฤษธรรมดา → runnable cBot ผ่าน **generate → build → AI-fix**
-  self-repair loop (`build-strategy`) ที่ `/ai/build`
+- **Build cBot** — prompt เป็นภาษาอังกฤษธรรมดา → runnable cBot ผ่าน **generate → build → AI-fix** self-repair loop (`build-strategy`) ที่ `/ai/build` **ซอร์สโค้ดที่สร้างขึ้นจะแสดง** เมื่อ build เสร็จสิ้น (พร้อมปุ่ม copy) พร้อมกับ build log — บนสำเร็จ *และ* บนความล้มเหลว — ดังนั้นคุณจึงเห็นสิ่งที่ AI เขียนเสมอ ไม่ใช่เพียงข้อผิดพลาด
 - **Parameter optimization** — closed loop: AI เสนอ param sets, แต่ละ persisted + backtested
   ข้าม nodes (`optimize-run` / `optimize-params`)
 - **Autonomous portfolio agent** — mandate-driven proposals พร้อม full decision journal
@@ -182,3 +181,17 @@ wire-identical กับ Ollama/LM Studio/vLLM มันสนับสนุน
   `AI_E2E_MODEL`) — real creds ชนะ) และ drive ทุก AI feature ผ่าน real UI การเพิ่มหรือเปลี่ยน
   AI feature **ต้อง** มี E2E test ผ่าน fixture นี้ (ดู repo test mandate) Lane แบบ opt-in
   (`AI_LOCAL_LLM=1`) run หนึ่ง real completion ผ่าน **Ollama** Testcontainer
+
+## Built-in local AI — zero-setup by default
+
+Built-in ONNX local LLM ทำงานได้ทันที: เมื่อไดเรกทอรี model ไม่มี และ
+`App:Ai:BuiltIn:AutoDownload` เป็น `true` (default) app ดาวน์โหลด model ครั้งเดียวในพื้นหลัง
+จาก `App:Ai:BuiltIn:DownloadBaseUrl` ขณะที่ download ทำงาน AI calls (และ **Test connection** ใน Settings → AI) คืนค่า
+ข้อความที่ชัดเจน "model กำลังดาวน์โหลด (first-time setup)" แทนความล้มเหลวที่หนักแน่น
+Air-gapped/metered deployments ตั้ง `AutoDownload=false` และ pre-provision model directory
+(`App:Ai:BuiltIn:ModelPath`) White-label `App:Branding:AllowBuiltInAi` gate ยังคงใช้ได้
+
+ดาวน์โหลดยังถูก **pre-warmed บน startup** เมื่อ built-in model เป็น active provider ดังนั้น
+มันพร้อมก่อนการคลิก AI ครั้งแรก แทนการล้มเหลวด้วย "downloading…" **Settings → AI** แสดง
+live install state บน built-in provider card — *Model ready* / *Downloading model…* / *Model not installed* / *Download failed* — พร้อมปุ่ม **Download model** (หรือ **Retry download**) ที่ทำให้ one-time background fetch ทำงานตามความต้องการ (`GET /api/ai/built-in/status`, `POST /api/ai/built-in/install`) การเปิดใช้งาน built-in provider จาก Settings นำ back row ที่ seeded แล้วแทนการเพิ่มรายการ duplicate
+ดังนั้นจึงไม่เกิดความขัดแย้งกับ single-active-provider constraint

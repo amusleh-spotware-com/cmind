@@ -105,7 +105,7 @@ Pembekal ONNX terbina dalam ialah pelaksanaan rujukan corak ini.
 
 ## Keupayaan
 
-- **Bina cBot** — prompt bahasa Inggeris biasa → cBot yang boleh lari melalui **jana → bina → pembaikan AI** gelung pembaikan diri (`build-strategy`), di `/ai/build`.
+- **Bina cBot** — prompt bahasa Inggeris biasa → cBot yang boleh lari melalui **jana → bina → pembaikan AI** gelung pembaikan diri (`build-strategy`), di `/ai/build`. **Kod sumber yang dijana ditunjukkan** apabila pembinaan selesai (dengan butang salin), bersama-sama log pembinaan — pada kejayaan *dan* pada kegagalan — supaya anda sentiasa melihat apa yang AI tulis, bukan sekadar ralat.
 - **Pengoptimuman parameter** — gelung tertutup: AI cadangkan set parameter, setiap dikekalkan + di-backtest merentasi nod (`optimize-run` / `optimize-params`).
 - **Ejen portfolio autonomic** — cadangan bermotivasi mandat dengan jurnal keputusan penuh (`AgentMandate` → `AgentProposal`).
 - **Penjaga risiko bertindak** — perkhidmatan latar `AiRiskGuard` menilai bot yang berjalan, boleh **auto-berhenti** pada risiko kritikal (pilihan masuk).
@@ -166,3 +166,5 @@ LLM tempatan ONNX terbina dalam berfungsi di luar kotak: apabila direktori model
 latar belakang dari `App:Ai:BuiltIn:DownloadBaseUrl`. Apabila muat turun berjalan, panggilan AI (dan **Uji
 sambungan** dalam Tetapan → AI) mengembalikan mesej jelas "model sedang dimuat turun (persediaan kali pertama)" berbanding kegagalan keras. Penempatan air-gapped/metered tetapkan `AutoDownload=false` dan pra-bekalkan direktori model (`App:Ai:BuiltIn:ModelPath`). Gerbang white-label
 `App:Branding:AllowBuiltInAi` masih dipakai.
+
+Muat turun juga **pra-dipanaskan pada permulaan** apabila model terbina dalam ialah pembekal aktif, jadi ia bersedia sebelum klik AI pertama daripada gagal dengan "memuat turun…". **Tetapan → AI** menampilkan keadaan pemasangan langsung pada kad pembekal terbina dalam — *Model sedia* / *Memuat turun model…* / *Model tidak dipasang* / *Muat turun gagal* — dengan butang **Muat turun model** (atau **Cuba semula muat turun**) yang menendang pengambilan latar belakang satu kali atas permintaan (`GET /api/ai/built-in/status`, `POST /api/ai/built-in/install`). Mengaktifkan pembekal terbina dalam dari Tetapan menggunakan semula baris yang sudah disambung daripada menambah pendua, jadi ia tidak pernah berkonflik pada kekangan pembekal aktif tunggal.

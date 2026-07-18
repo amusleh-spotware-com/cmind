@@ -18,6 +18,7 @@ Dialog **Agent baru** mengumpulkan, tanpa kode:
   Contrarian, Mean Reversion, atau Breakout/Momentum. Setiap preset menetapkan cadence dan posture
   yang masuk akal.
 - **Attitude** — slider agresivitas, kesabaran, dan trend-following.
+- **Akun yang dikelola** — **minimal satu diperlukan untuk membuat agent** (agent tanpa akun tidak pernah bisa dimulai, jadi *Create* tetap disabled hingga Anda pilih satu). Jika Anda belum menautkan akun trading, dialog mengatakan demikian dan mengarahkan Anda ke link satu terlebih dahulu.
 - **Tingkat otonomi** — **Advisory** (hanya propose) atau **Approval-gated** (bertindak hanya setelah
   persetujuan per-aksi). **Full Auto** (tanpa persetujuan per-trade) tambahan memerlukan **risk envelope**
   dan penerimaan risk disclaimer sebelum bisa diaktifkan.
@@ -89,3 +90,7 @@ dikelola dan menurun dengan aman ketika akun tidak tertaut. **Membutuhkan API ke
 model menghasilkan order (sampai saat itu engine hold); yang masih akan datang adalah multi-agent
 debate roles dan layered memory/reflection. Runtime off kecuali `App:Ai:AgentRuntimeEnabled` diset,
 sehingga live trading hanya terjadi pada opt-in yang eksplisit dan sepenuhnya disetujui.
+
+## Akun yang dikelola dan pengeditan
+
+Saat membuat agent Anda memilih akun trading yang dikelolanya — **minimal satu diperlukan saat creation** (tombol *Create* disabled hingga satu dipilih, dan create endpoint menolak empty selection). Setiap agent dapat **diedit** kemudian (nama, temperament, autonomy, dan managed accounts) dari ikon pencil pada baris roster. Lifecycle controls (details, edit, start, stop, kill) adalah icon buttons, masing-masing disabled dalam states di mana action tidak berlaku.

@@ -115,7 +115,7 @@ Vestavěný ONNX provider je reference implementation tohoto patternu.
 
 ## Capabilities
 
-- **Build cBot** — plain-English prompt → runnable cBot přes **generate → build → AI-fix** self-repair loop (`build-strategy`), na `/ai/build`.
+- **Build cBot** — plain-English prompt → runnable cBot přes **generate → build → AI-fix** self-repair loop (`build-strategy`), na `/ai/build`. **Vygenerovaný zdrojový kód je zobrazen** po dokončení buildu (s tlačítkem kopírování), vedle build logu — při úspěchu *i* při selhání — takže vždy vidíte, co AI napsala, nikoli jen chyby.
 - **Parameter optimization** — closed loop: AI navrhuje param sets, každý persisted + backtested across nodes (`optimize-run` / `optimize-params`).
 - **Autonomní portfolio agent** — mandate-driven proposals s full decision journal (`AgentMandate` → `AgentProposal`).
 - **Acting risk guard** — `AiRiskGuard` background service hodnotí běžící boty, může **auto-stop** na critical risk (opt-in).
@@ -158,7 +158,7 @@ pro cloud i lokální endpointy (mrtvý Ollama retryuje pak degraduje přesně j
 ## Testování s fake lokálním LLM
 
 AI vrstva je prověřena end-to-end **bez jakékoliv externí závislosti** přes `FakeLocalLlmServer` — tiny
-in-process **OpenAI-kompatibilní** endpoint vracící deterministic canned reply, wire-identical to
+in-process **OpenAI-kompatibilní** endpoint vracející deterministic canned reply, wire-identical to
 Ollama/LM Studio/vLLM. Zálohuje:
 
 - **Unit** — per-adapter request-translation + response-parse tests, routing/capability degradation.
@@ -169,3 +169,11 @@ Ollama/LM Studio/vLLM. Zálohuje:
   reálné creds vyhrají) a žene každou AI funkci přes reálné UI. Přidání nebo změna jakékoliv AI funkce
   **vyžaduje** E2E test přes tuto fixture (viz repo test mandate). Opt-in lane
   (`AI_LOCAL_LLM=1`) spouští jeden reálný completion přes **Ollama** Testcontainer.
+
+## Vestavěná lokální AI — nula-setup defaultně
+
+Vestavěný ONNX lokální LLM funguje z krabice: když jeho adresář modelu chybí a
+`App:Ai:BuiltIn:AutoDownload` je `true` (výchozí), aplikace stáhne model jednou na pozadí
+z `App:Ai:BuiltIn:DownloadBaseUrl`. Zatímco stahování běží, AI volání (a **Test connection** v Settings → AI) vrátí jasnou zprávu „model se stahuje (první nastavení)" místo tvrdého selhání. Air-gapped/metered nasazení nastavují `AutoDownload=false` a předem zajišťují adresář modelu (`App:Ai:BuiltIn:ModelPath`). White-label gate `App:Branding:AllowBuiltInAi` stále platí.
+
+Stahování je také **pre-warmed při startu** když je vestavěný model aktivním providerem, takže je připraven před prvním AI kliknutím místo selhání kliknutí s „stahování…". **Settings → AI** zobrazuje stav live instalace na kartě vestavěného providera — *Model ready* / *Downloading model…* / *Model not installed* / *Download failed* — s tlačítkem **Download model** (nebo **Retry download**), které spustí jednou-background fetch na požádání (`GET /api/ai/built-in/status`, `POST /api/ai/built-in/install`). Povolení vestavěného providera z Settings znovupoužije již-seeded řádek místo přidání duplikátu, takže nikdy nekoliduje s one-active-provider constraintem.

@@ -17,6 +17,7 @@ Mở **AI → Agent Studio** (`/agent-studio`).
 - **Name** và **archetype** — Scalper, Day Trader, Swing Trader, Position Trader, News Trader,
   Contrarian, Mean Reversion hoặc Breakout/Momentum. Mỗi preset fix một cadence và posture hợp lý.
 - **Attitude** — các thanh trượt aggressiveness, patience và trend-following.
+- **Managed account(s)** — **ít nhất một là bắt buộc để tạo agent** (một agent không có tài khoản không bao giờ có thể start, vì vậy *Create* vẫn disabled cho đến khi bạn chọn một). Nếu bạn chưa liên kết tài khoản giao dịch nào, dialog sẽ nói như vậy và hướng bạn liên kết một trước tiên.
 - **Autonomy level** — **Advisory** (chỉ propose) hoặc **Approval-gated** (chỉ act sau khi bạn
   per-action approval). **Full Auto** (không per-trade approval) thêm yêu cầu một **risk envelope**
   và chấp nhận risk disclaimer trước khi nó có thể arm.
@@ -82,3 +83,7 @@ degrade safely khi một account không được link. **Yêu cầu Anthropic AP
 (cho đến lúc đó engine holds); still to come are multi-agent debate roles và layered
 memory/reflection. Runtime off trừ khi `App:Ai:AgentRuntimeEnabled` được set, vì vậy live trading chỉ
 xảy ra trên một explicit, fully-consented opt-in.
+
+## Managed accounts and editing
+
+Khi tạo một agent, bạn chọn tài khoản giao dịch mà nó quản lý — **ít nhất một là bắt buộc khi tạo** (nút *Create* bị disabled cho đến khi cái nào được chọn, và endpoint create reject một selection rỗng). Mọi agent có thể được **edited** sau này (name, temperament, autonomy, và managed accounts) từ biểu tượng bút chì trên hàng roster của nó. Lifecycle controls (details, edit, start, stop, kill) là icon buttons, mỗi cái disabled trong các trạng thái mà hành động không áp dụng.

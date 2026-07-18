@@ -117,8 +117,7 @@ fonctionnalité, endpoint ou outil MCP. Le fournisseur ONNX intégré est l'impl
 
 ## Capacités
 
-- **Build cBot** — prompt en anglais plain → cBot exécutable via **génération → build → boucle d'auto-réparation AI-fix**
-  (`build-strategy`), sur `/ai/build`.
+- **Build cBot** — prompt en anglais plain → cBot exécutable via **génération → build → boucle d'auto-réparation AI-fix** (`build-strategy`), sur `/ai/build`. Le **code source généré est affiché** quand le build se termine (avec un bouton copier), à côté du journal de build — en succès *et* en échec — vous voyez toujours ce que l'IA a écrit, pas seulement les erreurs.
 - **Optimisation des paramètres** — boucle fermée : l'IA propose des ensembles de paramètres, chacun persisté + backtesté
   sur les nœuds (`optimize-run` / `optimize-params`).
 - **Agent de portfolio autonome** — propositions pilotées par un mandat avec journal de décision complet
@@ -195,3 +194,5 @@ la connexion** dans Settings → AI) retournent un message clair « le modèle e
 premier usage) » plutôt qu'un échec dur. Les déploiements air-gapped/métrés définissent `AutoDownload=false` et
 pré-approvisionnent le répertoire du modèle (`App:Ai:BuiltIn:ModelPath`). Le gate white-label
 `App:Branding:AllowBuiltInAi` s'applique toujours.
+
+Le téléchargement est aussi **pré-réchauffé au démarrage** quand le modèle intégré est le fournisseur actif, donc il est prêt avant le premier clic IA plutôt que d'échouer ce clic avec « téléchargement en cours... ». **Settings → AI** affiche l'état d'installation en direct sur la carte du fournisseur intégré — *Modèle prêt* / *Téléchargement du modèle...* / *Modèle non installé* / *Téléchargement échoué* — avec un bouton **Télécharger le modèle** (ou **Réessayer le téléchargement**) qui lance la récupération en arrière-plan à la demande (`GET /api/ai/built-in/status`, `POST /api/ai/built-in/install`). Activer le fournisseur intégré à partir des Settings réutilise la ligne déjà ensemencée au lieu d'ajouter une copie, donc ne rentre jamais en conflit sur la contrainte de fournisseur actif unique.

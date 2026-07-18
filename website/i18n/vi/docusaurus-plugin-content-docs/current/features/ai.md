@@ -100,7 +100,7 @@ changes. Built-in ONNX provider là reference implementation của pattern này.
 
 ## Capabilities
 
-- **Build cBot** — plain-English prompt → runnable cBot qua **generate → build → AI-fix** self-repair loop (`build-strategy`), tại `/ai/build`.
+- **Build cBot** — plain-English prompt → runnable cBot qua **generate → build → AI-fix** self-repair loop (`build-strategy`), tại `/ai/build`. **Mã nguồn được tạo ra được hiển thị** khi build kết thúc (với nút copy), cùng với build log — khi thành công *và* khi thất bại — vì vậy bạn luôn nhìn thấy những gì AI đã viết, không chỉ các lỗi.
 - **Parameter optimization** — closed loop: AI proposes param sets, each persisted + backtested across nodes (`optimize-run` / `optimize-params`).
 - **Autonomous portfolio agent** — mandate-driven proposals với full decision journal (`AgentMandate` → `AgentProposal`).
 - **Acting risk guard** — `AiRiskGuard` background service đánh giá các bot đang chạy, có thể **auto-stop** on critical risk (opt-in).
@@ -153,3 +153,10 @@ Ollama/LM Studio/vLLM. Nó backing:
   real creds win) và drives mọi AI feature qua real UI. Thêm hoặc thay đổi bất kỳ AI feature nào
   **yêu cầu** một E2E test qua fixture này (xem repo test mandate). Một opt-in lane
   (`AI_LOCAL_LLM=1`) chạy một real completion qua **Ollama** Testcontainer.
+
+## Built-in local AI — zero-setup by default
+
+LLM local ONNX tích hợp hoạt động ngay out of the box: khi thư mục model của nó absent và
+`App:Ai:BuiltIn:AutoDownload` là `true` (mặc định), app tải model một lần trong nền từ `App:Ai:BuiltIn:DownloadBaseUrl`. Trong khi download chạy, các lệnh gọi AI (và **Test connection** trong Settings → AI) trả về một thông báo rõ ràng "model đang tải (first-time setup)" chứ không phải là một failure cứng. Các deployment air-gapped/metered đặt `AutoDownload=false` và pre-provision thư mục model (`App:Ai:BuiltIn:ModelPath`). Cổng white-label `App:Branding:AllowBuiltInAi` vẫn áp dụng.
+
+Lệnh download cũng **được pre-warmed khi startup** khi built-in model là active provider, vì vậy nó sẵn sàng trước khi nhấp AI đầu tiên thay vì bị fail với "downloading…". **Settings → AI** hiển thị live install state trên built-in provider card — *Model ready* / *Downloading model…* / *Model not installed* / *Download failed* — với nút **Download model** (hoặc **Retry download**) kích động fetch background one-time theo yêu cầu (`GET /api/ai/built-in/status`, `POST /api/ai/built-in/install`). Bật built-in provider từ Settings tái sử dụng hàng được seed sẵn thay vì thêm một bản sao, vì vậy nó không bao giờ xung đột trên ràng buộc single-active-provider.

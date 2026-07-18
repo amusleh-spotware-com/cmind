@@ -102,7 +102,7 @@ dalam proc, dll) adalah perubahan terlokalisasi: tambahkan `AiProviderKind`, imp
 
 ## Kemampuan
 
-- **Build cBot** — prompt bahasa Inggris biasa → runnable cBot melalui **generate → build → AI-fix** self-repair loop (`build-strategy`), di `/ai/build`.
+- **Build cBot** — prompt bahasa Inggris biasa → runnable cBot melalui **generate → build → AI-fix** self-repair loop (`build-strategy`), di `/ai/build`. **Kode sumber yang dihasilkan ditampilkan** ketika build selesai (dengan tombol copy), bersama log build — saat sukses *dan* saat gagal — jadi Anda selalu melihat apa yang ditulis AI, bukan hanya error.
 - **Optimasi parameter** — loop tertutup: AI mengusulkan set param, masing-masing persisted + backtested di seluruh node (`optimize-run` / `optimize-params`).
 - **Agen portfolio otonom** — proposal berbasis mandat dengan jurnal keputusan lengkap (`AgentMandate` → `AgentProposal`).
 - **Penjaga risiko yang bertindak** — `AiRiskGuard` layanan latar belakang menilai bot yang berjalan, dapat **auto-stop** pada risiko kritis (opt-in).
@@ -155,3 +155,15 @@ Ollama/LM Studio/vLLM. Ini mendukung:
   real creds menang) dan mendorong setiap fitur AI melalui UI nyata. Menambahkan atau mengubah fitur AI apa pun
   **memerlukan** tes E2E melalui fixture ini (lihat mandat tes repo). Jalur opt-in
   (`AI_LOCAL_LLM=1`) menjalankan satu penyelesaian nyata melalui **Ollama** Testcontainer.
+
+## AI lokal bawaan — zero-setup secara default
+
+LLM lokal ONNX bawaan bekerja di luar kotak: ketika direktorinya tidak ada dan
+`App:Ai:BuiltIn:AutoDownload` adalah `true` (default), aplikasi mengunduh model sekali di
+background dari `App:Ai:BuiltIn:DownloadBaseUrl`. Saat download berjalan, panggilan AI (dan **Test
+connection** di Settings → AI) mengembalikan pesan jelas "model sedang diunduh (setup pertama kali)" daripada
+hard failure. Deployment air-gapped/metered setel `AutoDownload=false` dan
+pre-provision direktori model (`App:Ai:BuiltIn:ModelPath`). Gating white-label
+`App:Branding:AllowBuiltInAi` masih berlaku.
+
+Download juga **pre-warmed pada startup** ketika model built-in adalah provider aktif, sehingga siap sebelum klik AI pertama daripada gagal dengan "downloading…". **Settings → AI** menampilkan live install state pada kartu built-in provider — *Model ready* / *Downloading model…* / *Model not installed* / *Download failed* — dengan tombol **Download model** (atau **Retry download**) yang memicu one-time background fetch on demand (`GET /api/ai/built-in/status`, `POST /api/ai/built-in/install`). Mengaktifkan built-in provider dari Settings kembali menggunakan baris yang sudah di-seed daripada menambah duplicate, sehingga tidak pernah conflict pada constraint single-active-provider.

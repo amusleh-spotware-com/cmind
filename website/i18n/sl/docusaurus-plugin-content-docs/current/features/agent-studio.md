@@ -17,6 +17,7 @@ Razlog za **novega agenta** zbira, brez kode:
 - **Ime** in **arhitektura** — Scalper, Day Trader, Swing Trader, Position Trader, News Trader,
   Contrarian, Mean Reversion ali Breakout/Momentum. Vsak prednastavite fiksne razumno kadence in drži.
 - **Stališče** — agresivnosti, potrpljenja in trend-sledenja drsnikov.
+- **Upravljani račun(i)** — **najmanj en je potreben za ustvarjanje agenta** (agent brez računa nikoli ne bi mogel začeti, zato *Ustvari* ostane onemogočen, dokler ga ne izberete). Če še niste povezali trgovalnega računa, bo dialog to povedal in vas usmeril, da ga najprej povežete.
 - **Raven avtonomije** — **Svetovalnega** (predlaga samo) ali **Odobritev-vrat** (deluje samo po vašem
   na-delovanje odobritev). **Polne Avto** (nobenega na-trgovini odobritev) tudi zahteva **obvojnico tveganja**
   in sprejetje tveganja umora pred rukovanjem.
@@ -26,7 +27,7 @@ konfiguracija vedno proizvede iste navodila — ponovljiv in pregledljiv.
 
 ## Rosterja
 
-Vsak agent se pojavi v tabeli nadzorne sobe: **kateri agent, njegov tip, koliko računov upravljuje, njegove
+Vsak agent se pojavi v tabeli nadzorne sobe: **kateri agent, njegov tip, koliko računov upravlja, njegove
 cilje, status teka, in zadnje delovanje**, z **Start / Stop / Kill** kontrolo. Smrtonosni stikalo zaustavlja a
 tekočega agenta takoj.
 
@@ -84,3 +85,7 @@ degradiranje varno, ko račun ni povezan. **Zahteva Anthropic API ključ** za mo
 ustvarite naročila (do takrat motor drži); še korej bi prišli več-agent razpravi vloge in povrstveno
 spomin/razmislek. Čas izvajanja je off razen če je `App:Ai:AgentRuntimeEnabled` nastavljen, zato živo trgovanja samo
 se zgodi na izrecni, v celoti-prepričan opt-in.
+
+## Upravljani računi in ureditev
+
+Pri ustvarjanju agenta izberete trgovalnik račun(e), ki jih upravlja — **najmanj en je potreben pri ustvarjanju** (gumb *Ustvari* je onemogočen, dokler ga ne izberete, in končna točka za ustvarjanje zavrne prazno izbiro). Vsak agent se lahko **uredi** pozneje (ime, značaj, avtonomija in upravljani računi) iz svinčnika ikone v njegovo vrsto seznama. Kontrolniki životnega cikla (podrobnosti, ureja, začnite, ustavite, ubijte) so gumbki ikon, vsak onemogočen v stanjih, kjer dejanje ne velja.

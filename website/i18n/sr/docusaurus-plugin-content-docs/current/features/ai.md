@@ -115,8 +115,8 @@ in-proc, итд.) је локализована промена: додај `AiPr
 
 ## Могућности
 
-- **Изгради cBot** — plain-English prompt → покретачки cBot преко **generate → build → AI-fix** self-repair петље (`build-strategy`), на `/ai/build`.
-- **Оптимизација параметара** — затворена петља: AI предлаже param set-ове, сваки перзистovan + backtested преко чворова (`optimize-run` / `optimize-params`).
+- **Изгради cBot** — plain-English prompt → покретачки cBot преко **generate → build → AI-fix** self-repair петље (`build-strategy`), на `/ai/build`. **Генерисани изворни код је приказан** када се градња заврши (са дугметом копирај), заједно са логом градње — на успех *и* на неуспех — тако да увек видиш шта је AI написао, не само грешке.
+- **Оптимизација параметара** — затворена петља: AI предлаже param set-ове, сваки перзистован + backtested преко чворова (`optimize-run` / `optimize-params`).
 - **Аутономни portfolio агент** — mandate-driven предлози са пуним decision journal-ом (`AgentMandate` → `AgentProposal`).
 - **Acting risk guard** — `AiRiskGuard` background сервис процењује активне ботове, може **аутоматски зауставити** на критичан ризик (opt-in).
 - **Prop-firm exposure guardian** — drawdown/exposure лимити са аутоматским изравнавањем.
@@ -164,7 +164,7 @@ Ollama/LM Studio/vLLM. Он подржава:
 - **Unit** — per-adapter request-translation + response-parse тестови, рутирање/capability деградација.
 - **Integration** — OpenAI-компатибилни адаптер end-to-end, параметризована resilience теорија преко
   сваког адаптера, и **MCP AI алати**.
-- **E2E** — `AiLocalFixture` покреће апликацију усмерену на лажни сервер (или **правег** провајдера када
+- **E2E** — `AiLocalFixture` покреће апликацију усмерену на лажни сервер (или **правог** провајдера када
   developer постави `AI_E2E_BASEURL` (+ опциоо `AI_E2E_API_KEY` / `AI_E2E_KIND` / `AI_E2E_MODEL`) —
   прави креденцијали побеђују) и вози сваку AI функцију кроз реални UI. Додавање или мењање било које AI функције
   **захтева** E2E тест кроз ову fixture (види repo test mandate). Opt-in lane
@@ -179,3 +179,5 @@ connection** у Settings → AI) враћају јасну поруку "model i
 уместо хард неуспеха. Air-gapped/metered deployments постављају `AutoDownload=false` и
 пре-обезбеђују директоријум модела (`App:Ai:BuiltIn:ModelPath`). White-label
 `App:Branding:AllowBuiltInAi` gate се и даље примењује.
+
+Преузимање је такође **пре-загрејано при покретању** када је уграђени модел активан провајдер, тако да је спреман прије первог AI клика уместо да клик пропадне са "downloading…". **Settings → AI** приказује стање live инсталирања на картици уграђеног провајдера — *Model ready* / *Downloading model…* / *Model not installed* / *Download failed* — са дугметом **Download model** (или **Retry download**) које активира односи background преузимање на захтјев (`GET /api/ai/built-in/status`, `POST /api/ai/built-in/install`). Активирање уграђеног провајдера из Settings поново користи већ посијан ред уместо додавања дупликата, тако да никада не дође у сукоб са ограничењем једног активног провајдера.

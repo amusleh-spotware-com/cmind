@@ -114,7 +114,7 @@ O provedor ONNX built-in e a implementacao de referencia deste padrao.
 
 ## Capacidades
 
-- **Build cBot** — prompt em portugues → cBot executavel via loop de **generate → build → AI-fix** auto-repair (`build-strategy`), em `/ai/build`.
+- **Build cBot** — prompt em portugues → cBot executavel via loop de **generate → build → AI-fix** auto-repair (`build-strategy`), em `/ai/build`. O **codigo-fonte gerado e mostrado** quando o build termina (com um botao de copiar), ao lado do log de build — em sucesso *e* em falha — entao voce sempre ve o que o AI escreveu, nao apenas erros.
 - **Otimizacao de parametros** — loop fechado: AI propOE conjuntos de params, cada um persistido + backtestado em nos (`optimize-run` / `optimize-params`).
 - **Agente de portfolio autonomo** — propostas orientadas por mandato com diario de decisao completo (`AgentMandate` → `AgentProposal`).
 - **Guarda de risco agindo** — servico background `AiRiskGuard` avalia cBots em execucao, pode **auto-stop** em risco critico (opt-in).
@@ -167,3 +167,15 @@ Ollama/LM Studio/vLLM. Ele apoia:
   credenciais reais vencem) e dirige toda funcionalidade AI atraves da UI real. Adicionar ou mudar qualquer funcionalidade AI
   **requer** um teste E2E atraves desta fixture (veja o mandato de teste do repo). Uma faixa opt-in
   (`AI_LOCAL_LLM=1`) executa uma completacao real atraves de um **Ollama** Testcontainer.
+
+## AI local built-in — zero-setup por padrao
+
+O LLM local ONNX built-in funciona pronto para uso: quando seu diretorio de modelo esta ausente e
+`App:Ai:BuiltIn:AutoDownload` e `true` (o padrao), o app baixa o modelo uma vez em segundo plano
+a partir de `App:Ai:BuiltIn:DownloadBaseUrl`. Enquanto o download executa, chamadas AI (e **Test
+connection** em Settings → AI) retornam uma mensagem clara "modelo esta baixando (setup primeira-vez)" em vez de
+uma falha rigida. Deployments air-gapped/medidos definem `AutoDownload=false` e
+pre-provisionam o diretorio do modelo (`App:Ai:BuiltIn:ModelPath`). O gate white-label
+`App:Branding:AllowBuiltInAi` ainda se aplica.
+
+O download tambem e **pre-aquecido na inicializacao** quando o modelo built-in e o provedor ativo, entao fica pronto antes do primeiro clique AI em vez de falhar esse clique com "baixando…". **Settings → AI** expoe o estado de instalacao ao vivo no cartao do provedor built-in — *Modelo pronto* / *Baixando modelo…* / *Modelo nao instalado* / *Download falhou* — com um botao **Download model** (ou **Tentar novamente download**) que inicia o fetch em segundo plano unico sob demanda (`GET /api/ai/built-in/status`, `POST /api/ai/built-in/install`). Habilitar o provedor built-in a partir de Settings reutiliza a linha ja semeada em vez de adicionar uma duplicada, entao nunca conflita na restricao de provedor-unico-ativo.

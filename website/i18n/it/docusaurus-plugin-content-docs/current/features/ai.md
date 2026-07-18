@@ -116,7 +116,7 @@ di feature, endpoint o tool MCP. Il provider ONNX integrato è l'implementazione
 
 ## Funzionalità
 
-- **Build cBot** — prompt in inglese semplice → cBot runnable via **generate → build → AI-fix** self-repair loop (`build-strategy`), a `/ai/build`.
+- **Build cBot** — prompt in inglese semplice → cBot runnable via **generate → build → AI-fix** self-repair loop (`build-strategy`), a `/ai/build`. Il **codice sorgente generato viene mostrato** quando la build finisce (con un pulsante di copia), insieme al build log — in caso di successo *e* in caso di fallimento — così vedi sempre quello che l'AI ha scritto, non solo errori.
 - **Ottimizzazione parametri** — closed loop: AI propone param set, ciascuno persistito + backtestato attraverso nodi (`optimize-run` / `optimize-params`).
 - **Agente portfolio autonomo** — proposte mandate-driven con journal decisionale completo (`AgentMandate` → `AgentProposal`).
 - **Acting risk guard** — servizio background `AiRiskGuard` valuta i bot in esecuzione, può **auto-stop** su rischio critico (opt-in).
@@ -181,3 +181,11 @@ connection** in Settings → AI) restituiscono un chiaro messaggio "model is dow
 piuttosto che un hard failure. Deployment air-gapped/metered impostano `AutoDownload=false` e
 pre-provisionano la directory modello (`App:Ai:BuiltIn:ModelPath`). Il white-label gate
 `App:Branding:AllowBuiltInAi` si applica ancora.
+
+Lo scaricamento è anche **pre-riscaldato all'avvio** quando il modello integrato è il provider attivo, così è
+pronto prima del primo click AI piuttosto che fallire quel click con "downloading…". **Settings → AI**
+mostra lo stato di installazione live sulla scheda del provider integrato — *Modello pronto* / *Download del modello in corso…* /
+*Modello non installato* / *Download fallito* — con un pulsante **Scarica modello** (o **Riprova download**) che
+avvia il fetch in background one-time su richiesta (`GET /api/ai/built-in/status`, `POST /api/ai/built-in/install`).
+Abilitare il provider integrato da Settings riusa la riga già seminata invece di aggiungerne una duplicata,
+così non entra mai in conflitto con il vincolo single-active-provider.

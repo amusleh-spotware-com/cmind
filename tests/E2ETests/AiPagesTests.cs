@@ -94,6 +94,8 @@ public sealed class AiPagesTests(AppFixture app)
     public async Task Agent_studio_gates_start_when_ai_absent()
     {
         var page = await app.NewAuthedPageAsync();
+        // An agent needs a managed account at creation — seed one before loading the page.
+        var (accountNumber, _) = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
         await page.GotoAsync("/agent-studio", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
 
         var notice = page.Locator("[data-testid=ai-not-configured]").First;
@@ -102,6 +104,7 @@ public sealed class AiPagesTests(AppFixture app)
         // Create an agent so a Start control renders, then assert it is disabled with AI absent.
         await page.Locator("[data-testid=agent-new]").ClickAsync();
         await page.GetByLabel("Agent name").FillAsync($"gate-{Guid.NewGuid():N}");
+        await AgentTestHelpers.SelectManagedAccountAsync(page, accountNumber);
         await page.Locator("[data-testid=agent-create-submit]").ClickAsync();
 
         var start = page.Locator("[data-testid=agent-start]").First;

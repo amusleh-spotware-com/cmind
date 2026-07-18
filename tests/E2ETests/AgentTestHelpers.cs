@@ -10,7 +10,7 @@ namespace E2ETests;
 // user would use.
 internal static class AgentTestHelpers
 {
-    public static async Task<long> SeedTradingAccountAsync(IPage page, string baseUrl)
+    public static async Task<(long Number, Guid CtidId)> SeedTradingAccountAsync(IPage page, string baseUrl)
     {
         var username = $"ag-{Guid.NewGuid():N}";
         (await page.APIRequest.PostAsync($"{baseUrl}/api/ctids/",
@@ -31,8 +31,13 @@ internal static class AgentTestHelpers
                 }))
             .Status.Should().Be(200);
 
-        return accountNumber;
+        return (accountNumber, cidId);
     }
+
+    // Removes a seeded cTrader ID (cascades to its accounts) so a shared/first-run fixture returns to its
+    // prior zero-account state — the sibling "no trading account" gating tests depend on it. Best-effort.
+    public static async Task DeleteSeededCtidAsync(IPage page, string baseUrl, Guid ctidId) =>
+        await page.APIRequest.DeleteAsync($"{baseUrl}/api/ctids/{ctidId}");
 
     // Opens the managed-accounts MudSelect in the create/edit dialog, ticks the given account by its
     // number, then closes the multi-select popover so the dialog's action buttons are clickable again.

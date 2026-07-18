@@ -16,7 +16,7 @@ public sealed class AgentStudioTests(AppFixture app)
         var page = await app.NewAuthedPageAsync();
         // An agent needs a managed account at creation — seed one before loading the page so the dialog's
         // account selector is populated.
-        var accountNumber = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
+        var (accountNumber, _) = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
         await page.GotoAsync("/agent-studio");
         await page.WaitForAppReadyAsync();
 
@@ -36,7 +36,7 @@ public sealed class AgentStudioTests(AppFixture app)
     public async Task Create_is_disabled_until_a_managed_account_is_selected()
     {
         var page = await app.NewAuthedPageAsync();
-        var accountNumber = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
+        var (accountNumber, _) = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
         await page.GotoAsync("/agent-studio");
         await page.WaitForAppReadyAsync();
 
@@ -56,7 +56,7 @@ public sealed class AgentStudioTests(AppFixture app)
     public async Task Detail_dialog_opens_and_debate_reports_disabled()
     {
         var page = await app.NewAuthedPageAsync();
-        var accountNumber = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
+        var (accountNumber, _) = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
         await page.GotoAsync("/agent-studio");
         await page.WaitForAppReadyAsync();
 

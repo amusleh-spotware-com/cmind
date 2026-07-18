@@ -225,7 +225,7 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
     public async Task Agent_studio_start_enabled_when_ai_present()
     {
         var page = await app.NewAuthedPageAsync();
-        var accountNumber = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
+        var (accountNumber, _) = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
         await page.GotoAsync("/agent-studio", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await page.WaitForAppReadyAsync();
         (await page.Locator("[data-testid=ai-not-configured]").IsVisibleAsync()).Should().BeFalse();
@@ -262,7 +262,7 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
     public async Task Agent_studio_table_has_no_overflow_on_mobile_with_data()
     {
         var page = await app.NewAuthedMobilePageAsync();
-        var accountNumber = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
+        var (accountNumber, _) = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
         await page.GotoAsync("/agent-studio", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await page.WaitForAppReadyAsync();
         await page.Locator("[data-testid=agent-new]").ClickAsync();

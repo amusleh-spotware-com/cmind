@@ -63,28 +63,37 @@ public sealed class ManualFindingsTests(ManualFindingsFixture app)
     public async Task Agent_studio_supports_account_assignment_edit_and_icon_controls()
     {
         var page = await app.NewAuthedPageAsync();
-        var accountNumber = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
-        await page.GotoAsync("/agent-studio");
-        await page.WaitForAppReadyAsync();
+        // This runs in the first-run (no-account) fixture, so seed an account only for this test and remove
+        // it afterwards — the sibling run/backtest "no trading account" gating tests need zero accounts.
+        var (accountNumber, ctidId) = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
+        try
+        {
+            await page.GotoAsync("/agent-studio");
+            await page.WaitForAppReadyAsync();
 
-        // The create dialog exposes the managed-accounts selector (issue 4: assign accounts to an agent).
-        await page.ClickAsync("[data-testid=agent-new]");
-        await Assertions.Expect(page.Locator("[data-testid=agent-accounts]")).ToBeVisibleAsync(Slow);
+            // The create dialog exposes the managed-accounts selector (issue 4: assign accounts to an agent).
+            await page.ClickAsync("[data-testid=agent-new]");
+            await Assertions.Expect(page.Locator("[data-testid=agent-accounts]")).ToBeVisibleAsync(Slow);
 
-        var name = "Edit " + Guid.NewGuid().ToString("N")[..6];
-        await page.GetByLabel("Agent name").FillAsync(name);
-        await AgentTestHelpers.SelectManagedAccountAsync(page, accountNumber);
-        await page.ClickAsync("[data-testid=agent-create-submit]");
-        await Assertions.Expect(page.Locator("[data-testid=agents-table]")).ToContainTextAsync(name, new() { Timeout = 15000 });
+            var name = "Edit " + Guid.NewGuid().ToString("N")[..6];
+            await page.GetByLabel("Agent name").FillAsync(name);
+            await AgentTestHelpers.SelectManagedAccountAsync(page, accountNumber);
+            await page.ClickAsync("[data-testid=agent-create-submit]");
+            await Assertions.Expect(page.Locator("[data-testid=agents-table]")).ToContainTextAsync(name, new() { Timeout = 15000 });
 
-        var row = page.Locator($"tr:has-text(\"{name}\")");
-        // Lifecycle controls are icon buttons; Stop is disabled for a fresh (Draft) agent.
-        await Assertions.Expect(row.Locator("[data-testid=agent-start]")).ToBeVisibleAsync(Slow);
-        await Assertions.Expect(row.Locator("[data-testid=agent-stop]")).ToBeDisabledAsync(new() { Timeout = 15000 });
+            var row = page.Locator($"tr:has-text(\"{name}\")");
+            // Lifecycle controls are icon buttons; Stop is disabled for a fresh (Draft) agent.
+            await Assertions.Expect(row.Locator("[data-testid=agent-start]")).ToBeVisibleAsync(Slow);
+            await Assertions.Expect(row.Locator("[data-testid=agent-stop]")).ToBeDisabledAsync(new() { Timeout = 15000 });
 
-        // The edit dialog opens and offers the managed-accounts selector.
-        await row.Locator("[data-testid=agent-edit]").ClickAsync();
-        await Assertions.Expect(page.Locator("[data-testid=agent-edit-accounts]")).ToBeVisibleAsync(Slow);
+            // The edit dialog opens and offers the managed-accounts selector.
+            await row.Locator("[data-testid=agent-edit]").ClickAsync();
+            await Assertions.Expect(page.Locator("[data-testid=agent-edit-accounts]")).ToBeVisibleAsync(Slow);
+        }
+        finally
+        {
+            await AgentTestHelpers.DeleteSeededCtidAsync(page, app.BaseUrl, ctidId);
+        }
     }
 
     [Fact]

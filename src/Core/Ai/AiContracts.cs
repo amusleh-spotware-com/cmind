@@ -39,8 +39,14 @@ public interface IAiFeatureService
 {
     bool Enabled { get; }
     Task<AiResult> GenerateCBotAsync(string language, string description, CancellationToken ct);
+    /// <summary>As above but forces a specific provider credential (the async-task path running the user's
+    /// chosen model), bypassing feature bindings.</summary>
+    Task<AiResult> GenerateCBotAsync(string language, string description, Core.AiProviderCredentialId? credentialId, CancellationToken ct);
     Task<AiResult> ReviewCBotAsync(string language, string source, CancellationToken ct);
     Task<AiResult> FixCBotAsync(string language, string source, string buildLog, CancellationToken ct);
+    /// <summary>As above but forces a specific provider credential (the async-task path running the user's
+    /// chosen model), bypassing feature bindings.</summary>
+    Task<AiResult> FixCBotAsync(string language, string source, string buildLog, Core.AiProviderCredentialId? credentialId, CancellationToken ct);
     Task<AiResult> ProposeParamSetSuiteAsync(string cBotName, string currentParamsJson, int count, CancellationToken ct);
     Task<AiResult> AnalyzeBacktestAsync(string cBotName, string reportJson, CancellationToken ct);
     Task<AiResult> ProposeParamSetsAsync(string cBotName, string currentParamsJson, string? backtestReportJson, CancellationToken ct);

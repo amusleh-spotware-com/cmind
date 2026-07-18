@@ -3,6 +3,7 @@ using System.Text.Json;
 using Core;
 using Core.Ai;
 using Core.Constants;
+using Infrastructure.Ai;
 using Infrastructure.Builder;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
@@ -207,6 +208,85 @@ public static class AiEndpoints
             return Results.Ok(new { ok = true });
         });
 
+        // Async AI tasks: create one background task PER selected model (fan-out to compare), then the user
+        // navigates away and comes back. The AiTaskRunner on the web host claims + runs them.
+        g.MapPost("/tasks", async (CreateTasksRequest req, DataContext db, ICurrentUser u, TimeProvider clock, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            if (string.IsNullOrWhiteSpace(req.Description)) return Results.BadRequest("describe the task first");
+            var credIds = (req.CredentialIds ?? []).Distinct().ToList();
+            if (credIds.Count == 0) return Results.BadRequest("select at least one model");
+
+            var feature = req.Feature ?? AiFeature.GenerateCBot;
+            var payload = JsonSerializer.Serialize(new AiTaskBuildPayload(req.Name, req.Language ?? "CSharp", req.Description));
+            var now = clock.GetUtcNow();
+            var created = new List<Guid>();
+            foreach (var raw in credIds)
+            {
+                var cid = AiProviderCredentialId.From(raw);
+                var usable = await db.AiProviderCredentials
+                    .AnyAsync(c => c.Id == cid && (c.OwnerUserId == uid || c.OwnerUserId == null), ct);
+                if (!usable) continue;
+                var task = Core.Domain.AiTask.Create(uid, feature, cid, payload, now);
+                db.AiTasks.Add(task);
+                await db.SaveChangesAsync(ct);
+                created.Add(task.Id.Value);
+            }
+            return created.Count == 0 ? Results.BadRequest("no valid model selected") : Results.Ok(new { taskIds = created });
+        });
+
+        g.MapGet("/tasks", async (DataContext db, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var tasks = await db.AiTasks.AsNoTracking().Where(t => t.UserId == uid)
+                .OrderByDescending(t => t.CreatedAt).Take(100).ToListAsync(ct);
+            var credIds = tasks.Select(t => t.CredentialId).Distinct().ToList();
+            var models = await db.AiProviderCredentials.AsNoTracking()
+                .Where(c => credIds.Contains(c.Id)).ToDictionaryAsync(c => c.Id, c => c.Model, ct);
+            var views = tasks.Select(t => new AiTaskView(
+                t.Id.Value, t.Feature.ToString(), t.Status.ToString(), models.GetValueOrDefault(t.CredentialId, "(model)"),
+                t.Attempts, t.CreatedAt, t.FinishedAt, t.Error)).ToList();
+            return Results.Ok(views);
+        });
+
+        g.MapGet("/tasks/{id:guid}", async (Guid id, DataContext db, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var tid = AiTaskId.From(id);
+            var t = await db.AiTasks.AsNoTracking().FirstOrDefaultAsync(x => x.Id == tid && x.UserId == uid, ct);
+            if (t is null) return Results.NotFound();
+            var model = await db.AiProviderCredentials.AsNoTracking()
+                .Where(c => c.Id == t.CredentialId).Select(c => c.Model).FirstOrDefaultAsync(ct) ?? "(model)";
+            var logs = t.Logs.OrderBy(l => l.Sequence).Select(l => new AiTaskLogLine(l.Sequence, l.Time, l.Message)).ToList();
+            return Results.Ok(new AiTaskDetail(
+                t.Id.Value, t.Feature.ToString(), t.Status.ToString(), model, t.Attempts, t.CreatedAt, t.StartedAt,
+                t.FinishedAt, t.Error, t.ResultText, t.ResultRefsJson, logs));
+        });
+
+        g.MapPost("/tasks/{id:guid}/cancel", async (Guid id, DataContext db, ICurrentUser u, TimeProvider clock, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var tid = AiTaskId.From(id);
+            var t = await db.AiTasks.FirstOrDefaultAsync(x => x.Id == tid && x.UserId == uid, ct);
+            if (t is null) return Results.NotFound();
+            if (t.IsTerminal) return Results.BadRequest("task already finished");
+            t.Cancel(clock.GetUtcNow());
+            await db.SaveChangesAsync(ct);
+            return Results.Ok(new { ok = true });
+        });
+
+        g.MapDelete("/tasks/{id:guid}", async (Guid id, DataContext db, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var tid = AiTaskId.From(id);
+            var t = await db.AiTasks.FirstOrDefaultAsync(x => x.Id == tid && x.UserId == uid, ct);
+            if (t is null) return Results.NotFound();
+            if (t.IsActive) return Results.BadRequest("stop the task before deleting it");
+            db.AiTasks.Remove(t);
+            await db.SaveChangesAsync(ct);
+            return Results.Ok(new { ok = true });
+        });
+
         g.MapPost("/generate", async (GenerateCBotRequest req, IAiFeatureService ai, CancellationToken ct) =>
             Results.Ok(await ai.GenerateCBotAsync(req.Language ?? "CSharp", req.Description ?? "", ct)));
 
@@ -372,72 +452,28 @@ public static class AiEndpoints
             return Results.Ok(new { success, projectId = project.Id.Value, attempts, log = ClipLog(log) });
         });
 
-        // Feature C: plain-English intent -> generate -> build/self-repair -> create a runnable cBot.
+        // Feature C: plain-English intent -> generate -> build/self-repair -> create a runnable cBot. Shares
+        // the exact pipeline the async AiTaskRunner uses (CBotBuildFlow) — this is the synchronous entry.
         g.MapPost("/build-strategy", async (
-            BuildStrategyRequest req, DataContext db, ICurrentUser u, IAiFeatureService ai,
-            ISecretProtector protector, CBotBuilder builder, CancellationToken ct) =>
+            BuildStrategyRequest req, ICurrentUser u, IAiFeatureService ai, CBotBuildFlow flow, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             if (!ai.Enabled) return Results.Ok(new { success = false, error = AiConstants.DisabledMessage });
             if (string.IsNullOrWhiteSpace(req.Description))
                 return Results.Ok(new { success = false, error = "describe the strategy first" });
 
-            var language = req.Language ?? "CSharp";
-            var name = string.IsNullOrWhiteSpace(req.Name) ? "AiBot" : req.Name!.Trim();
-            var projectName = await UniqueNameAsync(
-                db.CBotSourceProjects.Where(p => p.UserId == uid).Select(p => p.Name), name, ct);
-            CBotSourceProject project = language.Equals("Python", StringComparison.OrdinalIgnoreCase)
-                ? PythonProject.Create(uid, projectName) : CSharpProject.Create(uid, projectName);
-
-            var files = JsonSerializer.Deserialize<Dictionary<string, string>>(
-                Templates.CreateProjectJson(project.LanguageName, project.Name)) ?? new Dictionary<string, string>();
-            var codeKey = files.Keys.FirstOrDefault(k => k.EndsWith(project.FileExtension, StringComparison.Ordinal));
-            if (codeKey is null) return Results.Ok(new { success = false, error = "project template has no code file" });
-
-            var gen = await ai.GenerateCBotAsync(language, req.Description!, ct);
-            if (!gen.Success) return Results.Ok(new { success = false, error = gen.Error });
-            files[codeKey] = ExtractCode(gen.Text);
-
-            db.CBotSourceProjects.Add(project);
-
-            try
+            var r = await flow.BuildAsync(uid, req.Name ?? "AiBot", req.Language ?? "CSharp", req.Description!, null, null, ct);
+            return Results.Ok(new
             {
-            const int maxAttempts = 3;
-            var success = false;
-            var log = string.Empty;
-            byte[]? algo = null;
-            var attempts = 0;
-            for (attempts = 1; attempts <= maxAttempts; attempts++)
-            {
-                project.SetFiles(protector.Protect(
-                    Encoding.UTF8.GetBytes(JsonSerializer.Serialize(files)), EncryptionPurposes.CbotSource));
-                await db.SaveChangesAsync(ct);
-
-                var build = await builder.BuildAsync(project, uid, ct);
-                success = build.Success;
-                log = build.Log;
-                algo = build.AlgoBytes;
-                if (success || attempts == maxAttempts) break;
-
-                var fix = await ai.FixCBotAsync(language, files[codeKey], build.Log, ct);
-                if (!fix.Success) break;
-                files[codeKey] = ExtractCode(fix.Text);
-            }
-
-            if (!success || algo is null)
-                return Results.Ok(new { success = false, projectId = project.Id.Value, attempts, log = ClipLog(log), code = files[codeKey], language });
-
-            var cbotName = await UniqueNameAsync(db.CBots.Where(c => c.UserId == uid).Select(c => c.Name), project.Name, ct);
-            var cbot = CBot.Create(uid, cbotName, protector.Protect(algo, EncryptionPurposes.CbotAlgo), project.Id);
-            db.CBots.Add(cbot);
-            await db.SaveChangesAsync(ct);
-
-            return Results.Ok(new { success = true, projectId = project.Id.Value, cbotId = cbot.Id.Value, attempts, log = ClipLog(log), code = files[codeKey], language });
-            }
-            catch (DbUpdateException)
-            {
-                return Results.Ok(new { success = false, error = "a cBot or project with that name already exists — try another name" });
-            }
+                success = r.Success,
+                projectId = r.ProjectId,
+                cbotId = r.CBotId,
+                attempts = r.Attempts,
+                log = r.Log,
+                code = r.Code,
+                language = r.Language,
+                error = r.Error
+            });
         });
 
         // Feature B: closed optimization loop — AI proposes parameter sets, we backtest each across nodes.
@@ -610,6 +646,8 @@ public sealed record CapabilitiesRequest(
     bool SupportsWebSearch, bool SupportsVision, bool SupportsSystemRole, bool SupportsTools);
 public sealed record ProbeModelsRequest(Core.Ai.AiProviderKind Kind, string? BaseUrl, string? ApiKey);
 public sealed record SetFeatureBindingRequest(Core.Ai.AiFeature Feature, Guid CredentialId);
+public sealed record CreateTasksRequest(
+    Core.Ai.AiFeature? Feature, string? Name, string? Language, string? Description, Guid[]? CredentialIds);
 public sealed record GenerateCBotRequest(string? Language, string? Description);
 public sealed record ReviewCBotRequest(string? Language, string? Source);
 public sealed record DebateRequest(string? Name, string? Language, string? Source);

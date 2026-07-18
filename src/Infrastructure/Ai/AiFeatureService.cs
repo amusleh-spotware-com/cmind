@@ -11,13 +11,22 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
 
     // Every operation routes through here so its AiFeature is stamped on the request — the routing client then
     // resolves the per-feature bound provider (or the scope's active provider when the feature is unbound).
+    // An explicit credentialId forces a specific model (the async-task path), bypassing feature bindings.
     private Task<AiResult> Complete(AiFeature feature, AiTextRequest request, CancellationToken ct) =>
-        client.CompleteAsync(request with { Feature = feature }, ct);
+        Complete(feature, request, null, ct);
+
+    private Task<AiResult> Complete(
+        AiFeature feature, AiTextRequest request, Core.AiProviderCredentialId? credentialId, CancellationToken ct) =>
+        client.CompleteAsync(request with { Feature = feature, CredentialId = credentialId }, ct);
 
     public Task<AiResult> GenerateCBotAsync(string language, string description, CancellationToken ct) =>
+        GenerateCBotAsync(language, description, null, ct);
+
+    public Task<AiResult> GenerateCBotAsync(
+        string language, string description, Core.AiProviderCredentialId? credentialId, CancellationToken ct) =>
         Complete(AiFeature.GenerateCBot, new AiTextRequest(
             AiPrompts.CodegenSystem(language),
-            $"Strategy description:\n{Clip(description)}"), ct);
+            $"Strategy description:\n{Clip(description)}"), credentialId, ct);
 
     public Task<AiResult> ReviewCBotAsync(string language, string source, CancellationToken ct) =>
         Complete(AiFeature.ReviewCBot, new AiTextRequest(
@@ -25,9 +34,13 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
             $"Language: {language}\n\nSource:\n{Clip(source)}"), ct);
 
     public Task<AiResult> FixCBotAsync(string language, string source, string buildLog, CancellationToken ct) =>
+        FixCBotAsync(language, source, buildLog, null, ct);
+
+    public Task<AiResult> FixCBotAsync(
+        string language, string source, string buildLog, Core.AiProviderCredentialId? credentialId, CancellationToken ct) =>
         Complete(AiFeature.FixCBot, new AiTextRequest(
             AiPrompts.FixSystem(language),
-            $"Build log:\n{Clip(buildLog)}\n\nCurrent source:\n{Clip(source)}"), ct);
+            $"Build log:\n{Clip(buildLog)}\n\nCurrent source:\n{Clip(source)}"), credentialId, ct);
 
     public Task<AiResult> ProposeParamSetSuiteAsync(string cBotName, string currentParamsJson, int count, CancellationToken ct) =>
         Complete(AiFeature.ProposeParamSetSuite, new AiTextRequest(

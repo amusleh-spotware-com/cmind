@@ -138,6 +138,7 @@ public static class DependencyInjection
         services.AddSingleton<Core.WhiteLabel.IWhiteLabelSettings, Infrastructure.WhiteLabel.WhiteLabelSettings>();
         services.AddHttpClient<IGithubContainerRegistryTagProvider, GithubContainerRegistryTagProvider>();
         services.AddScoped<CBotBuilder>();
+        services.AddScoped<Infrastructure.Ai.CBotBuildFlow>();
         services.TryAddScoped<ICurrentUser, Infrastructure.Ai.NullCurrentUser>();
         services.AddScoped<IAiProviderStore, AiProviderStore>();
         services.AddAiHttpClient();

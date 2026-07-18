@@ -318,6 +318,12 @@ public static class AiConstants
     // covers cloud and local endpoints identically. Base URL/headers are set per request.
     public const string HttpClientName = "ai";
 
+    // Async AI task runner: how often the web-host worker polls for a claimable task, and how long a
+    // claim lease lasts (generous — a cBot build + self-repair can take minutes; an orphaned task whose
+    // owner died becomes reclaimable once the lease expires).
+    public static readonly TimeSpan AiTaskPollInterval = TimeSpan.FromSeconds(5);
+    public static readonly TimeSpan AiTaskLeaseTtl = TimeSpan.FromMinutes(15);
+
     // Cache of the resolved active provider (or null = "no active provider"), refreshed on any store
     // mutation. Mirrors the old key cache TTL so gating stays cheap on the request path.
     public const string ActiveProviderCacheKey = "ai.active_provider";

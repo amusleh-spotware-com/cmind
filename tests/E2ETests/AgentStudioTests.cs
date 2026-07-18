@@ -14,6 +14,9 @@ public sealed class AgentStudioTests(AppFixture app)
     public async Task Create_agent_shows_it_in_the_roster()
     {
         var page = await app.NewAuthedPageAsync();
+        // An agent needs a managed account at creation — seed one before loading the page so the dialog's
+        // account selector is populated.
+        var accountNumber = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
         await page.GotoAsync("/agent-studio");
         await page.WaitForAppReadyAsync();
 
@@ -22,6 +25,7 @@ public sealed class AgentStudioTests(AppFixture app)
         var nameField = page.GetByLabel("Agent name");
         await page.ClickUntilVisibleAsync("[data-testid=agent-new]", nameField);
         await nameField.FillAsync("E2E Scalper");
+        await AgentTestHelpers.SelectManagedAccountAsync(page, accountNumber);
         var row = page.Locator("[data-testid=agents-table]").GetByText("E2E Scalper").First;
         await page.ClickUntilVisibleAsync("[data-testid=agent-create-submit]", row);
 
@@ -29,9 +33,30 @@ public sealed class AgentStudioTests(AppFixture app)
     }
 
     [Fact]
+    public async Task Create_is_disabled_until_a_managed_account_is_selected()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var accountNumber = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
+        await page.GotoAsync("/agent-studio");
+        await page.WaitForAppReadyAsync();
+
+        var nameField = page.GetByLabel("Agent name");
+        await page.ClickUntilVisibleAsync("[data-testid=agent-new]", nameField);
+        await nameField.FillAsync("NeedsAccount");
+
+        // No account picked yet -> an agent can't be created (mandate 11: no doomed action).
+        await Assertions.Expect(page.Locator("[data-testid=agent-create-submit]")).ToBeDisabledAsync(new() { Timeout = 15000 });
+
+        // Selecting an account enables Create.
+        await AgentTestHelpers.SelectManagedAccountAsync(page, accountNumber);
+        await Assertions.Expect(page.Locator("[data-testid=agent-create-submit]")).ToBeEnabledAsync(new() { Timeout = 15000 });
+    }
+
+    [Fact]
     public async Task Detail_dialog_opens_and_debate_reports_disabled()
     {
         var page = await app.NewAuthedPageAsync();
+        var accountNumber = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
         await page.GotoAsync("/agent-studio");
         await page.WaitForAppReadyAsync();
 
@@ -39,6 +64,7 @@ public sealed class AgentStudioTests(AppFixture app)
         var nameField = page.GetByLabel("Agent name");
         await page.ClickUntilVisibleAsync("[data-testid=agent-new]", nameField);
         await nameField.FillAsync(name);
+        await AgentTestHelpers.SelectManagedAccountAsync(page, accountNumber);
         var createdRow = page.Locator("[data-testid=agents-table]").GetByText(name).First;
         await page.ClickUntilVisibleAsync("[data-testid=agent-create-submit]", createdRow);
         await Assertions.Expect(createdRow).ToBeVisibleAsync(Slow);

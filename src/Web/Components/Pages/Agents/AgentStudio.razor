@@ -20,6 +20,13 @@
 
 <AiFeatureNotice EnabledChanged="OnAiStatus" />
 
+@if (_accounts.Count == 0)
+{
+    <MudAlert Severity="Severity.Info" Class="mb-3" data-testid="agent-needs-account">
+        Agents manage a trading account. Link a cTrader account to create one.
+    </MudAlert>
+}
+
 @if (_agents.Count == 0)
 {
     <MudText Typo="Typo.body2" Class="mud-text-secondary" data-testid="agents-empty">

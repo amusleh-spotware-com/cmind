@@ -35,10 +35,17 @@ public sealed class OwnerSeeder(
             {
                 await db.Database.MigrateAsync(token);
                 await SeedOwnerAsync(scope, db, token);
-                await scope.ServiceProvider.GetRequiredService<Core.Ai.IAiProviderStore>()
-                    .SeedFromConfigAsync(token);
+                var aiStore = scope.ServiceProvider.GetRequiredService<Core.Ai.IAiProviderStore>();
+                await aiStore.SeedFromConfigAsync(token);
                 await scope.ServiceProvider.GetRequiredService<Infrastructure.OpenApi.SharedOpenApiAppService>()
                     .SeedFromConfigAsync(token);
+
+                // Pre-warm the built-in local model so it is downloaded/ready before the user's first AI
+                // click instead of them hitting a "downloading…" failure. Only when it is the active
+                // provider — don't pull ~2GB of weights for a deployment that configured a cloud provider.
+                // Fire-and-forget, single-flight; the background download outlives the migration lock.
+                if (aiStore.Active?.Kind == Core.Ai.AiProviderKind.BuiltInOnnx)
+                    scope.ServiceProvider.GetRequiredService<Core.Ai.IBuiltInModelInstaller>().EnsureInstalling();
             }, ct);
     }
 

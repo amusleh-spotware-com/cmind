@@ -95,14 +95,17 @@ public static class AgentStudioEndpoints
         g.MapPost("/", async (CreateAgentRequest req, DataContext db, ICurrentUser u, TimeProvider time, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
+            // An agent is meaningless without an account to manage — require at least one at creation so a
+            // user can never end up with a Draft agent that can never start (mandate 11: no doomed action).
+            if (req.AccountIds is not { Length: > 0 })
+                return Results.BadRequest(new { error = Core.Constants.DomainErrors.AgentNoManagedAccounts });
             try
             {
                 var archetype = ParseEnum(req.Archetype, AgentArchetype.Scalper);
                 var agent = TradingAgent.Create(uid, req.Name ?? "Agent", archetype,
                     new AgentTemperament(req.Aggressiveness ?? 0.5, req.Patience ?? 0.5, req.TrendBias ?? 0.5));
 
-                if (req.AccountIds is { Length: > 0 })
-                    agent.SetManagedAccounts(req.AccountIds.Select(TradingAccountId.From));
+                agent.SetManagedAccounts(req.AccountIds.Select(TradingAccountId.From));
                 if (req.Goals is { Length: > 0 })
                     agent.SetGoals(req.Goals.Select(ToTarget).ToList());
                 if (req.Envelope is { } env)
@@ -122,10 +125,10 @@ public static class AgentStudioEndpoints
         });
 
         g.MapPut("/{id:guid}/goals", async (Guid id, GoalsRequest req, DataContext db, ICurrentUser u, CancellationToken ct) =>
-            await Mutate(db, id, u, ct, a => a.SetGoals((req.Goals ?? []).Select(ToTarget).ToList())));
+            await Mutate(db, id, u, a => a.SetGoals((req.Goals ?? []).Select(ToTarget).ToList()), ct));
 
         g.MapPut("/{id:guid}", async (Guid id, UpdateAgentRequest req, DataContext db, ICurrentUser u, CancellationToken ct) =>
-            await Mutate(db, id, u, ct, a =>
+            await Mutate(db, id, u, a =>
             {
                 if (!string.IsNullOrWhiteSpace(req.Name)) a.Rename(req.Name);
                 if (req.AccountIds is not null) a.SetManagedAccounts(req.AccountIds.Select(TradingAccountId.From));
@@ -133,16 +136,16 @@ public static class AgentStudioEndpoints
                     a.SetTemperament(new AgentTemperament(
                         req.Aggressiveness ?? a.Aggressiveness, req.Patience ?? a.Patience, req.TrendBias ?? a.TrendBias));
                 if (!string.IsNullOrWhiteSpace(req.Autonomy)) a.SetAutonomy(ParseEnum(req.Autonomy, a.Autonomy));
-            }));
+            }, ct));
 
         g.MapPost("/{id:guid}/start", async (Guid id, DataContext db, ICurrentUser u, TimeProvider time, CancellationToken ct) =>
-            await Mutate(db, id, u, ct, a => a.Start(time.GetUtcNow())));
+            await Mutate(db, id, u, a => a.Start(time.GetUtcNow()), ct));
 
         g.MapPost("/{id:guid}/stop", async (Guid id, DataContext db, ICurrentUser u, CancellationToken ct) =>
-            await Mutate(db, id, u, ct, a => a.Stop()));
+            await Mutate(db, id, u, a => a.Stop(), ct));
 
         g.MapPost("/{id:guid}/halt", async (Guid id, DataContext db, ICurrentUser u, TimeProvider time, CancellationToken ct) =>
-            await Mutate(db, id, u, ct, a => a.Halt("Kill switch", time.GetUtcNow())));
+            await Mutate(db, id, u, a => a.Halt("Kill switch", time.GetUtcNow()), ct));
 
         g.MapDelete("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u, CancellationToken ct) =>
         {
@@ -177,7 +180,7 @@ public static class AgentStudioEndpoints
         }
     }
 
-    private static async Task<IResult> Mutate(DataContext db, Guid id, ICurrentUser u, CancellationToken ct, Action<TradingAgent> action)
+    private static async Task<IResult> Mutate(DataContext db, Guid id, ICurrentUser u, Action<TradingAgent> action, CancellationToken ct)
     {
         if (u.UserId is not { } uid) return Results.Unauthorized();
         var agent = await Find(db, id, uid, ct);

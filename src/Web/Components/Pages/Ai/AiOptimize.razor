@@ -15,6 +15,18 @@
     <MudText Typo="Typo.body2" Class="mb-2">
         AI proposes parameter sets and backtests each across your nodes.
     </MudText>
+    @if (_loaded && _cbots.Length == 0)
+    {
+        <MudAlert Severity="Severity.Info" Class="mb-2" data-testid="opt-no-cbots">
+            You have no cBots yet. Build or import a cBot before optimizing its parameters.
+        </MudAlert>
+    }
+    @if (_loaded && _accounts.Length == 0)
+    {
+        <MudAlert Severity="Severity.Info" Class="mb-2" data-testid="opt-no-accounts">
+            Link a trading account — backtesting the proposed parameter sets needs one.
+        </MudAlert>
+    }
     <MudGrid>
         <MudItem xs="12" sm="6">
             <MudSelect T="Guid?" @bind-Value="_cbotId" Label="cBot" Dense="true">
@@ -45,11 +57,13 @@
     private dynamic[] _cbots = [], _accounts = [];
     private Guid? _cbotId, _acctId;
     private string _symbol = "EURUSD", _timeframe = "h1";
+    private bool _loaded;
 
     protected override async Task OnInitializedAsync()
     {
         _cbots = await LoadOrEmptyAsync("/api/cbots/");
         _accounts = await LoadOrEmptyAsync("/api/accounts/");
+        _loaded = true;
     }
 
     private Task Run()

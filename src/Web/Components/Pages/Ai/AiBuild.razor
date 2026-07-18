@@ -3,6 +3,7 @@
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inherits AiFeaturePageBase
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 <PageTitle>AI · Build cBot</PageTitle>
 
@@ -64,9 +65,43 @@
                     @(_buildResult.Error ?? $"Build failed after {_buildResult.Attempts} attempt(s).")
                 </MudAlert>
             }
+            @if (!string.IsNullOrEmpty(_buildResult.Code))
+            {
+                <MudExpansionPanels Class="mt-2" Elevation="0">
+                    <MudExpansionPanel Expanded="true" data-testid="ai-build-code-panel">
+                        <TitleContent>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" />
+                                <MudText Typo="Typo.subtitle2">Generated @(_buildResult.Language == "Python" ? "Python" : "C#") code</MudText>
+                                <MudSpacer />
+                                <MudTooltip Text="Copy code">
+                                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small"
+                                                   OnClick="CopyCode" data-testid="ai-build-copy" />
+                                </MudTooltip>
+                            </MudStack>
+                        </TitleContent>
+                        <ChildContent>
+                            <pre style="white-space:pre; margin:0; max-height:420px; overflow:auto; font-size:0.8rem;"
+                                 data-testid="ai-build-code">@_buildResult.Code</pre>
+                        </ChildContent>
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+            }
             @if (!string.IsNullOrEmpty(_buildResult.Log))
             {
-                <pre style="white-space:pre-wrap; margin:0; max-height:280px; overflow:auto;">@_buildResult.Log</pre>
+                <MudExpansionPanels Class="mt-2" Elevation="0">
+                    <MudExpansionPanel Expanded="@(!_buildResult.Success)" data-testid="ai-build-log-panel">
+                        <TitleContent>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.Terminal" Size="Size.Small" />
+                                <MudText Typo="Typo.subtitle2">Build log</MudText>
+                            </MudStack>
+                        </TitleContent>
+                        <ChildContent>
+                            <pre style="white-space:pre-wrap; margin:0; max-height:280px; overflow:auto;">@_buildResult.Log</pre>
+                        </ChildContent>
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
             }
         </MudPaper>
     }
@@ -100,7 +135,9 @@
                 root.TryGetProperty("projectId", out var p) && p.ValueKind == JsonValueKind.String ? p.GetGuid() : null,
                 root.TryGetProperty("attempts", out var a) && a.ValueKind == JsonValueKind.Number ? a.GetInt32() : 0,
                 root.TryGetProperty("log", out var l) ? l.GetString() : null,
-                root.TryGetProperty("error", out var e) ? e.GetString() : null);
+                root.TryGetProperty("error", out var e) ? e.GetString() : null,
+                root.TryGetProperty("code", out var cd) ? cd.GetString() : null,
+                root.TryGetProperty("language", out var lang) ? lang.GetString() : _language);
         }
         catch
         {
@@ -112,5 +149,20 @@
         }
     }
 
-    private sealed record BuildResult(bool Success, Guid? CBotId, Guid? ProjectId, int Attempts, string? Log, string? Error);
+    private async Task CopyCode()
+    {
+        if (string.IsNullOrEmpty(_buildResult?.Code)) return;
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _buildResult.Code);
+            Snack.Add("Code copied", Severity.Success);
+        }
+        catch
+        {
+            Snack.Add("Copy failed", Severity.Warning);
+        }
+    }
+
+    private sealed record BuildResult(
+        bool Success, Guid? CBotId, Guid? ProjectId, int Attempts, string? Log, string? Error, string? Code, string? Language);
 }

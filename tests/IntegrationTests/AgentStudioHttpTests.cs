@@ -51,7 +51,7 @@ public class AgentStudioHttpTests(PostgresFixture fixture) : IClassFixture<Postg
         await using var app = CreateApp();
         var client = await LoginAsync(app);
 
-        var id = await CreateAsync(client, new { Name = "Scalp One", Archetype = "Scalper", Autonomy = "Advisory" });
+        var id = await CreateAsync(client, new { Name = "Scalp One", Archetype = "Scalper", Autonomy = "Advisory", AccountIds = new[] { Guid.NewGuid() } });
 
         var list = await client.GetFromJsonAsync<JsonElement>("/api/agent-studio");
         list.EnumerateArray().Should().Contain(a => a.GetProperty("id").GetGuid() == id);
@@ -61,14 +61,18 @@ public class AgentStudioHttpTests(PostgresFixture fixture) : IClassFixture<Postg
     }
 
     [Fact]
-    public async Task Start_without_accounts_is_rejected()
+    public async Task Create_without_accounts_is_rejected()
     {
         await using var app = CreateApp();
         var client = await LoginAsync(app);
-        var id = await CreateAsync(client, new { Name = "No Accounts", Archetype = "DayTrader" });
 
-        var start = await client.PostAsync($"/api/agent-studio/{id}/start", null);
-        start.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        // An agent is meaningless without an account to manage — creation requires at least one.
+        var create = await client.PostAsJsonAsync("/api/agent-studio", new { Name = "No Accounts", Archetype = "DayTrader" });
+        create.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var empty = await client.PostAsJsonAsync("/api/agent-studio",
+            new { Name = "Empty Accounts", Archetype = "DayTrader", AccountIds = Array.Empty<Guid>() });
+        empty.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -102,7 +106,7 @@ public class AgentStudioHttpTests(PostgresFixture fixture) : IClassFixture<Postg
     {
         await using var app = CreateApp();
         var client = await LoginAsync(app);
-        var id = await CreateAsync(client, new { Name = "Ledger", Archetype = "Scalper" });
+        var id = await CreateAsync(client, new { Name = "Ledger", Archetype = "Scalper", AccountIds = new[] { Guid.NewGuid() } });
 
         var decisions = await client.GetFromJsonAsync<JsonElement>($"/api/agent-studio/{id}/decisions");
         decisions.EnumerateArray().Should().BeEmpty();
@@ -115,7 +119,7 @@ public class AgentStudioHttpTests(PostgresFixture fixture) : IClassFixture<Postg
     {
         await using var app = CreateApp();
         var client = await LoginAsync(app);
-        var id = await CreateAsync(client, new { Name = "Gated", Archetype = "DayTrader", Autonomy = "ApprovalGated" });
+        var id = await CreateAsync(client, new { Name = "Gated", Archetype = "DayTrader", Autonomy = "ApprovalGated", AccountIds = new[] { Guid.NewGuid() } });
 
         using (var scope = app.Services.CreateScope())
         {
@@ -142,7 +146,7 @@ public class AgentStudioHttpTests(PostgresFixture fixture) : IClassFixture<Postg
     {
         await using var app = CreateApp();
         var client = await LoginAsync(app);
-        var id = await CreateAsync(client, new { Name = "X", Archetype = "Scalper" });
+        var id = await CreateAsync(client, new { Name = "X", Archetype = "Scalper", AccountIds = new[] { Guid.NewGuid() } });
         (await client.PostAsync($"/api/agent-studio/{id}/decisions/99/approve", null)).StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
@@ -151,7 +155,7 @@ public class AgentStudioHttpTests(PostgresFixture fixture) : IClassFixture<Postg
     {
         await using var app = CreateApp();
         var client = await LoginAsync(app);
-        var id = await CreateAsync(client, new { Name = "Desk", Archetype = "SwingTrader" });
+        var id = await CreateAsync(client, new { Name = "Desk", Archetype = "SwingTrader", AccountIds = new[] { Guid.NewGuid() } });
 
         var response = await client.PostAsync($"/api/agent-studio/{id}/debate", null);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -165,7 +169,7 @@ public class AgentStudioHttpTests(PostgresFixture fixture) : IClassFixture<Postg
     {
         await using var app = CreateApp();
         var client = await LoginAsync(app);
-        var id = await CreateAsync(client, new { Name = "Mem", Archetype = "Scalper" });
+        var id = await CreateAsync(client, new { Name = "Mem", Archetype = "Scalper", AccountIds = new[] { Guid.NewGuid() } });
 
         using (var scope = app.Services.CreateScope())
         {

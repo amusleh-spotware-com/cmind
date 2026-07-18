@@ -45,6 +45,43 @@ public class OnnxBuiltInStoreTests(PostgresFixture fixture) : IClassFixture<Post
     }
 
     [Fact]
+    public async Task Enabling_built_in_again_reuses_the_seeded_row_without_conflict()
+    {
+        await using var db = await FreshAsync();
+        await CreateStore(db, new AppOptions()).SeedFromConfigAsync(CancellationToken.None);
+        (await db.AiProviderCredentials.CountAsync()).Should().Be(1);
+
+        // Enabling the built-in ONNX provider from settings must reuse the already-seeded row — not insert
+        // a duplicate, and not 409 on the partial-unique active index (the reported "same key" conflict).
+        var act = async () => await CreateStore(db, new AppOptions()).UpsertAsync(new UpsertAiProviderCommand(
+            null, AiProviderKind.BuiltInOnnx, "https://builtin.local/", "built-in-onnx", null, 1024, null, Activate: true),
+            CancellationToken.None);
+        await act.Should().NotThrowAsync();
+
+        (await db.AiProviderCredentials.CountAsync()).Should().Be(1);
+        (await db.AiProviderCredentials.CountAsync(c => c.IsActive)).Should().Be(1);
+        CreateStore(db, new AppOptions()).Active!.Kind.Should().Be(AiProviderKind.BuiltInOnnx);
+    }
+
+    [Fact]
+    public async Task Activating_a_new_provider_deactivates_the_active_one_without_conflict()
+    {
+        await using var db = await FreshAsync();
+        await CreateStore(db, new AppOptions()).SeedFromConfigAsync(CancellationToken.None);
+
+        // Adding + activating a second provider while the seeded built-in is active must flip the active
+        // flag atomically (deactivate old, activate new) without tripping the partial-unique active index.
+        var act = async () => await CreateStore(db, new AppOptions()).UpsertAsync(new UpsertAiProviderCommand(
+            null, AiProviderKind.OpenAiCompatible, "https://api.openai.com/v1/", "gpt-4o", "k", 4000, null, Activate: true),
+            CancellationToken.None);
+        await act.Should().NotThrowAsync();
+
+        (await db.AiProviderCredentials.CountAsync()).Should().Be(2);
+        (await db.AiProviderCredentials.CountAsync(c => c.IsActive)).Should().Be(1);
+        CreateStore(db, new AppOptions()).Active!.Kind.Should().Be(AiProviderKind.OpenAiCompatible);
+    }
+
+    [Fact]
     public async Task White_label_can_remove_the_built_in()
     {
         await using var db = await FreshAsync();

@@ -66,6 +66,18 @@ public static class AiEndpoints
             return Results.Ok(new { enabled = store.HasActive });
         }).RequireAuthorization(AuthPolicies.Owner);
 
+        // Built-in ONNX local model install state + a manual trigger, so the owner can see whether the
+        // model is present/downloading/failed and kick the one-time background download from the UI.
+        g.MapGet("/built-in/status", (IBuiltInModelInstaller installer) =>
+            Results.Ok(new { installed = installer.IsInstalled(), state = installer.State.ToString() }))
+            .RequireAuthorization(AuthPolicies.Owner);
+
+        g.MapPost("/built-in/install", (IBuiltInModelInstaller installer) =>
+        {
+            installer.EnsureInstalling();
+            return Results.Ok(new { installed = installer.IsInstalled(), state = installer.State.ToString() });
+        }).RequireAuthorization(AuthPolicies.Owner);
+
         // Ping the active provider with a tiny completion and report success + latency — handy for
         // verifying a local endpoint after adding it.
         g.MapPost("/providers/test", async (IAiClient client, CancellationToken ct) =>
@@ -335,14 +347,14 @@ public static class AiEndpoints
             }
 
             if (!success || algo is null)
-                return Results.Ok(new { success = false, projectId = project.Id.Value, attempts, log = ClipLog(log) });
+                return Results.Ok(new { success = false, projectId = project.Id.Value, attempts, log = ClipLog(log), code = files[codeKey], language });
 
             var cbotName = await UniqueNameAsync(db.CBots.Where(c => c.UserId == uid).Select(c => c.Name), project.Name, ct);
             var cbot = CBot.Create(uid, cbotName, protector.Protect(algo, EncryptionPurposes.CbotAlgo), project.Id);
             db.CBots.Add(cbot);
             await db.SaveChangesAsync(ct);
 
-            return Results.Ok(new { success = true, projectId = project.Id.Value, cbotId = cbot.Id.Value, attempts, log = ClipLog(log) });
+            return Results.Ok(new { success = true, projectId = project.Id.Value, cbotId = cbot.Id.Value, attempts, log = ClipLog(log), code = files[codeKey], language });
             }
             catch (DbUpdateException)
             {

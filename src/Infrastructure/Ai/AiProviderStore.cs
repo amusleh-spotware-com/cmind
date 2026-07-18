@@ -103,8 +103,21 @@ public sealed class AiProviderStore(
         var caps = command.Capabilities ?? AiProviderCapabilities.DefaultFor(command.Kind);
         var encrypted = string.IsNullOrWhiteSpace(command.ApiKey) ? null : Encrypt(command.ApiKey!);
 
+        // The keyless singleton providers (built-in ONNX, Demo) have one fixed identity per scope and the
+        // built-in one is already seeded on first startup. An "add" of one that already exists must reuse
+        // the existing row (retarget/activate it), never insert a duplicate — otherwise the user ends up
+        // with two identical built-in rows and, when activating, a partial-unique-index conflict.
+        var targetId = command.Id;
+        if (targetId is null && command.Kind is AiProviderKind.BuiltInOnnx or AiProviderKind.Demo)
+        {
+            var existing = await db.Set<AiProviderCredential>()
+                .Where(c => c.OwnerUserId == owner && c.Kind == command.Kind)
+                .Select(c => c.Id).FirstOrDefaultAsync(ct);
+            if (existing != default) targetId = existing.Value;
+        }
+
         AiProviderCredential credential;
-        if (command.Id is { } id)
+        if (targetId is { } id)
         {
             var cid = AiProviderCredentialId.From(id);
             credential = await db.Set<AiProviderCredential>()
@@ -121,9 +134,15 @@ public sealed class AiProviderStore(
             db.Set<AiProviderCredential>().Add(credential);
         }
 
-        if (command.Activate) await DeactivateOthersAndActivateAsync(credential, owner, now, ct);
+        if (command.Activate)
+        {
+            await DeactivateOthersAndActivateAsync(credential, owner, now, ct);
+        }
+        else
+        {
+            await db.SaveChangesAsync(ct);
+        }
 
-        await db.SaveChangesAsync(ct);
         Invalidate(owner);
         return credential.Id.Value;
     }
@@ -139,7 +158,6 @@ public sealed class AiProviderStore(
             .FirstOrDefaultAsync(c => c.Id == cid && c.OwnerUserId == owner, ct)
             ?? throw new InvalidOperationException("Provider credential not found.");
         await DeactivateOthersAndActivateAsync(credential, owner, timeProvider.GetUtcNow(), ct);
-        await db.SaveChangesAsync(ct);
         Invalidate(owner);
     }
 
@@ -226,8 +244,17 @@ public sealed class AiProviderStore(
         // activating the deployment default only touches deployment-scoped rows.
         var others = await db.Set<AiProviderCredential>()
             .Where(c => c.OwnerUserId == owner && c.IsActive && c.Id != target.Id).ToListAsync(ct);
-        foreach (var other in others) other.Deactivate(now);
+        if (others.Count > 0)
+        {
+            foreach (var other in others) other.Deactivate(now);
+            // Flush the deactivations first (a newly-added target is inserted here still INACTIVE): Postgres
+            // evaluates the partial-unique active index per statement and EF does not guarantee the UPDATE
+            // clearing the old active row runs before the INSERT/UPDATE that sets the new one, so doing both
+            // in a single batch can momentarily present two active rows in the scope -> 23505 conflict.
+            await db.SaveChangesAsync(ct);
+        }
         target.Activate(now);
+        await db.SaveChangesAsync(ct);
     }
 
     private void Invalidate(UserId? owner)

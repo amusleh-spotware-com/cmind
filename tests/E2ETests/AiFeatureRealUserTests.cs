@@ -102,7 +102,7 @@ public sealed class AiFeatureRealUserTests(AiLocalFixture app)
         var page = await app.NewAuthedPageAsync();
 
         var create = await page.APIRequest.PostAsync($"{app.BaseUrl}/api/agent-studio",
-            new() { DataObject = new { Name = $"desk-{Guid.NewGuid():N}", Archetype = "Scalper" } });
+            new() { DataObject = new { Name = $"desk-{Guid.NewGuid():N}", Archetype = "Scalper", AccountIds = new[] { Guid.NewGuid() } } });
         create.Status.Should().Be(200, $"create agent failed: {await create.TextAsync()}");
         using var created = JsonDocument.Parse(await create.TextAsync());
         var agentId = created.RootElement.GetProperty("id").GetGuid();

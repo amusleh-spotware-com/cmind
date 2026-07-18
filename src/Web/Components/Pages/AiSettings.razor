@@ -2,6 +2,7 @@
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "Owner")]
 @using System.Net.Http.Json
 @using Web.Components.Dialogs
+@using Web.Json
 @inject HttpClient Http
 @inject ISnackbar Snack
 @inject IDialogService Dialogs
@@ -55,6 +56,19 @@ else
                         <MudChip T="string" Size="Size.Small" Color="Color.Default"
                                  Icon="@Icons.Material.Filled.NoEncryption">No key (local)</MudChip>
                     }
+                    @if (p.Kind == 5)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="@BuiltInColor()" Icon="@BuiltInIcon()"
+                                 data-testid="ai-builtin-state">@BuiltInLabel()</MudChip>
+                        @if (!_builtInInstalled && _builtInState != "Downloading")
+                        {
+                            <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Text"
+                                       StartIcon="@Icons.Material.Filled.Download" OnClick="InstallBuiltIn"
+                                       data-testid="ai-builtin-install">
+                                @(_builtInState == "Failed" ? "Retry download" : "Download model")
+                            </MudButton>
+                        }
+                    }
                     @if (!p.IsActive)
                     {
                         <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Text"
@@ -78,6 +92,9 @@ else
 @code {
     private List<ProviderView> _providers = [];
     private bool _testing;
+    private bool _builtInInstalled;
+    private string _builtInState = "NotStarted";
+    private bool _polling;
 
     protected override Task OnInitializedAsync() => Load();
 
@@ -91,7 +108,64 @@ else
         {
             _providers = [];
         }
+        if (_providers.Any(p => p.Kind == 5))
+        {
+            await RefreshBuiltIn();
+            MaybePollBuiltIn();
+        }
     }
+
+    private async Task RefreshBuiltIn()
+    {
+        try
+        {
+            var res = await Http.GetDynamicAsync("/api/ai/built-in/status");
+            if (res is not null)
+            {
+                _builtInInstalled = (bool)res.installed;
+                _builtInState = (string)res.state;
+            }
+        }
+        catch { /* leave last known state */ }
+    }
+
+    private async Task InstallBuiltIn()
+    {
+        try { await Http.PostAsync("/api/ai/built-in/install", null); }
+        catch { Snack.Add("Could not start the model download", Severity.Error); return; }
+        Snack.Add("Downloading the built-in model in the background — this can take a few minutes", Severity.Info);
+        await RefreshBuiltIn();
+        MaybePollBuiltIn();
+    }
+
+    private void MaybePollBuiltIn()
+    {
+        if (!_builtInInstalled && _builtInState == "Downloading" && !_polling) _ = PollBuiltIn();
+    }
+
+    private async Task PollBuiltIn()
+    {
+        _polling = true;
+        try
+        {
+            while (!_builtInInstalled && _builtInState == "Downloading")
+            {
+                await Task.Delay(3000);
+                await RefreshBuiltIn();
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        finally { _polling = false; }
+    }
+
+    private string BuiltInLabel() => _builtInInstalled ? "Model ready"
+        : _builtInState switch { "Downloading" => "Downloading model…", "Failed" => "Download failed", _ => "Model not installed" };
+
+    private Color BuiltInColor() => _builtInInstalled ? Color.Success
+        : _builtInState switch { "Downloading" => Color.Info, "Failed" => Color.Error, _ => Color.Default };
+
+    private string BuiltInIcon() => _builtInInstalled ? Icons.Material.Filled.CheckCircle
+        : _builtInState switch { "Downloading" => Icons.Material.Filled.Downloading, "Failed" => Icons.Material.Filled.ErrorOutline, _ => Icons.Material.Filled.CloudOff };
 
     private async Task OpenDialog(ProviderView? existing)
     {

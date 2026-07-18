@@ -63,6 +63,7 @@ public sealed class ManualFindingsTests(ManualFindingsFixture app)
     public async Task Agent_studio_supports_account_assignment_edit_and_icon_controls()
     {
         var page = await app.NewAuthedPageAsync();
+        var accountNumber = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
         await page.GotoAsync("/agent-studio");
         await page.WaitForAppReadyAsync();
 
@@ -72,6 +73,7 @@ public sealed class ManualFindingsTests(ManualFindingsFixture app)
 
         var name = "Edit " + Guid.NewGuid().ToString("N")[..6];
         await page.GetByLabel("Agent name").FillAsync(name);
+        await AgentTestHelpers.SelectManagedAccountAsync(page, accountNumber);
         await page.ClickAsync("[data-testid=agent-create-submit]");
         await Assertions.Expect(page.Locator("[data-testid=agents-table]")).ToContainTextAsync(name, new() { Timeout = 15000 });
 

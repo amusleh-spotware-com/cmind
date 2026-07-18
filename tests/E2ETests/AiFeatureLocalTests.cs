@@ -224,11 +224,15 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
     [Fact]
     public async Task Agent_studio_start_enabled_when_ai_present()
     {
-        var page = await OpenAsync("/agent-studio");
+        var page = await app.NewAuthedPageAsync();
+        var accountNumber = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
+        await page.GotoAsync("/agent-studio", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForAppReadyAsync();
         (await page.Locator("[data-testid=ai-not-configured]").IsVisibleAsync()).Should().BeFalse();
 
         await page.Locator("[data-testid=agent-new]").ClickAsync();
         await page.GetByLabel("Agent name").FillAsync($"live-{Guid.NewGuid():N}");
+        await AgentTestHelpers.SelectManagedAccountAsync(page, accountNumber);
         await page.Locator("[data-testid=agent-create-submit]").ClickAsync();
 
         var start = page.Locator("[data-testid=agent-start]").First;
@@ -257,9 +261,13 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
     [Fact]
     public async Task Agent_studio_table_has_no_overflow_on_mobile_with_data()
     {
-        var page = await OpenAsync("/agent-studio", mobile: true);
+        var page = await app.NewAuthedMobilePageAsync();
+        var accountNumber = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
+        await page.GotoAsync("/agent-studio", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForAppReadyAsync();
         await page.Locator("[data-testid=agent-new]").ClickAsync();
         await page.GetByLabel("Agent name").FillAsync($"m-{Guid.NewGuid():N}");
+        await AgentTestHelpers.SelectManagedAccountAsync(page, accountNumber);
         await page.Locator("[data-testid=agent-create-submit]").ClickAsync();
         await Assertions.Expect(page.Locator("[data-testid=agents-table]")).ToBeVisibleAsync(new() { Timeout = 8000 });
         await page.WaitForTimeoutAsync(300);

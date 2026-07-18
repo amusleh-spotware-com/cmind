@@ -17,6 +17,9 @@ The **New agent** dialog collects, no-code:
 - **Name** and **archetype** — Scalper, Day Trader, Swing Trader, Position Trader, News Trader,
   Contrarian, Mean Reversion or Breakout/Momentum. Each preset fixes a sensible cadence and posture.
 - **Attitude** — aggressiveness, patience and trend-following sliders.
+- **Managed account(s)** — **at least one is required to create the agent** (an agent with no account
+  could never start, so *Create* stays disabled until you pick one). If you have not linked a trading
+  account yet, the dialog says so and points you to link one first.
 - **Autonomy level** — **Advisory** (proposes only) or **Approval-gated** (acts only after your
   per-action approval). **Full Auto** (no per-trade approval) additionally requires a **risk envelope**
   and acceptance of the risk disclaimer before it can arm.
@@ -87,7 +90,8 @@ happens on an explicit, fully-consented opt-in.
 
 ## Managed accounts and editing
 
-When creating an agent you pick the trading account(s) it manages (required before it can start).
-Every agent can be **edited** afterwards (name, temperament, autonomy, and managed accounts) from the
+When creating an agent you pick the trading account(s) it manages — **at least one is required at
+creation** (the *Create* button is disabled until one is selected, and the create endpoint rejects an
+empty selection). Every agent can be **edited** afterwards (name, temperament, autonomy, and managed accounts) from the
 pencil icon on its roster row. Lifecycle controls (details, edit, start, stop, kill) are icon buttons,
 each disabled in states where the action does not apply.

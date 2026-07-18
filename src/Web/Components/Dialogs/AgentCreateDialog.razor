@@ -16,13 +16,20 @@
                 <MudSelectItem Value="@("ApprovalGated")">Approval-gated</MudSelectItem>
             </MudSelect>
             <MudSelect T="Guid" MultiSelection="true" @bind-SelectedValues="_accounts" Label="Managed accounts" Class="mb-2"
-                       HelperText="Which trading account(s) this agent manages (required to start it)"
+                       Required="true" RequiredError="Select at least one account"
+                       HelperText="Which trading account(s) this agent manages (at least one required)"
                        MultiSelectionTextFunc="@(v => $"{v?.Count ?? 0} account(s)")" data-testid="agent-accounts">
                 @foreach (var a in Accounts)
                 {
                     <MudSelectItem T="Guid" Value="@a.Id">@a.Number</MudSelectItem>
                 }
             </MudSelect>
+            @if (Accounts.Count == 0)
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-2" data-testid="agent-no-accounts">
+                    Link a trading account first — an agent needs an account to manage.
+                </MudAlert>
+            }
             <MudText Typo="Typo.body2" Class="mt-2">Aggressiveness</MudText>
             <MudSlider @bind-Value="_aggr" Min="0" Max="1" Step="0.1" Color="Color.Primary" />
             <MudText Typo="Typo.body2">Patience</MudText>
@@ -33,7 +40,8 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" data-testid="agent-create-submit">Create</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit"
+                   Disabled="@(!_accounts.Any())" data-testid="agent-create-submit">Create</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -58,6 +66,7 @@
     {
         if (_form is not null) await _form.Validate();
         if (string.IsNullOrWhiteSpace(_name)) return;
+        if (!_accounts.Any()) return;
         Dialog.Close(DialogResult.Ok(new AgentCreateResult(
             _name.Trim(), _archetype, _autonomy, _aggr, _patience, _trend, _accounts.ToArray())));
     }

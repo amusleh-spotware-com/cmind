@@ -454,6 +454,7 @@ public sealed class CopyEngineHost(
         {
             _mirroredPendingPlacedAt.Remove(execution.OrderId);
             await CancelDestinationPendingsAsync(session, execution.OrderId, ct);
+            await CloseDestinationPendingFillsAsync(session, execution.OrderId, ct);
         }
 
         _openSourcePositions.Add(execution.PositionId);
@@ -784,6 +785,9 @@ public sealed class CopyEngineHost(
         _mirroredPendingPlacedAt.Remove(execution.OrderId);
         Activity($"Source pending order {execution.OrderId} cancelled/expired — cancelling mirrored pendings.");
         await CancelDestinationPendingsAsync(session, execution.OrderId, ct);
+        // The slave's own pending may have already filled in the cross-broker race; the master never took
+        // the trade, so close that uncorrelated early fill instead of leaving an orphan until resync.
+        await CloseDestinationPendingFillsAsync(session, execution.OrderId, ct);
     }
 
     private async Task CancelDestinationPendingsAsync(IOpenApiTradingSession session, long sourceOrderId, CancellationToken ct)
@@ -799,6 +803,39 @@ public sealed class CopyEngineHost(
                     await session.CancelOrderAsync(destination.CtidTraderAccountId, pending.OrderId, token);
                     logger.CopyPendingOrderCancelled(plan.ProfileId.Value, destination.CtidTraderAccountId,
                         pending.OrderId, sourceOrderId);
+                }
+            }
+            catch (Exception ex)
+            {
+                NoteIfTokenInvalidated(ex, destination.CtidTraderAccountId);
+                logger.CopyCloseFailed(plan.ProfileId.Value, destination.CtidTraderAccountId, sourceOrderId, ex);
+            }
+        }, ct);
+    }
+
+    // A destination's own resting pending can fill (its price hit) in the small cross-broker window before
+    // the master's fill/cancel event is processed here — leaving a destination position labelled by the
+    // source ORDER id, which the canonical close/SL-TP paths (keyed by source POSITION id) would never
+    // match. That is a real divergence: on a master CANCEL the master never took the trade, so the slave's
+    // early fill must be closed; on a master FILL it is retired here and re-opened as a canonically
+    // position-id-labelled market copy by the following open (so the destination ends with exactly one
+    // copy, not two). Uses a FRESH reconcile (not the cached book) because the fill is broker-side and not
+    // yet in our cache. Rare; the cost is ~one spread. Left uncorrected this doubled destination exposure
+    // (on a fill) or left an uncorrelated orphan (on a cancel) until the next resync healed it.
+    private async Task CloseDestinationPendingFillsAsync(IOpenApiTradingSession session, long sourceOrderId, CancellationToken ct)
+    {
+        var label = sourceOrderId.ToString();
+        await ForEachDestinationAsync(async (destination, token) =>
+        {
+            try
+            {
+                var positions = await session.ReconcileAsync(destination.CtidTraderAccountId, token);
+                foreach (var position in positions.Where(p => p.Label == label).ToList())
+                {
+                    await session.ClosePositionAsync(destination.CtidTraderAccountId, position.PositionId, position.Volume, token);
+                    InvalidateBook(destination.CtidTraderAccountId);
+                    logger.CopyPositionClosed(plan.ProfileId.Value, destination.CtidTraderAccountId, position.PositionId, sourceOrderId);
+                    Activity($"→ {destination.CtidTraderAccountId}: retired an early destination pending-fill (source order {sourceOrderId}).");
                 }
             }
             catch (Exception ex)

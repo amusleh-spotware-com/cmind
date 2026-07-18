@@ -230,6 +230,23 @@ internal sealed class FakeTradingSession : IOpenApiTradingSession
     public void SeedPending(long ctid, long orderId, long symbolId, bool isBuy, long volume, CopyOrderKind kind, double price, string label)
         => PendingStore(ctid).Add(new PendingOrderSnapshot(orderId, symbolId, isBuy, volume, kind, price, label));
 
+    // Models the broker filling a resting pending order on this account: the order leaves the pending book
+    // and becomes an open position carrying the SAME label (the source order id), exactly as cTrader reports
+    // a limit/stop fill. Lets a test reproduce the cross-broker race where a destination pending fills before
+    // the master's own fill/cancel is processed by the host.
+    public void FillPendingByLabel(long ctid, string label)
+    {
+        lock (_gate)
+        {
+            var store = PendingStore(ctid);
+            var index = store.FindIndex(o => o.Label == label);
+            if (index < 0) return;
+            var order = store[index];
+            store.RemoveAt(index);
+            PositionStore(ctid).Add(new OpenPositionSnapshot(++_positionSeq, order.SymbolId, order.IsBuy, order.Volume, order.Label));
+        }
+    }
+
     public void CompleteSource() => _source.Writer.TryComplete();
 
     // ---- IOpenApiTradingSession ----------------------------------------------------------------

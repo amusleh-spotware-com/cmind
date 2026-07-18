@@ -283,6 +283,50 @@ public sealed class CopyAdvancedScenariosTests
     }
 
     [Fact]
+    public async Task Master_pending_fill_does_not_double_when_the_slave_pending_filled_first()
+    {
+        // Cross-broker race: the slave's own pending fills before the host processes the master's fill. The
+        // slave must end with exactly one copy (the canonical position-id-labelled one), not two.
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(d => d.SetPendingOrderCopying(true))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushPending(Source, orderId: 7020, SymbolId, isBuy: true, volume: 100, CopyOrderKind.Limit, price: 1.09);
+            await WaitUntil(() => session.Pendings.Count == 1);
+            session.FillPendingByLabel(Slave, "7020"); // slave pending fills early (labelled by the source order id)
+            session.PushOpen(Source, positionId: 5100, SymbolId, isBuy: true, volume: 100, orderId: 7020);
+            await WaitUntil(() => session.Closes.Any(c => c.Ctid == Slave)); // early fill retired
+            await WaitUntil(() => session.Orders.Any(o => o.Ctid == Slave));  // canonical copy opened
+        });
+
+        var slavePositions = await session.ReconcileAsync(Slave, CancellationToken.None);
+        slavePositions.Should().ContainSingle("the early pending-fill is retired and replaced by one canonical copy");
+        slavePositions.Single().Label.Should().Be("5100", "the surviving copy is labelled by the source position id");
+    }
+
+    [Fact]
+    public async Task Master_pending_cancel_closes_a_slave_pending_that_filled_early()
+    {
+        // The slave's pending filled before the master cancelled its pending. The master never took the
+        // trade, so the slave's uncorrelated early fill must be closed (not left as an orphan until resync).
+        var session = NewSession();
+        var plan = Plan(new CopyDestinationPlan(Slave, "t", 1, Destination(d => d.SetPendingOrderCopying(true))));
+
+        await DriveAsync(session, plan, async () =>
+        {
+            session.PushPending(Source, orderId: 7021, SymbolId, isBuy: true, volume: 100, CopyOrderKind.Limit, price: 1.09);
+            await WaitUntil(() => session.Pendings.Count == 1);
+            session.FillPendingByLabel(Slave, "7021"); // slave pending fills early
+            session.PushPendingCancel(Source, orderId: 7021, SymbolId, isBuy: true, volume: 100, CopyOrderKind.Limit);
+            await WaitUntil(() => session.Closes.Any(c => c.Ctid == Slave));
+        });
+
+        var slavePositions = await session.ReconcileAsync(Slave, CancellationToken.None);
+        slavePositions.Should().BeEmpty("the master never took the trade, so the slave's early fill is closed");
+    }
+
+    [Fact]
     public async Task Pending_order_type_filter_skips_an_excluded_stop()
     {
         var session = NewSession();

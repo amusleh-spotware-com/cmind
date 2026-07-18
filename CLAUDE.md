@@ -338,6 +338,18 @@ Architecture facts you can't read off the code — the rest lives in nested `CLA
   `GET /api/instances/current?lineageId=…` when the direct id 404s — otherwise clicking a just-finished
   backtest shows "instance not found" (its id changed in the background). This exact bug has now bitten
   three times (lineage mix, stale-id view, run/backtest confusion); a raw id link is the trap.
+- **Copy-engine destination labelling — position id vs order id.** Every destination copy is labelled with
+  a source id so state rebuilds from a reconcile: a mirrored **position** by source **position** id, a
+  mirrored resting **pending** by source **order** id. The canonical close / SL-TP / partial / resync-orphan
+  paths all match by the **position-id** label. Trap: a destination's own pending can fill (broker-side, its
+  price hit) in the small cross-broker window before the master's fill/cancel event is processed — that
+  leaves a destination position labelled by the **order** id, which the position-id-keyed paths never match.
+  Left alone it doubles destination exposure (on a master fill: canonical market open + the order-id-labelled
+  early fill) or leaves an uncorrelated orphan (on a master cancel), healed only at the next resync. The fill
+  and cancel handlers therefore retire order-id-labelled destination positions immediately
+  (`CloseDestinationPendingFillsAsync`, FRESH reconcile — the fill isn't in the cached book). The engine
+  mirrors **master** events only; it does not consume destination-side executions, so a slave-side SL/TP hit
+  on a copy the master still holds re-opens on the next reconcile (by design, not a bug).
 - **cTrader Console CLI — verified facts (discover, don't guess; re-probe with the commands below):**
   `docker run --rm ghcr.io/spotware/ctrader-console backtest --help` (usage/flags),
   `… periods` (the full timeframe list), and grep the image DLL for an enum

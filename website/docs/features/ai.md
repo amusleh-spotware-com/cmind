@@ -11,7 +11,7 @@ a key); every existing feature works unchanged with the same gating, encryption,
 degradation.
 
 **Batteries included:** a **built-in local LLM ships with the app and is enabled by default**
-(Microsoft.ML.OnnxRuntimeGenAI, e.g. Phi-3-mini) — so every deployment has working AI **with no API key
+(Microsoft.ML.OnnxRuntimeGenAI, e.g. Phi-3.5-mini) — so every deployment has working AI **with no API key
 and no external service**. A white-label deployment can remove it and restrict which providers users may
 add. Beyond the built-in, connect any external provider.
 
@@ -82,7 +82,7 @@ Full per-provider setup guides (keys, URLs, model ids, UI steps): see
 
 cMind ships a **real local LLM that runs in-process** via
 [Microsoft.ML.OnnxRuntimeGenAI](https://onnxruntime.ai/docs/genai/) (a compact instruct model such as
-Phi-3-mini). It needs **no API key and no external service**, and on first startup — when no provider is
+Phi-3.5-mini). It needs **no API key and no external service**, and on first startup — when no provider is
 configured and the white-label gate allows it — it is **seeded and activated automatically**, so every
 deployment has working AI out of the box.
 

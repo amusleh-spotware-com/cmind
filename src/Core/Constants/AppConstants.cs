@@ -333,7 +333,9 @@ public static class AiConstants
     public const string BuiltInModel = "built-in-onnx";
     public const string BuiltInModelDefaultPath = "models/onnx";
 
-    // Fallback token context window when genai_config.json can't be read; the shipped Phi-3-mini is 4k.
+    // Conservative fallback token context window used only when genai_config.json can't be read. The shipped
+    // Phi-3.5-mini model itself is 128k; under-estimating here just triggers the "context too small" degrade
+    // path more eagerly, which is the safe direction.
     public const int BuiltInDefaultContextLength = 4096;
 
     public const string BuiltInUnavailableMessage =
@@ -346,12 +348,13 @@ public static class AiConstants
         "This request is too large for the built-in local AI model's context window. It needs a larger-context " +
         "model — configure a cloud provider (or a larger local model) in Settings → AI for this feature.";
 
-    // Built-in model auto-download: the canonical Phi-3-mini 128k instruct int4 ONNX model folder + its
-    // files. The 128k context window (vs the 4k variant) is what lets long-prompt features — cBot code
-    // generation, currency-strength — run on the built-in model instead of overflowing its context. When
-    // the model directory is absent the app fetches these once in the background (App:Ai:BuiltIn:AutoDownload).
+    // Built-in model auto-download: the canonical Phi-3.5-mini-instruct int4 ONNX model folder + its files.
+    // Phi-3.5-mini supersedes Phi-3-mini (better reasoning/instruction-following at the same size class) and
+    // keeps the 128k context window that lets long-prompt features — cBot code generation, currency-strength —
+    // run on the built-in model instead of overflowing its context. When the model directory is absent the app
+    // fetches these once in the background (App:Ai:BuiltIn:AutoDownload).
     public const string BuiltInModelDownloadBaseUrl =
-        "https://huggingface.co/microsoft/Phi-3-mini-128k-instruct-onnx/resolve/main/cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/";
+        "https://huggingface.co/microsoft/Phi-3.5-mini-instruct-onnx/resolve/main/cpu_and_mobile/cpu-int4-awq-block-128-acc-level-4/";
 
     public static readonly string[] BuiltInModelDownloadFiles =
     [
@@ -360,9 +363,8 @@ public static class AiConstants
         "special_tokens_map.json",
         "tokenizer.json",
         "tokenizer_config.json",
-        "added_tokens.json",
-        "phi3-mini-128k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx",
-        "phi3-mini-128k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx.data"
+        "phi-3.5-mini-instruct-cpu-int4-awq-block-128-acc-level-4.onnx",
+        "phi-3.5-mini-instruct-cpu-int4-awq-block-128-acc-level-4.onnx.data"
     ];
 
     public const string BuiltInDownloadingMessage =

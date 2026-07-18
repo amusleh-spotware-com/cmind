@@ -20,7 +20,7 @@ public enum AiProviderKind
     Demo,
 
     /// <summary>
-    /// Built-in real local LLM running in-process via Microsoft.ML.OnnxRuntimeGenAI (e.g. Phi-3-mini).
+    /// Built-in real local LLM running in-process via Microsoft.ML.OnnxRuntimeGenAI (e.g. Phi-3.5-mini).
     /// Shipped with the app and enabled by default, so every user gets working AI with no API key or
     /// external service. A white-label deployment can disable it (<c>App:Branding:AllowBuiltInAi</c>).
     /// </summary>

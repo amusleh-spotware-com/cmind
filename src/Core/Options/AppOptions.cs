@@ -350,7 +350,7 @@ public sealed record AiBuiltInOptions
     public string DownloadBaseUrl { get; init; } = Constants.AiConstants.BuiltInModelDownloadBaseUrl;
 
     /// <summary>The model file names to download (relative to <see cref="DownloadBaseUrl"/>). Empty ⇒ the
-    /// built-in default set for the canonical Phi-3-mini int4 ONNX model.</summary>
+    /// built-in default set for the canonical Phi-3.5-mini-instruct int4 ONNX model.</summary>
     public IReadOnlyList<string> DownloadFiles { get; init; } = [];
 }
 

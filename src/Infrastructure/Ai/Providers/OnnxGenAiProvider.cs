@@ -11,7 +11,7 @@ using Microsoft.ML.OnnxRuntimeGenAI;
 namespace Infrastructure.Ai.Providers;
 
 /// <summary>
-/// Built-in real local LLM running in-process via Microsoft.ML.OnnxRuntimeGenAI (e.g. Phi-3-mini). No
+/// Built-in real local LLM running in-process via Microsoft.ML.OnnxRuntimeGenAI (e.g. Phi-3.5-mini). No
 /// API key, no external service — shipped with the app and enabled by default so every deployment has
 /// working AI out of the box. The model (config + weights) lives in a directory (App:Ai:BuiltIn:ModelPath);
 /// when it is absent the provider degrades to a typed failure with an install hint (never throws). The
@@ -177,7 +177,7 @@ public sealed class OnnxGenAiProvider(
         return AiConstants.BuiltInDefaultContextLength;
     }
 
-    // Phi-3 style chat template (the canonical bundled model). Harmless on other instruct models.
+    // Phi-3 / Phi-3.5 style chat template (the canonical bundled model). Harmless on other instruct models.
     private static string BuildPrompt(string system, string user)
     {
         var sb = new StringBuilder();

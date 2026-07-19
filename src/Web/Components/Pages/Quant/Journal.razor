@@ -17,6 +17,8 @@
                OnClick="OpenNewNote" data-testid="journal-new-entry">@L["journal.note.new"]</MudButton>
 </MudStack>
 
+<AiFeatureNotice EnabledChanged="OnAiStatus" />
+
 @if (_data is null)
 {
     <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
@@ -29,30 +31,45 @@ else if (_data.summary.total == 0)
 }
 else
 {
-    <MudGrid data-testid="journal-summary">
-        <MudItem xs="12" md="5">
-            <MudPaper Class="pa-4" Elevation="1">
-                <MudSimpleTable Dense="true">
-                    <tbody>
-                        <tr><td>Total instances</td><td>@_data.summary.total</td></tr>
-                        <tr><td>Winning backtests</td><td>@_data.summary.wins</td></tr>
-                        <tr><td>Losing backtests</td><td>@_data.summary.losses</td></tr>
-                        <tr><td>Failures</td><td>@_data.summary.failures</td></tr>
-                        <tr><td>Win rate</td><td>@((_data.summary.winRate * 100).ToString("0.0"))%</td></tr>
-                    </tbody>
-                </MudSimpleTable>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" md="7">
-            <MudPaper Class="pa-4" Elevation="1">
-                <MudText Typo="Typo.subtitle1" Class="mb-2">Insights</MudText>
-                @foreach (var insight in _data.summary.insights)
-                {
-                    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">@insight</MudAlert>
-                }
-            </MudPaper>
-        </MudItem>
+    <MudGrid data-testid="journal-summary" Class="mb-1">
+        @KpiCard("Total", _data.summary.total.ToString(), Color.Default, Icons.Material.Filled.List)
+        @KpiCard("Wins", _data.summary.wins.ToString(), Color.Success, Icons.Material.Filled.TrendingUp)
+        @KpiCard("Losses", _data.summary.losses.ToString(), Color.Error, Icons.Material.Filled.TrendingDown)
+        @KpiCard("Failures", _data.summary.failures.ToString(), Color.Warning, Icons.Material.Filled.ErrorOutline)
+        @KpiCard("Win rate", (_data.summary.winRate * 100).ToString("0.0") + "%", Color.Info, Icons.Material.Filled.Percent)
     </MudGrid>
+
+    @if (_data.summary.insights.Count > 0)
+    {
+        <MudPaper Class="pa-4 mt-3" Elevation="1">
+            <MudText Typo="Typo.subtitle1" Class="mb-2">Insights</MudText>
+            @foreach (var insight in _data.summary.insights)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">@insight</MudAlert>
+            }
+        </MudPaper>
+    }
+}
+
+@if (_data is not null)
+{
+    <MudPaper Class="pa-4 mt-3" Elevation="1" data-testid="journal-coach">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2" Class="mb-2">
+            <MudIcon Icon="@Icons.Material.Filled.Psychology" Color="Color.Primary" />
+            <MudText Typo="Typo.subtitle1">AI Coach</MudText>
+            <MudSpacer />
+            <AiModelSelect Feature="AiFeature.PortfolioDigest" @bind-Selected="_coachModelId" Class="mr-2" />
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AutoAwesome"
+                       OnClick="Coach" Disabled="@(_coachLoading || !_aiEnabled)" data-testid="journal-coach-run">
+                Coach me
+            </MudButton>
+        </MudStack>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">
+            The AI reviews your runs and backtests for behavioural leaks — over-concentration, repeated
+            failures, a losing bias — and suggests concrete next steps.
+        </MudText>
+        <AiOutputPanel Loading="@_coachLoading" Output="@_coachOutput" />
+    </MudPaper>
 }
 
 @if (_data is not null && _data.entries.Count > 0)
@@ -122,6 +139,73 @@ else
     private JournalData? _data;
     private List<JournalNoteDto>? _notes;
     private readonly CancellationTokenSource _cts = new();
+
+    private bool _aiEnabled;
+    private bool _coachLoading;
+    private string _coachOutput = "";
+    private Guid? _coachModelId;
+
+    private void OnAiStatus(bool enabled)
+    {
+        _aiEnabled = enabled;
+        StateHasChanged();
+    }
+
+    // The journal's AI coach reuses the Portfolio Digest feature (which reviews the same runs/backtests for
+    // concentration, what's working vs failing, and next steps) on the model the user picked.
+    private async Task Coach()
+    {
+        _coachLoading = true;
+        _coachOutput = "";
+        try
+        {
+            var url = _coachModelId is { } id ? $"/api/ai/portfolio-digest?modelId={id}" : "/api/ai/portfolio-digest";
+            var response = await Http.PostAsync(url, null, _cts.Token);
+            var result = await response.Content.ReadFromJsonAsync<AiTextResult>(cancellationToken: _cts.Token);
+            if (result is { success: true })
+                _coachOutput = result.text;
+            else
+                Snack.Add(result?.error ?? L["journal.note.save_failed"], Severity.Error);
+        }
+        catch (OperationCanceledException) { }
+        catch { Snack.Add(L["journal.note.save_failed"], Severity.Error); }
+        finally { _coachLoading = false; }
+    }
+
+    private RenderFragment KpiCard(string label, string value, Color color, string icon) => builder =>
+    {
+        builder.OpenComponent<MudItem>(0);
+        builder.AddAttribute(1, "xs", 6);
+        builder.AddAttribute(2, "sm", 4);
+        builder.AddAttribute(3, "md", 2);
+        builder.AddAttribute(4, "ChildContent", (RenderFragment)(item =>
+        {
+            item.OpenComponent<MudPaper>(0);
+            item.AddAttribute(1, "Class", "pa-3");
+            item.AddAttribute(2, "Elevation", 1);
+            item.AddAttribute(3, "ChildContent", (RenderFragment)(paper =>
+            {
+                paper.OpenComponent<MudIcon>(0);
+                paper.AddAttribute(1, "Icon", icon);
+                paper.AddAttribute(2, "Color", color);
+                paper.AddAttribute(3, "Size", Size.Small);
+                paper.CloseComponent();
+                paper.OpenComponent<MudText>(4);
+                paper.AddAttribute(5, "Typo", Typo.h5);
+                paper.AddAttribute(6, "ChildContent", (RenderFragment)(t => t.AddContent(0, value)));
+                paper.CloseComponent();
+                paper.OpenComponent<MudText>(7);
+                paper.AddAttribute(8, "Typo", Typo.caption);
+                paper.AddAttribute(9, "Class", "mud-text-secondary");
+                paper.AddAttribute(10, "ChildContent", (RenderFragment)(t => t.AddContent(0, label)));
+                paper.CloseComponent();
+            }));
+            item.CloseComponent();
+        }));
+        builder.CloseComponent();
+    };
+
+    private sealed record AiTextResult(bool success, string text, string? error);
 
     protected override async Task OnInitializedAsync()
     {

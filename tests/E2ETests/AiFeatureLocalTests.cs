@@ -229,6 +229,24 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
     }
 
     [Fact]
+    public async Task Journal_ai_coach_is_enabled_and_runs_clean()
+    {
+        var page = await OpenAsync("/journal");
+        (await page.Locator("[data-testid=ai-not-configured]").IsVisibleAsync()).Should().BeFalse();
+
+        // The journal now exposes an AI Coach (reusing the digest) with a model selector; it is enabled when
+        // AI is configured and must run without crashing even with no seeded portfolio data.
+        var coach = page.Locator("[data-testid=journal-coach-run]");
+        await Assertions.Expect(coach).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(coach).ToBeEnabledAsync(new() { Timeout = 20000 });
+        await coach.ClickAsync();
+        await page.WaitForTimeoutAsync(1500);
+
+        (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
+        (await page.Locator("[data-testid=page-error]").IsVisibleAsync()).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Tune_page_is_ai_enabled()
     {
         var page = await OpenAsync("/ai/tune");

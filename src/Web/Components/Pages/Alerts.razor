@@ -17,6 +17,13 @@
 
 <AiFeatureNotice />
 
+<MudAlert Severity="Severity.Info" Dense="true" Class="mb-3" data-testid="alerts-data-source">
+    Alerts are grounded in <b>live web search</b> for the symbol, run on each rule's schedule by a background
+    worker. For useful results, set a <b>web-search-capable</b> provider as the default (Anthropic, Gemini,
+    or an OpenAI-compatible model with search) in <MudLink Href="/settings/ai">Settings → AI</MudLink> — the
+    built-in local model has no web access.
+</MudAlert>
+
 <MudGrid>
     <MudItem xs="12" md="5">
         <MudPaper Class="pa-4" Elevation="1">

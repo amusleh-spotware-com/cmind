@@ -158,7 +158,15 @@ else
 
     private Task Start(Guid id) => Lifecycle(id, "start");
     private Task Stop(Guid id) => Lifecycle(id, "stop");
-    private Task Kill(Guid id) => Lifecycle(id, "halt");
+
+    private async Task Kill(Guid id)
+    {
+        // The kill switch is an emergency halt — confirm so it is never triggered by a mis-click.
+        var confirmed = await Dialogs.ShowMessageBox("Kill agent",
+            "Immediately halt this agent and stop it managing your accounts until you restart it?",
+            yesText: "Kill", cancelText: "Cancel");
+        if (confirmed == true) await Lifecycle(id, "halt");
+    }
 
     private async Task Lifecycle(Guid id, string verb)
     {

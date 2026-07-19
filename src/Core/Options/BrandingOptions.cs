@@ -78,6 +78,13 @@ public sealed record BrandingOptions
     public bool EnableEconomicCalendar { get; init; } = true;
 
     /// <summary>
+    /// White-label hard gate for the Commitment of Traders (COT) report (Tier 2). Defaults to <c>true</c> —
+    /// the COT browser, its REST API and MCP tools ship on. A reseller sets it <c>false</c> to remove the
+    /// feature entirely from that build: it never appears and an operator cannot re-enable it at runtime.
+    /// </summary>
+    public bool EnableCot { get; init; } = true;
+
+    /// <summary>
     /// How much of the Nodes surface this deployment exposes. Defaults to <see cref="NodesUiMode.Full"/>
     /// (list plus manual add/delete). A white-label deployment sets <see cref="NodesUiMode.Monitor"/> to
     /// keep a read-only view but drop manual add/delete, or <see cref="NodesUiMode.Hidden"/> to remove the

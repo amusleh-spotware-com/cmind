@@ -371,4 +371,35 @@
   <data name="nav.ai.tasks" xml:space="preserve"><value>Công việc</value></data>
   <data name="ai.model" xml:space="preserve"><value>Mô hình</value></data>
   <data name="ai.model.default" xml:space="preserve"><value>mặc định</value></data>
+  <data name="nav.cot" xml:space="preserve"><value>Cam kết của các nhà giao dịch</value></data>
+  <data name="cot.title" xml:space="preserve"><value>Cam kết của các nhà giao dịch</value></data>
+  <data name="cot.help" xml:space="preserve"><value>Báo cáo định vị hàng tuần của CFTC — cho biết các công ty thương mại, nhà đầu cơ lớn và quỹ được định vị như thế nào trên thị trường hợp đồng tương lai. Chỉ số COT cho thấy vị trí ròng hiện tại ở đâu trong phạm vi lịch sử của nó; các giá trị cực đoan thường đi trước sự đảo ngược.</value></data>
+  <data name="cot.disabled" xml:space="preserve"><value>Báo cáo Cam kết của các nhà giao dịch không được bật cho triển khai này.</value></data>
+  <data name="cot.noData" xml:space="preserve"><value>Chưa có dữ liệu COT cho thị trường và loại báo cáo này. Nó xuất hiện sau khi quá trình nạp hàng tuần chạy.</value></data>
+  <data name="cot.market" xml:space="preserve"><value>Thị trường</value></data>
+  <data name="cot.reportType" xml:space="preserve"><value>Loại báo cáo</value></data>
+  <data name="cot.legacy" xml:space="preserve"><value>Legacy</value></data>
+  <data name="cot.disaggregated" xml:space="preserve"><value>Chưa tổng hợp</value></data>
+  <data name="cot.tff" xml:space="preserve"><value>Tài chính (TFF)</value></data>
+  <data name="cot.combined" xml:space="preserve"><value>Hợp đồng tương lai + tùy chọn</value></data>
+  <data name="cot.netPositioning" xml:space="preserve"><value>Định vị ròng theo thời gian</value></data>
+  <data name="cot.cotIndex" xml:space="preserve"><value>Chỉ số COT</value></data>
+  <data name="cot.openInterest" xml:space="preserve"><value>Lãi suất mở</value></data>
+  <data name="cot.category" xml:space="preserve"><value>Danh mục</value></data>
+  <data name="cot.long" xml:space="preserve"><value>Dài</value></data>
+  <data name="cot.short" xml:space="preserve"><value>Ngắn</value></data>
+  <data name="cot.net" xml:space="preserve"><value>Ròng</value></data>
+  <data name="cot.pctOi" xml:space="preserve"><value>% OI</value></data>
+  <data name="cot.index" xml:space="preserve"><value>Chỉ số</value></data>
+  <data name="cot.reportDate" xml:space="preserve"><value>Ngày báo cáo</value></data>
+  <data name="cot.cat.nonCommercial" xml:space="preserve"><value>Không thương mại</value></data>
+  <data name="cot.cat.commercial" xml:space="preserve"><value>Thương mại</value></data>
+  <data name="cot.cat.nonReportable" xml:space="preserve"><value>Không báo cáo được</value></data>
+  <data name="cot.cat.producerMerchant" xml:space="preserve"><value>Nhà sản xuất/Nhà buôn</value></data>
+  <data name="cot.cat.swapDealer" xml:space="preserve"><value>Nhà cung cấp hoán đổi</value></data>
+  <data name="cot.cat.managedMoney" xml:space="preserve"><value>Quỹ được quản lý</value></data>
+  <data name="cot.cat.dealer" xml:space="preserve"><value>Nhà phân phối</value></data>
+  <data name="cot.cat.assetManager" xml:space="preserve"><value>Người quản lý tài sản</value></data>
+  <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Quỹ được sử dụng đòn bẩy</value></data>
+  <data name="cot.cat.otherReportable" xml:space="preserve"><value>Những người báo cáo khác</value></data>
 </root>

@@ -57,11 +57,17 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<CalendarApiClient> CalendarApiClients => Set<CalendarApiClient>();
     public DbSet<CalendarWebhook> CalendarWebhooks => Set<CalendarWebhook>();
     public DbSet<CurrencyStrengthSnapshot> CurrencyStrengthSnapshots => Set<CurrencyStrengthSnapshot>();
+    public DbSet<Core.Cot.CotMarket> CotMarkets => Set<Core.Cot.CotMarket>();
+    public DbSet<Core.Cot.CotReport> CotReports => Set<Core.Cot.CotReport>();
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     // The calendar module lives in its own Postgres schema so its append-only churn stays logically
     // isolated from the trading core and can be dropped wholesale when white-label-disabled.
     public const string CalendarSchema = "calendar";
+
+    // The COT module lives in its own Postgres schema so its append-only weekly churn stays logically
+    // isolated from the trading core and can be dropped wholesale when white-label-disabled.
+    public const string CotSchema = "cot";
 
     public override int SaveChanges() { ApplySoftDelete(); return base.SaveChanges(); }
 
@@ -123,6 +129,8 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<AiFeatureBindingId>().HaveConversion<StrongIdConverter<AiFeatureBindingId>>();
         configurationBuilder.Properties<CBotBuildMessageId>().HaveConversion<StrongIdConverter<CBotBuildMessageId>>();
         configurationBuilder.Properties<CurrencyStrengthSnapshotId>().HaveConversion<StrongIdConverter<CurrencyStrengthSnapshotId>>();
+        configurationBuilder.Properties<CotMarketId>().HaveConversion<StrongIdConverter<CotMarketId>>();
+        configurationBuilder.Properties<CotReportId>().HaveConversion<StrongIdConverter<CotReportId>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -544,6 +552,40 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.Property(x => x.RankingJson).HasColumnType("jsonb");
             e.Property(x => x.HorizonsJson).HasColumnType("jsonb");
             e.Property(x => x.IndicatorsJson).HasColumnType("jsonb");
+        });
+
+        modelBuilder.Entity<Core.Cot.CotMarket>(e =>
+        {
+            e.ToTable("market", CotSchema);
+            e.Ignore(x => x.ContractCode);
+            e.Ignore(x => x.MappedSymbol);
+            e.HasIndex(x => x.ContractCodeValue).IsUnique().HasFilter("\"IsDeleted\" = false");
+            e.HasIndex(x => x.Group);
+            e.Property(x => x.Group).HasConversion<string>().HasMaxLength(16);
+        });
+
+        modelBuilder.Entity<Core.Cot.CotReport>(e =>
+        {
+            e.ToTable("report", CotSchema);
+            e.Ignore(x => x.ContractCode);
+            e.Ignore(x => x.ReportType);
+            e.Ignore(x => x.SpeculatorNet);
+            // Idempotent upsert key + the two hot queries (latest, history-by-market).
+            e.HasIndex(x => new { x.ContractCodeValue, x.Kind, x.Combined, x.ReportDate })
+                .IsUnique().HasFilter("\"IsDeleted\" = false");
+            e.HasIndex(x => new { x.MarketId, x.Kind, x.Combined, x.ReportDate });
+            e.HasIndex(x => x.KnownAt);
+            e.Property(x => x.Kind).HasConversion<string>().HasMaxLength(16);
+            e.OwnsMany(x => x.Positions, b =>
+            {
+                b.ToTable("category_position", CotSchema);
+                b.WithOwner().HasForeignKey("CotReportId");
+                b.HasKey("CotReportId", nameof(Core.Cot.CotCategoryPosition.Category));
+                b.Ignore(p => p.Net);
+                b.Ignore(p => p.Positions);
+                b.Property(p => p.Category).HasConversion<string>().HasMaxLength(24);
+            });
+            e.Navigation(x => x.Positions).UsePropertyAccessMode(PropertyAccessMode.Field);
         });
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())

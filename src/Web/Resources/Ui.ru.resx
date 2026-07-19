@@ -371,4 +371,35 @@
   <data name="nav.ai.tasks" xml:space="preserve"><value>Задачи</value></data>
   <data name="ai.model" xml:space="preserve"><value>Модель</value></data>
   <data name="ai.model.default" xml:space="preserve"><value>по умолчанию</value></data>
+  <data name="nav.cot" xml:space="preserve"><value>Обязательства трейдеров</value></data>
+  <data name="cot.title" xml:space="preserve"><value>Обязательства трейдеров</value></data>
+  <data name="cot.help" xml:space="preserve"><value>Еженедельный отчет CFTC о позиционировании — как коммерческие компании, крупные спекулянты и фонды позиционируют себя на рынке фьючерсов. Индекс COT показывает, где текущая чистая позиция находится в историческом диапазоне; экстремум часто предшествует разворотам.</value></data>
+  <data name="cot.disabled" xml:space="preserve"><value>Отчет об обязательствах трейдеров не включен для этого развертывания.</value></data>
+  <data name="cot.noData" xml:space="preserve"><value>Пока нет данных COT для этого рынка и типа отчета. Они появляются после еженедельного поступления данных.</value></data>
+  <data name="cot.market" xml:space="preserve"><value>Рынок</value></data>
+  <data name="cot.reportType" xml:space="preserve"><value>Тип отчета</value></data>
+  <data name="cot.legacy" xml:space="preserve"><value>Legacy</value></data>
+  <data name="cot.disaggregated" xml:space="preserve"><value>Расчлененный</value></data>
+  <data name="cot.tff" xml:space="preserve"><value>Финансовый (TFF)</value></data>
+  <data name="cot.combined" xml:space="preserve"><value>Фьючерсы + опционы</value></data>
+  <data name="cot.netPositioning" xml:space="preserve"><value>Чистое позиционирование со временем</value></data>
+  <data name="cot.cotIndex" xml:space="preserve"><value>Индекс COT</value></data>
+  <data name="cot.openInterest" xml:space="preserve"><value>Открытый интерес</value></data>
+  <data name="cot.category" xml:space="preserve"><value>Категория</value></data>
+  <data name="cot.long" xml:space="preserve"><value>Длинная позиция</value></data>
+  <data name="cot.short" xml:space="preserve"><value>Короткая позиция</value></data>
+  <data name="cot.net" xml:space="preserve"><value>Чистая</value></data>
+  <data name="cot.pctOi" xml:space="preserve"><value>% от ОИ</value></data>
+  <data name="cot.index" xml:space="preserve"><value>Индекс</value></data>
+  <data name="cot.reportDate" xml:space="preserve"><value>Дата отчета</value></data>
+  <data name="cot.cat.nonCommercial" xml:space="preserve"><value>Некоммерческие</value></data>
+  <data name="cot.cat.commercial" xml:space="preserve"><value>Коммерческие</value></data>
+  <data name="cot.cat.nonReportable" xml:space="preserve"><value>Нерепортируемые</value></data>
+  <data name="cot.cat.producerMerchant" xml:space="preserve"><value>Производитель/Торговец</value></data>
+  <data name="cot.cat.swapDealer" xml:space="preserve"><value>Дилеры свопов</value></data>
+  <data name="cot.cat.managedMoney" xml:space="preserve"><value>Управляемые деньги</value></data>
+  <data name="cot.cat.dealer" xml:space="preserve"><value>Дилер</value></data>
+  <data name="cot.cat.assetManager" xml:space="preserve"><value>Управляющий активами</value></data>
+  <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Кредитные фонды</value></data>
+  <data name="cot.cat.otherReportable" xml:space="preserve"><value>Прочие репортируемые</value></data>
 </root>

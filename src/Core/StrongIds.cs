@@ -309,6 +309,20 @@ public readonly record struct CurrencyStrengthSnapshotId(Guid Value) : IStrongly
     public override string ToString() => Value.ToString();
 }
 
+public readonly record struct CotMarketId(Guid Value) : IStronglyTypedId<CotMarketId>
+{
+    public static CotMarketId New() => new(Guid.NewGuid());
+    public static CotMarketId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
+public readonly record struct CotReportId(Guid Value) : IStronglyTypedId<CotReportId>
+{
+    public static CotReportId New() => new(Guid.NewGuid());
+    public static CotReportId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct Email
 {
     public string Value { get; }

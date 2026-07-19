@@ -371,4 +371,35 @@
   <data name="nav.ai.tasks" xml:space="preserve"><value>Εργασίες</value></data>
   <data name="ai.model" xml:space="preserve"><value>Μοντέλο</value></data>
   <data name="ai.model.default" xml:space="preserve"><value>προεπιλογή</value></data>
+  <data name="nav.cot" xml:space="preserve"><value>Δέσμευση Εμπόρων</value></data>
+  <data name="cot.title" xml:space="preserve"><value>Δέσμευση Εμπόρων</value></data>
+  <data name="cot.help" xml:space="preserve"><value>Εβδομαδιαία έκθεση θέσης CFTC — πώς τοποθετούνται οι εμπορικοί, οι μεγάλοι κερδοσκόποι και τα κεφάλαια στην αγορά συμβολαίων μελλοντικής εκπλήρωσης. Ο δείκτης COT δείχνει πού βρίσκεται η τρέχουσα καθαρή θέση στο ιστορικό εύρος της. τα ακραία σημεία συχνά προηγούνται αντιστροφών.</value></data>
+  <data name="cot.disabled" xml:space="preserve"><value>Η έκθεση Δέσμευσης Εμπόρων δεν είναι ενεργοποιημένη για αυτήν την ανάπτυξη.</value></data>
+  <data name="cot.noData" xml:space="preserve"><value>Δεν υπάρχουν ακόμα δεδομένα COT για αυτήν την αγορά και τύπο έκθεσης. Εμφανίζεται μετά την εκτέλεση της εβδομαδιαίας πρόσληψης.</value></data>
+  <data name="cot.market" xml:space="preserve"><value>Αγορά</value></data>
+  <data name="cot.reportType" xml:space="preserve"><value>Τύπος έκθεσης</value></data>
+  <data name="cot.legacy" xml:space="preserve"><value>Legacy</value></data>
+  <data name="cot.disaggregated" xml:space="preserve"><value>Αποσυναθροισμένα</value></data>
+  <data name="cot.tff" xml:space="preserve"><value>Χρηματοοικονομική (TFF)</value></data>
+  <data name="cot.combined" xml:space="preserve"><value>Συμβόλαια μελλοντικής εκπλήρωσης + δικαιώματα</value></data>
+  <data name="cot.netPositioning" xml:space="preserve"><value>Καθαρή θέση κατά τη διάρκεια του χρόνου</value></data>
+  <data name="cot.cotIndex" xml:space="preserve"><value>Δείκτης COT</value></data>
+  <data name="cot.openInterest" xml:space="preserve"><value>Ανοικτό ενδιαφέρον</value></data>
+  <data name="cot.category" xml:space="preserve"><value>Κατηγορία</value></data>
+  <data name="cot.long" xml:space="preserve"><value>Μακρά</value></data>
+  <data name="cot.short" xml:space="preserve"><value>Σύντομη</value></data>
+  <data name="cot.net" xml:space="preserve"><value>Καθαρά</value></data>
+  <data name="cot.pctOi" xml:space="preserve"><value>% της ΕΔ</value></data>
+  <data name="cot.index" xml:space="preserve"><value>Δείκτης</value></data>
+  <data name="cot.reportDate" xml:space="preserve"><value>Ημερομηνία έκθεσης</value></data>
+  <data name="cot.cat.nonCommercial" xml:space="preserve"><value>Μη-Εμπορική</value></data>
+  <data name="cot.cat.commercial" xml:space="preserve"><value>Εμπορική</value></data>
+  <data name="cot.cat.nonReportable" xml:space="preserve"><value>Μη-Αναφέρουσα</value></data>
+  <data name="cot.cat.producerMerchant" xml:space="preserve"><value>Παραγωγός/Έμπορος</value></data>
+  <data name="cot.cat.swapDealer" xml:space="preserve"><value>Έμποροι Ανταλλαγών</value></data>
+  <data name="cot.cat.managedMoney" xml:space="preserve"><value>Διαχειριζόμενο Κεφάλαιο</value></data>
+  <data name="cot.cat.dealer" xml:space="preserve"><value>Αντιπρόσωπος</value></data>
+  <data name="cot.cat.assetManager" xml:space="preserve"><value>Διαχειριστής Περιουσιακών Στοιχείων</value></data>
+  <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Κεφάλαια με Μόχλευση</value></data>
+  <data name="cot.cat.otherReportable" xml:space="preserve"><value>Άλλες Αναφέρουσες</value></data>
 </root>

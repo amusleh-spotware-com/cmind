@@ -23,5 +23,6 @@ public enum FeatureFlag
     Mcp,
     Compliance,
     Registration,
-    EconomicCalendar
+    EconomicCalendar,
+    Cot
 }

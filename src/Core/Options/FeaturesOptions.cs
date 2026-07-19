@@ -25,6 +25,7 @@ public sealed record FeaturesOptions
     public bool Mcp { get; init; } = true;
     public bool Compliance { get; init; } = true;
     public bool EconomicCalendar { get; init; } = true;
+    public bool Cot { get; init; } = true;
 
     /// <summary>
     /// Self-service registration. Unlike the other features this defaults to <c>false</c> — a deployment
@@ -49,6 +50,7 @@ public sealed record FeaturesOptions
         FeatureFlag.Mcp => Mcp,
         FeatureFlag.Compliance => Compliance,
         FeatureFlag.EconomicCalendar => EconomicCalendar,
+        FeatureFlag.Cot => Cot,
         FeatureFlag.Registration => Registration,
         _ => throw new DomainException(DomainErrors.FeatureFlagUnknown)
     };

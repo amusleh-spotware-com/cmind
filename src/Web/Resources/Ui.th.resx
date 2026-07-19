@@ -371,4 +371,35 @@
   <data name="nav.ai.tasks" xml:space="preserve"><value>งาน</value></data>
   <data name="ai.model" xml:space="preserve"><value>โมเดล</value></data>
   <data name="ai.model.default" xml:space="preserve"><value>ค่าเริ่มต้น</value></data>
+  <data name="nav.cot" xml:space="preserve"><value>ความมุ่งมั่นของผู้ค้า</value></data>
+  <data name="cot.title" xml:space="preserve"><value>ความมุ่งมั่นของผู้ค้า</value></data>
+  <data name="cot.help" xml:space="preserve"><value>รายงานการวางตำแหน่งรายสัปดาห์ของ CFTC — วิธีการวางตำแหน่งของบริษัทพาณิชย์ นักเก่าง่วนรายใหญ่ และกองทุนในตลาดฟิวเจอร์ส ดัชนี COT แสดงให้เห็นว่าตำแหน่งสุทธิปัจจุบันอยู่ที่ใดในช่วงประวัติศาสตร์ของมัน สุดขั้วมักจะนำหน้าการย้อนกลับ</value></data>
+  <data name="cot.disabled" xml:space="preserve"><value>รายงานความมุ่งมั่นของผู้ค้าไม่เปิดใช้งานสำหรับการปรับใช้นี้</value></data>
+  <data name="cot.noData" xml:space="preserve"><value>ยังไม่มีข้อมูล COT สำหรับตลาดและประเภทรายงานนี้ จะปรากฏขึ้นเมื่อการรับข้อมูลรายสัปดาห์ทำงาน</value></data>
+  <data name="cot.market" xml:space="preserve"><value>ตลาด</value></data>
+  <data name="cot.reportType" xml:space="preserve"><value>ประเภทรายงาน</value></data>
+  <data name="cot.legacy" xml:space="preserve"><value>Legacy</value></data>
+  <data name="cot.disaggregated" xml:space="preserve"><value>ไม่รวมกลุ่ม</value></data>
+  <data name="cot.tff" xml:space="preserve"><value>การเงิน (TFF)</value></data>
+  <data name="cot.combined" xml:space="preserve"><value>ฟิวเจอร์ส + ตัวเลือก</value></data>
+  <data name="cot.netPositioning" xml:space="preserve"><value>การวางตำแหน่งสุทธิเมื่อเวลาผ่านไป</value></data>
+  <data name="cot.cotIndex" xml:space="preserve"><value>ดัชนี COT</value></data>
+  <data name="cot.openInterest" xml:space="preserve"><value>ดอกเบี้ยเปิด</value></data>
+  <data name="cot.category" xml:space="preserve"><value>หมวดหมู่</value></data>
+  <data name="cot.long" xml:space="preserve"><value>ยาว</value></data>
+  <data name="cot.short" xml:space="preserve"><value>สั้น</value></data>
+  <data name="cot.net" xml:space="preserve"><value>สุทธิ</value></data>
+  <data name="cot.pctOi" xml:space="preserve"><value>% ของ OI</value></data>
+  <data name="cot.index" xml:space="preserve"><value>ดัชนี</value></data>
+  <data name="cot.reportDate" xml:space="preserve"><value>วันที่รายงาน</value></data>
+  <data name="cot.cat.nonCommercial" xml:space="preserve"><value>ไม่ใช่พาณิชย์</value></data>
+  <data name="cot.cat.commercial" xml:space="preserve"><value>พาณิชย์</value></data>
+  <data name="cot.cat.nonReportable" xml:space="preserve"><value>ไม่จำเป็นต้องรายงาน</value></data>
+  <data name="cot.cat.producerMerchant" xml:space="preserve"><value>ผู้ผลิต/พ่อค้า</value></data>
+  <data name="cot.cat.swapDealer" xml:space="preserve"><value>ผู้ค้า Swap</value></data>
+  <data name="cot.cat.managedMoney" xml:space="preserve"><value>เงินที่จัดการ</value></data>
+  <data name="cot.cat.dealer" xml:space="preserve"><value>ผู้ค้า</value></data>
+  <data name="cot.cat.assetManager" xml:space="preserve"><value>ผู้จัดการสินทรัพย์</value></data>
+  <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>กองทุนที่มีการใช้สัญญา</value></data>
+  <data name="cot.cat.otherReportable" xml:space="preserve"><value>ผู้รายงานอื่น ๆ</value></data>
 </root>

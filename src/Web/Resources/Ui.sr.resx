@@ -371,4 +371,35 @@
   <data name="nav.ai.tasks" xml:space="preserve"><value>Задаци</value></data>
   <data name="ai.model" xml:space="preserve"><value>Модел</value></data>
   <data name="ai.model.default" xml:space="preserve"><value>подразумевано</value></data>
+  <data name="nav.cot" xml:space="preserve"><value>Обавезе трговца</value></data>
+  <data name="cot.title" xml:space="preserve"><value>Обавезе трговца</value></data>
+  <data name="cot.help" xml:space="preserve"><value>Недељни извештај CFTC о позиционирању — како су комерцијалци, велики шпекуланти и фондови позиционирани на тржишту фјучерса. COT индекс показује где се тренутна нето позиција налази у њеном историјском опсегу; екстреми често претходе преокретима.</value></data>
+  <data name="cot.disabled" xml:space="preserve"><value>Извештај о обавезама трговца није омогућен за ово увођење.</value></data>
+  <data name="cot.noData" xml:space="preserve"><value>Још нема COT podataka за ово тржиште и врсту извештаја. Појављује се након што је недељна уношења извршена.</value></data>
+  <data name="cot.market" xml:space="preserve"><value>Тржиште</value></data>
+  <data name="cot.reportType" xml:space="preserve"><value>Врста извештаја</value></data>
+  <data name="cot.legacy" xml:space="preserve"><value>Legacy</value></data>
+  <data name="cot.disaggregated" xml:space="preserve"><value>Дезагрегирано</value></data>
+  <data name="cot.tff" xml:space="preserve"><value>Финансијски (TFF)</value></data>
+  <data name="cot.combined" xml:space="preserve"><value>Фјучерси + опције</value></data>
+  <data name="cot.netPositioning" xml:space="preserve"><value>Нето позиционирање кроз време</value></data>
+  <data name="cot.cotIndex" xml:space="preserve"><value>COT индекс</value></data>
+  <data name="cot.openInterest" xml:space="preserve"><value>Отворена каматна стопа</value></data>
+  <data name="cot.category" xml:space="preserve"><value>Категорија</value></data>
+  <data name="cot.long" xml:space="preserve"><value>Дугачка</value></data>
+  <data name="cot.short" xml:space="preserve"><value>Кратка</value></data>
+  <data name="cot.net" xml:space="preserve"><value>Нето</value></data>
+  <data name="cot.pctOi" xml:space="preserve"><value>% OI</value></data>
+  <data name="cot.index" xml:space="preserve"><value>Индекс</value></data>
+  <data name="cot.reportDate" xml:space="preserve"><value>Датум извештаја</value></data>
+  <data name="cot.cat.nonCommercial" xml:space="preserve"><value>Некомерцијално</value></data>
+  <data name="cot.cat.commercial" xml:space="preserve"><value>Комерцијално</value></data>
+  <data name="cot.cat.nonReportable" xml:space="preserve"><value>Непријављиво</value></data>
+  <data name="cot.cat.producerMerchant" xml:space="preserve"><value>Произвођач/Трговац</value></data>
+  <data name="cot.cat.swapDealer" xml:space="preserve"><value>Трговци свопа</value></data>
+  <data name="cot.cat.managedMoney" xml:space="preserve"><value>Управљани новац</value></data>
+  <data name="cot.cat.dealer" xml:space="preserve"><value>Дилер</value></data>
+  <data name="cot.cat.assetManager" xml:space="preserve"><value>Управник имовине</value></data>
+  <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Полуџирани фондови</value></data>
+  <data name="cot.cat.otherReportable" xml:space="preserve"><value>Остали извештајни</value></data>
 </root>

@@ -371,4 +371,35 @@
   <data name="nav.ai.tasks" xml:space="preserve"><value>Görevler</value></data>
   <data name="ai.model" xml:space="preserve"><value>Model</value></data>
   <data name="ai.model.default" xml:space="preserve"><value>varsayılan</value></data>
+  <data name="nav.cot" xml:space="preserve"><value>Tüccar Taahhütleri</value></data>
+  <data name="cot.title" xml:space="preserve"><value>Tüccar Taahhütleri</value></data>
+  <data name="cot.help" xml:space="preserve"><value>Haftalık CFTC konumlandırma raporu — ticari şirketler, büyük spekülatörler ve fonların vadeli işlem piyasasında nasıl konumlandırıldığını gösterir. COT endeksi mevcut net pozisyonun tarihsel aralığında nerede olduğunu gösterir; uçlar sıklıkla geri dönüşleri önceden haber verir.</value></data>
+  <data name="cot.disabled" xml:space="preserve"><value>Tüccar Taahhütleri raporu bu dağıtım için etkin değildir.</value></data>
+  <data name="cot.noData" xml:space="preserve"><value>Bu pazar ve rapor türü için henüz COT verisi yok. Haftalık alım gerçekleştirildikten sonra görünür.</value></data>
+  <data name="cot.market" xml:space="preserve"><value>Pazar</value></data>
+  <data name="cot.reportType" xml:space="preserve"><value>Rapor türü</value></data>
+  <data name="cot.legacy" xml:space="preserve"><value>Legacy</value></data>
+  <data name="cot.disaggregated" xml:space="preserve"><value>Ayrıştırılmış</value></data>
+  <data name="cot.tff" xml:space="preserve"><value>Mali (TFF)</value></data>
+  <data name="cot.combined" xml:space="preserve"><value>Vadeli işlem + opsiyonlar</value></data>
+  <data name="cot.netPositioning" xml:space="preserve"><value>Zaman içinde net konumlandırma</value></data>
+  <data name="cot.cotIndex" xml:space="preserve"><value>COT endeksi</value></data>
+  <data name="cot.openInterest" xml:space="preserve"><value>Açık Faiz</value></data>
+  <data name="cot.category" xml:space="preserve"><value>Kategori</value></data>
+  <data name="cot.long" xml:space="preserve"><value>Uzun</value></data>
+  <data name="cot.short" xml:space="preserve"><value>Kısa</value></data>
+  <data name="cot.net" xml:space="preserve"><value>Net</value></data>
+  <data name="cot.pctOi" xml:space="preserve"><value>% OI</value></data>
+  <data name="cot.index" xml:space="preserve"><value>Endeks</value></data>
+  <data name="cot.reportDate" xml:space="preserve"><value>Rapor tarihi</value></data>
+  <data name="cot.cat.nonCommercial" xml:space="preserve"><value>Ticari Olmayan</value></data>
+  <data name="cot.cat.commercial" xml:space="preserve"><value>Ticari</value></data>
+  <data name="cot.cat.nonReportable" xml:space="preserve"><value>Raporlanabilir Olmayan</value></data>
+  <data name="cot.cat.producerMerchant" xml:space="preserve"><value>Üretici/Tüccar</value></data>
+  <data name="cot.cat.swapDealer" xml:space="preserve"><value>Takas Bayileri</value></data>
+  <data name="cot.cat.managedMoney" xml:space="preserve"><value>Yönetilen Para</value></data>
+  <data name="cot.cat.dealer" xml:space="preserve"><value>Bayii</value></data>
+  <data name="cot.cat.assetManager" xml:space="preserve"><value>Varlık Yöneticisi</value></data>
+  <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Kaldıraçlı Fonlar</value></data>
+  <data name="cot.cat.otherReportable" xml:space="preserve"><value>Diğer Raporlanabilir</value></data>
 </root>

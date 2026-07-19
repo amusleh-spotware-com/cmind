@@ -371,4 +371,35 @@
   <data name="nav.ai.tasks" xml:space="preserve"><value>Úlohy</value></data>
   <data name="ai.model" xml:space="preserve"><value>Model</value></data>
   <data name="ai.model.default" xml:space="preserve"><value>predvolené</value></data>
+  <data name="nav.cot" xml:space="preserve"><value>Záväzky obchodníkov</value></data>
+  <data name="cot.title" xml:space="preserve"><value>Záväzky obchodníkov</value></data>
+  <data name="cot.help" xml:space="preserve"><value>Týždenná správa o pozicionovaní CFTC — ako sú komerčné spoločnosti, veľkí špekulanti a fondy pozičované na trhu futures. Index COT ukazuje, kde sa aktuálna čistá pozícia nachádza v historickom rozmedzí; extrémy často predchádzajú zvráteniu.</value></data>
+  <data name="cot.disabled" xml:space="preserve"><value>Správa o záväzkoch obchodníkov nie je povolená pre toto nasadenie.</value></data>
+  <data name="cot.noData" xml:space="preserve"><value>Zatiaľ žiadne údaje COT pre tento trh a typ správy. Objavia sa po spustení týždenného príjmu.</value></data>
+  <data name="cot.market" xml:space="preserve"><value>Trh</value></data>
+  <data name="cot.reportType" xml:space="preserve"><value>Typ správy</value></data>
+  <data name="cot.legacy" xml:space="preserve"><value>Legacy</value></data>
+  <data name="cot.disaggregated" xml:space="preserve"><value>Neskupované</value></data>
+  <data name="cot.tff" xml:space="preserve"><value>Finančný (TFF)</value></data>
+  <data name="cot.combined" xml:space="preserve"><value>Futures + možnosti</value></data>
+  <data name="cot.netPositioning" xml:space="preserve"><value>Čistá pozícia v čase</value></data>
+  <data name="cot.cotIndex" xml:space="preserve"><value>Index COT</value></data>
+  <data name="cot.openInterest" xml:space="preserve"><value>Otvorený záujem</value></data>
+  <data name="cot.category" xml:space="preserve"><value>Kategória</value></data>
+  <data name="cot.long" xml:space="preserve"><value>Dlhá</value></data>
+  <data name="cot.short" xml:space="preserve"><value>Krátka</value></data>
+  <data name="cot.net" xml:space="preserve"><value>Čistá</value></data>
+  <data name="cot.pctOi" xml:space="preserve"><value>% OI</value></data>
+  <data name="cot.index" xml:space="preserve"><value>Index</value></data>
+  <data name="cot.reportDate" xml:space="preserve"><value>Dátum správy</value></data>
+  <data name="cot.cat.nonCommercial" xml:space="preserve"><value>Nekomerčné</value></data>
+  <data name="cot.cat.commercial" xml:space="preserve"><value>Komerčné</value></data>
+  <data name="cot.cat.nonReportable" xml:space="preserve"><value>Nehlasiteľné</value></data>
+  <data name="cot.cat.producerMerchant" xml:space="preserve"><value>Výrobca/Obchodník</value></data>
+  <data name="cot.cat.swapDealer" xml:space="preserve"><value>Dealeri swapov</value></data>
+  <data name="cot.cat.managedMoney" xml:space="preserve"><value>Spravované peniaze</value></data>
+  <data name="cot.cat.dealer" xml:space="preserve"><value>Dealer</value></data>
+  <data name="cot.cat.assetManager" xml:space="preserve"><value>Správca aktív</value></data>
+  <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Fondy so pákou</value></data>
+  <data name="cot.cat.otherReportable" xml:space="preserve"><value>Ostatné hlasiteľné</value></data>
 </root>

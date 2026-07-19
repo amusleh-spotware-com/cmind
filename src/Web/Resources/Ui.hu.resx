@@ -371,4 +371,35 @@
   <data name="nav.ai.tasks" xml:space="preserve"><value>Feladatok</value></data>
   <data name="ai.model" xml:space="preserve"><value>Modell</value></data>
   <data name="ai.model.default" xml:space="preserve"><value>alapértelmezett</value></data>
+  <data name="nav.cot" xml:space="preserve"><value>Kereskedők kötelezettségei</value></data>
+  <data name="cot.title" xml:space="preserve"><value>Kereskedők kötelezettségei</value></data>
+  <data name="cot.help" xml:space="preserve"><value>Heti CFTC pozicionálási jelentés — hogyan helyezkednek el a kereskedelmi vállalatok, a nagy spekulánsok és az alapok a határidős piacon. A COT-index azt mutatja, hogy a jelenlegi nettó pozíció hol helyezkedik el a történelmi tartományán; a szélsőségek gyakran megelőzik a megfordításokat.</value></data>
+  <data name="cot.disabled" xml:space="preserve"><value>A Kereskedők kötelezettségeit tartalmazó jelentés nincs engedélyezve ebben az üzemeltetésben.</value></data>
+  <data name="cot.noData" xml:space="preserve"><value>Még nincsenek COT-adatok ehhez a piachoz és jelentéstípushoz. Megjelennek, miután a heti bevitel megtörtént.</value></data>
+  <data name="cot.market" xml:space="preserve"><value>Piac</value></data>
+  <data name="cot.reportType" xml:space="preserve"><value>Jelentés típusa</value></data>
+  <data name="cot.legacy" xml:space="preserve"><value>Legacy</value></data>
+  <data name="cot.disaggregated" xml:space="preserve"><value>Nem összesített</value></data>
+  <data name="cot.tff" xml:space="preserve"><value>Pénzügyi (TFF)</value></data>
+  <data name="cot.combined" xml:space="preserve"><value>Határidős ügyletek + opciók</value></data>
+  <data name="cot.netPositioning" xml:space="preserve"><value>Nettó pozicionálás az idő múlásával</value></data>
+  <data name="cot.cotIndex" xml:space="preserve"><value>COT-index</value></data>
+  <data name="cot.openInterest" xml:space="preserve"><value>Nyitott kamat</value></data>
+  <data name="cot.category" xml:space="preserve"><value>Kategória</value></data>
+  <data name="cot.long" xml:space="preserve"><value>Long</value></data>
+  <data name="cot.short" xml:space="preserve"><value>Short</value></data>
+  <data name="cot.net" xml:space="preserve"><value>Nettó</value></data>
+  <data name="cot.pctOi" xml:space="preserve"><value>% az OI-ből</value></data>
+  <data name="cot.index" xml:space="preserve"><value>Index</value></data>
+  <data name="cot.reportDate" xml:space="preserve"><value>Jelentés dátuma</value></data>
+  <data name="cot.cat.nonCommercial" xml:space="preserve"><value>Nem kereskedelmi</value></data>
+  <data name="cot.cat.commercial" xml:space="preserve"><value>Kereskedelmi</value></data>
+  <data name="cot.cat.nonReportable" xml:space="preserve"><value>Nem bejelentendő</value></data>
+  <data name="cot.cat.producerMerchant" xml:space="preserve"><value>Gyártó/Kereskedő</value></data>
+  <data name="cot.cat.swapDealer" xml:space="preserve"><value>Swap-kereskedők</value></data>
+  <data name="cot.cat.managedMoney" xml:space="preserve"><value>Kezelt pénz</value></data>
+  <data name="cot.cat.dealer" xml:space="preserve"><value>Kereskedő</value></data>
+  <data name="cot.cat.assetManager" xml:space="preserve"><value>Eszközkezelő</value></data>
+  <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Tőkeáttételes alapok</value></data>
+  <data name="cot.cat.otherReportable" xml:space="preserve"><value>Egyéb bejelentendő</value></data>
 </root>

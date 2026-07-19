@@ -371,4 +371,35 @@
   <data name="nav.ai.tasks" xml:space="preserve"><value>Tugas</value></data>
   <data name="ai.model" xml:space="preserve"><value>Model</value></data>
   <data name="ai.model.default" xml:space="preserve"><value>bawaan</value></data>
+  <data name="nav.cot" xml:space="preserve"><value>Komitmen Pedagang</value></data>
+  <data name="cot.title" xml:space="preserve"><value>Komitmen Pedagang</value></data>
+  <data name="cot.help" xml:space="preserve"><value>Laporan pemosisian CFTC mingguan — bagaimana komersial, spekulan besar, dan dana diposisikan di pasar futures. Indeks COT menunjukkan di mana posisi bersih saat ini berada dalam jangkauannya yang historis; ekstrem sering mendahului pembalikan.</value></data>
+  <data name="cot.disabled" xml:space="preserve"><value>Laporan Komitmen Pedagang tidak diaktifkan untuk penerapan ini.</value></data>
+  <data name="cot.noData" xml:space="preserve"><value>Belum ada data COT untuk pasar dan jenis laporan ini. Muncul setelah penyerapan mingguan selesai.</value></data>
+  <data name="cot.market" xml:space="preserve"><value>Pasar</value></data>
+  <data name="cot.reportType" xml:space="preserve"><value>Jenis laporan</value></data>
+  <data name="cot.legacy" xml:space="preserve"><value>Legacy</value></data>
+  <data name="cot.disaggregated" xml:space="preserve"><value>Tidak diagregasi</value></data>
+  <data name="cot.tff" xml:space="preserve"><value>Keuangan (TFF)</value></data>
+  <data name="cot.combined" xml:space="preserve"><value>Futures + opsi</value></data>
+  <data name="cot.netPositioning" xml:space="preserve"><value>Pemosisian bersih sepanjang waktu</value></data>
+  <data name="cot.cotIndex" xml:space="preserve"><value>Indeks COT</value></data>
+  <data name="cot.openInterest" xml:space="preserve"><value>Minat terbuka</value></data>
+  <data name="cot.category" xml:space="preserve"><value>Kategori</value></data>
+  <data name="cot.long" xml:space="preserve"><value>Panjang</value></data>
+  <data name="cot.short" xml:space="preserve"><value>Pendek</value></data>
+  <data name="cot.net" xml:space="preserve"><value>Bersih</value></data>
+  <data name="cot.pctOi" xml:space="preserve"><value>% OI</value></data>
+  <data name="cot.index" xml:space="preserve"><value>Indeks</value></data>
+  <data name="cot.reportDate" xml:space="preserve"><value>Tanggal laporan</value></data>
+  <data name="cot.cat.nonCommercial" xml:space="preserve"><value>Non-komersial</value></data>
+  <data name="cot.cat.commercial" xml:space="preserve"><value>Komersial</value></data>
+  <data name="cot.cat.nonReportable" xml:space="preserve"><value>Tidak dapat dilaporkan</value></data>
+  <data name="cot.cat.producerMerchant" xml:space="preserve"><value>Produsen/Pedagang</value></data>
+  <data name="cot.cat.swapDealer" xml:space="preserve"><value>Pedagang Swap</value></data>
+  <data name="cot.cat.managedMoney" xml:space="preserve"><value>Uang Terkelola</value></data>
+  <data name="cot.cat.dealer" xml:space="preserve"><value>Dealer</value></data>
+  <data name="cot.cat.assetManager" xml:space="preserve"><value>Manajer Aset</value></data>
+  <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Dana Berleverage</value></data>
+  <data name="cot.cat.otherReportable" xml:space="preserve"><value>Lainnya yang Dapat Dilaporkan</value></data>
 </root>

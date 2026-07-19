@@ -1,0 +1,218 @@
+﻿@page "/cot"
+@using Core.Cot
+@using Core.Features
+@using Core.Options
+@using Microsoft.Extensions.Options
+@using Web.Components.Cot
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@inject IStringLocalizer<Ui> L
+@inject ICotReports Cot
+@inject IFeatureGate Gate
+@inject IOptionsMonitor<AppOptions> Options
+@inject TimeProvider Time
+
+<PageTitle>@L["cot.title"]</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">@L["cot.title"]</MudText>
+    <HelpTip Text='@L["cot.help"]' />
+</MudStack>
+
+@if (!_enabled)
+{
+    <MudAlert Severity="Severity.Info" data-testid="cot-disabled">@L["cot.disabled"]</MudAlert>
+}
+else
+{
+    <MudStack Row="true" Wrap="Wrap.Wrap" AlignItems="AlignItems.Center" Class="mb-3" Spacing="2">
+        <MudSelect T="string" Value="_code" ValueChanged="OnMarketChanged" Dense="true" Label='@L["cot.market"]'
+                   Style="min-width:220px;" data-testid="cot-market" ToStringFunc="MarketLabel">
+            @foreach (var market in _markets)
+            {
+                <MudSelectItem T="string" Value="@market.ContractCode">@market.Name</MudSelectItem>
+            }
+        </MudSelect>
+        <MudSpacer />
+        <MudChipSet T="string" SelectedValue="@_kind" SelectedValueChanged="OnKindChanged"
+                    SelectionMode="SelectionMode.SingleSelection" Variant="Variant.Filled" Color="Color.Primary">
+            <MudChip T="string" Value="@(nameof(CotReportKind.Legacy))" data-testid="cot-kind-legacy">@L["cot.legacy"]</MudChip>
+            <MudChip T="string" Value="@(nameof(CotReportKind.Disaggregated))">@L["cot.disaggregated"]</MudChip>
+            <MudChip T="string" Value="@(nameof(CotReportKind.Tff))">@L["cot.tff"]</MudChip>
+        </MudChipSet>
+        <MudSwitch T="bool" Value="_combined" ValueChanged="OnCombinedChanged" Color="Color.Secondary"
+                   Label='@L["cot.combined"]' data-testid="cot-combined" />
+    </MudStack>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+    }
+    else if (_latest is null)
+    {
+        <MudAlert Severity="Severity.Normal" data-testid="cot-nodata">@L["cot.noData"]</MudAlert>
+    }
+    else
+    {
+        <MudGrid>
+            <MudItem xs="12" md="7">
+                <MudPaper Class="pa-4" Elevation="1" data-testid="cot-net-chart">
+                    <MudText Typo="Typo.subtitle1" Class="mb-2">@L["cot.netPositioning"]</MudText>
+                    <CotChart Series="_netSeries" EmptyText='@L["cot.noData"]' />
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="5">
+                <MudPaper Class="pa-4" Elevation="1" data-testid="cot-index-chart">
+                    <MudText Typo="Typo.subtitle1" Class="mb-2">@L["cot.cotIndex"]</MudText>
+                    <CotChart Series="_indexSeries" EmptyText='@L["cot.noData"]' Height="220" />
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudPaper Class="pa-4" Elevation="1" data-testid="cot-latest">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2" Spacing="2">
+                        <MudText Typo="Typo.subtitle1">@_latest.MarketName</MudText>
+                        @if (_latest.CotIndex is { } index)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="@ExtremeColor(_latest.Extreme)"
+                                     data-testid="cot-index-chip">
+                                @L["cot.index"] @index.ToString("0")
+                            </MudChip>
+                        }
+                        <MudSpacer />
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            @L["cot.openInterest"]: @_latest.OpenInterest.ToString("N0")
+                        </MudText>
+                    </MudStack>
+                    <MudTable Items="_latest.Categories" Dense="true" Breakpoint="Breakpoint.Sm" Hover="true">
+                        <HeaderContent>
+                            <MudTh>@L["cot.category"]</MudTh>
+                            <MudTh>@L["cot.long"]</MudTh>
+                            <MudTh>@L["cot.short"]</MudTh>
+                            <MudTh>@L["cot.net"]</MudTh>
+                            <MudTh>@L["cot.pctOi"]</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel='@L["cot.category"]'><b>@CategoryName(context.Category)</b></MudTd>
+                            <MudTd DataLabel='@L["cot.long"]'>@context.Long.ToString("N0")</MudTd>
+                            <MudTd DataLabel='@L["cot.short"]'>@context.Short.ToString("N0")</MudTd>
+                            <MudTd DataLabel='@L["cot.net"]'>
+                                <MudText Color="@(context.Net >= 0 ? Color.Success : Color.Error)">@context.Net.ToString("N0")</MudText>
+                            </MudTd>
+                            <MudTd DataLabel='@L["cot.pctOi"]'>@context.LongPercentOfOi.ToString("0.0")%</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mt-2">
+                        @L["cot.reportDate"]: <UserTime Value="_latest.ReportDate" Format="d" />
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
+}
+
+@code {
+    private IReadOnlyList<CotMarketView> _markets = [];
+    private string? _code;
+    private string _kind = nameof(CotReportKind.Legacy);
+    private bool _combined;
+    private bool _enabled;
+    private bool _loading = true;
+    private CotReportView? _latest;
+    private IReadOnlyList<CotChart.CotChartSeries> _netSeries = [];
+    private IReadOnlyList<CotChart.CotChartSeries> _indexSeries = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _enabled = CotEnablement.IsEnabled(Options.CurrentValue.Branding, Gate);
+        if (!_enabled)
+        {
+            _loading = false;
+            return;
+        }
+
+        _markets = await Cot.GetMarketsAsync(null, null, CancellationToken.None);
+        _code = _markets.FirstOrDefault()?.ContractCode;
+        await LoadAsync();
+    }
+
+    private CotReportKind Kind => Enum.TryParse<CotReportKind>(_kind, out var k) ? k : CotReportKind.Legacy;
+
+    private async Task OnMarketChanged(string? code) { _code = code; await LoadAsync(); }
+    private async Task OnKindChanged(string? kind) { _kind = kind ?? nameof(CotReportKind.Legacy); await LoadAsync(); }
+    private async Task OnCombinedChanged(bool combined) { _combined = combined; await LoadAsync(); }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        if (string.IsNullOrWhiteSpace(_code))
+        {
+            _latest = null;
+            _loading = false;
+            return;
+        }
+
+        var code = new ContractMarketCode(_code);
+        var now = Time.GetUtcNow();
+        _latest = await Cot.GetLatestAsync(code, Kind, _combined, null, CancellationToken.None);
+        var history = await Cot.GetHistoryAsync(code, Kind, _combined, now.AddYears(-3), now, null, CancellationToken.None);
+        BuildSeries(history);
+        _loading = false;
+        StateHasChanged();
+    }
+
+    private void BuildSeries(IReadOnlyList<CotHistoryPoint> history)
+    {
+        var net = new List<CotChart.CotChartSeries>();
+        foreach (var category in Kind.Categories())
+        {
+            var points = history
+                .Select(h => new
+                {
+                    h.ReportDate,
+                    Cat = h.Categories.FirstOrDefault(c => c.Category == category)
+                })
+                .Where(x => x.Cat is not null)
+                .Select(x => new CotChart.CotChartPoint(x.ReportDate.UtcDateTime, x.Cat!.Net))
+                .ToList();
+            if (points.Count > 0)
+                net.Add(new CotChart.CotChartSeries(CategoryName(category), points));
+        }
+
+        _netSeries = net;
+        _indexSeries =
+        [
+            new CotChart.CotChartSeries(
+                L["cot.cotIndex"],
+                history.Where(h => h.CotIndex is not null)
+                    .Select(h => new CotChart.CotChartPoint(h.ReportDate.UtcDateTime, h.CotIndex!.Value))
+                    .ToList())
+        ];
+    }
+
+    private string MarketLabel(string? code) =>
+        _markets.FirstOrDefault(m => m.ContractCode == code)?.Name ?? code ?? string.Empty;
+
+    private string CategoryName(CotTraderCategory category) => L[$"cot.cat.{CategoryKey(category)}"];
+
+    private static string CategoryKey(CotTraderCategory category) => category switch
+    {
+        CotTraderCategory.NonCommercial => "nonCommercial",
+        CotTraderCategory.Commercial => "commercial",
+        CotTraderCategory.ProducerMerchant => "producerMerchant",
+        CotTraderCategory.SwapDealer => "swapDealer",
+        CotTraderCategory.ManagedMoney => "managedMoney",
+        CotTraderCategory.Dealer => "dealer",
+        CotTraderCategory.AssetManager => "assetManager",
+        CotTraderCategory.LeveragedFunds => "leveragedFunds",
+        CotTraderCategory.OtherReportable => "otherReportable",
+        _ => "nonReportable"
+    };
+
+    private static Color ExtremeColor(CotExtreme extreme) => extreme switch
+    {
+        CotExtreme.LongExtreme => Color.Success,
+        CotExtreme.ShortExtreme => Color.Error,
+        _ => Color.Default
+    };
+}

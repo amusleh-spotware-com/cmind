@@ -371,4 +371,35 @@
   <data name="nav.ai.tasks" xml:space="preserve"><value>المهام</value></data>
   <data name="ai.model" xml:space="preserve"><value>نموذج</value></data>
   <data name="ai.model.default" xml:space="preserve"><value>افتراضي</value></data>
+  <data name="nav.cot" xml:space="preserve"><value>التزام التجار</value></data>
+  <data name="cot.title" xml:space="preserve"><value>التزام التجار</value></data>
+  <data name="cot.help" xml:space="preserve"><value>تقرير تموضع CFTC أسبوعي — كيف يتموضع التجار التجاريون والمضاربون الكبار والصناديق في سوق العقود الآجلة. يوضح مؤشر COT موضع الشبكة الحالي في نطاقه التاريخي؛ غالباً ما تسبق الحالات القصوى الانعكاسات.</value></data>
+  <data name="cot.disabled" xml:space="preserve"><value>تقرير التزام التجار غير مفعل لهذا النشر.</value></data>
+  <data name="cot.noData" xml:space="preserve"><value>لا توجد بيانات COT حتى الآن لهذا السوق ونوع التقرير. يظهر بعد تشغيل الاستيعاب الأسبوعي.</value></data>
+  <data name="cot.market" xml:space="preserve"><value>السوق</value></data>
+  <data name="cot.reportType" xml:space="preserve"><value>نوع التقرير</value></data>
+  <data name="cot.legacy" xml:space="preserve"><value>Legacy</value></data>
+  <data name="cot.disaggregated" xml:space="preserve"><value>غير مجمّع</value></data>
+  <data name="cot.tff" xml:space="preserve"><value>المالي (TFF)</value></data>
+  <data name="cot.combined" xml:space="preserve"><value>العقود الآجلة + الخيارات</value></data>
+  <data name="cot.netPositioning" xml:space="preserve"><value>صافي التموضع عبر الزمن</value></data>
+  <data name="cot.cotIndex" xml:space="preserve"><value>مؤشر COT</value></data>
+  <data name="cot.openInterest" xml:space="preserve"><value>الفائدة المفتوحة</value></data>
+  <data name="cot.category" xml:space="preserve"><value>الفئة</value></data>
+  <data name="cot.long" xml:space="preserve"><value>طويل</value></data>
+  <data name="cot.short" xml:space="preserve"><value>قصير</value></data>
+  <data name="cot.net" xml:space="preserve"><value>صافي</value></data>
+  <data name="cot.pctOi" xml:space="preserve"><value>% من OI</value></data>
+  <data name="cot.index" xml:space="preserve"><value>المؤشر</value></data>
+  <data name="cot.reportDate" xml:space="preserve"><value>تاريخ التقرير</value></data>
+  <data name="cot.cat.nonCommercial" xml:space="preserve"><value>غير تجاري</value></data>
+  <data name="cot.cat.commercial" xml:space="preserve"><value>تجاري</value></data>
+  <data name="cot.cat.nonReportable" xml:space="preserve"><value>غير قابل للإبلاغ</value></data>
+  <data name="cot.cat.producerMerchant" xml:space="preserve"><value>المنتج/التاجر</value></data>
+  <data name="cot.cat.swapDealer" xml:space="preserve"><value>تجار المقايضة</value></data>
+  <data name="cot.cat.managedMoney" xml:space="preserve"><value>الأموال المدارة</value></data>
+  <data name="cot.cat.dealer" xml:space="preserve"><value>التاجر</value></data>
+  <data name="cot.cat.assetManager" xml:space="preserve"><value>مدير الأصول</value></data>
+  <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>الصناديق ذات الرافعة المالية</value></data>
+  <data name="cot.cat.otherReportable" xml:space="preserve"><value>الآخرون القابلون للإبلاغ</value></data>
 </root>

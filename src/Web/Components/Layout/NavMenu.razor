@@ -1,4 +1,5 @@
 @using Core.Calendar
+@using Core.Cot
 @using Core.Features
 @using Core.Nodes
 @using Core.Options
@@ -19,6 +20,11 @@
         @if (CalendarOn)
         {
             <MudNavLink Href="/economic-calendar" Icon="@Icons.Material.Filled.CalendarMonth">@L["nav.economicCalendar"]</MudNavLink>
+        }
+
+        @if (CotOn)
+        {
+            <MudNavLink Href="/cot" Icon="@Icons.Material.Filled.StackedLineChart">@L["nav.cot"]</MudNavLink>
         }
 
         @if (AnyAuthoring)
@@ -139,6 +145,9 @@
 
     private bool CalendarOn =>
         CalendarEnablement.IsVisible(AppOptionsMonitor.CurrentValue.Branding, Gate, AppOptionsMonitor.CurrentValue.Calendar);
+
+    private bool CotOn =>
+        CotEnablement.IsVisible(AppOptionsMonitor.CurrentValue.Branding, Gate);
 
     private bool NodesPageVisible =>
         NodesUiAccess.IsPageVisible(AppOptionsMonitor.CurrentValue.Branding.NodesUi);

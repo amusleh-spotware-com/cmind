@@ -371,4 +371,35 @@
   <data name="nav.ai.tasks" xml:space="preserve"><value>Tarefas</value></data>
   <data name="ai.model" xml:space="preserve"><value>Modelo</value></data>
   <data name="ai.model.default" xml:space="preserve"><value>padrão</value></data>
+  <data name="nav.cot" xml:space="preserve"><value>Compromisso dos Operadores</value></data>
+  <data name="cot.title" xml:space="preserve"><value>Compromisso dos Operadores</value></data>
+  <data name="cot.help" xml:space="preserve"><value>Relatório de posicionamento semanal da CFTC — como empresas comerciais, grandes especuladores e fundos estão posicionados no mercado de futuros. O índice COT mostra onde a posição líquida atual se encontra em seu intervalo histórico; os extremos costumam preceder reversões.</value></data>
+  <data name="cot.disabled" xml:space="preserve"><value>O relatório de Compromisso dos Operadores não está habilitado para esta implantação.</value></data>
+  <data name="cot.noData" xml:space="preserve"><value>Ainda não há dados de COT para este mercado e tipo de relatório. Aparecem quando a ingestão semanal é executada.</value></data>
+  <data name="cot.market" xml:space="preserve"><value>Mercado</value></data>
+  <data name="cot.reportType" xml:space="preserve"><value>Tipo de relatório</value></data>
+  <data name="cot.legacy" xml:space="preserve"><value>Legacy</value></data>
+  <data name="cot.disaggregated" xml:space="preserve"><value>Desagregado</value></data>
+  <data name="cot.tff" xml:space="preserve"><value>Financeiro (TFF)</value></data>
+  <data name="cot.combined" xml:space="preserve"><value>Futuros + opções</value></data>
+  <data name="cot.netPositioning" xml:space="preserve"><value>Posicionamento líquido ao longo do tempo</value></data>
+  <data name="cot.cotIndex" xml:space="preserve"><value>Índice COT</value></data>
+  <data name="cot.openInterest" xml:space="preserve"><value>Volume em aberto</value></data>
+  <data name="cot.category" xml:space="preserve"><value>Categoria</value></data>
+  <data name="cot.long" xml:space="preserve"><value>Comprado</value></data>
+  <data name="cot.short" xml:space="preserve"><value>Vendido</value></data>
+  <data name="cot.net" xml:space="preserve"><value>Líquido</value></data>
+  <data name="cot.pctOi" xml:space="preserve"><value>% de OI</value></data>
+  <data name="cot.index" xml:space="preserve"><value>Índice</value></data>
+  <data name="cot.reportDate" xml:space="preserve"><value>Data do relatório</value></data>
+  <data name="cot.cat.nonCommercial" xml:space="preserve"><value>Não-comercial</value></data>
+  <data name="cot.cat.commercial" xml:space="preserve"><value>Comercial</value></data>
+  <data name="cot.cat.nonReportable" xml:space="preserve"><value>Não reportável</value></data>
+  <data name="cot.cat.producerMerchant" xml:space="preserve"><value>Produtor/Comerciante</value></data>
+  <data name="cot.cat.swapDealer" xml:space="preserve"><value>Operadores de Swap</value></data>
+  <data name="cot.cat.managedMoney" xml:space="preserve"><value>Dinheiro Administrado</value></data>
+  <data name="cot.cat.dealer" xml:space="preserve"><value>Distribuidor</value></data>
+  <data name="cot.cat.assetManager" xml:space="preserve"><value>Gestor de Ativos</value></data>
+  <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Fundos Alavancados</value></data>
+  <data name="cot.cat.otherReportable" xml:space="preserve"><value>Outros Reportáveis</value></data>
 </root>

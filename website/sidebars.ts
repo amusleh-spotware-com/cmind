@@ -52,6 +52,8 @@ const sidebars: SidebarsConfig = {
         'features/economic-calendar',
         'features/calendar-cbot-api',
         'features/currency-strength',
+        'features/cot-report',
+        'features/cot-cbot-api',
         'features/prop-firm',
         'features/two-factor-auth',
         'features/user-registration',

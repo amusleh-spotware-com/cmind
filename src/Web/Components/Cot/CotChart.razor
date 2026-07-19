@@ -1,0 +1,85 @@
+﻿@using ApexCharts
+@inject IJSRuntime JS
+
+<div class="app-chart-card">
+    @if (Series.Count == 0 || Series.All(s => s.Points.Count == 0))
+    {
+        <div class="app-dash-empty">@EmptyText</div>
+    }
+    else
+    {
+        <ApexChart @ref="_chart" TItem="CotChartPoint" Options="_options" Height="@Height">
+            @foreach (var series in Series)
+            {
+                <ApexPointSeries TItem="CotChartPoint" Items="series.Points" Name="@series.Name"
+                                 SeriesType="SeriesType.Line" XValue="@(p => p.X)" YValue="@(p => (decimal)p.Y)" />
+            }
+        </ApexChart>
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<CotChartSeries> Series { get; set; } = [];
+    [Parameter] public string EmptyText { get; set; } = string.Empty;
+    [Parameter] public int Height { get; set; } = 280;
+
+    public sealed record CotChartPoint(DateTime X, double Y);
+    public sealed record CotChartSeries(string Name, IReadOnlyList<CotChartPoint> Points);
+
+    private ApexChart<CotChartPoint>? _chart;
+    private readonly ApexChartOptions<CotChartPoint> _options = new();
+    private bool _themed;
+
+    protected override void OnInitialized()
+    {
+        _options.Chart = new Chart
+        {
+            Toolbar = new Toolbar { Show = false },
+            Background = "transparent",
+            Animations = new Animations { Enabled = false },
+            FontFamily = "Inter, sans-serif"
+        };
+        _options.Theme = new ApexCharts.Theme { Mode = Mode.Dark };
+        _options.Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 };
+        _options.DataLabels = new DataLabels { Enabled = false };
+        _options.Legend = new Legend { Show = true, Position = LegendPosition.Top };
+        _options.Xaxis = new XAxis { Type = XAxisType.Datetime };
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_chart is not null)
+        {
+            try { await _chart.UpdateSeriesAsync(true); }
+            catch { /* chart JS not ready or transient — the next render reconciles it */ }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_themed || Series.Count == 0) return;
+        _themed = true;
+
+        string[] colors;
+        try
+        {
+            colors = await JS.InvokeAsync<string[]>(
+                "appReadTokens",
+                new[] { "--app-primary", "--app-info", "--app-success", "--app-warning", "--app-error", "--app-secondary" });
+        }
+        catch
+        {
+            return;
+        }
+
+        var usable = colors.Where(c => !string.IsNullOrWhiteSpace(c)).ToArray();
+        if (usable.Length == 0) return;
+        _options.Colors = [.. usable];
+
+        try
+        {
+            if (_chart is not null) await _chart.UpdateOptionsAsync(true, true, false);
+        }
+        catch { /* chart JS not ready or transient — options apply on the next render */ }
+    }
+}

@@ -220,6 +220,7 @@ app.MapFeatureEndpoints();
 app.MapWhiteLabelSettingsEndpoints();
 app.MapAiEndpoints();
 app.MapCurrencyStrengthEndpoints();
+app.MapCotApiEndpoints();
 app.MapQuantEndpoints();
 app.MapAgentStudioEndpoints();
 app.MapJournalEndpoints();

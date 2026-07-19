@@ -38,6 +38,60 @@ public sealed record AppOptions
     public EmailOptions Email { get; init; } = new();
     public CalendarOptions Calendar { get; init; } = new();
     public CurrencyStrengthOptions CurrencyStrength { get; init; } = new();
+    public CotOptions Cot { get; init; } = new();
+}
+
+/// <summary>
+/// The Commitment of Traders module. Data comes from the CFTC public Socrata datasets (keyless), so unlike
+/// the calendar there is no data-source key gate — the weekly ingestion worker runs out of the box. Feature
+/// visibility is gated by <see cref="BrandingOptions.EnableCot"/> + <c>FeatureFlag.Cot</c>. Operational knobs
+/// (worker cadence, node lease) mirror the calendar module.
+/// </summary>
+public sealed record CotOptions
+{
+    /// <summary>Whether the weekly ingestion worker runs (fetch → upsert markets → append reports). On by
+    /// default so the read side is populated out of the box; a deployment or the owner turns it off (or
+    /// disables the COT feature, which the worker honours via <see cref="Core.Cot.CotEnablement"/>).</summary>
+    public bool IngestionEnabled { get; init; } = true;
+
+    /// <summary>How often the ingestion worker polls the CFTC datasets for newly published reports.</summary>
+    public TimeSpan PollInterval { get; init; } = TimeSpan.FromHours(6);
+
+    /// <summary>How long a node's claim on the singleton ingestion worker stays valid without renewal.</summary>
+    public TimeSpan LeaseTtl { get; init; } = TimeSpan.FromSeconds(120);
+
+    /// <summary>Stable identity of the node hosting the ingestion worker; defaults to the machine name.</summary>
+    public string NodeName { get; init; } = string.Empty;
+
+    /// <summary>Weeks of history the ingestion pass re-syncs each cycle to catch late-published revisions.</summary>
+    public int ReconcileLookbackWeeks { get; init; } = 4;
+
+    /// <summary>Years of history the one-time proactive backfill pulls on first run for tracked markets.</summary>
+    public int BackfillYears { get; init; } = 5;
+
+    /// <summary>Base host of the CFTC public Socrata reporting API.</summary>
+    public string SocrataBaseUrl { get; init; } = "https://publicreporting.cftc.gov";
+
+    /// <summary>Optional Socrata app token; raises the anonymous rate limit but is not required.</summary>
+    public string? SocrataAppToken { get; init; }
+
+    /// <summary>Client-side request budget kept under the anonymous Socrata limit so ingestion never trips a 429.</summary>
+    public int RequestsPerMinute { get; init; } = 30;
+
+    /// <summary>Fallback cooldown applied after a 429 that carries no usable <c>Retry-After</c>.</summary>
+    public TimeSpan RateLimitBackoff { get; init; } = TimeSpan.FromSeconds(60);
+
+    /// <summary>A source with no successful poll within this window is reported as stale in the health view.</summary>
+    public TimeSpan SourceStaleAfter { get; init; } = TimeSpan.FromDays(9);
+
+    /// <summary>Consecutive source failures that trip the reported circuit-open flag for that source.</summary>
+    public int CircuitFailureThreshold { get; init; } = 5;
+
+    /// <summary>Weekly reports used as the COT-index lookback window (~3 years).</summary>
+    public int CotIndexLookbackWeeks { get; init; } = Cot.CotIndexCalculator.DefaultLookbackWeeks;
+
+    /// <summary>Short JWT lifetime for issued market-data API client tokens (shared with the calendar API).</summary>
+    public TimeSpan ApiTokenLifetime { get; init; } = TimeSpan.FromMinutes(15);
 }
 
 /// <summary>

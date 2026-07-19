@@ -154,4 +154,13 @@ public static class DomainErrors
     public const string CurrencyWeightsNotNormalized = "domain.currency.weights_not_normalized";
     public const string CurrencyPanelEmpty = "domain.currency.panel_empty";
     public const string CurrencyHorizonUnknown = "domain.currency.horizon_unknown";
+
+    public const string CotContractCodeRequired = "domain.cot.contract_code_required";
+    public const string CotMarketNameRequired = "domain.cot.market_name_required";
+    public const string CotReportDateInvalid = "domain.cot.report_date_invalid";
+    public const string CotOpenInterestNegative = "domain.cot.open_interest_negative";
+    public const string CotPositionNegative = "domain.cot.position_negative";
+    public const string CotCategoryDuplicate = "domain.cot.category_duplicate";
+    public const string CotCategoryNotInReportKind = "domain.cot.category_not_in_report_kind";
+    public const string CotHistoryInsufficient = "domain.cot.history_insufficient";
 }

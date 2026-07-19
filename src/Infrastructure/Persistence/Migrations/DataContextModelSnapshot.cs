@@ -1625,6 +1625,121 @@ namespace Infrastructure.Persistence.Migrations
                     b.ToTable("CopyProviderListings");
                 });
 
+            modelBuilder.Entity("Core.Cot.CotMarket", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContractCodeValue")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Exchange")
+                        .IsRequired()
+                        .HasMaxLength(96)
+                        .HasColumnType("character varying(96)");
+
+                    b.Property<string>("Group")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MappedSymbolValue")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContractCodeValue")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.HasIndex("Group");
+
+                    b.ToTable("market", "cot");
+                });
+
+            modelBuilder.Entity("Core.Cot.CotReport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Combined")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ContractCodeValue")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTimeOffset>("KnownAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MarketId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MarketName")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<long>("OpenInterest")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("OpenInterestChange")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("ReportDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KnownAt");
+
+                    b.HasIndex("ContractCodeValue", "Kind", "Combined", "ReportDate")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.HasIndex("MarketId", "Kind", "Combined", "ReportDate");
+
+                    b.ToTable("report", "cot");
+                });
+
             modelBuilder.Entity("Core.Dashboard.UserDashboard", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3449,6 +3564,43 @@ namespace Infrastructure.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Core.Cot.CotReport", b =>
+                {
+                    b.OwnsMany("Core.Cot.CotCategoryPosition", "Positions", b1 =>
+                        {
+                            b1.Property<Guid>("CotReportId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Category")
+                                .HasMaxLength(24)
+                                .HasColumnType("character varying(24)");
+
+                            b1.Property<long>("Long")
+                                .HasColumnType("bigint");
+
+                            b1.Property<long>("Short")
+                                .HasColumnType("bigint");
+
+                            b1.Property<long>("Spread")
+                                .HasColumnType("bigint");
+
+                            b1.Property<int?>("TradersLong")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("TradersShort")
+                                .HasColumnType("integer");
+
+                            b1.HasKey("CotReportId", "Category");
+
+                            b1.ToTable("category_position", "cot");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CotReportId");
+                        });
+
+                    b.Navigation("Positions");
                 });
 
             modelBuilder.Entity("Core.Dashboard.UserDashboard", b =>

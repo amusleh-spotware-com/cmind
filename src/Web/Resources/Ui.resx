@@ -89,6 +89,37 @@
   <data name="timezone.current" xml:space="preserve"><value>Current time zone</value></data>
   <data name="timezone.select" xml:space="preserve"><value>Search time zone</value></data>
   <data name="nav.economicCalendar" xml:space="preserve"><value>Economic Calendar</value></data>
+  <data name="nav.cot" xml:space="preserve"><value>Commitment of Traders</value></data>
+  <data name="cot.title" xml:space="preserve"><value>Commitment of Traders</value></data>
+  <data name="cot.help" xml:space="preserve"><value>Weekly CFTC positioning report — how commercials, large speculators and funds are positioned in the futures market. The COT index shows where the current net position sits in its historical range; extremes often precede reversals.</value></data>
+  <data name="cot.disabled" xml:space="preserve"><value>The Commitment of Traders report is not enabled for this deployment.</value></data>
+  <data name="cot.noData" xml:space="preserve"><value>No COT data yet for this market and report type. It appears once the weekly ingestion has run.</value></data>
+  <data name="cot.market" xml:space="preserve"><value>Market</value></data>
+  <data name="cot.reportType" xml:space="preserve"><value>Report type</value></data>
+  <data name="cot.legacy" xml:space="preserve"><value>Legacy</value></data>
+  <data name="cot.disaggregated" xml:space="preserve"><value>Disaggregated</value></data>
+  <data name="cot.tff" xml:space="preserve"><value>Financial (TFF)</value></data>
+  <data name="cot.combined" xml:space="preserve"><value>Futures + options</value></data>
+  <data name="cot.netPositioning" xml:space="preserve"><value>Net positioning over time</value></data>
+  <data name="cot.cotIndex" xml:space="preserve"><value>COT index</value></data>
+  <data name="cot.openInterest" xml:space="preserve"><value>Open interest</value></data>
+  <data name="cot.category" xml:space="preserve"><value>Category</value></data>
+  <data name="cot.long" xml:space="preserve"><value>Long</value></data>
+  <data name="cot.short" xml:space="preserve"><value>Short</value></data>
+  <data name="cot.net" xml:space="preserve"><value>Net</value></data>
+  <data name="cot.pctOi" xml:space="preserve"><value>% of OI</value></data>
+  <data name="cot.index" xml:space="preserve"><value>Index</value></data>
+  <data name="cot.reportDate" xml:space="preserve"><value>Report date</value></data>
+  <data name="cot.cat.nonCommercial" xml:space="preserve"><value>Non-Commercial</value></data>
+  <data name="cot.cat.commercial" xml:space="preserve"><value>Commercial</value></data>
+  <data name="cot.cat.nonReportable" xml:space="preserve"><value>Non-Reportable</value></data>
+  <data name="cot.cat.producerMerchant" xml:space="preserve"><value>Producer/Merchant</value></data>
+  <data name="cot.cat.swapDealer" xml:space="preserve"><value>Swap Dealers</value></data>
+  <data name="cot.cat.managedMoney" xml:space="preserve"><value>Managed Money</value></data>
+  <data name="cot.cat.dealer" xml:space="preserve"><value>Dealer</value></data>
+  <data name="cot.cat.assetManager" xml:space="preserve"><value>Asset Manager</value></data>
+  <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Leveraged Funds</value></data>
+  <data name="cot.cat.otherReportable" xml:space="preserve"><value>Other Reportables</value></data>
   <data name="calendar.title" xml:space="preserve"><value>Economic Calendar</value></data>
   <data name="calendar.upcoming" xml:space="preserve"><value>Upcoming</value></data>
   <data name="calendar.country" xml:space="preserve"><value>Country</value></data>

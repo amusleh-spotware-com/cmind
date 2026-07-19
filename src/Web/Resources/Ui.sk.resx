@@ -402,4 +402,8 @@
   <data name="cot.cat.assetManager" xml:space="preserve"><value>Správca aktív</value></data>
   <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Fondy so pákou</value></data>
   <data name="cot.cat.otherReportable" xml:space="preserve"><value>Ostatné hlasiteľné</value></data>
+  <data name="cot.export" xml:space="preserve"><value>Exportovať CSV</value></data>
+  <data name="cot.compare" xml:space="preserve"><value>Porovnať trhy</value></data>
+  <data name="cot.netComparison" xml:space="preserve"><value>Čistá pozícia — porovnanie</value></data>
+  <data name="cot.indexComparison" xml:space="preserve"><value>Index COT — porovnanie</value></data>
 </root>

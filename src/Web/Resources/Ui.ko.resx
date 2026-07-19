@@ -402,4 +402,8 @@
   <data name="cot.cat.assetManager" xml:space="preserve"><value>자산관리자</value></data>
   <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>레버리지 펀드</value></data>
   <data name="cot.cat.otherReportable" xml:space="preserve"><value>기타 보고 대상</value></data>
+  <data name="cot.export" xml:space="preserve"><value>CSV 내보내기</value></data>
+  <data name="cot.compare" xml:space="preserve"><value>시장 비교</value></data>
+  <data name="cot.netComparison" xml:space="preserve"><value>순포지션 — 비교</value></data>
+  <data name="cot.indexComparison" xml:space="preserve"><value>COT 지수 — 비교</value></data>
 </root>

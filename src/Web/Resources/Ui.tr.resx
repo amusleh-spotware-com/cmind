@@ -402,4 +402,8 @@
   <data name="cot.cat.assetManager" xml:space="preserve"><value>Varlık Yöneticisi</value></data>
   <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Kaldıraçlı Fonlar</value></data>
   <data name="cot.cat.otherReportable" xml:space="preserve"><value>Diğer Raporlanabilir</value></data>
+  <data name="cot.export" xml:space="preserve"><value>CSV İle Dışa Aktar</value></data>
+  <data name="cot.compare" xml:space="preserve"><value>Piyasaları Karşılaştır</value></data>
+  <data name="cot.netComparison" xml:space="preserve"><value>Net Pozisyon — karşılaştırma</value></data>
+  <data name="cot.indexComparison" xml:space="preserve"><value>COT Endeksi — karşılaştırma</value></data>
 </root>

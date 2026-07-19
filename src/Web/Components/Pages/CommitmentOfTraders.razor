@@ -16,6 +16,14 @@
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
     <MudText Typo="Typo.h5">@L["cot.title"]</MudText>
     <HelpTip Text='@L["cot.help"]' />
+    <MudSpacer />
+    @if (_enabled && !string.IsNullOrWhiteSpace(_code))
+    {
+        <MudTooltip Text='@L["cot.export"]'>
+            <MudIconButton Icon="@Icons.Material.Filled.Download" Color="Color.Primary" Href="@ExportUrl"
+                           aria-label='@L["cot.export"]' data-testid="cot-export" />
+        </MudTooltip>
+    }
 </MudStack>
 
 @if (!_enabled)
@@ -43,6 +51,15 @@ else
                    Label='@L["cot.combined"]' data-testid="cot-combined" />
     </MudStack>
 
+    <MudSelect T="string" MultiSelection="true" SelectedValues="_compareCodes" SelectedValuesChanged="OnCompareChanged"
+               Dense="true" Clearable="true" Label='@L["cot.compare"]' Class="mb-3" Style="max-width:520px;"
+               MultiSelectionTextFunc="@(v => CompareLabel(v))" data-testid="cot-compare">
+        @foreach (var market in _markets.Where(m => m.ContractCode != _code))
+        {
+            <MudSelectItem T="string" Value="@market.ContractCode">@market.Name</MudSelectItem>
+        }
+    </MudSelect>
+
     @if (_loading)
     {
         <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
@@ -66,6 +83,22 @@ else
                     <CotChart Series="_indexSeries" EmptyText='@L["cot.noData"]' Height="220" />
                 </MudPaper>
             </MudItem>
+
+            @if (_compareCodes.Count > 0)
+            {
+                <MudItem xs="12" md="7">
+                    <MudPaper Class="pa-4" Elevation="1" data-testid="cot-net-comparison">
+                        <MudText Typo="Typo.subtitle1" Class="mb-2">@L["cot.netComparison"]</MudText>
+                        <CotChart Series="_compareNetSeries" EmptyText='@L["cot.noData"]' />
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" md="5">
+                    <MudPaper Class="pa-4" Elevation="1" data-testid="cot-index-comparison">
+                        <MudText Typo="Typo.subtitle1" Class="mb-2">@L["cot.indexComparison"]</MudText>
+                        <CotChart Series="_compareIndexSeries" EmptyText='@L["cot.noData"]' Height="220" />
+                    </MudPaper>
+                </MudItem>
+            }
 
             <MudItem xs="12">
                 <MudPaper Class="pa-4" Elevation="1" data-testid="cot-latest">
@@ -120,6 +153,12 @@ else
     private CotReportView? _latest;
     private IReadOnlyList<CotChart.CotChartSeries> _netSeries = [];
     private IReadOnlyList<CotChart.CotChartSeries> _indexSeries = [];
+    private IReadOnlyCollection<string> _compareCodes = [];
+    private IReadOnlyList<CotChart.CotChartSeries> _compareNetSeries = [];
+    private IReadOnlyList<CotChart.CotChartSeries> _compareIndexSeries = [];
+
+    private string ExportUrl =>
+        $"/api/cot/export.csv?code={Uri.EscapeDataString(_code ?? string.Empty)}&kind={_kind}&combined={_combined}";
 
     protected override async Task OnInitializedAsync()
     {
@@ -141,6 +180,16 @@ else
     private async Task OnKindChanged(string? kind) { _kind = kind ?? nameof(CotReportKind.Legacy); await LoadAsync(); }
     private async Task OnCombinedChanged(bool combined) { _combined = combined; await LoadAsync(); }
 
+    private async Task OnCompareChanged(IEnumerable<string?>? values)
+    {
+        _compareCodes = values?.Where(v => v is not null).Select(v => v!).ToList() ?? [];
+        await LoadComparisonAsync();
+        StateHasChanged();
+    }
+
+    private string CompareLabel(List<string?>? values) =>
+        values is null ? string.Empty : string.Join(", ", values.Where(v => v is not null).Select(v => MarketLabel(v)));
+
     private async Task LoadAsync()
     {
         _loading = true;
@@ -157,8 +206,43 @@ else
         _latest = await Cot.GetLatestAsync(code, Kind, _combined, null, CancellationToken.None);
         var history = await Cot.GetHistoryAsync(code, Kind, _combined, now.AddYears(-3), now, null, CancellationToken.None);
         BuildSeries(history);
+        await LoadComparisonAsync();
         _loading = false;
         StateHasChanged();
+    }
+
+    private async Task LoadComparisonAsync()
+    {
+        if (_compareCodes.Count == 0 || string.IsNullOrWhiteSpace(_code))
+        {
+            _compareNetSeries = [];
+            _compareIndexSeries = [];
+            return;
+        }
+
+        var now = Time.GetUtcNow();
+        var codes = new List<string> { _code };
+        foreach (var compare in _compareCodes)
+            if (!codes.Contains(compare))
+                codes.Add(compare);
+
+        var net = new List<CotChart.CotChartSeries>();
+        var index = new List<CotChart.CotChartSeries>();
+        foreach (var code in codes)
+        {
+            var history = await Cot.GetHistoryAsync(
+                new ContractMarketCode(code), Kind, _combined, now.AddYears(-3), now, null, CancellationToken.None);
+            var name = MarketLabel(code);
+            var netPoints = history
+                .Select(h => new CotChart.CotChartPoint(h.ReportDate.UtcDateTime, h.SpeculatorNet)).ToList();
+            if (netPoints.Count > 0) net.Add(new CotChart.CotChartSeries(name, netPoints));
+            var indexPoints = history.Where(h => h.CotIndex is not null)
+                .Select(h => new CotChart.CotChartPoint(h.ReportDate.UtcDateTime, h.CotIndex!.Value)).ToList();
+            if (indexPoints.Count > 0) index.Add(new CotChart.CotChartSeries(name, indexPoints));
+        }
+
+        _compareNetSeries = net;
+        _compareIndexSeries = index;
     }
 
     private void BuildSeries(IReadOnlyList<CotHistoryPoint> history)

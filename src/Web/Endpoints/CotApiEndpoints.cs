@@ -41,6 +41,22 @@ public static class CotApiEndpoints
         g.MapGet("/history", async (HttpContext http, ICotReports cot, TimeProvider time, CancellationToken ct) =>
             await HistoryAsync(http, cot, null, time, ct));
 
+        g.MapGet("/export.csv", async (HttpContext http, ICotReports cot, TimeProvider time, CancellationToken ct) =>
+        {
+            var code = http.Request.Query["code"].ToString();
+            if (string.IsNullOrWhiteSpace(code)) return Results.BadRequest(new { error = "code_required" });
+            var kind = ParseKind(http.Request.Query["kind"]);
+            var combined = ParseBool(http.Request.Query["combined"]);
+            var now = time.GetUtcNow();
+            var from = ParseAsOf(http.Request.Query["from"]) ?? now.AddYears(-5);
+            var to = ParseAsOf(http.Request.Query["to"]) ?? now;
+            var points = await cot.GetHistoryAsync(new ContractMarketCode(code), kind, combined, from, to, null, ct);
+            var csv = Core.Cot.CotCsv.Build(kind, points);
+            var safeCode = new string(code.Where(char.IsLetterOrDigit).ToArray());
+            var fileName = $"cot_{safeCode}_{kind}{(combined ? "_combined" : string.Empty)}.csv";
+            return Results.File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv", fileName);
+        });
+
         g.MapGet("/health", async (ICotReports cot, CancellationToken ct) =>
             Results.Ok(await cot.GetHealthAsync(ct)));
     }

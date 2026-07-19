@@ -108,6 +108,10 @@
       "cot.pctOi": "% of OI",
       "cot.index": "Index",
       "cot.reportDate": "Report date",
+      "cot.export": "Export CSV",
+      "cot.compare": "Compare markets",
+      "cot.netComparison": "Net positioning — comparison",
+      "cot.indexComparison": "COT index — comparison",
       "cot.cat.nonCommercial": "Non-Commercial",
       "cot.cat.commercial": "Commercial",
       "cot.cat.nonReportable": "Non-Reportable",
@@ -799,7 +803,11 @@
       "cot.cat.dealer": "التاجر",
       "cot.cat.assetManager": "مدير الأصول",
       "cot.cat.leveragedFunds": "الصناديق ذات الرافعة المالية",
-      "cot.cat.otherReportable": "الآخرون القابلون للإبلاغ"
+      "cot.cat.otherReportable": "الآخرون القابلون للإبلاغ",
+      "cot.export": "تصدير CSV",
+      "cot.compare": "مقارنة الأسواق",
+      "cot.netComparison": "صافي المراكز — المقارنة",
+      "cot.indexComparison": "مؤشر COT — المقارنة"
     },
     "cs": {
       "integrity.row.sharpe": "Sharpe (za období)",
@@ -1199,7 +1207,11 @@
       "cot.cat.dealer": "Dealer",
       "cot.cat.assetManager": "Správce aktiv",
       "cot.cat.leveragedFunds": "Fondy se pákou",
-      "cot.cat.otherReportable": "Ostatní hlášené"
+      "cot.cat.otherReportable": "Ostatní hlášené",
+      "cot.export": "Exportovat CSV",
+      "cot.compare": "Porovnat trhy",
+      "cot.netComparison": "Čistá pozice — porovnání",
+      "cot.indexComparison": "Index COT — porovnání"
     },
     "de": {
       "integrity.row.sharpe": "Sharpe (pro Periode)",
@@ -1599,7 +1611,11 @@
       "cot.cat.dealer": "Dealer",
       "cot.cat.assetManager": "Vermögensverwalter",
       "cot.cat.leveragedFunds": "Gehebelte Fonds",
-      "cot.cat.otherReportable": "Sonstige Meldepflichtige"
+      "cot.cat.otherReportable": "Sonstige Meldepflichtige",
+      "cot.export": "CSV exportieren",
+      "cot.compare": "Märkte vergleichen",
+      "cot.netComparison": "Netto-Positionen — Vergleich",
+      "cot.indexComparison": "COT-Index — Vergleich"
     },
     "el": {
       "integrity.row.sharpe": "Sharpe (ανά περίοδο)",
@@ -1999,7 +2015,11 @@
       "cot.cat.dealer": "Αντιπρόσωπος",
       "cot.cat.assetManager": "Διαχειριστής Περιουσιακών Στοιχείων",
       "cot.cat.leveragedFunds": "Κεφάλαια με Μόχλευση",
-      "cot.cat.otherReportable": "Άλλες Αναφέρουσες"
+      "cot.cat.otherReportable": "Άλλες Αναφέρουσες",
+      "cot.export": "Εξαγωγή CSV",
+      "cot.compare": "Σύγκριση αγορών",
+      "cot.netComparison": "Καθαρή θέση — σύγκριση",
+      "cot.indexComparison": "Δείκτης COT — σύγκριση"
     },
     "es": {
       "integrity.row.sharpe": "Sharpe (por período)",
@@ -2399,7 +2419,11 @@
       "cot.cat.dealer": "Distribuidor",
       "cot.cat.assetManager": "Gestor de Activos",
       "cot.cat.leveragedFunds": "Fondos Apalancados",
-      "cot.cat.otherReportable": "Otros Notificables"
+      "cot.cat.otherReportable": "Otros Notificables",
+      "cot.export": "Exportar CSV",
+      "cot.compare": "Comparar mercados",
+      "cot.netComparison": "Posición neta — comparación",
+      "cot.indexComparison": "Índice COT — comparación"
     },
     "fr": {
       "integrity.row.sharpe": "Sharpe (par période)",
@@ -2799,7 +2823,11 @@
       "cot.cat.dealer": "Courtier",
       "cot.cat.assetManager": "Gestionnaire d'actifs",
       "cot.cat.leveragedFunds": "Fonds à effet de levier",
-      "cot.cat.otherReportable": "Autres déclarants"
+      "cot.cat.otherReportable": "Autres déclarants",
+      "cot.export": "Exporter CSV",
+      "cot.compare": "Comparer les marchés",
+      "cot.netComparison": "Position nette — comparaison",
+      "cot.indexComparison": "Indice COT — comparaison"
     },
     "hu": {
       "integrity.row.sharpe": "Sharpe (periódusonként)",
@@ -3199,7 +3227,11 @@
       "cot.cat.dealer": "Kereskedő",
       "cot.cat.assetManager": "Eszközkezelő",
       "cot.cat.leveragedFunds": "Tőkeáttételes alapok",
-      "cot.cat.otherReportable": "Egyéb bejelentendő"
+      "cot.cat.otherReportable": "Egyéb bejelentendő",
+      "cot.export": "CSV exportálása",
+      "cot.compare": "Piacok összehasonlítása",
+      "cot.netComparison": "Nettó pozíció — összehasonlítás",
+      "cot.indexComparison": "COT index — összehasonlítás"
     },
     "id": {
       "integrity.row.sharpe": "Sharpe (per periode)",
@@ -3599,7 +3631,11 @@
       "cot.cat.dealer": "Dealer",
       "cot.cat.assetManager": "Manajer Aset",
       "cot.cat.leveragedFunds": "Dana Berleverage",
-      "cot.cat.otherReportable": "Lainnya yang Dapat Dilaporkan"
+      "cot.cat.otherReportable": "Lainnya yang Dapat Dilaporkan",
+      "cot.export": "Ekspor CSV",
+      "cot.compare": "Bandingkan pasar",
+      "cot.netComparison": "Posisi neto — perbandingan",
+      "cot.indexComparison": "Indeks COT — perbandingan"
     },
     "it": {
       "integrity.row.sharpe": "Sharpe (per periodo)",
@@ -3999,7 +4035,11 @@
       "cot.cat.dealer": "Dealer",
       "cot.cat.assetManager": "Gestore Patrimoniale",
       "cot.cat.leveragedFunds": "Fondi Leveraged",
-      "cot.cat.otherReportable": "Altri Segnalabili"
+      "cot.cat.otherReportable": "Altri Segnalabili",
+      "cot.export": "Esporta CSV",
+      "cot.compare": "Confronta mercati",
+      "cot.netComparison": "Posizione netta — confronto",
+      "cot.indexComparison": "Indice COT — confronto"
     },
     "ja": {
       "integrity.row.sharpe": "シャープ（期間あたり）",
@@ -4399,7 +4439,11 @@
       "cot.cat.dealer": "ディーラー",
       "cot.cat.assetManager": "資産管理会社",
       "cot.cat.leveragedFunds": "レバレッジファンド",
-      "cot.cat.otherReportable": "その他報告対象"
+      "cot.cat.otherReportable": "その他報告対象",
+      "cot.export": "CSV をエクスポート",
+      "cot.compare": "市場を比較",
+      "cot.netComparison": "ネット・ポジション — 比較",
+      "cot.indexComparison": "COT指数 — 比較"
     },
     "ko": {
       "integrity.row.sharpe": "샤프 (기간당)",
@@ -4799,7 +4843,11 @@
       "cot.cat.dealer": "딜러",
       "cot.cat.assetManager": "자산관리자",
       "cot.cat.leveragedFunds": "레버리지 펀드",
-      "cot.cat.otherReportable": "기타 보고 대상"
+      "cot.cat.otherReportable": "기타 보고 대상",
+      "cot.export": "CSV 내보내기",
+      "cot.compare": "시장 비교",
+      "cot.netComparison": "순포지션 — 비교",
+      "cot.indexComparison": "COT 지수 — 비교"
     },
     "ms": {
       "integrity.row.sharpe": "Sharpe (setiap tempoh)",
@@ -5199,7 +5247,11 @@
       "cot.cat.dealer": "Peniaga",
       "cot.cat.assetManager": "Pengurus Aset",
       "cot.cat.leveragedFunds": "Dana Berleveraj",
-      "cot.cat.otherReportable": "Lain-lain yang Boleh Dilaporkan"
+      "cot.cat.otherReportable": "Lain-lain yang Boleh Dilaporkan",
+      "cot.export": "Eksport CSV",
+      "cot.compare": "Bandingkan pasaran",
+      "cot.netComparison": "Kedudukan bersih — perbandingan",
+      "cot.indexComparison": "Indeks COT — perbandingan"
     },
     "pl": {
       "integrity.row.sharpe": "Sharpe (na okres)",
@@ -5599,7 +5651,11 @@
       "cot.cat.dealer": "Dealer",
       "cot.cat.assetManager": "Zarządzający Aktywami",
       "cot.cat.leveragedFunds": "Fundusze Dźwigniowe",
-      "cot.cat.otherReportable": "Inne Zgłaszalne"
+      "cot.cat.otherReportable": "Inne Zgłaszalne",
+      "cot.export": "Eksportuj CSV",
+      "cot.compare": "Porównaj rynki",
+      "cot.netComparison": "Pozycja netto — porównanie",
+      "cot.indexComparison": "Indeks COT — porównanie"
     },
     "pt-BR": {
       "integrity.row.sharpe": "Sharpe (por período)",
@@ -5999,7 +6055,11 @@
       "cot.cat.dealer": "Distribuidor",
       "cot.cat.assetManager": "Gestor de Ativos",
       "cot.cat.leveragedFunds": "Fundos Alavancados",
-      "cot.cat.otherReportable": "Outros Reportáveis"
+      "cot.cat.otherReportable": "Outros Reportáveis",
+      "cot.export": "Exportar CSV",
+      "cot.compare": "Comparar mercados",
+      "cot.netComparison": "Posição líquida — comparação",
+      "cot.indexComparison": "Índice COT — comparação"
     },
     "ru": {
       "integrity.row.sharpe": "Шарп (за период)",
@@ -6399,7 +6459,11 @@
       "cot.cat.dealer": "Дилер",
       "cot.cat.assetManager": "Управляющий активами",
       "cot.cat.leveragedFunds": "Кредитные фонды",
-      "cot.cat.otherReportable": "Прочие репортируемые"
+      "cot.cat.otherReportable": "Прочие репортируемые",
+      "cot.export": "Экспортировать CSV",
+      "cot.compare": "Сравнить рынки",
+      "cot.netComparison": "Чистая позиция — сравнение",
+      "cot.indexComparison": "Индекс COT — сравнение"
     },
     "sk": {
       "integrity.row.sharpe": "Sharpe (za obdobie)",
@@ -6799,7 +6863,11 @@
       "cot.cat.dealer": "Dealer",
       "cot.cat.assetManager": "Správca aktív",
       "cot.cat.leveragedFunds": "Fondy so pákou",
-      "cot.cat.otherReportable": "Ostatné hlasiteľné"
+      "cot.cat.otherReportable": "Ostatné hlasiteľné",
+      "cot.export": "Exportovať CSV",
+      "cot.compare": "Porovnať trhy",
+      "cot.netComparison": "Čistá pozícia — porovnanie",
+      "cot.indexComparison": "Index COT — porovnanie"
     },
     "sl": {
       "integrity.row.sharpe": "Sharpe (na obdobje)",
@@ -7199,7 +7267,11 @@
       "cot.cat.dealer": "Trgovec",
       "cot.cat.assetManager": "Upravljavec premoženja",
       "cot.cat.leveragedFunds": "Skladi z vzvodom",
-      "cot.cat.otherReportable": "Druga poročljiva podjetja"
+      "cot.cat.otherReportable": "Druga poročljiva podjetja",
+      "cot.export": "Izvozi CSV",
+      "cot.compare": "Primerjaj trge",
+      "cot.netComparison": "Neto pozicija — primerjava",
+      "cot.indexComparison": "Indeks COT — primerjava"
     },
     "sr": {
       "integrity.row.sharpe": "Шарп (по периоду)",
@@ -7599,7 +7671,11 @@
       "cot.cat.dealer": "Дилер",
       "cot.cat.assetManager": "Управник имовине",
       "cot.cat.leveragedFunds": "Полуџирани фондови",
-      "cot.cat.otherReportable": "Остали извештајни"
+      "cot.cat.otherReportable": "Остали извештајни",
+      "cot.export": "Извезите CSV",
+      "cot.compare": "Упоредите тржишта",
+      "cot.netComparison": "Нето позиција — поређење",
+      "cot.indexComparison": "COT индекс — поређење"
     },
     "th": {
       "integrity.row.sharpe": "ชาร์ป (ต่อช่วง)",
@@ -7999,7 +8075,11 @@
       "cot.cat.dealer": "ผู้ค้า",
       "cot.cat.assetManager": "ผู้จัดการสินทรัพย์",
       "cot.cat.leveragedFunds": "กองทุนที่มีการใช้สัญญา",
-      "cot.cat.otherReportable": "ผู้รายงานอื่น ๆ"
+      "cot.cat.otherReportable": "ผู้รายงานอื่น ๆ",
+      "cot.export": "ส่งออก CSV",
+      "cot.compare": "เปรียบเทียบตลาด",
+      "cot.netComparison": "ตำแหน่งสุทธิ — เปรียบเทียบ",
+      "cot.indexComparison": "ดัชนี COT — เปรียบเทียบ"
     },
     "tr": {
       "integrity.row.sharpe": "Sharpe (dönem başına)",
@@ -8399,7 +8479,11 @@
       "cot.cat.dealer": "Bayii",
       "cot.cat.assetManager": "Varlık Yöneticisi",
       "cot.cat.leveragedFunds": "Kaldıraçlı Fonlar",
-      "cot.cat.otherReportable": "Diğer Raporlanabilir"
+      "cot.cat.otherReportable": "Diğer Raporlanabilir",
+      "cot.export": "CSV İle Dışa Aktar",
+      "cot.compare": "Piyasaları Karşılaştır",
+      "cot.netComparison": "Net Pozisyon — karşılaştırma",
+      "cot.indexComparison": "COT Endeksi — karşılaştırma"
     },
     "vi": {
       "integrity.row.sharpe": "Sharpe (mỗi kỳ)",
@@ -8799,7 +8883,11 @@
       "cot.cat.dealer": "Nhà phân phối",
       "cot.cat.assetManager": "Người quản lý tài sản",
       "cot.cat.leveragedFunds": "Quỹ được sử dụng đòn bẩy",
-      "cot.cat.otherReportable": "Những người báo cáo khác"
+      "cot.cat.otherReportable": "Những người báo cáo khác",
+      "cot.export": "Xuất CSV",
+      "cot.compare": "So sánh thị trường",
+      "cot.netComparison": "Vị trí ròng — so sánh",
+      "cot.indexComparison": "Chỉ số COT — so sánh"
     },
     "zh-Hans": {
       "integrity.row.sharpe": "夏普（每期）",
@@ -9199,7 +9287,11 @@
       "cot.cat.dealer": "交易商",
       "cot.cat.assetManager": "资产管理公司",
       "cot.cat.leveragedFunds": "杠杆基金",
-      "cot.cat.otherReportable": "其他可报告"
+      "cot.cat.otherReportable": "其他可报告",
+      "cot.export": "导出 CSV",
+      "cot.compare": "比较市场",
+      "cot.netComparison": "净头寸 — 比较",
+      "cot.indexComparison": "COT 指数 — 比较"
     }
   }
 }

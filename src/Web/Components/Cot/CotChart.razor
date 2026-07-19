@@ -34,7 +34,22 @@
     {
         _options.Chart = new Chart
         {
-            Toolbar = new Toolbar { Show = false },
+            // Zoom in/out (+ reset) icon buttons on the chart toolbar; drag-to-zoom on the X axis.
+            Toolbar = new Toolbar
+            {
+                Show = true,
+                Tools = new Tools
+                {
+                    Download = false,
+                    Selection = false,
+                    Zoom = false,
+                    Zoomin = true,
+                    Zoomout = true,
+                    Pan = false,
+                    Reset = true
+                }
+            },
+            Zoom = new Zoom { Enabled = true, Type = AxisType.X },
             Background = "transparent",
             Animations = new Animations { Enabled = false },
             FontFamily = "Inter, sans-serif"

@@ -7,7 +7,9 @@ using Core.Cot;
 using Infrastructure.Cot;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using FluentAssertions;
 using Xunit;
 
@@ -29,6 +31,13 @@ public class CotApiHttpTests(PostgresFixture fixture) : IClassFixture<PostgresFi
             // Keep the weekly ingestion worker off in tests — we seed deterministically.
             b.UseSetting("App:Cot:IngestionEnabled", "false");
             foreach (var (key, value) in settings) b.UseSetting(key, value);
+            // Replace the live CFTC source with an empty fake so the read-through cache never hits the network;
+            // these tests seed the database directly and assert it is served from there.
+            b.ConfigureTestServices(s =>
+            {
+                s.RemoveAll<Core.Cot.ICotSource>();
+                s.AddSingleton<Core.Cot.ICotSource>(new FakeCotSource());
+            });
         });
 
     private static async Task<HttpClient> LoginAsync(WebApplicationFactory<Program> app)
@@ -132,6 +141,21 @@ public class CotApiHttpTests(PostgresFixture fixture) : IClassFixture<PostgresFi
 
         var markets = await cbot.GetFromJsonAsync<JsonElement>("/api/market/v1/cot/markets");
         markets.EnumerateArray().Should().Contain(m => m.GetProperty("contractCode").GetString() == Code);
+    }
+
+    [Fact]
+    public async Task Export_csv_returns_csv_for_the_market()
+    {
+        await using var app = CreateApp();
+        var owner = await LoginAsync(app);
+        await SeedAsync(app);
+
+        var response = await owner.GetAsync($"/api/cot/export.csv?code={Code}&kind=Legacy");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.Content.Headers.ContentType!.MediaType.Should().Be("text/csv");
+        var csv = await response.Content.ReadAsStringAsync();
+        csv.Should().StartWith("report_date,open_interest,cot_index,speculator_net,");
+        csv.Should().Contain("NonCommercial_net");
     }
 
     [Fact]

@@ -35,12 +35,11 @@ Trang hiển thị:
 - **Ảnh chụp nhanh mới nhất** — bảng dài / ngắn / ròng / % lãi suất mở trên mỗi loại nhà giao dịch, cộng
   với tổng lãi suất mở và ngày báo cáo.
 
+Mỗi biểu đồ đi kèm với **phóng to / thu nhỏ** (và đặt lại) các nút thanh công cụ, và bạn có thể kéo trên trục thời gian để phóng to. **Xuất CSV** tải xuống toàn bộ lịch sử hàng tuần của thị trường và loại báo cáo được chọn dưới dạng tệp sẵn sàng bảng tính. Sử dụng **So sánh các thị trường** để chồng chéo nhiều thị trường trên một biểu đồ — các biểu đồ so sánh vẽ vị trí ròng nhà đầu cơ và chỉ số COT của mỗi thị trường được chọn cạnh nhau, vì vậy bạn có thể đọc định vị chéo thị trường một cách sáng suốt.
+
 ## Dòng dữ liệu được thực hiện như thế nào
 
-Một công nhân nhập dữ liệu hàng tuần kéo sáu tập dữ liệu CFTC cho các thị trường theo dõi, upserts danh mục thị trường
-và nối thêm mỗi báo cáo mới **theo cách lạc quan** (chạy lại không bao giờ sao chép ảnh chụp nhanh). Lần chạy đầu tiên
-điền một số năm lịch sử; các lần chạy sau sẽ đồng bộ hóa lại những tuần gần đây nhất để bắt các sửa đổi muộn.
-Mọi thứ chạy từ hộp có khóa không; một mã thông báo ứng dụng Socrata tùy chọn chỉ nâng giới hạn tốc độ.
+Cơ sở dữ liệu là bộ nhớ cache. Một công nhân nhập dữ liệu hàng tuần kéo sáu tập dữ liệu CFTC cho các thị trường theo dõi, upserts danh mục thị trường và nối thêm mỗi báo cáo mới **theo cách lạc quan** (chạy lại không bao giờ sao chép một ảnh chụp nhanh). Ngoài ra, dữ liệu được **tải theo yêu cầu**: lần đầu tiên một thị trường được yêu cầu nó sẽ được tìm nạp từ nguồn CFTC và lưu trữ, và mọi yêu cầu tiếp theo được phục vụ trực tiếp từ cơ sở dữ liệu. Bộ nhớ cache **làm mới khi các báo cáo hàng tuần mới được phát hành** — khi báo cáo được lưu trữ mới nhất cũ hơn một tuần, yêu cầu tiếp theo sẽ trong suốt kéo và nối thêm dữ liệu mới nhất (giới hạn để nguồn không bao giờ bị tấn công). Lần tải đầu tiên điền sẵn vài năm lịch sử; một sự cố nguồn giảm xuống phục vụ dữ liệu được lưu trong bộ nhớ cache tốt nhất. Mọi thứ chạy từ hộp không có khóa; một mã thông báo ứng dụng Socrata tùy chọn chỉ nâng giới hạn tốc độ.
 
 ## Cấu hình
 

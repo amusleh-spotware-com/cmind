@@ -20,9 +20,11 @@ Abra **Compromiso de Operadores** desde la navegación izquierda. Seleccione un 
 - **Índice COT** — un gráfico de líneas del índice 0–100, con la lectura más reciente y su etiqueta extrema.
 - **Última instantánea** — una tabla de largo / corto / neto / % de interés abierto por categoría de operador, más interés abierto total y la fecha del informe.
 
+Cada gráfico lleva botones de barra de herramientas **ampliar / reducir** (y restablecer), y puede arrastrar a lo largo del eje de tiempo para ampliar. **Exportar CSV** descarga el historial semanal completo del mercado seleccionado y el tipo de informe como un archivo listo para hojas de cálculo. Use **Comparar mercados** para superponer varios mercados en un solo gráfico — los gráficos de comparación trazan la posición neta especuladora de cada mercado seleccionado y el índice COT lado a lado, para que pueda leer el posicionamiento entre mercados de un vistazo.
+
 ## Cómo fluyen los datos
 
-Un trabajador de ingesta semanal extrae los seis conjuntos de datos de la CFTC para los mercados rastreados, actualiza el catálogo de mercados y agrega cada nuevo informe **idempotentemente** (re-ejecutar nunca duplica una instantánea). La primera ejecución rellena varios años de historial; las ejecuciones posteriores resincronizar las semanas más recientes para captar revisiones tardías. Todo se ejecuta fuera de la caja sin clave; un token de aplicación de Socrata opcional solo aumenta el límite de velocidad.
+La base de datos es el caché. Un trabajador de ingesta semanal extrae los seis conjuntos de datos de la CFTC para los mercados rastreados, actualiza el catálogo de mercados y agrega cada nuevo informe **idempotentemente** (re-ejecutar nunca duplica una instantánea). Además, los datos se **cargan bajo demanda**: la primera vez que se solicita un mercado se obtiene de la fuente CFTC y se almacena, y todas las solicitudes posteriores se sirven directamente desde la base de datos. El caché **se actualiza cuando se lanzan nuevos informes semanales** — una vez que el informe almacenado más reciente tiene más de una semana, la siguiente solicitud extrae transparentemente y agrega los datos más recientes (limitado para que la fuente nunca sea bombardeada). La primera carga rellena varios años de historial; una interrupción de la fuente se degrada a servir los mejores datos en caché. Todo se ejecuta listo para usar sin clave; un token de aplicación de Socrata opcional solo aumenta el límite de velocidad.
 
 ## Configuración
 

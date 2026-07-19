@@ -402,4 +402,8 @@
   <data name="cot.cat.assetManager" xml:space="preserve"><value>Pengurus Aset</value></data>
   <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Dana Berleveraj</value></data>
   <data name="cot.cat.otherReportable" xml:space="preserve"><value>Lain-lain yang Boleh Dilaporkan</value></data>
+  <data name="cot.export" xml:space="preserve"><value>Eksport CSV</value></data>
+  <data name="cot.compare" xml:space="preserve"><value>Bandingkan pasaran</value></data>
+  <data name="cot.netComparison" xml:space="preserve"><value>Kedudukan bersih — perbandingan</value></data>
+  <data name="cot.indexComparison" xml:space="preserve"><value>Indeks COT — perbandingan</value></data>
 </root>

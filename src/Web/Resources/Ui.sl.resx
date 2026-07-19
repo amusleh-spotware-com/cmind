@@ -402,4 +402,8 @@
   <data name="cot.cat.assetManager" xml:space="preserve"><value>Upravljavec premoženja</value></data>
   <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Skladi z vzvodom</value></data>
   <data name="cot.cat.otherReportable" xml:space="preserve"><value>Druga poročljiva podjetja</value></data>
+  <data name="cot.export" xml:space="preserve"><value>Izvozi CSV</value></data>
+  <data name="cot.compare" xml:space="preserve"><value>Primerjaj trge</value></data>
+  <data name="cot.netComparison" xml:space="preserve"><value>Neto pozicija — primerjava</value></data>
+  <data name="cot.indexComparison" xml:space="preserve"><value>Indeks COT — primerjava</value></data>
 </root>

@@ -40,13 +40,11 @@ birleştirilmiş varyant arasında geçiş yapın. Sayfa gösterir:
 - **Son anlık görüntü** — tüccar kategorisi başına uzun / kısa / net / açık faiz yüzdesi tablosu, ayrıca
   toplam açık faiz ve rapor tarihi.
 
+Her grafiğin **yakınlaştır/uzaklaştır** (ve sıfırla) araç çubuğu düğmeleri var ve zaman ekseni üzerinde sürükleyerek yakınlaştırabilirsiniz. **CSV Dışa Aktar**, seçili pazar ve rapor türünün tam haftalık geçmişini elektronik tablo için hazır bir dosya olarak indirir. Birden fazla pazarı tek bir grafikte örtüştürmek için **Pazarları Karşılaştır**'ı kullanın — karşılaştırma grafikler, seçili her pazarın spekülatör net konumunu ve COT endeksini yan yana çizerek, pazarlar arası konumlandırmayı bir bakışta okumanızı sağlar.
+
 ## Veriler Nasıl Akar
 
-Haftalık bir yutma işçisi, izlenen pazarlar için altı CFTC veri setini çeker, pazar kataloğunu
-upsert eder ve her yeni raporu **eşgüçlü** olarak ekler (yeniden çalıştırma hiçbir zaman anlık
-görüntüyü çoğaltmaz). İlk çalıştırma birkaç yıl tarihini geri doldurur; daha sonraki çalıştırmalar
-geç revizyonları yakalamak için en son haftaları yeniden senkronize eder. Anahtar olmadan kutudan
-çıktı gibi her şey çalışır; isteğe bağlı Socrata uygulaması jetonlaması oran sınırını yükseltir.
+Veritabanı önbellektir. Haftalık yutma işçisi, izlenen pazarlar için altı CFTC veri setini çeker, pazar kataloğunu upsert eder ve her yeni raporu **idempotently** ekler (yeniden çalıştırma hiçbir zaman anlık görüntüyü çoğaltmaz). Ayrıca veriler **talep üzerine yüklenir**: bir pazar ilk kez istendiğinde CFTC kaynağından alınır ve depolanır ve sonraki her istek doğrudan veritabanından sunulur. Önbellek **yeni haftalık raporlar yayınlandığında yenilenir** — depolanan en yeni rapor bir haftadan daha yaşlı olduğunda, sonraki istek başarısız ve en son verileri şeffaf bir şekilde ekler (kaynağın asla aşırı yüklenmemesi için kısıtlanır). İlk yükleme birkaç yıl geçmişini geri doldurur; kaynak kesintisi en iyi önbelleğe alınmış verileri sunmaya düşer. Anahtar olmadan kutudan çıktı gibi her şey çalışır; isteğe bağlı Socrata uygulaması jetonlaması oran sınırını yükseltir.
 
 ## Yapılandırma
 

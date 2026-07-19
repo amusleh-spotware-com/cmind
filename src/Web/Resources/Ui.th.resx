@@ -402,4 +402,8 @@
   <data name="cot.cat.assetManager" xml:space="preserve"><value>ผู้จัดการสินทรัพย์</value></data>
   <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>กองทุนที่มีการใช้สัญญา</value></data>
   <data name="cot.cat.otherReportable" xml:space="preserve"><value>ผู้รายงานอื่น ๆ</value></data>
+  <data name="cot.export" xml:space="preserve"><value>ส่งออก CSV</value></data>
+  <data name="cot.compare" xml:space="preserve"><value>เปรียบเทียบตลาด</value></data>
+  <data name="cot.netComparison" xml:space="preserve"><value>ตำแหน่งสุทธิ — เปรียบเทียบ</value></data>
+  <data name="cot.indexComparison" xml:space="preserve"><value>ดัชนี COT — เปรียบเทียบ</value></data>
 </root>

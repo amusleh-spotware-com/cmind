@@ -110,6 +110,10 @@
   <data name="cot.pctOi" xml:space="preserve"><value>% of OI</value></data>
   <data name="cot.index" xml:space="preserve"><value>Index</value></data>
   <data name="cot.reportDate" xml:space="preserve"><value>Report date</value></data>
+  <data name="cot.export" xml:space="preserve"><value>Export CSV</value></data>
+  <data name="cot.compare" xml:space="preserve"><value>Compare markets</value></data>
+  <data name="cot.netComparison" xml:space="preserve"><value>Net positioning — comparison</value></data>
+  <data name="cot.indexComparison" xml:space="preserve"><value>COT index — comparison</value></data>
   <data name="cot.cat.nonCommercial" xml:space="preserve"><value>Non-Commercial</value></data>
   <data name="cot.cat.commercial" xml:space="preserve"><value>Commercial</value></data>
   <data name="cot.cat.nonReportable" xml:space="preserve"><value>Non-Reportable</value></data>

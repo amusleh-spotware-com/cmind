@@ -29,12 +29,11 @@ combinata. La pagina mostra:
 - **Snapshot più recente** — una tabella di long / short / net / % dell'interesse aperto per categoria di trader, più
   interesse aperto totale e la data del report.
 
+Ogni grafico ha pulsanti della barra degli strumenti **zoom in / out** (e reset), e puoi trascinare sull'asse temporale per ingrandire. **Export CSV** scarica la cronologia completa settimanale del mercato selezionato e del tipo di report come file pronto per il foglio di calcolo. Usa **Compare markets** per sovrapporre più mercati su un unico grafico — i grafici di confronto tracciano la posizione netta dello speculatore di ogni mercato selezionato e l'indice COT uno accanto all'altro, così puoi leggere il posizionamento cross-market a colpo d'occhio.
+
 ## How the data flows
 
-Un worker di ingestion settimanale estrae i sei dataset CFTC per i mercati tracciati, fa upsert del catalogo di mercati
-e aggiunge ogni nuovo report **idempotentemente** (rieseguire non duplica mai uno snapshot). La prima esecuzione
-riempie diversi anni di cronologia; le esecuzioni successive risincronizzano le settimane più recenti per catturare revisioni tardive.
-Tutto viene eseguito out of the box senza chiave; un token app Socrata opzionale solo aumenta il limite di velocità.
+Il database è la cache. Un worker di ingestion settimanale estrae i sei dataset CFTC per i mercati tracciati, fa upsert del catalogo di mercati e aggiunge ogni nuovo report **idempotentemente** (rieseguire non duplica mai uno snapshot). Inoltre, i dati vengono **caricati su richiesta**: la prima volta che viene richiesto un mercato viene scaricato dalla fonte CFTC e memorizzato, e ogni richiesta successiva viene servita direttamente dal database. La cache **si aggiorna al rilascio di nuovi report settimanali** — una volta che il report memorizzato più recente è più di una settimana vecchio, la richiesta successiva estrae e aggiunge in modo trasparente i dati più recenti (limitato in modo che la fonte non venga mai martellata). Il carico iniziale riempie diversi anni di cronologia; un'interruzione della fonte si degrada a servire i migliori dati in cache. Tutto viene eseguito out of the box senza chiave; un token app Socrata opzionale solo aumenta il limite di velocità.
 
 ## Configuration
 

@@ -402,4 +402,8 @@
   <data name="cot.cat.assetManager" xml:space="preserve"><value>Gestore Patrimoniale</value></data>
   <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Fondi Leveraged</value></data>
   <data name="cot.cat.otherReportable" xml:space="preserve"><value>Altri Segnalabili</value></data>
+  <data name="cot.export" xml:space="preserve"><value>Esporta CSV</value></data>
+  <data name="cot.compare" xml:space="preserve"><value>Confronta mercati</value></data>
+  <data name="cot.netComparison" xml:space="preserve"><value>Posizione netta — confronto</value></data>
+  <data name="cot.indexComparison" xml:space="preserve"><value>Indice COT — confronto</value></data>
 </root>

@@ -35,12 +35,11 @@ a wariantem połączonym. Strona pokazuje:
 - **Najnowsza migawka** — tabela long / short / net / % otwartych odsetek na kategoriję handlowca, plus
   całkowite otwarte odsetki i datę raportu.
 
+Każdy wykres zawiera przyciski paska narzędzi **powiększenia / pomniejszenia** (i resetowania), a możesz przeciągać wzdłuż osi czasu, aby powiększyć. **Export CSV** pobiera pełną cotygodniową historię wybranego rynku i typu raportu jako plik gotowy do arkusza kalkulacyjnego. Użyj **Compare markets**, aby nałożyć kilka rynków na jednym wykresie — wykresy porównawcze wykreślają netto pozycję spekulantów każdego wybranego rynku i indeks COT obok siebie, abyś mógł przeglądać pozycjonowanie na rynkach na pierwszy rzut oka.
+
 ## Jak przepływają dane
 
-Cotygodniowy pracownik ingestion pobiera sześć zestawów danych CFTC dla śledzonych rynków, upsert katalog rynków
-i dodaje każdy nowy raport **idempotentnie** (ponowne uruchomienie nigdy nie duplikuje migawki). Pierwszy przebieg
-wypełnia wiele lat historii; późniejsze przebiegi ponownie synchronizują najnowsze tygodnie, aby złapać późne poprawki.
-Wszystko działa z pudełka bez klucza; opcjonalny token aplikacji Socrata tylko podnosi limit szybkości.
+Baza danych jest pamięcią podręczną. Cotygodniowy pracownik ingestion pobiera sześć zestawów danych CFTC dla śledzonych rynków, aktualizuje katalog rynków i dodaje każdy nowy raport **idempotentnie** (ponowne uruchomienie nigdy nie duplikuje migawki). Ponadto dane są **ładowane na żądanie**: po raz pierwszy żądany rynek jest pobierany ze źródła CFTC i przechowywany, a każde kolejne żądanie jest obsługiwane bezpośrednio z bazy danych. Pamięć podręczna **odświeża się w miarę publikacji nowych cotygodniowych raportów** — raz gdy najnowszy przechowywany raport ma więcej niż jeden tydzień, następne żądanie transparentnie pobiera i dołącza najnowsze dane (ograniczone, aby źródło nie było nigdy zalewane). Pierwsze ładowanie wstecz wypełnia kilka lat historii; awaria źródła pogarsza się do podawania najlepszych buforowanych danych. Wszystko działa z pudełka bez klucza; opcjonalny token aplikacji Socrata tylko podnosi limit szybkości.
 
 ## Konfiguracja
 

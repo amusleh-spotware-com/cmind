@@ -402,4 +402,8 @@
   <data name="cot.cat.assetManager" xml:space="preserve"><value>資産管理会社</value></data>
   <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>レバレッジファンド</value></data>
   <data name="cot.cat.otherReportable" xml:space="preserve"><value>その他報告対象</value></data>
+  <data name="cot.export" xml:space="preserve"><value>CSV をエクスポート</value></data>
+  <data name="cot.compare" xml:space="preserve"><value>市場を比較</value></data>
+  <data name="cot.netComparison" xml:space="preserve"><value>ネット・ポジション — 比較</value></data>
+  <data name="cot.indexComparison" xml:space="preserve"><value>COT指数 — 比較</value></data>
 </root>

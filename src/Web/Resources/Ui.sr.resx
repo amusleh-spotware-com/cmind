@@ -402,4 +402,8 @@
   <data name="cot.cat.assetManager" xml:space="preserve"><value>Управник имовине</value></data>
   <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Полуџирани фондови</value></data>
   <data name="cot.cat.otherReportable" xml:space="preserve"><value>Остали извештајни</value></data>
+  <data name="cot.export" xml:space="preserve"><value>Извезите CSV</value></data>
+  <data name="cot.compare" xml:space="preserve"><value>Упоредите тржишта</value></data>
+  <data name="cot.netComparison" xml:space="preserve"><value>Нето позиција — поређење</value></data>
+  <data name="cot.indexComparison" xml:space="preserve"><value>COT индекс — поређење</value></data>
 </root>

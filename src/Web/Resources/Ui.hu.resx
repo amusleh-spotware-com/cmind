@@ -402,4 +402,8 @@
   <data name="cot.cat.assetManager" xml:space="preserve"><value>Eszközkezelő</value></data>
   <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Tőkeáttételes alapok</value></data>
   <data name="cot.cat.otherReportable" xml:space="preserve"><value>Egyéb bejelentendő</value></data>
+  <data name="cot.export" xml:space="preserve"><value>CSV exportálása</value></data>
+  <data name="cot.compare" xml:space="preserve"><value>Piacok összehasonlítása</value></data>
+  <data name="cot.netComparison" xml:space="preserve"><value>Nettó pozíció — összehasonlítás</value></data>
+  <data name="cot.indexComparison" xml:space="preserve"><value>COT index — összehasonlítás</value></data>
 </root>

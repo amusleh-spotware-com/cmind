@@ -34,12 +34,23 @@ combined variant. The page shows:
 - **Latest snapshot** — a table of long / short / net / % of open interest per trader category, plus
   total open interest and the report date.
 
+Each chart carries **zoom in / out** (and reset) toolbar buttons, and you can drag across the time axis to
+zoom. **Export CSV** downloads the full weekly history of the selected market and report type as a
+spreadsheet-ready file. Use **Compare markets** to overlay several markets on a single chart — the
+comparison charts plot each selected market's speculator net position and COT index side by side, so you
+can read cross-market positioning at a glance.
+
 ## How the data flows
 
-A weekly ingestion worker pulls the six CFTC datasets for the tracked markets, upserts the market catalog
-and appends each new report **idempotently** (re-running never duplicates a snapshot). The first run
-back-fills several years of history; later runs re-sync the most recent weeks to catch late revisions.
-Everything runs out of the box with no key; an optional Socrata app token only raises the rate limit.
+The database is the cache. A weekly ingestion worker pulls the six CFTC datasets for the tracked markets,
+upserts the market catalog and appends each new report **idempotently** (re-running never duplicates a
+snapshot). In addition, data is **loaded on demand**: the first time a market is requested it is fetched
+from the CFTC source and stored, and every subsequent request is served straight from the database. The
+cache **refreshes as new weekly reports are released** — once the newest stored report is more than a week
+old the next request transparently pulls and appends the latest data (throttled so the source is never
+hammered). The first load back-fills several years of history; a source outage degrades to serving the best
+cached data. Everything runs out of the box with no key; an optional Socrata app token only raises the rate
+limit.
 
 ## Configuration
 

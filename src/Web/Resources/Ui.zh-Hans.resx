@@ -402,4 +402,8 @@
   <data name="cot.cat.assetManager" xml:space="preserve"><value>资产管理公司</value></data>
   <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>杠杆基金</value></data>
   <data name="cot.cat.otherReportable" xml:space="preserve"><value>其他可报告</value></data>
+  <data name="cot.export" xml:space="preserve"><value>导出 CSV</value></data>
+  <data name="cot.compare" xml:space="preserve"><value>比较市场</value></data>
+  <data name="cot.netComparison" xml:space="preserve"><value>净头寸 — 比较</value></data>
+  <data name="cot.indexComparison" xml:space="preserve"><value>COT 指数 — 比较</value></data>
 </root>

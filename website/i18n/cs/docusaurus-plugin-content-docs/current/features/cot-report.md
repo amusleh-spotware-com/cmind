@@ -20,9 +20,11 @@ Otevřete **Commitment of Traders** z levé navigace. Vyberte **trh**, **typ zpr
 - **Index COT** — liniový graf indexu 0–100 s nejnovějším čtením a jeho extrémním štítkem.
 - **Nejnovější snímek** — tabulka dlouho / krátko / čisté / % otevřeného zájmu na kategorii obchodníka, plus celkový otevřený zájem a datum zprávy.
 
+Každý graf má tlačítka panelu nástrojů **přiblížení / oddálení** (a obnovení), a můžete táhnout přes časovou osu pro přiblížení. **Stažení CSV** stahuje úplnou týdenní historii vybraného trhu a typu zprávy jako soubor připravený do tabulky. Použijte **Porovnání trhů** k překrytí několika trhů na jednom grafu — srovnávací grafy znázorňují čistou pozici spekulanta a index COT každého vybraného trhu vedle sebe, takže můžete přečíst mezitržní pozicování na první pohled.
+
 ## Jak data tečou
 
-Týdenní pracovník přijímání vytahuje šest souborů CFTC pro sledované trhy, aktualizuje katalog trhu a připojuje každou novou zprávu **idempotentně** (znovuspuštění nikdy nezpůsobí duplikování snímku). Prvnímu spuštění předchází několik let historie; pozdější běhy znovu synchronizují poslední týdny, aby se zachytily pozdní revize. Vše běží hned po vybalení bez klíče; volitelný token aplikace Socrata pouze zvyšuje limit sazby.
+Databáze je mezipaměť. Týdenní pracovník přijímání si vezme šest datových souborů CFTC pro sledované trhy, aktualizuje katalog trhu a připojí každou novou zprávu **idempotentně** (znovuspuštění nikdy nezpůsobí duplikování snímku). Navíc se data **načítají na vyžádání**: poprvé, když je trh požadován, je načten ze zdroje CFTC a uložen, a každý následný požadavek je obsluhován přímo z databáze. Mezipaměť **se osvěžuje, když jsou vydány nové týdenní zprávy** — jakmile je nejnovější uložená zpráva starší než jeden týden, další požadavek transparentně vytáhne a připojí nejnovější data (omezené tak, aby zdroj nikdy není zahlcen). První načtení vyplní několik let historie; výpadek zdroje se degraduje na obsluhu nejlepších mezipaměti dat. Vše běží z balení bez klíče; volitelný token aplikace Socrata pouze zvyšuje limit sazby.
 
 ## Konfigurace
 

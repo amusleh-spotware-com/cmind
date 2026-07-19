@@ -402,4 +402,8 @@
   <data name="cot.cat.assetManager" xml:space="preserve"><value>Управляющий активами</value></data>
   <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Кредитные фонды</value></data>
   <data name="cot.cat.otherReportable" xml:space="preserve"><value>Прочие репортируемые</value></data>
+  <data name="cot.export" xml:space="preserve"><value>Экспортировать CSV</value></data>
+  <data name="cot.compare" xml:space="preserve"><value>Сравнить рынки</value></data>
+  <data name="cot.netComparison" xml:space="preserve"><value>Чистая позиция — сравнение</value></data>
+  <data name="cot.indexComparison" xml:space="preserve"><value>Индекс COT — сравнение</value></data>
 </root>

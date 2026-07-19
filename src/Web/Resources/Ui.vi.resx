@@ -402,4 +402,8 @@
   <data name="cot.cat.assetManager" xml:space="preserve"><value>Người quản lý tài sản</value></data>
   <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Quỹ được sử dụng đòn bẩy</value></data>
   <data name="cot.cat.otherReportable" xml:space="preserve"><value>Những người báo cáo khác</value></data>
+  <data name="cot.export" xml:space="preserve"><value>Xuất CSV</value></data>
+  <data name="cot.compare" xml:space="preserve"><value>So sánh thị trường</value></data>
+  <data name="cot.netComparison" xml:space="preserve"><value>Vị trí ròng — so sánh</value></data>
+  <data name="cot.indexComparison" xml:space="preserve"><value>Chỉ số COT — so sánh</value></data>
 </root>

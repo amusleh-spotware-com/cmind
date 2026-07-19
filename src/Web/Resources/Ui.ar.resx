@@ -402,4 +402,8 @@
   <data name="cot.cat.assetManager" xml:space="preserve"><value>مدير الأصول</value></data>
   <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>الصناديق ذات الرافعة المالية</value></data>
   <data name="cot.cat.otherReportable" xml:space="preserve"><value>الآخرون القابلون للإبلاغ</value></data>
+  <data name="cot.export" xml:space="preserve"><value>تصدير CSV</value></data>
+  <data name="cot.compare" xml:space="preserve"><value>مقارنة الأسواق</value></data>
+  <data name="cot.netComparison" xml:space="preserve"><value>صافي المراكز — المقارنة</value></data>
+  <data name="cot.indexComparison" xml:space="preserve"><value>مؤشر COT — المقارنة</value></data>
 </root>

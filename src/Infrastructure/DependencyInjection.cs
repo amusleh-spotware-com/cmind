@@ -163,7 +163,19 @@ public static class DependencyInjection
         services.AddTransient<Infrastructure.Cot.CotRateLimitHandler>();
         services.AddScoped<Infrastructure.Cot.CotWriteService>();
         services.AddScoped<Infrastructure.Cot.CotHealthStore>();
-        services.AddScoped<Core.Cot.ICotReports, Infrastructure.Cot.CotReader>();
+        // The database is the cache: CotReader serves purely from it; the read-through decorator loads a
+        // market from the CFTC source on its first request and refreshes it as new weekly data is released.
+        services.AddSingleton<Infrastructure.Cot.CotLoadGate>();
+        services.AddScoped<Infrastructure.Cot.CotReader>();
+        services.AddScoped<Core.Cot.ICotReports>(sp => new Infrastructure.Cot.CotReadThroughReports(
+            sp.GetRequiredService<Infrastructure.Cot.CotReader>(),
+            sp.GetRequiredService<Core.Cot.ICotSource>(),
+            sp.GetRequiredService<Infrastructure.Cot.CotWriteService>(),
+            sp.GetRequiredService<Infrastructure.Cot.CotHealthStore>(),
+            sp.GetRequiredService<DataContext>(),
+            sp.GetRequiredService<Infrastructure.Cot.CotLoadGate>(),
+            sp.GetRequiredService<IOptionsMonitor<AppOptions>>(),
+            sp.GetRequiredService<TimeProvider>()));
         services.AddHttpClient<Core.Cot.ICotSource, Infrastructure.Cot.CftcSocrataSource>((sp, client) =>
         {
             var cot = sp.GetRequiredService<IOptionsMonitor<AppOptions>>().CurrentValue.Cot;

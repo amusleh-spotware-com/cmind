@@ -34,12 +34,12 @@ Halaman menunjukkan:
 - **Potret terkini** — jadual beli / jual / bersih / % minat terbuka setiap kategori peniaga, ditambah
   jumlah minat terbuka dan tarikh laporan.
 
+Setiap carta membawa butang bar alat **zoom masuk / keluar** (dan tetapkan semula), dan anda boleh seret merentasi paksi masa untuk zum. **Export CSV** memuat turun sejarah mingguan penuh pasaran dan jenis laporan yang dipilih sebagai fail siap hamparan. Gunakan **Compare markets** untuk menindih beberapa pasaran pada carta tunggal — carta perbandingan merancang kedudukan bersih spekulator setiap pasaran yang dipilih dan indeks COT bersebelahan, supaya anda boleh membaca kedudukan lintas-pasaran sepintas lalu.
+
 ## How the data flows
 
-Pekerja pengambilan mingguan menarik enam set data CFTC untuk pasaran terjejak, menggabungkan katalog pasaran
-dan menambah setiap laporan baru **secara idempoten** (menjalankan semula tidak pernah menduplikasi potret). 
-Larian pertama menyedari sejarah beberapa tahun; larian kemudian menyegerakkan semula minggu terkini untuk menangkap 
-revisi lewat. Semuanya berjalan di luar kotak tanpa kunci; token aplikasi Socrata pilihan hanya menaikkan had kadar.
+Pangkalan data ialah cache. Pekerja pengambilan mingguan menarik enam set data CFTC untuk pasaran terjejak, menggabungkan katalog pasaran
+dan menambah setiap laporan baru **secara idempoten** (menjalankan semula tidak pernah menduplikasi potret). Selain itu, data adalah **dimuat atas permintaan**: kali pertama pasaran diminta ia diambil dari sumber CFTC dan disimpan, dan setiap permintaan berikutnya dilayani terus dari pangkalan data. Cache **menyegarkan semula kerana laporan mingguan baru dirilis** — sebaik sahaja laporan yang disimpan terbaru lebih daripada seminggu lama permintaan berikutnya secara limpah menarik dan menambah data terkini (dikurangkan supaya sumber tidak pernah dipukul). Beban pertama memenuhi sejarah beberapa tahun; gangguan sumber merosot kepada melayani data cache terbaik. Semuanya berjalan di luar kotak tanpa kunci; token aplikasi Socrata pilihan hanya menaikkan had kadar.
 
 ## Configuration
 

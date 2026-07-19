@@ -20,9 +20,11 @@ cMind bietet einen integrierten **Commitment of Traders**-Bericht — die wöche
 - **COT-Index** — ein Liniendiagramm des 0–100-Index mit der neuesten Ablesung und seinem Extremlabel.
 - **Aktuelle Momentaufnahme** — eine Tabelle mit lang / kurz / netto / % des offenen Interesses pro Händlerkategorie, plus gesamtes offenes Interesse und Berichtsdatum.
 
+Jedes Diagramm hat Symbolleisten-Schaltflächen **Vergrößerung / Verkleinerung** (und Zurücksetzen), und Sie können über die Zeitachse ziehen zum Vergrößern. **CSV exportieren** lädt die vollständige wöchentliche Historie des ausgewählten Markts und Berichtstyps als tabellenfertige Datei herunter. Verwenden Sie **Märkte vergleichen**, um mehrere Märkte in einem Diagramm überlagern — die Vergleichsdiagramme zeigen die Nettopositionen und COT-Index des Spekulanten für jeden ausgewählten Markt nebeneinander, sodass Sie die marktübergreifende Positionierung auf einen Blick erfassen können.
+
 ## Wie die Daten fließen
 
-Ein wöchentlicher Erfassungsarbeiter zieht die sechs CFTC-Datensätze für die verfolgten Märkte, führt den Marktkatalog zusammen und fügt jeden neuen Bericht **idempotent** an (erneutes Ausführen dupliziert niemals einen Snapshot). Der erste Lauf füllt mehrere Jahre Verlauf auf; spätere Läufe synchronisieren die letzten Wochen neu, um späte Revisionen zu erfassen. Alles funktioniert sofort ohne Schlüssel; ein optionales Socrata-App-Token erhöht lediglich die Rate Limit.
+Die Datenbank ist der Cache. Ein wöchentlicher Erfassungsarbeiter zieht die sechs CFTC-Datensätze für die verfolgten Märkte ab, führt den Marktkatalog zusammen und fügt jeden neuen Bericht **idempotent** an (erneutes Ausführen dupliziert niemals einen Snapshot). Darüber hinaus werden Daten **bei Bedarf geladen**: Wenn ein Markt zum ersten Mal angefordert wird, wird er aus der CFTC-Quelle abgerufen und gespeichert, und jede nachfolgende Anforderung wird direkt aus der Datenbank bereitgestellt. Der Cache **aktualisiert sich mit der Veröffentlichung neuer Wochenberichte** — sobald der neueste gespeicherte Bericht älter als eine Woche ist, lädt die nächste Anforderung transparent die neuesten Daten ab und fügt sie an (gedrosselt, um die Quelle nie zu überlasten). Der erste Ladevorgang füllt mehrere Jahre Verlauf auf; ein Quellenausfall führt dazu, dass die besten zwischengespeicherten Daten bereitgestellt werden. Alles funktioniert sofort ohne Schlüssel; ein optionales Socrata-App-Token erhöht lediglich die Rate Limit.
 
 ## Konfiguration
 

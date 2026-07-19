@@ -402,4 +402,8 @@
   <data name="cot.cat.assetManager" xml:space="preserve"><value>Διαχειριστής Περιουσιακών Στοιχείων</value></data>
   <data name="cot.cat.leveragedFunds" xml:space="preserve"><value>Κεφάλαια με Μόχλευση</value></data>
   <data name="cot.cat.otherReportable" xml:space="preserve"><value>Άλλες Αναφέρουσες</value></data>
+  <data name="cot.export" xml:space="preserve"><value>Εξαγωγή CSV</value></data>
+  <data name="cot.compare" xml:space="preserve"><value>Σύγκριση αγορών</value></data>
+  <data name="cot.netComparison" xml:space="preserve"><value>Καθαρή θέση — σύγκριση</value></data>
+  <data name="cot.indexComparison" xml:space="preserve"><value>Δείκτης COT — σύγκριση</value></data>
 </root>

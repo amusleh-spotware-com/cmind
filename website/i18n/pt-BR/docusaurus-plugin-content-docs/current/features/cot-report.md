@@ -35,13 +35,11 @@ A página mostra:
 - **Snapshot mais recente** — uma tabela de comprado / vendido / líquido / % de interesse em aberto por categoria
   de trader, mais interesse em aberto total e data do relatório.
 
+Cada gráfico possui botões de barra de ferramentas para **ampliar / reduzir** (e resetar), e você pode arrastar ao longo do eixo de tempo para ampliar. **Exportar CSV** baixa o histórico completo semanalmente do mercado selecionado e tipo de relatório como arquivo pronto para planilha. Use **Comparar mercados** para sobrepor vários mercados em um único gráfico — os gráficos de comparação plotam a posição líquida especulativa de cada mercado selecionado e o índice COT lado a lado, para que você possa ler o posicionamento entre mercados em um relance.
+
 ## Como os dados fluem
 
-Um trabalhador de ingestão semanal extrai os seis conjuntos de dados do CFTC para os mercados rastreados, faz upsert
-do catálogo de mercado e adiciona cada novo relatório **idempotentemente** (re-executar nunca duplica um snapshot).
-A primeira execução preenche vários anos de histórico; execuções posteriores ressincronizam as semanas mais recentes
-para pegar revisões tardias. Tudo funciona fora da caixa sem chave; um token de aplicativo Socrata opcional apenas
-aumenta o limite de taxa.
+O banco de dados é o cache. Um trabalhador de ingestão semanal extrai os seis conjuntos de dados CFTC dos mercados rastreados, faz upsert do catálogo de mercado e anexa cada novo relatório **idempotentemente** (re-executar nunca duplica um snapshot). Além disso, os dados são **carregados sob demanda**: a primeira vez que um mercado é solicitado, ele é obtido da fonte CFTC e armazenado, e cada solicitação subsequente é atendida diretamente do banco de dados. O cache **se atualiza conforme novos relatórios semanais são lançados** — uma vez que o relatório armazenado mais novo tenha mais de uma semana de idade, a próxima solicitação extrai transparentemente e anexa os dados mais recentes (limitado para que a fonte nunca seja assoberbada). O primeiro carregamento preenche vários anos de histórico; uma interrupção de fonte degrada para atender os melhores dados em cache. Tudo funciona fora da caixa sem chave; um token de aplicativo Socrata opcional apenas aumenta o limite de taxa.
 
 ## Configuração
 

@@ -39,12 +39,11 @@ kombiniranimi variantami. Stran prikazuje:
 - **Sveža slika** — tabela dolgo / kratko / neto / % odprtega interesa na kategorijo trgovca, skupaj
   z skupnim odprtim interesom in datumom poročila.
 
+Vsak grafikon ima gumbe za orodja **povečave / pomanjšave** (in reset), čez časovno os lahko povlečete za povečavo. **Izvoz CSV** presneme polno tedensko zgodovino izbranega trga in tipa poročila kot datoteko, pripravljeno za preglednico. Uporabite **Primerjaj trge** za prekrivanje več trgov na eno risbo — grafikoni primerjave narišejo čisto pozicioniranje spekulanta in COT indeks v vsako izbrano trgov drug ob drugega, tako da lahko berete presečno tržno pozicioniranje na prvo pogled.
+
 ## Kako podatki tečejo
 
-Tedenski vbiralnik premakne šest CFTC datasetov za sledene trge, vstavlja katalog trga in dodaja
-vsako novo poročilo **idempotentno** (ponovni zagon nikoli ne podvoji sliko). Prvi zagon后vnese
-zgodovino več let; poznejši teki ponovno usklajijo zadnje tedne, da ujamejo pozne popravke. Vse se
-izvaja iz škatlice brez ključa; izbirni Socrata ključ aplikacije le dviguje omejitev hitrosti.
+Podatkovne zbirke je predpomnilnik. Tedenski radnik vbilanja potegne šest CFTC datasetov za sledene trge, vstavlja katalog trga in dodaja vsako novo poročilo **idempotentno** (ponovni zagon nikoli ne podvoji sliko). Poleg tega se podatki **nalagajo na zahtevo**: prvi krat, ko se zahteva trg, se pridobi iz vira CFTC in shrani, vsaka naslednja zahteva pa se služi direktno iz podatkovne zbirke. Predpomnilnik se **osvežuje, ko izidejo nova tedenskega poročila** — ko je najnovejše shranjeno poročilo starejše kot en teden, naslednja zahteva transparentno potegne in doda najnovejše podatke (omejene, da se vir nikoli ne prezgosti). Prvi nanos vnaprej napolni več let zgodovine; izpad vira se poslabša na služ s popolnoma shranjenimi podatki. Vse se izvaja iz škatlice brez ključa; izbirni Socrata ključ aplikacije le dviguje omejitev hitrosti.
 
 ## Konfiguracija
 

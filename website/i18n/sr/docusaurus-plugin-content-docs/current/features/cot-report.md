@@ -39,13 +39,11 @@ između samo fučersa i kombinovane varijante. Stranica prikazuje:
 - **Najnovija slika** — tabela duga / kratka / neto / % otvorene kamate po kategoriji trgovca, plus
   ukupna otvorena kamatna stopa i datum izveštaja.
 
+Svaki grafikon ima dugmadi alatne trake za **uvećanje/umanjenje** (i reset), i možete vuči preko vremenske ose za zumiranje. **Izvoz CSV** preuzima punu nedeljnu istoriju odabranog tržišta i vrstu izveštaja kao datoteku spremnu za tabele. Koristite **Poredi tržišta** da preklapate nekoliko tržišta na jednom grafikonu — grafikoni poređenja crtaju čist položaj spekulanta i COT indeks svakog odabranog tržišta jedan pored drugog, tako da možete čitati pozicioniranje između tržišta na prvi pogled.
+
 ## Kako podaci tečaju
 
-Nedeljni radnik unoša povlači šest CFTC datasetima za praćena tržišta, upsertuje katalog tržišta i
-dodeljuje svaki novi izveštaj **idempotentno** (ponovno pokretanje nikad ne umnožava snimak). Prvo
-pokretanje popunjava nekoliko godina istorije; kasnija pokretanja ponovno usklađuju najnovije nedelje
-da bi uhvatila pozne revizije. Sve se pokreće iz kutije bez ključa; opcioni Socrata aplikacijski
-ključ samo podiže ograničenje stope.
+Baza podataka je keš. Nedeljni radnik unoša izvlači šest CFTC skupova podataka za praćena tržišta, upsertuje katalog tržišta i prilagođava svaki novi izveštaj **idempotentno** (ponovno pokretanje nikad ne umnožava snimak). Pored toga, podaci se **učitavaju na zahtev**: prvi put kada se traži tržište, izvlači se iz CFTC izvora i pohranjuje, a svaki kasnije zahtev se služi direktno iz baze podataka. Keš se **osvežava kako se objavljuju nova nedeljni izveštaji** — kada je najnoviji pohranjen izveštaj stariji od nedelje, sledeći zahtev transparentno izvlači i prilagođava najnovije podatke (smanjeno tako da izvor nikada nije zamoren). Prvi učitak unazad popunjava nekoliko godina istorije; izvor kvarija degradira na služ sa najboljim keširanih podataka. Sve se pokreće iz kutije bez ključa; opcioni Socrata aplikacijski ključ samo podiže ograničenje stope.
 
 ## Konfiguracija
 

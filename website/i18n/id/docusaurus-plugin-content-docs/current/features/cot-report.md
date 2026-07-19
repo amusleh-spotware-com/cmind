@@ -20,9 +20,11 @@ Buka **Komitmen Pedagang** dari navigasi kiri. Pilih **pasar**, **jenis laporan*
 - **Indeks COT** — grafik garis dari indeks 0–100, dengan pembacaan terbaru dan labelnya yang ekstrem.
 - **Snapshot terbaru** — tabel panjang / pendek / neto / % minat terbuka per kategori pedagang, plus total minat terbuka dan tanggal laporan.
 
+Setiap bagan memiliki tombol toolbar **perbesar / perkecil** (dan atur ulang), dan Anda dapat menyeret melintasi sumbu waktu untuk memperbesar. **Ekspor CSV** mengunduh riwayat mingguan lengkap pasar yang dipilih dan jenis laporan sebagai file siap spreadsheet. Gunakan **Bandingkan pasar** untuk menumpangkan beberapa pasar pada satu bagan — bagan perbandingan memplot posisi neto spekulan dan indeks COT setiap pasar yang dipilih berdampingan, sehingga Anda dapat membaca posisi lintas pasar sekilas.
+
 ## Bagaimana data mengalir
 
-Pekerja ingesti mingguan menarik enam kumpulan data CFTC untuk pasar yang dilacak, memperbarui katalog pasar dan menambahkan setiap laporan baru **secara idempoten** (menjalankan kembali tidak pernah menduplikasi snapshot). Kegiatan pertama mengisi kembali beberapa tahun sejarah; kegiatan nanti menyinkronkan ulang minggu-minggu terakhir untuk menangkap revisi terlambat. Semuanya berjalan langsung tanpa kunci; token aplikasi Socrata opsional hanya meningkatkan batas laju.
+Basis data adalah cache. Pekerja ingesti mingguan menarik enam kumpulan data CFTC untuk pasar yang dilacak, memperbarui katalog pasar dan menambahkan setiap laporan baru **secara idempoten** (menjalankan kembali tidak pernah menduplikasi snapshot). Selain itu, data **dimuat sesuai permintaan**: pertama kali pasar diminta, data diambil dari sumber CFTC dan disimpan, dan setiap permintaan berikutnya dilayani langsung dari basis data. Cache **menyegarkan saat laporan mingguan baru dirilis** — begitu laporan tersimpan terbaru berusia lebih dari seminggu, permintaan berikutnya secara transparan menarik dan menambahkan data terbaru (dibatasi sehingga sumber tidak pernah dihajar). Beban pertama mengisi kembali beberapa tahun sejarah; pemadaman sumber menurun untuk melayani data cache terbaik. Semuanya berjalan langsung tanpa kunci; token aplikasi Socrata opsional hanya meningkatkan batas laju.
 
 ## Konfigurasi
 

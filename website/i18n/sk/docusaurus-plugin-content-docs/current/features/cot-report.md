@@ -34,13 +34,11 @@ a kombinovanou variantou. Stránka zobrazuje:
 - **Najnovší snímok** — tabuľka dlhá / krátka / čistá / % otvorený záujem na kategóriu obchodníka, plus
   celkový otvorený záujem a dátum správy.
 
+Každý graf má tlačidlá panela nástrojov na **zväčšenie / zmenšenie** (a resetovanie) a môžete prenášať cez os času, aby ste zväčšili. **Exportovať CSV** stiahne úplnú týždennú históriu vybraného trhu a typu správy ako súbor pripravený na tabuľku. Použite **Porovnať trhy** na prekrytie niekoľkých trhov na jednom grafe — porovnávacie grafy vykresľujú čistú pozíciu špekulantov vybraného trhu a index COT vedľa seba, aby ste mohli čítať pozície na viacerých trhoch na prvý pohľad.
+
 ## Ako tok údajov
 
-Týždenný pracovník príjmu ťahá šesť množín údajov CFTC pre sledované trhy, upsertuje katalóg trhov
-a pripája každú novú správu **idempotentne** (opätovné spustenie nikdy neduplikuje snímok). Prvé spustenie
-vyplní niekoľko rokov histórie; neskoršie spustenia znovu synchronizujú posledné týždne, aby sa
-zachytili neskoré revízie. Všetko funguje mimo krabice bez kľúča; voliteľný token aplikácie Socrata
-iba zvýši limit sadzby.
+Databáza je vyrovnávacia pamäť. Týždenný pracovník príjmu ťahá šesť množín údajov CFTC pre sledované trhy, aktualizuje katalóg trhov a pripája každú novú správu **idempotentne** (opätovné spustenie nikdy neduplikuje snímok). Okrem toho sú údaje **načítané na požiadanie**: prvýkrát, keď sa požaduje trh, sa načítava zo zdroja CFTC a uloží, a každé následné požiadavky sa obsluhujú priamo z databázy. Vyrovnávacia pamäť sa **obnovuje s vydaním nových týždenných správ** — akonáhle je najnovšia uložená správa staršia ako týždeň, nasledujúce požiadavky transparentne vytiahnu a pripoja najnovšie údaje (regulované tak, aby zdroj nikdy nebol preplavený). Prvé načítanie wstecz vypĺňa niekoľko rokov histórie; výpadok zdroja zhoršuje podávanie najlepších údajov z vyrovnávacej pamäte. Všetko funguje z krabice bez kľúča; voliteľný token aplikácie Socrata iba zvýši ľahostajnosť sadzby.
 
 ## Konfigurácia
 

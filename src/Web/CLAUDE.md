@@ -95,6 +95,18 @@ here. Full UI contract: [website/docs/ui-guidelines.md](website/docs/ui-guidelin
   `data-testid` inside it.
 - `Slow` (a `LocatorAssertionsToBeVisibleOptions`) is **not** accepted by `ToBeEnabledAsync` /
   `ToBeHiddenAsync` — each assertion has its own options type; pass `new() { Timeout = … }`.
+- **`MudSelect` multi-select callbacks use NULLABLE-element collections; a non-nullable handler compiles but
+  fails `get_file_problems` (CS8622), not `dotnet build`.** `SelectedValuesChanged`'s target is
+  `Func<IEnumerable<string?>?, Task>` and `MultiSelectionTextFunc` is `Func<List<string?>?, string>`. A handler
+  typed `IEnumerable<string> values` / `List<string> values` builds green but Rider flags the nullability
+  mismatch — so match the signatures (`IEnumerable<string?>? values`, `List<string?>? values`) and null-filter
+  inside. The `.razor` `get_file_problems` gate is the only thing that catches it.
+- **ApexCharts zoom = the native toolbar, not custom buttons.** Enable `Chart.Toolbar { Show = true, Tools = new
+  Tools { Zoomin = true, Zoomout = true, Reset = … } }` + `Chart.Zoom { Enabled = true, Type = AxisType.X }`. The
+  **Reset tool's default glyph is a "home" icon** — to show a proper refresh/reset icon set `Tools.Reset` to an
+  **HTML/SVG string** (e.g. an inline `<svg>` with `fill="currentColor"`); `Tools` bool-ish props also accept a
+  custom-icon string. `DashActivityChart` disables the toolbar (`Show = false`) on purpose — copy that when you
+  do NOT want zoom, but a data chart the user explores gets the zoom toolbar.
 
 ## Dynamic-JSON traps in `.razor` (runtime, not compile — each cost a debug loop)
 

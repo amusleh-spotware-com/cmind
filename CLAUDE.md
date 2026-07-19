@@ -403,6 +403,20 @@ Each of these burned real tokens/time in a past session. They are not style — 
 - **A running Web locks the build output.** `dotnet run`/an IDE-debug Web holds `bin/**/*.dll`, so a
   Web/Nodes build fails with `MSB3027 … locked by Web (PID …)`. Kill the stray process
   (`taskkill //F //PID <pid>`) before rebuilding; the PID is in the error.
+- **The auto-commit hook stages MODIFIED files but not NEW untracked ones — a new-namespace feature ships
+  half-committed and CI dies on a fresh checkout.** A session added a whole new `Core.Cot`/`Infrastructure.Cot`
+  namespace; the auto-commit pushed the *edited* `DependencyInjection.cs` (which references it) but left the new
+  `src/**/Cot/*.cs`, the EF migration, and the docs as untracked — so the pushed commit built locally (files on
+  disk) yet failed CI with `CS0234 'Cot' does not exist in the namespace` on the clean runner checkout. When a
+  change ADDS files (new module dir, migration, docs, i18n, locale files), commit the feature **atomically
+  yourself**: `git add -A`, then `git status --porcelain --untracked-files=all` must show nothing feature-related
+  left as `??`, and after pushing **confirm CI's build job is green** — never trust that the auto-commit captured
+  a multi-file/new-file feature.
+- **Strong-id types live in the ROOT `Core` namespace (`StrongIds.cs` = `namespace Core;`), not in the module
+  namespace.** A file in `Core.Cot` / `Infrastructure.Cot` that uses `CotReportId`/`CotMarketId` (or any strong
+  id) needs an explicit `using Core;` — without it you get `CS0246 CotReportId could not be found` even though the
+  id is "right there". Bit twice this session (`CotReader`, `CotReadThroughReports`). Add `using Core;` whenever a
+  new module file references a strong id.
 - **E2E fixture-boot saturation is not a test bug.** Running Playwright suites back-to-back exhausts the
   machine; `AppFixture.InitializeAsync` then times out on the login nav and every test in that collection
   **fast-fails in 5–35 ms** (vs a real failure's seconds). Tell: it passes in isolation. Run E2E in small

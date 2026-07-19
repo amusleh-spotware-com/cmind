@@ -136,6 +136,18 @@ xUnit does not guarantee order. Two traps that each shipped a red CI here:
   accessible-name match is a substring match across the whole page. Fix: scope to the container first
   (`page.Locator(".mud-dialog").GetByRole(...)`) **and** pass `new() { Name = "Close", Exact = true }`.
   `:has-text('N')` is likewise a substring — fine for a distinct number, wrong for a short/near-duplicate.
+- **A `MudSelect`'s `data-testid` is on its HIDDEN `<input>` — never put it in a "resolve to a visible state"
+  locator.** A `WaitForAsync(Visible)` over `"[data-testid=cot-net-chart], [data-testid=cot-nodata], [data-testid=cot-market]"`
+  timed out because `.First` matched the hidden `cot-market` select input (first in DOM order) and waited forever
+  for it to become visible. For "the page resolved to a known state" assert on the **visible** panels/alerts only
+  (a `MudPaper`/`MudAlert` testid); to drive the select, click `.mud-select:has([data-testid=…]) .mud-input-control`.
+- **Any read path that lazily fetches from an external source (read-through cache, on-demand load) MUST get a
+  FAKE source in integration/`WebApplicationFactory` tests — else the read hits the live network and is flaky.**
+  The COT read-through decorator fetches from CFTC on a cache miss; the endpoint tests
+  `ConfigureTestServices(s => { s.RemoveAll<ICotSource>(); s.AddSingleton<ICotSource>(new FakeCotSource()); })`
+  and pre-seed the DB, so reads are served from Postgres, deterministically, offline. Assert the load-through
+  behaviour (first call fetches + persists, second served from DB, empty market throttled to one fetch) against
+  the fake with a `CallCount` — never against the real endpoint.
 
 - **Wait for interactivity, not just `window.Blazor` — use `page.WaitForAppReadyAsync()`.** The app is
   Blazor **Server** (InteractiveServer): a freshly-loaded page shows SSR HTML *before* the circuit wires

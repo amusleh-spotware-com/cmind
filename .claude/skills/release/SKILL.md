@@ -26,7 +26,11 @@ good commit messages are the changelog.
        sync) and the census gates. Must be green.
      - `cd website && node scripts/check-i18n-parity.mjs` — docs translations in sync.
    - Confirm the latest CI run on `main` is green (`gh run list --branch main --limit 5`). Don't tag a red
-     commit.
+     commit — **but distinguish a real regression from a known flaky E2E.** The E2E job flakes on unrelated
+     tests under CI load (e.g. a `CopyTradingTests` 30s timeout with 425/426 passing). If the only failure is an
+     E2E test **unrelated to the tagged change** and it passes in isolation, it's a flake: `gh run rerun <id>
+     --failed`, wait for green, then tag. A failure in a test the change actually touches, or a build/unit/gate
+     failure, is a real red — fix it, never rerun-around it.
 
 2. **Compute the next version** from the most recent tag
    (`git tag --sort=-v:refname | head -1`, e.g. `v1.0.0-alpha.1`). Default bump = **increment the

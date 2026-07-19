@@ -1,0 +1,86 @@
+﻿@* Start an AI Build project: create a new cBot from scratch (name + language) or improve one of the
+   user's existing cBots that has source. A model is chosen for the session. Returns AiBuildStartResult. *@
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Class="mr-2" />
+            New AI Build
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTabs @bind-ActivePanelIndex="_tab" Rounded="true" Border="true" ApplyEffectsToContainer="true"
+                 Class="mb-2" PanelClass="pa-4" data-testid="ai-build-start-tabs">
+            <MudTabPanel Text="New cBot" Icon="@Icons.Material.Filled.Add">
+                <MudTextField @bind-Value="_name" Label="cBot name" Immediate="true" Required="true"
+                              Error="@NameTaken" ErrorText="A cBot with that name already exists"
+                              data-testid="ai-build-new-name" />
+                <MudText Typo="Typo.caption" Class="mt-3 mb-1">Language</MudText>
+                <MudRadioGroup T="int" @bind-Value="_language">
+                    <MudRadio T="int" Value="0">C#</MudRadio>
+                    <MudRadio T="int" Value="1">Python</MudRadio>
+                </MudRadioGroup>
+            </MudTabPanel>
+            <MudTabPanel Text="Improve existing" Icon="@Icons.Material.Filled.Edit" data-testid="ai-build-improve-tab">
+                @if (Projects.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true" data-testid="ai-build-no-projects">
+                        You have no cBots with source yet. Create one from scratch first.
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudSelect T="Guid?" @bind-Value="_projectId" Label="cBot to improve" Dense="true"
+                               data-testid="ai-build-improve-select">
+                        @foreach (var p in Projects)
+                        {
+                            <MudSelectItem T="Guid?" Value="@((Guid?)p.Id)">@p.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+            </MudTabPanel>
+        </MudTabs>
+
+        <AiModelSelect Feature="AiFeature.GenerateCBot" @bind-Selected="_modelId" Class="mt-1" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" data-testid="ai-build-start-cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Create"
+                   Disabled="@(!CanCreate)" data-testid="ai-build-start-create">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public IReadOnlyList<ProjectOption> Projects { get; set; } = [];
+
+    private int _tab;
+    private string _name = "";
+    private int _language;
+    private Guid? _projectId;
+    private Guid? _modelId;
+
+    private bool NameTaken =>
+        !string.IsNullOrWhiteSpace(_name) &&
+        Projects.Any(p => string.Equals(p.Name, _name.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    private bool CanCreate => _tab == 0
+        ? !string.IsNullOrWhiteSpace(_name) && !NameTaken
+        : _projectId is not null;
+
+    private void Create()
+    {
+        if (!CanCreate) return;
+        var result = _tab == 0
+            ? new AiBuildStartResult(true, _name.Trim(), _language, null, _modelId)
+            : new AiBuildStartResult(false, null, 0, _projectId, _modelId);
+        Dialog.Close(DialogResult.Ok(result));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    public sealed record ProjectOption(Guid Id, string Name);
+
+    public sealed record AiBuildStartResult(bool IsNew, string? Name, int Language, Guid? ProjectId, Guid? ModelId);
+}

@@ -91,7 +91,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("AgentId", "Sequence");
 
-                    b.ToTable("AgentDecisionRecords", (string)null);
+                    b.ToTable("AgentDecisionRecords");
                 });
 
             modelBuilder.Entity("Core.Agent.AgentMemoryRecord", b =>
@@ -133,7 +133,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("AgentId", "CreatedAt");
 
-                    b.ToTable("AgentMemories", (string)null);
+                    b.ToTable("AgentMemories");
                 });
 
             modelBuilder.Entity("Core.Agent.TradingAgent", b =>
@@ -247,7 +247,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "CreatedAt");
 
-                    b.ToTable("TradingAgents", (string)null);
+                    b.ToTable("TradingAgents");
                 });
 
             modelBuilder.Entity("Core.AgentMandate", b =>
@@ -331,7 +331,7 @@ namespace Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
 
-                    b.ToTable("AgentMandates", (string)null);
+                    b.ToTable("AgentMandates");
                 });
 
             modelBuilder.Entity("Core.AgentProposal", b =>
@@ -399,7 +399,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("MandateId", "CreatedAt");
 
-                    b.ToTable("AgentProposals", (string)null);
+                    b.ToTable("AgentProposals");
                 });
 
             modelBuilder.Entity("Core.Ai.CurrencyStrength.CurrencyStrengthSnapshot", b =>
@@ -519,7 +519,7 @@ namespace Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"OwnerUserId\" IS NOT NULL AND \"IsActive\" = true AND \"IsDeleted\" = false");
 
-                    b.ToTable("AiProviderCredentials", (string)null);
+                    b.ToTable("AiProviderCredentials");
                 });
 
             modelBuilder.Entity("Core.AlertEvent", b =>
@@ -563,7 +563,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "CreatedAt");
 
-                    b.ToTable("AlertEvents", (string)null);
+                    b.ToTable("AlertEvents");
                 });
 
             modelBuilder.Entity("Core.AlertRule", b =>
@@ -631,7 +631,7 @@ namespace Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
 
-                    b.ToTable("AlertRules", (string)null);
+                    b.ToTable("AlertRules");
                 });
 
             modelBuilder.Entity("Core.AppSetting", b =>
@@ -649,7 +649,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasKey("Key");
 
-                    b.ToTable("AppSettings", (string)null);
+                    b.ToTable("AppSettings");
                 });
 
             modelBuilder.Entity("Core.AppUser", b =>
@@ -726,7 +726,7 @@ namespace Infrastructure.Persistence.Migrations
                     b.HasIndex("NormalizedEmail")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
 
                     b.HasDiscriminator<string>("Role").HasValue("AppUser");
 
@@ -781,7 +781,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "Time");
 
-                    b.ToTable("AuditLogs", (string)null);
+                    b.ToTable("AuditLogs");
                 });
 
             modelBuilder.Entity("Core.CBot", b =>
@@ -827,7 +827,7 @@ namespace Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
 
-                    b.ToTable("CBots", (string)null);
+                    b.ToTable("CBots");
                 });
 
             modelBuilder.Entity("Core.CBotSourceProject", b =>
@@ -879,7 +879,7 @@ namespace Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
 
-                    b.ToTable("CBotSourceProjects", (string)null);
+                    b.ToTable("CBotSourceProjects");
 
                     b.HasDiscriminator<string>("Language").HasValue("CBotSourceProject");
 
@@ -923,7 +923,7 @@ namespace Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "Username")
                         .IsUnique();
 
-                    b.ToTable("CTids", (string)null);
+                    b.ToTable("CTids");
                 });
 
             modelBuilder.Entity("Core.Calendar.CalendarApiClient", b =>
@@ -1195,7 +1195,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "DocumentType", "Version");
 
-                    b.ToTable("ConsentRecords", (string)null);
+                    b.ToTable("ConsentRecords");
                 });
 
             modelBuilder.Entity("Core.CopyDestination", b =>
@@ -1354,7 +1354,7 @@ namespace Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
 
-                    b.ToTable("CopyDestinations", (string)null);
+                    b.ToTable("CopyDestinations");
                 });
 
             modelBuilder.Entity("Core.CopyExecution", b =>
@@ -1416,7 +1416,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ProfileId", "OccurredAt");
 
-                    b.ToTable("CopyExecutions", (string)null);
+                    b.ToTable("CopyExecutions");
                 });
 
             modelBuilder.Entity("Core.CopyFeeAccrual", b =>
@@ -1461,7 +1461,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "SettledAt");
 
-                    b.ToTable("CopyFeeAccruals", (string)null);
+                    b.ToTable("CopyFeeAccruals");
                 });
 
             modelBuilder.Entity("Core.CopyNotification", b =>
@@ -1512,7 +1512,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "OccurredAt");
 
-                    b.ToTable("CopyNotifications", (string)null);
+                    b.ToTable("CopyNotifications");
                 });
 
             modelBuilder.Entity("Core.CopyProfile", b =>
@@ -1564,7 +1564,7 @@ namespace Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
 
-                    b.ToTable("CopyProfiles", (string)null);
+                    b.ToTable("CopyProfiles");
                 });
 
             modelBuilder.Entity("Core.CopyProviderListing", b =>
@@ -1622,7 +1622,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("CopyProviderListings", (string)null);
+                    b.ToTable("CopyProviderListings");
                 });
 
             modelBuilder.Entity("Core.Dashboard.UserDashboard", b =>
@@ -1651,7 +1651,7 @@ namespace Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
 
-                    b.ToTable("UserDashboards", (string)null);
+                    b.ToTable("UserDashboards");
                 });
 
             modelBuilder.Entity("Core.Domain.AiFeatureBinding", b =>
@@ -1692,7 +1692,48 @@ namespace Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"OwnerUserId\" IS NOT NULL AND \"IsDeleted\" = false");
 
-                    b.ToTable("AiFeatureBindings", (string)null);
+                    b.ToTable("AiFeatureBindings");
+                });
+
+            modelBuilder.Entity("Core.Domain.CBotBuildMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ProjectId", "CreatedAt");
+
+                    b.ToTable("CBotBuildMessages");
                 });
 
             modelBuilder.Entity("Core.EmailVerificationToken", b =>
@@ -1723,7 +1764,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("EmailVerificationToken", (string)null);
+                    b.ToTable("EmailVerificationToken");
                 });
 
             modelBuilder.Entity("Core.Instance", b =>
@@ -1798,7 +1839,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "CreatedAt");
 
-                    b.ToTable("Instances", (string)null);
+                    b.ToTable("Instances");
 
                     b.HasDiscriminator<string>("Kind").HasValue("Instance");
 
@@ -1838,7 +1879,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("InstanceId", "Time");
 
-                    b.ToTable("InstanceLogs", (string)null);
+                    b.ToTable("InstanceLogs");
                 });
 
             modelBuilder.Entity("Core.Journal.JournalNote", b =>
@@ -1879,7 +1920,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "CreatedAt");
 
-                    b.ToTable("JournalNotes", (string)null);
+                    b.ToTable("JournalNotes");
                 });
 
             modelBuilder.Entity("Core.LegalDocument", b =>
@@ -1923,7 +1964,7 @@ namespace Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
 
-                    b.ToTable("LegalDocuments", (string)null);
+                    b.ToTable("LegalDocuments");
                 });
 
             modelBuilder.Entity("Core.McpApiKey", b =>
@@ -1974,7 +2015,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("McpApiKeys", (string)null);
+                    b.ToTable("McpApiKeys");
                 });
 
             modelBuilder.Entity("Core.MfaBackupCode", b =>
@@ -2000,7 +2041,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "CodeHash");
 
-                    b.ToTable("MfaBackupCode", (string)null);
+                    b.ToTable("MfaBackupCode");
                 });
 
             modelBuilder.Entity("Core.Node", b =>
@@ -2043,7 +2084,7 @@ namespace Infrastructure.Persistence.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Nodes", (string)null);
+                    b.ToTable("Nodes");
 
                     b.HasDiscriminator<string>("Kind").HasValue("Node");
 
@@ -2084,7 +2125,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasKey("NodeId");
 
-                    b.ToTable("NodeStats", (string)null);
+                    b.ToTable("NodeStats");
                 });
 
             modelBuilder.Entity("Core.OpenApiApplication", b =>
@@ -2139,7 +2180,7 @@ namespace Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
 
-                    b.ToTable("OpenApiApplications", (string)null);
+                    b.ToTable("OpenApiApplications");
                 });
 
             modelBuilder.Entity("Core.OpenApiAuthorization", b =>
@@ -2210,7 +2251,7 @@ namespace Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
 
-                    b.ToTable("OpenApiAuthorizations", (string)null);
+                    b.ToTable("OpenApiAuthorizations");
                 });
 
             modelBuilder.Entity("Core.ParamSet", b =>
@@ -2252,7 +2293,7 @@ namespace Infrastructure.Persistence.Migrations
                     b.HasIndex("CBotId", "Name")
                         .IsUnique();
 
-                    b.ToTable("ParamSets", (string)null);
+                    b.ToTable("ParamSets");
                 });
 
             modelBuilder.Entity("Core.PropFirmChallenge", b =>
@@ -2405,7 +2446,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "CreatedAt");
 
-                    b.ToTable("PropFirmChallenges", (string)null);
+                    b.ToTable("PropFirmChallenges");
                 });
 
             modelBuilder.Entity("Core.PropRule", b =>
@@ -2462,7 +2503,7 @@ namespace Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
 
-                    b.ToTable("PropRules", (string)null);
+                    b.ToTable("PropRules");
                 });
 
             modelBuilder.Entity("Core.TradingAccount", b =>
@@ -2519,7 +2560,7 @@ namespace Infrastructure.Persistence.Migrations
                     b.HasIndex("CTidId", "AccountNumber")
                         .IsUnique();
 
-                    b.ToTable("TradingAccounts", (string)null);
+                    b.ToTable("TradingAccounts");
                 });
 
             modelBuilder.Entity("Core.ViewerGrant", b =>
@@ -2546,7 +2587,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("InstanceId");
 
-                    b.ToTable("ViewerGrants", (string)null);
+                    b.ToTable("ViewerGrants");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
@@ -2565,7 +2606,7 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DataProtectionKeys", (string)null);
+                    b.ToTable("DataProtectionKeys");
                 });
 
             modelBuilder.Entity("Core.AdminUser", b =>
@@ -2640,7 +2681,7 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("StoppedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.ToTable("Instances", null, t =>
+                    b.ToTable("Instances", t =>
                         {
                             t.Property("ContainerId")
                                 .HasColumnName("CompletedBacktestInstance_ContainerId");
@@ -2677,7 +2718,7 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("StoppedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.ToTable("Instances", null, t =>
+                    b.ToTable("Instances", t =>
                         {
                             t.Property("ContainerId")
                                 .HasColumnName("FailedBacktestInstance_ContainerId");
@@ -2750,7 +2791,7 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("StartedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.ToTable("Instances", null, t =>
+                    b.ToTable("Instances", t =>
                         {
                             t.Property("ContainerId")
                                 .HasColumnName("RunningBacktestInstance_ContainerId");
@@ -2774,7 +2815,7 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("StartedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.ToTable("Instances", null, t =>
+                    b.ToTable("Instances", t =>
                         {
                             t.Property("ContainerId")
                                 .HasColumnName("RunningRunInstance_ContainerId");
@@ -2816,7 +2857,7 @@ namespace Infrastructure.Persistence.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
-                    b.ToTable("Instances", null, t =>
+                    b.ToTable("Instances", t =>
                         {
                             t.Property("ContainerId")
                                 .HasColumnName("StartingBacktestInstance_ContainerId");
@@ -2833,7 +2874,7 @@ namespace Infrastructure.Persistence.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
-                    b.ToTable("Instances", null, t =>
+                    b.ToTable("Instances", t =>
                         {
                             t.Property("ContainerId")
                                 .HasColumnName("StartingRunInstance_ContainerId");
@@ -2856,7 +2897,7 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("StoppedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.ToTable("Instances", null, t =>
+                    b.ToTable("Instances", t =>
                         {
                             t.Property("ContainerId")
                                 .HasColumnName("StoppedRunInstance_ContainerId");
@@ -2887,7 +2928,7 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("StartedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.ToTable("Instances", null, t =>
+                    b.ToTable("Instances", t =>
                         {
                             t.Property("ContainerId")
                                 .HasColumnName("StoppingBacktestInstance_ContainerId");
@@ -2911,7 +2952,7 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("StartedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.ToTable("Instances", null, t =>
+                    b.ToTable("Instances", t =>
                         {
                             t.Property("ContainerId")
                                 .HasColumnName("StoppingRunInstance_ContainerId");
@@ -3192,7 +3233,7 @@ namespace Infrastructure.Persistence.Migrations
 
                             b1.HasKey("AppUserId");
 
-                            b1.ToTable("Users", (string)null);
+                            b1.ToTable("Users");
 
                             b1.WithOwner()
                                 .HasForeignKey("AppUserId");
@@ -3354,7 +3395,7 @@ namespace Infrastructure.Persistence.Migrations
 
                             b1.HasKey("CopyDestinationId", "__synthesizedOrdinal");
 
-                            b1.ToTable("CopyDestinations", (string)null);
+                            b1.ToTable("CopyDestinations");
 
                             b1.ToJson("SymbolFilters");
 
@@ -3379,7 +3420,7 @@ namespace Infrastructure.Persistence.Migrations
 
                             b1.HasKey("CopyDestinationId", "__synthesizedOrdinal");
 
-                            b1.ToTable("CopyDestinations", (string)null);
+                            b1.ToTable("CopyDestinations");
 
                             b1.ToJson("SymbolMaps");
 
@@ -3435,7 +3476,7 @@ namespace Infrastructure.Persistence.Migrations
 
                             b1.HasKey("UserDashboardId", "__synthesizedOrdinal");
 
-                            b1.ToTable("UserDashboards", (string)null);
+                            b1.ToTable("UserDashboards");
 
                             b1.ToJson("Widgets");
 
@@ -3444,6 +3485,15 @@ namespace Infrastructure.Persistence.Migrations
                         });
 
                     b.Navigation("Widgets");
+                });
+
+            modelBuilder.Entity("Core.Domain.CBotBuildMessage", b =>
+                {
+                    b.HasOne("Core.CBotSourceProject", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Core.EmailVerificationToken", b =>

@@ -24,7 +24,8 @@ public static class BuilderEndpoints
         {
             var uid = u.UserId!.Value;
             return await db.CBotSourceProjects.Where(p => p.UserId == uid)
-                .Select(p => new { p.Id, p.Name, Language = p.LanguageName, p.LastBuildAt, p.LastBuildSucceeded })
+                .Select(p => new { p.Id, p.Name, Language = p.LanguageName, p.LastBuildAt, p.LastBuildSucceeded,
+                    p.CreatedAt, p.UpdatedAt })
                 .ToListAsync();
         });
 

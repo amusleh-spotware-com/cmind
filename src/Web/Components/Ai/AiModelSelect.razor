@@ -47,10 +47,15 @@
         catch { return; }
         if (_models.Count == 0) return;
 
+        _show = true;
+
+        // Respect a value the parent already supplied (e.g. a model carried from a prior dialog); only
+        // auto-pick when nothing is selected yet, and only if it maps to a usable model.
+        if (Selected is { } current && _models.Any(m => m.Id == current)) return;
+
         var preselect = await ResolveBindingAsync()
             ?? _models.FirstOrDefault(m => m.IsActive)?.Id
             ?? _models[0].Id;
-        _show = true;
         if (Selected != preselect)
         {
             Selected = preselect;

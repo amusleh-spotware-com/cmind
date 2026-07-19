@@ -1,0 +1,217 @@
+﻿@page "/ai/build/{ProjectId:guid}"
+@using Web.Json
+@using Web.Time
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+@inject HttpClient Http
+@inject ISnackbar Snack
+@inject NavigationManager Nav
+@inject IUserTimeZone UserZone
+
+<PageTitle>AI · Build cBot</PageTitle>
+
+@if (_notFound)
+{
+    <MudAlert Severity="Severity.Warning" data-testid="ai-build-project-missing">
+        This cBot project was not found. <MudLink Href="/ai/build">Back to AI Build</MudLink>.
+    </MudAlert>
+}
+else if (_project is null)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3" Wrap="Wrap.Wrap" Spacing="2">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Href="/ai/build" aria-label="Back to AI Build" />
+        <MudText Typo="Typo.h5" data-testid="ai-build-project-name">@_project.Name</MudText>
+        <MudChip T="string" Size="Size.Small" Color="Color.Default">@_project.Language</MudChip>
+        @if (_project.LastBuildSucceeded is { } ok)
+        {
+            <MudChip T="string" Size="Size.Small" Color="@(ok ? Color.Success : Color.Error)">@(ok ? "Build OK" : "Build failed")</MudChip>
+        }
+        <MudSpacer />
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Build"
+                   OnClick="Build" Disabled="_busy" data-testid="ai-build-project-build">Build</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.PlayArrow"
+                   OnClick="Run" Disabled="_busy" data-testid="ai-build-project-run">Run</MudButton>
+        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Edit"
+                   OnClick="@(() => Nav.NavigateTo($"/builder/{ProjectId}"))" data-testid="ai-build-project-editor">Open in editor</MudButton>
+    </MudStack>
+
+    <AiFeatureNotice EnabledChanged="OnAiStatus" />
+
+    <MudPaper Class="pa-4" Elevation="1" data-testid="ai-build-chat">
+        @if (_messages.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2" data-testid="ai-build-chat-empty">
+                Describe the cBot or a change you want. The model writes/updates the source; every prompt and
+                reply is saved here, and you can Build and Run above.
+            </MudText>
+        }
+        else
+        {
+            <MudStack Spacing="2" Class="mb-3">
+                @foreach (var m in _messages)
+                {
+                    <div class="d-flex" style="@(m.Role == "User" ? "justify-content:flex-end;" : "justify-content:flex-start;")">
+                        <MudPaper Class="pa-2" Elevation="0" Outlined="true"
+                                  Style="@($"max-width:85%;{(m.Role == "User" ? "background:var(--mud-palette-primary-hover);" : "")}")"
+                                  data-testid="@($"ai-build-msg-{m.Role.ToLowerInvariant()}")">
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                @(m.Role == "User" ? "You" : "Model") · @FormatTs(m.CreatedAt)
+                            </MudText>
+                            <pre style="white-space:pre-wrap; margin:0; font-family:inherit; font-size:0.85rem;">@m.Content</pre>
+                        </MudPaper>
+                    </div>
+                }
+            </MudStack>
+        }
+
+        <MudTextField @bind-Value="_prompt" Label="Your prompt" Lines="3" AutoGrow="true" Immediate="true"
+                      Placeholder="e.g. RSI mean-reversion on EURUSD h1, 1.5% risk with an ATR stop-loss"
+                      data-testid="ai-build-prompt" />
+        <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2" Class="mt-2">
+            <AiModelSelect Feature="AiFeature.GenerateCBot" @bind-Selected="_modelId" Class="flex-grow-1" />
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Send"
+                       OnClick="Send" Disabled="@(_busy || !_aiEnabled || string.IsNullOrWhiteSpace(_prompt))"
+                       data-testid="ai-build-send">Send</MudButton>
+        </MudStack>
+        @if (_busy)
+        {
+            <MudProgressLinear Indeterminate="true" Class="mt-2" />
+        }
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_buildLog))
+    {
+        <MudExpansionPanels Class="mt-3" Elevation="1">
+            <MudExpansionPanel Text="Build log" Expanded="true" data-testid="ai-build-project-log">
+                <pre style="white-space:pre-wrap; margin:0; max-height:280px; overflow:auto;">@_buildLog</pre>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    }
+}
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [SupplyParameterFromQuery(Name = "model")] public string? Model { get; set; }
+
+    private ProjectDto? _project;
+    private readonly List<MessageDto> _messages = [];
+    private bool _notFound;
+    private bool _aiEnabled;
+    private bool _busy;
+    private string _prompt = "";
+    private string? _buildLog;
+    private Guid? _modelId;
+    private TimeZoneInfo _zone = TimeZoneInfo.Utc;
+
+    private void OnAiStatus(bool enabled)
+    {
+        _aiEnabled = enabled;
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _zone = await UserZone.GetZoneAsync();
+        if (Guid.TryParse(Model, out var m) && m != Guid.Empty) _modelId = m;
+        await LoadProject();
+        await LoadMessages();
+    }
+
+    private async Task LoadProject()
+    {
+        try
+        {
+            var response = await Http.GetAsync($"/api/builder/projects/{ProjectId}");
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound) { _notFound = true; return; }
+            _project = await response.Content.ReadFromJsonAsync<ProjectDto>();
+        }
+        catch { _notFound = true; }
+    }
+
+    private async Task LoadMessages()
+    {
+        try
+        {
+            var msgs = await Http.GetFromJsonAsync<List<MessageDto>>($"/api/ai/build/{ProjectId}/messages");
+            _messages.Clear();
+            if (msgs is not null) _messages.AddRange(msgs);
+        }
+        catch { /* leave what we have */ }
+    }
+
+    private async Task Send()
+    {
+        if (string.IsNullOrWhiteSpace(_prompt)) return;
+        _busy = true;
+        var url = _modelId is { } id ? $"/api/ai/build/{ProjectId}/prompt?modelId={id}" : $"/api/ai/build/{ProjectId}/prompt";
+        try
+        {
+            var response = await Http.PostAsJsonAsync(url, new { Prompt = _prompt });
+            var result = await response.Content.ReadFromJsonAsync<PromptResult>();
+            if (result is { success: true })
+            {
+                _prompt = "";
+                await LoadMessages();
+                await LoadProject();
+            }
+            else
+            {
+                Snack.Add(result?.error ?? "AI request failed", Severity.Error);
+                await LoadMessages();
+            }
+        }
+        catch { Snack.Add("AI request failed", Severity.Error); }
+        finally { _busy = false; }
+    }
+
+    private async Task Build()
+    {
+        _busy = true;
+        _buildLog = null;
+        Snack.Add("Building…", Severity.Info);
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"/api/builder/projects/{ProjectId}/build", new { });
+            var result = await response.Content.ReadFromJsonAsync<BuildResult>();
+            _buildLog = result?.log;
+            Snack.Add(result?.success == true ? "Build OK" : "Build failed",
+                result?.success == true ? Severity.Success : Severity.Error);
+            await LoadProject();
+        }
+        catch { Snack.Add("Build request failed", Severity.Error); }
+        finally { _busy = false; }
+    }
+
+    private async Task Run()
+    {
+        _busy = true;
+        Snack.Add("Starting…", Severity.Info);
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"/api/builder/projects/{ProjectId}/quick-run", new { });
+            var result = await response.Content.ReadFromJsonAsync<QuickRunResult>();
+            if (result?.success == true && result.instanceId is { } instanceId)
+            {
+                Nav.NavigateTo($"/instance/{instanceId}");
+            }
+            else
+            {
+                _buildLog = result?.output;
+                Snack.Add(string.IsNullOrWhiteSpace(result?.output) ? "Run failed" : $"Run failed: {result!.output}", Severity.Error);
+            }
+        }
+        catch { Snack.Add("Run request failed", Severity.Error); }
+        finally { _busy = false; }
+    }
+
+    private string FormatTs(DateTimeOffset v) => v.ToUserString(_zone, "yyyy-MM-dd HH:mm");
+
+    private sealed record ProjectDto(Guid Id, string Name, string Language, DateTimeOffset? LastBuildAt, bool? LastBuildSucceeded, string? LastBuildLog, Guid? CBotId);
+    private sealed record MessageDto(string Role, string Content, DateTimeOffset CreatedAt);
+    private sealed record PromptResult(bool success, string? reply, string? error, DateTimeOffset? createdAt);
+    private sealed record BuildResult(bool success, string? log);
+    private sealed record QuickRunResult(bool success, string? output, Guid? instanceId);
+}

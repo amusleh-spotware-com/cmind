@@ -188,37 +188,38 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
     // (The canned-reply render for these is covered by the data-independent pages: Review/Sentiment/Debate.)
 
     [Fact]
-    public async Task Build_page_is_ai_enabled_and_runs()
+    public async Task Ai_build_create_project_then_chat_persists_the_conversation()
     {
         var page = await OpenAsync("/ai/build");
-        (await page.Locator("[data-testid=ai-not-configured]").IsVisibleAsync()).Should().BeFalse();
 
-        await page.GetByLabel("Describe your strategy").FillAsync("RSI mean-reversion on EURUSD h1");
-        var button = page.Locator("button:has-text('Build my bot')");
-        await Assertions.Expect(button).ToBeEnabledAsync(new() { Timeout = 20000 });
-        await button.ClickAsync();
+        // Open the start dialog and create a new cBot from scratch.
+        await page.Locator("[data-testid=ai-build-new]").ClickAsync();
+        await Assertions.Expect(page.Locator("[data-testid=ai-build-start-tabs]")).ToBeVisibleAsync(Slow);
+        var name = "e2e" + System.Guid.NewGuid().ToString("N")[..8];
+        await page.GetByTestId("ai-build-new-name").FillAsync(name);
+        await page.Locator("[data-testid=ai-build-start-create]").ClickAsync();
 
-        // The AI generates the bot (canned reply as source) and the build pipeline runs; the result panel
-        // must render (success or a build-log failure) without tripping the error UI.
-        await Assertions.Expect(page.Locator("[data-testid=ai-build-result]")).ToBeVisibleAsync(new() { Timeout = 120000 });
+        // Navigated to the per-project chat page.
+        await Assertions.Expect(page.Locator("[data-testid=ai-build-project-name]"))
+            .ToBeVisibleAsync(new() { Timeout = 20000 });
+
+        // Send a prompt; the user turn and the model reply both persist and render.
+        await page.GetByTestId("ai-build-prompt").FillAsync("RSI mean reversion on EURUSD h1");
+        var send = page.Locator("[data-testid=ai-build-send]");
+        await Assertions.Expect(send).ToBeEnabledAsync(new() { Timeout = 20000 });
+        await send.ClickAsync();
+
+        await Assertions.Expect(page.Locator("[data-testid=ai-build-msg-user]"))
+            .ToBeVisibleAsync(new() { Timeout = 30000 });
+        await Assertions.Expect(page.Locator("[data-testid=ai-build-msg-assistant]")).ToBeVisibleAsync(Slow);
+        if (app.UsingFakeLlm)
+            (await page.Locator("[data-testid=ai-build-chat]").InnerTextAsync()).Should().Contain(AiLocalFixture.CannedReply);
         (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
 
-        // The pipeline always yields an outcome that keeps the work: success -> Run it / Open in editor;
-        // failure -> the project is still saved to the user's cBots with an Open-in-editor link. Assert one
-        // of those surfaces renders (which one depends on whether the canned reply happened to compile).
-        var openFailed = page.Locator("[data-testid=ai-build-open-failed]");
-        var openSuccess = page.Locator("button:has-text('Open in editor')");
-        (await openFailed.CountAsync() + await openSuccess.CountAsync())
-            .Should().BeGreaterThan(0, "a built or failed AI bot must offer to open in the editor");
-
-        // On the failure path the "saved to your cBots" notice + its open link render.
-        if (await openFailed.CountAsync() > 0)
-            await Assertions.Expect(page.Locator("[data-testid=ai-build-saved]")).ToBeVisibleAsync(Slow);
-
-        // Whenever a build log was produced, it is shown with a Copy button.
-        var copyLog = page.Locator("[data-testid=ai-build-copy-log]");
-        if (await copyLog.CountAsync() > 0)
-            await Assertions.Expect(copyLog).ToBeVisibleAsync(Slow);
+        // The project now appears in the AI Build list.
+        var list = await OpenAsync("/ai/build");
+        await Assertions.Expect(list.Locator("[data-testid=ai-build-projects]")).ToBeVisibleAsync(Slow);
+        (await list.Locator($"text={name}").CountAsync()).Should().BeGreaterThan(0);
     }
 
     [Theory]

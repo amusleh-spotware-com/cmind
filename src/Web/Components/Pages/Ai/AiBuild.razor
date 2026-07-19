@@ -1,202 +1,152 @@
 ﻿@page "/ai/build"
-@using System.Text.Json
+@using Web.Json
+@using Web.Time
+@using Web.Components.Dialogs
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
-@inherits AiFeaturePageBase
-@inject NavigationManager Nav
-@inject IJSRuntime JS
+@inject HttpClient Http
+@inject ISnackbar Snack
 @inject IDialogService Dialogs
+@inject NavigationManager Nav
+@inject IUserTimeZone UserZone
 
 <PageTitle>AI · Build cBot</PageTitle>
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
     <MudText Typo="Typo.h5">Build cBot</MudText>
-    <HelpTip Text="Describe a strategy in plain English. The AI writes the cBot, builds it, fixes its own compile errors (up to 3 tries), and on success creates a runnable cBot." />
+    <HelpTip Text="Create cBot projects with AI. Start from scratch or improve an existing cBot, then chat with a model to write and refine its code — every prompt and reply is saved. Build and run right from the project page." />
+    <MudSpacer />
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
+               OnClick="StartNew" data-testid="ai-build-new">New cBot</MudButton>
 </MudStack>
 
-<AiFeatureNotice EnabledChanged="OnAiStatus" PromptOnLoad="true" />
+<AiFeatureNotice PromptOnLoad="true" />
 
-<MudPaper Class="pa-4" Elevation="1">
-    <MudText Typo="Typo.body2" Class="mb-2">
-        Describe a strategy in plain English. The AI writes the cBot, builds it, fixes its own compile
-        errors (up to 3 tries), and on success creates a runnable cBot.
-    </MudText>
-    <MudGrid>
-        <MudItem xs="12" sm="4">
-            <MudSelect T="string" @bind-Value="_language" Label="Language" Dense="true">
-                <MudSelectItem Value="@("CSharp")">C#</MudSelectItem>
-                <MudSelectItem Value="@("Python")">Python</MudSelectItem>
-            </MudSelect>
-        </MudItem>
-        <MudItem xs="12" sm="8">
-            <MudTextField @bind-Value="_projectName" Label="Bot name" Placeholder="MyBot" />
-        </MudItem>
-    </MudGrid>
-    <MudTextField @bind-Value="_description" Label="Describe your strategy" Lines="5" Class="mt-3"
-                  Placeholder="e.g. RSI mean-reversion on EURUSD h1, 1.5% risk, ATR stop-loss" />
-    <AiModelSelect Feature="AiFeature.GenerateCBot" @bind-Selected="SelectedModelId" Class="mt-3" />
-    <MudStack Row="true" Spacing="2" Class="mt-3" Wrap="Wrap.Wrap">
-        <MudButton Color="Color.Primary" Variant="Variant.Filled"
-                   StartIcon="@Icons.Material.Filled.Bolt" OnClick="BuildBot" Disabled="Busy">
-            Build my bot
-        </MudButton>
-    </MudStack>
-
-    @if (Loading)
-    {
-        <MudProgressLinear Indeterminate="true" Class="mt-3" />
-    }
-
-    @if (_buildResult is not null)
-    {
-        <MudPaper Class="pa-3 mt-3" Elevation="0" Outlined="true" data-testid="ai-build-result">
-            @if (_buildResult.Success)
-            {
-                <MudAlert Severity="Severity.Success" Class="mb-2">
-                    Built in @_buildResult.Attempts attempt(s). Saved as <b>@_buildResult.Name</b> in your cBots — your runnable cBot is ready.
-                </MudAlert>
-                <MudStack Row="true" Spacing="2">
-                    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.PlayArrow"
-                               OnClick="@(() => Nav.NavigateTo($"/run?cbot={_buildResult.CBotId}"))"
-                               Disabled="@(_buildResult.CBotId is null)">Run it</MudButton>
-                    <MudButton Color="Color.Secondary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit"
-                               OnClick="@(() => Nav.NavigateTo($"/builder/{_buildResult.ProjectId}"))"
-                               Disabled="@(_buildResult.ProjectId is null)">Open in editor</MudButton>
-                </MudStack>
-            }
-            else
-            {
-                <MudAlert Severity="Severity.Error" Class="mb-2">
-                    @(_buildResult.Error ?? $"Build failed after {_buildResult.Attempts} attempt(s).")
-                </MudAlert>
-                @if (_buildResult.ProjectId is not null)
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (_rows.Length == 0)
+{
+    <MudPaper Class="pa-6" Style="text-align:center;" data-testid="ai-build-empty">
+        <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Size="Size.Large" Class="mb-2" />
+        <MudText Typo="Typo.body1" Class="mb-1">No AI cBot projects yet.</MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">Click "New cBot" to create one from scratch or improve an existing cBot.</MudText>
+    </MudPaper>
+}
+else
+{
+    <MudTable Items="_rows" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="1" data-testid="ai-build-projects">
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh Style="width:64px;text-align:center;">Lang</MudTh>
+            <MudTh>Last change</MudTh>
+            <MudTh Style="width:120px;" />
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name"><MudLink Href="@($"/ai/build/{context.Id}")">@context.Name</MudLink></MudTd>
+            <MudTd DataLabel="Lang" Style="text-align:center;">
+                @if (context.Language is not null)
                 {
-                    <MudAlert Severity="Severity.Info" Class="mb-2" data-testid="ai-build-saved">
-                        Saved as <b>@_buildResult.Name</b> in your cBots — open it in the editor to fix the errors and rebuild.
-                    </MudAlert>
-                    <MudButton Color="Color.Secondary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit"
-                               OnClick="@(() => Nav.NavigateTo($"/builder/{_buildResult.ProjectId}"))"
-                               data-testid="ai-build-open-failed">Open in editor</MudButton>
+                    <MudTooltip Text="@LanguageIcons.LabelFor(context.Language)">@LanguageIcons.For(context.Language)</MudTooltip>
                 }
-            }
-            @if (!string.IsNullOrEmpty(_buildResult.Code))
-            {
-                <MudExpansionPanels Class="mt-2" Elevation="0">
-                    <MudExpansionPanel Expanded="true" data-testid="ai-build-code-panel">
-                        <TitleContent>
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" />
-                                <MudText Typo="Typo.subtitle2">Generated @(_buildResult.Language == "Python" ? "Python" : "C#") code</MudText>
-                                <MudSpacer />
-                                <MudTooltip Text="Copy code">
-                                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small"
-                                                   OnClick="CopyCode" data-testid="ai-build-copy" />
-                                </MudTooltip>
-                            </MudStack>
-                        </TitleContent>
-                        <ChildContent>
-                            <pre style="white-space:pre; margin:0; max-height:420px; overflow:auto; font-size:0.8rem;"
-                                 data-testid="ai-build-code">@_buildResult.Code</pre>
-                        </ChildContent>
-                    </MudExpansionPanel>
-                </MudExpansionPanels>
-            }
-            @if (!string.IsNullOrEmpty(_buildResult.Log))
-            {
-                <MudExpansionPanels Class="mt-2" Elevation="0">
-                    <MudExpansionPanel Expanded="@(!_buildResult.Success)" data-testid="ai-build-log-panel">
-                        <TitleContent>
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                <MudIcon Icon="@Icons.Material.Filled.Terminal" Size="Size.Small" />
-                                <MudText Typo="Typo.subtitle2">Build log</MudText>
-                                <MudSpacer />
-                                <MudTooltip Text="Copy build log">
-                                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small"
-                                                   OnClick="CopyLog" data-testid="ai-build-copy-log" />
-                                </MudTooltip>
-                            </MudStack>
-                        </TitleContent>
-                        <ChildContent>
-                            <pre style="white-space:pre-wrap; margin:0; max-height:280px; overflow:auto;">@_buildResult.Log</pre>
-                        </ChildContent>
-                    </MudExpansionPanel>
-                </MudExpansionPanels>
-            }
-        </MudPaper>
-    }
-</MudPaper>
+            </MudTd>
+            <MudTd DataLabel="Last change">@FormatTs(context.LastChange)</MudTd>
+            <MudTd>
+                <MudTooltip Text="Open project">
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Color="Color.Primary"
+                                   OnClick="@(() => Nav.NavigateTo($"/ai/build/{context.Id}"))" data-testid="ai-build-view" />
+                </MudTooltip>
+                <MudTooltip Text="Delete">
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                   OnClick="@(() => Delete(context))" data-testid="ai-build-delete" />
+                </MudTooltip>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
 
 @code {
-    private string _language = "CSharp";
-    private string _projectName = "MyBot";
-    private string _description = "";
-    private BuildResult? _buildResult;
+    private Row[] _rows = [];
+    private bool _loading = true;
+    private TimeZoneInfo _zone = TimeZoneInfo.Utc;
 
-    private async Task BuildBot()
+    protected override async Task OnInitializedAsync()
     {
-        if (string.IsNullOrWhiteSpace(_description))
+        _zone = await UserZone.GetZoneAsync();
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        _loading = true;
+        try
         {
-            Snack.Add("Describe your strategy first", Severity.Warning);
+            var arr = await Http.GetDynamicArrayAsync("/api/builder/projects");
+            _rows = arr.Select(p => new Row(
+                    (Guid)p.id,
+                    (string)p.name,
+                    (string?)p.language,
+                    LastChangeOf(p)))
+                .OrderByDescending(r => r.LastChange ?? DateTimeOffset.MinValue)
+                .ToArray();
+        }
+        catch { _rows = []; }
+        finally { _loading = false; }
+    }
+
+    private static DateTimeOffset? LastChangeOf(dynamic p)
+    {
+        if (p.updatedAt is not null) return (DateTimeOffset?)p.updatedAt;
+        if (p.createdAt is not null) return (DateTimeOffset?)p.createdAt;
+        return null;
+    }
+
+    private async Task StartNew()
+    {
+        var options = _rows.Select(r => new AiBuildStartDialog.ProjectOption(r.Id, r.Name)).ToList();
+        var parameters = new DialogParameters<AiBuildStartDialog>
+        {
+            { x => x.Projects, (IReadOnlyList<AiBuildStartDialog.ProjectOption>)options }
+        };
+        var dialog = await Dialogs.ShowAsync<AiBuildStartDialog>("New AI Build", parameters);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled || result.Data is not AiBuildStartDialog.AiBuildStartResult r) return;
+
+        Guid projectId;
+        if (r.IsNew)
+        {
+            var response = await Http.PostAsJsonAsync("/api/builder/projects", new { Name = r.Name, Language = r.Language });
+            if (!response.IsSuccessStatusCode) { Snack.Add("Could not create the project", Severity.Error); return; }
+            var created = await response.Content.ReadFromJsonAsync<dynamic?>(JsonDefaults.DynamicWeb);
+            if (created is null) { Snack.Add("Could not create the project", Severity.Error); return; }
+            projectId = (Guid)created.id;
+        }
+        else if (r.ProjectId is { } existing)
+        {
+            projectId = existing;
+        }
+        else
+        {
             return;
         }
-        Loading = true;
-        _buildResult = null;
-        try
-        {
-            var response = await Http.PostAsJsonAsync(WithModel("/api/ai/build-strategy"),
-                new { Name = _projectName, Language = _language, Description = _description });
-            var text = await response.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(text);
-            var root = doc.RootElement;
-            _buildResult = new BuildResult(
-                root.TryGetProperty("success", out var s) && s.ValueKind == JsonValueKind.True,
-                root.TryGetProperty("cbotId", out var c) && c.ValueKind == JsonValueKind.String ? c.GetGuid() : null,
-                root.TryGetProperty("projectId", out var p) && p.ValueKind == JsonValueKind.String ? p.GetGuid() : null,
-                root.TryGetProperty("attempts", out var a) && a.ValueKind == JsonValueKind.Number ? a.GetInt32() : 0,
-                root.TryGetProperty("log", out var l) ? l.GetString() : null,
-                root.TryGetProperty("error", out var e) ? e.GetString() : null,
-                root.TryGetProperty("code", out var cd) ? cd.GetString() : null,
-                root.TryGetProperty("language", out var lang) ? lang.GetString() : _language,
-                root.TryGetProperty("name", out var nm) ? nm.GetString() : null);
-        }
-        catch
-        {
-            Snack.Add("Request failed", Severity.Error);
-        }
-        finally
-        {
-            Loading = false;
-        }
+
+        var url = r.ModelId is { } model ? $"/ai/build/{projectId}?model={model}" : $"/ai/build/{projectId}";
+        Nav.NavigateTo(url);
     }
 
-    private async Task CopyCode()
+    private async Task Delete(Row row)
     {
-        if (string.IsNullOrEmpty(_buildResult?.Code)) return;
-        try
-        {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _buildResult.Code);
-            Snack.Add("Code copied", Severity.Success);
-        }
-        catch
-        {
-            Snack.Add("Copy failed", Severity.Warning);
-        }
+        var ok = await Dialogs.ShowMessageBox("Delete cBot",
+            $"Delete '{row.Name}'? This removes its source and AI conversation. This cannot be undone.",
+            yesText: "Delete", cancelText: "Cancel");
+        if (ok != true) return;
+        var response = await Http.DeleteAsync($"/api/builder/projects/{row.Id}");
+        if (response.IsSuccessStatusCode) { Snack.Add("Deleted", Severity.Success); await Load(); }
+        else Snack.Add("Delete failed", Severity.Error);
     }
 
-    private async Task CopyLog()
-    {
-        if (string.IsNullOrEmpty(_buildResult?.Log)) return;
-        try
-        {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _buildResult.Log);
-            Snack.Add("Build log copied", Severity.Success);
-        }
-        catch
-        {
-            Snack.Add("Copy failed", Severity.Warning);
-        }
-    }
+    private string FormatTs(DateTimeOffset? v) =>
+        v is null ? "—" : v.Value.ToUserString(_zone, "yyyy-MM-dd HH:mm");
 
-    private sealed record BuildResult(
-        bool Success, Guid? CBotId, Guid? ProjectId, int Attempts, string? Log, string? Error, string? Code, string? Language,
-        string? Name);
+    private sealed record Row(Guid Id, string Name, string? Language, DateTimeOffset? LastChange);
 }

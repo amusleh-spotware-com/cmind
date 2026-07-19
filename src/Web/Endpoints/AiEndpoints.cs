@@ -404,29 +404,72 @@ public static class AiEndpoints
             return Results.Ok(new { success, projectId = project.Id.Value, attempts, log = ClipLog(log) });
         });
 
-        // Feature C: plain-English intent -> generate -> build/self-repair -> create a runnable cBot via the
-        // shared CBotBuildFlow pipeline.
-        g.MapPost("/build-strategy", async (
-            BuildStrategyRequest req, ICurrentUser u, IAiFeatureService ai, CBotBuildFlow flow, CancellationToken ct) =>
+        // AI Build project chat: the persisted conversation (prompts + model replies with timestamps) for a
+        // cBot source project. The user iterates on one project over time; source edits from a prompt update
+        // the project (via the builder), and the project is built/run through the builder endpoints.
+        g.MapGet("/build/{projectId:guid}/messages", async (
+            Guid projectId, DataContext db, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var pid = CBotSourceProjectId.From(projectId);
+            if (!await db.CBotSourceProjects.AnyAsync(p => p.Id == pid && p.UserId == uid, ct)) return Results.NotFound();
+            var messages = await db.CBotBuildMessages.AsNoTracking()
+                .Where(m => m.ProjectId == pid && m.UserId == uid)
+                .OrderBy(m => m.CreatedAt)
+                .Select(m => new { role = m.Role.ToString(), content = m.Content, createdAt = m.CreatedAt })
+                .ToListAsync(ct);
+            return Results.Ok(messages);
+        });
+
+        g.MapPost("/build/{projectId:guid}/prompt", async (
+            Guid projectId, BuildPromptRequest req, DataContext db, ICurrentUser u, IAiFeatureService ai,
+            ISecretProtector protector, TimeProvider clock, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             if (!ai.Enabled) return Results.Ok(new { success = false, error = AiConstants.DisabledMessage });
-            if (string.IsNullOrWhiteSpace(req.Description))
-                return Results.Ok(new { success = false, error = "describe the strategy first" });
+            if (string.IsNullOrWhiteSpace(req.Prompt)) return Results.BadRequest("enter a prompt");
 
-            var r = await flow.BuildAsync(uid, req.Name ?? "AiBot", req.Language ?? "CSharp", req.Description!, null, null, ct);
-            return Results.Ok(new
+            var pid = CBotSourceProjectId.From(projectId);
+            var project = await db.CBotSourceProjects.FirstOrDefaultAsync(p => p.Id == pid && p.UserId == uid, ct);
+            if (project is null) return Results.NotFound();
+
+            // Persist the user's turn first, so it survives even if the AI call fails.
+            db.CBotBuildMessages.Add(Core.Domain.CBotBuildMessage.Create(
+                pid, uid, Core.Domain.CBotBuildRole.User, req.Prompt!, clock.GetUtcNow()));
+            await db.SaveChangesAsync(ct);
+
+            var files = DecryptFiles(project, protector);
+            var codeKey = files.Keys.FirstOrDefault(k => k.EndsWith(project.FileExtension, StringComparison.Ordinal));
+            var currentCode = codeKey is not null ? files[codeKey] : string.Empty;
+            var description = string.IsNullOrWhiteSpace(currentCode)
+                ? req.Prompt!
+                : $"Current cBot source:\n{Truncate(currentCode, 8000)}\n\nApply this change and return the COMPLETE updated source:\n{req.Prompt}";
+
+            var gen = await ai.GenerateCBotAsync(project.LanguageName, description, ct);
+            if (!gen.Success)
             {
-                success = r.Success,
-                projectId = r.ProjectId,
-                cbotId = r.CBotId,
-                attempts = r.Attempts,
-                log = r.Log,
-                code = r.Code,
-                language = r.Language,
-                error = r.Error,
-                name = r.ProjectName
-            });
+                var failed = Core.Domain.CBotBuildMessage.Create(
+                    pid, uid, Core.Domain.CBotBuildRole.Assistant, gen.Error ?? "AI request failed", clock.GetUtcNow());
+                db.CBotBuildMessages.Add(failed);
+                await db.SaveChangesAsync(ct);
+                return Results.Ok(new { success = false, error = gen.Error, reply = failed.Content, createdAt = failed.CreatedAt });
+            }
+
+            // Apply the model's source to the project (its own aggregate + SaveChanges) so a subsequent Build
+            // compiles the new code and the project's last-change time reflects this turn.
+            if (codeKey is not null)
+            {
+                files[codeKey] = ExtractCode(gen.Text);
+                project.SetFiles(protector.Protect(
+                    Encoding.UTF8.GetBytes(JsonSerializer.Serialize(files)), EncryptionPurposes.CbotSource));
+                await db.SaveChangesAsync(ct);
+            }
+
+            var reply = Core.Domain.CBotBuildMessage.Create(
+                pid, uid, Core.Domain.CBotBuildRole.Assistant, gen.Text, clock.GetUtcNow());
+            db.CBotBuildMessages.Add(reply);
+            await db.SaveChangesAsync(ct);
+            return Results.Ok(new { success = true, reply = reply.Content, createdAt = reply.CreatedAt });
         });
 
         // Feature B: closed optimization loop — AI proposes parameter sets, we backtest each across nodes.
@@ -559,6 +602,13 @@ public static class AiEndpoints
         return $"{desired} {Guid.NewGuid():N}";
     }
 
+    private static Dictionary<string, string> DecryptFiles(CBotSourceProject project, ISecretProtector protector)
+    {
+        if (project.EncryptedProjectFiles.Length == 0) return new Dictionary<string, string>();
+        var json = Encoding.UTF8.GetString(protector.Unprotect(project.EncryptedProjectFiles, EncryptionPurposes.CbotSource));
+        return JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
+    }
+
     private static string ExtractCode(string text)
     {
         var trimmed = text.Trim();
@@ -612,7 +662,7 @@ public sealed record VisionRequest(string? MediaType, string? Base64, string? No
 public sealed record CurateRequest(string? Name, string? Language, string? Source);
 public sealed record RecommendCopyProfileRequest(string? RiskProfile, string? SourceDescription);
 public sealed record GenerateProjectRequest(string? Name, string? Language, string? Description);
-public sealed record BuildStrategyRequest(string? Name, string? Language, string? Description);
+public sealed record BuildPromptRequest(string? Prompt);
 public sealed record OptimizeRunRequest(
     Guid TradingAccountId, string? Symbol, string? Timeframe,
     string? DockerImageTag, string? BacktestSettingsJson, int? Count);

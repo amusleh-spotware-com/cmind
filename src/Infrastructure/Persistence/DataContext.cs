@@ -34,6 +34,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
     public DbSet<AiProviderCredential> AiProviderCredentials => Set<AiProviderCredential>();
     public DbSet<Core.Domain.AiFeatureBinding> AiFeatureBindings => Set<Core.Domain.AiFeatureBinding>();
+    public DbSet<Core.Domain.CBotBuildMessage> CBotBuildMessages => Set<Core.Domain.CBotBuildMessage>();
     public DbSet<UserDashboard> UserDashboards => Set<UserDashboard>();
     public DbSet<AgentMandate> AgentMandates => Set<AgentMandate>();
     public DbSet<AgentProposal> AgentProposals => Set<AgentProposal>();
@@ -120,6 +121,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<UserDashboardId>().HaveConversion<StrongIdConverter<UserDashboardId>>();
         configurationBuilder.Properties<AiProviderCredentialId>().HaveConversion<StrongIdConverter<AiProviderCredentialId>>();
         configurationBuilder.Properties<AiFeatureBindingId>().HaveConversion<StrongIdConverter<AiFeatureBindingId>>();
+        configurationBuilder.Properties<CBotBuildMessageId>().HaveConversion<StrongIdConverter<CBotBuildMessageId>>();
         configurationBuilder.Properties<CurrencyStrengthSnapshotId>().HaveConversion<StrongIdConverter<CurrencyStrengthSnapshotId>>();
     }
 
@@ -294,6 +296,15 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.HasIndex(x => new { x.OwnerUserId, x.Feature }).IsUnique()
                 .HasFilter("\"OwnerUserId\" IS NOT NULL AND \"IsDeleted\" = false");
             e.Property(x => x.Feature).HasConversion<string>().HasMaxLength(32);
+        });
+
+        modelBuilder.Entity<Core.Domain.CBotBuildMessage>(e =>
+        {
+            e.HasIndex(x => new { x.ProjectId, x.CreatedAt });
+            e.HasIndex(x => x.UserId);
+            e.Property(x => x.Role).HasConversion<string>().HasMaxLength(16);
+            e.Property(x => x.Content).HasColumnType("text");
+            e.HasOne<CBotSourceProject>().WithMany().HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<UserDashboard>(e =>

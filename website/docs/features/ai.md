@@ -22,8 +22,11 @@ Supported providers:
 - **OpenAI** and **Azure OpenAI** (Chat Completions)
 - **Google Gemini** (`generateContent`)
 - **Any OpenAI-compatible endpoint**, including **local models** (Ollama, LM Studio, vLLM,
-  llama.cpp `server`, LocalAI) and OpenAI-compatible clouds (OpenRouter, Groq, Together, Mistral,
-  DeepSeek) — all via the one OpenAI-compatible adapter, differing only by base URL + model + key.
+  llama.cpp `server`, LocalAI) and OpenAI-compatible clouds (**Kimi / Moonshot** at
+  `https://api.moonshot.ai/v1/`, OpenRouter, Groq, Together, Mistral, DeepSeek) — all via the one
+  OpenAI-compatible adapter, differing only by base URL + model + key. The Add-provider dialog offers
+  one-click **presets** (Kimi, OpenAI, OpenRouter, Groq, DeepSeek, Mistral, Ollama, LM Studio) that fill
+  the base URL + a sample model.
 
 Exactly **one** provider is active at a time. Credentials are stored **encrypted**
 (`AiProviderCredential` aggregate + `IAiProviderStore` + `ISecretProtector`, `EncryptionPurposes.AiApiKey`);
@@ -118,7 +121,7 @@ changes. The built-in ONNX provider is the reference implementation of this patt
 
 ## Capabilities
 
-- **Build cBot** — plain-English prompt → runnable cBot via **generate → build → AI-fix** self-repair loop (`build-strategy`), at `/ai/build`. The **generated source code is shown** when the build finishes (with a copy button), alongside the build log — on success *and* on failure — so you always see what the AI wrote, not just errors.
+- **Build cBot** — plain-English prompt → runnable cBot via **generate → build → AI-fix** self-repair loop (`build-strategy`), at `/ai/build`. The **generated source code is shown** when the build finishes (with a copy button), alongside the build log (also copyable) — on success *and* on failure. **Even a failed build is saved to your cBots** (with the actual unique name) and offers an *Open in editor* link so you can fix the compile errors and rebuild, rather than losing the work.
 - **Per-page model selection** — every AI feature page and dialog shows a **model selector** listing the models you may use (your own providers + the deployment defaults). It pre-selects the feature's saved binding if set, else the **default** model, and the model you pick applies to that one action (sent as `?modelId=` and forced by `RoutingAiClient` for that call). Hidden when the deployment disables model management.
 - **Browse & select models, per feature** — browse the models a provider endpoint advertises (`GET /v1/models` on LM Studio / Ollama / vLLM / llama.cpp, or the built-in catalog) instead of hand-typing an id, and **bind each AI feature to a different model** so several models serve different features at once (an unbound feature falls back to the scope's default provider).
 - **Parameter optimization** — closed loop: AI proposes param sets, each persisted + backtested across nodes (`optimize-run` / `optimize-params`).
@@ -133,7 +136,7 @@ changes. The built-in ONNX provider is the reference implementation of this patt
 - Web endpoints under `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Every feature endpoint accepts an optional `?modelId=<credential>` to run that one call on a chosen model. Plus **model discovery** (`/api/ai/models/probe`, `/api/ai/usable-models`) and **per-feature bindings** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - MCP tools (`AiTools`) for AI clients — see [mcp.md](mcp.md). Provider selection is transparent to MCP clients.
 - **AI** nav group — one Blazor **page per feature**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), plus Portfolio Agent, Alerts, MCP Keys. Pages share `AiFeaturePageBase` + `AiOutputPanel` + an `AiModelSelect`; each shows `AiFeatureNotice` when no provider is configured.
-- **Settings → AI** (`/settings/ai`, owner-only) — provider list with an **Add / edit provider dialog** (kind, base URL with per-kind hints incl. an Ollama/LM Studio localhost preset, model, optional key, capability toggles, "set as default") and a **Test connection** button.
+- **Settings → AI** (`/settings/ai`, owner-only) — provider list with an **Add / edit provider dialog** (kind, base URL with per-kind hints and one-click OpenAI-compatible presets incl. **Kimi/Moonshot**, Ollama and LM Studio, model, optional key, capability toggles, "set as default") and a **Test connection** button.
 
 ## Configuration
 

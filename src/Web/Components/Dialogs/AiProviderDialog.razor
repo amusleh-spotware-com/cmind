@@ -21,9 +21,22 @@
 
             @if (_kind == 1)
             {
+                <MudSelect T="string" Value="_preset" ValueChanged="ApplyPreset" Label="Preset (optional)"
+                           Dense="true" data-testid="ai-dlg-preset">
+                    <MudSelectItem T="string" Value="@("custom")">Custom / other</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("openai")">OpenAI</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("kimi")">Kimi (Moonshot)</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("openrouter")">OpenRouter</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("groq")">Groq</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("deepseek")">DeepSeek</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("mistral")">Mistral</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("ollama")">Ollama (local)</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("lmstudio")">LM Studio (local)</MudSelectItem>
+                </MudSelect>
                 <MudAlert Severity="Severity.Info" Dense="true">
-                    Local models: Ollama → <code>http://localhost:11434/v1/</code>, LM Studio →
-                    <code>http://localhost:1234/v1/</code>. No API key needed for local endpoints.
+                    Cloud presets fill the base URL + a sample model — add your API key. Kimi (Moonshot):
+                    <code>https://api.moonshot.ai/v1/</code>, key from platform.moonshot.ai. Local models
+                    (Ollama, LM Studio) need no API key.
                 </MudAlert>
             }
 
@@ -42,7 +55,7 @@
             <MudSwitch T="bool" @bind-Value="_webSearch" Color="Color.Primary" data-testid="ai-dlg-websearch">Web search</MudSwitch>
             <MudSwitch T="bool" @bind-Value="_vision" Color="Color.Primary" data-testid="ai-dlg-vision">Vision (image input)</MudSwitch>
             <MudSwitch T="bool" @bind-Value="_systemRole" Color="Color.Primary" data-testid="ai-dlg-systemrole">System role</MudSwitch>
-            <MudSwitch T="bool" @bind-Value="_activate" Color="Color.Success" data-testid="ai-dlg-activate">Set as active provider</MudSwitch>
+            <MudSwitch T="bool" @bind-Value="_activate" Color="Color.Success" data-testid="ai-dlg-activate">Set as the default model</MudSwitch>
         </MudStack>
     </DialogContent>
     <DialogActions>
@@ -70,6 +83,7 @@
     private bool _tools = true;
     private bool _activate = true;
     private bool _isEdit;
+    private string _preset = "custom";
 
     protected override void OnInitialized()
     {
@@ -96,8 +110,28 @@
 
     private void OnKindChanged() => ApplyKindDefaults();
 
+    // Quick-fill the base URL + a sample model for a known OpenAI-compatible provider (cloud or local).
+    // The model stays editable; the key must still be supplied for cloud presets.
+    private void ApplyPreset(string preset)
+    {
+        _preset = preset;
+        (_baseUrl, _model) = preset switch
+        {
+            "openai" => ("https://api.openai.com/v1/", "gpt-4o"),
+            "kimi" => ("https://api.moonshot.ai/v1/", "kimi-k2-0711-preview"),
+            "openrouter" => ("https://openrouter.ai/api/v1/", "openai/gpt-4o"),
+            "groq" => ("https://api.groq.com/openai/v1/", "llama-3.3-70b-versatile"),
+            "deepseek" => ("https://api.deepseek.com/v1/", "deepseek-chat"),
+            "mistral" => ("https://api.mistral.ai/v1/", "mistral-large-latest"),
+            "ollama" => ("http://localhost:11434/v1/", "llama3.1:8b"),
+            "lmstudio" => ("http://localhost:1234/v1/", "local-model"),
+            _ => (_baseUrl, _model)
+        };
+    }
+
     private void ApplyKindDefaults()
     {
+        _preset = "custom";
         switch (_kind)
         {
             case 0:

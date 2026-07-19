@@ -22,8 +22,11 @@ AI слој cMind-а је **провајдер-агностик**. Свака ф
 - **OpenAI** и **Azure OpenAI** (Chat Completions)
 - **Google Gemini** (`generateContent`)
 - **Било која OpenAI-компатибилна крајња тачка**, укључујући **локалне моделе** (Ollama, LM Studio, vLLM,
-  llama.cpp `server`, LocalAI) и OpenAI-компатибилне cloud-ове (OpenRouter, Groq, Together, Mistral,
-  DeepSeek) — све преко једног OpenAI-компатибилног адаптера, различито само по base URL + модел + кључ.
+  llama.cpp `server`, LocalAI) и OpenAI-компатибилне cloud-ове (**Kimi / Moonshot** на
+  `https://api.moonshot.ai/v1/`, OpenRouter, Groq, Together, Mistral, DeepSeek) — све преко једног
+  OpenAI-компатибилног адаптера, различито само по base URL + модел + кључ. Дијалог за додавање провајдера нуди
+  **one-click preset-е** (Kimi, OpenAI, OpenRouter, Groq, DeepSeek, Mistral, Ollama, LM Studio) који попуњавају
+  base URL + sample модел.
 
 Тачно **један** провајдер је активан у исто време. Креденцијали се чувају **шифровано**
 (`AiProviderCredential` aggregate + `IAiProviderStore` + `ISecretProtector`, `EncryptionPurposes.AiApiKey`);
@@ -120,7 +123,7 @@ in-proc, итд.) је локализована промена: додај `AiPr
 
 ## Могућности
 
-- **Build cBot** — plain-English prompt → покретачки cBot преко **generate → build → AI-fix** self-repair петље (`build-strategy`), на `/ai/build`. **Генерисани изворни код је приказан** када се градња заврши (са дугметом копирај), заједно са логом градње — на успех *и* на неуспех — тако да увек видиш шта је AI написао, не само грешке.
+- **Build cBot** — plain-English prompt → покретачки cBot преко **generate → build → AI-fix** self-repair петље (`build-strategy`), на `/ai/build`. **Генерисани изворни код је приказан** када се градња заврши (са дугметом копирај), заједно са логом градње (такође копирајт-е) — на успех *и* на неуспех. **Чак и неуспешна градња се чува у вашим cBot-има** (са правим јединственим именом) и нуди **Open in editor** везу како бисте исправили compile грешке и поново градили.
 - **Per-page model selection** — свака AI функција страница и дијалог показује **model selector** који наводи моделе које можеш користити (твоји сопствени провајдери + deployment подразумевани). Пре-селектује binding сачуван за функцију ако је постављен, иначе **default** модел, и модел који бираш се примењује нату једну акцију (слан као `?modelId=` и принуђен од стране `RoutingAiClient` за тај позив). Скривен када deployment деактивира управљање моделима.
 - **Browse & select models, per feature** — брши моделе које крајња тачка провајдера оглашава (`GET /v1/models` на LM Studio / Ollama / vLLM / llama.cpp, или уграђени каталог) уместо ручног куцања id-а, и **везати сваку AI карактеристику другачијем моделу** тако да неколико модела служи различитим карактеристикама одједном (неповезана карактеристика пада на подразумевани провајдер опсега).
 - **Parameter optimization** — затворена петља: AI предлаже param set-ове, сваки перзистован + backtested преко чворова (`optimize-run` / `optimize-params`).
@@ -135,7 +138,7 @@ in-proc, итд.) је локализована промена: додај `AiPr
 - Web ендпоинти под `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Свака ендпоинт функције прихвата опционални `?modelId=<credential>` да покреће тај један позив на одабраном моделу. Плус **model discovery** (`/api/ai/models/probe`, `/api/ai/usable-models`) и **per-feature bindings** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - MCP алати (`AiTools`) за AI клијенте — види [mcp.md](mcp.md). Избор провајдера је транспарентан MCP клијентима.
 - **AI** навигациона група — једна Blazor **страница по функцији**: Изгради cBot (`/ai/build`), Рецензија (`/ai/review`), Дебата (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Оптимизуј (`/ai/optimize`), плус Portfolio Agent, Alerts, MCP Keys. Странице деле `AiFeaturePageBase` + `AiOutputPanel` + `AiModelSelect`; свака приказује `AiFeatureNotice` када провајдер није конфигурисан.
-- **Settings → AI** (`/settings/ai`, owner-only) — листа провајдера са **Add / edit provider дијалогом** (врста, base URL са per-kind наговештајима укључујући Ollama/LM Studio localhost preset, модел, опциони кључ, capability toggle-ови, "set as default") и **Test connection** дугметом.
+- **Settings → AI** (`/settings/ai`, owner-only) — листа провајдера са **Add / edit provider дијалогом** (врста, base URL са per-kind наговештајима и **one-click preset-има** укључујући **Kimi/Moonshot**, Ollama и LM Studio, модел, опциони кључ, capability toggle-ови, "set as default") и **Test connection** дугметом.
 
 ## Конфигурација
 

@@ -15,8 +15,10 @@ Các provider được hỗ trợ:
 - **OpenAI** và **Azure OpenAI** (Chat Completions)
 - **Google Gemini** (`generateContent`)
 - **Bất kỳ endpoint tương thích OpenAI nào**, bao gồm **mô hình cục bộ** (Ollama, LM Studio, vLLM,
-  llama.cpp `server`, LocalAI) và đám mây tương thích OpenAI (OpenRouter, Groq, Together, Mistral,
-  DeepSeek) — tất cả qua một adapter tương thích OpenAI, chỉ khác base URL + model + key.
+  llama.cpp `server`, LocalAI) và những đám mây tương thích OpenAI (**Kimi / Moonshot** tại
+  `https://api.moonshot.ai/v1/`, OpenRouter, Groq, Together, Mistral, DeepSeek) — tất cả qua một adapter
+  tương thích OpenAI, chỉ khác base URL + model + key. Dialog thêm provider cung cấp **preset** một cách nhấp
+  (**Kimi, OpenAI, OpenRouter, Groq, DeepSeek, Mistral, Ollama, LM Studio**) để điền base URL + một sample model.
 
 Chính xác **một** provider active tại một thời điểm. Credentials được lưu trữ **đã mã hóa**
 (`AiProviderCredential` aggregate + `IAiProviderStore` + `ISecretProtector`, `EncryptionPurposes.AiApiKey`);
@@ -101,7 +103,7 @@ changes. Built-in ONNX provider là reference implementation của pattern này.
 
 ## Capabilities
 
-- **Build cBot** — plain-English prompt → runnable cBot qua **generate → build → AI-fix** self-repair loop (`build-strategy`), tại `/ai/build`. **Mã nguồn được tạo ra được hiển thị** khi build kết thúc (với nút copy), cùng với build log — khi thành công *và* khi thất bại — vì vậy bạn luôn nhìn thấy những gì AI đã viết, không chỉ các lỗi.
+- **Build cBot** — plain-English prompt → runnable cBot qua **generate → build → AI-fix** self-repair loop (`build-strategy`), tại `/ai/build`. **Mã nguồn được tạo ra được hiển thị** khi build kết thúc (với nút copy), cùng với build log (cũng có thể sao chép) — khi thành công *và* khi thất bại. **Ngay cả một build thất bại cũng được lưu vào cBots của bạn** (với tên duy nhất thực tế) và cung cấp link *Mở trong trình chỉnh sửa* để bạn có thể sửa các lỗi biên dịch và xây dựng lại, thay vì mất công việc.
 - **Per-page model selection** — mọi trang tính năng AI và hộp thoại hiển thị **model selector** liệt kê các models bạn có thể sử dụng (providers của bạn + deployment defaults). Nó pre-selects binding được lưu của feature nếu được đặt, nếu không **default** model, và model bạn chọn áp dụng cho hành động đó (được gửi dưới dạng `?modelId=` và được ép buộc bởi `RoutingAiClient` cho lệnh gọi đó). Ẩn khi deployment vô hiệu hóa quản lý model.
 - **Browse & select models, per feature** — browse các models mà provider endpoint advertises (`GET /v1/models` trên LM Studio / Ollama / vLLM / llama.cpp, hoặc built-in catalog) thay vì hand-typing một id, và **bind mỗi AI feature thành một model khác** vì vậy vài models phục vụ các features khác nhau cùng một lúc (một unbound feature quay về scope's default provider).
 - **Parameter optimization** — closed loop: AI proposes param sets, each persisted + backtested across nodes (`optimize-run` / `optimize-params`).
@@ -116,7 +118,7 @@ changes. Built-in ONNX provider là reference implementation của pattern này.
 - Web endpoints dưới `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Mọi tính năng endpoint chấp nhận một tùy chọn `?modelId=<credential>` để chạy lệnh gọi đó trên một model được chọn. Cộng **model discovery** (`/api/ai/models/probe`, `/api/ai/usable-models`) và **per-feature bindings** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - MCP tools (`AiTools`) cho AI clients — xem [mcp.md](mcp.md). Provider selection transparent đối với MCP clients.
 - **AI** nav group — một Blazor **page per feature**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), cộng Portfolio Agent, Alerts, MCP Keys. Pages share `AiFeaturePageBase` + `AiOutputPanel` + một `AiModelSelect`; mỗi cái hiển thị `AiFeatureNotice` khi không có provider nào được cấu hình.
-- **Settings → AI** (`/settings/ai`, owner-only) — provider list với **Add / edit provider dialog** (kind, base URL với per-kind hints incl. Ollama/LM Studio localhost preset, model, optional key, capability toggles, "set as default") và **Test connection** button.
+- **Settings → AI** (`/settings/ai`, owner-only) — provider list với **Add / edit provider dialog** (kind, base URL với per-kind hints và **preset** một cách nhấp bao gồm **Kimi/Moonshot**, Ollama và LM Studio, model, optional key, capability toggles, "set as default") và **Test connection** button.
 
 ## Configuration
 

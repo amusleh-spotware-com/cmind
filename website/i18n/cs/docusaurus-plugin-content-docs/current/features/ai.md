@@ -22,8 +22,11 @@ Podporovaní provideri:
 - **OpenAI** a **Azure OpenAI** (Chat Completions)
 - **Google Gemini** (`generateContent`)
 - **Jakýkoliv OpenAI-kompatibilní endpoint**, včetně **lokálních modelů** (Ollama, LM Studio, vLLM,
-  llama.cpp `server`, LocalAI) a OpenAI-kompatibilních cloudů (OpenRouter, Groq, Together, Mistral,
-  DeepSeek) — vše přes jeden OpenAI-kompatibilní adapter, liší se pouze base URL + model + klíč.
+  llama.cpp `server`, LocalAI) a OpenAI-kompatibilních cloudů (**Kimi / Moonshot** na
+  `https://api.moonshot.ai/v1/`, OpenRouter, Groq, Together, Mistral, DeepSeek) — vše přes jeden
+  OpenAI-kompatibilní adapter, liší se pouze base URL + model + klíč. Dialog Přidat providera nabízí
+  **one-click presety** (Kimi, OpenAI, OpenRouter, Groq, DeepSeek, Mistral, Ollama, LM Studio), které vyplní
+  base URL + příklad modelu.
 
 Přesně **jeden** provider je aktivní najednou. Credentials jsou uloženy **šifrovaně**
 (`AiProviderCredential` aggregate + `IAiProviderStore` + `ISecretProtector`, `EncryptionPurposes.AiApiKey`);
@@ -116,7 +119,7 @@ Vestavěný ONNX provider je reference implementation tohoto patternu.
 
 ## Capabilities
 
-- **Build cBot** — plain-English prompt → runnable cBot přes **generate → build → AI-fix** self-repair loop (`build-strategy`), na `/ai/build`. **Vygenerovaný zdrojový kód je zobrazen** po dokončení buildu (s tlačítkem kopírování), vedle build logu — při úspěchu *i* při selhání — takže vždy vidíte, co AI napsala, nikoli jen chyby.
+- **Build cBot** — plain-English prompt → runnable cBot přes **generate → build → AI-fix** self-repair loop (`build-strategy`), na `/ai/build`. **Vygenerovaný zdrojový kód je zobrazen** po dokončení buildu (s tlačítkem kopírování), vedle build logu (také kopírovatelného) — při úspěchu *i* při selhání. **Dokonce i neúspěšný build je uložen do vašich cBotů** (s jedinečným jménem) a nabízí odkaz *Otevřít v editoru*, abyste mohli opravit chyby kompilace a znovu vytvořit, místo ztráty práce.
 - **Per-page model selection** — každá AI feature stránka a dialog ukazuje **model selector** vyjmenovávající modely, které můžete použít (vaši vlastní providery + deployment defaults). Předvybere binding funkce uložený pokud nastaven, jinak **default** model, a model který zvolíte se aplikuje na tu jednu akci (poslán jako `?modelId=` a vynucen `RoutingAiClient` pro ten call). Skryt když deployment vypne management modelů.
 - **Browse & select models, per feature** — procházejte modely, které provider endpoint inzeruje (`GET /v1/models` na LM Studio / Ollama / vLLM / llama.cpp, nebo vestavěný katalog) místo ručního psaní id, a **bindujte každou AI funkci k jinému modelu** tak několik modelů slouží různým funkcím najednou (unbound funkce se fallbackují na scope's default provider).
 - **Parameter optimization** — closed loop: AI navrhuje param sets, každý persisted + backtested across nodes (`optimize-run` / `optimize-params`).
@@ -131,7 +134,7 @@ Vestavěný ONNX provider je reference implementation tohoto patternu.
 - Web endpoints under `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Každý feature endpoint přijímá volitelný `?modelId=<credential>` pro spuštění té jedné callky na zvoleném modelu. Plus **model discovery** (`/api/ai/models/probe`, `/api/ai/usable-models`) a **per-feature bindings** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - MCP tools (`AiTools`) pro AI klienty — viz [mcp.md](mcp.md). Provider selection je transparentní pro MCP klienty.
 - **AI** nav group — jedna Blazor **stránka per funkce**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), plus Portfolio Agent, Alerts, MCP Keys. Stránky sdílejí `AiFeaturePageBase` + `AiOutputPanel` + `AiModelSelect`; každá ukazuje `AiFeatureNotice` když žádný provider nakonfigurován.
-- **Settings → AI** (`/settings/ai`, pouze owner) — seznam providerů s **Add / edit provider dialog** (kind, base URL s per-kind hints incl. Ollama/LM Studio localhost preset, model, volitelný klíč, capability toggles, "set as default") a tlačítko **Test connection**.
+- **Settings → AI** (`/settings/ai`, pouze owner) — seznam providerů s dialogem **Přidat / upravit providera** (kind, base URL s one-click presety vč. **Kimi/Moonshot**, Ollama a LM Studio, model, volitelný klíč, toggle schopností, "nastavit jako default") a tlačítko **Test connection**.
 
 ## Konfigurace
 

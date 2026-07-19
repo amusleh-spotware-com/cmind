@@ -22,8 +22,8 @@ Provider yang didukung:
 - **OpenAI** dan **Azure OpenAI** (Chat Completions)
 - **Google Gemini** (`generateContent`)
 - **Endpoint compatible OpenAI apa pun**, termasuk **model lokal** (Ollama, LM Studio, vLLM,
-  llama.cpp `server`, LocalAI) dan cloud compatible OpenAI (OpenRouter, Groq, Together, Mistral,
-  DeepSeek) — semua melalui satu adapter compatible OpenAI, berbeda hanya berdasarkan base URL + model + kunci.
+  llama.cpp `server`, LocalAI) dan cloud compatible OpenAI (**Kimi / Moonshot** di
+  `https://api.moonshot.ai/v1/`, OpenRouter, Groq, Together, Mistral, DeepSeek) — semua melalui satu adapter compatible OpenAI, berbeda hanya berdasarkan base URL + model + kunci. Dialog Add-provider menawarkan **preset** sekali klik (Kimi, OpenAI, OpenRouter, Groq, DeepSeek, Mistral, Ollama, LM Studio) yang mengisi base URL + model sampel.
 
 Tepat **satu** provider aktif pada satu waktu. Kredensial disimpan **terenkripsi**
 (`AiProviderCredential` aggregate + `IAiProviderStore` + `ISecretProtector`, `EncryptionPurposes.AiApiKey`);
@@ -103,7 +103,7 @@ dalam proc, dll) adalah perubahan terlokalisasi: tambahkan `AiProviderKind`, imp
 
 ## Kemampuan
 
-- **Build cBot** — prompt bahasa Inggris biasa → runnable cBot melalui **generate → build → AI-fix** self-repair loop (`build-strategy`), di `/ai/build`. **Kode sumber yang dihasilkan ditampilkan** ketika build selesai (dengan tombol copy), bersama log build — saat sukses *dan* saat gagal — jadi Anda selalu melihat apa yang ditulis AI, bukan hanya error.
+- **Build cBot** — prompt bahasa Inggris biasa → runnable cBot melalui **generate → build → AI-fix** self-repair loop (`build-strategy`), di `/ai/build`. **Kode sumber yang dihasilkan ditampilkan** ketika build selesai (dengan tombol copy), bersama log build (juga dapat disalin) — saat sukses *dan* saat gagal. **Bahkan build yang gagal disimpan ke cBots Anda** (dengan nama unik aktual) dan menawarkan tautan *Open in editor* sehingga Anda dapat memperbaiki kesalahan kompilasi dan membangun kembali, bukan kehilangan pekerjaan.
 - **Pemilihan model per halaman** — setiap halaman fitur AI dan dialog menampilkan **pemilih model** yang mencantumkan model yang dapat Anda gunakan (provider Anda sendiri + default deployment). Ia pre-memilih pengikatan yang disimpan fitur jika diatur, jika tidak **model default**, dan model yang Anda pilih berlaku untuk tindakan itu saja (dikirim sebagai `?modelId=` dan dipaksa oleh `RoutingAiClient` untuk panggilan itu). Tersembunyi ketika deployment menonaktifkan manajemen model.
 - **Telusuri & pilih model, per fitur** — telusuri model yang diiklankan endpoint provider (`GET /v1/models` di LM Studio / Ollama / vLLM / llama.cpp, atau katalog bawaan) bukan tangan-ketik id, dan **ikat setiap fitur AI ke model yang berbeda** jadi beberapa model melayani fitur berbeda sekaligus (fitur tidak terikat kembali ke default scope).
 - **Optimasi parameter** — loop tertutup: AI mengusulkan set param, masing-masing persisted + backtested di seluruh node (`optimize-run` / `optimize-params`).
@@ -118,7 +118,7 @@ dalam proc, dll) adalah perubahan terlokalisasi: tambahkan `AiProviderKind`, imp
 - Endpoint web di bawah `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Setiap endpoint fitur menerima `?modelId=<credential>` opsional untuk menjalankan panggilan itu pada model pilihan. Ditambah **penemuan model** (`/api/ai/models/probe`, `/api/ai/usable-models`) dan **pengikatan per fitur** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - Alat MCP (`AiTools`) untuk klien AI — lihat [mcp.md](mcp.md). Pemilihan provider transparan untuk klien MCP.
 - Grup nav **AI** — satu halaman Blazor **per fitur**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), ditambah Portfolio Agent, Alerts, MCP Keys. Halaman berbagi `AiFeaturePageBase` + `AiOutputPanel` + `AiModelSelect`; masing-masing menampilkan `AiFeatureNotice` ketika tidak ada provider yang dikonfigurasi.
-- **Settings → AI** (`/settings/ai`, hanya pemilik) — daftar provider dengan dialog **Add / edit provider** (jenis, base URL dengan petunjuk per jenis incl. preset localhost Ollama/LM Studio, model, kunci opsional, toggle kemampuan, "set sebagai default") dan tombol **Test connection**.
+- **Settings → AI** (`/settings/ai`, hanya pemilik) — daftar provider dengan dialog **Add / edit provider** (jenis, base URL dengan petunjuk per jenis dan preset compatible OpenAI sekali klik incl. **Kimi/Moonshot**, Ollama dan LM Studio, model, kunci opsional, toggle kemampuan, "set sebagai default") dan tombol **Test connection**.
 
 ## Konfigurasi
 

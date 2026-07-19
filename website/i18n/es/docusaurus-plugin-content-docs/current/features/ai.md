@@ -22,8 +22,11 @@ Proveedores soportados:
 - **OpenAI** y **Azure OpenAI** (Chat Completions)
 - **Google Gemini** (`generateContent`)
 - **Cualquier punto final compatible con OpenAI**, incluyendo **modelos locales** (Ollama, LM Studio, vLLM,
-  `server` llama.cpp, LocalAI) y nubes compatibles con OpenAI (OpenRouter, Groq, Together, Mistral,
-  DeepSeek) — todos a través del único adaptador compatible con OpenAI, diferenciándose solo por URL base + modelo + clave.
+  llama.cpp `server`, LocalAI) y nubes compatibles con OpenAI (**Kimi / Moonshot** en
+  `https://api.moonshot.ai/v1/`, OpenRouter, Groq, Together, Mistral, DeepSeek) — todos a través del único
+  adaptador compatible con OpenAI, diferenciándose solo por URL base + modelo + clave. El diálogo Agregar proveedor ofrece
+  **preajustes** de un clic (Kimi, OpenAI, OpenRouter, Groq, DeepSeek, Mistral, Ollama, LM Studio) que rellenan
+  la URL base + un modelo de muestra.
 
 Exactamente **un** proveedor está activo a la vez. Las credenciales se almacenan **encriptadas**
 (`AiProviderCredential` agregado + `IAiProviderStore` + `ISecretProtector`, `EncryptionPurposes.AiApiKey`);
@@ -116,7 +119,7 @@ El proveedor ONNX integrado es la implementación de referencia de este patrón.
 
 ## Capacidades
 
-- **Construir cBot** — mensaje en inglés simple → cBot ejecutable vía **generar → compilar → auto-reparación de IA** bucle (`build-strategy`), en `/ai/build`. El **código fuente generado se muestra** cuando la compilación finaliza (con un botón de copiar), junto al registro de compilación — en caso de éxito *y* en caso de fallo — para que siempre veas lo que escribió la IA, no solo errores.
+- **Construir cBot** — mensaje en inglés simple → cBot ejecutable vía **generar → compilar → auto-reparación de IA** bucle (`build-strategy`), en `/ai/build`. El **código fuente generado se muestra** cuando la compilación finaliza (con un botón de copiar), junto al registro de compilación (también copiable) — en caso de éxito *y* en caso de fallo. **Incluso una compilación fallida se guarda en tus cBots** (con el nombre único actual) y ofrece un enlace *Abrir en editor* para que puedas arreglar los errores de compilación y recompilar, en lugar de perder el trabajo.
 - **Selección de modelo por página** — cada página y diálogo de característica de IA muestra un **selector de modelo** que enumera los modelos que puedes usar (tus propios proveedores + los predeterminados de despliegue). Preselecciona la vinculación guardada de la característica si está configurada, de lo contrario el modelo **predeterminado**, y el modelo que elijas se aplica a esa única acción (enviado como `?modelId=` y forzado por `RoutingAiClient` para esa llamada). Oculto cuando el despliegue deshabilita la administración de modelos.
 - **Examinar y seleccionar modelos, por característica** — examina los modelos que un punto final de proveedor anuncia (`GET /v1/models` en LM Studio / Ollama / vLLM / llama.cpp, o el catálogo integrado) en lugar de escribir a mano una id, y **vincula cada característica de IA a un modelo diferente** para que varios modelos sirvan a diferentes características a la vez (una característica no vinculada regresa al proveedor predeterminado del alcance).
 - **Optimización de parámetros** — bucle cerrado: IA propone conjuntos de parámetros, cada uno persiste + backtested en nodos (`optimize-run` / `optimize-params`).
@@ -131,7 +134,7 @@ El proveedor ONNX integrado es la implementación de referencia de este patrón.
 - Puntos finales web bajo `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Cada punto final de característica acepta un `?modelId=<credential>` opcional para ejecutar esa única llamada en un modelo elegido. Plus **descubrimiento de modelos** (`/api/ai/models/probe`, `/api/ai/usable-models`) y **vinculaciones por característica** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - Herramientas MCP (`AiTools`) para clientes de IA — ver [mcp.md](mcp.md). La selección de proveedor es transparente para los clientes MCP.
 - Grupo de navegación **IA** — una página Blazor **por característica**: Construir cBot (`/ai/build`), Revisión (`/ai/review`), Debate (`/ai/debate`), Sentimiento de Mercado (`/ai/sentiment`), Verificación de Exposición (`/ai/exposure`), Resumen de Cartera (`/ai/digest`), Asesor de Ajuste (`/ai/tune`), Optimizar (`/ai/optimize`), además de Agente de Cartera, Alertas, Claves MCP. Las páginas comparten `AiFeaturePageBase` + `AiOutputPanel` + un `AiModelSelect`; cada una muestra `AiFeatureNotice` cuando no hay proveedor configurado.
-- **Configuración → IA** (`/settings/ai`, solo propietario) — lista de proveedores con un **diálogo Agregar / editar proveedor** (tipo, URL base con pistas por tipo incluyendo un preajuste localhost de Ollama/LM Studio, modelo, clave opcional, alternar capacidades, "establecer como predeterminado") y un botón **Probar conexión**.
+- **Configuración → IA** (`/settings/ai`, solo propietario) — lista de proveedores con un **diálogo Agregar / editar proveedor** (tipo, URL base con pistas por tipo y preajustes de un clic incluyendo Kimi/Moonshot, Ollama y LM Studio, modelo, clave opcional, alternar capacidades, "establecer como predeterminado") y un botón **Probar conexión**.
 
 ## Configuración
 

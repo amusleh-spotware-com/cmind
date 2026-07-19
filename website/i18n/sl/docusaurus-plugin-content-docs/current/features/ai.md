@@ -22,10 +22,7 @@ Podprti ponudniki:
 - **Anthropic** (Claude — Messages API)
 - **OpenAI** in **Azure OpenAI** (Chat Completions)
 - **Google Gemini** (`generateContent`)
-- **Kateri koli OpenAI-kompatibilen končni točki**, vključno z **lokalnimi modeli** (Ollama, LM
-  Studio, vLLM, llama.cpp `server`, LocalAI) in OpenAI-kompatibilnimi oblaki (OpenRouter, Groq,
-  Together, Mistral, DeepSeek) — vse prek enega OpenAI-kompatibilnega adapterja, se razlikuje le po
-  osnovni URL + model + ključ.
+- **Kateri koli OpenAI-kompatibilen končni točki**, vključno z **lokalnimi modeli** (Ollama, LM Studio, vLLM, llama.cpp `server`, LocalAI) in OpenAI-kompatibilnimi oblaki (**Kimi / Moonshot** na `https://api.moonshot.ai/v1/`, OpenRouter, Groq, Together, Mistral, DeepSeek) — vse prek enega OpenAI-kompatibilnega adapterja, se razlikuje le po osnovni URL + model + ključ. Dialog za dodajanje ponudnika nudi **prednastavke na eno klic** (Kimi, OpenAI, OpenRouter, Groq, DeepSeek, Mistral, Ollama, LM Studio), ki izpolnijo osnovno URL in vzorčni model.
 
 Natančno **en** ponudnik je aktiven naenkrat. Poverenja so shranjena **šifrirana** (`AiProviderCredential`
 agregat + `IAiProviderStore` + `ISecretProtector`, `EncryptionPurposes.AiApiKey`); lokalna končna
@@ -130,7 +127,7 @@ je referenčna izvedba tega vzorca.
 
 - **Izbira modela na stran** — vsaka stran značilnosti AI in dialog prikazuje **izbirnik modela**, ki navaja modele, ki jih lahko uporabljate (vaši lastni ponudniki + privzete implementacije). Pred-izbira vezavo modela, ki je shranjena za značilnost, če je nastavljena, sicer **privzeti** model, in model, ki ga izberete, velja za to eno dejanje (poslan kot `?modelId=` in nujen s `RoutingAiClient` za ta klic). Skrit, ko implementacija onemogoči upravljanje modelov.
 - **Brskajte in izberite modele, po značilnosti** — brskajte po modelih, ki jih končna točka ponudnika oglašuje (`GET /v1/models` na LM Studio / Ollama / vLLM / llama.cpp, ali vgrajeni katalog) namesto ročnega tipkanja ID, in **vsaki značilnosti AI vezati drugačen model** tako da več modelov služi različnim značilnostim hkrati (nevezana značilnost se vrne na privzeti model obsega).
-- **Gradnja cBota** — navaden-angleški poziv → tečeči cBot prek **generira → gradnja → AI-popravek** samopopravljajoče zanke (`build-strategy`), na `/ai/build`. **Generirani izvorna koda je prikazana** ko se gradnja zaključi (z gumbom za kopiranje), skupaj z dnevnikom gradnje — ob uspehu *in* ob neuspehu — tako da vedno vidite, kaj je AI napisal, ne samo napake.
+- **Gradnja cBota** — navaden-angleški poziv → tečeči cBot prek **generira → gradnja → AI-popravek** samopopravljajoče zanke (`build-strategy`), na `/ai/build`. **Generirani izvorna koda je prikazana** ko se gradnja zaključi (z gumbom za kopiranje), skupaj z dnevnikom gradnje (tudi kopljivim) — ob uspehu *in* ob neuspehu. **Celo neuspešna gradnja je shranjena v vaše cBote** (z dejanskim edinstvenim imenom) in ponuja *Odpri v urejevalniku* povezavo, da lahko popravite napake prevajanja in ponovno zgradite, namesto da izgubite delo.
 - **Optimizacija parametra** — zaprta zanka: AI predlaga komplete parametrov, vsak obstojni +
   testirani čez vozlišča (`optimize-run` / `optimize-params`).
 - **Avtonomni agent za portfelj** — predlogi z naročilom z celotnim dnevnikom odločitve (`AgentMandate` →
@@ -149,10 +146,7 @@ je referenčna izvedba tega vzorca.
 - Orodja MCP (`AiTools`) za odjemalce AI — poglejte [mcp.md](mcp.md). Izbor ponudnika je
   transparenten za odjemalce MCP.
 - **AI** navigacijska skupina — ena stran Blazor **na značilnost**: Gradnja cBota (`/ai/build`), Pregled (`/ai/review`), Razprava (`/ai/debate`), Sentiment trga (`/ai/sentiment`), Preverjanje izpostave (`/ai/exposure`), Povzetek portfelja (`/ai/digest`), Svetovalec Tune (`/ai/tune`), Optimizacija (`/ai/optimize`), skupaj Agent portfelja, Obvestila, Ključi MCP. Strani delijo `AiFeaturePageBase` + `AiOutputPanel` + `AiModelSelect`; vsaka prikazuje `AiFeatureNotice`, ko ni ponudnika nastavljenega.
-- **Nastavitve → AI** (`/settings/ai`, samo lastnik) — seznam ponudnika z **Dodaj / uredi dialogom
-  ponudnika** (vrsta, osnovna URL z namigom na vrsto, vključno z Ollama/LM Studio localhost
-  prednastavka, model, neobvezni ključ, stikala zmožnosti, "nastavi aktivno") in gumbom **Test
-  povezanosti**.
+- **Nastavitve → AI** (`/settings/ai`, samo lastnik) — seznam ponudnika z **Dodaj / uredi dialogom ponudnika** (vrsta, osnovna URL z namigom na vrsto, vključno s prednastavki na eno klic **Kimi/Moonshot**, Ollama in LM Studio, model, neobvezni ključ, stikala zmožnosti, "nastavi aktivno") in gumbom **Test povezanosti**.
 
 ## Konfiguracija
 

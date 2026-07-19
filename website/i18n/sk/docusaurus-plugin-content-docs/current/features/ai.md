@@ -22,8 +22,11 @@ Podporovaní poskytovatelia:
 - **OpenAI** a **Azure OpenAI** (Chat Completions)
 - **Google Gemini** (`generateContent`)
 - **Akýkoľvek OpenAI-kompatibilný koncový bod**, vrátane **lokálnych modelov** (Ollama, LM Studio, vLLM,
-  llama.cpp `server`, LocalAI) a OpenAI-kompatibilných oblakov (OpenRouter, Groq, Together, Mistral,
-  DeepSeek) — všetko cez jeden OpenAI-kompatibilný adaptér, líšiace sa iba základnou URL + model + kľúč.
+  llama.cpp `server`, LocalAI) a OpenAI-kompatibilných oblakov (**Kimi / Moonshot** na
+  `https://api.moonshot.ai/v1/`, OpenRouter, Groq, Together, Mistral, DeepSeek) — všetko cez jeden
+  OpenAI-kompatibilný adaptér, líšiace sa iba základnou URL + model + kľúč. Dialóg Pridať poskytovateľa ponúka
+  **jednoklikové predvoľby** (Kimi, OpenAI, OpenRouter, Groq, DeepSeek, Mistral, Ollama, LM Studio), ktoré vyplnia
+  základnú URL + ukážkový model.
 
 Presne **jeden** poskytovať je aktívny naraz. Poverenia sú uložené **zašifrované**
 (`AiProviderCredential` agregát + `IAiProviderStore` + `ISecretProtector`, `EncryptionPurposes.AiApiKey`);
@@ -118,7 +121,7 @@ zmeny. Vstavaný ONNX poskytovať je referenčná implementácia tohto vzoru.
 
 ## Schopnosti
 
-- **Vytvorenie cBot** — plain-English prompt → runnable cBot cez **generate → build → AI-fix** samoreparácia loop (`build-strategy`), na `/ai/build`. **Generovaný zdrojový kód sa zobrazuje** keď je build hotov (s tlačidlom kopírovania), spolu s logg buildu — pri úspechu *a* pri zlyhání — takže vždy vidíte, čo AI napísala, nie len chyby.
+- **Vytvorenie cBot** — plain-English prompt → runnable cBot cez **generate → build → AI-fix** samoreparácia loop (`build-strategy`), na `/ai/build`. **Generovaný zdrojový kód sa zobrazuje** keď je build hotov (s tlačidlom kopírovania), spolu so skriptom buildu (tiež kopírovateľný) — pri úspechu *a* pri zlyhání. **Aj neúspešný build sa uloží do vašich cBotov** (s skutočným jedinečným názvom) a ponúka odkaz *Otvoriť v editore*, aby ste mohli opraviť chyby kompilácie a znovu vytvoriť, namiesto straty práce.
 - **Per-page model selection** — každá stránka funkcie AI a dialóg ukazuje **model selector** listujúcu modely, ktoré môžete použiť (vaši vlastní poskytovatelia + nasadení štandardy). Pré-vyberie viazanie uložené funkcie, ak je nastavené, ináč **štandardný** model, a model, ktorý vyberiete, sa vzťahuje na túto jednu akciu (poslané ako `?modelId=` a vynútené `RoutingAiClient` pre to volanie). Skryté, keď nasadení vypnutie správu modelov.
 - **Prehliadajte a vyberte si modely, per feature** — browse modelov čo poskytovateľ-koncový bod advertise (`GET /v1/models` na LM Studio / Ollama / vLLM / llama.cpp, alebo vstavaný katalóg) namiesto hand-typing id, a **viažte každú funkciu AI k inému modelu** aby niekoľko modelov slúžilo rôznym funkciám naraz (unbind funkcia falls back k scope's default poskytovateľ).
 - **Optimalizácia parametrov** — uzavretá slučka: AI navrhuje sady param, každý trvalý + backtestovaný naprieč uzlami (`optimize-run` / `optimize-params`).
@@ -133,7 +136,7 @@ zmeny. Vstavaný ONNX poskytovať je referenčná implementácia tohto vzoru.
 - Web koncové body pod `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Každý koncový bod funkcie akceptuje voliteľný `?modelId=<credential>` na spustenie tohto jedného volania na vybranom modeli. Plus **objav modelov** (`/api/ai/models/probe`, `/api/ai/usable-models`) a **per-feature viazania** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - MCP nástroje (`AiTools`) pre AI klientov — pozrite si [mcp.md](mcp.md). Výber poskytovateľa je transparentný pre MCP klientov.
 - **AI** skupinou navigácie — jeden Blazor **stránka na funkciu**: Vytvorenie cBot (`/ai/build`), Recenzia (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Kontrola expozície (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimalizovať (`/ai/optimize`), plus Portfolio Agent, Alerts, MCP Keys. Stránky zdieľanie `AiFeaturePageBase` + `AiOutputPanel` + `AiModelSelect`; každý ukazuje `AiFeatureNotice` keď nie je žiadny poskytovať nakonfigurovaný.
-- **Nastavenia → AI** (`/settings/ai`, iba vlastník) — zoznam poskytovateľov s **Pridajte / upravte dialóg poskytovateľa** (typ, základná URL s per-kind hints incl. Ollama/LM Studio localhost predvoľba, model, voliteľný kľúč, prepínače schopností, "nastaviť ako aktívne") a **Testovať pripojenie** tlačidlo.
+- **Nastavenia → AI** (`/settings/ai`, iba vlastník) — zoznam poskytovateľov s **Pridajte / upravte dialóg poskytovateľa** (typ, základná URL s per-kind hints a **jednoklikové predvoľby** vrátane **Kimi/Moonshot**, Ollama a LM Studio, model, voliteľný kľúč, prepínače schopností, "nastaviť ako aktívne") a **Testovať pripojenie** tlačidlo.
 
 ## Konfigurácia
 

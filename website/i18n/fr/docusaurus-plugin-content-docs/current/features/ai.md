@@ -22,8 +22,11 @@ Fournisseurs supportés :
 - **OpenAI** et **Azure OpenAI** (Chat Completions)
 - **Google Gemini** (`generateContent`)
 - **Tout point de terminaison compatible OpenAI**, y compris **les modèles locaux** (Ollama, LM Studio, vLLM,
-  llama.cpp `server`, LocalAI) et les clouds compatibles OpenAI (OpenRouter, Groq, Together, Mistral,
-  DeepSeek) — tous via l'adaptateur compatible OpenAI, différant uniquement par URL de base + modèle + clé.
+  llama.cpp `server`, LocalAI) et les clouds compatibles OpenAI (**Kimi / Moonshot** à
+  `https://api.moonshot.ai/v1/`, OpenRouter, Groq, Together, Mistral, DeepSeek) — tous via l'adaptateur
+  compatible OpenAI, différant uniquement par URL de base + modèle + clé. Le dialogue Ajouter un fournisseur offre
+  des **presets** en un clic (Kimi, OpenAI, OpenRouter, Groq, DeepSeek, Mistral, Ollama, LM Studio) qui remplissent
+  l'URL de base + un modèle exemple.
 
 Exactement **un** fournisseur est actif à un instant donné. Les credentials sont stockés **chiffrés**
 (`AiProviderCredential` aggregate + `IAiProviderStore` + `ISecretProtector`, `EncryptionPurposes.AiApiKey`) ;
@@ -120,7 +123,7 @@ fonctionnalité, endpoint ou outil MCP. Le fournisseur ONNX intégré est l'impl
 
 ## Capacités
 
-- **Build cBot** — prompt en anglais plain → cBot exécutable via **génération → build → boucle d'auto-réparation AI-fix** (`build-strategy`), sur `/ai/build`. Le **code source généré est affiché** quand le build se termine (avec un bouton copier), à côté du journal de build — en succès *et* en échec — vous voyez toujours ce que l'IA a écrit, pas seulement les erreurs.
+- **Build cBot** — prompt en anglais plain → cBot exécutable via **génération → build → boucle d'auto-réparation AI-fix** (`build-strategy`), sur `/ai/build`. Le **code source généré est affiché** quand le build se termine (avec un bouton copier), à côté du journal de build (également copiable) — en succès *et* en échec. **Même un build échoué est enregistré dans vos cBots** (avec le vrai nom unique) et offre un lien *Ouvrir dans l'éditeur* afin que vous puissiez corriger les erreurs de compilation et reconstruire, plutôt que de perdre le travail.
 - **Sélection de modèle par page** — chaque page et dialogue de fonctionnalité IA affiche un **sélecteur de modèle** listant les modèles que vous pouvez utiliser (vos propres fournisseurs + les valeurs par défaut du déploiement). Il présélectionne la liaison enregistrée de la fonctionnalité si définie, sinon le modèle **par défaut**, et le modèle que vous choisissez s'applique à cette seule action (envoyé comme `?modelId=` et forcé par `RoutingAiClient` pour cet appel). Masqué quand le déploiement désactive la gestion des modèles.
 - **Parcourir et sélectionner les modèles, par fonctionnalité** — parcourez les modèles qu'un point de terminaison de fournisseur annonce (`GET /v1/models` sur LM Studio / Ollama / vLLM / llama.cpp, ou le catalogue intégré) au lieu de taper à la main une id, et **liez chaque fonctionnalité IA à un modèle différent** afin que plusieurs modèles servent différentes fonctionnalités à la fois (une fonctionnalité non liée revient au fournisseur par défaut du scope).
 - **Optimisation des paramètres** — boucle fermée : l'IA propose des ensembles de paramètres, chacun persisté + backtesté
@@ -145,7 +148,7 @@ fonctionnalité, endpoint ou outil MCP. Le fournisseur ONNX intégré est l'impl
   Les pages partagent `AiFeaturePageBase` + `AiOutputPanel` + un `AiModelSelect` ; chacune affiche `AiFeatureNotice`
   quand aucun fournisseur n'est configuré.
 - **Settings → AI** (`/settings/ai`, propriétaire uniquement) — liste des fournisseurs avec un **dialogue Ajouter/éditer
-  fournisseur** (kind, URL de base avec indications par kind incluant un preset Ollama/LM Studio localhost,
+  fournisseur** (kind, URL de base avec indications par kind et presets en un clic incl. **Kimi/Moonshot**, Ollama et LM Studio,
   modèle, clé optionnelle, bascules de capacité, « définir comme par défaut ») et un bouton **Tester la connexion**.
 
 ## Configuration

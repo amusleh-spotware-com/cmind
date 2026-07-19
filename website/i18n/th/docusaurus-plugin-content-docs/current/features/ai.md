@@ -21,8 +21,8 @@ Provider ที่รองรับ:
 - **OpenAI** และ **Azure OpenAI** (Chat Completions)
 - **Google Gemini** (`generateContent`)
 - **Endpoint ที่เข้ากันได้กับ OpenAI ใดก็ได้** รวมถึง **local models** (Ollama, LM Studio, vLLM,
-  llama.cpp `server`, LocalAI) และ cloud ที่เข้ากันได้กับ OpenAI (OpenRouter, Groq, Together, Mistral,
-  DeepSeek) — ทั้งหมดผ่าน OpenAI-compatible adapter เดียว แตกต่างกันที่ base URL + model + key เท่านั้น
+  llama.cpp `server`, LocalAI) และ OpenAI-compatible clouds (**Kimi / Moonshot** ที่
+  `https://api.moonshot.ai/v1/`, OpenRouter, Groq, Together, Mistral, DeepSeek) — ทั้งหมดผ่าน OpenAI-compatible adapter เดียว แตกต่างกันที่ base URL + model + key เท่านั้น ไดเรกทอรี Add-provider แสดง **presets** (Kimi, OpenAI, OpenRouter, Groq, DeepSeek, Mistral, Ollama, LM Studio) ที่เติม base URL + sample model
 
 **หนึ่ง** provider เท่านั้นที่ active ได้ในเวลาเดียว Credentials ถูกเก็บ **แบบ encrypted**
 (`AiProviderCredential` aggregate + `IAiProviderStore` + `ISecretProtector`,
@@ -114,7 +114,7 @@ changes Built-in ONNX provider คือ reference implementation ของ patt
 
 ## Capabilities
 
-- **Build cBot** — prompt เป็นภาษาอังกฤษธรรมดา → runnable cBot ผ่าน **generate → build → AI-fix** self-repair loop (`build-strategy`) ที่ `/ai/build` **ซอร์สโค้ดที่สร้างขึ้นจะแสดง** เมื่อ build เสร็จสิ้น (พร้อมปุ่ม copy) พร้อมกับ build log — บนสำเร็จ *และ* บนความล้มเหลว — ดังนั้นคุณจึงเห็นสิ่งที่ AI เขียนเสมอ ไม่ใช่เพียงข้อผิดพลาด
+- **Build cBot** — prompt เป็นภาษาอังกฤษธรรมดา → runnable cBot ผ่าน **generate → build → AI-fix** self-repair loop (`build-strategy`) ที่ `/ai/build` **ซอร์สโค้ดที่สร้างขึ้นจะแสดง** เมื่อ build เสร็จสิ้น (พร้อมปุ่ม copy) พร้อมกับ build log (ก็ copy ได้เช่นกัน) — บนสำเร็จ *และ* บนความล้มเหลว **แม้แต่ build ที่ล้มเหลวก็ถูกบันทึกไปยัง cBots ของคุณ** (พร้อมชื่อจริงที่ไม่ซ้ำกัน) และนำเสนอลิงก์ *Open in editor* เพื่อให้คุณสามารถแก้ไขข้อผิดพลาดในการคอมไพล์และสร้างใหม่ได้
 - **ตัวเลือกโมเดลต่อหน้า** — ทุก AI feature page และ dialog แสดง **ตัวเลือกโมเดล** ที่แสดงรายการโมเดลที่คุณอาจใช้ (your own providers + deployment defaults) มันเลือกล่วงหน้าการผูก saved ของฟีเจอร์หากตั้งไว้ มิฉะนั้นโมเดล **default** และโมเดลที่คุณเลือกนั้นใช้กับการกระทำนั้นเพียงครั้งเดียว (ส่งเป็น `?modelId=` และบังคับใช้โดย `RoutingAiClient` สำหรับการเรียกนั้น) ซ่อนเมื่อ deployment ปิดการจัดการโมเดล
 - **เรียกดูและเลือกโมเดล ต่อฟีเจอร์** — เรียกดูโมเดลที่ provider endpoint โฆษณา (`GET /v1/models` บน LM Studio / Ollama / vLLM / llama.cpp หรือ built-in catalog) แทนการพิมพ์ด้วยมือ id และ **ผูก AI feature แต่ละตัวไปยังโมเดลต่างกัน** ดังนั้นโมเดลหลายตัวให้บริการฟีเจอร์ต่างกัน ในเวลาเดียวกัน (ฟีเจอร์ที่ไม่ผูก fall back ไปที่ default provider ของ scope)
 - **Parameter optimization** — closed loop: AI เสนอ param sets, แต่ละ persisted + backtested ข้าม nodes (`optimize-run` / `optimize-params`)
@@ -129,7 +129,7 @@ changes Built-in ONNX provider คือ reference implementation ของ patt
 - Web endpoints ภายใต้ `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …) ทุก feature endpoint ยอมรับ optional `?modelId=<credential>` เพื่อเรียกใช้ครั้งเดียวบนโมเดลที่เลือก บวก **การค้นหาโมเดล** (`/api/ai/models/probe`, `/api/ai/usable-models`) และ **การผูกต่อฟีเจอร์** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`)
 - MCP tools (`AiTools`) สำหรับ AI clients — ดู [mcp.md](mcp.md) Provider selection โปร่งใสต่อ MCP clients
 - **AI** nav group — หนึ่ง Blazor **page ต่อ feature**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`) บวก Portfolio Agent, Alerts, MCP Keys Pages แชร์ `AiFeaturePageBase` + `AiOutputPanel` + `AiModelSelect` แต่ละแสดง `AiFeatureNotice` เมื่อไม่มี provider configure
-- **Settings → AI** (`/settings/ai`, เจ้าของเท่านั้น) — provider list พร้อม **Add / edit provider dialog** (kind, base URL พร้อม per-kind hints รวม Ollama/LM Studio localhost preset, model, optional key, capability toggles, "set as default") และปุ่ม **Test connection**
+- **Settings → AI** (`/settings/ai`, เจ้าของเท่านั้น) — provider list พร้อม **Add / edit provider dialog** (kind, base URL พร้อม per-kind hints และ one-click presets รวม **Kimi/Moonshot**, Ollama และ LM Studio, model, optional key, capability toggles, "set as default") และปุ่ม **Test connection**
 
 ## Configuration
 

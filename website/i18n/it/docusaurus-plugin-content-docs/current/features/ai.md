@@ -22,8 +22,11 @@ Provider supportati:
 - **OpenAI** e **Azure OpenAI** (Chat Completions)
 - **Google Gemini** (`generateContent`)
 - **Qualsiasi endpoint compatibile con OpenAI**, inclusi **modelli locali** (Ollama, LM Studio, vLLM,
-  llama.cpp `server`, LocalAI) e cloud compatibili con OpenAI (OpenRouter, Groq, Together, Mistral,
-  DeepSeek) — tutti tramite l'unico adapter compatibile OpenAI, differing solo per base URL + modello + key.
+  llama.cpp `server`, LocalAI) e cloud compatibili con OpenAI (**Kimi / Moonshot** a
+  `https://api.moonshot.ai/v1/`, OpenRouter, Groq, Together, Mistral, DeepSeek) — tutti tramite l'unico
+  adapter compatibile OpenAI, differing solo per base URL + modello + key. La finestra di dialogo Add-provider offre
+  **preset** one-click (Kimi, OpenAI, OpenRouter, Groq, DeepSeek, Mistral, Ollama, LM Studio) che compilano
+  l'URL base + un modello di esempio.
 
 Esattamente **uno** provider è attivo alla volta. Le credenziali sono memorizzate **crittografate**
 (`AiProviderCredential` aggregate + `IAiProviderStore` + `ISecretProtector`, `EncryptionPurposes.AiApiKey`);
@@ -117,7 +120,7 @@ di feature, endpoint o tool MCP. Il provider ONNX integrato è l'implementazione
 
 ## Funzionalità
 
-- **Build cBot** — prompt in inglese semplice → cBot runnable via **generate → build → AI-fix** self-repair loop (`build-strategy`), a `/ai/build`. Il **codice sorgente generato viene mostrato** quando la build finisce (con un pulsante di copia), insieme al build log — in caso di successo *e* in caso di fallimento — così vedi sempre quello che l'AI ha scritto, non solo errori.
+- **Build cBot** — prompt in inglese semplice → cBot runnable via **generate → build → AI-fix** self-repair loop (`build-strategy`), a `/ai/build`. Il **codice sorgente generato viene mostrato** quando la build finisce (con un pulsante di copia), insieme al build log (anch'esso copiabile) — sia in caso di successo *che* di fallimento. **Anche una build fallita viene salvata nei tuoi cBot** (con il nome univoco effettivo) e offre un link *Apri nell'editor* per correggere gli errori di compilazione e rifare la build, anziché perdere il lavoro.
 - **Selezione modello per-page** — ogni pagina feature AI e dialog mostra un **selettore modello** che elenca i modelli che puoi usare (i tuoi provider + i default del deployment). Pre-seleziona il binding salvato della feature se impostato, altrimenti il modello **default**, e il modello che scegli si applica a quell'azione (inviato come `?modelId=` e forzato da `RoutingAiClient` per quella chiamata). Nascosto quando il deployment disabilita la gestione del modello.
 - **Sfoglia e seleziona modelli, per feature** — sfoglia i modelli che un endpoint provider pubblicizza (`GET /v1/models` su LM Studio / Ollama / vLLM / llama.cpp, o il catalogo integrato) invece di digitare manualmente un id, e **vincolare ogni feature AI a un modello diverso** così più modelli servono feature diverse contemporaneamente (una feature non vincolata ricade al provider dello scope predefinito).
 - **Ottimizzazione parametri** — closed loop: AI propone param set, ciascuno persistito + backtestato attraverso nodi (`optimize-run` / `optimize-params`).
@@ -132,7 +135,7 @@ di feature, endpoint o tool MCP. Il provider ONNX integrato è l'implementazione
 - Endpoint Web sotto `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Ogni endpoint feature accetta un opzionale `?modelId=<credential>` per eseguire quella chiamata su un modello scelto. Plus **scoperta modelli** (`/api/ai/models/probe`, `/api/ai/usable-models`) e **binding per-feature** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - Tool MCP (`AiTools`) per client AI — vedere [mcp.md](mcp.md). La selezione provider è trasparente ai client MCP.
 - **Nav group AI** — una Blazor **page per feature**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), più Portfolio Agent, Alerts, MCP Keys. Le pagine condividono `AiFeaturePageBase` + `AiOutputPanel` + un `AiModelSelect`; ciascuna mostra `AiFeatureNotice` quando nessun provider è configurato.
-- **Settings → AI** (`/settings/ai`, solo owner) — lista provider con dialog **Add / edit provider** (kind, base URL con hint per-kind incluso preset Ollama/LM Studio localhost, modello, key opzionale, toggle capacità, "set active") e pulsante **Test connection**.
+- **Settings → AI** (`/settings/ai`, solo owner) — lista provider con dialog **Add / edit provider** (kind, base URL con hint per-kind e preset one-click inclusi **Kimi/Moonshot**, Ollama e LM Studio, modello, key opzionale, toggle capacità, "set as default") e pulsante **Test connection**.
 
 ## Configurazione
 

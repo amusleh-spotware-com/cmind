@@ -22,8 +22,11 @@ Unterstuetzte Anbieter:
 - **OpenAI** und **Azure OpenAI** (Chat Completions)
 - **Google Gemini** (`generateContent`)
 - **Jeder OpenAI-kompatible Endpunkt**, einschliesslich **lokaler Modelle** (Ollama, LM Studio, vLLM,
-  llama.cpp `server`, LocalAI) und OpenAI-kompatibler Clouds (OpenRouter, Groq, Together, Mistral,
-  DeepSeek) – alle ueber den OpenAI-kompatiblen Adapter, unterschiedlich nur durch Basis-URL + Modell + Schluessel.
+  llama.cpp `server`, LocalAI) und OpenAI-kompatibler Clouds (**Kimi / Moonshot** unter
+  `https://api.moonshot.ai/v1/`, OpenRouter, Groq, Together, Mistral, DeepSeek) – alle ueber den
+  OpenAI-kompatiblen Adapter, unterschiedlich nur durch Basis-URL + Modell + Schluessel. Der Dialog zum Hinzufuegen des Anbieters bietet
+  **Ein-Klick-Voreinstellungen** (Kimi, OpenAI, OpenRouter, Groq, DeepSeek, Mistral, Ollama, LM Studio), die die
+  Basis-URL + ein Beispielmodell ausfuellen.
 
 Genau **ein** Anbieter ist zu einem Zeitpunkt aktiv. Berechtigungen werden **verschluesselt** gespeichert
 (`AiProviderCredential` Aggregate + `IAiProviderStore` + `ISecretProtector`, `EncryptionPurposes.AiApiKey`);
@@ -115,7 +118,7 @@ Aenderungen. Der integrierte ONNX-Anbieter ist die Referenzimplementierung diese
 
 ## Faehigkeiten
 
-- **cBot erstellen** – Klartext-Prompt → lauffaehiger cBot ueber **generieren → bauen → KI-reparieren** Selbstreparaturschleife (`build-strategy`), unter `/ai/build`. Der **generierte Quellcode wird angezeigt**, wenn der Bau abgeschlossen ist (mit einer Schaltflaeche zum Kopieren), zusammen mit dem Bau-Log – bei Erfolg *und* bei Fehler – damit du immer siehst, was die KI geschrieben hat, nicht nur Fehler.
+- **cBot erstellen** – Klartext-Prompt → lauffaehiger cBot ueber **generieren → bauen → KI-reparieren** Selbstreparaturschleife (`build-strategy`), unter `/ai/build`. Der **generierte Quellcode wird angezeigt**, wenn der Bau abgeschlossen ist (mit einer Schaltflaeche zum Kopieren), zusammen mit dem Bau-Log (ebenfalls kopierbar) – bei Erfolg *und* bei Fehler. **Auch ein fehlgeschlagener Bau wird in deinen cBots gespeichert** (mit dem tatsaechlichen eindeutigen Namen) und bietet einen *Im Editor oeffnen*-Link, damit du die Kompilierungsfehler beheben und erneut erstellen kannst, anstatt die Arbeit zu verlieren.
 - **Pro-Seite-Modellauswahl** – jede KI-Funktionsseite und jedes Dialog zeigen eine **Modellauswahl**, die die Modelle auflistet, die du verwenden kannst (deine eigenen Anbieter + die Bereitstellungsstandards). Sie waehlt vorab die gespeicherte Bindung der Funktion aus, falls gesetzt, sonst das **Standard**-Modell, und das ausgewaehlte Modell wird auf diese eine Aktion angewendet (gesendet als `?modelId=` und von `RoutingAiClient` fuer diesen Aufruf erzwungen). Verborgen, wenn die Bereitstellung Modellverwaltung deaktiviert.
 - **Modelle durchsuchen und auswaehlen, pro Funktion** – durchsuche die Modelle, die ein Anbieter-Endpunkt bewirbt (`GET /v1/models` auf LM Studio / Ollama / vLLM / llama.cpp, oder den integrierten Katalog), anstatt manuell eine ID einzugeben, und **binde jede KI-Funktion an ein anderes Modell**, damit mehrere Modelle gleichzeitig verschiedene Funktionen bedienen (eine ungebundene Funktion faellt auf den Standard-Anbieter des Umfangs zurueck).
 - **Parameteroptimierung** – geschlossene Schleife: KI schlaegt Parametersaetze vor, jeder persistiert + ueber Nodes getestet (`optimize-run` / `optimize-params`).
@@ -130,7 +133,7 @@ Aenderungen. Der integrierte ONNX-Anbieter ist die Referenzimplementierung diese
 - Web-Endpunkte unter `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Jeder Feature-Endpunkt akzeptiert ein optionales `?modelId=<credential>`, um diesen einen Aufruf auf einem ausgewaehlten Modell auszufuehren. Plus **Modell-Entdeckung** (`/api/ai/models/probe`, `/api/ai/usable-models`) und **Pro-Funktion-Bindungen** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - MCP-Tools (`AiTools`) fuer KI-Clients – siehe [mcp.md](mcp.md). Anbieter-Auswahl ist fuer MCP-Clients transparent.
 - **KI**-Navigationsgruppe – eine Blazor-**Seite pro Funktion**: cBot erstellen (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Marktstimmung (`/ai/sentiment`), Exposure-Pruefung (`/ai/exposure`), Portfolio-Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimieren (`/ai/optimize`), zuzueglich Portfolio-Agent, Alarme, MCP-Schluessel. Seiten teilen `AiFeaturePageBase` + `AiOutputPanel` + eine `AiModelSelect`; jede zeigt `AiFeatureNotice`, wenn kein Anbieter konfiguriert ist.
-- **Einstellungen → KI** (`/settings/ai`, nur Eigentuemer) – Anbieterliste mit einem **Hinzufuegen/Bearbeiten-Anbieter-Dialog** (Art, Basis-URL mit pro-Art-Hinweisen einschliesslich Ollama/LM Studio Localhost-Voreinstellung, Modell, optionaler Schluessel, Faehigkeitsschalter, "aktiv setzen") und einem **Verbindung testen**-Button.
+- **Einstellungen → KI** (`/settings/ai`, nur Eigentuemer) – Anbieterliste mit einem **Hinzufuegen/Bearbeiten-Anbieter-Dialog** (Art, Basis-URL mit pro-Art-Hinweisen und **Ein-Klick-Voreinstellungen** inkl. Kimi/Moonshot, Ollama und LM Studio, Modell, optionaler Schluessel, Faehigkeitsschalter, "aktiv setzen") und einem **Verbindung testen**-Button.
 
 ## Konfiguration
 

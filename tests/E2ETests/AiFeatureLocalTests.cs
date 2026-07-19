@@ -339,4 +339,24 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
         await Assertions.Expect(page.Locator("[data-testid=ai-provider-card]"))
             .ToHaveCountAsync(2, new() { Timeout = 20000 });
     }
+
+    [Fact]
+    public async Task Add_provider_dialog_offers_a_kimi_moonshot_preset()
+    {
+        var page = await OpenAsync("/settings/ai");
+        await page.Locator("[data-testid=ai-add-provider]").ClickAsync();
+        await Assertions.Expect(page.Locator("[data-testid=ai-dlg-baseurl]")).ToBeVisibleAsync(Slow);
+
+        // Switch to the OpenAI-compatible kind so the preset picker (which includes Kimi) appears.
+        await page.Locator("div.mud-select:has([data-testid=ai-dlg-kind])").First.ClickAsync();
+        await page.Locator(".mud-list-item:has-text('OpenAI-compatible')").First.ClickAsync();
+
+        // Pick the Kimi (Moonshot) preset → the base URL auto-fills to the Moonshot endpoint.
+        await page.Locator("div.mud-select:has([data-testid=ai-dlg-preset])").First.ClickAsync();
+        await page.Locator(".mud-list-item:has-text('Kimi')").First.ClickAsync();
+
+        await Assertions.Expect(page.GetByTestId("ai-dlg-baseurl"))
+            .ToHaveValueAsync(new Regex("moonshot"), new() { Timeout = 10000 });
+        await page.GetByTestId("ai-dlg-cancel").ClickAsync();
+    }
 }

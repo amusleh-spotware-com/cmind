@@ -421,7 +421,8 @@ public static class AiEndpoints
                 log = r.Log,
                 code = r.Code,
                 language = r.Language,
-                error = r.Error
+                error = r.Error,
+                name = r.ProjectName
             });
         });
 

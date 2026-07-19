@@ -52,7 +52,7 @@
             @if (_buildResult.Success)
             {
                 <MudAlert Severity="Severity.Success" Class="mb-2">
-                    Built in @_buildResult.Attempts attempt(s). Your runnable cBot is ready.
+                    Built in @_buildResult.Attempts attempt(s). Saved as <b>@_buildResult.Name</b> in your cBots — your runnable cBot is ready.
                 </MudAlert>
                 <MudStack Row="true" Spacing="2">
                     <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.PlayArrow"
@@ -68,6 +68,15 @@
                 <MudAlert Severity="Severity.Error" Class="mb-2">
                     @(_buildResult.Error ?? $"Build failed after {_buildResult.Attempts} attempt(s).")
                 </MudAlert>
+                @if (_buildResult.ProjectId is not null)
+                {
+                    <MudAlert Severity="Severity.Info" Class="mb-2" data-testid="ai-build-saved">
+                        Saved as <b>@_buildResult.Name</b> in your cBots — open it in the editor to fix the errors and rebuild.
+                    </MudAlert>
+                    <MudButton Color="Color.Secondary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit"
+                               OnClick="@(() => Nav.NavigateTo($"/builder/{_buildResult.ProjectId}"))"
+                               data-testid="ai-build-open-failed">Open in editor</MudButton>
+                }
             }
             @if (!string.IsNullOrEmpty(_buildResult.Code))
             {
@@ -99,6 +108,11 @@
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                                 <MudIcon Icon="@Icons.Material.Filled.Terminal" Size="Size.Small" />
                                 <MudText Typo="Typo.subtitle2">Build log</MudText>
+                                <MudSpacer />
+                                <MudTooltip Text="Copy build log">
+                                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small"
+                                                   OnClick="CopyLog" data-testid="ai-build-copy-log" />
+                                </MudTooltip>
                             </MudStack>
                         </TitleContent>
                         <ChildContent>
@@ -141,7 +155,8 @@
                 root.TryGetProperty("log", out var l) ? l.GetString() : null,
                 root.TryGetProperty("error", out var e) ? e.GetString() : null,
                 root.TryGetProperty("code", out var cd) ? cd.GetString() : null,
-                root.TryGetProperty("language", out var lang) ? lang.GetString() : _language);
+                root.TryGetProperty("language", out var lang) ? lang.GetString() : _language,
+                root.TryGetProperty("name", out var nm) ? nm.GetString() : null);
         }
         catch
         {
@@ -167,6 +182,21 @@
         }
     }
 
+    private async Task CopyLog()
+    {
+        if (string.IsNullOrEmpty(_buildResult?.Log)) return;
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _buildResult.Log);
+            Snack.Add("Build log copied", Severity.Success);
+        }
+        catch
+        {
+            Snack.Add("Copy failed", Severity.Warning);
+        }
+    }
+
     private sealed record BuildResult(
-        bool Success, Guid? CBotId, Guid? ProjectId, int Attempts, string? Log, string? Error, string? Code, string? Language);
+        bool Success, Guid? CBotId, Guid? ProjectId, int Attempts, string? Log, string? Error, string? Code, string? Language,
+        string? Name);
 }

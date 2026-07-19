@@ -202,6 +202,12 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
         // must render (success or a build-log failure) without tripping the error UI.
         await Assertions.Expect(page.Locator("[data-testid=ai-build-result]")).ToBeVisibleAsync(new() { Timeout = 120000 });
         (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
+
+        // The build log is always shown with a Copy button; the canned reply is not valid source, so the
+        // build fails — the failed project is still saved to the user's cBots with an "open in editor" link.
+        await Assertions.Expect(page.Locator("[data-testid=ai-build-copy-log]")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.Locator("[data-testid=ai-build-saved]")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.Locator("[data-testid=ai-build-open-failed]")).ToBeVisibleAsync(Slow);
     }
 
     [Theory]

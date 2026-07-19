@@ -10,7 +10,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Infrastructure.Ai;
 
 public sealed record CBotBuildFlowResult(
-    bool Success, Guid? CBotId, Guid? ProjectId, int Attempts, string Log, string? Code, string Language, string? Error);
+    bool Success, Guid? CBotId, Guid? ProjectId, int Attempts, string Log, string? Code, string Language, string? Error,
+    string ProjectName);
 
 /// <summary>
 /// The plain-English-intent → generate → build → self-repair → create-cBot pipeline, behind the
@@ -44,12 +45,12 @@ public sealed class CBotBuildFlow(
             Templates.CreateProjectJson(project.LanguageName, project.Name)) ?? new Dictionary<string, string>();
         var codeKey = files.Keys.FirstOrDefault(k => k.EndsWith(project.FileExtension, StringComparison.Ordinal));
         if (codeKey is null)
-            return new CBotBuildFlowResult(false, null, project.Id.Value, 0, string.Empty, null, lang, "project template has no code file");
+            return new CBotBuildFlowResult(false, null, project.Id.Value, 0, string.Empty, null, lang, "project template has no code file", projectName);
 
         Log("Generating strategy code…");
         var gen = await ai.GenerateCBotAsync(lang, description, credentialId, ct);
         if (!gen.Success)
-            return new CBotBuildFlowResult(false, null, project.Id.Value, 0, string.Empty, null, lang, gen.Error);
+            return new CBotBuildFlowResult(false, null, project.Id.Value, 0, string.Empty, null, lang, gen.Error, projectName);
         files[codeKey] = ExtractCode(gen.Text);
 
         db.CBotSourceProjects.Add(project);
@@ -83,8 +84,10 @@ public sealed class CBotBuildFlow(
 
         if (!success || algo is null)
         {
-            Log($"Build did not succeed after {attempts} attempt(s).");
-            return new CBotBuildFlowResult(false, null, project.Id.Value, attempts, ClipLog(log), files[codeKey], lang, null);
+            // The source project is already persisted (saved each build attempt), so a failed AI build still
+            // shows up in the user's cBots list as a "Failed" project they can open in the editor and fix.
+            Log($"Build did not succeed after {attempts} attempt(s). Saved as '{project.Name}' in your cBots — open it in the editor to fix and rebuild.");
+            return new CBotBuildFlowResult(false, null, project.Id.Value, attempts, ClipLog(log), files[codeKey], lang, null, projectName);
         }
 
         try
@@ -93,13 +96,13 @@ public sealed class CBotBuildFlow(
             var cbot = CBot.Create(uid, cbotName, protector.Protect(algo, EncryptionPurposes.CbotAlgo), project.Id);
             db.CBots.Add(cbot);
             await db.SaveChangesAsync(ct);
-            Log("Build succeeded — your runnable cBot is ready.");
-            return new CBotBuildFlowResult(true, cbot.Id.Value, project.Id.Value, attempts, ClipLog(log), files[codeKey], lang, null);
+            Log($"Build succeeded — your runnable cBot '{project.Name}' is ready.");
+            return new CBotBuildFlowResult(true, cbot.Id.Value, project.Id.Value, attempts, ClipLog(log), files[codeKey], lang, null, projectName);
         }
         catch (DbUpdateException)
         {
             return new CBotBuildFlowResult(false, null, project.Id.Value, attempts, ClipLog(log), files[codeKey], lang,
-                "a cBot or project with that name already exists — try another name");
+                "a cBot or project with that name already exists — try another name", projectName);
         }
     }
 

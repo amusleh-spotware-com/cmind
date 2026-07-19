@@ -369,4 +369,6 @@
   <data name="copyDetail.editDestination" xml:space="preserve"><value>Изменить назначение</value></data>
   <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Назначение обновлено</value></data>
   <data name="nav.ai.tasks" xml:space="preserve"><value>Задачи</value></data>
+  <data name="ai.model" xml:space="preserve"><value>Модель</value></data>
+  <data name="ai.model.default" xml:space="preserve"><value>по умолчанию</value></data>
 </root>

@@ -22,8 +22,16 @@ public abstract class AiFeaturePageBase : ComponentBase
     protected string Output = "";
     protected bool AiEnabled;
 
+    // The provider credential the user chose in this page's model selector (null = use the feature
+    // binding / default). PostText/PostJson append it as ?modelId= so the one call runs on that model.
+    protected Guid? SelectedModelId;
+
     // AI actions are disabled while a request is in flight or until a key is configured.
     protected bool Busy => Loading || !AiEnabled;
+
+    // Append the chosen model to an AI endpoint URL so the request runs on it (see AiEndpoints' filter).
+    protected string WithModel(string url) =>
+        SelectedModelId is { } id ? $"{url}{(url.Contains('?') ? '&' : '?')}modelId={id}" : url;
 
     protected void OnAiStatus(bool enabled)
     {
@@ -37,7 +45,7 @@ public abstract class AiFeaturePageBase : ComponentBase
         Output = "";
         try
         {
-            var response = await Http.PostAsJsonAsync(url, body);
+            var response = await Http.PostAsJsonAsync(WithModel(url), body);
             var result = await response.Content.ReadFromJsonAsync<AiTextResponse>();
             if (result is { success: true })
             {
@@ -64,7 +72,7 @@ public abstract class AiFeaturePageBase : ComponentBase
         Output = "";
         try
         {
-            var response = await Http.PostAsJsonAsync(url, body);
+            var response = await Http.PostAsJsonAsync(WithModel(url), body);
             var text = await response.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(text);
             var root = doc.RootElement;

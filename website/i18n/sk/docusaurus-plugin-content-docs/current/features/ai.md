@@ -103,11 +103,9 @@ White-label nasadenie obmedzuje AI cez `App:Branding` (vynútené na strane serv
   privátne OpenAI-kompatibilný, napr. Ollama/LM Studio/vLLM).
 - `AllowedAiProviderKinds` (štandardne prázdne = všetky) — zoznam iba typy nasadenie sankcionuje (napr.
   `["Anthropic","OpenAiCompatible"]`) na uzamknutie, ktorí poskytovatelia môžu používatelia pridať.
-- `AllowAiTasks` (štandardne `true`) — nastavte `false` na **odstránenie funkcie fovej AI-úlohy** (stránka
-  `/ai/tasks` a API úlohy vracajú 404; runner prestáva claims); synchrónne funkcie AI zostávajú pracovať.
-- `AllowAiModelManagement` (štandardne `true`) — nastavte `false` na skrytie **prehľadu modelov** a **per-feature
-  viazania modelov**. Oboje sú tuneable vlastníkom za bahu z **Nastavenia → Nasadenie** (overlaid live na
-  `IOptionsMonitor`) a katalógovaní v `WhiteLabelCatalog`.
+- `AllowAiModelManagement` (štandardne `true`) — nastavte `false` na skrytie **prehľadu modelov**, **per-page model
+  selector**, a **per-feature model binding**. Všetky sú tuneable vlastníkom za bahu z **Nastavenia →
+  Nasadenie** (overlaid live na `IOptionsMonitor`) a katalógovaní v `WhiteLabelCatalog`.
 
 ## Rozšírenie: budúce vstavaných modelov
 
@@ -121,8 +119,8 @@ zmeny. Vstavaný ONNX poskytovať je referenčná implementácia tohto vzoru.
 ## Schopnosti
 
 - **Vytvorenie cBot** — plain-English prompt → runnable cBot cez **generate → build → AI-fix** samoreparácia loop (`build-strategy`), na `/ai/build`. **Generovaný zdrojový kód sa zobrazuje** keď je build hotov (s tlačidlom kopírovania), spolu s logg buildu — pri úspechu *a* pri zlyhání — takže vždy vidíte, čo AI napísala, nie len chyby.
-- **Fový AI-úlohy** — spustite dlhodobú AI-prácu (napr. vytvorte cBot) s modelom(kami) vášho výberu, potom opustite stránku a vráťte sa k výsledku. Vyberte niekoľko modelov na porovnanie — každý beží ako vlastná úloha (`/ai/tasks`). Pracovník na pozadí claims úlohy na self-healing zákupnej (vyžaduje sa ak uzol zomrie) a streams progres do per-task activity log.
-- **Prehliadajte a vyberte si modely, per feature** — browse modelov čo poskytovateľ-koncový bod advertise (`GET /v1/models` na LM Studio / Ollama / vLLM / llama.cpp, alebo vstavaný katalóg) namiesto hand-typing id, a **viažte každú funkciu AI k inému modelu** aby niekoľko modelov slúžilo rôznym funkciám naraz (unbind funkcia falls back k scope's active poskytovateľ).
+- **Per-page model selection** — každá stránka funkcie AI a dialóg ukazuje **model selector** listujúcu modely, ktoré môžete použiť (vaši vlastní poskytovatelia + nasadení štandardy). Pré-vyberie viazanie uložené funkcie, ak je nastavené, ináč **štandardný** model, a model, ktorý vyberiete, sa vzťahuje na túto jednu akciu (poslané ako `?modelId=` a vynútené `RoutingAiClient` pre to volanie). Skryté, keď nasadení vypnutie správu modelov.
+- **Prehliadajte a vyberte si modely, per feature** — browse modelov čo poskytovateľ-koncový bod advertise (`GET /v1/models` na LM Studio / Ollama / vLLM / llama.cpp, alebo vstavaný katalóg) namiesto hand-typing id, a **viažte každú funkciu AI k inému modelu** aby niekoľko modelov slúžilo rôznym funkciám naraz (unbind funkcia falls back k scope's default poskytovateľ).
 - **Optimalizácia parametrov** — uzavretá slučka: AI navrhuje sady param, každý trvalý + backtestovaný naprieč uzlami (`optimize-run` / `optimize-params`).
 - **Autonómny agent portfólia** — mandátované návrhy s úplným rozhodovacím denníkom (`AgentMandate` → `AgentProposal`).
 - **Pôsobiaci strážca rizika** — `AiRiskGuard` background služba posudzuje bežiace boty, môžu **auto-stop** na kritické riziko (opt-in).
@@ -132,9 +130,9 @@ zmeny. Vstavaný ONNX poskytovať je referenčná implementácia tohto vzoru.
 
 ## Povrchy
 
-- Web koncové body pod `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), plus **fove úlohy** (`/api/ai/tasks` create/list/detail/cancel/delete), **objav modelov** (`/api/ai/models/probe`, `/api/ai/usable-models`) a **per-feature viazania** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
+- Web koncové body pod `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Každý koncový bod funkcie akceptuje voliteľný `?modelId=<credential>` na spustenie tohto jedného volania na vybranom modeli. Plus **objav modelov** (`/api/ai/models/probe`, `/api/ai/usable-models`) a **per-feature viazania** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - MCP nástroje (`AiTools`) pre AI klientov — pozrite si [mcp.md](mcp.md). Výber poskytovateľa je transparentný pre MCP klientov.
-- **AI** skupinou navigácie — jeden Blazor **stránka na funkciu**: Vytvorenie cBot (`/ai/build`), Recenzia (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Kontrola expozície (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimalizovať (`/ai/optimize`), **AI Tasks** (`/ai/tasks`), plus Portfolio Agent, Alerts, MCP Keys. Stránky zdieľanie `AiFeaturePageBase` + `AiOutputPanel`; každý ukazuje `AiFeatureNotice` keď nie je žiadny poskytovať nakonfigurovaný.
+- **AI** skupinou navigácie — jeden Blazor **stránka na funkciu**: Vytvorenie cBot (`/ai/build`), Recenzia (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Kontrola expozície (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimalizovať (`/ai/optimize`), plus Portfolio Agent, Alerts, MCP Keys. Stránky zdieľanie `AiFeaturePageBase` + `AiOutputPanel` + `AiModelSelect`; každý ukazuje `AiFeatureNotice` keď nie je žiadny poskytovať nakonfigurovaný.
 - **Nastavenia → AI** (`/settings/ai`, iba vlastník) — zoznam poskytovateľov s **Pridajte / upravte dialóg poskytovateľa** (typ, základná URL s per-kind hints incl. Ollama/LM Studio localhost predvoľba, model, voliteľný kľúč, prepínače schopností, "nastaviť ako aktívne") a **Testovať pripojenie** tlačidlo.
 
 ## Konfigurácia

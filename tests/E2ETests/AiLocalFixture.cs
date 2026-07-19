@@ -38,10 +38,6 @@ public class AiLocalFixture : AppFixture
         // tune, optimize, analyze, post-mortem) can be driven against real seeded state without Docker.
         psi.Environment["App__TestSeed__Enabled"] = "true";
 
-        // The base fixture keeps the async AI task runner off; this fixture drives the /ai/tasks flow, so
-        // turn it back on so a created task is actually claimed and run.
-        psi.Environment["App__Ai__RunTasks"] = "true";
-
         // Seed one active provider via config (App:Ai:Providers[0]); the store imports it on startup.
         if (UsingFakeLlm)
         {

@@ -13,6 +13,7 @@
     <MudSpacer />
     @if (_isOwner)
     {
+        <AiModelSelect Feature="AiFeature.GatherCurrencyForward" @bind-Selected="SelectedModelId" Class="mr-2" />
         <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh"
                    OnClick="Refresh" Disabled="Busy" data-testid="cs-refresh">Refresh now</MudButton>
     }
@@ -155,7 +156,7 @@ else
         Loading = true;
         try
         {
-            var response = await Http.PostAsync($"/api/ai/currency-strength/refresh", null);
+            var response = await Http.PostAsync(WithModel("/api/ai/currency-strength/refresh"), null);
             if (response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.NoContent)
                 _view = await response.Content.ReadFromJsonAsync<CsView>();
             else if (response.StatusCode == System.Net.HttpStatusCode.NoContent)

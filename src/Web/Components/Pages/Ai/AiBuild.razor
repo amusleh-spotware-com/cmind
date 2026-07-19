@@ -33,15 +33,11 @@
     </MudGrid>
     <MudTextField @bind-Value="_description" Label="Describe your strategy" Lines="5" Class="mt-3"
                   Placeholder="e.g. RSI mean-reversion on EURUSD h1, 1.5% risk, ATR stop-loss" />
+    <AiModelSelect Feature="AiFeature.GenerateCBot" @bind-Selected="SelectedModelId" Class="mt-3" />
     <MudStack Row="true" Spacing="2" Class="mt-3" Wrap="Wrap.Wrap">
         <MudButton Color="Color.Primary" Variant="Variant.Filled"
                    StartIcon="@Icons.Material.Filled.Bolt" OnClick="BuildBot" Disabled="Busy">
             Build my bot
-        </MudButton>
-        <MudButton Color="Color.Secondary" Variant="Variant.Outlined"
-                   StartIcon="@Icons.Material.Filled.Checklist" OnClick="CreateTask" Disabled="Busy"
-                   data-testid="ai-build-as-task">
-            Run as background task
         </MudButton>
     </MudStack>
 
@@ -132,7 +128,7 @@
         _buildResult = null;
         try
         {
-            var response = await Http.PostAsJsonAsync("/api/ai/build-strategy",
+            var response = await Http.PostAsJsonAsync(WithModel("/api/ai/build-strategy"),
                 new { Name = _projectName, Language = _language, Description = _description });
             var text = await response.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(text);
@@ -155,13 +151,6 @@
         {
             Loading = false;
         }
-    }
-
-    private async Task CreateTask()
-    {
-        var dialog = await Dialogs.ShowAsync<Web.Components.Dialogs.AiTaskCreateDialog>("Create cBot task");
-        var result = await dialog.Result;
-        if (result is { Canceled: false }) Nav.NavigateTo("/ai/tasks");
     }
 
     private async Task CopyCode()

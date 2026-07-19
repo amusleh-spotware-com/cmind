@@ -111,11 +111,7 @@ tarafında zorlanır):
   özel OpenAI uyumlu, örn. Ollama/LM Studio/vLLM) yasaklamak için `false` ayarlayın.
 - `AllowedAiProviderKinds` (varsayılan boş = tümü) — kullanıcıların hangi sağlayıcıları ekleyebileceğini
   kilitlemek için yalnızca dağıtımın onayladığı türleri listeleyin (örn. `["Anthropic","OpenAiCompatible"]`).
-- `AllowAiTasks` (varsayılan `true`) — **arka plan AI görevi** özelliğini **kaldırmak** için `false` ayarlayın (`/ai/tasks`
-  sayfası ve görev API 404 döndürür; runner talepleri durdurur); eş zamanlı AI özellikleri yine de çalışır.
-- `AllowAiModelManagement` (varsayılan `true`) — **model taraması** ve **özellik başına model bağlama**
-  **gizlemek** için `false` ayarlayın. Her ikisi de **Settings → Deployment**'ten owner tarafından çalışma zamanında
-  ayarlanabilir (canlı olarak `IOptionsMonitor` üzerine yerleştirilir) ve `WhiteLabelCatalog`'da kataloglanır.
+- `AllowAiModelManagement` (varsayılan `true`) — **model taraması**, **sayfada model seçicisi** ve **özellik başına model bağlama**'yı **gizlemek** için `false` ayarlayın. Tümü **Settings → Deployment**'ten owner tarafından çalışma zamanında ayarlanabilir (canlı olarak `IOptionsMonitor` üzerine yerleştirilir) ve `WhiteLabelCatalog`'da kataloglanır.
 
 ## Genişletme: gelecekteki yerleşik modeller
 
@@ -130,8 +126,8 @@ sağlayıcısı bu desenin referans uygulamasıdır.
 ## Yetenekler
 
 - **cBot Oluştur** — düz İngilizce prompt → **generate → build → AI-fix** kendi kendini onarma döngüsü aracılığıyla çalıştırılabilir cBot (`build-strategy`), `/ai/build`'da. **Oluşturulan kaynak kodu, derleme bittiğinde gösterilir** (kopyala düğmesi ile), derleme günlüğünün yanında — başarıda *ve* başarısızlıkta — böylece her zaman AI'ın ne yazdığını görürsünüz, sadece hataları değil.
-- **Arka plan AI görevleri** — uzun çalışan bir AI işi başlatın (örn. cBot oluşturun) seçtiğiniz modelle, sonra sayfayı ayrılın ve sonuç için geri dönün. Karşılaştırmak için birden fazla model seçin — her biri kendi görevi olarak çalışır (`/ai/tasks`). Bir web-host çalışanı görevleri self-healing bir kiralama üzerinde talep eder (bir düğüm ölürse geri alınır) ve ilerlemeyi bir per-görev etkinlik günlüğüne akışla aktarır.
-- **Modelleri tarayın ve seçin, özellik başına** — bir sağlayıcı uç noktası (`GET /v1/models` LM Studio / Ollama / vLLM / llama.cpp üzerinde veya yerleşik kataloğ) reklamını yaptığı modelleri tarayın, elle bir id yazarak yerine, ve **her AI özelliğini farklı bir modele bağlayın**, böylece birden fazla model aynı anda farklı özellikleri sunabilir (bağlı olmayan bir özellik kapsam'ın aktif sağlayıcısına geri döner).
+- **Sayfada model seçimi** — her AI özelliği sayfası ve iletişim kutusu, kullanabileceğiniz modelleri (kendi sağlayıcılarınız + dağıtım varsayılanları) listeleyen bir **model seçici** gösterir. Özelliğin kaydedilmiş bağlaması ayarlanmışsa onu önceden seçer, aksi takdirde **varsayılan** modeli seçer ve seçtiğiniz model bu bir eylem için geçerli olur (gönderimiş `?modelId=` olarak `RoutingAiClient` tarafından zorunlu kılınır). Dağıtım model yönetimini devre dışı bıraktığında gizlenir.
+- **Modelleri tarayın ve seçin, özellik başına** — bir sağlayıcı uç noktası (`GET /v1/models` LM Studio / Ollama / vLLM / llama.cpp üzerinde veya yerleşik kataloğ) reklamını yaptığı modelleri tarayın, elle bir id yazarak yerine, ve **her AI özelliğini farklı bir modele bağlayın**, böylece birden fazla model aynı anda farklı özellikleri sunabilir (bağlı olmayan bir özellik kapsam'ın varsayılan sağlayıcısına geri döner).
 - **Parametre optimizasyonu** — kapalı döngü: AI param setleri önerir, her biri node'lar arasında kalıcılaştırılır + backtest edilir (`optimize-run` / `optimize-params`).
 - **Otonom portföy ajanı** — tam karar günlüğüyle mandat odaklı öneriler (`AgentMandate` → `AgentProposal`).
 - **Hareket eden risk muhafızı** — `AiRiskGuard` arka plan servisi çalışan botları değerlendirir, kritik riskte **otomatik-durdurabilir** (opt-in).
@@ -141,10 +137,10 @@ sağlayıcısı bu desenin referans uygulamasıdır.
 
 ## Yüzeyler
 
-- `/api/ai/*` altında Web uç noktaları (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …) artı **arka plan görevleri** (`/api/ai/tasks` create/list/detail/cancel/delete), **model keşfi** (`/api/ai/models/probe`, `/api/ai/usable-models`) ve **özellik başına bağlamalar** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
+- `/api/ai/*` altında Web uç noktaları (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Her özellik uç noktası seçilen bir modelde o bir çağrıyı çalıştırmak için isteğe bağlı bir `?modelId=` kabul eder. Artı **model keşfi** (`/api/ai/models/probe`, `/api/ai/usable-models`) ve **özellik başına bağlamalar** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - AI istemcileri için MCP araçları (`AiTools`) — bkz. [mcp.md](mcp.md). Sağlayıcı seçimi MCP istemcileri için şeffaftır.
-- **AI** nav grubu — özellik başına bir Blazor **sayfası**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), **AI Tasks** (`/ai/tasks`), artı Portfolio Agent, Alerts, MCP Keys. Sayfalar `AiFeaturePageBase` + `AiOutputPanel` paylaşır; her biri hiçbir sağlayıcı yapılandırılmadığında `AiFeatureNotice` gösterir.
-- **Settings → AI** (`/settings/ai`, yalnızca owner) — **Add / edit provider dialog** ile sağlayıcı listesi (kind, tür başına ipuçlarıyla temel URL bir Ollama/LM Studio localhost ön ayarı dahil, model, isteğe bağlı anahtar, yetenek geçişleri, "set active") ve bir **Test connection** düğmesi.
+- **AI** nav grubu — özellik başına bir Blazor **sayfası**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), artı Portfolio Agent, Alerts, MCP Keys. Sayfalar `AiFeaturePageBase` + `AiOutputPanel` + bir `AiModelSelect` paylaşır; her biri hiçbir sağlayıcı yapılandırılmadığında `AiFeatureNotice` gösterir.
+- **Settings → AI** (`/settings/ai`, yalnızca owner) — **Add / edit provider dialog** ile sağlayıcı listesi (kind, tür başına ipuçlarıyla temel URL bir Ollama/LM Studio localhost ön ayarı dahil, model, isteğe bağlı anahtar, yetenek geçişleri, "set as default") ve bir **Test connection** düğmesi.
 
 ## Yapılandırma
 

@@ -103,10 +103,7 @@ Wdrożenie white-label ogranicza AI przez `App:Branding` (wymuszane po stronie s
   prywatne kompatybilne z OpenAI, np. Ollama/LM Studio/vLLM).
 - `AllowedAiProviderKinds` (domyślnie puste = wszystko) — wypisz tylko rodzaje które wdrożenie sankcjonuje (np.
   `["Anthropic","OpenAiCompatible"]`) aby zablokować które dostawcy użytkownicy mogą dodać.
-- `AllowAiTasks` (domyślnie `true`) — ustaw `false` aby usunąć funkcję **zadania w tle AI** (strona
-  `/ai/tasks` i API zadań zwracają 404; runner przestaje się twierdzi); synchroniczne funkcje AI wciąż pracują.
-- `AllowAiModelManagement` (domyślnie `true`) — ustaw `false` aby ukryć **przeglądanie modeli** i **wiązanie modelu na funkcję**.
-  Oba są tunable przez właściciela w runtime z **Ustawienia → Deployment** (nałożone na żywo na `IOptionsMonitor`) i skatalogowane w `WhiteLabelCatalog`.
+- `AllowAiModelManagement` (domyślnie `true`) — ustaw `false` aby ukryć **przeglądanie modeli**, **selektor modeli na stronie**, i **wiązanie modelu na funkcję**. Wszystko jest tunable przez właściciela w runtime z **Ustawienia → Deployment** (nałożone na żywo na `IOptionsMonitor`) i skatalogowane w `WhiteLabelCatalog`.
 
 ## Rozszerzanie: przyszłe wbudowane modele
 
@@ -120,8 +117,8 @@ dostawca ONNX jest implementacją referencyjną tego wzorca.
 ## Możliwości
 
 - **Zbuduj cBot** — zwykły angielski prompt → uruchamiany cBot przez **generate → build → AI-fix** self-repair pętla (`build-strategy`), na `/ai/build`. **Wygenerowany kod źródłowy jest pokazywany** gdy build się kończy (z przyciskiem kopiuj), razem z logiem buildu — zarówno na sukces *jak i* na porażkę — więc zawsze widzisz co AI napisało, nie tylko błędy.
-- **Zadania AI w tle** — rozpocznij długotrwałe zadanie AI (np. zbuduj cBot) z wybranym modelem(ami), a następnie opuść stronę i wróć do wyniku. Wybierz kilka modeli do porównania — każdy uruchamia się jako własne zadanie (`/ai/tasks`). Worker hosta sieci web twierdzi o zadaniach na samoleczącym dzierżawę (odbieranym jeśli węzeł umrze) i transmituje postęp do dziennika aktywności na zadanie.
-- **Przeglądaj i wybieraj modele dla każdej funkcji** — przeglądaj modele, które reklamuje endpoint dostawcy (`GET /v1/models` na LM Studio / Ollama / vLLM / llama.cpp, lub katalog wbudowany) zamiast ręcznego pisania id, i **wiąż każdą funkcję AI do innego modelu** aby kilka modeli obsługiwało różne funkcje jednocześnie (niezwiązana funkcja powraca do aktywnego dostawcy zakresu).
+- **Selektor modelu na stronie** — każda strona funkcji AI i dialog pokazuje **selektor modelu** wymieniający modele które możesz używać (twoi własni dostawcy + domyślne wdrożenia). Wstępnie wybiera wiązanie zapisane na funkcję jeśli ustawione, inaczej **domyślny** model, i model który wybrałeś stosuje się do tej jednej akcji (wysłane jako `?modelId=` i wymuszane przez `RoutingAiClient` dla tego wezwania). Ukryte gdy wdrożenie wyłącza zarządzanie modelami.
+- **Przeglądaj i wybieraj modele dla każdej funkcji** — przeglądaj modele, które reklamuje endpoint dostawcy (`GET /v1/models` na LM Studio / Ollama / vLLM / llama.cpp, lub katalog wbudowany) zamiast ręcznego pisania id, i **wiąż każdą funkcję AI do innego modelu** aby kilka modeli obsługiwało różne funkcje jednocześnie (niezwiązana funkcja powraca do domyślnego dostawcy zakresu).
 - **Optymalizacja parametrów** — zamknięta pętla: AI proponuje param sets, każdy persystentny + backtestowany przez nodes (`optimize-run` / `optimize-params`).
 - **Agent portfolio autonomiczny** — proposal napędzane mandatem z pełnym dziennikiem decyzji (`AgentMandate` → `AgentProposal`).
 - **Acting risk guard** — `AiRiskGuard` usługa w tle ocenia uruchomione boty, może **auto-stop** na krytycznym ryzyku (opt-in).
@@ -131,10 +128,10 @@ dostawca ONNX jest implementacją referencyjną tego wzorca.
 
 ## Powierzchnie
 
-- Web endpoints pod `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), plus **zadania w tle** (`/api/ai/tasks` create/list/detail/cancel/delete), **odkrywanie modeli** (`/api/ai/models/probe`, `/api/ai/usable-models`) i **wiązania na funkcję** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
+- Web endpoints pod `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Każdy endpoint funkcji akceptuje opcjonalne `?modelId=<credential>` aby uruchomić to jedno wezwanie na wybranym modelu. Plus **odkrywanie modeli** (`/api/ai/models/probe`, `/api/ai/usable-models`) i **wiązania na funkcję** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - Narzędzia MCP (`AiTools`) dla klientów AI — zobacz [mcp.md](mcp.md). Wybór dostawcy jest transparentny dla klientów MCP.
-- **AI** grupa nav — jedna strona Blazor **na funkcję**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), **Zadania AI** (`/ai/tasks`), plus Portfolio Agent, Alerts, MCP Keys. Strony dzielą `AiFeaturePageBase` + `AiOutputPanel`; każda pokazuje `AiFeatureNotice` gdy żaden dostawca nie jest skonfigurowany.
-- **Ustawienia → AI** (`/settings/ai`, tylko właściciel) — lista dostawcy z **Add / edit provider dialog** (rodzaj, base URL z wskazówkami per-kind incl. Ollama/LM Studio localhost preset, model, opcjonalny klucz, toggles możliwości, "set active") i przycisk **Test connection**.
+- **AI** grupa nav — jedna strona Blazor **na funkcję**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), plus Portfolio Agent, Alerts, MCP Keys. Strony dzielą `AiFeaturePageBase` + `AiOutputPanel` + `AiModelSelect`; każda pokazuje `AiFeatureNotice` gdy żaden dostawca nie jest skonfigurowany.
+- **Ustawienia → AI** (`/settings/ai`, tylko właściciel) — lista dostawcy z **Add / edit provider dialog** (rodzaj, base URL z wskazówkami per-kind incl. Ollama/LM Studio localhost preset, model, opcjonalny klucz, toggles możliwości, "set as default") i przycisk **Test connection**.
 
 ## Konfiguracja
 

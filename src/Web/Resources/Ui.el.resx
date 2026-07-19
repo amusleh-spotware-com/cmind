@@ -369,4 +369,6 @@
   <data name="copyDetail.editDestination" xml:space="preserve"><value>Επεξεργασία προορισμού</value></data>
   <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Ο προορισμός ενημερώθηκε</value></data>
   <data name="nav.ai.tasks" xml:space="preserve"><value>Εργασίες</value></data>
+  <data name="ai.model" xml:space="preserve"><value>Μοντέλο</value></data>
+  <data name="ai.model.default" xml:space="preserve"><value>προεπιλογή</value></data>
 </root>

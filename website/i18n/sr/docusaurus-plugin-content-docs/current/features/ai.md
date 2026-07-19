@@ -105,11 +105,9 @@ White-label deployment ограничава AI преко `App:Branding` (enforc
   приватни OpenAI-компатибилни, нпр. Ollama/LM Studio/vLLM).
 - `AllowedAiProviderKinds` (подразумевано празно = све) — наведи само врсте које deployment одобрава (нпр.
   `["Anthropic","OpenAiCompatible"]`) да закљуцаш које провајдере корисници могу да додају.
-- `AllowAiTasks` (подразумевано `true`) — постави `false` да уклониш **background AI task** функцију (страна
-  `/ai/tasks` и task API враћају 404; runner престаје да претпоставља); синхроне AI функције и даље раде.
-- `AllowAiModelManagement` (подразумевано `true`) — постави `false` да сакријеш **model browsing** и **per-feature
-  model binding**. Обе су owner-tunable у време извршавања из **Settings → Deployment** (преклоњене live на
-  `IOptionsMonitor`) и каталогирана у `WhiteLabelCatalog`.
+- `AllowAiModelManagement` (подразумевано `true`) — постави `false` да сакријеш **model browsing**, **per-page model
+  selector**, и **per-feature model binding**. Сви су owner-tunable у време извршавања из **Settings →
+  Deployment** (преклоњени live на `IOptionsMonitor`) и каталогирани у `WhiteLabelCatalog`.
 
 ## Проширивање: будући уграђени модели
 
@@ -122,22 +120,22 @@ in-proc, итд.) је локализована промена: додај `AiPr
 
 ## Могућности
 
-- **Background AI tasks** — почни дугорочну AI посао (нпр. изгради cBot) са модела твога избора, затим напусти страну и врати се резултату. Изабери неколико модела за поређење — свако ради као своја задатака (`/ai/tasks`). Web-host worker захтева задатке на самолечећем лизингу (отклоњени ако чвор умре) и тока напредак у дневник активности по задатку.
-- **Брши и изабери моделе, по карактеристици** — брши моделе које крајња тачка провајдера оглашава (`GET /v1/models` на LM Studio / Ollama / vLLM / llama.cpp, или уграђени каталог) уместо ручног куцања id-а, и **везати сваку AI карактеристику другачијем моделу** тако да неколико модела служи различитим карактеристикама одједном (неповезана карактеристика пада на активни провајдер опсега).
-- **Изгради cBot** — plain-English prompt → покретачки cBot преко **generate → build → AI-fix** self-repair петље (`build-strategy`), на `/ai/build`. **Генерисани изворни код је приказан** када се градња заврши (са дугметом копирај), заједно са логом градње — на успех *и* на неуспех — тако да увек видиш шта је AI написао, не само грешке.
-- **Оптимизација параметара** — затворена петља: AI предлаже param set-ове, сваки перзистован + backtested преко чворова (`optimize-run` / `optimize-params`).
-- **Аутономни portfolio агент** — mandate-driven предлози са пуним decision journal-ом (`AgentMandate` → `AgentProposal`).
+- **Build cBot** — plain-English prompt → покретачки cBot преко **generate → build → AI-fix** self-repair петље (`build-strategy`), на `/ai/build`. **Генерисани изворни код је приказан** када се градња заврши (са дугметом копирај), заједно са логом градње — на успех *и* на неуспех — тако да увек видиш шта је AI написао, не само грешке.
+- **Per-page model selection** — свака AI функција страница и дијалог показује **model selector** који наводи моделе које можеш користити (твоји сопствени провајдери + deployment подразумевани). Пре-селектује binding сачуван за функцију ако је постављен, иначе **default** модел, и модел који бираш се примењује нату једну акцију (слан као `?modelId=` и принуђен од стране `RoutingAiClient` за тај позив). Скривен када deployment деактивира управљање моделима.
+- **Browse & select models, per feature** — брши моделе које крајња тачка провајдера оглашава (`GET /v1/models` на LM Studio / Ollama / vLLM / llama.cpp, или уграђени каталог) уместо ручног куцања id-а, и **везати сваку AI карактеристику другачијем моделу** тако да неколико модела служи различитим карактеристикама одједном (неповезана карактеристика пада на подразумевани провајдер опсега).
+- **Parameter optimization** — затворена петља: AI предлаже param set-ове, сваки перзистован + backtested преко чворова (`optimize-run` / `optimize-params`).
+- **Autonomous portfolio agent** — mandate-driven предлози са пуним decision journal-ом (`AgentMandate` → `AgentProposal`).
 - **Acting risk guard** — `AiRiskGuard` background сервис процењује активне ботове, може **аутоматски зауставити** на критичан ризик (opt-in).
 - **Prop-firm exposure guardian** — drawdown/exposure лимити са аутоматским изравнавањем.
 - **Market alerts** — `AlertRule` engine са AI sentiment-ом (web-search grounded тамо где провајдер подржава).
-- **Анализа** — cBot рецензија, backtest анализа, post-mortems, market sentiment, chart-vision дизајн, marketplace curation.
+- **Analysis** — cBot рецензија, backtest анализа, post-mortems, market sentiment, chart-vision дизајн, marketplace curation.
 
 ## Површине
 
-- Web ендпоинти под `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), плус **background tasks** (`/api/ai/tasks` креирај/листа/детаљ/отклони/обриши), **model discovery** (`/api/ai/models/probe`, `/api/ai/usable-models`) и **per-feature bindings** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
+- Web ендпоинти под `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Свака ендпоинт функције прихвата опционални `?modelId=<credential>` да покреће тај један позив на одабраном моделу. Плус **model discovery** (`/api/ai/models/probe`, `/api/ai/usable-models`) и **per-feature bindings** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - MCP алати (`AiTools`) за AI клијенте — види [mcp.md](mcp.md). Избор провајдера је транспарентан MCP клијентима.
-- **AI** навигациона група — једна Blazor **страница по функцији**: Изгради cBot (`/ai/build`), Рецензија (`/ai/review`), Дебата (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Оптимизуј (`/ai/optimize`), **AI Tasks** (`/ai/tasks`), плус Portfolio Agent, Alerts, MCP Keys. Странице деле `AiFeaturePageBase` + `AiOutputPanel`; свака приказује `AiFeatureNotice` када провајдер није конфигурисан.
-- **Settings → AI** (`/settings/ai`, owner-only) — листа провајдера са **Add / edit provider дијалогом** (врста, base URL са per-kind наговештајима укључујући Ollama/LM Studio localhost preset, модел, опциони кључ, capability toggle-ови, "set active") и **Test connection** дугметом.
+- **AI** навигациона група — једна Blazor **страница по функцији**: Изгради cBot (`/ai/build`), Рецензија (`/ai/review`), Дебата (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Оптимизуј (`/ai/optimize`), плус Portfolio Agent, Alerts, MCP Keys. Странице деле `AiFeaturePageBase` + `AiOutputPanel` + `AiModelSelect`; свака приказује `AiFeatureNotice` када провајдер није конфигурисан.
+- **Settings → AI** (`/settings/ai`, owner-only) — листа провајдера са **Add / edit provider дијалогом** (врста, base URL са per-kind наговештајима укључујући Ollama/LM Studio localhost preset, модел, опциони кључ, capability toggle-ови, "set as default") и **Test connection** дугметом.
 
 ## Конфигурација
 
@@ -179,7 +177,7 @@ Ollama/LM Studio/vLLM. Он подржава:
   **захтева** E2E тест кроз ову fixture (види repo test mandate). Opt-in lane
   (`AI_LOCAL_LLM=1`) покреће једно право completion преко **Ollama** Testcontainer-а.
 
-## Уграђени локални AI — нulla-setup по подразумевању
+## Уграђени локални AI — nulla-setup по подразумевању
 
 Уграђени ONNX локални LLM ради out of the box: када његов директоријум модела недостаје и
 `App:Ai:BuiltIn:AutoDownload` је `true` (подразумевано), апликација преузима модел једном у

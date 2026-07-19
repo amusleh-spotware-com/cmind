@@ -63,15 +63,6 @@ public sealed record BrandingOptions
     public IReadOnlyList<string> AllowedAiProviderKinds { get; init; } = [];
 
     /// <summary>
-    /// Whether the asynchronous AI task engine is offered — the background "build a cBot" task, the
-    /// <c>/ai/tasks</c> page and the task API. Defaults to <c>true</c>. A white-label deployment (or the
-    /// owner at runtime) sets it <c>false</c> to remove the task feature entirely: the nav entry and page
-    /// disappear, the task API returns 404 and the runner stops claiming work, while the synchronous AI
-    /// features keep working.
-    /// </summary>
-    public bool AllowAiTasks { get; init; } = true;
-
-    /// <summary>
     /// Whether the AI model-management surface is offered — browsing the models a provider advertises and
     /// binding each AI feature to a specific model. Defaults to <c>true</c>. A white-label deployment (or the
     /// owner) sets it <c>false</c> to keep AI on a single fixed active model per scope and hide the

@@ -103,11 +103,7 @@ Un despliegue de etiqueta blanca restringe la IA vía `App:Branding` (aplicado d
   OpenAI-compatible privado, ej. Ollama/LM Studio/vLLM).
 - `AllowedAiProviderKinds` (predeterminado vacío = todos) — enumera solo los tipos que el despliegue sanciona (ej.
   `["Anthropic","OpenAiCompatible"]`) para bloquear qué proveedores pueden agregar los usuarios.
-- `AllowAiTasks` (predeterminado `true`) — establece `false` para eliminar la característica de **tarea de IA de fondo** (la
-  página `/ai/tasks` y la API de tareas devuelven 404; el ejecutor deja de reclamar); las características de IA sincrónica aún funcionan.
-- `AllowAiModelManagement` (predeterminado `true`) — establece `false` para ocultar **exploración de modelos** y **vinculación de modelos
-  por característica**. Ambos son sintonizables por propietario en tiempo de ejecución desde **Configuración → Despliegue** (superpuestos en vivo en
-  `IOptionsMonitor`) y catalogados en `WhiteLabelCatalog`.
+- `AllowAiModelManagement` (predeterminado `true`) — establece `false` para ocultar **exploración de modelos**, el **selector de modelo por página**, y **vinculación de modelo por característica**. Todos son sintonizables por propietario en tiempo de ejecución desde **Configuración → Despliegue** (superpuestos en vivo en `IOptionsMonitor`) y catalogados en `WhiteLabelCatalog`.
 
 ## Extensión: futuros modelos integrados
 
@@ -121,8 +117,8 @@ El proveedor ONNX integrado es la implementación de referencia de este patrón.
 ## Capacidades
 
 - **Construir cBot** — mensaje en inglés simple → cBot ejecutable vía **generar → compilar → auto-reparación de IA** bucle (`build-strategy`), en `/ai/build`. El **código fuente generado se muestra** cuando la compilación finaliza (con un botón de copiar), junto al registro de compilación — en caso de éxito *y* en caso de fallo — para que siempre veas lo que escribió la IA, no solo errores.
-- **Tareas de IA de fondo** — inicia un trabajo de IA de larga duración (ej. construir un cBot) con los modelos de tu elección, luego deja la página y regresa al resultado. Elige varios modelos para comparar — cada uno se ejecuta como su propia tarea (`/ai/tasks`). Un trabajador del host web reclama tareas en un arrendamiento auto-cicatrizante (reclamado si un nodo muere) y transmite progreso en un registro de actividad por tarea.
-- **Examinar y seleccionar modelos, por característica** — examina los modelos que un punto final de proveedor anuncia (`GET /v1/models` en LM Studio / Ollama / vLLM / llama.cpp, o el catálogo integrado) en lugar de escribir a mano una id, y **vincula cada característica de IA a un modelo diferente** para que varios modelos sirvan a diferentes características a la vez (una característica no vinculada regresa al proveedor activo del alcance).
+- **Selección de modelo por página** — cada página y diálogo de característica de IA muestra un **selector de modelo** que enumera los modelos que puedes usar (tus propios proveedores + los predeterminados de despliegue). Preselecciona la vinculación guardada de la característica si está configurada, de lo contrario el modelo **predeterminado**, y el modelo que elijas se aplica a esa única acción (enviado como `?modelId=` y forzado por `RoutingAiClient` para esa llamada). Oculto cuando el despliegue deshabilita la administración de modelos.
+- **Examinar y seleccionar modelos, por característica** — examina los modelos que un punto final de proveedor anuncia (`GET /v1/models` en LM Studio / Ollama / vLLM / llama.cpp, o el catálogo integrado) en lugar de escribir a mano una id, y **vincula cada característica de IA a un modelo diferente** para que varios modelos sirvan a diferentes características a la vez (una característica no vinculada regresa al proveedor predeterminado del alcance).
 - **Optimización de parámetros** — bucle cerrado: IA propone conjuntos de parámetros, cada uno persiste + backtested en nodos (`optimize-run` / `optimize-params`).
 - **Agente de cartera autónomo** — propuestas impulsadas por mandato con diario de decisión completo (`AgentMandate` → `AgentProposal`).
 - **Guardia de riesgo actuante** — servicio de fondo `AiRiskGuard` evalúa bots en ejecución, puede **detener automáticamente** en riesgo crítico (opt-in).
@@ -132,10 +128,10 @@ El proveedor ONNX integrado es la implementación de referencia de este patrón.
 
 ## Superficies
 
-- Puntos finales web bajo `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), plus **background tasks** (`/api/ai/tasks` create/list/detail/cancel/delete), **model discovery** (`/api/ai/models/probe`, `/api/ai/usable-models`) and **per-feature bindings** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
+- Puntos finales web bajo `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Cada punto final de característica acepta un `?modelId=<credential>` opcional para ejecutar esa única llamada en un modelo elegido. Plus **descubrimiento de modelos** (`/api/ai/models/probe`, `/api/ai/usable-models`) y **vinculaciones por característica** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - Herramientas MCP (`AiTools`) para clientes de IA — ver [mcp.md](mcp.md). La selección de proveedor es transparente para los clientes MCP.
-- Grupo de navegación **IA** — una página Blazor **por característica**: Construir cBot (`/ai/build`), Revisión (`/ai/review`), Debate (`/ai/debate`), Sentimiento de Mercado (`/ai/sentiment`), Verificación de Exposición (`/ai/exposure`), Resumen de Cartera (`/ai/digest`), Asesor de Ajuste (`/ai/tune`), Optimizar (`/ai/optimize`), **Tareas de IA** (`/ai/tasks`), además de Agente de Cartera, Alertas, Claves MCP. Las páginas comparten `AiFeaturePageBase` + `AiOutputPanel`; cada una muestra `AiFeatureNotice` cuando no hay proveedor configurado.
-- **Configuración → IA** (`/settings/ai`, solo propietario) — lista de proveedores con un **diálogo Agregar / editar proveedor** (tipo, URL base con pistas por tipo incluyendo un preajuste localhost de Ollama/LM Studio, modelo, clave opcional, alternar capacidades, "establecer activo") y un botón **Probar conexión**.
+- Grupo de navegación **IA** — una página Blazor **por característica**: Construir cBot (`/ai/build`), Revisión (`/ai/review`), Debate (`/ai/debate`), Sentimiento de Mercado (`/ai/sentiment`), Verificación de Exposición (`/ai/exposure`), Resumen de Cartera (`/ai/digest`), Asesor de Ajuste (`/ai/tune`), Optimizar (`/ai/optimize`), además de Agente de Cartera, Alertas, Claves MCP. Las páginas comparten `AiFeaturePageBase` + `AiOutputPanel` + un `AiModelSelect`; cada una muestra `AiFeatureNotice` cuando no hay proveedor configurado.
+- **Configuración → IA** (`/settings/ai`, solo propietario) — lista de proveedores con un **diálogo Agregar / editar proveedor** (tipo, URL base con pistas por tipo incluyendo un preajuste localhost de Ollama/LM Studio, modelo, clave opcional, alternar capacidades, "establecer como predeterminado") y un botón **Probar conexión**.
 
 ## Configuración
 

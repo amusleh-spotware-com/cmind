@@ -12,7 +12,7 @@ istim vratarjenjem, šifriranjem, premoženjem in degradacijo.
 
 **Baterije vključene:** **vgrajeni lokalni LLM se pošilja z aplikacijo in je privzeto omogočen**
 (Microsoft.ML.OnnxRuntimeGenAI, npr. Phi-3-mini) — torej vsaka implementacija ima delujočo AI **brez
-ključa API in brez zunanje storitve**. Implementacija belo oznake lahko odstrani in omeji, katere
+ključa API in brez eksterne storitve**. Implementacija belo oznake lahko odstrani in omeji, katere
 ponudnike smejo uporabniki dodati. Poleg vgrajene, povežite kateri koli zunanji ponudnik.
 
 Podprti ponudniki:
@@ -29,7 +29,7 @@ Podprti ponudniki:
 
 Natančno **en** ponudnik je aktiven naenkrat. Poverenja so shranjena **šifrirana** (`AiProviderCredential`
 agregat + `IAiProviderStore` + `ISecretProtector`, `EncryptionPurposes.AiApiKey`); lokalna končna
-točka ne potrebuje **ključa**. Brez **aktvnega** ponudnika vsaka značilnost vrne onemogočen rezultat
+točka ne potrebuje **ključa**. Brez **aktivnega** ponudnika vsaka značilnost vrne onemogočen rezultat
 in se ostala aplikacija tečika nespremenjena (ni ključa potrebnega za gradnjo, testiranje ali tečenje
 platforme).
 
@@ -52,13 +52,13 @@ Pooblastila AI imajo dva obsega:
   torej je posrednik ali ponudnik gostovanja lahko financira AI za vse svoje uporabnike z **brez
   nastavitve na uporabnika in brez omejitve na uporabnika**. Upravljan prek samo-lastniškoih
   `/api/ai/providers` poti zgoraj.
-- **Ponudnik lastnegaega uporabnika (samopostrežni).** Vsak vpisani uporabnik smeh dodati svojega
+- **Ponudnik lastnega uporabnika (samopostrežni).** Vsak vpisani uporabnik smeh dodati svojega
   ponudnika pod `GET/PUT /api/ai/my-providers`, `POST /api/ai/my-providers/{id}/activate`,
   `DELETE /api/ai/my-providers/{id}`. Če je prisoten, njihov **lastni aktivni ponudnik preglasa
   privzeto implementacijo za njihove lastne značilnosti AI**; odstranitev se vrne na privzeto.
 
 **Vrstni red razrešitve** (v `AiProviderStore`, na uporabnika na zahtevo): lastno pooblastilo uporabnika →
-privzeta implementacija → starega ključ konfiguracije → nobena (AI onemogočen). Natančno eno pooblastilo
+privzetaImplementacija → starega ključ konfiguracije → nobena (AI onemogočen). Natančno eno pooblastilo
 je aktivno **na obseg** (delni edinstven indeks na `OwnerUserId`), in vsak obseg se razreši neodvisno,
 zato uporabnik, ki aktivira svoj ključ, nikoli ne moti skupnega privzetega. Ozadja/ne-spletnih konteksti
 (ni zahtevka uporabnika) vedno razrešijo privzeto implementacijo.
@@ -87,7 +87,7 @@ Polnih na ponudnika nastavitvenih vodičev (ključi, URL, ID modelov, koraki UI)
 
 cMind pošilja **pravi lokalni LLM, ki teče v postopku** prek
 [Microsoft.ML.OnnxRuntimeGenAI](https://onnxruntime.ai/docs/genai/) (kompaktni model obuke, kot je
-Phi-3-mini). Ne potrebuje **ključa API in brez zunanje storitve**, in ob prvem zagonu — ko ni
+Phi-3-mini). Ne potrebuje **ključa API in brez eksterne storitve**, in ob prvem zagonu — ko ni
 ponudnika nastavljen in vrata belo oznake to dovolijo — je **sejan in avtomatično aktiviran**, torej
 ima vsaka implementacija delujočo AI iz škatle.
 
@@ -95,8 +95,8 @@ ima vsaka implementacija delujočo AI iz škatle.
   (privzeto `models/onnx`, relativno na bazo aplikacije). Ko so datoteke modela odsotne ponudnik
   **degradira na tipiziran pristop z namigonom namestitve** — nikoli ne vrže, in preostala aplikacija
   ni prizadeta.
-- Napaja vsako besedilno značilnost AI. Ker je kompaktni model besedilo samo (brez serverskeganega
-  spletnega iskanja ali vida) in generiranje je serijalizirano (ena instanca modela, ponovno
+- Napaja vsako besedilno značilnost AI. Ker je kompaktni model besedilo samo (brez serverske
+  spletnega iskanja ali vida) in generiranje je serializirano (ena instanca modela, ponovno
   rabljena po lenivem natovarjanju).
 - **Več vgrajenih modelov se lahko sočasno nahaja.** Vsak preneseni model se nahaja pod `ModelPath/<key>`; kurirana
   katalog (Phi-3.5-mini privzeto, plus Phi-3-mini-128k) se lahko prenese in preklopi iz **Nastavitve → AI**. Izbira
@@ -114,11 +114,7 @@ ponudnika):
 - `AllowedAiProviderKinds` (privzeto prazno = vse) — seznam samo tistih vrst, ki jih
   implementacija sankcionira (npr. `["Anthropic","OpenAiCompatible"]`) za zaklučanje kateri
   ponudniki jih smejo dodati.
-- `AllowAiTasks` (privzeto `true`) — nastavite `false` za odstranitev značilnosti **naloge AI v ozadju** (stran
-  `/ai/tasks` in API nalog vrnejo 404; tevalec soproga neha trditi); sočasne značilnosti AI še vedno delujejo.
-- `AllowAiModelManagement` (privzeto `true`) — nastavite `false` za skriovanje **pregledovanja modelov** in **vezave modelov na značilnost**.
-  Oba sta upravičiteljna lastnika ob času izvajanja iz **Nastavitve → Uvrstitev** (prekriti živahno na
-  `IOptionsMonitor`) in katalogizirana v `WhiteLabelCatalog`.
+- `AllowAiModelManagement` (privzeto `true`) — nastavite `false` za skriovanje **pregledovanja modelov**, **izbirnika modelov na stran** in **vezave modelov na značilnost**. Vsi so upravičiteljna lastnika ob času izvajanja iz **Nastavitve → Uvrstitev** (prekriti živahno na `IOptionsMonitor`) in katalogizirana v `WhiteLabelCatalog`.
 
 ## Razširjanje: prihodnji vgrajeni modeli
 
@@ -132,8 +128,8 @@ je referenčna izvedba tega vzorca.
 
 ## Zmožnosti
 
-- **Naloge AI v ozadju** — začnite dolgotrajno nalogo AI (npr. zgradite cBot) z izbrano modeli, nato zapustite stran in se vrnite k rezultatu. Izberite več modelov za primerjavo — vsak deluje kot lastno nalogo (`/ai/tasks`). Delavec web-gostitelja zahteva naloge na samopopravljajočem lizingu (vrnjeni, če vozlišče umre) in preusmeri napredek v dnevnik dejavnosti na nalogo.
-- **Brskajte in izberite modele, po značilnosti** — brskajte po modelih, ki jih končna točka ponudnika oglašuje (`GET /v1/models` na LM Studio / Ollama / vLLM / llama.cpp, ali vgrajeni katalog) namesto ročnega tipkanja ID, in **vsaki značilnosti AI vezati drugačen model** tako da več modelov služi različnim značilnostim hkrati (nevezana značilnost se vrne na aktivni ponudnik obsega).
+- **Izbira modela na stran** — vsaka stran značilnosti AI in dialog prikazuje **izbirnik modela**, ki navaja modele, ki jih lahko uporabljate (vaši lastni ponudniki + privzete implementacije). Pred-izbira vezavo modela, ki je shranjena za značilnost, če je nastavljena, sicer **privzeti** model, in model, ki ga izberete, velja za to eno dejanje (poslan kot `?modelId=` in nujen s `RoutingAiClient` za ta klic). Skrit, ko implementacija onemogoči upravljanje modelov.
+- **Brskajte in izberite modele, po značilnosti** — brskajte po modelih, ki jih končna točka ponudnika oglašuje (`GET /v1/models` na LM Studio / Ollama / vLLM / llama.cpp, ali vgrajeni katalog) namesto ročnega tipkanja ID, in **vsaki značilnosti AI vezati drugačen model** tako da več modelov služi različnim značilnostim hkrati (nevezana značilnost se vrne na privzeti model obsega).
 - **Gradnja cBota** — navaden-angleški poziv → tečeči cBot prek **generira → gradnja → AI-popravek** samopopravljajoče zanke (`build-strategy`), na `/ai/build`. **Generirani izvorna koda je prikazana** ko se gradnja zaključi (z gumbom za kopiranje), skupaj z dnevnikom gradnje — ob uspehu *in* ob neuspehu — tako da vedno vidite, kaj je AI napisal, ne samo napake.
 - **Optimizacija parametra** — zaprta zanka: AI predlaga komplete parametrov, vsak obstojni +
   testirani čez vozlišča (`optimize-run` / `optimize-params`).
@@ -149,16 +145,10 @@ je referenčna izvedba tega vzorca.
 
 ## Površine
 
-- Spletne končne točke pod `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest,
-  optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), plus **naloge v ozadju** (`/api/ai/tasks` ustvariti/seznam/podrobnosti/preklicati/izbrisati), **odkrivanje modelov** (`/api/ai/models/probe`, `/api/ai/usable-models`) in **vezave po značilnosti** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
+- Spletne končne točke pod `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Vsaka končna točka značilnosti sprejme neobvezno `?modelId=<credential>` za togo to eno klico na izbrani model. Plus **odkrivanje modelov** (`/api/ai/models/probe`, `/api/ai/usable-models`) in **vezave po značilnosti** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - Orodja MCP (`AiTools`) za odjemalce AI — poglejte [mcp.md](mcp.md). Izbor ponudnika je
   transparenten za odjemalce MCP.
-- **AI** navigacijska skupina — ena stran Blazor **na značilnost**: Gradnja cBota (`/ai/build`),
-  Pregled (`/ai/review`), Razprava (`/ai/debate`), Sentiment trga (`/ai/sentiment`), Preverjanje
-  izpostave (`/ai/exposure`), Povzetek portfelja (`/ai/digest`), Svetovalec Tune (`/ai/tune`),
-  Optimizacija (`/ai/optimize`), **Naloge AI** (`/ai/tasks`), skupaj Agent portfelja, Obvestila, Ključi MCP. Stranice delijo
-  `AiFeaturePageBase` + `AiOutputPanel`; vsaka prikazuje `AiFeatureNotice`, ko ni ponudnika
-  nastavljenega.
+- **AI** navigacijska skupina — ena stran Blazor **na značilnost**: Gradnja cBota (`/ai/build`), Pregled (`/ai/review`), Razprava (`/ai/debate`), Sentiment trga (`/ai/sentiment`), Preverjanje izpostave (`/ai/exposure`), Povzetek portfelja (`/ai/digest`), Svetovalec Tune (`/ai/tune`), Optimizacija (`/ai/optimize`), skupaj Agent portfelja, Obvestila, Ključi MCP. Strani delijo `AiFeaturePageBase` + `AiOutputPanel` + `AiModelSelect`; vsaka prikazuje `AiFeatureNotice`, ko ni ponudnika nastavljenega.
 - **Nastavitve → AI** (`/settings/ai`, samo lastnik) — seznam ponudnika z **Dodaj / uredi dialogom
   ponudnika** (vrsta, osnovna URL z namigom na vrsto, vključno z Ollama/LM Studio localhost
   prednastavka, model, neobvezni ključ, stikala zmožnosti, "nastavi aktivno") in gumbom **Test
@@ -195,7 +185,7 @@ reguliran Anthropic):
 
 ## Testiranje z lažnim lokalnim LLM
 
-Raven AI je dokazana od konca do konca **brez katere koli zunanje odvisnosti** s `FakeLocalLlmServer`
+Raven AI je dokazana od konca do konca **brez katere koli eksterne odvisnosti** s `FakeLocalLlmServer`
 — majhna v-postopka **OpenAI-kompatibilna** končna točka, ki vrne determinističen konzervirani odgovor,
 žično identičen Ollama/LM Studio/vLLM. Ga podkrajuje:
 

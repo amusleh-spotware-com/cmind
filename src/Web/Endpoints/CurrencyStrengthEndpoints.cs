@@ -30,7 +30,8 @@ public static class CurrencyStrengthEndpoints
     {
         var g = app.MapGroup("/api/ai/currency-strength")
             .RequireAuthorization("UserOrAbove")
-            .RequireFeature(FeatureFlag.Ai);
+            .RequireFeature(FeatureFlag.Ai)
+            .WithAiModelOverride();
 
         g.MapGet("/latest", async (HttpContext http, ICurrencyStrengthQuery query, CancellationToken ct) =>
         {

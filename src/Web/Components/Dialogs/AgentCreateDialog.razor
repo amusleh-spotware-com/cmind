@@ -1,4 +1,5 @@
 @* Create a persona-driven trading agent. Returns AgentCreateResult on confirm. *@
+@inject HttpClient Http
 
 <MudDialog>
     <TitleContent>
@@ -15,6 +16,8 @@
                 <MudSelectItem Value="@("Advisory")">Advisory (proposes only)</MudSelectItem>
                 <MudSelectItem Value="@("ApprovalGated")">Approval-gated</MudSelectItem>
             </MudSelect>
+            <AiModelSelect Feature="AiFeature.ProposeAgentAction" Selected="_modelId"
+                           SelectedChanged="OnModelChanged" Class="mb-2" />
             <MudSelect T="Guid" MultiSelection="true" @bind-SelectedValues="_accounts" Label="Managed accounts" Class="mb-2"
                        Required="true" RequiredError="Select at least one account"
                        HelperText="Which trading account(s) this agent manages (at least one required)"
@@ -61,6 +64,21 @@
     private double _patience = 0.5;
     private double _trend = 0.5;
     private IEnumerable<Guid> _accounts = new HashSet<Guid>();
+    private Guid? _modelId;
+
+    // Autonomous agents run AI in a background scope (no per-request override), so the model an agent uses is
+    // the user's ProposeAgentAction feature binding — persist the picked model to it immediately.
+    private async Task OnModelChanged(Guid? id)
+    {
+        _modelId = id;
+        if (id is not { } credentialId) return;
+        try
+        {
+            await Http.PutAsJsonAsync("/api/ai/my-feature-bindings",
+                new { Feature = (int)AiFeature.ProposeAgentAction, CredentialId = credentialId });
+        }
+        catch { /* model management may be gated off — leave the binding as-is */ }
+    }
 
     private async Task Submit()
     {

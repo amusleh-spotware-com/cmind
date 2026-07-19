@@ -369,4 +369,6 @@
   <data name="copyDetail.editDestination" xml:space="preserve"><value>Edit destinasi</value></data>
   <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Destinasi diperbarui</value></data>
   <data name="nav.ai.tasks" xml:space="preserve"><value>Tugas</value></data>
+  <data name="ai.model" xml:space="preserve"><value>Model</value></data>
+  <data name="ai.model.default" xml:space="preserve"><value>bawaan</value></data>
 </root>

@@ -94,8 +94,7 @@ Penempatan white-label mengekang AI melalui `App:Branding` (dikuatkuasakan pelay
   OpenAI-serasakan peribadi, cth Ollama/LM Studio/vLLM).
 - `AllowedAiProviderKinds` (lalai kosong = semua) — senaraikan hanya jenis yang diluluskan penempatan (cth.
   `["Anthropic","OpenAiCompatible"]`) untuk mengunci pembekal yang boleh ditambah pengguna.
-- `AllowAiTasks` (lalai `true`) — tetapkan `false` untuk mengalih ciri **tugas AI latar belakang** (halaman `/ai/tasks` dan API tugas mengembalikan 404; pelari berhenti menuntut); ciri AI segerak masih berfungsi.
-- `AllowAiModelManagement` (lalai `true`) — tetapkan `false` untuk menyembunyikan **pelayaran model** dan **pengikatan model setiap ciri**. Kedua-duanya boleh diselaras pemilik pada masa larian dari **Tetapan → Penempatan** (disarungkan hidup pada `IOptionsMonitor`) dan dikatalogkan dalam `WhiteLabelCatalog`.
+- `AllowAiModelManagement` (lalai `true`) — tetapkan `false` untuk menyembunyikan **pelayaran model**, **pemilih model setiap halaman**, dan **pengikatan model setiap ciri**. Kesemuanya boleh diselaras pemilik pada masa larian dari **Tetapan → Penempatan** (disarungkan hidup pada `IOptionsMonitor`) dan dikatalogkan dalam `WhiteLabelCatalog`.
 
 ## Memperluaskan: model terbina dalam masa depan
 
@@ -108,8 +107,8 @@ Pembekal ONNX terbina dalam ialah pelaksanaan rujukan corak ini.
 ## Keupayaan
 
 - **Bina cBot** — prompt bahasa Inggeris biasa → cBot yang boleh lari melalui **jana → bina → pembaikan AI** gelung pembaikan diri (`build-strategy`), di `/ai/build`. **Kod sumber yang dijana ditunjukkan** apabila pembinaan selesai (dengan butang salin), bersama-sama log pembinaan — pada kejayaan *dan* pada kegagalan — supaya anda sentiasa melihat apa yang AI tulis, bukan sekadar ralat.
-- **Tugas AI latar belakang** — mulai pekerjaan AI jangka panjang (cth. bina cBot) dengan model pilihan anda, kemudian tinggalkan halaman dan kembali ke hasilnya. Pilih beberapa model untuk dibandingkan — setiap berjalan sebagai tugasnya sendiri (`/ai/tasks`). Pekerja hos web menuntut tugas pada sewa pembedahan diri (diambil semula jika nod mati) dan mengalirkan kemajuan ke log aktiviti setiap tugas.
-- **Pelayaran & pilih model, setiap ciri** — pelayaran model yang titik akhir pembekal iklankan (`GET /v1/models` pada LM Studio / Ollama / vLLM / llama.cpp, atau katalog terbina dalam) daripada mengetik id tangan, dan **ikat setiap ciri AI ke model berbeza** supaya beberapa model melayani ciri berbeza pada masa yang sama (ciri tidak terikat jatuh kembali ke pembekal aktif skop).
+- **Pemilih model setiap halaman** — setiap halaman ciri AI dan dialog menunjukkan **pemilih model** yang menyenaraikan model yang boleh anda gunakan (pembekal anda sendiri + lalai penempatan). Ia pra-memilih pengikatan model yang disimpan ciri jika ditetapkan, sebaliknya model **lalai**, dan model yang anda pilih digunakan untuk tindakan satu itu (dihantar sebagai `?modelId=` dan dipaksakan oleh `RoutingAiClient` untuk panggilan itu). Disembunyikan apabila penempatan melumpuhkan pengurusan model.
+- **Pelayaran & pilih model, setiap ciri** — pelayaran model yang titik akhir pembekal iklankan (`GET /v1/models` pada LM Studio / Ollama / vLLM / llama.cpp, atau katalog terbina dalam) daripada mengetik id tangan, dan **ikat setiap ciri AI ke model berbeza** supaya beberapa model melayani ciri berbeza pada masa yang sama (ciri tidak terikat jatuh kembali ke pembekal lalai skop).
 - **Pengoptimuman parameter** — gelung tertutup: AI cadangkan set parameter, setiap dikekalkan + di-backtest merentasi nod (`optimize-run` / `optimize-params`).
 - **Ejen portfolio autonomic** — cadangan bermotivasi mandat dengan jurnal keputusan penuh (`AgentMandate` → `AgentProposal`).
 - **Penjaga risiko bertindak** — perkhidmatan latar `AiRiskGuard` menilai bot yang berjalan, boleh **auto-berhenti** pada risiko kritikal (pilihan masuk).
@@ -119,9 +118,9 @@ Pembekal ONNX terbina dalam ialah pelaksanaan rujukan corak ini.
 
 ## Permukaan
 
-- Titik akhir Web di bawah `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), tambah **tugas latar belakang** (`/api/ai/tasks` buat/senarai/terperinci/batalkan/padam), **penemuan model** (`/api/ai/models/probe`, `/api/ai/usable-models`) dan **pengikatan setiap ciri** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
+- Titik akhir Web di bawah `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Setiap titik akhir ciri menerima `?modelId=<credential>` pilihan untuk menjalankan panggilan satu itu pada model pilihan. Tambah **penemuan model** (`/api/ai/models/probe`, `/api/ai/usable-models`) dan **pengikatan setiap ciri** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - Alat MCP (`AiTools`) untuk klien AI — lihat [mcp.md](mcp.md). Pemilihan pembekal telus kepada klien MCP.
-- Kumpulan nav **AI** — satu halaman Blazor **setiap ciri**: Bina cBot (`/ai/build`), Semak (`/ai/review`), Perdebatan (`/ai/debate`), Sentimen Pasaran (`/ai/sentiment`), Semakan Pendedahan (`/ai/exposure`), Ringkasan Portfolio (`/ai/digest`), Penasihat Tune (`/ai/tune`), Optimimum (`/ai/optimize`), **Tugas AI** (`/ai/tasks`), tambah Ejen Portfolio, Makluman, Kunci MCP. Halaman kongsi `AiFeaturePageBase` + `AiOutputPanel`; setiap menunjukkan `AiFeatureNotice` apabila tiada pembekal dikonfigur.
+- Kumpulan nav **AI** — satu halaman Blazor **setiap ciri**: Bina cBot (`/ai/build`), Semak (`/ai/review`), Perdebatan (`/ai/debate`), Sentimen Pasaran (`/ai/sentiment`), Semakan Pendedahan (`/ai/exposure`), Ringkasan Portfolio (`/ai/digest`), Penasihat Tune (`/ai/tune`), Optimimum (`/ai/optimize`), tambah Ejen Portfolio, Makluman, Kunci MCP. Halaman kongsi `AiFeaturePageBase` + `AiOutputPanel` + `AiModelSelect`; setiap menunjukkan `AiFeatureNotice` apabila tiada pembekal dikonfigur.
 - **Tetapan → AI** (`/settings/ai`, pemilik sahaja) — senarai pembekal dengan **dialog tambah/edit pembekal** (jenis, URL asas dengan hint setiap jenis termasuk preset localhost Ollama/LM Studio, model, kunci pilihan, togolan keupayaan, "tetap aktif") dan butang **Uji sambungan**.
 
 ## Konfigurasi

@@ -13,12 +13,12 @@ public sealed record CBotBuildFlowResult(
     bool Success, Guid? CBotId, Guid? ProjectId, int Attempts, string Log, string? Code, string Language, string? Error);
 
 /// <summary>
-/// The plain-English-intent → generate → build → self-repair → create-cBot pipeline, extracted so both the
-/// synchronous endpoint and the background <c>AiTaskRunner</c> share one implementation. Generates the cBot
-/// source with the caller's chosen model, builds it in the sandboxed container, feeds compile errors back to
-/// the AI up to three times, and on success creates a runnable <see cref="CBot"/>. Emits progress lines via
-/// <paramref name="onLog"/> so the async path can stream them; never throws for an AI/build failure — it
-/// returns a failed result (only a genuine infrastructure fault propagates, for the worker to catch).
+/// The plain-English-intent → generate → build → self-repair → create-cBot pipeline, behind the
+/// synchronous <c>/api/ai/build-strategy</c> endpoint. Generates the cBot source with the caller's chosen
+/// model, builds it in the sandboxed container, feeds compile errors back to the AI up to three times, and
+/// on success creates a runnable <see cref="CBot"/>. Emits progress lines via <paramref name="onLog"/> for
+/// the caller to surface; never throws for an AI/build failure — it returns a failed result (only a genuine
+/// infrastructure fault propagates).
 /// </summary>
 public sealed class CBotBuildFlow(
     DataContext db, IAiFeatureService ai, ISecretProtector protector, CBotBuilder builder)

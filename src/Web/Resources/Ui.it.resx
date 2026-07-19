@@ -369,4 +369,6 @@
   <data name="copyDetail.editDestination" xml:space="preserve"><value>Modifica destinazione</value></data>
   <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Destinazione aggiornata</value></data>
   <data name="nav.ai.tasks" xml:space="preserve"><value>Attività</value></data>
+  <data name="ai.model" xml:space="preserve"><value>Modello</value></data>
+  <data name="ai.model.default" xml:space="preserve"><value>predefinito</value></data>
 </root>

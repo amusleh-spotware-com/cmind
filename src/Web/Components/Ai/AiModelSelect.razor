@@ -1,0 +1,90 @@
+﻿@* Per-feature model picker. Lists every AI model the user may use (their own providers + the deployment
+   defaults) and pre-selects the feature's saved binding if any, else the Default (active) model. The chosen
+   credential id flows to the endpoint via the page's ?modelId= query so this one AI action runs on it.
+   Hidden when the deployment disables model management or no models are available. *@
+@using System.Globalization
+@using Core.Ai
+@using Web.Json
+@inject HttpClient Http
+@inject IStringLocalizer<Ui> L
+
+@if (_show)
+{
+    <MudSelect T="Guid?" Value="Selected" ValueChanged="OnChanged" Label="@L["ai.model"]" Dense="true"
+               Class="@Class" data-testid="ai-model-select">
+        @foreach (var m in _models)
+        {
+            <MudSelectItem T="Guid?" Value="@((Guid?)m.Id)">@LabelFor(m)</MudSelectItem>
+        }
+    </MudSelect>
+}
+
+@code {
+    [Parameter] public AiFeature Feature { get; set; }
+    [Parameter] public Guid? Selected { get; set; }
+    [Parameter] public EventCallback<Guid?> SelectedChanged { get; set; }
+    [Parameter] public string? Class { get; set; }
+
+    private readonly List<ModelOption> _models = [];
+    private bool _show;
+
+    protected override async Task OnInitializedAsync()
+    {
+        bool manage;
+        try
+        {
+            var status = await Http.GetDynamicAsync("/api/ai/status");
+            manage = status is not null && (bool)status.allowModelManagement;
+        }
+        catch { manage = false; }
+        if (!manage) return;
+
+        try
+        {
+            foreach (var row in await Http.GetDynamicArrayAsync("/api/ai/usable-models"))
+                _models.Add(new ModelOption((Guid)row.id, (string)row.model, (string)row.kind, (bool)row.isActive));
+        }
+        catch { return; }
+        if (_models.Count == 0) return;
+
+        var preselect = await ResolveBindingAsync()
+            ?? _models.FirstOrDefault(m => m.IsActive)?.Id
+            ?? _models[0].Id;
+        _show = true;
+        if (Selected != preselect)
+        {
+            Selected = preselect;
+            await SelectedChanged.InvokeAsync(Selected);
+        }
+    }
+
+    // The feature's own binding (a user's, then the deployment default), if it maps to a usable model.
+    // The bindings endpoint may serialize the feature name or its numeric value, so match either form.
+    private async Task<Guid?> ResolveBindingAsync()
+    {
+        try
+        {
+            var name = Feature.ToString();
+            var number = ((int)Feature).ToString(CultureInfo.InvariantCulture);
+            foreach (var row in await Http.GetDynamicArrayAsync("/api/ai/my-feature-bindings"))
+            {
+                var feature = Convert.ToString(row.feature, CultureInfo.InvariantCulture);
+                if (feature != name && feature != number) continue;
+                var credentialId = (Guid)row.credentialId;
+                if (_models.Any(m => m.Id == credentialId)) return credentialId;
+            }
+        }
+        catch { /* model management may be gated off for this scope — fall back to default */ }
+        return null;
+    }
+
+    private async Task OnChanged(Guid? value)
+    {
+        Selected = value;
+        await SelectedChanged.InvokeAsync(value);
+    }
+
+    private string LabelFor(ModelOption m) => m.IsActive ? $"{m.Model} ({L["ai.model.default"]})" : m.Model;
+
+    private sealed record ModelOption(Guid Id, string Model, string Kind, bool IsActive);
+}

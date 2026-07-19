@@ -140,6 +140,7 @@ public static class DependencyInjection
         services.AddScoped<CBotBuilder>();
         services.AddScoped<Infrastructure.Ai.CBotBuildFlow>();
         services.TryAddScoped<ICurrentUser, Infrastructure.Ai.NullCurrentUser>();
+        services.AddScoped<IAiCallContext, AiCallContext>();
         services.AddScoped<IAiProviderStore, AiProviderStore>();
         services.AddAiHttpClient();
         services.AddScoped<IAiClient, RoutingAiClient>();

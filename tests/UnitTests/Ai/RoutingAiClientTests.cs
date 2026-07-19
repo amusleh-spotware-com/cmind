@@ -12,7 +12,12 @@ public sealed class RoutingAiClientTests
     {
         public bool HasActive => active is not null;
         public ActiveAiProvider? Active => active;
-        public ActiveAiProvider? ResolveFor(AiFeature? feature, Core.AiProviderCredentialId? credentialId) => active;
+        public Core.AiProviderCredentialId? SeenCredentialId { get; private set; }
+        public ActiveAiProvider? ResolveFor(AiFeature? feature, Core.AiProviderCredentialId? credentialId)
+        {
+            SeenCredentialId = credentialId;
+            return active;
+        }
         public Task<IReadOnlyList<AiFeatureBindingView>> ListBindingsAsync(Core.UserId? owner, CancellationToken ct) =>
             Task.FromResult<IReadOnlyList<AiFeatureBindingView>>([]);
         public Task SetBindingAsync(Core.UserId? owner, AiFeature feature, Core.AiProviderCredentialId credentialId, CancellationToken ct) =>
@@ -108,6 +113,36 @@ public sealed class RoutingAiClientTests
         result.Success.Should().BeFalse();
         result.Error.Should().Be(AiConstants.VisionUnsupportedMessage);
         provider.Seen.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Uses_call_context_model_override_when_request_has_no_explicit_credential()
+    {
+        var provider = new CapturingProvider(AiProviderKind.Anthropic);
+        var caps = AiProviderCapabilities.DefaultFor(AiProviderKind.Anthropic);
+        var store = new FakeStore(ActiveOf(AiProviderKind.Anthropic, caps));
+        var chosen = Core.AiProviderCredentialId.New();
+        var context = new AiCallContext { OverrideCredentialId = chosen };
+        var client = new RoutingAiClient(store, context, [provider]);
+
+        await client.CompleteAsync(new AiTextRequest("s", "u"), CancellationToken.None);
+
+        store.SeenCredentialId.Should().Be(chosen);
+    }
+
+    [Fact]
+    public async Task Explicit_request_credential_wins_over_call_context_override()
+    {
+        var provider = new CapturingProvider(AiProviderKind.Anthropic);
+        var caps = AiProviderCapabilities.DefaultFor(AiProviderKind.Anthropic);
+        var store = new FakeStore(ActiveOf(AiProviderKind.Anthropic, caps));
+        var forced = Core.AiProviderCredentialId.New();
+        var context = new AiCallContext { OverrideCredentialId = Core.AiProviderCredentialId.New() };
+        var client = new RoutingAiClient(store, context, [provider]);
+
+        await client.CompleteAsync(new AiTextRequest("s", "u", CredentialId: forced), CancellationToken.None);
+
+        store.SeenCredentialId.Should().Be(forced);
     }
 
     [Fact]

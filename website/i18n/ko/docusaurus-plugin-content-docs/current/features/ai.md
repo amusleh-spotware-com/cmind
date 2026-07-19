@@ -64,8 +64,7 @@ cMind는 [Microsoft.ML.OnnxRuntimeGenAI](https://onnxruntime.ai/docs/genai/)를 
 - `AllowBuiltInAi`(기본값 `true`) — `false`로 설정하면 **기본 제공 모델을 완전히 제거**합니다.
 - `AllowLocalProviders`(기본값 `true`) — `false`로 설정하면 로컬/자체 호스팅 엔드포인트(루프백/비공개 OpenAI 호환, 예: Ollama/LM Studio/vLLM)를 금지합니다.
 - `AllowedAiProviderKinds`(기본값 빈 = 모두) — 배포에서 승인한 종류만 나열(예: `["Anthropic","OpenAiCompatible"]`)하여 사용자가 추가할 수 있는 공급자를 제한합니다.
-- `AllowAiTasks`(기본값 `true`) — `false`로 설정하면 **백그라운드 AI 작업** 기능을 제거합니다(`/ai/tasks` 페이지 및 작업 API는 404 반환; 러너는 클레임 중지); 동기 AI 기능은 계속 작동합니다.
-- `AllowAiModelManagement`(기본값 `true`) — `false`로 설정하면 **모델 탐색** 및 **기능별 모델 바인딩**을 숨깁니다. 둘 다 소유자가 **Settings → Deployment**에서 런타임에 조정 가능하며(`IOptionsMonitor`에 라이브 오버레이) `WhiteLabelCatalog`에 카탈로그됩니다.
+- `AllowAiModelManagement`(기본값 `true`) — `false`로 설정하면 **모델 탐색**, **페이지별 모델 선택기**, **기능별 모델 바인딩**을 숨깁니다. 모두 소유자가 **Settings → Deployment**에서 런타임에 조정 가능하며(`IOptionsMonitor`에 라이브 오버레이) `WhiteLabelCatalog`에 카탈로그됩니다.
 
 ## 확장: 향후 기본 제공 모델
 
@@ -74,8 +73,8 @@ AI 레이어는 **어댑터 기반이며 확장 가능**합니다. 각 공급자
 ## 기능
 
 - **cBot 빌드** — 일반 영어 프롬프트 → **생성 → 빌드 → AI 수정** 자체 복구 루프를 통해 실행 가능한 cBot(`build-strategy`), `/ai/build`에서. **생성된 소스 코드는 빌드 완료 시에 표시**됩니다(복사 버튼 포함). 빌드 로그와 함께 — 성공 시와 실패 시 모두 — AI가 작성한 내용을 항상 확인할 수 있으며, 오류만 표시되지 않습니다.
-- **백그라운드 AI 작업** — 모델을 선택하여 장시간 실행 AI 작업(예: cBot 빌드) 시작한 후 페이지를 떠났다가 결과를 보러 돌아옵니다. 여러 모델 선택하여 비교 — 각각 자신의 작업으로 실행(`/ai/tasks`). 웹 호스트 워커는 자체 치유 리스를 통해 작업을 주장하며(노드가 죽으면 회수됨) 작업별 활동 로그로 진행 상황을 스트리밍합니다.
-- **모델 탐색 및 기능별 선택** — 공급자 엔드포인트가 광고하는 모델 탐색(`GET /v1/models` on LM Studio / Ollama / vLLM / llama.cpp 또는 기본 제공 카탈로그) 대신 손으로 ID를 입력하고, **각 AI 기능을 다른 모델에 바인딩**하여 여러 모델이 동시에 다른 기능을 제공합니다(바인딩되지 않은 기능은 범위의 활성 공급자로 폴백).
+- **페이지별 모델 선택** — 모든 AI 기능 페이지 및 대화상자에는 사용할 수 있는 모델(자신의 공급자 + 배포 기본값)을 나열하는 **모델 선택기**가 표시됩니다. 설정된 경우 기능의 저장된 바인딩을 미리 선택하고, 그렇지 않으면 **기본** 모델을 선택하며, 선택한 모델은 해당 작업 하나에 적용됩니다(`?modelId=`로 전송되고 `RoutingAiClient`에 의해 해당 호출에 강제됨). 배포에서 모델 관리를 비활성화하면 숨겨집니다.
+- **모델 탐색 및 기능별 선택** — 공급자 엔드포인트가 광고하는 모델 탐색(`GET /v1/models` on LM Studio / Ollama / vLLM / llama.cpp 또는 기본 제공 카탈로그) 대신 손으로 ID를 입력하고, **각 AI 기능을 다른 모델에 바인딩**하여 여러 모델이 동시에 다른 기능을 제공합니다(바인딩되지 않은 기능은 범위의 기본 공급자로 폴백).
 - **파라미터 최적화** — 폐쇄 루프: AI가 파라미터 세트 제안, 각각 지속됨 + 노드에서 백테스트(`optimize-run` / `optimize-params`).
 - **자율적 포트폴리오 에이전트** — 명령 기반 제안, 완전한 결정 저널 포함(`AgentMandate` → `AgentProposal`).
 - **실행 중 리스크 가드** — `AiRiskGuard` 백그라운드 서비스가 실행 중인 봇을 평가하고 중요한 리스크 시 **자동 중지** 가능(옵션).
@@ -85,10 +84,10 @@ AI 레이어는 **어댑터 기반이며 확장 가능**합니다. 각 공급자
 
 ## 노출
 
-- `/api/ai/*` 아래의 Web 엔드포인트(build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), 추가로 **백그라운드 작업**(`/api/ai/tasks` create/list/detail/cancel/delete), **모델 검색**(`/api/ai/models/probe`, `/api/ai/usable-models`) 및 **기능별 바인딩**(`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
-- AI 클라이언트를 위한 MCP 도구(`AiTools`) — [mcp.md](mcp.md) 참조. 공급자 선택은 MCP 클라이언트에 투명합니다.
-- **AI** 내비게이션 그룹 — 기능당 하나의 Blazor **페이지**: Build cBot(`/ai/build`), Review(`/ai/review`), Debate(`/ai/debate`), Market Sentiment(`/ai/sentiment`), Exposure Check(`/ai/exposure`), Portfolio Digest(`/ai/digest`), Tune Advisor(`/ai/tune`), Optimize(`/ai/optimize`), **AI Tasks** (`/ai/tasks`), 포트폴리오 에이전트, Alerts, MCP Keys 포함. 페이지는 `AiFeaturePageBase` + `AiOutputPanel`을 공유; 공급자가 구성되지 않으면 각 페이지에 `AiFeatureNotice` 표시.
-- **Settings → AI** (`/settings/ai`, 소유자 전용) — 공급자 목록과 **공급자 추가/편집 대화상자**(종류, 종류별 힌트 포함 기본 URL, Ollama/LM Studio localhost 프리셋 포함, 모델, 선택적 키, 기능 토글, "활성 설정") 및 **연결 테스트** 버튼.
+- `/api/ai/*` 아래의 Web 엔드포인트(build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). 모든 기능 엔드포인트는 선택적 `?modelId=<credential>`을 수용하여 선택한 모델에서 해당 하나의 호출을 실행합니다. 또한 **모델 검색**(`/api/ai/models/probe`, `/api/ai/usable-models`) 및 **기능별 바인딩**(`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
+- MCP 도구(`AiTools`) for AI 클라이언트 — [mcp.md](mcp.md) 참조. 공급자 선택은 MCP 클라이언트에 투명합니다.
+- **AI** 내비게이션 그룹 — 기능당 하나의 Blazor **페이지**: Build cBot(`/ai/build`), Review(`/ai/review`), Debate(`/ai/debate`), Market Sentiment(`/ai/sentiment`), Exposure Check(`/ai/exposure`), Portfolio Digest(`/ai/digest`), Tune Advisor(`/ai/tune`), Optimize(`/ai/optimize`), Portfolio Agent, Alerts, MCP Keys 포함. 페이지는 `AiFeaturePageBase` + `AiOutputPanel` + `AiModelSelect`를 공유합니다; 공급자가 구성되지 않으면 각 페이지에 `AiFeatureNotice` 표시합니다.
+- **Settings → AI** (`/settings/ai`, 소유자 전용) — 공급자 목록과 **공급자 추가/편집 대화상자**(종류, 종류별 힌트 포함 기본 URL, Ollama/LM Studio localhost 프리셋 포함, 모델, 선택적 키, 기능 토글, "기본값 설정") 및 **연결 테스트** 버튼.
 
 ## 구성
 

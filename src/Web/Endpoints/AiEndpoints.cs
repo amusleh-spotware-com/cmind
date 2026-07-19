@@ -23,6 +23,8 @@ public static class AiEndpoints
         var g = app.MapGroup("/api/ai").RequireAuthorization("UserOrAbove")
             .RequireFeature(Core.Features.FeatureFlag.Ai);
 
+        g.WithAiModelOverride();
+
         // Status keeps its { enabled } shape (the gate JS/E2E depend on it) and adds the active
         // provider kind + model for display when configured.
         g.MapGet("/status", (IAiProviderStore store, IOptionsMonitor<AppOptions> options) =>
@@ -34,7 +36,6 @@ public static class AiEndpoints
                 enabled = active is not null,
                 kind = active?.Kind.ToString(),
                 model = active?.Model,
-                allowTasks = branding.AllowAiTasks,
                 allowModelManagement = branding.AllowAiModelManagement
             });
         });
@@ -235,88 +236,6 @@ public static class AiEndpoints
             return Results.Ok(new { ok = true });
         });
 
-        // Async AI tasks: create one background task PER selected model (fan-out to compare), then the user
-        // navigates away and comes back. The AiTaskRunner on the web host claims + runs them. The whole
-        // surface is white-label/owner-gated by Branding.AllowAiTasks (404 when disabled).
-        var tasks = g.MapGroup("/tasks").AddEndpointFilter(BrandingGate(b => b.AllowAiTasks));
-
-        tasks.MapPost("", async (CreateTasksRequest req, DataContext db, ICurrentUser u, TimeProvider clock, CancellationToken ct) =>
-        {
-            if (u.UserId is not { } uid) return Results.Unauthorized();
-            if (string.IsNullOrWhiteSpace(req.Description)) return Results.BadRequest("describe the task first");
-            var credIds = (req.CredentialIds ?? []).Distinct().ToList();
-            if (credIds.Count == 0) return Results.BadRequest("select at least one model");
-
-            var feature = req.Feature ?? AiFeature.GenerateCBot;
-            var payload = JsonSerializer.Serialize(new AiTaskBuildPayload(req.Name, req.Language ?? "CSharp", req.Description));
-            var now = clock.GetUtcNow();
-            var created = new List<Guid>();
-            foreach (var raw in credIds)
-            {
-                var cid = AiProviderCredentialId.From(raw);
-                var usable = await db.AiProviderCredentials
-                    .AnyAsync(c => c.Id == cid && (c.OwnerUserId == uid || c.OwnerUserId == null), ct);
-                if (!usable) continue;
-                var task = Core.Domain.AiTask.Create(uid, feature, cid, payload, now);
-                db.AiTasks.Add(task);
-                await db.SaveChangesAsync(ct);
-                created.Add(task.Id.Value);
-            }
-            return created.Count == 0 ? Results.BadRequest("no valid model selected") : Results.Ok(new { taskIds = created });
-        });
-
-        tasks.MapGet("", async (DataContext db, ICurrentUser u, CancellationToken ct) =>
-        {
-            if (u.UserId is not { } uid) return Results.Unauthorized();
-            var rows = await db.AiTasks.AsNoTracking().Where(t => t.UserId == uid)
-                .OrderByDescending(t => t.CreatedAt).Take(100).ToListAsync(ct);
-            var credIds = rows.Select(t => t.CredentialId).Distinct().ToList();
-            var models = await db.AiProviderCredentials.AsNoTracking()
-                .Where(c => credIds.Contains(c.Id)).ToDictionaryAsync(c => c.Id, c => c.Model, ct);
-            var views = rows.Select(t => new AiTaskView(
-                t.Id.Value, t.Feature.ToString(), t.Status.ToString(), models.GetValueOrDefault(t.CredentialId, "(model)"),
-                t.Attempts, t.CreatedAt, t.FinishedAt, t.Error)).ToList();
-            return Results.Ok(views);
-        });
-
-        tasks.MapGet("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u, CancellationToken ct) =>
-        {
-            if (u.UserId is not { } uid) return Results.Unauthorized();
-            var tid = AiTaskId.From(id);
-            var t = await db.AiTasks.AsNoTracking().FirstOrDefaultAsync(x => x.Id == tid && x.UserId == uid, ct);
-            if (t is null) return Results.NotFound();
-            var model = await db.AiProviderCredentials.AsNoTracking()
-                .Where(c => c.Id == t.CredentialId).Select(c => c.Model).FirstOrDefaultAsync(ct) ?? "(model)";
-            var logs = t.Logs.OrderBy(l => l.Sequence).Select(l => new AiTaskLogLine(l.Sequence, l.Time, l.Message)).ToList();
-            return Results.Ok(new AiTaskDetail(
-                t.Id.Value, t.Feature.ToString(), t.Status.ToString(), model, t.Attempts, t.CreatedAt, t.StartedAt,
-                t.FinishedAt, t.Error, t.ResultText, t.ResultRefsJson, logs));
-        });
-
-        tasks.MapPost("/{id:guid}/cancel", async (Guid id, DataContext db, ICurrentUser u, TimeProvider clock, CancellationToken ct) =>
-        {
-            if (u.UserId is not { } uid) return Results.Unauthorized();
-            var tid = AiTaskId.From(id);
-            var t = await db.AiTasks.FirstOrDefaultAsync(x => x.Id == tid && x.UserId == uid, ct);
-            if (t is null) return Results.NotFound();
-            if (t.IsTerminal) return Results.BadRequest("task already finished");
-            t.Cancel(clock.GetUtcNow());
-            await db.SaveChangesAsync(ct);
-            return Results.Ok(new { ok = true });
-        });
-
-        tasks.MapDelete("/{id:guid}", async (Guid id, DataContext db, ICurrentUser u, CancellationToken ct) =>
-        {
-            if (u.UserId is not { } uid) return Results.Unauthorized();
-            var tid = AiTaskId.From(id);
-            var t = await db.AiTasks.FirstOrDefaultAsync(x => x.Id == tid && x.UserId == uid, ct);
-            if (t is null) return Results.NotFound();
-            if (t.IsActive) return Results.BadRequest("stop the task before deleting it");
-            db.AiTasks.Remove(t);
-            await db.SaveChangesAsync(ct);
-            return Results.Ok(new { ok = true });
-        });
-
         g.MapPost("/generate", async (GenerateCBotRequest req, IAiFeatureService ai, CancellationToken ct) =>
             Results.Ok(await ai.GenerateCBotAsync(req.Language ?? "CSharp", req.Description ?? "", ct)));
 
@@ -482,8 +401,8 @@ public static class AiEndpoints
             return Results.Ok(new { success, projectId = project.Id.Value, attempts, log = ClipLog(log) });
         });
 
-        // Feature C: plain-English intent -> generate -> build/self-repair -> create a runnable cBot. Shares
-        // the exact pipeline the async AiTaskRunner uses (CBotBuildFlow) — this is the synchronous entry.
+        // Feature C: plain-English intent -> generate -> build/self-repair -> create a runnable cBot via the
+        // shared CBotBuildFlow pipeline.
         g.MapPost("/build-strategy", async (
             BuildStrategyRequest req, ICurrentUser u, IAiFeatureService ai, CBotBuildFlow flow, CancellationToken ct) =>
         {
@@ -587,6 +506,22 @@ public static class AiEndpoints
         return app;
     }
 
+    // Per-request model override: a feature page's model selector appends ?modelId=<credential>. The scoped
+    // IAiCallContext is read by RoutingAiClient to force that provider for this one call, so any AI feature
+    // runs on the model the user picked without threading it through every service method. An id the user may
+    // not use resolves to null downstream and harmlessly falls back to the feature binding / default provider.
+    public static TBuilder WithAiModelOverride<TBuilder>(this TBuilder builder) where TBuilder : IEndpointConventionBuilder
+    {
+        builder.AddEndpointFilter(async (ctx, next) =>
+        {
+            if (Guid.TryParse(ctx.HttpContext.Request.Query["modelId"], out var modelId) && modelId != Guid.Empty)
+                ctx.HttpContext.RequestServices.GetRequiredService<IAiCallContext>()
+                    .OverrideCredentialId = Core.AiProviderCredentialId.From(modelId);
+            return await next(ctx);
+        });
+        return builder;
+    }
+
     private const int MaxLogChars = 4000;
 
     // White-label gate for a branding bool (overlaid by the owner's runtime override on IOptionsMonitor).
@@ -686,8 +621,6 @@ public sealed record CapabilitiesRequest(
     bool SupportsWebSearch, bool SupportsVision, bool SupportsSystemRole, bool SupportsTools);
 public sealed record ProbeModelsRequest(Core.Ai.AiProviderKind Kind, string? BaseUrl, string? ApiKey);
 public sealed record SetFeatureBindingRequest(Core.Ai.AiFeature Feature, Guid CredentialId);
-public sealed record CreateTasksRequest(
-    Core.Ai.AiFeature? Feature, string? Name, string? Language, string? Description, Guid[]? CredentialIds);
 public sealed record GenerateCBotRequest(string? Language, string? Description);
 public sealed record ReviewCBotRequest(string? Language, string? Source);
 public sealed record DebateRequest(string? Name, string? Language, string? Source);

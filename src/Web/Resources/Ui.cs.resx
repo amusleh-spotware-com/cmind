@@ -369,4 +369,6 @@
   <data name="copyDetail.editDestination" xml:space="preserve"><value>Upravit cíl</value></data>
   <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>Cíl aktualizován</value></data>
   <data name="nav.ai.tasks" xml:space="preserve"><value>Úkoly</value></data>
+  <data name="ai.model" xml:space="preserve"><value>Model</value></data>
+  <data name="ai.model.default" xml:space="preserve"><value>výchozí</value></data>
 </root>

@@ -34,7 +34,6 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
     public DbSet<AiProviderCredential> AiProviderCredentials => Set<AiProviderCredential>();
     public DbSet<Core.Domain.AiFeatureBinding> AiFeatureBindings => Set<Core.Domain.AiFeatureBinding>();
-    public DbSet<Core.Domain.AiTask> AiTasks => Set<Core.Domain.AiTask>();
     public DbSet<UserDashboard> UserDashboards => Set<UserDashboard>();
     public DbSet<AgentMandate> AgentMandates => Set<AgentMandate>();
     public DbSet<AgentProposal> AgentProposals => Set<AgentProposal>();
@@ -121,7 +120,6 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<UserDashboardId>().HaveConversion<StrongIdConverter<UserDashboardId>>();
         configurationBuilder.Properties<AiProviderCredentialId>().HaveConversion<StrongIdConverter<AiProviderCredentialId>>();
         configurationBuilder.Properties<AiFeatureBindingId>().HaveConversion<StrongIdConverter<AiFeatureBindingId>>();
-        configurationBuilder.Properties<AiTaskId>().HaveConversion<StrongIdConverter<AiTaskId>>();
         configurationBuilder.Properties<CurrencyStrengthSnapshotId>().HaveConversion<StrongIdConverter<CurrencyStrengthSnapshotId>>();
     }
 
@@ -297,21 +295,6 @@ public class DataContext : DbContext, IDataProtectionKeyContext
                 .HasFilter("\"OwnerUserId\" IS NOT NULL AND \"IsDeleted\" = false");
             e.Property(x => x.Feature).HasConversion<string>().HasMaxLength(32);
         });
-
-        modelBuilder.Entity<Core.Domain.AiTask>(e =>
-        {
-            e.HasIndex(x => new { x.UserId, x.CreatedAt });
-            e.HasIndex(x => x.Status);
-            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
-            e.Property(x => x.Feature).HasConversion<string>().HasMaxLength(32);
-            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
-            e.Property(x => x.PayloadJson).HasColumnType("jsonb");
-            e.Property(x => x.ResultRefsJson).HasColumnType("jsonb");
-            e.Property(x => x.ClaimedBy).HasMaxLength(128);
-            e.OwnsMany(x => x.Logs, b => b.ToJson());
-        });
-        modelBuilder.Entity<Core.Domain.AiTask>().Navigation(x => x.Logs)
-            .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         modelBuilder.Entity<UserDashboard>(e =>
         {

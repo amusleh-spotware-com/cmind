@@ -13,21 +13,31 @@ namespace Infrastructure.Ai;
 public sealed class RoutingAiClient : IAiClient
 {
     private readonly IAiProviderStore _store;
+    private readonly IAiCallContext _callContext;
     private readonly Dictionary<AiProviderKind, IAiProvider> _providers;
 
-    public RoutingAiClient(IAiProviderStore store, IEnumerable<IAiProvider> providers)
+    public RoutingAiClient(IAiProviderStore store, IAiCallContext callContext, IEnumerable<IAiProvider> providers)
     {
         _store = store;
+        _callContext = callContext;
         _providers = providers.ToDictionary(p => p.Kind);
+    }
+
+    // Convenience for callers with no per-request model override (tests) — an empty call context.
+    public RoutingAiClient(IAiProviderStore store, IEnumerable<IAiProvider> providers)
+        : this(store, new AiCallContext(), providers)
+    {
     }
 
     public bool Enabled => _store.HasActive;
 
     public Task<AiResult> CompleteAsync(AiTextRequest request, CancellationToken ct)
     {
-        // Route to the provider bound to this request's feature (or the caller-forced credential), falling
-        // back to the scope's active provider when the feature is unbound.
-        if (_store.ResolveFor(request.Feature, request.CredentialId) is not { } active)
+        // Resolution priority: an explicit request credential (build/fix flow) wins, then the user's
+        // per-request model selection (a feature page's model dropdown, carried on the scoped call
+        // context), then the per-feature binding, then the scope's active/default provider.
+        var credentialId = request.CredentialId ?? _callContext.OverrideCredentialId;
+        if (_store.ResolveFor(request.Feature, credentialId) is not { } active)
             return Task.FromResult(AiResult.Fail(AiConstants.DisabledMessage));
         if (!_providers.TryGetValue(active.Kind, out var provider))
             return Task.FromResult(AiResult.Fail(AiConstants.DisabledMessage));

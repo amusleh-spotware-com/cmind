@@ -30,6 +30,8 @@
             <MudSlider @bind-Value="_patience" Min="0" Max="1" Step="0.1" Color="Color.Primary" />
             <MudText Typo="Typo.body2">Trend-following</MudText>
             <MudSlider @bind-Value="_trend" Min="0" Max="1" Step="0.1" Color="Color.Primary" />
+            <AiModelSelect Feature="AiFeature.ProposeAgentAction" Selected="_modelId"
+                           SelectedChanged="OnModelChanged" Class="mt-2" />
         </MudForm>
     </DialogContent>
     <DialogActions>
@@ -57,6 +59,20 @@
     private double _patience = 0.5;
     private double _trend = 0.5;
     private IEnumerable<Guid> _accounts = new HashSet<Guid>();
+    private Guid? _modelId;
+
+    // Autonomous agents run AI in a background scope, so the model is the user's ProposeAgentAction binding.
+    private async Task OnModelChanged(Guid? id)
+    {
+        _modelId = id;
+        if (id is not { } credentialId) return;
+        try
+        {
+            await Http.PutAsJsonAsync("/api/ai/my-feature-bindings",
+                new { Feature = (int)AiFeature.ProposeAgentAction, CredentialId = credentialId });
+        }
+        catch { /* model management may be gated off — leave the binding as-is */ }
+    }
 
     protected override void OnInitialized()
     {

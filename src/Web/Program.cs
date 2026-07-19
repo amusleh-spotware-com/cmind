@@ -163,10 +163,6 @@ builder.Services.AddScoped<Core.Accounts.IBrokerVerifier, Web.Accounts.BrokerVer
 builder.Services.AddSingleton<OwnerSeeder>();
 builder.Services.AddHostedService<LocalNodeSeeder>();
 builder.Services.AddHostedService<InstanceReconciler>();
-// Runs async AI tasks (e.g. build-cBot) on the web host — the build needs its Docker socket. Disable it
-// (App:Ai:RunTasks=false) on a host that must not execute tasks, or in tests that assert task state.
-if (builder.Configuration.GetValue("App:Ai:RunTasks", true))
-    builder.Services.AddHostedService<Infrastructure.Ai.AiTaskRunner>();
 
 var app = builder.Build();
 

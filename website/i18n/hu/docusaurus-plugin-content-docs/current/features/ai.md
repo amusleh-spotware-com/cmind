@@ -64,8 +64,7 @@ Egy white-label telepítés korlátozza az AI-t az `App:Branding` révén (szerv
 - `AllowBuiltInAi` (alapértelmezés `true`) — állítsd `false`-ra a **beépített modell teljes eltávolításához**.
 - `AllowLocalProviders` (alapértelmezés `true`) — állítsd `false`-ra a lokális/saját-gazda végpontok tiltásához (loopback / privát OpenAI-kompatibilis, pl. Ollama/LM Studio/vLLM).
 - `AllowedAiProviderKinds` (alapértelmezés üres = mind) — csak azokat a fajtákat listázd, amelyeket a telepítés engedélyez (pl. `["Anthropic","OpenAiCompatible"]`), hogy zárold, mely szolgáltatókat adhatnak hozzá a felhasználók.
-- `AllowAiTasks` (alapértelmezés `true`) — állítsd `false`-ra a **háttérben futó AI feladat** funkció eltávolításához (az `/ai/tasks` oldal és a feladat API 404-et ad vissza; az futó leállítja a feldolgozást); szinkron AI funkciók továbbra is működnek.
-- `AllowAiModelManagement` (alapértelmezés `true`) — állítsd `false`-ra a **modell böngészés** és **funkciónként model kötés** elrejtéséhez. Mindkettő a tulajdonos által futásidőben hangolható a **Beállítások → Telepítés** menüből (élőben átfedett az `IOptionsMonitor`-on) és katalógusban van az `WhiteLabelCatalog`-ban.
+- `AllowAiModelManagement` (alapértelmezés `true`) — állítsd `false`-ra a **modell böngészés**, a **funkciónkénti modellválasztó**, és a **funkciónkénti model kötés** elrejtéséhez. Mindegyik a tulajdonos által futásidőben hangolható a **Beállítások → Telepítés** menüből (élőben átfedett az `IOptionsMonitor`-on) és katalógusban van az `WhiteLabelCatalog`-ban.
 
 ## Bővítés: jövőbeli beépített modellek
 
@@ -74,8 +73,8 @@ Az AI réteg **adapter-alapú és bővíthető**. Minden szolgáltató egy `IAiP
 ## Képességek
 
 - **cBot építése** — egyszerű angol prompt → futtatható cBot via **generál → épít → AI-javítás** ön-javító hurok (`build-strategy`), `/ai/build` címen. A **generált forráskód megjelenik** amikor az épület befejeződik (másolás gombbal), az építési naplóval együtt — siker és kudarc esetén is — így mindig látod, mit írt az AI, nem csak hibákat.
-- **Háttérben futó AI feladatok** — indítson el egy hosszan futó AI munkát (pl. cBot építése) a választott modell(ek)kel, majd hagyja el az oldalt és visszatérhet az eredményhez. Válasszon ki több modellt az összehasonlítás céljából — mindegyik saját feladatként fut (`/ai/tasks`). Egy web-host worker igényli fel a feladatokat egy öngyógyító bérleten (visszavéve, ha egy node meghal) és továbbítja a folyamatot egy feladatonkénti tevékenységnaplóba.
-- **Modellek böngészése és kiválasztása funkciónként** — böngésszen azokat a modelleket, amelyeket egy szolgáltató végpontja meghirdet (`GET /v1/models` az LM Studio / Ollama / vLLM / llama.cpp között, vagy a beépített katalógus), ahelyett hogy kézzel beírna egy id-t, és **kösse az egyes AI funkciókat egy másik modellhez** így több modell szolgál egyszerre más-más funkciókat (egy kötetlen funkció visszaáll a hatókör aktív szolgáltatójára).
+- **Funkciónkénti modellválasztó** — minden AI funkció oldal és dialog megjeleníti a **modellválasztót**, amely felsorolja az elérhető modelleket (saját szolgáltatók + telepítési alapértelmezések). Az oldal mentett kötése van előválasztva, ha van, egyébként az **alapértelmezett** modell, és a kiválasztott modell az adott műveletre vonatkozik (elküldve `?modelId=` paraméterként, és a `RoutingAiClient` által kényszerítve az adott híváshoz). Rejtett, ha a telepítés letiltja a modellkezelést.
+- **Modellek böngészése és kiválasztása funkciónként** — böngésszen azokat a modelleket, amelyeket egy szolgáltató végpontja meghirdet (`GET /v1/models` az LM Studio / Ollama / vLLM / llama.cpp között, vagy a beépített katalógus), ahelyett hogy kézzel beírna egy id-t, és **kösse az egyes AI funkciókat egy másik modellhez** így több modell szolgál egyszerre más-más funkciókat (egy kötetlen funkció visszaáll a hatókör alapértelmezett szolgáltatójára).
 - **Paraméter optimalizálás** — zárt hurok: AI javasol paraméterkészleteket, mindegyik perzisztálva + backtesztelve a node-okon (`optimize-run` / `optimize-params`).
 - **Autonóm portfólió ügynök** — mandátum-vezérelt javaslatok teljes döntési naplóval (`AgentMandate` → `AgentProposal`).
 - **Kockázati őr működésben** — `AiRiskGuard` háttérszolgáltatás értékeli a futó botokat, képes **automatikusan leállítani** kritikus kockázat esetén (opcionális).
@@ -85,9 +84,9 @@ Az AI réteg **adapter-alapú és bővíthető**. Minden szolgáltató egy `IAiP
 
 ## Felületek
 
-- Web végpontok `/api/ai/*` alatt (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), valamint **háttérben futó feladatok** (`/api/ai/tasks` create/list/detail/cancel/delete), **modell felfedezés** (`/api/ai/models/probe`, `/api/ai/usable-models`) és **funkciónként kötések** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
+- Web végpontok `/api/ai/*` alatt (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Minden funkció végpont elfogad egy opcionális `?modelId=<credential>` paramétert az adott hívás futtatásához egy kiválasztott modellen. Plusz **modell felfedezés** (`/api/ai/models/probe`, `/api/ai/usable-models`) és **funkciónkénti kötések** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - MCP eszközök (`AiTools`) AI kliensek számára — lásd [mcp.md](mcp.md). A szolgáltató kiválasztás átlátszó az MCP kliensek számára.
-- **AI** nav csoport — egy Blazor **oldal funkciónként**: cBot építése (`/ai/build`), Értékelés (`/ai/review`), Vita (`/ai/debate`), Piaci Szentimentum (`/ai/sentiment`), Kitettség ellenőrzés (`/ai/exposure`), Portfólió Áttekintés (`/ai/digest`), Hangolási Tanácsadó (`/ai/tune`), Optimalizálás (`/ai/optimize`), **AI feladatok** (`/ai/tasks`), valamint Portfólió Ügynök, Riasztások, MCP Kulcsok. Az oldalak megosztják az `AiFeaturePageBase` + `AiOutputPanel`; mindegyik megmutatja az `AiFeatureNotice`-t, ha nincs szolgáltató konfigurálva.
+- **AI** nav csoport — egy Blazor **oldal funkciónként**: cBot építése (`/ai/build`), Értékelés (`/ai/review`), Vita (`/ai/debate`), Piaci Szentimentum (`/ai/sentiment`), Kitettség ellenőrzés (`/ai/exposure`), Portfólió Áttekintés (`/ai/digest`), Hangolási Tanácsadó (`/ai/tune`), Optimalizálás (`/ai/optimize`), valamint Portfólió Ügynök, Riasztások, MCP Kulcsok. Az oldalak megosztják az `AiFeaturePageBase` + `AiOutputPanel` + egy `AiModelSelect`-et; mindegyik megmutatja az `AiFeatureNotice`-t, ha nincs szolgáltató konfigurálva.
 - **Beállítások → AI** (`/settings/ai`, csak tulajdonos) — szolgáltató lista egy **Hozzáadás / szerkesztés szolgáltató dialog-kal** (fajta, base URL fajta-specifikus tippekkel, beleértve egy Ollama/LM Studio localhost presetet, modell, opcionális kulcs, képesség togglek, "állítsd aktívra") és egy **Tesztelés kapcsolat** gombbal.
 
 ## Konfiguráció
@@ -101,7 +100,7 @@ Az `App:Ai` támogatja mind az örökölt egykulcsos, mind a multi-szolgáltató
 
 ## Megbízhatóság
 
-A szolgáltató megbízhatatlanként van kezelve — semmi, amit csinál, nem tudja lehozni az alkalmazást. Ez azonosan igaz a felhős és lokális végpontokra (egy halott Ollama újrapróbál, majd degradál pontosan úgy, mint egy throttelt Anthropic):
+A szolgáltató megbízhatatlanként van kezelve — semmi, amit csinál, nem tudja lehozni az alkalmazást. Ez azonosan igaz a felhős és lokális végpontokra (egy halott Ollama újrapróbál, majd degradál pontosan úgy, mint egy throttlet Anthropic):
 
 - **Graceful degradáció.** Minden hiba mód (nincs szolgáltató, HTTP 4xx/5xx/429, timeout, rossz test, üres tartalom, nem támogatott képesség) egy típusolt `AiResult.Fail(reason)`-t ad vissza — a kliens soha nem dob kivételt egy oldalra, MCP eszközre vagy hosted szolgáltatásra.
 - **Rugalmassági pipeline.** `AddAiHttpClient` ad az egy megosztott AI `HttpClient`-nek korlátozott újrapróbálást átmeneti 5xx / hálózati hibákra (exponenciális backoff + jitter) plusz generózus per-attempt és összes időtúllépések (`AiHttp`), újrafelhasználva minden adapter által.

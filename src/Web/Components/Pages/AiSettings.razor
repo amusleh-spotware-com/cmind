@@ -21,7 +21,8 @@
 <MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">
     Connect any AI provider — Anthropic, OpenAI, Azure OpenAI, Google Gemini, or any OpenAI-compatible
     endpoint including local models (Ollama, LM Studio, vLLM, llama.cpp, LocalAI) and OpenAI-compatible
-    clouds (OpenRouter, Groq, Together, Mistral, DeepSeek). Exactly one provider is active at a time.
+    clouds (OpenRouter, Groq, Together, Mistral, DeepSeek). One provider is the default model for AI
+    features; you can also pick any added model per action from the model selector on each AI page.
     Keys are stored encrypted and never shown again.
 </MudText>
 
@@ -45,7 +46,7 @@ else
                             @if (p.IsActive)
                             {
                                 <MudChip T="string" Size="Size.Small" Color="Color.Success"
-                                         Icon="@Icons.Material.Filled.CheckCircle" data-testid="ai-active-chip">Active</MudChip>
+                                         Icon="@Icons.Material.Filled.CheckCircle" data-testid="ai-active-chip">Default</MudChip>
                             }
                         </MudStack>
                         <MudText Typo="Typo.body2" Class="mud-text-secondary">@p.Model · @p.BaseUrl</MudText>
@@ -72,7 +73,7 @@ else
                     @if (!p.IsActive)
                     {
                         <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Text"
-                                   OnClick="@(() => Activate(p.Id))" data-testid="ai-set-active">Set active</MudButton>
+                                   OnClick="@(() => Activate(p.Id))" data-testid="ai-set-active">Set as default</MudButton>
                     }
                     <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit"
                                    OnClick="@(() => OpenDialog(p))" data-testid="ai-edit-provider" />
@@ -202,7 +203,7 @@ else
     private async Task Activate(Guid id)
     {
         var resp = await Http.PostAsync($"/api/ai/providers/{id}/activate", null);
-        Snack.Add(resp.IsSuccessStatusCode ? "Provider activated" : "Failed to activate",
+        Snack.Add(resp.IsSuccessStatusCode ? "Set as the default model" : "Failed to set default",
             resp.IsSuccessStatusCode ? Severity.Success : Severity.Error);
         await Load();
     }

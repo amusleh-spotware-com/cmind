@@ -13,6 +13,7 @@
 
 <MudPaper Class="pa-4" Elevation="1">
     <MudTextField @bind-Value="_symbol" Label="Symbol" Style="max-width:200px;" Placeholder="EURUSD" />
+    <AiModelSelect Feature="AiFeature.MarketSentiment" @bind-Selected="SelectedModelId" Class="mt-3" />
     <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
                StartIcon="@Icons.Material.Filled.Insights" OnClick="Run" Disabled="Busy">
         Get sentiment

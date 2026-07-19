@@ -81,5 +81,3 @@ Pages/Run.razor
 Pages/TradingAccountList.razor
 Pages/TwoFactorChallenge.razor
 Pages/Users.razor
-Dialogs/AiTaskCreateDialog.razor
-Pages/Ai/AiTasks.razor

@@ -88,8 +88,7 @@ Deployment white-label giới hạn AI qua `App:Branding` (enforced server-side 
   private OpenAI-compatible, ví dụ Ollama/LM Studio/vLLM).
 - `AllowedAiProviderKinds` (mặc định empty = all) — liệt kê chỉ các kinds mà deployment cho phép (ví dụ
   `["Anthropic","OpenAiCompatible"]`) để khóa down các provider người dùng được thêm.
-- `AllowAiTasks` (mặc định `true`) — đặt `false` để xóa tính năng **background AI task** (trang `/ai/tasks` và task API trả về 404; runner dừng claiming); các tính năng AI đồng bộ vẫn hoạt động.
-- `AllowAiModelManagement` (mặc định `true`) — đặt `false` để ẩn **model browsing** và **per-feature model binding**. Cả hai đều có thể được owner-tunable tại runtime từ **Settings → Deployment** (overlaid live trên `IOptionsMonitor`) và catalogued trong `WhiteLabelCatalog`.
+- `AllowAiModelManagement` (mặc định `true`) — đặt `false` để ẩn **model browsing**, **per-page model selector**, và **per-feature model binding**. Tất cả đều có thể được owner-tunable tại runtime từ **Settings → Deployment** (overlaid live trên `IOptionsMonitor`) và catalogued trong `WhiteLabelCatalog`.
 
 ## Extending: future built-in models
 
@@ -103,8 +102,8 @@ changes. Built-in ONNX provider là reference implementation của pattern này.
 ## Capabilities
 
 - **Build cBot** — plain-English prompt → runnable cBot qua **generate → build → AI-fix** self-repair loop (`build-strategy`), tại `/ai/build`. **Mã nguồn được tạo ra được hiển thị** khi build kết thúc (với nút copy), cùng với build log — khi thành công *và* khi thất bại — vì vậy bạn luôn nhìn thấy những gì AI đã viết, không chỉ các lỗi.
-- **Background AI tasks** — khởi động một long-running AI job (ví dụ build một cBot) với model(s) của sự lựa chọn của bạn, sau đó rời trang và quay lại để xem kết quả. Chọn vài models để so sánh — mỗi cái chạy như task riêng của nó (`/ai/tasks`). Một web-host worker claims tasks trên self-healing lease (reclaimed nếu node chết) và streams progress vào per-task activity log.
-- **Browse & select models, per feature** — browse các models mà provider endpoint advertises (`GET /v1/models` trên LM Studio / Ollama / vLLM / llama.cpp, hoặc built-in catalog) thay vì hand-typing một id, và **bind mỗi AI feature thành một model khác** vì vậy vài models phục vụ các features khác nhau cùng một lúc (một unbound feature quay về scope's active provider).
+- **Per-page model selection** — mọi trang tính năng AI và hộp thoại hiển thị **model selector** liệt kê các models bạn có thể sử dụng (providers của bạn + deployment defaults). Nó pre-selects binding được lưu của feature nếu được đặt, nếu không **default** model, và model bạn chọn áp dụng cho hành động đó (được gửi dưới dạng `?modelId=` và được ép buộc bởi `RoutingAiClient` cho lệnh gọi đó). Ẩn khi deployment vô hiệu hóa quản lý model.
+- **Browse & select models, per feature** — browse các models mà provider endpoint advertises (`GET /v1/models` trên LM Studio / Ollama / vLLM / llama.cpp, hoặc built-in catalog) thay vì hand-typing một id, và **bind mỗi AI feature thành một model khác** vì vậy vài models phục vụ các features khác nhau cùng một lúc (một unbound feature quay về scope's default provider).
 - **Parameter optimization** — closed loop: AI proposes param sets, each persisted + backtested across nodes (`optimize-run` / `optimize-params`).
 - **Autonomous portfolio agent** — mandate-driven proposals với full decision journal (`AgentMandate` → `AgentProposal`).
 - **Acting risk guard** — `AiRiskGuard` background service đánh giá các bot đang chạy, có thể **auto-stop** on critical risk (opt-in).
@@ -114,10 +113,10 @@ changes. Built-in ONNX provider là reference implementation của pattern này.
 
 ## Surfaces
 
-- Web endpoints dưới `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), cộng **background tasks** (`/api/ai/tasks` create/list/detail/cancel/delete), **model discovery** (`/api/ai/models/probe`, `/api/ai/usable-models`) và **per-feature bindings** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
+- Web endpoints dưới `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Mọi tính năng endpoint chấp nhận một tùy chọn `?modelId=<credential>` để chạy lệnh gọi đó trên một model được chọn. Cộng **model discovery** (`/api/ai/models/probe`, `/api/ai/usable-models`) và **per-feature bindings** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - MCP tools (`AiTools`) cho AI clients — xem [mcp.md](mcp.md). Provider selection transparent đối với MCP clients.
-- **AI** nav group — một Blazor **page per feature**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), **AI Tasks** (`/ai/tasks`), cộng Portfolio Agent, Alerts, MCP Keys. Pages share `AiFeaturePageBase` + `AiOutputPanel`; each shows `AiFeatureNotice` when no provider configured.
-- **Settings → AI** (`/settings/ai`, owner-only) — provider list với **Add / edit provider dialog** (kind, base URL với per-kind hints incl. Ollama/LM Studio localhost preset, model, optional key, capability toggles, "set active") và **Test connection** button.
+- **AI** nav group — một Blazor **page per feature**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), cộng Portfolio Agent, Alerts, MCP Keys. Pages share `AiFeaturePageBase` + `AiOutputPanel` + một `AiModelSelect`; mỗi cái hiển thị `AiFeatureNotice` khi không có provider nào được cấu hình.
+- **Settings → AI** (`/settings/ai`, owner-only) — provider list với **Add / edit provider dialog** (kind, base URL với per-kind hints incl. Ollama/LM Studio localhost preset, model, optional key, capability toggles, "set as default") và **Test connection** button.
 
 ## Configuration
 

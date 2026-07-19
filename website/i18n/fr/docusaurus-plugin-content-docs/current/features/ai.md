@@ -105,11 +105,9 @@ Un déploiement white-label restreint l'IA via `App:Branding` (appliqué côté 
   (loopback / compatible OpenAI privé, p. ex. Ollama/LM Studio/vLLM).
 - `AllowedAiProviderKinds` (par défaut vide = tous) — lister uniquement les kinds que le déploiement autorise (p. ex.
   `["Anthropic","OpenAiCompatible"]`) pour verrouiller les fournisseurs que les utilisateurs peuvent ajouter.
-- `AllowAiTasks` (par défaut `true`) — mettre `false` pour supprimer la fonctionnalité de **tâche IA en arrière-plan** (la
-  page `/ai/tasks` et l'API des tâches retournent 404 ; le worker cesse de réclamer) ; les fonctionnalités IA synchrone fonctionnent toujours.
-- `AllowAiModelManagement` (par défaut `true`) — mettre `false` pour masquer **l'exploration de modèles** et la **liaison par fonctionnalité
-  de modèle**. Les deux sont réglables par le propriétaire à l'exécution depuis **Settings → Deployment** (superposés en direct sur
-  `IOptionsMonitor`) et catalogués dans `WhiteLabelCatalog`.
+- `AllowAiModelManagement` (par défaut `true`) — mettre `false` pour masquer **l'exploration de modèles**, le
+  **sélecteur de modèle par page**, et **la liaison de modèle par fonctionnalité**. Tous sont réglables par le propriétaire
+  à l'exécution depuis **Settings → Deployment** (superposés en direct sur `IOptionsMonitor`) et catalogués dans `WhiteLabelCatalog`.
 
 ## Extension : futurs modèles intégrés
 
@@ -123,8 +121,8 @@ fonctionnalité, endpoint ou outil MCP. Le fournisseur ONNX intégré est l'impl
 ## Capacités
 
 - **Build cBot** — prompt en anglais plain → cBot exécutable via **génération → build → boucle d'auto-réparation AI-fix** (`build-strategy`), sur `/ai/build`. Le **code source généré est affiché** quand le build se termine (avec un bouton copier), à côté du journal de build — en succès *et* en échec — vous voyez toujours ce que l'IA a écrit, pas seulement les erreurs.
-- **Tâches IA en arrière-plan** — démarrez un travail IA de longue durée (p. ex. construire un cBot) avec les modèles de votre choix, puis quittez la page et revenez au résultat. Choisissez plusieurs modèles pour comparer — chacun s'exécute en tant que sa propre tâche (`/ai/tasks`). Un worker de l'hôte web réclame les tâches sur un bail auto-cicatrisant (réclamé si un nœud meurt) et diffuse la progression dans un journal d'activité par tâche.
-- **Parcourir et sélectionner les modèles, par fonctionnalité** — parcourez les modèles qu'un point de terminaison de fournisseur annonce (`GET /v1/models` sur LM Studio / Ollama / vLLM / llama.cpp, ou le catalogue intégré) au lieu de taper à la main une id, et **liez chaque fonctionnalité IA à un modèle différent** afin que plusieurs modèles servent différentes fonctionnalités à la fois (une fonctionnalité non liée revient au fournisseur actif du scope).
+- **Sélection de modèle par page** — chaque page et dialogue de fonctionnalité IA affiche un **sélecteur de modèle** listant les modèles que vous pouvez utiliser (vos propres fournisseurs + les valeurs par défaut du déploiement). Il présélectionne la liaison enregistrée de la fonctionnalité si définie, sinon le modèle **par défaut**, et le modèle que vous choisissez s'applique à cette seule action (envoyé comme `?modelId=` et forcé par `RoutingAiClient` pour cet appel). Masqué quand le déploiement désactive la gestion des modèles.
+- **Parcourir et sélectionner les modèles, par fonctionnalité** — parcourez les modèles qu'un point de terminaison de fournisseur annonce (`GET /v1/models` sur LM Studio / Ollama / vLLM / llama.cpp, ou le catalogue intégré) au lieu de taper à la main une id, et **liez chaque fonctionnalité IA à un modèle différent** afin que plusieurs modèles servent différentes fonctionnalités à la fois (une fonctionnalité non liée revient au fournisseur par défaut du scope).
 - **Optimisation des paramètres** — boucle fermée : l'IA propose des ensembles de paramètres, chacun persisté + backtesté
   sur les nœuds (`optimize-run` / `optimize-params`).
 - **Agent de portfolio autonome** — propositions pilotées par un mandat avec journal de décision complet
@@ -138,17 +136,17 @@ fonctionnalité, endpoint ou outil MCP. Le fournisseur ONNX intégré est l'impl
 
 ## Surfaces
 
-- Endpoints web sous `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), plus **background tasks** (`/api/ai/tasks` create/list/detail/cancel/delete), **model discovery** (`/api/ai/models/probe`, `/api/ai/usable-models`) and **per-feature bindings** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
+- Endpoints web sous `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Chaque endpoint de fonctionnalité accepte un `?modelId=<credential>` optionnel pour exécuter cet appel sur un modèle choisi. Plus **découverte de modèles** (`/api/ai/models/probe`, `/api/ai/usable-models`) et **liaisons par fonctionnalité** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - Outils MCP (`AiTools`) pour les clients IA — voir [mcp.md](mcp.md). La sélection du fournisseur est
   transparente pour les clients MCP.
 - **Navigation IA** — une Blazor **page par fonctionnalité** : Build cBot (`/ai/build`), Review (`/ai/review`),
   Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest
-  (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), **AI Tasks** (`/ai/tasks`), plus Portfolio Agent, Alerts, MCP Keys.
-  Les pages partagent `AiFeaturePageBase` + `AiOutputPanel` ; chacune affiche `AiFeatureNotice` quand aucun
-  fournisseur n'est configuré.
+  (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), plus Portfolio Agent, Alerts, MCP Keys.
+  Les pages partagent `AiFeaturePageBase` + `AiOutputPanel` + un `AiModelSelect` ; chacune affiche `AiFeatureNotice`
+  quand aucun fournisseur n'est configuré.
 - **Settings → AI** (`/settings/ai`, propriétaire uniquement) — liste des fournisseurs avec un **dialogue Ajouter/éditer
   fournisseur** (kind, URL de base avec indications par kind incluant un preset Ollama/LM Studio localhost,
-  modèle, clé optionnelle, bascules de capacité, « définir comme actif ») et un bouton **Tester la connexion**.
+  modèle, clé optionnelle, bascules de capacité, « définir comme par défaut ») et un bouton **Tester la connexion**.
 
 ## Configuration
 

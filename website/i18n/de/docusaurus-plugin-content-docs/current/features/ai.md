@@ -102,9 +102,7 @@ Eine White-Label-Bereitstellung schraenkt KI ueber `App:Branding` ein (serversei
   private OpenAI-kompatibel, z.B. Ollama/LM Studio/vLLM).
 - `AllowedAiProviderKinds` (Standard leer = alle) – liste nur die Arten, die die Bereitstellung sanktioniert (z.B.
   `["Anthropic","OpenAiCompatible"]`), um einzuschraenken, welche Anbieter Benutzer hinzufuegen duerfen.
-- `AllowAiTasks` (Standard `true`) – setze `false`, um die **Hintergrund-KI-Aufgaben**-Funktion zu entfernen (die
-  `/ai/tasks`-Seite und die Aufgaben-API geben 404 zurueck; der Runner hoert auf, Aufgaben zu beanspruchen). Synchrone KI-Funktionen funktionieren weiterhin.
-- `AllowAiModelManagement` (Standard `true`) – setze `false`, um **Modell-Browsing** und **Pro-Funktion-Modellbindung** zu verbergen. Beide sind vom Eigentuemer zur Laufzeit aus **Einstellungen → Bereitstellung** abstimmbar (live ueber `IOptionsMonitor` ueberlagert) und im `WhiteLabelCatalog` katalogisiert.
+- `AllowAiModelManagement` (Standard `true`) – setze `false`, um **Modell-Browsing**, die **Pro-Seite-Modellauswahl** und **Pro-Funktion-Modellbindung** zu verbergen. Alle sind vom Eigentuemer zur Laufzeit aus **Einstellungen → Bereitstellung** abstimmbar (live ueber `IOptionsMonitor` ueberlagert) und im `WhiteLabelCatalog` katalogisiert.
 
 ## Erweiterung: zukuenftige integrierte Modelle
 
@@ -118,8 +116,8 @@ Aenderungen. Der integrierte ONNX-Anbieter ist die Referenzimplementierung diese
 ## Faehigkeiten
 
 - **cBot erstellen** – Klartext-Prompt → lauffaehiger cBot ueber **generieren → bauen → KI-reparieren** Selbstreparaturschleife (`build-strategy`), unter `/ai/build`. Der **generierte Quellcode wird angezeigt**, wenn der Bau abgeschlossen ist (mit einer Schaltflaeche zum Kopieren), zusammen mit dem Bau-Log – bei Erfolg *und* bei Fehler – damit du immer siehst, was die KI geschrieben hat, nicht nur Fehler.
-- **Hintergrund-KI-Aufgaben** — starten Sie einen lang laufenden KI-Job (z.B. einen cBot erstellen) mit den Modellen Ihrer Wahl, lassen Sie dann die Seite verlassen und kehren Sie zum Ergebnis zurueck. Waehlen Sie mehrere Modelle zum Vergleich — jedes laeuft als eigene Aufgabe (`/ai/tasks`). Ein Web-Host-Worker beansprucht Aufgaben auf einem selbstheilenden Lease (rueckgefordert, wenn ein Knoten stirbt) und streamt den Fortschritt in ein Pro-Aufgaben-Aktivitaetslog.
-- **Modelle durchsuchen und auswaehlen, pro Funktion** — durchsuchen Sie die Modelle, die ein Anbieter-Endpunkt bewirbt (`GET /v1/models` auf LM Studio / Ollama / vLLM / llama.cpp, oder den integrierten Katalog), anstatt manuell eine ID einzugeben, und **binden Sie jede KI-Funktion an ein anderes Modell**, damit mehrere Modelle gleichzeitig verschiedene Funktionen bedienen (eine ungebundene Funktion fällt auf den aktiven Anbieter des Umfangs zurueck).
+- **Pro-Seite-Modellauswahl** – jede KI-Funktionsseite und jedes Dialog zeigen eine **Modellauswahl**, die die Modelle auflistet, die du verwenden kannst (deine eigenen Anbieter + die Bereitstellungsstandards). Sie waehlt vorab die gespeicherte Bindung der Funktion aus, falls gesetzt, sonst das **Standard**-Modell, und das ausgewaehlte Modell wird auf diese eine Aktion angewendet (gesendet als `?modelId=` und von `RoutingAiClient` fuer diesen Aufruf erzwungen). Verborgen, wenn die Bereitstellung Modellverwaltung deaktiviert.
+- **Modelle durchsuchen und auswaehlen, pro Funktion** – durchsuche die Modelle, die ein Anbieter-Endpunkt bewirbt (`GET /v1/models` auf LM Studio / Ollama / vLLM / llama.cpp, oder den integrierten Katalog), anstatt manuell eine ID einzugeben, und **binde jede KI-Funktion an ein anderes Modell**, damit mehrere Modelle gleichzeitig verschiedene Funktionen bedienen (eine ungebundene Funktion faellt auf den Standard-Anbieter des Umfangs zurueck).
 - **Parameteroptimierung** – geschlossene Schleife: KI schlaegt Parametersaetze vor, jeder persistiert + ueber Nodes getestet (`optimize-run` / `optimize-params`).
 - **Autonomer Portfolio-Agent** – mandategetriebene Vorschlaege mit vollstaendigem Entscheidungstagebuch (`AgentMandate` → `AgentProposal`).
 - **Agierender Risikowächter** – `AiRiskGuard`-Hintergrunddienst bewertet laufende Bots, kann kritische Risiken **auto-stoppen** (Opt-in).
@@ -129,9 +127,9 @@ Aenderungen. Der integrierte ONNX-Anbieter ist die Referenzimplementierung diese
 
 ## Oberflaechen
 
-- Web-Endpunkte unter `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), plus **Hintergrund-Aufgaben** (`/api/ai/tasks` erstellen/auflisten/Detail/Abbrechen/Loeschen), **Modell-Entdeckung** (`/api/ai/models/probe`, `/api/ai/usable-models`) und **Pro-Funktion-Bindungen** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
-- MCP-Tools (`AiTools`) fuer KI-Clients – see [mcp.md](mcp.md). Anbieter-Auswahl ist fuer MCP-Clients transparent.
-- **KI**-Navigationsgruppe – eine Blazor-**Seite pro Funktion**: cBot erstellen (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Marktstimmung (`/ai/sentiment`), Exposure-Pruefung (`/ai/exposure`), Portfolio-Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimieren (`/ai/optimize`), **KI-Aufgaben** (`/ai/tasks`), zuzueglich Portfolio-Agent, Alarme, MCP-Schluessel. Seiten teilen `AiFeaturePageBase` + `AiOutputPanel`; jede zeigt `AiFeatureNotice`, wenn kein Anbieter konfiguriert ist.
+- Web-Endpunkte unter `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Jeder Feature-Endpunkt akzeptiert ein optionales `?modelId=<credential>`, um diesen einen Aufruf auf einem ausgewaehlten Modell auszufuehren. Plus **Modell-Entdeckung** (`/api/ai/models/probe`, `/api/ai/usable-models`) und **Pro-Funktion-Bindungen** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
+- MCP-Tools (`AiTools`) fuer KI-Clients – siehe [mcp.md](mcp.md). Anbieter-Auswahl ist fuer MCP-Clients transparent.
+- **KI**-Navigationsgruppe – eine Blazor-**Seite pro Funktion**: cBot erstellen (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Marktstimmung (`/ai/sentiment`), Exposure-Pruefung (`/ai/exposure`), Portfolio-Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimieren (`/ai/optimize`), zuzueglich Portfolio-Agent, Alarme, MCP-Schluessel. Seiten teilen `AiFeaturePageBase` + `AiOutputPanel` + eine `AiModelSelect`; jede zeigt `AiFeatureNotice`, wenn kein Anbieter konfiguriert ist.
 - **Einstellungen → KI** (`/settings/ai`, nur Eigentuemer) – Anbieterliste mit einem **Hinzufuegen/Bearbeiten-Anbieter-Dialog** (Art, Basis-URL mit pro-Art-Hinweisen einschliesslich Ollama/LM Studio Localhost-Voreinstellung, Modell, optionaler Schluessel, Faehigkeitsschalter, "aktiv setzen") und einem **Verbindung testen**-Button.
 
 ## Konfiguration

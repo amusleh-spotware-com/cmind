@@ -100,15 +100,11 @@ ogni deployment ha AI funzionante out of the box.
 Un deployment white-label restringe AI via `App:Branding` (applicato server-side su ogni provider upsert):
 
 - `AllowBuiltInAi` (default `true`) — impostare `false` per **rimuovere completamente il modello integrato**.
-- `AllowLocalProviders` (default `true`) — impostare `false` per proibire endpoint locali/self-hosted
-  (loopback / OpenAI-compatibile privato, es. Ollama/LM Studio/vLLM).
+- `AllowLocalProviders` (default `true`) — impostare `false` per proibire endpoint locali/self-hosted (loopback /
+  private OpenAI-compatible, es. Ollama/LM Studio/vLLM).
 - `AllowedAiProviderKinds` (default empty = tutti) — elencare solo i tipi che il deployment sanziona (es.
   `["Anthropic","OpenAiCompatible"]`) per bloccare quali provider gli utenti possono aggiungere.
-- `AllowAiTasks` (default `true`) — impostare `false` per rimuovere la funzionalità **task AI in background** (la
-  pagina `/ai/tasks` e l'API task ritornano 404; il runner smette di rivendicare); funzionalità AI sincrone funzionano ancora.
-- `AllowAiModelManagement` (default `true`) — impostare `false` per nascondere **navigazione modelli** e **binding
-  modelli per-feature**. Entrambi sono owner-tunable a runtime da **Settings → Deployment** (sovrapposti live su
-  `IOptionsMonitor`) e catalogati in `WhiteLabelCatalog`.
+- `AllowAiModelManagement` (default `true`) — impostare `false` per nascondere **navigazione modelli**, lo **selettore modello per-page**, e **binding modelli per-feature**. Tutti sono owner-tunable a runtime da **Settings → Deployment** (sovrapposti live su `IOptionsMonitor`) e catalogati in `WhiteLabelCatalog`.
 
 ## Estendere: futuri modelli integrati
 
@@ -122,8 +118,8 @@ di feature, endpoint o tool MCP. Il provider ONNX integrato è l'implementazione
 ## Funzionalità
 
 - **Build cBot** — prompt in inglese semplice → cBot runnable via **generate → build → AI-fix** self-repair loop (`build-strategy`), a `/ai/build`. Il **codice sorgente generato viene mostrato** quando la build finisce (con un pulsante di copia), insieme al build log — in caso di successo *e* in caso di fallimento — così vedi sempre quello che l'AI ha scritto, non solo errori.
-- **Task AI in background** — avvia un lavoro AI di lunga durata (es. build un cBot) con il/i modello/i di tua scelta, poi lascia la pagina e torna per il risultato. Scegli diversi modelli per confrontare — ciascuno esegue come il suo proprio task (`/ai/tasks`). Un worker web-host rivendica task su un lease auto-curativo (rivendicato se un nodo muore) e trasmette il progresso in un log di attività per-task.
-- **Sfoglia e seleziona modelli, per feature** — sfoglia i modelli che un endpoint provider pubblicizza (`GET /v1/models` su LM Studio / Ollama / vLLM / llama.cpp, o il catalogo integrato) invece di digitare manualmente un id, e **vincolare ogni feature AI a un modello diverso** così più modelli servono feature diverse contemporaneamente (una feature non vincolata ricade al provider attivo dello scope).
+- **Selezione modello per-page** — ogni pagina feature AI e dialog mostra un **selettore modello** che elenca i modelli che puoi usare (i tuoi provider + i default del deployment). Pre-seleziona il binding salvato della feature se impostato, altrimenti il modello **default**, e il modello che scegli si applica a quell'azione (inviato come `?modelId=` e forzato da `RoutingAiClient` per quella chiamata). Nascosto quando il deployment disabilita la gestione del modello.
+- **Sfoglia e seleziona modelli, per feature** — sfoglia i modelli che un endpoint provider pubblicizza (`GET /v1/models` su LM Studio / Ollama / vLLM / llama.cpp, o il catalogo integrato) invece di digitare manualmente un id, e **vincolare ogni feature AI a un modello diverso** così più modelli servono feature diverse contemporaneamente (una feature non vincolata ricade al provider dello scope predefinito).
 - **Ottimizzazione parametri** — closed loop: AI propone param set, ciascuno persistito + backtestato attraverso nodi (`optimize-run` / `optimize-params`).
 - **Agente portfolio autonomo** — proposte mandate-driven con journal decisionale completo (`AgentMandate` → `AgentProposal`).
 - **Acting risk guard** — servizio background `AiRiskGuard` valuta i bot in esecuzione, può **auto-stop** su rischio critico (opt-in).
@@ -133,9 +129,9 @@ di feature, endpoint o tool MCP. Il provider ONNX integrato è l'implementazione
 
 ## Superfici
 
-- Endpoint Web sotto `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …), più **task in background** (`/api/ai/tasks` create/list/detail/cancel/delete), **scoperta modelli** (`/api/ai/models/probe`, `/api/ai/usable-models`) e **binding per-feature** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
+- Endpoint Web sotto `/api/ai/*` (build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). Ogni endpoint feature accetta un opzionale `?modelId=<credential>` per eseguire quella chiamata su un modello scelto. Plus **scoperta modelli** (`/api/ai/models/probe`, `/api/ai/usable-models`) e **binding per-feature** (`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
 - Tool MCP (`AiTools`) per client AI — vedere [mcp.md](mcp.md). La selezione provider è trasparente ai client MCP.
-- **Nav group AI** — una Blazor **page per feature**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), **AI Tasks** (`/ai/tasks`), più Portfolio Agent, Alerts, MCP Keys. Le pagine condividono `AiFeaturePageBase` + `AiOutputPanel`; ciascuna mostra `AiFeatureNotice` quando nessun provider è configurato.
+- **Nav group AI** — una Blazor **page per feature**: Build cBot (`/ai/build`), Review (`/ai/review`), Debate (`/ai/debate`), Market Sentiment (`/ai/sentiment`), Exposure Check (`/ai/exposure`), Portfolio Digest (`/ai/digest`), Tune Advisor (`/ai/tune`), Optimize (`/ai/optimize`), più Portfolio Agent, Alerts, MCP Keys. Le pagine condividono `AiFeaturePageBase` + `AiOutputPanel` + un `AiModelSelect`; ciascuna mostra `AiFeatureNotice` quando nessun provider è configurato.
 - **Settings → AI** (`/settings/ai`, solo owner) — lista provider con dialog **Add / edit provider** (kind, base URL con hint per-kind incluso preset Ollama/LM Studio localhost, modello, key opzionale, toggle capacità, "set active") e pulsante **Test connection**.
 
 ## Configurazione

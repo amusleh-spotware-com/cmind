@@ -86,8 +86,9 @@ cMind发送一个**真实的本地LLM，通过
   私有OpenAI兼容，例如Ollama/LM Studio/vLLM）。
 - `AllowedAiProviderKinds`（默认empty=all）——仅列出部署许可的类型（例如
   `["Anthropic","OpenAiCompatible"]`）以锁定用户可以添加哪些提供商。
-- `AllowAiTasks`（默认`true`）——设置`false`以移除**后台AI任务**功能（`/ai/tasks`页面和任务API返回404；运行程序停止认领）；同步AI功能仍然工作。
-- `AllowAiModelManagement`（默认`true`）——设置`false`以隐藏**模型浏览**和**按功能模型绑定**。两者都是所有者可调的运行时间，来自**Settings → Deployment**（在`IOptionsMonitor`上实时叠加）并编目在`WhiteLabelCatalog`中。
+- `AllowAiModelManagement`（默认`true`）——设置`false`以隐藏**模型浏览**、**按页面模型
+  选择器**和**按功能模型绑定**。所有这些都是所有者可调的运行时间，来自**Settings →
+  Deployment**（在`IOptionsMonitor`上实时叠加）并编目在`WhiteLabelCatalog`中。
 
 ## 扩展：未来的内置模型
 
@@ -101,8 +102,8 @@ in-proc等）是本地化的改变：添加`AiProviderKind`、实现一个`IAiPr
 ## 能力
 
 - **构建cBot**——纯英文提示→可运行的cBot通过**生成→构建→AI修复**自修复循环（`build-strategy`），在`/ai/build`。**生成的源代码在构建完成时显示**（带有复制按钮），与构建日志一起——成功*和*失败时——所以您总是看到AI写了什么，而不仅仅是错误。
-- **后台AI任务**——启动一个长期运行的AI工作（例如构建一个cBot），选择您的模型，然后离开页面并返回查看结果。选择几个模型进行比较——每个作为自己的任务运行（`/ai/tasks`）。网络主机工作程序在自修复租约上认领任务（如果节点死亡则回收），并将进度流式传输到每任务活动日志中。
-- **浏览并选择模型，按功能**——浏览提供商终点宣传的模型（LM Studio/Ollama/vLLM/llama.cpp上的`GET /v1/models`或内置目录），而不是手动输入ID，**将每个AI功能绑定到不同的模型**，所以几个模型同时为不同的功能服务（未绑定的功能回退到范围的活跃提供商）。
+- **按页面模型选择**——每个AI功能页面和对话框都显示一个**模型选择器**，列出您可能使用的模型（您自己的提供商+部署默认值）。它预选功能保存的绑定（如果已设置），否则**默认**模型，您选择的模型适用于那一个操作（作为`?modelId=`发送并由`RoutingAiClient`对该调用强制执行）。当部署禁用模型管理时隐藏。
+- **浏览并选择模型，按功能**——浏览提供商终点宣传的模型（LM Studio/Ollama/vLLM/llama.cpp上的`GET /v1/models`或内置目录），而不是手动输入ID，并**将每个AI功能绑定到不同的模型**，所以几个模型同时为不同的功能服务（未绑定的功能回退到范围的默认提供商）。
 - **参数优化**——闭环：AI提出参数集，每个持久化+在节点间进行回测（`optimize-run`/`optimize-params`）。
 - **自主投资组合代理**——命令驱动的提议和完整的决策日志（`AgentMandate`→`AgentProposal`）。
 - **行为风险警卫**——`AiRiskGuard`后台服务评估运行的机器人，可以在关键风险时**自动停止**（可选）。
@@ -112,10 +113,10 @@ in-proc等）是本地化的改变：添加`AiProviderKind`、实现一个`IAiPr
 
 ## 表面
 
-- Web终点在`/api/ai/*`下（构建策略、生成项目、审查、分析回测、优化参数、优化运行、事后分析、情绪、视觉、精选等），加上**后台任务**（`/api/ai/tasks`创建/列表/详情/取消/删除）、**模型发现**（`/api/ai/models/probe`、`/api/ai/usable-models`）和**按功能绑定**（`/api/ai/feature-bindings`、`/api/ai/my-feature-bindings`）。
-- MCP工具（`AiTools`）适用于AI客户端——请参阅[mcp.md](mcp.md)。对于MCP客户端，提供商选择是透明的。
-- **AI**导航组——每个功能一个Blazor**页面**：构建cBot（`/ai/build`）、审查（`/ai/review`）、辩论（`/ai/debate`）、市场情绪（`/ai/sentiment`）、敞口检查（`/ai/exposure`）、投资组合摘要（`/ai/digest`）、调优顾问（`/ai/tune`）、优化（`/ai/optimize`）、**AI任务**（`/ai/tasks`），加上投资组合代理、警报、MCP密钥。页面共享`AiFeaturePageBase`+`AiOutputPanel`；当没有配置提供商时每个都显示`AiFeatureNotice`。
-- **Settings → AI**（`/settings/ai`，仅所有者）——提供商列表和**添加/编辑提供商对话框**（类型、基本URL与按类型提示包括Ollama/LM Studio本地主机预设、模型、可选密钥、能力切换、"设置活跃"）和**测试连接**按钮。
+- Web终点在`/api/ai/*`下（构建策略、生成项目、审查、分析回测、优化参数、优化运行、事后分析、情绪、视觉、精选等）。每个功能终点接受可选的`?modelId=<credential>`以在选定的模型上运行该一个调用。加上**模型发现**（`/api/ai/models/probe`、`/api/ai/usable-models`）和**按功能绑定**（`/api/ai/feature-bindings`、`/api/ai/my-feature-bindings`）。
+- MCP工具（`AiTools`）适用于AI客户端——请参阅[mcp.md](mcp.md)。提供商选择对MCP客户端是透明的。
+- **AI**导航组——每个功能一个Blazor**页面**：构建cBot（`/ai/build`）、审查（`/ai/review`）、辩论（`/ai/debate`）、市场情绪（`/ai/sentiment`）、敞口检查（`/ai/exposure`）、投资组合摘要（`/ai/digest`）、调优顾问（`/ai/tune`）、优化（`/ai/optimize`），加上投资组合代理、警报、MCP密钥。页面共享`AiFeaturePageBase`+`AiOutputPanel`+一个`AiModelSelect`；当没有配置提供商时每个都显示`AiFeatureNotice`。
+- **Settings → AI**（`/settings/ai`，仅所有者）——提供商列表和**添加/编辑提供商对话框**（类型、基本URL与按类型提示包括Ollama/LM Studio本地主机预设、模型、可选密钥、能力切换、"设置为默认值"）和**测试连接**按钮。
 
 ## 配置
 

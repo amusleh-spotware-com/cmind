@@ -83,12 +83,6 @@ public static partial class LogMessages
     [LoggerMessage(EventId = 1134, Level = LogLevel.Error, Message = "Currency-strength refresh cycle failed")]
     public static partial void CurrencyStrengthRefreshCycleFailed(this ILogger logger, Exception ex);
 
-    [LoggerMessage(EventId = 1140, Level = LogLevel.Error, Message = "AI task runner cycle failed")]
-    public static partial void AiTaskRunnerFailed(this ILogger logger, Exception ex);
-
-    [LoggerMessage(EventId = 1141, Level = LogLevel.Information, Message = "AI task {TaskId} finished with status {Status}")]
-    public static partial void AiTaskFinished(this ILogger logger, Guid taskId, string status);
-
     [LoggerMessage(EventId = 1017, Level = LogLevel.Error, Message = "Portfolio agent cycle failed")]
     public static partial void AgentCycleFailed(this ILogger logger, Exception ex);
 

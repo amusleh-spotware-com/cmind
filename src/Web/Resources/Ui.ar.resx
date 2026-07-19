@@ -369,4 +369,6 @@
   <data name="copyDetail.editDestination" xml:space="preserve"><value>تعديل الوجهة</value></data>
   <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>تم تحديث الوجهة</value></data>
   <data name="nav.ai.tasks" xml:space="preserve"><value>المهام</value></data>
+  <data name="ai.model" xml:space="preserve"><value>نموذج</value></data>
+  <data name="ai.model.default" xml:space="preserve"><value>افتراضي</value></data>
 </root>

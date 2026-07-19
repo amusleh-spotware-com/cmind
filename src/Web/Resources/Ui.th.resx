@@ -369,4 +369,6 @@
   <data name="copyDetail.editDestination" xml:space="preserve"><value>แก้ไขปลายทาง</value></data>
   <data name="copyDetail.destinationUpdated" xml:space="preserve"><value>ปลายทางได้รับการอัปเดต</value></data>
   <data name="nav.ai.tasks" xml:space="preserve"><value>งาน</value></data>
+  <data name="ai.model" xml:space="preserve"><value>โมเดล</value></data>
+  <data name="ai.model.default" xml:space="preserve"><value>ค่าเริ่มต้น</value></data>
 </root>

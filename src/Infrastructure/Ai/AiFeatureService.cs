@@ -50,7 +50,7 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
     public Task<AiResult> AnalyzeBacktestAsync(string cBotName, string reportJson, CancellationToken ct) =>
         Complete(AiFeature.AnalyzeBacktest, new AiTextRequest(
             AiPrompts.AnalyzeBacktestSystem,
-            $"cBot: {cBotName}\n\nBacktest report JSON:\n{Clip(reportJson)}"), ct);
+            $"cBot: {cBotName}\n\nBacktest report JSON:\n{ClipReport(reportJson)}"), ct);
 
     public Task<AiResult> ProposeParamSetsAsync(string cBotName, string currentParamsJson, string? backtestReportJson, CancellationToken ct)
     {
@@ -184,6 +184,13 @@ public sealed class AiFeatureService(IAiClient client) : IAiFeatureService
 
     private static string Clip(string value) =>
         string.IsNullOrEmpty(value) || value.Length <= MaxInputChars ? value ?? string.Empty : value[..MaxInputChars];
+
+    // A backtest report's summary metrics lead the JSON, so a bounded head keeps the analysable signal while
+    // staying small enough for a local model's context window (the built-in ONNX model's 4096-token window)
+    // rather than overflowing on a full report.
+    private const int MaxReportChars = 3500;
+    private static string ClipReport(string reportJson) =>
+        string.IsNullOrEmpty(reportJson) || reportJson.Length <= MaxReportChars ? reportJson : reportJson[..MaxReportChars];
 }
 
 internal static class AiPrompts

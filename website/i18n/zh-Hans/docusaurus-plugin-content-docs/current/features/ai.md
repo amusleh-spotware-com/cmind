@@ -104,7 +104,7 @@ in-proc等）是本地化的改变：添加`AiProviderKind`、实现一个`IAiPr
 
 ## 能力
 
-- **构建cBot**——纯英文提示→可运行的cBot通过**生成→构建→AI修复**自修复循环（`build-strategy`），在`/ai/build`。**生成的源代码在构建完成时显示**（带有复制按钮），与构建日志一起（也可复制）——在成功*和*失败时。**即使是失败的构建也会保存到您的cBots**（带有实际的唯一名称），并提供一个*在编辑器中打开*链接以便您可以修复编译错误并重新构建，而不是丢失工作。
+- **构建cBot**——在`/ai/build`进行基于项目的工作坊：**创建新cBot**（唯一的名称+语言）或**改进现有的**有源代码的，然后在`/ai/build/{projectId}`上与模型进行**对话**来编写和完善其代码。**每个提示和模型回复都带有时间戳进行持久化**并能在导航/重新加载后保持；模型的源代码在每一回合都应用到项目。从同一页面**构建**和**运行** cBot（或在完整编辑器中打开它）。每个项目在列表中显示其**最后更改时间**和查看/删除控制。
 - **按页面模型选择**——每个AI功能页面和对话框都显示一个**模型选择器**，列出您可能使用的模型（您自己的提供商+部署默认值）。它预选功能保存的绑定（如果已设置），否则**默认**模型，您选择的模型适用于那一个操作（作为`?modelId=`发送并由`RoutingAiClient`对该调用强制执行）。当部署禁用模型管理时隐藏。
 - **浏览并选择模型，按功能**——浏览提供商终点宣传的模型（LM Studio/Ollama/vLLM/llama.cpp上的`GET /v1/models`或内置目录），而不是手动输入ID，并**将每个AI功能绑定到不同的模型**，所以几个模型同时为不同的功能服务（未绑定的功能回退到范围的默认提供商）。
 - **参数优化**——闭环：AI提出参数集，每个持久化+在节点间进行回测（`optimize-run`/`optimize-params`）。
@@ -116,7 +116,7 @@ in-proc等）是本地化的改变：添加`AiProviderKind`、实现一个`IAiPr
 
 ## 表面
 
-- Web终点在`/api/ai/*`下（构建策略、生成项目、审查、分析回测、优化参数、优化运行、事后分析、情绪、视觉、精选等）。每个功能终点接受可选的`?modelId=<credential>`以在选定的模型上运行该一个调用。加上**模型发现**（`/api/ai/models/probe`、`/api/ai/usable-models`）和**按功能绑定**（`/api/ai/feature-bindings`、`/api/ai/my-feature-bindings`）。
+- Web终点在`/api/ai/*`下（AI Build聊天`build/{id}/prompt`+`build/{id}/messages`、生成项目、审查、分析回测、优化参数、优化运行、事后分析、情绪、视觉、精选等）。每个功能终点接受可选的`?modelId=<credential>`以在选定的模型上运行该一个调用。加上**模型发现**（`/api/ai/models/probe`、`/api/ai/usable-models`）和**按功能绑定**（`/api/ai/feature-bindings`、`/api/ai/my-feature-bindings`）。cBot项目、构建和运行重复使用构建器终点（`/api/builder/projects…`）。
 - MCP工具（`AiTools`）适用于AI客户端——请参阅[mcp.md](mcp.md)。提供商选择对MCP客户端是透明的。
 - **AI**导航组——每个功能一个Blazor**页面**：构建cBot（`/ai/build`）、审查（`/ai/review`）、辩论（`/ai/debate`）、市场情绪（`/ai/sentiment`）、敞口检查（`/ai/exposure`）、投资组合摘要（`/ai/digest`）、调优顾问（`/ai/tune`）、优化（`/ai/optimize`），加上投资组合代理、警报、MCP密钥。页面共享`AiFeaturePageBase`+`AiOutputPanel`+一个`AiModelSelect`；当没有配置提供商时每个都显示`AiFeatureNotice`。
 - **Settings → AI**（`/settings/ai`，仅所有者）——提供商列表和**添加/编辑提供商对话框**（类型、带有按类型提示和单击**预设**（Kimi/Moonshot、Ollama、LM Studio）的基本URL，模型、可选密钥、能力切换、"设置为默认值"）和**测试连接**按钮。

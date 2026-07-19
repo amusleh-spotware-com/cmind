@@ -72,7 +72,7 @@ AI 레이어는 **어댑터 기반이며 확장 가능**합니다. 각 공급자
 
 ## 기능
 
-- **cBot 빌드** — 일반 영어 프롬프트 → **생성 → 빌드 → AI 수정** 자체 복구 루프를 통해 실행 가능한 cBot(`build-strategy`), `/ai/build`에서. **생성된 소스 코드는 빌드 완료 시에 표시**됩니다(복사 버튼 포함), 빌드 로그(도 복사 가능)와 함께 — 성공 시와 실패 시 모두. **실패한 빌드도 cBots에 저장**됩니다(실제 고유 이름 포함) 컴파일 오류를 수정하고 다시 빌드할 수 있도록 "편집기에서 열기" 링크를 제공합니다.
+- **cBot 빌드** — `/ai/build`에서 **새로운 cBot 생성**(고유한 이름 + 언어) 또는 **소스가 있는 기존 cBot 개선**, 그 후 `/ai/build/{projectId}`의 모델과 **채팅**하여 코드를 작성하고 개선합니다. **모든 프롬프트와 모델 회신은 타임스탬프와 함께 지속되며** 탐색/새로 고침을 견디어냅니다; 모델의 소스는 매 턴마다 프로젝트에 적용됩니다. 동일한 페이지에서 cBot을 **빌드**하고 **실행**합니다(또는 전체 편집기에서 열기). 각 프로젝트는 목록에 **마지막 변경 시간** 및 보기/삭제 컨트롤과 함께 표시됩니다.
 - **페이지별 모델 선택** — 모든 AI 기능 페이지 및 대화상자에는 사용할 수 있는 모델(자신의 공급자 + 배포 기본값)을 나열하는 **모델 선택기**가 표시됩니다. 설정된 경우 기능의 저장된 바인딩을 미리 선택하고, 그렇지 않으면 **기본** 모델을 선택하며, 선택한 모델은 해당 작업 하나에 적용됩니다(`?modelId=`로 전송되고 `RoutingAiClient`에 의해 해당 호출에 강제됨). 배포에서 모델 관리를 비활성화하면 숨겨집니다.
 - **모델 탐색 및 기능별 선택** — 공급자 엔드포인트가 광고하는 모델 탐색(`GET /v1/models` on LM Studio / Ollama / vLLM / llama.cpp 또는 기본 제공 카탈로그) 대신 손으로 ID를 입력하고, **각 AI 기능을 다른 모델에 바인딩**하여 여러 모델이 동시에 다른 기능을 제공합니다(바인딩되지 않은 기능은 범위의 기본 공급자로 폴백).
 - **파라미터 최적화** — 폐쇄 루프: AI가 파라미터 세트 제안, 각각 지속됨 + 노드에서 백테스트(`optimize-run` / `optimize-params`).
@@ -84,7 +84,7 @@ AI 레이어는 **어댑터 기반이며 확장 가능**합니다. 각 공급자
 
 ## 노출
 
-- `/api/ai/*` 아래의 Web 엔드포인트(build-strategy, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). 모든 기능 엔드포인트는 선택적 `?modelId=<credential>`을 수용하여 선택한 모델에서 해당 하나의 호출을 실행합니다. 또한 **모델 검색**(`/api/ai/models/probe`, `/api/ai/usable-models`) 및 **기능별 바인딩**(`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`).
+- `/api/ai/*` 아래의 Web 엔드포인트(AI 빌드 채팅 `build/{id}/prompt` + `build/{id}/messages`, generate-project, review, analyze-backtest, optimize-params, optimize-run, post-mortem, sentiment, vision, curate, …). 모든 기능 엔드포인트는 선택적 `?modelId=<credential>`을 수용하여 선택한 모델에서 해당 하나의 호출을 실행합니다. 또한 **모델 검색**(`/api/ai/models/probe`, `/api/ai/usable-models`) 및 **기능별 바인딩**(`/api/ai/feature-bindings`, `/api/ai/my-feature-bindings`). cBot 프로젝트, 빌드 및 실행은 빌더 엔드포인트(`/api/builder/projects…`)를 재사용합니다.
 - MCP 도구(`AiTools`) for AI 클라이언트 — [mcp.md](mcp.md) 참조. 공급자 선택은 MCP 클라이언트에 투명합니다.
 - **AI** 내비게이션 그룹 — 기능당 하나의 Blazor **페이지**: Build cBot(`/ai/build`), Review(`/ai/review`), Debate(`/ai/debate`), Market Sentiment(`/ai/sentiment`), Exposure Check(`/ai/exposure`), Portfolio Digest(`/ai/digest`), Tune Advisor(`/ai/tune`), Optimize(`/ai/optimize`), Portfolio Agent, Alerts, MCP Keys 포함. 페이지는 `AiFeaturePageBase` + `AiOutputPanel` + `AiModelSelect`를 공유합니다; 공급자가 구성되지 않으면 각 페이지에 `AiFeatureNotice` 표시합니다.
 - **Settings → AI** (`/settings/ai`, 소유자 전용) — 공급자 목록과 **공급자 추가/편집 대화상자**(종류, 종류별 힌트 포함 기본 URL, Kimi/Moonshot, Ollama 및 LM Studio를 포함한 일회성 **사전 설정**, 모델, 선택적 키, 기능 토글, "기본값 설정") 및 **연결 테스트** 버튼.

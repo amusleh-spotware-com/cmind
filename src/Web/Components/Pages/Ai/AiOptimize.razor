@@ -41,8 +41,12 @@
         <MudItem xs="6" sm="6">
             <MudTextField @bind-Value="_symbol" Label="Symbol" />
         </MudItem>
-        <MudItem xs="6" sm="6">
+        <MudItem xs="6" sm="3">
             <MudTextField @bind-Value="_timeframe" Label="Timeframe" />
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudNumericField @bind-Value="_count" Label="Parameter sets" Min="1" Max="5" Step="1"
+                             HelperText="How many to propose &amp; backtest" data-testid="opt-count" />
         </MudItem>
         <MudItem xs="12" sm="6">
             <AiModelSelect Feature="AiFeature.ProposeParamSetSuite" @bind-Selected="SelectedModelId" />
@@ -60,6 +64,7 @@
     private dynamic[] _cbots = [], _accounts = [];
     private Guid? _cbotId, _acctId;
     private string _symbol = "EURUSD", _timeframe = "h1";
+    private int _count = 3;
     private bool _loaded;
 
     protected override async Task OnInitializedAsync()
@@ -77,6 +82,6 @@
             return Task.CompletedTask;
         }
         return PostJsonAsync($"/api/ai/optimize-run/{_cbotId}",
-            new { TradingAccountId = _acctId, Symbol = _symbol, Timeframe = _timeframe });
+            new { TradingAccountId = _acctId, Symbol = _symbol, Timeframe = _timeframe, Count = _count });
     }
 }

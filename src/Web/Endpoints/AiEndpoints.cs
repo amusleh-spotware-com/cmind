@@ -313,7 +313,7 @@ public static class AiEndpoints
                 return Results.Ok(new AiResult(false, string.Empty, "no instances to analyze yet"));
 
             var portfolio = instances
-                .Select(i => new AiInstanceContext(i.CBot.Name, i.KindName, i.StatusName, i.Symbol, i.Timeframe, DetailOf(i)))
+                .Select(i => new AiInstanceContext(i.CBot.Name, i.KindName, i.StatusName, i.Symbol, i.Timeframe, DigestDetailOf(i)))
                 .ToList();
             return Results.Ok(await ai.PortfolioDigestAsync(portfolio, AiConstants.DigestMaxTokens, ct));
         });
@@ -336,8 +336,11 @@ public static class AiEndpoints
 
             var current = await db.ParamSets.Where(p => p.CBotId == cid && p.UserId == uid)
                 .OrderByDescending(p => p.CreatedAt).Select(p => p.JsonContent).FirstOrDefaultAsync(ct) ?? "{}";
-            var previous = reports.Count > 1 ? reports[1] : null;
-            return Results.Ok(await ai.AssessStrategyDecayAsync(name, previous, reports[0], current, AiConstants.TuneAdviceMaxTokens, ct));
+            // Head-clip each report: the summary metrics (net profit, trades, drawdown, ratios) sit at the top
+            // of the backtest report JSON, so a bounded head keeps the decay signal while two full reports
+            // would overflow a small local model's context window (the same overflow that broke the digest).
+            var previous = reports.Count > 1 ? ClipReport(reports[1]) : null;
+            return Results.Ok(await ai.AssessStrategyDecayAsync(name, previous, ClipReport(reports[0]), current, AiConstants.TuneAdviceMaxTokens, ct));
         });
 
         g.MapPost("/post-mortem/{id:guid}", async (
@@ -450,9 +453,15 @@ public static class AiEndpoints
             var suite = await ai.ProposeParamSetSuiteAsync(cbot.Name, current, count, ct);
             if (!suite.Success) return Results.Ok(new { success = false, error = suite.Error });
 
-            var proposals = ParseParamSuite(suite.Text, count);
+            var proposals = Web.Ai.ParamSuiteParser.Parse(suite.Text, count);
             if (proposals.Count == 0)
-                return Results.Ok(new { success = false, error = "AI returned no usable parameter sets", raw = ClipLog(suite.Text) });
+                return Results.Ok(new
+                {
+                    success = false,
+                    error = "The AI did not return usable parameter sets in the required JSON format. Small local " +
+                            "models often can't; pick a larger/cloud model from the Model selector above and retry.",
+                    raw = ClipLog(suite.Text)
+                });
 
             var imageTag = string.IsNullOrWhiteSpace(req.DockerImageTag) ? "latest" : req.DockerImageTag!;
             var symbol = string.IsNullOrWhiteSpace(req.Symbol) ? "EURUSD" : req.Symbol!;
@@ -561,51 +570,6 @@ public static class AiEndpoints
         return end < 0 ? trimmed[(start + 1)..].Trim() : trimmed[(start + 1)..end].Trim();
     }
 
-    private static List<(string Name, string Json)> ParseParamSuite(string text, int max)
-    {
-        var results = new List<(string, string)>();
-        foreach (var candidate in new[] { StripFences(text), BracketSlice(text) })
-        {
-            if (string.IsNullOrWhiteSpace(candidate)) continue;
-            try
-            {
-                using var doc = JsonDocument.Parse(candidate);
-                if (doc.RootElement.ValueKind != JsonValueKind.Array) continue;
-                var index = 0;
-                foreach (var element in doc.RootElement.EnumerateArray())
-                {
-                    if (index >= max) break;
-                    var name = element.TryGetProperty("name", out var n) && n.ValueKind == JsonValueKind.String
-                        ? n.GetString()!
-                        : $"AI-opt {index + 1}";
-                    var paramsElement = element.TryGetProperty("parameters", out var p) ? p : element;
-                    results.Add((name, paramsElement.GetRawText()));
-                    index++;
-                }
-                if (results.Count > 0) return results;
-            }
-            catch (JsonException) { /* try next candidate */ }
-        }
-        return results;
-    }
-
-    private static string StripFences(string value)
-    {
-        var s = value.Trim();
-        if (!s.StartsWith("```", StringComparison.Ordinal)) return s;
-        var nl = s.IndexOf('\n');
-        if (nl >= 0) s = s[(nl + 1)..];
-        if (s.EndsWith("```", StringComparison.Ordinal)) s = s[..^3];
-        return s.Trim();
-    }
-
-    private static string BracketSlice(string value)
-    {
-        var open = value.IndexOf('[');
-        var close = value.LastIndexOf(']');
-        return open >= 0 && close > open ? value[open..(close + 1)] : string.Empty;
-    }
-
     private static string? DetailOf(Instance instance) => instance switch
     {
         FailedRunInstance f => $"Failure: {f.FailureReason}",
@@ -613,6 +577,24 @@ public static class AiEndpoints
         CompletedBacktestInstance c => c.ReportJson is null ? null : $"Report JSON:\n{c.ReportJson}",
         _ => null
     };
+
+    // A concise per-bot detail for the portfolio digest. Deliberately omits the full backtest report JSON:
+    // the digest reasons across up to DigestMaxInstances bots at once, and stuffing each one's whole report
+    // in overflows a small local model's context window (the built-in ONNX model's 4096-token window).
+    private static string? DigestDetailOf(Instance instance) => instance switch
+    {
+        FailedRunInstance f => $"Failure: {Truncate(f.FailureReason, 160)}",
+        FailedBacktestInstance f => $"Failure: {Truncate(f.FailureReason, 160)}",
+        _ => null
+    };
+
+    private static string Truncate(string value, int max) =>
+        string.IsNullOrEmpty(value) || value.Length <= max ? value : value[..max];
+
+    // A backtest report's summary metrics lead the JSON; a bounded head keeps them small enough that two
+    // reports (tune advisor) fit a small local model's context window.
+    private const int MaxReportChars = 3500;
+    private static string ClipReport(string reportJson) => Truncate(reportJson, MaxReportChars);
 }
 
 public sealed record UpsertProviderRequest(

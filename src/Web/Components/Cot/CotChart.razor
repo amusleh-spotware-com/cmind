@@ -46,7 +46,8 @@
                     Zoomin = true,
                     Zoomout = true,
                     Pan = false,
-                    Reset = true
+                    // ApexCharts' default reset tool renders a "home" glyph; swap in a proper refresh icon.
+                    Reset = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M17.65 6.35A7.958 7.958 0 0 0 12 4a8 8 0 1 0 7.74 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z\"/></svg>"
                 }
             },
             Zoom = new Zoom { Enabled = true, Type = AxisType.X },

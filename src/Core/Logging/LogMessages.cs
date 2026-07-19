@@ -83,6 +83,9 @@ public static partial class LogMessages
     [LoggerMessage(EventId = 1134, Level = LogLevel.Error, Message = "Currency-strength refresh cycle failed")]
     public static partial void CurrencyStrengthRefreshCycleFailed(this ILogger logger, Exception ex);
 
+    [LoggerMessage(EventId = 1140, Level = LogLevel.Error, Message = "AI Build prompt generation failed for project {ProjectId}")]
+    public static partial void AiBuildPromptFailed(this ILogger logger, Guid projectId, Exception ex);
+
     [LoggerMessage(EventId = 1017, Level = LogLevel.Error, Message = "Portfolio agent cycle failed")]
     public static partial void AgentCycleFailed(this ILogger logger, Exception ex);
 

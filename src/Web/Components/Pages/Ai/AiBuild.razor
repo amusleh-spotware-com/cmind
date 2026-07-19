@@ -2,6 +2,7 @@
 @using Web.Json
 @using Web.Time
 @using Web.Components.Dialogs
+@implements IDisposable
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
@@ -40,7 +41,8 @@ else
             <MudTh>Name</MudTh>
             <MudTh Style="width:64px;text-align:center;">Lang</MudTh>
             <MudTh>Last change</MudTh>
-            <MudTh Style="width:120px;" />
+            <MudTh Style="width:96px;">Status</MudTh>
+            <MudTh Style="width:104px;" />
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Name"><MudLink Href="@($"/ai/build/{context.Id}")">@context.Name</MudLink></MudTd>
@@ -51,29 +53,53 @@ else
                 }
             </MudTd>
             <MudTd DataLabel="Last change">@FormatTs(context.LastChange)</MudTd>
+            <MudTd DataLabel="Status">
+                @if (context.Working)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Icon="@Icons.Material.Filled.HourglassTop"
+                             data-testid="ai-build-working">Working</MudChip>
+                }
+                else
+                {
+                    <span class="mud-text-secondary">Idle</span>
+                }
+            </MudTd>
             <MudTd>
-                <MudTooltip Text="Open project">
-                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Color="Color.Primary"
-                                   OnClick="@(() => Nav.NavigateTo($"/ai/build/{context.Id}"))" data-testid="ai-build-view" />
-                </MudTooltip>
-                <MudTooltip Text="Delete">
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
-                                   OnClick="@(() => Delete(context))" data-testid="ai-build-delete" />
-                </MudTooltip>
+                <div class="d-flex" style="gap:2px;">
+                    <MudTooltip Text="Open project">
+                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Color="Color.Primary"
+                                       OnClick="@(() => Nav.NavigateTo($"/ai/build/{context.Id}"))" data-testid="ai-build-view" />
+                    </MudTooltip>
+                    <MudTooltip Text="Delete">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                       OnClick="@(() => Delete(context))" data-testid="ai-build-delete" />
+                    </MudTooltip>
+                </div>
             </MudTd>
         </RowTemplate>
     </MudTable>
 }
 
 @code {
+    private ProjectDto[] _projects = [];
+    private HashSet<Guid> _working = [];
     private Row[] _rows = [];
     private bool _loading = true;
     private TimeZoneInfo _zone = TimeZoneInfo.Utc;
+    private Timer? _poll;
 
     protected override async Task OnInitializedAsync()
     {
         _zone = await UserZone.GetZoneAsync();
         await Load();
+        await RefreshActivity();
+        // Poll so a project that finishes generating (or one another tab started) updates its status live.
+        _poll = new Timer(async _ => await InvokeAsync(async () =>
+        {
+            await Load();
+            await RefreshActivity();
+            StateHasChanged();
+        }), null, 3000, 3000);
     }
 
     private async Task Load()
@@ -81,25 +107,35 @@ else
         _loading = true;
         try
         {
-            var arr = await Http.GetDynamicArrayAsync("/api/builder/projects");
-            _rows = arr.Select(p => new Row(
-                    (Guid)p.id,
-                    (string)p.name,
-                    (string?)p.language,
-                    LastChangeOf(p)))
-                .OrderByDescending(r => r.LastChange ?? DateTimeOffset.MinValue)
-                .ToArray();
+            _projects = await Http.GetFromJsonAsync<ProjectDto[]>("/api/builder/projects") ?? [];
         }
-        catch { _rows = []; }
-        finally { _loading = false; }
+        catch { _projects = []; }
+        finally { _loading = false; Rebuild(); }
     }
 
-    private static DateTimeOffset? LastChangeOf(dynamic p)
+    private async Task RefreshActivity()
     {
-        if (p.updatedAt is not null) return (DateTimeOffset?)p.updatedAt;
-        if (p.createdAt is not null) return (DateTimeOffset?)p.createdAt;
-        return null;
+        try
+        {
+            var res = await Http.GetFromJsonAsync<ActivityDto>("/api/ai/build/activity");
+            _working = res?.Working?.ToHashSet() ?? [];
+        }
+        catch { /* leave last known */ }
+        Rebuild();
     }
+
+    private void Rebuild() =>
+        _rows = _projects
+            .Select(p => new Row(p.Id, p.Name, p.Language,
+                NonMin(p.UpdatedAt) ?? NonMin(p.LastBuildAt) ?? NonMin(p.CreatedAt), _working.Contains(p.Id)))
+            .OrderByDescending(r => r.Working)
+            .ThenByDescending(r => r.LastChange ?? DateTimeOffset.MinValue)
+            .ToArray();
+
+    // The DB default (0001-01-01) is not a real timestamp — treat it as unknown.
+    private static DateTimeOffset? NonMin(DateTimeOffset? value) => value is { } d && d != default ? d : null;
+
+    public void Dispose() => _poll?.Dispose();
 
     private async Task StartNew()
     {
@@ -148,5 +184,9 @@ else
     private string FormatTs(DateTimeOffset? v) =>
         v is null ? "—" : v.Value.ToUserString(_zone, "yyyy-MM-dd HH:mm");
 
-    private sealed record Row(Guid Id, string Name, string? Language, DateTimeOffset? LastChange);
+    private sealed record Row(Guid Id, string Name, string? Language, DateTimeOffset? LastChange, bool Working);
+    private sealed record ProjectDto(
+        Guid Id, string Name, string? Language, DateTimeOffset? LastBuildAt, bool? LastBuildSucceeded,
+        DateTimeOffset? CreatedAt, DateTimeOffset? UpdatedAt);
+    private sealed record ActivityDto(Guid[]? Working);
 }

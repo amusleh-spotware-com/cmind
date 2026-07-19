@@ -140,12 +140,37 @@ public static class DependencyInjection
         services.AddScoped<CBotBuilder>();
         services.TryAddScoped<ICurrentUser, Infrastructure.Ai.NullCurrentUser>();
         services.AddScoped<IAiCallContext, AiCallContext>();
+        services.AddSingleton<IAiBuildActivity, AiBuildActivity>();
         services.AddScoped<IAiProviderStore, AiProviderStore>();
         services.AddAiHttpClient();
         services.AddScoped<IAiClient, RoutingAiClient>();
         services.AddScoped<IAiFeatureService, AiFeatureService>();
         services.AddCalendarInfrastructure(backgroundServices);
         services.AddCurrencyStrengthInfrastructure();
+        services.AddCotInfrastructure(backgroundServices);
+        return services;
+    }
+
+    /// <summary>
+    /// Registers the Commitment of Traders module: the read side (<see cref="Core.Cot.ICotReports"/>), the
+    /// append-only write service, the health store, the CFTC Socrata source behind a resilient rate-limited
+    /// typed client, and the (config-gated) weekly ingestion worker. Data is keyless (public CFTC datasets).
+    /// </summary>
+    public static IServiceCollection AddCotInfrastructure(
+        this IServiceCollection services, bool backgroundServices = true)
+    {
+        services.TryAddSingleton<Infrastructure.Cot.CotRateGate>();
+        services.AddTransient<Infrastructure.Cot.CotRateLimitHandler>();
+        services.AddScoped<Infrastructure.Cot.CotWriteService>();
+        services.AddScoped<Infrastructure.Cot.CotHealthStore>();
+        services.AddScoped<Core.Cot.ICotReports, Infrastructure.Cot.CotReader>();
+        services.AddHttpClient<Core.Cot.ICotSource, Infrastructure.Cot.CftcSocrataSource>((sp, client) =>
+        {
+            var cot = sp.GetRequiredService<IOptionsMonitor<AppOptions>>().CurrentValue.Cot;
+            var baseUrl = cot.SocrataBaseUrl.EndsWith('/') ? cot.SocrataBaseUrl : cot.SocrataBaseUrl + "/";
+            client.BaseAddress = new Uri(baseUrl);
+        }).AddHttpMessageHandler<Infrastructure.Cot.CotRateLimitHandler>();
+        if (backgroundServices) services.AddHostedService<Infrastructure.Cot.CotIngestionService>();
         return services;
     }
 

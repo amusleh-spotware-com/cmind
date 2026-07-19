@@ -43,7 +43,7 @@ public class AiBuildProjectHttpTests(PostgresFixture fixture) : IClassFixture<Po
     }
 
     [Fact]
-    public async Task Prompt_persists_the_user_turn_and_the_model_reply_in_order()
+    public async Task Prompt_persists_the_user_turn_and_the_background_reply_in_order()
     {
         await using var app = CreateApp();
         var client = await LoginAsync(app);
@@ -55,17 +55,28 @@ public class AiBuildProjectHttpTests(PostgresFixture fixture) : IClassFixture<Po
         var before = await (await client.GetAsync($"/api/ai/build/{id}/messages")).Content.ReadFromJsonAsync<JsonElement>();
         before.GetArrayLength().Should().Be(0);
 
+        // The prompt is accepted immediately and generation runs detached from the request.
         var prompt = await client.PostAsJsonAsync($"/api/ai/build/{id}/prompt", new { Prompt = "RSI mean reversion on EURUSD" });
-        prompt.StatusCode.Should().Be(HttpStatusCode.OK);
-        (await prompt.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("success").GetBoolean().Should().BeTrue();
+        prompt.StatusCode.Should().Be(HttpStatusCode.Accepted);
 
-        var after = await (await client.GetAsync($"/api/ai/build/{id}/messages")).Content.ReadFromJsonAsync<JsonElement>();
-        var messages = after.EnumerateArray().ToList();
+        // Poll until both turns are persisted (the background task finishes shortly).
+        List<JsonElement> messages = [];
+        for (var attempt = 0; attempt < 40 && messages.Count < 2; attempt++)
+        {
+            await Task.Delay(250);
+            var list = await (await client.GetAsync($"/api/ai/build/{id}/messages")).Content.ReadFromJsonAsync<JsonElement>();
+            messages = list.EnumerateArray().ToList();
+        }
+
         messages.Should().HaveCount(2);
         messages[0].GetProperty("role").GetString().Should().Be("User");
         messages[0].GetProperty("content").GetString().Should().Be("RSI mean reversion on EURUSD");
         messages[1].GetProperty("role").GetString().Should().Be("Assistant");
         messages[1].GetProperty("content").GetString().Should().Contain("Robot");
+
+        // Activity clears once the reply lands.
+        var status = await (await client.GetAsync($"/api/ai/build/{id}/status")).Content.ReadFromJsonAsync<JsonElement>();
+        status.GetProperty("working").GetBoolean().Should().BeFalse();
     }
 
     [Fact]

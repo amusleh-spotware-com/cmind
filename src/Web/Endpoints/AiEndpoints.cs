@@ -3,6 +3,7 @@ using System.Text.Json;
 using Core;
 using Core.Ai;
 using Core.Constants;
+using Core.Logging;
 using Core.Options;
 using Infrastructure.Ai;
 using Infrastructure.Builder;
@@ -12,6 +13,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Web.Endpoints;
@@ -421,55 +423,45 @@ public static class AiEndpoints
             return Results.Ok(messages);
         });
 
-        g.MapPost("/build/{projectId:guid}/prompt", async (
-            Guid projectId, BuildPromptRequest req, DataContext db, ICurrentUser u, IAiFeatureService ai,
-            ISecretProtector protector, TimeProvider clock, CancellationToken ct) =>
+        // Which of the caller's projects are generating a reply right now (in-memory, node-local). The list
+        // page intersects this with its own projects to show a "Working" status per row.
+        g.MapGet("/build/activity", (IAiBuildActivity activity) =>
+            Results.Ok(new { working = activity.WorkingProjectIds() }));
+
+        g.MapGet("/build/{projectId:guid}/status", async (
+            Guid projectId, DataContext db, ICurrentUser u, IAiBuildActivity activity, CancellationToken ct) =>
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
-            if (!ai.Enabled) return Results.Ok(new { success = false, error = AiConstants.DisabledMessage });
+            var pid = CBotSourceProjectId.From(projectId);
+            if (!await db.CBotSourceProjects.AnyAsync(p => p.Id == pid && p.UserId == uid, ct)) return Results.NotFound();
+            return Results.Ok(new { working = activity.IsWorking(pid) });
+        });
+
+        g.MapPost("/build/{projectId:guid}/prompt", async (
+            Guid projectId, BuildPromptRequest req, DataContext db, ICurrentUser u, IAiClient aiClient,
+            IAiCallContext callContext, IServiceScopeFactory scopeFactory, IAiBuildActivity activity,
+            TimeProvider clock, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            if (!aiClient.Enabled) return Results.Ok(new { accepted = false, error = AiConstants.DisabledMessage });
             if (string.IsNullOrWhiteSpace(req.Prompt)) return Results.BadRequest("enter a prompt");
 
             var pid = CBotSourceProjectId.From(projectId);
-            var project = await db.CBotSourceProjects.FirstOrDefaultAsync(p => p.Id == pid && p.UserId == uid, ct);
-            if (project is null) return Results.NotFound();
+            if (!await db.CBotSourceProjects.AnyAsync(p => p.Id == pid && p.UserId == uid, ct)) return Results.NotFound();
 
-            // Persist the user's turn first, so it survives even if the AI call fails.
+            // Persist the user's turn, then run the generation DETACHED from this request so it keeps going if
+            // the user navigates away (the request's CancellationToken no longer aborts it). The chosen model
+            // (the scoped ?modelId= override) is captured and passed explicitly — the background scope has no
+            // request-scoped IAiCallContext. Mark the project working so the UI shows a live status.
             db.CBotBuildMessages.Add(Core.Domain.CBotBuildMessage.Create(
                 pid, uid, Core.Domain.CBotBuildRole.User, req.Prompt!, clock.GetUtcNow()));
             await db.SaveChangesAsync(ct);
 
-            var files = DecryptFiles(project, protector);
-            var codeKey = files.Keys.FirstOrDefault(k => k.EndsWith(project.FileExtension, StringComparison.Ordinal));
-            var currentCode = codeKey is not null ? files[codeKey] : string.Empty;
-            var description = string.IsNullOrWhiteSpace(currentCode)
-                ? req.Prompt!
-                : $"Current cBot source:\n{Truncate(currentCode, 8000)}\n\nApply this change and return the COMPLETE updated source:\n{req.Prompt}";
+            var credentialId = callContext.OverrideCredentialId;
+            activity.MarkWorking(pid);
+            _ = Task.Run(() => RunPromptAsync(scopeFactory, activity, pid, uid, req.Prompt!, credentialId));
 
-            var gen = await ai.GenerateCBotAsync(project.LanguageName, description, ct);
-            if (!gen.Success)
-            {
-                var failed = Core.Domain.CBotBuildMessage.Create(
-                    pid, uid, Core.Domain.CBotBuildRole.Assistant, gen.Error ?? "AI request failed", clock.GetUtcNow());
-                db.CBotBuildMessages.Add(failed);
-                await db.SaveChangesAsync(ct);
-                return Results.Ok(new { success = false, error = gen.Error, reply = failed.Content, createdAt = failed.CreatedAt });
-            }
-
-            // Apply the model's source to the project (its own aggregate + SaveChanges) so a subsequent Build
-            // compiles the new code and the project's last-change time reflects this turn.
-            if (codeKey is not null)
-            {
-                files[codeKey] = ExtractCode(gen.Text);
-                project.SetFiles(protector.Protect(
-                    Encoding.UTF8.GetBytes(JsonSerializer.Serialize(files)), EncryptionPurposes.CbotSource));
-                await db.SaveChangesAsync(ct);
-            }
-
-            var reply = Core.Domain.CBotBuildMessage.Create(
-                pid, uid, Core.Domain.CBotBuildRole.Assistant, gen.Text, clock.GetUtcNow());
-            db.CBotBuildMessages.Add(reply);
-            await db.SaveChangesAsync(ct);
-            return Results.Ok(new { success = true, reply = reply.Content, createdAt = reply.CreatedAt });
+            return Results.Accepted($"/api/ai/build/{projectId}/messages", new { accepted = true });
         });
 
         // Feature B: closed optimization loop — AI proposes parameter sets, we backtest each across nodes.
@@ -600,6 +592,68 @@ public static class AiEndpoints
             if (!set.Contains(candidate)) return candidate;
         }
         return $"{desired} {Guid.NewGuid():N}";
+    }
+
+    // Runs one AI Build turn detached from the HTTP request: generate/refine the source with the chosen
+    // model, apply it to the project, and persist the model's reply — always clearing the working flag.
+    private static async Task RunPromptAsync(
+        IServiceScopeFactory scopeFactory, IAiBuildActivity activity,
+        CBotSourceProjectId pid, UserId uid, string prompt, Core.AiProviderCredentialId? credentialId)
+    {
+        using var scope = scopeFactory.CreateScope();
+        var services = scope.ServiceProvider;
+        var db = services.GetRequiredService<DataContext>();
+        var ai = services.GetRequiredService<IAiFeatureService>();
+        var protector = services.GetRequiredService<ISecretProtector>();
+        var clock = services.GetRequiredService<TimeProvider>();
+        try
+        {
+            var project = await db.CBotSourceProjects.FirstOrDefaultAsync(p => p.Id == pid && p.UserId == uid);
+            if (project is null) return;
+
+            var files = DecryptFiles(project, protector);
+            var codeKey = files.Keys.FirstOrDefault(k => k.EndsWith(project.FileExtension, StringComparison.Ordinal));
+            var currentCode = codeKey is not null ? files[codeKey] : string.Empty;
+            var description = string.IsNullOrWhiteSpace(currentCode)
+                ? prompt
+                : $"Current cBot source:\n{Truncate(currentCode, 8000)}\n\nApply this change and return the COMPLETE updated source:\n{prompt}";
+
+            var gen = await ai.GenerateCBotAsync(project.LanguageName, description, credentialId, CancellationToken.None);
+            if (!gen.Success)
+            {
+                db.CBotBuildMessages.Add(Core.Domain.CBotBuildMessage.Create(
+                    pid, uid, Core.Domain.CBotBuildRole.Assistant, gen.Error ?? "AI request failed", clock.GetUtcNow()));
+                await db.SaveChangesAsync();
+                return;
+            }
+
+            if (codeKey is not null)
+            {
+                files[codeKey] = ExtractCode(gen.Text);
+                project.SetFiles(protector.Protect(
+                    Encoding.UTF8.GetBytes(JsonSerializer.Serialize(files)), EncryptionPurposes.CbotSource));
+                await db.SaveChangesAsync();
+            }
+
+            db.CBotBuildMessages.Add(Core.Domain.CBotBuildMessage.Create(
+                pid, uid, Core.Domain.CBotBuildRole.Assistant, gen.Text, clock.GetUtcNow()));
+            await db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            services.GetRequiredService<ILogger<AiBuildActivity>>().AiBuildPromptFailed(pid.Value, ex);
+            try
+            {
+                db.CBotBuildMessages.Add(Core.Domain.CBotBuildMessage.Create(
+                    pid, uid, Core.Domain.CBotBuildRole.Assistant, "Generation failed — please try again.", clock.GetUtcNow()));
+                await db.SaveChangesAsync();
+            }
+            catch { /* best-effort error turn */ }
+        }
+        finally
+        {
+            activity.Clear(pid);
+        }
     }
 
     private static Dictionary<string, string> DecryptFiles(CBotSourceProject project, ISecretProtector protector)

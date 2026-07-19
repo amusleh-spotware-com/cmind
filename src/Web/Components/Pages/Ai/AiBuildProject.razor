@@ -1,6 +1,7 @@
 ﻿@page "/ai/build/{ProjectId:guid}"
 @using Web.Json
 @using Web.Time
+@implements IDisposable
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
 @inject HttpClient Http
 @inject ISnackbar Snack
@@ -73,10 +74,17 @@ else
         <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2" Class="mt-2">
             <AiModelSelect Feature="AiFeature.GenerateCBot" @bind-Selected="_modelId" Class="flex-grow-1" />
             <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Send"
-                       OnClick="Send" Disabled="@(_busy || !_aiEnabled || string.IsNullOrWhiteSpace(_prompt))"
+                       OnClick="Send" Disabled="@(_busy || _working || !_aiEnabled || string.IsNullOrWhiteSpace(_prompt))"
                        data-testid="ai-build-send">Send</MudButton>
         </MudStack>
-        @if (_busy)
+        @if (_working)
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2" data-testid="ai-build-project-working">
+                <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Info" />
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">The model is working — this continues even if you leave the page.</MudText>
+            </MudStack>
+        }
+        else if (_busy)
         {
             <MudProgressLinear Indeterminate="true" Class="mt-2" />
         }
@@ -101,10 +109,12 @@ else
     private bool _notFound;
     private bool _aiEnabled;
     private bool _busy;
+    private bool _working;
     private string _prompt = "";
     private string? _buildLog;
     private Guid? _modelId;
     private TimeZoneInfo _zone = TimeZoneInfo.Utc;
+    private Timer? _poll;
 
     private void OnAiStatus(bool enabled)
     {
@@ -118,6 +128,29 @@ else
         if (Guid.TryParse(Model, out var m) && m != Guid.Empty) _modelId = m;
         await LoadProject();
         await LoadMessages();
+        await LoadStatus();
+        // Poll while the model is generating so the reply appears when it lands — even for a generation the
+        // user started, navigated away from, and came back to (it ran in the background on the server).
+        _poll = new Timer(async _ => await InvokeAsync(PollTickAsync), null, 2000, 2000);
+    }
+
+    private async Task LoadStatus()
+    {
+        try
+        {
+            var status = await Http.GetFromJsonAsync<StatusDto>($"/api/ai/build/{ProjectId}/status");
+            _working = status?.working ?? false;
+        }
+        catch { /* leave last known */ }
+    }
+
+    private async Task PollTickAsync()
+    {
+        if (!_working) return;
+        await LoadStatus();
+        await LoadMessages();
+        await LoadProject();
+        StateHasChanged();
     }
 
     private async Task LoadProject()
@@ -144,27 +177,21 @@ else
 
     private async Task Send()
     {
-        if (string.IsNullOrWhiteSpace(_prompt)) return;
-        _busy = true;
+        if (string.IsNullOrWhiteSpace(_prompt) || _working) return;
         var url = _modelId is { } id ? $"/api/ai/build/{ProjectId}/prompt?modelId={id}" : $"/api/ai/build/{ProjectId}/prompt";
+        var prompt = _prompt;
         try
         {
-            var response = await Http.PostAsJsonAsync(url, new { Prompt = _prompt });
-            var result = await response.Content.ReadFromJsonAsync<PromptResult>();
-            if (result is { success: true })
-            {
-                _prompt = "";
-                await LoadMessages();
-                await LoadProject();
-            }
-            else
-            {
-                Snack.Add(result?.error ?? "AI request failed", Severity.Error);
-                await LoadMessages();
-            }
+            // The endpoint persists the user turn and runs the generation in the background, returning at
+            // once — so we don't await the model here; we clear the box, show the user's turn, mark working,
+            // and let the poll surface the reply.
+            var response = await Http.PostAsJsonAsync(url, new { Prompt = prompt });
+            if (!response.IsSuccessStatusCode) { Snack.Add("Request failed", Severity.Error); return; }
+            _prompt = "";
+            _working = true;
+            await LoadMessages();
         }
-        catch { Snack.Add("AI request failed", Severity.Error); }
-        finally { _busy = false; }
+        catch { Snack.Add("Request failed", Severity.Error); }
     }
 
     private async Task Build()
@@ -209,9 +236,11 @@ else
 
     private string FormatTs(DateTimeOffset v) => v.ToUserString(_zone, "yyyy-MM-dd HH:mm");
 
+    public void Dispose() => _poll?.Dispose();
+
     private sealed record ProjectDto(Guid Id, string Name, string Language, DateTimeOffset? LastBuildAt, bool? LastBuildSucceeded, string? LastBuildLog, Guid? CBotId);
     private sealed record MessageDto(string Role, string Content, DateTimeOffset CreatedAt);
-    private sealed record PromptResult(bool success, string? reply, string? error, DateTimeOffset? createdAt);
+    private sealed record StatusDto(bool working);
     private sealed record BuildResult(bool success, string? log);
     private sealed record QuickRunResult(bool success, string? output, Guid? instanceId);
 }

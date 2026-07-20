@@ -1,4 +1,3 @@
-using System;
 using Microsoft.Playwright;
 using Xunit;
 
@@ -30,6 +29,36 @@ public sealed class AgentStudioTests(AppFixture app)
         await page.ClickUntilVisibleAsync("[data-testid=agent-create-submit]", row);
 
         await Assertions.Expect(row).ToBeVisibleAsync(Slow);
+    }
+
+    [Fact]
+    public async Task Create_is_disabled_when_the_name_duplicates_an_existing_agent()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var (accountNumber, _) = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
+        await page.GotoAsync("/agent-studio");
+        await page.WaitForAppReadyAsync();
+
+        var name = "Dup " + Guid.NewGuid().ToString("N")[..6];
+
+        // Create the first agent with this name.
+        var nameField = page.GetByLabel("Agent name");
+        await page.ClickUntilVisibleAsync("[data-testid=agent-new]", nameField);
+        await nameField.FillAsync(name);
+        await AgentTestHelpers.SelectManagedAccountAsync(page, accountNumber);
+        var row = page.Locator("[data-testid=agents-table]").GetByText(name).First;
+        await page.ClickUntilVisibleAsync("[data-testid=agent-create-submit]", row);
+        await Assertions.Expect(row).ToBeVisibleAsync(Slow);
+
+        // Reopen the dialog: the same name is now taken, so Create stays disabled even with an account picked.
+        await page.ClickUntilVisibleAsync("[data-testid=agent-new]", nameField);
+        await nameField.FillAsync(name);
+        await AgentTestHelpers.SelectManagedAccountAsync(page, accountNumber);
+        await Assertions.Expect(page.Locator("[data-testid=agent-create-submit]")).ToBeDisabledAsync(new() { Timeout = 15000 });
+
+        // A unique name enables it again.
+        await nameField.FillAsync(name + " v2");
+        await Assertions.Expect(page.Locator("[data-testid=agent-create-submit]")).ToBeEnabledAsync(new() { Timeout = 15000 });
     }
 
     [Fact]

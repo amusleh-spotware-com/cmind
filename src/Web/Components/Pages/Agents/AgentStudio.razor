@@ -112,7 +112,11 @@ else
 
     private async Task CreateAgent()
     {
-        var parameters = new DialogParameters<AgentCreateDialog> { { x => x.Accounts, (IReadOnlyList<AgentCreateDialog.AgentAccountOption>)_accounts } };
+        var parameters = new DialogParameters<AgentCreateDialog>
+        {
+            { x => x.Accounts, (IReadOnlyList<AgentCreateDialog.AgentAccountOption>)_accounts },
+            { x => x.ExistingNames, (IReadOnlyList<string>)_agents.Select(a => a.name).ToList() }
+        };
         var dialog = await Dialogs.ShowAsync<AgentCreateDialog>("New agent", parameters);
         var result = await dialog.Result;
         if (result is { Canceled: false, Data: AgentCreateDialog.AgentCreateResult r })

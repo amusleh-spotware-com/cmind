@@ -409,6 +409,43 @@ public static class AiEndpoints
         // AI Build project chat: the persisted conversation (prompts + model replies with timestamps) for a
         // cBot source project. The user iterates on one project over time; source edits from a prompt update
         // the project (via the builder), and the project is built/run through the builder endpoints.
+        // The AI Build project list: ONLY the user's projects that have an AI Build conversation (i.e. a
+        // session was started — a new cBot from scratch or an existing one picked to improve), not their
+        // whole cBot library. A project joins this list the moment its session starts (a seed turn exists).
+        g.MapGet("/build/projects", async (DataContext db, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var withConversation = db.CBotBuildMessages.Where(m => m.UserId == uid).Select(m => m.ProjectId).Distinct();
+            var projects = await db.CBotSourceProjects.AsNoTracking()
+                .Where(p => p.UserId == uid && withConversation.Contains(p.Id))
+                .Select(p => new
+                {
+                    p.Id, p.Name, Language = p.LanguageName, p.LastBuildAt, p.LastBuildSucceeded, p.CreatedAt, p.UpdatedAt
+                })
+                .ToListAsync(ct);
+            return Results.Ok(projects);
+        });
+
+        // Start an AI Build session on a project (new-from-scratch or improve-existing). Idempotently seeds
+        // the conversation with an opening turn so the project shows up in the AI Build list right away — even
+        // before the user's first prompt — without listing every cBot the user owns.
+        g.MapPost("/build/{projectId:guid}/start", async (
+            Guid projectId, DataContext db, ICurrentUser u, TimeProvider clock, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var pid = CBotSourceProjectId.From(projectId);
+            if (!await db.CBotSourceProjects.AnyAsync(p => p.Id == pid && p.UserId == uid, ct)) return Results.NotFound();
+            if (!await db.CBotBuildMessages.AnyAsync(m => m.ProjectId == pid && m.UserId == uid, ct))
+            {
+                db.CBotBuildMessages.Add(Core.Domain.CBotBuildMessage.Create(
+                    pid, uid, Core.Domain.CBotBuildRole.Assistant,
+                    "Describe the cBot you want, or a change to make, and I'll write and update the source. "
+                    + "Build and Run it from the buttons above.", clock.GetUtcNow()));
+                await db.SaveChangesAsync(ct);
+            }
+            return Results.Ok(new { ok = true });
+        });
+
         g.MapGet("/build/{projectId:guid}/messages", async (
             Guid projectId, DataContext db, ICurrentUser u, CancellationToken ct) =>
         {

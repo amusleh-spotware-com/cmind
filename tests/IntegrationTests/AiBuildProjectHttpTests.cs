@@ -80,6 +80,34 @@ public class AiBuildProjectHttpTests(PostgresFixture fixture) : IClassFixture<Po
     }
 
     [Fact]
+    public async Task Build_projects_lists_only_projects_with_a_started_session()
+    {
+        await using var app = CreateApp();
+        var client = await LoginAsync(app);
+
+        // A freshly created cBot project is NOT in the AI Build list until a session is started on it.
+        var create = await client.PostAsJsonAsync("/api/builder/projects", new { Name = "Solo", Language = 0 });
+        var id = (await create.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+
+        var before = await (await client.GetAsync("/api/ai/build/projects")).Content.ReadFromJsonAsync<JsonElement>();
+        before.EnumerateArray().Select(p => p.GetProperty("id").GetGuid()).Should().NotContain(id);
+
+        // Starting a session seeds one opening turn and makes the project appear.
+        (await client.PostAsync($"/api/ai/build/{id}/start", null)).StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var after = await (await client.GetAsync("/api/ai/build/projects")).Content.ReadFromJsonAsync<JsonElement>();
+        after.EnumerateArray().Select(p => p.GetProperty("id").GetGuid()).Should().Contain(id);
+
+        var seeded = await (await client.GetAsync($"/api/ai/build/{id}/messages")).Content.ReadFromJsonAsync<JsonElement>();
+        seeded.GetArrayLength().Should().Be(1);
+
+        // Start is idempotent — starting again does not add another seed turn.
+        (await client.PostAsync($"/api/ai/build/{id}/start", null)).StatusCode.Should().Be(HttpStatusCode.OK);
+        var again = await (await client.GetAsync($"/api/ai/build/{id}/messages")).Content.ReadFromJsonAsync<JsonElement>();
+        again.GetArrayLength().Should().Be(1);
+    }
+
+    [Fact]
     public async Task Messages_and_prompt_for_a_missing_project_are_not_found()
     {
         await using var app = CreateApp();

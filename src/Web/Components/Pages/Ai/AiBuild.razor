@@ -107,7 +107,7 @@ else
         _loading = true;
         try
         {
-            _projects = await Http.GetFromJsonAsync<ProjectDto[]>("/api/builder/projects") ?? [];
+            _projects = await Http.GetFromJsonAsync<ProjectDto[]>("/api/ai/build/projects") ?? [];
         }
         catch { _projects = []; }
         finally { _loading = false; Rebuild(); }
@@ -139,7 +139,10 @@ else
 
     private async Task StartNew()
     {
-        var options = _rows.Select(r => new AiBuildStartDialog.ProjectOption(r.Id, r.Name)).ToList();
+        // The "improve existing" picker offers ALL the user's cBots with source (not only ones already in
+        // the AI Build list) so they can start a session on any of them.
+        var all = await Http.GetFromJsonAsync<ProjectDto[]>("/api/builder/projects") ?? [];
+        var options = all.Select(p => new AiBuildStartDialog.ProjectOption(p.Id, p.Name)).ToList();
         var parameters = new DialogParameters<AiBuildStartDialog>
         {
             { x => x.Projects, (IReadOnlyList<AiBuildStartDialog.ProjectOption>)options }
@@ -165,6 +168,9 @@ else
         {
             return;
         }
+
+        // Register the AI Build session so the project appears in the list (create-new or improve-existing).
+        try { await Http.PostAsync($"/api/ai/build/{projectId}/start", null); } catch { /* still open the page */ }
 
         var url = r.ModelId is { } model ? $"/ai/build/{projectId}?model={model}" : $"/ai/build/{projectId}";
         Nav.NavigateTo(url);

@@ -15,6 +15,7 @@ Dialogs/AgentCreateDialog.razor
 Dialogs/AgentDetailDialog.razor
 Dialogs/AgentEditDialog.razor
 Dialogs/AiBuildStartDialog.razor
+Dialogs/AiRunStartDialog.razor
 Dialogs/AiProviderDialog.razor
 Dialogs/BacktestDialog.razor
 Dialogs/CBotParamSetsDialog.razor
@@ -44,6 +45,10 @@ Pages/Agent.razor
 Pages/Agents/AgentStudio.razor
 Pages/Ai/AiBuild.razor
 Pages/Ai/AiBuildProject.razor
+Pages/Ai/AiReviewDetail.razor
+Pages/Ai/AiDebateDetail.razor
+Ai/AiRunListView.razor
+Ai/AiRunDetailView.razor
 Pages/Ai/AiCurrencyStrength.razor
 Pages/Ai/AiDebate.razor
 Pages/Ai/AiDigest.razor

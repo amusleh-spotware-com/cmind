@@ -496,9 +496,68 @@ public static class AiEndpoints
 
             var credentialId = callContext.OverrideCredentialId;
             activity.MarkWorking(pid);
-            _ = Task.Run(() => RunPromptAsync(scopeFactory, activity, pid, uid, req.Prompt!, credentialId));
+            _ = Task.Run(() => RunPromptAsync(scopeFactory, activity, pid, uid, req.Prompt!, credentialId), CancellationToken.None);
 
             return Results.Accepted($"/api/ai/build/{projectId}/messages", new { accepted = true });
+        });
+
+        // AI runs: single-shot Review / Debate jobs that persist as history, run DETACHED from the request
+        // (survive navigation), and expose a status the list/detail pages poll. Same background pattern as the
+        // AI Build chat, generalised for one input → one output features.
+        g.MapPost("/runs", async (
+            AiRunRequest req, DataContext db, ICurrentUser u, IAiClient aiClient, IAiCallContext callContext,
+            IServiceScopeFactory scopeFactory, TimeProvider clock, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            if (!aiClient.Enabled) return Results.Ok(new { accepted = false, error = AiConstants.DisabledMessage });
+            if (string.IsNullOrWhiteSpace(req.Source)) return Results.BadRequest("paste the cBot source first");
+            if (req.Feature is not (AiFeature.ReviewCBot or AiFeature.DebateStrategy))
+                return Results.BadRequest("unsupported run type");
+
+            var run = Core.Domain.AiRun.Create(
+                uid, req.Feature, req.Title ?? "", req.Language ?? "CSharp", req.Source!, clock.GetUtcNow());
+            db.AiRuns.Add(run);
+            await db.SaveChangesAsync(ct);
+
+            var credentialId = callContext.OverrideCredentialId;
+            _ = Task.Run(() => RunAiRunAsync(scopeFactory, run.Id, uid, credentialId), CancellationToken.None);
+            return Results.Accepted($"/api/ai/runs/{run.Id.Value}", new { id = run.Id.Value });
+        });
+
+        g.MapGet("/runs", async (AiFeature feature, DataContext db, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var runs = await db.AiRuns.AsNoTracking()
+                .Where(r => r.UserId == uid && r.Feature == feature)
+                .OrderByDescending(r => r.CreatedAt).Take(200)
+                .Select(r => new { id = r.Id.Value, title = r.Title, status = r.Status.ToString(), createdAt = r.CreatedAt })
+                .ToListAsync(ct);
+            return Results.Ok(runs);
+        });
+
+        g.MapGet("/runs/{id:guid}", async (Guid id, DataContext db, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var rid = AiRunId.From(id);
+            var r = await db.AiRuns.AsNoTracking().FirstOrDefaultAsync(x => x.Id == rid && x.UserId == uid, ct);
+            if (r is null) return Results.NotFound();
+            return Results.Ok(new
+            {
+                id = r.Id.Value, feature = r.Feature.ToString(), title = r.Title, language = r.Language,
+                source = r.Source, status = r.Status.ToString(), output = r.Output, error = r.Error,
+                createdAt = r.CreatedAt, finishedAt = r.FinishedAt
+            });
+        });
+
+        g.MapDelete("/runs/{id:guid}", async (Guid id, DataContext db, ICurrentUser u, CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            var rid = AiRunId.From(id);
+            var r = await db.AiRuns.FirstOrDefaultAsync(x => x.Id == rid && x.UserId == uid, ct);
+            if (r is null) return Results.NotFound();
+            db.AiRuns.Remove(r);
+            await db.SaveChangesAsync(ct);
+            return Results.NoContent();
         });
 
         // Feature B: closed optimization loop — AI proposes parameter sets, we backtest each across nodes.
@@ -693,6 +752,41 @@ public static class AiEndpoints
         }
     }
 
+    // Runs one single-shot AI run (Review / Debate) detached from the request: sets the chosen model on the
+    // background scope's call context, calls the matching feature, and stores the output/status.
+    private static async Task RunAiRunAsync(
+        IServiceScopeFactory scopeFactory, AiRunId runId, UserId uid, Core.AiProviderCredentialId? credentialId)
+    {
+        using var scope = scopeFactory.CreateScope();
+        var services = scope.ServiceProvider;
+        services.GetRequiredService<IAiCallContext>().OverrideCredentialId = credentialId;
+        var db = services.GetRequiredService<DataContext>();
+        var ai = services.GetRequiredService<IAiFeatureService>();
+        var clock = services.GetRequiredService<TimeProvider>();
+
+        var run = await db.AiRuns.FirstOrDefaultAsync(r => r.Id == runId && r.UserId == uid);
+        if (run is null) return;
+        try
+        {
+            var result = run.Feature switch
+            {
+                AiFeature.ReviewCBot => await ai.ReviewCBotAsync(run.Language, run.Source, CancellationToken.None),
+                AiFeature.DebateStrategy => await ai.DebateStrategyAsync(
+                    run.Title, run.Language, run.Source, AiConstants.DebateMaxTokens, CancellationToken.None),
+                _ => AiResult.Fail("unsupported run type")
+            };
+            if (result.Success) run.Complete(result.Text, clock.GetUtcNow());
+            else run.Fail(result.Error ?? "AI request failed", clock.GetUtcNow());
+            await db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            services.GetRequiredService<ILogger<AiBuildActivity>>().AiRunFailed(runId.Value, ex);
+            try { run.Fail("Run failed — please try again.", clock.GetUtcNow()); await db.SaveChangesAsync(); }
+            catch { /* best-effort */ }
+        }
+    }
+
     private static Dictionary<string, string> DecryptFiles(CBotSourceProject project, ISecretProtector protector)
     {
         if (project.EncryptedProjectFiles.Length == 0) return new Dictionary<string, string>();
@@ -754,6 +848,7 @@ public sealed record CurateRequest(string? Name, string? Language, string? Sourc
 public sealed record RecommendCopyProfileRequest(string? RiskProfile, string? SourceDescription);
 public sealed record GenerateProjectRequest(string? Name, string? Language, string? Description);
 public sealed record BuildPromptRequest(string? Prompt);
+public sealed record AiRunRequest(Core.Ai.AiFeature Feature, string? Title, string? Language, string? Source);
 public sealed record OptimizeRunRequest(
     Guid TradingAccountId, string? Symbol, string? Timeframe,
     string? DockerImageTag, string? BacktestSettingsJson, int? Count);

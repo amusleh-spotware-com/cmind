@@ -1,0 +1,157 @@
+@* Shared list surface for single-shot AI runs (Review, Debate): a history table with live status, a New
+   dialog that starts a background run, and per-row view/delete. Parameterised by AiFeature. *@
+@using Web.Json
+@using Web.Time
+@using Web.Components.Dialogs
+@implements IDisposable
+@inject HttpClient Http
+@inject IDialogService Dialogs
+@inject ISnackbar Snack
+@inject NavigationManager Nav
+@inject IUserTimeZone UserZone
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudText Typo="Typo.h5">@Heading</MudText>
+    <HelpTip Text="@HelpText" />
+    <MudSpacer />
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
+               OnClick="StartNew" data-testid="ai-run-new">@NewLabel</MudButton>
+</MudStack>
+
+<AiFeatureNotice EnabledChanged="OnAiStatus" PromptOnLoad="true" />
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (_rows.Length == 0)
+{
+    <MudPaper Class="pa-6" Style="text-align:center;" data-testid="ai-run-empty">
+        <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Large" Class="mb-2" />
+        <MudText Typo="Typo.body1" Class="mb-1">Nothing yet.</MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">@EmptyHint</MudText>
+    </MudPaper>
+}
+else
+{
+    <MudTable Items="_rows" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="1" data-testid="ai-run-list">
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh Style="width:110px;">Status</MudTh>
+            <MudTh>Created</MudTh>
+            <MudTh Style="width:104px;" />
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name"><MudLink Href="@($"{RoutePrefix}/{context.Id}")">@Display(context.Title)</MudLink></MudTd>
+            <MudTd DataLabel="Status">@StatusChip(context.Status)</MudTd>
+            <MudTd DataLabel="Created">@FormatTs(context.CreatedAt)</MudTd>
+            <MudTd>
+                <div class="d-flex" style="gap:2px;">
+                    <MudTooltip Text="View">
+                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Color="Color.Primary"
+                                       OnClick="@(() => Nav.NavigateTo($"{RoutePrefix}/{context.Id}"))" data-testid="ai-run-view" />
+                    </MudTooltip>
+                    <MudTooltip Text="Delete">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                       OnClick="@(() => Delete(context))" data-testid="ai-run-delete" />
+                    </MudTooltip>
+                </div>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    [Parameter] public AiFeature Feature { get; set; }
+    [Parameter] public string Heading { get; set; } = "";
+    [Parameter] public string HelpText { get; set; } = "";
+    [Parameter] public string NewLabel { get; set; } = "New";
+    [Parameter] public string RoutePrefix { get; set; } = "";
+    [Parameter] public string DialogTitle { get; set; } = "New run";
+    [Parameter] public string ConfirmLabel { get; set; } = "Run";
+    [Parameter] public string SourcePlaceholder { get; set; } = "Paste cBot source";
+    [Parameter] public string EmptyHint { get; set; } = "Start one to see it here.";
+
+    private RunRow[] _rows = [];
+    private bool _loading = true;
+    private TimeZoneInfo _zone = TimeZoneInfo.Utc;
+    private Timer? _poll;
+
+    private void OnAiStatus(bool enabled) => _ = enabled;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _zone = await UserZone.GetZoneAsync();
+        await Load();
+        // Poll so a running job flips to Completed/Failed live.
+        _poll = new Timer(async _ => await InvokeAsync(async () => { await Load(); StateHasChanged(); }), null, 3000, 3000);
+    }
+
+    private async Task Load()
+    {
+        _loading = true;
+        try { _rows = await Http.GetFromJsonAsync<RunRow[]>($"/api/ai/runs?feature={Feature}") ?? []; }
+        catch { _rows = []; }
+        finally { _loading = false; }
+    }
+
+    private async Task StartNew()
+    {
+        var parameters = new DialogParameters<AiRunStartDialog>
+        {
+            { x => x.DialogTitle, DialogTitle },
+            { x => x.Feature, Feature },
+            { x => x.ConfirmLabel, ConfirmLabel },
+            { x => x.SourcePlaceholder, SourcePlaceholder }
+        };
+        var dialog = await Dialogs.ShowAsync<AiRunStartDialog>(DialogTitle, parameters);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled || result.Data is not AiRunStartDialog.AiRunStartResult r) return;
+
+        var url = r.ModelId is { } model ? $"/api/ai/runs?modelId={model}" : "/api/ai/runs";
+        try
+        {
+            var response = await Http.PostAsJsonAsync(url,
+                new { Feature = (int)Feature, Title = r.Name, Language = "CSharp", Source = r.Source });
+            if (!response.IsSuccessStatusCode) { Snack.Add("Could not start", Severity.Error); return; }
+            var created = await response.Content.ReadFromJsonAsync<dynamic?>(JsonDefaults.DynamicWeb);
+            if (created is not null) Nav.NavigateTo($"{RoutePrefix}/{(Guid)created.id}");
+            else await Load();
+        }
+        catch { Snack.Add("Could not start", Severity.Error); }
+    }
+
+    private async Task Delete(RunRow row)
+    {
+        var ok = await Dialogs.ShowMessageBox("Delete", $"Delete '{Display(row.Title)}'? This cannot be undone.",
+            yesText: "Delete", cancelText: "Cancel");
+        if (ok != true) return;
+        var response = await Http.DeleteAsync($"/api/ai/runs/{row.Id}");
+        if (response.IsSuccessStatusCode) { Snack.Add("Deleted", Severity.Success); await Load(); }
+        else Snack.Add("Delete failed", Severity.Error);
+    }
+
+    private RenderFragment StatusChip(string status) => builder =>
+    {
+        var (color, icon, label) = status switch
+        {
+            "Completed" => (Color.Success, Icons.Material.Filled.CheckCircle, "Done"),
+            "Failed" => (Color.Error, Icons.Material.Filled.ErrorOutline, "Failed"),
+            _ => (Color.Info, Icons.Material.Filled.HourglassTop, "Working")
+        };
+        builder.OpenComponent<MudChip<string>>(0);
+        builder.AddAttribute(1, "Size", Size.Small);
+        builder.AddAttribute(2, "Color", color);
+        builder.AddAttribute(3, "Icon", icon);
+        builder.AddAttribute(4, "data-testid", status == "Running" ? "ai-run-working" : "ai-run-done");
+        builder.AddAttribute(5, "ChildContent", (RenderFragment)(c => c.AddContent(0, label)));
+        builder.CloseComponent();
+    };
+
+    private static string Display(string title) => string.IsNullOrWhiteSpace(title) ? "(untitled)" : title;
+    private string FormatTs(DateTimeOffset v) => v.ToUserString(_zone, "yyyy-MM-dd HH:mm");
+
+    public void Dispose() => _poll?.Dispose();
+
+    private sealed record RunRow(Guid Id, string Title, string Status, DateTimeOffset CreatedAt);
+}

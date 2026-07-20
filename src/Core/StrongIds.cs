@@ -274,6 +274,13 @@ public readonly record struct CBotBuildMessageId(Guid Value) : IStronglyTypedId<
     public override string ToString() => Value.ToString();
 }
 
+public readonly record struct AiRunId(Guid Value) : IStronglyTypedId<AiRunId>
+{
+    public static AiRunId New() => new(Guid.NewGuid());
+    public static AiRunId From(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct EconomicSeriesId(Guid Value) : IStronglyTypedId<EconomicSeriesId>
 {
     public static EconomicSeriesId New() => new(Guid.NewGuid());

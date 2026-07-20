@@ -35,6 +35,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
     public DbSet<AiProviderCredential> AiProviderCredentials => Set<AiProviderCredential>();
     public DbSet<Core.Domain.AiFeatureBinding> AiFeatureBindings => Set<Core.Domain.AiFeatureBinding>();
     public DbSet<Core.Domain.CBotBuildMessage> CBotBuildMessages => Set<Core.Domain.CBotBuildMessage>();
+    public DbSet<Core.Domain.AiRun> AiRuns => Set<Core.Domain.AiRun>();
     public DbSet<UserDashboard> UserDashboards => Set<UserDashboard>();
     public DbSet<AgentMandate> AgentMandates => Set<AgentMandate>();
     public DbSet<AgentProposal> AgentProposals => Set<AgentProposal>();
@@ -128,6 +129,7 @@ public class DataContext : DbContext, IDataProtectionKeyContext
         configurationBuilder.Properties<AiProviderCredentialId>().HaveConversion<StrongIdConverter<AiProviderCredentialId>>();
         configurationBuilder.Properties<AiFeatureBindingId>().HaveConversion<StrongIdConverter<AiFeatureBindingId>>();
         configurationBuilder.Properties<CBotBuildMessageId>().HaveConversion<StrongIdConverter<CBotBuildMessageId>>();
+        configurationBuilder.Properties<AiRunId>().HaveConversion<StrongIdConverter<AiRunId>>();
         configurationBuilder.Properties<CurrencyStrengthSnapshotId>().HaveConversion<StrongIdConverter<CurrencyStrengthSnapshotId>>();
         configurationBuilder.Properties<CotMarketId>().HaveConversion<StrongIdConverter<CotMarketId>>();
         configurationBuilder.Properties<CotReportId>().HaveConversion<StrongIdConverter<CotReportId>>();
@@ -313,6 +315,19 @@ public class DataContext : DbContext, IDataProtectionKeyContext
             e.Property(x => x.Role).HasConversion<string>().HasMaxLength(16);
             e.Property(x => x.Content).HasColumnType("text");
             e.HasOne<CBotSourceProject>().WithMany().HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Core.Domain.AiRun>(e =>
+        {
+            e.HasIndex(x => new { x.UserId, x.Feature, x.CreatedAt });
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.Feature).HasConversion<string>().HasMaxLength(32);
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
+            e.Property(x => x.Title).HasMaxLength(200);
+            e.Property(x => x.Language).HasMaxLength(32);
+            e.Property(x => x.Source).HasColumnType("text");
+            e.Property(x => x.Output).HasColumnType("text");
+            e.Property(x => x.Error).HasColumnType("text");
         });
 
         modelBuilder.Entity<UserDashboard>(e =>

@@ -34,35 +34,44 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
     public async Task Ai_is_enabled_no_not_configured_notice()
     {
         var page = await OpenAsync("/ai/review");
-        await Assertions.Expect(page.Locator("button:has-text('Review cBot')")).ToBeEnabledAsync(new() { Timeout = 20000 });
+        await Assertions.Expect(page.Locator("[data-testid=ai-run-new]")).ToBeEnabledAsync(new() { Timeout = 20000 });
         (await page.Locator("[data-testid=ai-not-configured]").IsVisibleAsync()).Should().BeFalse();
     }
 
-    [Fact]
-    public async Task Review_returns_ai_output()
+    // Start a Review/Debate run through the new list → dialog → background flow and wait for its result.
+    private async Task RunAiRunAsync(string route)
     {
-        var page = await OpenAsync("/ai/review");
-        await page.GetByLabel("cBot source").FillAsync("public class Bot { }");
-        var button = page.Locator("button:has-text('Review cBot')");
-        await Assertions.Expect(button).ToBeEnabledAsync(new() { Timeout = 20000 });
-        await button.ClickAsync();
-        await AssertOutputAsync(page);
+        var page = await OpenAsync(route);
+        await page.Locator("[data-testid=ai-run-new]").ClickAsync();
+        await Assertions.Expect(page.Locator("[data-testid=ai-run-source]")).ToBeVisibleAsync(new() { Timeout = 20000 });
+        await page.GetByTestId("ai-run-name").FillAsync("e2e");
+        await page.GetByTestId("ai-run-source").FillAsync("public class Bot { }");
+        var create = page.Locator("[data-testid=ai-run-start-create]");
+        await Assertions.Expect(create).ToBeEnabledAsync(new() { Timeout = 20000 });
+        await create.ClickAsync();
+
+        // Navigated to the detail page; the run finishes in the background and its output renders.
+        await Assertions.Expect(page.Locator("[data-testid=ai-run-title]")).ToBeVisibleAsync(new() { Timeout = 20000 });
+        var output = page.Locator("[data-testid=ai-run-output]");
+        await Assertions.Expect(output).ToBeVisibleAsync(new() { Timeout = 30000 });
+        if (app.UsingFakeLlm) (await output.InnerTextAsync()).Should().Contain(AiLocalFixture.CannedReply);
+        (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
     }
+
+    [Fact]
+    public Task Review_run_produces_output_in_the_background() => RunAiRunAsync("/ai/review");
 
     [Fact]
     public async Task Model_selector_renders_and_feature_runs_on_chosen_model()
     {
-        // Every AI feature page exposes a model selector (seeded fake provider is the default). It renders,
-        // and running the feature with a model selected still returns AI output through the chosen model.
-        var page = await OpenAsync("/ai/review");
-        // MudSelect exposes the testid on its (hidden) value input; a non-empty GUID value proves the
-        // selector rendered and pre-selected a usable model (the seeded fake provider, the default).
+        // A model selector renders and pre-selects a usable model (the seeded fake provider); running the
+        // feature with it still returns AI output. Sentiment keeps the inline selector.
+        var page = await OpenAsync("/ai/sentiment");
         var selector = page.Locator("[data-testid=ai-model-select]");
         await Assertions.Expect(selector).ToHaveValueAsync(
             new Regex("[0-9a-fA-F-]{36}"), new() { Timeout = 20000 });
 
-        await page.GetByLabel("cBot source").FillAsync("public class Bot { }");
-        var button = page.Locator("button:has-text('Review cBot')");
+        var button = page.Locator("button:has-text('Get sentiment')");
         await Assertions.Expect(button).ToBeEnabledAsync(new() { Timeout = 20000 });
         await button.ClickAsync();
         await AssertOutputAsync(page);
@@ -79,15 +88,7 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
     }
 
     [Fact]
-    public async Task Debate_returns_ai_output()
-    {
-        var page = await OpenAsync("/ai/debate");
-        await page.GetByLabel("cBot source").FillAsync("public class Bot { }");
-        var button = page.Locator("button:has-text('Run the debate')");
-        await Assertions.Expect(button).ToBeEnabledAsync(new() { Timeout = 20000 });
-        await button.ClickAsync();
-        await AssertOutputAsync(page);
-    }
+    public Task Debate_run_produces_output_in_the_background() => RunAiRunAsync("/ai/debate");
 
     [Fact]
     public async Task Sentiment_returns_ai_output_on_mobile()

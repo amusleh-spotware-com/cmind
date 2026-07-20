@@ -1,0 +1,10 @@
+@page "/ai/review/{Id:guid}"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+
+<PageTitle>AI · Review cBot</PageTitle>
+
+<AiRunDetailView RunId="Id" RoutePrefix="/ai/review" />
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+}

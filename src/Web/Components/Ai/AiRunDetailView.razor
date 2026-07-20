@@ -1,0 +1,115 @@
+@* Shared detail surface for a single AI run (Review / Debate): shows the input source and the model's
+   output, with a live status that polls while the run is still working. *@
+@using Web.Json
+@using Web.Time
+@implements IDisposable
+@inject HttpClient Http
+@inject ISnackbar Snack
+@inject NavigationManager Nav
+@inject IUserTimeZone UserZone
+
+@if (_notFound)
+{
+    <MudAlert Severity="Severity.Warning" data-testid="ai-run-missing">
+        This item was not found. <MudLink Href="@RoutePrefix">Back to the list</MudLink>.
+    </MudAlert>
+}
+else if (_run is null)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3" Wrap="Wrap.Wrap" Spacing="2">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Href="@RoutePrefix" aria-label="Back" />
+        <MudText Typo="Typo.h5" data-testid="ai-run-title">@(string.IsNullOrWhiteSpace(_run.Title) ? "(untitled)" : _run.Title)</MudText>
+        @switch (_run.Status)
+        {
+            case "Completed":
+                <MudChip T="string" Size="Size.Small" Color="Color.Success" Icon="@Icons.Material.Filled.CheckCircle">Done</MudChip>
+                break;
+            case "Failed":
+                <MudChip T="string" Size="Size.Small" Color="Color.Error" Icon="@Icons.Material.Filled.ErrorOutline">Failed</MudChip>
+                break;
+            default:
+                <MudChip T="string" Size="Size.Small" Color="Color.Info" Icon="@Icons.Material.Filled.HourglassTop" data-testid="ai-run-detail-working">Working</MudChip>
+                break;
+        }
+        <MudSpacer />
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">@FormatTs(_run.CreatedAt)</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                       OnClick="Delete" aria-label="Delete" data-testid="ai-run-detail-delete" />
+    </MudStack>
+
+    @if (_run.Status == "Running")
+    {
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3" data-testid="ai-run-detail-progress">
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Info" />
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">The model is working — this continues even if you leave the page.</MudText>
+        </MudStack>
+    }
+
+    @if (_run.Status == "Failed" && !string.IsNullOrWhiteSpace(_run.Error))
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">@_run.Error</MudAlert>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_run.Output))
+    {
+        <MudPaper Class="pa-4 mb-3" Elevation="1" data-testid="ai-run-output">
+            <MudText Typo="Typo.subtitle2" Class="mb-2">Result</MudText>
+            <pre style="white-space:pre-wrap; margin:0; font-size:0.9rem;">@_run.Output</pre>
+        </MudPaper>
+    }
+
+    <MudExpansionPanels Elevation="1">
+        <MudExpansionPanel Text="Input source" data-testid="ai-run-input">
+            <pre style="white-space:pre; margin:0; max-height:360px; overflow:auto; font-size:0.8rem;">@_run.Source</pre>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+}
+
+@code {
+    [Parameter] public Guid RunId { get; set; }
+    [Parameter] public string RoutePrefix { get; set; } = "";
+
+    private RunDto? _run;
+    private bool _notFound;
+    private TimeZoneInfo _zone = TimeZoneInfo.Utc;
+    private Timer? _poll;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _zone = await UserZone.GetZoneAsync();
+        await Load();
+        _poll = new Timer(async _ => await InvokeAsync(async () =>
+        {
+            if (_run is { Status: "Running" }) { await Load(); StateHasChanged(); }
+        }), null, 2000, 2000);
+    }
+
+    private async Task Load()
+    {
+        try
+        {
+            var response = await Http.GetAsync($"/api/ai/runs/{RunId}");
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound) { _notFound = true; return; }
+            _run = await response.Content.ReadFromJsonAsync<RunDto>();
+        }
+        catch { /* leave last known */ }
+    }
+
+    private async Task Delete()
+    {
+        var response = await Http.DeleteAsync($"/api/ai/runs/{RunId}");
+        if (response.IsSuccessStatusCode) Nav.NavigateTo(RoutePrefix);
+        else Snack.Add("Delete failed", Severity.Error);
+    }
+
+    private string FormatTs(DateTimeOffset v) => v.ToUserString(_zone, "yyyy-MM-dd HH:mm");
+
+    public void Dispose() => _poll?.Dispose();
+
+    private sealed record RunDto(Guid Id, string Feature, string Title, string Language, string Source,
+        string Status, string? Output, string? Error, DateTimeOffset CreatedAt, DateTimeOffset? FinishedAt);
+}

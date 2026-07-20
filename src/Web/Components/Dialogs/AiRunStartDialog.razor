@@ -1,0 +1,42 @@
+@* Start a Review or Debate run: paste the cBot source, name it, pick a model. Returns AiRunStartResult. *@
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@DialogTitle</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_name" Label="Name" Immediate="true" Class="mb-2"
+                      Placeholder="e.g. EURUSD scalper" data-testid="ai-run-name" />
+        <MudTextField @bind-Value="_source" Label="cBot source" Lines="10" Immediate="true"
+                      Placeholder="@SourcePlaceholder" data-testid="ai-run-source" />
+        <AiModelSelect Feature="Feature" @bind-Selected="_modelId" Class="mt-2" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" data-testid="ai-run-start-cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit"
+                   Disabled="@(string.IsNullOrWhiteSpace(_source))" data-testid="ai-run-start-create">@ConfirmLabel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public string DialogTitle { get; set; } = "New run";
+    [Parameter] public AiFeature Feature { get; set; }
+    [Parameter] public string ConfirmLabel { get; set; } = "Run";
+    [Parameter] public string SourcePlaceholder { get; set; } = "Paste cBot source";
+
+    private string _name = "";
+    private string _source = "";
+    private Guid? _modelId;
+
+    private void Submit()
+    {
+        if (string.IsNullOrWhiteSpace(_source)) return;
+        Dialog.Close(DialogResult.Ok(new AiRunStartResult(_name.Trim(), _source, _modelId)));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    public sealed record AiRunStartResult(string Name, string Source, Guid? ModelId);
+}

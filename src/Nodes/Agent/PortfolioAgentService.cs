@@ -1,7 +1,6 @@
 using Core;
 using Core.Agent;
 using Core.Ai;
-using Core.Constants;
 using Core.Logging;
 using Core.Options;
 using Infrastructure.Persistence;
@@ -42,64 +41,22 @@ public sealed class PortfolioAgentService(
         if (!ai.Enabled) return;
 
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var executor = scope.ServiceProvider.GetRequiredService<IAgentExecutor>();
+        var runner = scope.ServiceProvider.GetRequiredService<IAgentMandateRunner>();
 
         var cutoff = timeProvider.GetUtcNow() - config.Interval;
-        var due = await db.AgentMandates.Include(m => m.CBot)
+        var due = await db.AgentMandates
             .Where(m => m.Enabled && (m.LastRunAt == null || m.LastRunAt < cutoff))
             .OrderBy(m => m.LastRunAt)
             .Take(config.MaxProposalsPerCycle)
+            .Select(m => new { m.Id, m.UserId })
             .ToListAsync(ct);
 
         foreach (var mandate in due)
         {
             ct.ThrowIfCancellationRequested();
-            try { await RunMandateAsync(db, ai, executor, mandate, ct); }
+            try { await runner.RunOnceAsync(mandate.Id, mandate.UserId, ct); }
             catch (OperationCanceledException) { throw; }
             catch (Exception ex) { logger.AgentMandateFailed(mandate.Id.Value, ex); }
         }
     }
-
-    private async Task RunMandateAsync(
-        DataContext db, IAiFeatureService ai, IAgentExecutor executor, AgentMandate mandate, CancellationToken ct)
-    {
-        var currentParams = await db.ParamSets
-            .Where(p => p.CBotId == mandate.CBotId && p.UserId == mandate.UserId)
-            .OrderByDescending(p => p.CreatedAt).Select(p => p.JsonContent).FirstOrDefaultAsync(ct) ?? "{}";
-
-        var lastReport = await db.Instances.OfType<CompletedBacktestInstance>()
-            .Where(i => i.CBotId == mandate.CBotId && i.UserId == mandate.UserId)
-            .OrderByDescending(i => i.CreatedAt).Select(i => i.ReportJson).FirstOrDefaultAsync(ct);
-
-        var objective = BuildObjective(mandate);
-        var result = await ai.ProposeAgentActionAsync(
-            mandate.CBot.Name, objective, currentParams, lastReport, AgentConstants.ActionMaxTokens, ct);
-
-        mandate.RecordRun(timeProvider.GetUtcNow());
-
-        if (!result.Success)
-        {
-            await db.SaveChangesAsync(ct);
-            return;
-        }
-
-        var action = AgentJson.ParseAction(result.Text);
-        if (action is null)
-        {
-            await db.SaveChangesAsync(ct);
-            return;
-        }
-
-        var proposal = mandate.AddProposal(AgentConstants.ProposalKindBacktest,
-            action.Reasoning, action.ParametersJson, action.Name);
-        await db.SaveChangesAsync(ct);
-        logger.AgentProposalCreated(proposal.Id.Value, mandate.Id.Value, mandate.Autonomy.ToString());
-
-        if (mandate.Autonomy == AgentAutonomy.Auto)
-            await executor.ExecuteAsync(proposal.Id, mandate.UserId, ct);
-    }
-
-    private static string BuildObjective(AgentMandate mandate) =>
-        $"{mandate.Objective}\nRisk per trade: {mandate.RiskPercentPerTrade}%. " +
-        $"Max drawdown: {mandate.MaxDrawdownPercent}%. Symbol: {mandate.Symbol}, timeframe: {mandate.Timeframe}.";
 }

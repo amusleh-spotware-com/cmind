@@ -96,7 +96,7 @@ public static partial class LogMessages
     public static partial void AgentMandateFailed(this ILogger logger, Guid mandateId, Exception ex);
 
     [LoggerMessage(EventId = 1019, Level = LogLevel.Information, Message = "Portfolio agent proposal {ProposalId} created for mandate {MandateId} (autonomy {Autonomy})")]
-    public static partial void AgentProposalCreated(this ILogger logger, Guid proposalId, Guid mandateId, string autonomy);
+    public static partial void AgentProposalCreated(this ILogger logger, Guid proposalId, Guid mandateId, Core.Agent.AgentAutonomy autonomy);
 
     [LoggerMessage(EventId = 1020, Level = LogLevel.Information, Message = "Portfolio agent proposal {ProposalId} executed -> instance {InstanceId}")]
     public static partial void AgentProposalExecuted(this ILogger logger, Guid proposalId, Guid instanceId);

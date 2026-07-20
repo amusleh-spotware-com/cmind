@@ -185,6 +185,52 @@ public sealed class AiFeatureDataE2ETests(AiLocalFixture app)
         (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
     }
 
+    // Portfolio Agent — create a mandate (unique-name gated) and run it NOW; the detached background cycle
+    // records LastRunAt, and the decision journal is its log. Proves the "run in background" path end to end.
+    [Fact]
+    public async Task Portfolio_agent_mandate_runs_in_the_background()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var seeded = await SeedAsync(page);
+        var cbotName = await CBotNameAsync(page, seeded.CBotId);
+
+        await page.GotoAsync("/agent", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForAppReadyAsync();
+
+        var mandateName = "M " + Guid.NewGuid().ToString("N")[..6];
+        await page.GetByTestId("agent-mandate-name").FillAsync(mandateName);
+        await page.Locator(".mud-select:has([data-testid=agent-cbot]) .mud-input-control").ClickAsync();
+        await page.Locator($".mud-popover .mud-list-item:has-text('{cbotName}')").First.ClickAsync();
+
+        var create = page.Locator("[data-testid=agent-create-mandate]");
+        await Assertions.Expect(create).ToBeEnabledAsync(new() { Timeout = 20000 });
+        await create.ClickAsync();
+
+        // The mandate appears; trigger an on-demand background run.
+        var runNow = page.Locator($"tr:has-text(\"{mandateName}\") [data-testid=agent-run-now]");
+        await Assertions.Expect(runNow).ToBeVisibleAsync(Slow);
+        await runNow.ClickAsync();
+
+        // The detached run records LastRunAt — poll the API until it does.
+        string? lastRun = null;
+        for (var i = 0; i < 30 && lastRun is null; i++)
+        {
+            var res = await page.APIRequest.GetAsync("/api/agent/mandates");
+            using var doc = JsonDocument.Parse(await res.TextAsync());
+            foreach (var m in doc.RootElement.EnumerateArray())
+                if (m.GetProperty("name").GetString() == mandateName &&
+                    m.GetProperty("lastRunAt").ValueKind != JsonValueKind.Null)
+                    lastRun = m.GetProperty("lastRunAt").GetString();
+            if (lastRun is null) await page.WaitForTimeoutAsync(500);
+        }
+        lastRun.Should().NotBeNull("the background mandate run should record LastRunAt");
+
+        // Unique-name gate: retyping the existing mandate name disables Create.
+        await page.GetByTestId("agent-mandate-name").FillAsync(mandateName);
+        await Assertions.Expect(create).ToBeDisabledAsync(new() { Timeout = 15000 });
+        (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
+    }
+
     private static async Task<string> CBotNameAsync(IPage page, Guid cbotId)
     {
         var response = await page.APIRequest.GetAsync("/api/cbots/");

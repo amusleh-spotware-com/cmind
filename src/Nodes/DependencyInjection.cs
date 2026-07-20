@@ -42,6 +42,7 @@ public static class DependencyInjection
         services.AddHostedService<BacktestCompletionPoller>();
         services.AddHostedService<RunCompletionPoller>();
         services.AddScoped<IAgentExecutor, AgentExecutor>();
+        services.AddScoped<Core.Agent.IAgentMandateRunner, Nodes.Agent.AgentMandateRunner>();
 
         services.AddScoped<NewsBlackoutRiskFilter>();
         if (features.Ai) services.AddHostedService<AiRiskGuard>();

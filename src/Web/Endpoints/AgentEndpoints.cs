@@ -1,5 +1,6 @@
 using Core;
 using Core.Agent;
+using Core.Ai;
 using Core.Constants;
 using Core.Domain;
 using Infrastructure.Persistence;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Web.Endpoints;
 
@@ -173,7 +175,31 @@ public static class AgentEndpoints
             return Results.Ok(new { success = true });
         });
 
+        // Run one mandate cycle NOW, detached from the request so it survives navigation (same background
+        // pattern as the AI runs). The resulting proposal — or a recorded run with no action — appears in the
+        // decision journal, which is the agent's live log.
+        g.MapPost("/mandates/{id:guid}/run", async (
+            Guid id, DataContext db, ICurrentUser u, IServiceScopeFactory scopeFactory, IAiClient aiClient,
+            CancellationToken ct) =>
+        {
+            if (u.UserId is not { } uid) return Results.Unauthorized();
+            if (!aiClient.Enabled) return Results.Ok(new { accepted = false, error = AiConstants.DisabledMessage });
+            var mid = AgentMandateId.From(id);
+            if (!await db.AgentMandates.AnyAsync(m => m.Id == mid && m.UserId == uid, ct)) return Results.NotFound();
+
+            _ = Task.Run(() => RunMandateDetachedAsync(scopeFactory, mid, uid), CancellationToken.None);
+            return Results.Accepted($"/api/agent/proposals?mandateId={id}", new { accepted = true });
+        });
+
         return app;
+    }
+
+    private static async Task RunMandateDetachedAsync(IServiceScopeFactory scopeFactory, AgentMandateId mandateId, UserId uid)
+    {
+        using var scope = scopeFactory.CreateScope();
+        var runner = scope.ServiceProvider.GetRequiredService<IAgentMandateRunner>();
+        try { await runner.RunOnceAsync(mandateId, uid, CancellationToken.None); }
+        catch { /* the runner logs its own failures */ }
     }
 }
 

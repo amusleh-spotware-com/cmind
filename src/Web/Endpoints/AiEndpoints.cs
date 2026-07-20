@@ -510,9 +510,11 @@ public static class AiEndpoints
         {
             if (u.UserId is not { } uid) return Results.Unauthorized();
             if (!aiClient.Enabled) return Results.Ok(new { accepted = false, error = AiConstants.DisabledMessage });
-            if (string.IsNullOrWhiteSpace(req.Source)) return Results.BadRequest("paste the cBot source first");
-            if (req.Feature is not (AiFeature.ReviewCBot or AiFeature.DebateStrategy))
+            if (req.Feature is not (AiFeature.ReviewCBot or AiFeature.DebateStrategy
+                or AiFeature.AssessStrategyDecay or AiFeature.ProposeParamSetSuite))
                 return Results.BadRequest("unsupported run type");
+            // Review/Debate carry pasted cBot source; Tune/Optimize carry a JSON input blob — both live in Source.
+            if (string.IsNullOrWhiteSpace(req.Source)) return Results.BadRequest("run input is required");
 
             var run = Core.Domain.AiRun.Create(
                 uid, req.Feature, req.Title ?? "", req.Language ?? "CSharp", req.Source!, clock.GetUtcNow());
@@ -773,6 +775,8 @@ public static class AiEndpoints
                 AiFeature.ReviewCBot => await ai.ReviewCBotAsync(run.Language, run.Source, CancellationToken.None),
                 AiFeature.DebateStrategy => await ai.DebateStrategyAsync(
                     run.Title, run.Language, run.Source, AiConstants.DebateMaxTokens, CancellationToken.None),
+                AiFeature.AssessStrategyDecay => await RunTuneRunAsync(services, run, uid),
+                AiFeature.ProposeParamSetSuite => await RunOptimizeRunAsync(services, run, uid),
                 _ => AiResult.Fail("unsupported run type")
             };
             if (result.Success) run.Complete(result.Text, clock.GetUtcNow());
@@ -786,6 +790,126 @@ public static class AiEndpoints
             catch { /* best-effort */ }
         }
     }
+
+    // Tune Advisor as a background run: parse the picked cBot, compare its two most recent backtests for edge
+    // decay. Mirrors the /tune-advice endpoint, resolving inputs in the detached scope.
+    private static async Task<AiResult> RunTuneRunAsync(IServiceProvider services, Core.Domain.AiRun run, UserId uid)
+    {
+        var db = services.GetRequiredService<DataContext>();
+        var ai = services.GetRequiredService<IAiFeatureService>();
+
+        TuneRunInput? input;
+        try { input = JsonSerializer.Deserialize<TuneRunInput>(run.Source, RunInputJson); }
+        catch { input = null; }
+        if (input is null || input.CBotId == Guid.Empty) return AiResult.Fail("invalid tune input");
+
+        var cid = CBotId.From(input.CBotId);
+        var name = await db.CBots.Where(c => c.Id == cid && c.UserId == uid).Select(c => c.Name).FirstOrDefaultAsync();
+        if (name is null) return AiResult.Fail("cBot not found");
+
+        var reports = await db.Instances.OfType<CompletedBacktestInstance>()
+            .Where(i => i.CBotId == cid && i.UserId == uid && i.ReportJson != null)
+            .OrderByDescending(i => i.CreatedAt).Select(i => i.ReportJson!).Take(2).ToListAsync();
+        if (reports.Count == 0) return AiResult.Fail("This cBot has no completed backtests to analyze yet.");
+
+        var current = await db.ParamSets.Where(p => p.CBotId == cid && p.UserId == uid)
+            .OrderByDescending(p => p.CreatedAt).Select(p => p.JsonContent).FirstOrDefaultAsync() ?? "{}";
+        var previous = reports.Count > 1 ? ClipReport(reports[1]) : null;
+        return await ai.AssessStrategyDecayAsync(
+            name, previous, ClipReport(reports[0]), current, AiConstants.TuneAdviceMaxTokens, CancellationToken.None);
+    }
+
+    // Optimize as a background run: propose parameter sets with the chosen model, then backtest each across
+    // nodes. Mirrors the /optimize-run endpoint; the run's output is a human summary of what was launched.
+    private static async Task<AiResult> RunOptimizeRunAsync(IServiceProvider services, Core.Domain.AiRun run, UserId uid)
+    {
+        var db = services.GetRequiredService<DataContext>();
+        var ai = services.GetRequiredService<IAiFeatureService>();
+        var protector = services.GetRequiredService<ISecretProtector>();
+        var scheduler = services.GetRequiredService<INodeScheduler>();
+        var factory = services.GetRequiredService<IContainerDispatcherFactory>();
+        var clock = services.GetRequiredService<TimeProvider>();
+
+        OptimizeRunInput? input;
+        try { input = JsonSerializer.Deserialize<OptimizeRunInput>(run.Source, RunInputJson); }
+        catch { input = null; }
+        if (input is null || input.CBotId == Guid.Empty) return AiResult.Fail("invalid optimize input");
+
+        var cid = CBotId.From(input.CBotId);
+        var cbot = await db.CBots.FirstOrDefaultAsync(c => c.Id == cid && c.UserId == uid);
+        if (cbot is null) return AiResult.Fail("cBot not found");
+        var accountId = TradingAccountId.From(input.TradingAccountId);
+        var account = await db.TradingAccounts.Include(t => t.CTid)
+            .FirstOrDefaultAsync(t => t.Id == accountId && t.CTid.UserId == uid);
+        if (account is null) return AiResult.Fail("trading account not found");
+
+        var currentParams = await db.ParamSets.Where(p => p.CBotId == cid && p.UserId == uid)
+            .OrderByDescending(p => p.CreatedAt).Select(p => p.JsonContent).FirstOrDefaultAsync() ?? "{}";
+
+        var count = Math.Clamp(input.Count ?? 3, 1, 5);
+        var suite = await ai.ProposeParamSetSuiteAsync(cbot.Name, currentParams, count, CancellationToken.None);
+        if (!suite.Success) return AiResult.Fail(suite.Error ?? "AI request failed");
+
+        var proposals = Web.Ai.ParamSuiteParser.Parse(suite.Text, count);
+        if (proposals.Count == 0)
+            return AiResult.Fail(
+                "The AI did not return usable parameter sets in the required JSON format. Small local models often "
+                + "can't; pick a larger/cloud model from the Model selector and retry.");
+
+        var symbolText = string.IsNullOrWhiteSpace(input.Symbol) ? "EURUSD" : input.Symbol!;
+        var timeframeText = string.IsNullOrWhiteSpace(input.Timeframe) ? "h1" : input.Timeframe!;
+        var imageTag = new DockerImageTag(string.IsNullOrWhiteSpace(input.DockerImageTag) ? "latest" : input.DockerImageTag!);
+        var symbol = new Symbol(symbolText);
+        var timeframe = new Timeframe(timeframeText);
+        var algo = protector.Unprotect(cbot.EncryptedAlgo, EncryptionPurposes.CbotAlgo);
+
+        var lines = new List<string>();
+        foreach (var (setName, json) in proposals)
+        {
+            var paramSet = ParamSet.Create(uid, cid, setName, json);
+            db.ParamSets.Add(paramSet);
+            await db.SaveChangesAsync();
+
+            var node = await scheduler.PickNodeAsync("Backtest", CancellationToken.None);
+            if (node is null) { lines.Add($"• {setName}: no node available"); continue; }
+
+            var starting = BacktestInstance.CreateStarting(uid, cid, node.Id, imageTag, symbol, timeframe,
+                input.BacktestSettingsJson, accountId, paramSet.Id);
+            db.Instances.Add(starting);
+            await db.SaveChangesAsync();
+            starting.AttachNode(node);
+            try
+            {
+                var containerId = await factory.For(node).StartAsync(starting, algo, json, CancellationToken.None);
+                var running = starting.ToRunning(containerId, clock.GetUtcNow());
+                db.Instances.Remove(starting);
+                db.Instances.Add(running);
+                await db.SaveChangesAsync();
+                lines.Add($"• {setName}: backtest launched (instance {running.Id.Value})");
+            }
+            catch (Exception ex)
+            {
+                var failed = starting.ToFailed(ex.Message, clock.GetUtcNow());
+                db.Instances.Remove(starting);
+                db.Instances.Add(failed);
+                await db.SaveChangesAsync();
+                lines.Add($"• {setName}: failed to launch — {ex.Message}");
+            }
+        }
+
+        var summary = $"Proposed and launched {proposals.Count} parameter set(s) for {cbot.Name} on "
+            + $"{symbolText} {timeframeText}:\n\n{string.Join("\n", lines)}\n\n"
+            + "Track each backtest on the cBots / Instances pages; run Tune Advisor once they complete.";
+        return AiResult.Ok(summary);
+    }
+
+    // The run's Source JSON is written by the page with camelCase keys; Web defaults match them case-insensitively.
+    private static readonly JsonSerializerOptions RunInputJson = new(JsonSerializerDefaults.Web);
+
+    private sealed record TuneRunInput(Guid CBotId, string? CBotName);
+    private sealed record OptimizeRunInput(
+        Guid CBotId, Guid TradingAccountId, string? Symbol, string? Timeframe,
+        string? DockerImageTag, string? BacktestSettingsJson, int? Count);
 
     private static Dictionary<string, string> DecryptFiles(CBotSourceProject project, ISecretProtector protector)
     {

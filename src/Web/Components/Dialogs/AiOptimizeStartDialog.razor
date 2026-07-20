@@ -1,0 +1,88 @@
+@* Start an Optimize run: pick a cBot + trading account and a symbol/timeframe; the AI proposes parameter
+   sets and backtests each across nodes in the background. Returns Result. *@
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Tune" Class="mr-2" />
+            New optimization
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (CBots.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2" data-testid="ai-opt-no-cbots">
+                You have no cBots yet. Build or import a cBot before optimizing its parameters.
+            </MudAlert>
+        }
+        @if (Accounts.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2" data-testid="ai-opt-no-accounts">
+                Link a trading account — backtesting the proposed parameter sets needs one.
+            </MudAlert>
+        }
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudSelect T="Guid?" @bind-Value="_cbotId" Label="cBot" Dense="true" data-testid="ai-opt-cbot-select">
+                    @foreach (var c in CBots)
+                    {
+                        <MudSelectItem T="Guid?" Value="@((Guid?)c.Id)">@c.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect T="Guid?" @bind-Value="_accountId" Label="Trading account" Dense="true" data-testid="ai-opt-account-select">
+                    @foreach (var a in Accounts)
+                    {
+                        <MudSelectItem T="Guid?" Value="@((Guid?)a.Id)">@a.AccountNumber - @a.Broker</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" sm="6">
+                <MudTextField @bind-Value="_symbol" Label="Symbol" data-testid="ai-opt-symbol" />
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudTextField @bind-Value="_timeframe" Label="Timeframe" />
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudNumericField @bind-Value="_count" Label="Parameter sets" Min="1" Max="5" Step="1"
+                                 HelperText="How many to propose &amp; backtest" data-testid="ai-opt-count" />
+            </MudItem>
+        </MudGrid>
+        <AiModelSelect Feature="AiFeature.ProposeParamSetSuite" @bind-Selected="_modelId" Class="mt-2" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" data-testid="ai-opt-cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit"
+                   Disabled="@(_cbotId is null || _accountId is null)" data-testid="ai-opt-create">Propose &amp; backtest</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public IReadOnlyList<CBotOption> CBots { get; set; } = [];
+    [Parameter] public IReadOnlyList<AccountOption> Accounts { get; set; } = [];
+
+    private Guid? _cbotId;
+    private Guid? _accountId;
+    private string _symbol = "EURUSD";
+    private string _timeframe = "h1";
+    private int _count = 3;
+    private Guid? _modelId;
+
+    private void Submit()
+    {
+        if (_cbotId is not { } cbot || _accountId is not { } account) return;
+        var name = CBots.FirstOrDefault(c => c.Id == cbot)?.Name ?? "";
+        Dialog.Close(DialogResult.Ok(new Result(cbot, name, account, _symbol.Trim(), _timeframe.Trim(), _count, _modelId)));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    public sealed record CBotOption(Guid Id, string Name);
+    public sealed record AccountOption(Guid Id, long AccountNumber, string Broker);
+
+    public sealed record Result(
+        Guid CBotId, string CBotName, Guid TradingAccountId, string Symbol, string Timeframe, int Count, Guid? ModelId);
+}

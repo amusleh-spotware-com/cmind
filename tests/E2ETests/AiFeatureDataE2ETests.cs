@@ -123,4 +123,72 @@ public sealed class AiFeatureDataE2ETests(AiLocalFixture app)
         var seeded = await SeedAsync(page);
         await AssertApiAiOutputAsync(page, $"/api/ai/post-mortem/{seeded.CompletedInstanceId}");
     }
+
+    // F8 UI — Tune Advisor as a background run: seed a cBot with a completed backtest, start a tune from the
+    // list dialog, and the detail page renders the AI output once the background run completes.
+    [Fact]
+    public async Task Tune_run_completes_in_background_for_seeded_cbot()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var seeded = await SeedAsync(page);
+        var name = await CBotNameAsync(page, seeded.CBotId);
+
+        await page.GotoAsync("/ai/tune", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForAppReadyAsync();
+
+        await page.Locator("[data-testid=ai-run-new]").ClickAsync();
+        await Assertions.Expect(page.Locator("[data-testid=ai-tune-create]")).ToBeVisibleAsync(Slow);
+        await page.Locator(".mud-select:has([data-testid=ai-tune-cbot-select]) .mud-input-control").ClickAsync();
+        await page.Locator($".mud-popover .mud-list-item:has-text('{name}')").First.ClickAsync();
+        var create = page.Locator("[data-testid=ai-tune-create]");
+        await Assertions.Expect(create).ToBeEnabledAsync(new() { Timeout = 20000 });
+        await create.ClickAsync();
+
+        await Assertions.Expect(page.Locator("[data-testid=ai-run-title]")).ToBeVisibleAsync(Slow);
+        var output = page.Locator("[data-testid=ai-run-output]");
+        await Assertions.Expect(output).ToBeVisibleAsync(new() { Timeout = 30000 });
+        if (app.UsingFakeLlm) (await output.InnerTextAsync()).Should().Contain(AiLocalFixture.CannedReply);
+        (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
+    }
+
+    // F9 UI — Optimize as a background run: seed a cBot + trading account, start an optimization from the list
+    // dialog, and the detail page reaches a terminal state (the canned reply yields no parseable parameter
+    // sets, so the run ends Failed with an actionable message — the whole list→dialog→background→detail flow).
+    [Fact]
+    public async Task Optimize_run_reaches_terminal_state_in_background()
+    {
+        var page = await app.NewAuthedPageAsync();
+        var seeded = await SeedAsync(page);
+        var name = await CBotNameAsync(page, seeded.CBotId);
+        var (accountNumber, _) = await AgentTestHelpers.SeedTradingAccountAsync(page, app.BaseUrl);
+
+        await page.GotoAsync("/ai/optimize", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForAppReadyAsync();
+
+        await page.Locator("[data-testid=ai-run-new]").ClickAsync();
+        await Assertions.Expect(page.Locator("[data-testid=ai-opt-create]")).ToBeVisibleAsync(Slow);
+        await page.Locator(".mud-select:has([data-testid=ai-opt-cbot-select]) .mud-input-control").ClickAsync();
+        await page.Locator($".mud-popover .mud-list-item:has-text('{name}')").First.ClickAsync();
+        await page.Locator(".mud-select:has([data-testid=ai-opt-account-select]) .mud-input-control").ClickAsync();
+        await page.Locator($".mud-popover .mud-list-item:has-text('{accountNumber}')").First.ClickAsync();
+        var create = page.Locator("[data-testid=ai-opt-create]");
+        await Assertions.Expect(create).ToBeEnabledAsync(new() { Timeout = 20000 });
+        await create.ClickAsync();
+
+        // Detail page opens and the background run leaves the "working" state (Completed or Failed).
+        await Assertions.Expect(page.Locator("[data-testid=ai-run-title]")).ToBeVisibleAsync(Slow);
+        await Assertions.Expect(page.Locator("[data-testid=ai-run-detail-progress]"))
+            .ToBeHiddenAsync(new() { Timeout = 30000 });
+        (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
+    }
+
+    private static async Task<string> CBotNameAsync(IPage page, Guid cbotId)
+    {
+        var response = await page.APIRequest.GetAsync("/api/cbots/");
+        using var doc = JsonDocument.Parse(await response.TextAsync());
+        foreach (var el in doc.RootElement.EnumerateArray())
+            if (el.GetProperty("id").GetGuid() == cbotId)
+                return el.GetProperty("name").GetString()!;
+        throw new InvalidOperationException("seeded cBot not found in /api/cbots/");
+    }
 }

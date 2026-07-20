@@ -1,0 +1,10 @@
+@page "/ai/optimize/{Id:guid}"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
+
+<PageTitle>AI · Optimize</PageTitle>
+
+<AiRunDetailView RunId="Id" RoutePrefix="/ai/optimize" ShowInput="false" />
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+}

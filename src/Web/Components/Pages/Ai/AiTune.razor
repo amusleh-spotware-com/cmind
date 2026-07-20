@@ -1,45 +1,40 @@
 ﻿@page "/ai/tune"
+@using System.Text.Json
+@using Web.Components.Dialogs
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
-@inherits AiFeaturePageBase
+@inject HttpClient Http
+@inject IDialogService Dialogs
 
 <PageTitle>AI · Tune Advisor</PageTitle>
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
-    <MudText Typo="Typo.h5">Tune Advisor</MudText>
-    <HelpTip Text="Compares a cBot's two most recent backtests and tells you if its edge is decaying, with one adjustment to test." />
-</MudStack>
-
-<AiFeatureNotice EnabledChanged="OnAiStatus" PromptOnLoad="true" />
-
-<MudPaper Class="pa-4" Elevation="1">
-    <MudText Typo="Typo.body2" Class="mb-2">
-        Compares a cBot's two most recent backtests and flags edge decay, with one concrete adjustment to try.
-    </MudText>
-    <MudSelect T="Guid?" @bind-Value="_cbotId" Label="cBot" Dense="true" Style="max-width:240px;">
-        @foreach (var c in _cbots) { <MudSelectItem T="Guid?" Value="@((Guid?)c.id)">@c.name</MudSelectItem> }
-    </MudSelect>
-    <AiModelSelect Feature="AiFeature.AssessStrategyDecay" @bind-Selected="SelectedModelId" Class="mt-3" />
-    <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
-               StartIcon="@Icons.Material.Filled.TrendingDown" OnClick="Run" Disabled="Busy">
-        Check for decay
-    </MudButton>
-</MudPaper>
-
-<AiOutputPanel Loading="@Loading" Output="@Output" />
+<AiRunListView Feature="AiFeature.AssessStrategyDecay"
+               Heading="Tune Advisor"
+               HelpText="Pick a cBot and the AI compares its two most recent backtests, tells you if its edge is decaying, and suggests one adjustment to test. Tunes run in the background and are saved — open one anytime."
+               NewLabel="New tune"
+               RoutePrefix="/ai/tune"
+               EmptyHint="Start a tune to see it here."
+               StartInputProvider="StartAsync" />
 
 @code {
-    private dynamic[] _cbots = [];
-    private Guid? _cbotId;
-
-    protected override async Task OnInitializedAsync() => _cbots = await LoadOrEmptyAsync("/api/cbots/");
-
-    private Task Run()
+    private async Task<AiRunListView.AiRunInput?> StartAsync()
     {
-        if (_cbotId is null)
+        CBotDto[] cbots;
+        try { cbots = await Http.GetFromJsonAsync<CBotDto[]>("/api/cbots/") ?? []; }
+        catch { cbots = []; }
+        var options = cbots.Select(c => new AiTuneStartDialog.CBotOption(c.Id, c.Name)).ToList();
+
+        var parameters = new DialogParameters<AiTuneStartDialog>
         {
-            Snack.Add("Pick a cBot", Severity.Warning);
-            return Task.CompletedTask;
-        }
-        return PostTextAsync($"/api/ai/tune-advice/{_cbotId}", new { });
+            { x => x.Projects, (IReadOnlyList<AiTuneStartDialog.CBotOption>)options }
+        };
+        var opts = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await Dialogs.ShowAsync<AiTuneStartDialog>("New tune", parameters, opts);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled || result.Data is not AiTuneStartDialog.Result r) return null;
+
+        var source = JsonSerializer.Serialize(new { cbotId = r.CBotId, cbotName = r.CBotName });
+        return new AiRunListView.AiRunInput(r.CBotName, source, r.ModelId);
     }
+
+    private sealed record CBotDto(Guid Id, string Name);
 }

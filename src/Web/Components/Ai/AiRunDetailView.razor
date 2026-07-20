@@ -63,16 +63,21 @@ else
         </MudPaper>
     }
 
-    <MudExpansionPanels Elevation="1">
-        <MudExpansionPanel Text="Input source" data-testid="ai-run-input">
-            <pre style="white-space:pre; margin:0; max-height:360px; overflow:auto; font-size:0.8rem;">@_run.Source</pre>
-        </MudExpansionPanel>
-    </MudExpansionPanels>
+    @if (ShowInput)
+    {
+        <MudExpansionPanels Elevation="1">
+            <MudExpansionPanel Text="Input source" data-testid="ai-run-input">
+                <pre style="white-space:pre; margin:0; max-height:360px; overflow:auto; font-size:0.8rem;">@_run.Source</pre>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    }
 }
 
 @code {
     [Parameter] public Guid RunId { get; set; }
     [Parameter] public string RoutePrefix { get; set; } = "";
+    // Review/Debate show the pasted source; Tune/Optimize inputs are a JSON blob, so hide that panel.
+    [Parameter] public bool ShowInput { get; set; } = true;
 
     private RunDto? _run;
     private bool _notFound;

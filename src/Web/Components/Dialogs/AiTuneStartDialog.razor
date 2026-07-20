@@ -1,0 +1,59 @@
+@* Start a Tune Advisor run: pick a cBot; its two most recent backtests are compared for edge decay.
+   Returns Result with the chosen cBot + model. *@
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.TrendingDown" Class="mr-2" />
+            New tune
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (Projects.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info" Dense="true" data-testid="ai-tune-no-cbots">
+                You have no cBots yet. Build or import one first.
+            </MudAlert>
+        }
+        else
+        {
+            <MudSelect T="Guid?" @bind-Value="_cbotId" Label="cBot" Dense="true" data-testid="ai-tune-cbot-select">
+                @foreach (var p in Projects)
+                {
+                    <MudSelectItem T="Guid?" Value="@((Guid?)p.Id)">@p.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2 d-block">
+                The cBot's two most recent backtests are compared for edge decay, with one adjustment to try.
+            </MudText>
+        }
+        <AiModelSelect Feature="AiFeature.AssessStrategyDecay" @bind-Selected="_modelId" Class="mt-2" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" data-testid="ai-tune-cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit"
+                   Disabled="@(_cbotId is null)" data-testid="ai-tune-create">Check for decay</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public IReadOnlyList<CBotOption> Projects { get; set; } = [];
+
+    private Guid? _cbotId;
+    private Guid? _modelId;
+
+    private void Submit()
+    {
+        if (_cbotId is not { } id) return;
+        var name = Projects.FirstOrDefault(p => p.Id == id)?.Name ?? "";
+        Dialog.Close(DialogResult.Ok(new Result(id, name, _modelId)));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    public sealed record CBotOption(Guid Id, string Name);
+
+    public sealed record Result(Guid CBotId, string CBotName, Guid? ModelId);
+}

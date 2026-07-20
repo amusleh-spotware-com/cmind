@@ -72,6 +72,12 @@ else
     [Parameter] public string SourcePlaceholder { get; set; } = "Paste cBot source";
     [Parameter] public string EmptyHint { get; set; } = "Start one to see it here.";
 
+    // When set, the "New" button uses this page-supplied structured dialog (Tune, Optimize) instead of the
+    // built-in paste-or-pick-cBot source dialog. Returns null when the user cancels.
+    [Parameter] public Func<Task<AiRunInput?>>? StartInputProvider { get; set; }
+
+    public sealed record AiRunInput(string Title, string Source, Guid? ModelId);
+
     private RunRow[] _rows = [];
     private bool _loading = true;
     private TimeZoneInfo _zone = TimeZoneInfo.Utc;
@@ -97,6 +103,16 @@ else
 
     private async Task StartNew()
     {
+        // A page can supply its own structured start dialog (Tune, Optimize) via StartInputProvider; otherwise
+        // use the built-in paste-or-pick-cBot source dialog (Review, Debate).
+        if (StartInputProvider is not null)
+        {
+            var custom = await StartInputProvider();
+            if (custom is null) return;
+            await SubmitRunAsync(custom.Title, custom.Source, custom.ModelId);
+            return;
+        }
+
         // Offer the user's existing cBots (with source) so a run can target one instead of pasted code.
         CBotDto[] cbots;
         try { cbots = await Http.GetFromJsonAsync<CBotDto[]>("/api/builder/projects") ?? []; }
@@ -132,7 +148,13 @@ else
             if (string.IsNullOrWhiteSpace(source)) { Snack.Add("That cBot has no source yet", Severity.Error); return; }
         }
 
-        var url = r.ModelId is { } model ? $"/api/ai/runs?modelId={model}" : "/api/ai/runs";
+        await SubmitRunAsync(title, source, r.ModelId);
+    }
+
+    // POST a new run (any feature) and navigate to its detail page; the run itself finishes in the background.
+    private async Task SubmitRunAsync(string title, string source, Guid? modelId)
+    {
+        var url = modelId is { } model ? $"/api/ai/runs?modelId={model}" : "/api/ai/runs";
         try
         {
             var response = await Http.PostAsJsonAsync(url,

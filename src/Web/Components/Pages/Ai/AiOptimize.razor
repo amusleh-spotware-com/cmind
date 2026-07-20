@@ -1,87 +1,51 @@
 ﻿@page "/ai/optimize"
+@using System.Text.Json
+@using Web.Components.Dialogs
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "UserOrAbove")]
-@inherits AiFeaturePageBase
+@inject HttpClient Http
+@inject IDialogService Dialogs
 
 <PageTitle>AI · Optimize</PageTitle>
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
-    <MudText Typo="Typo.h5">Optimize</MudText>
-    <HelpTip Text="The AI proposes parameter sets and backtests each across your nodes, then reports the best." />
-</MudStack>
-
-<AiFeatureNotice EnabledChanged="OnAiStatus" PromptOnLoad="true" />
-
-<MudPaper Class="pa-4" Elevation="1">
-    <MudText Typo="Typo.body2" Class="mb-2">
-        AI proposes parameter sets and backtests each across your nodes.
-    </MudText>
-    @if (_loaded && _cbots.Length == 0)
-    {
-        <MudAlert Severity="Severity.Info" Class="mb-2" data-testid="opt-no-cbots">
-            You have no cBots yet. Build or import a cBot before optimizing its parameters.
-        </MudAlert>
-    }
-    @if (_loaded && _accounts.Length == 0)
-    {
-        <MudAlert Severity="Severity.Info" Class="mb-2" data-testid="opt-no-accounts">
-            Link a trading account — backtesting the proposed parameter sets needs one.
-        </MudAlert>
-    }
-    <MudGrid>
-        <MudItem xs="12" sm="6">
-            <MudSelect T="Guid?" @bind-Value="_cbotId" Label="cBot" Dense="true">
-                @foreach (var c in _cbots) { <MudSelectItem T="Guid?" Value="@((Guid?)c.id)">@c.name</MudSelectItem> }
-            </MudSelect>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudSelect T="Guid?" @bind-Value="_acctId" Label="Trading account" Dense="true">
-                @foreach (var a in _accounts) { <MudSelectItem T="Guid?" Value="@((Guid?)a.id)">@a.accountNumber - @a.broker</MudSelectItem> }
-            </MudSelect>
-        </MudItem>
-        <MudItem xs="6" sm="6">
-            <MudTextField @bind-Value="_symbol" Label="Symbol" />
-        </MudItem>
-        <MudItem xs="6" sm="3">
-            <MudTextField @bind-Value="_timeframe" Label="Timeframe" />
-        </MudItem>
-        <MudItem xs="6" sm="3">
-            <MudNumericField @bind-Value="_count" Label="Parameter sets" Min="1" Max="5" Step="1"
-                             HelperText="How many to propose &amp; backtest" data-testid="opt-count" />
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <AiModelSelect Feature="AiFeature.ProposeParamSetSuite" @bind-Selected="SelectedModelId" />
-        </MudItem>
-    </MudGrid>
-    <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
-               StartIcon="@Icons.Material.Filled.Tune" OnClick="Run" Disabled="Busy">
-        Propose &amp; backtest
-    </MudButton>
-</MudPaper>
-
-<AiOutputPanel Loading="@Loading" Output="@Output" />
+<AiRunListView Feature="AiFeature.ProposeParamSetSuite"
+               Heading="Optimize"
+               HelpText="Pick a cBot, a trading account and a symbol/timeframe. The AI proposes parameter sets and backtests each across your nodes in the background, then reports what it launched. Optimizations are saved — open one anytime."
+               NewLabel="New optimization"
+               RoutePrefix="/ai/optimize"
+               EmptyHint="Start an optimization to see it here."
+               StartInputProvider="StartAsync" />
 
 @code {
-    private dynamic[] _cbots = [], _accounts = [];
-    private Guid? _cbotId, _acctId;
-    private string _symbol = "EURUSD", _timeframe = "h1";
-    private int _count = 3;
-    private bool _loaded;
-
-    protected override async Task OnInitializedAsync()
+    private async Task<AiRunListView.AiRunInput?> StartAsync()
     {
-        _cbots = await LoadOrEmptyAsync("/api/cbots/");
-        _accounts = await LoadOrEmptyAsync("/api/accounts/");
-        _loaded = true;
-    }
+        CBotDto[] cbots;
+        AccountDto[] accounts;
+        try { cbots = await Http.GetFromJsonAsync<CBotDto[]>("/api/cbots/") ?? []; }
+        catch { cbots = []; }
+        try { accounts = await Http.GetFromJsonAsync<AccountDto[]>("/api/accounts") ?? []; }
+        catch { accounts = []; }
 
-    private Task Run()
-    {
-        if (_cbotId is null || _acctId is null)
+        var parameters = new DialogParameters<AiOptimizeStartDialog>
         {
-            Snack.Add("Pick a cBot and trading account", Severity.Warning);
-            return Task.CompletedTask;
-        }
-        return PostJsonAsync($"/api/ai/optimize-run/{_cbotId}",
-            new { TradingAccountId = _acctId, Symbol = _symbol, Timeframe = _timeframe, Count = _count });
+            { x => x.CBots, (IReadOnlyList<AiOptimizeStartDialog.CBotOption>)
+                cbots.Select(c => new AiOptimizeStartDialog.CBotOption(c.Id, c.Name)).ToList() },
+            { x => x.Accounts, (IReadOnlyList<AiOptimizeStartDialog.AccountOption>)
+                accounts.Select(a => new AiOptimizeStartDialog.AccountOption(a.Id, a.AccountNumber, a.Broker)).ToList() }
+        };
+        var opts = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await Dialogs.ShowAsync<AiOptimizeStartDialog>("New optimization", parameters, opts);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled || result.Data is not AiOptimizeStartDialog.Result r) return null;
+
+        var source = JsonSerializer.Serialize(new
+        {
+            cbotId = r.CBotId, tradingAccountId = r.TradingAccountId,
+            symbol = r.Symbol, timeframe = r.Timeframe, count = r.Count
+        });
+        var title = $"{r.CBotName} · {r.Symbol} {r.Timeframe}";
+        return new AiRunListView.AiRunInput(title, source, r.ModelId);
     }
+
+    private sealed record CBotDto(Guid Id, string Name);
+    private sealed record AccountDto(Guid Id, long AccountNumber, string Broker);
 }

@@ -17,7 +17,9 @@ public sealed class PageSmokeTests(AppFixture app)
         "/ai/build", "/ai/build/00000000-0000-0000-0000-000000000000",
         "/ai/review", "/ai/review/00000000-0000-0000-0000-000000000000",
         "/ai/debate", "/ai/debate/00000000-0000-0000-0000-000000000000", "/ai/sentiment", "/ai/exposure", "/ai/digest",
-        "/ai/tune", "/ai/optimize", "/ai/currency-strength", "/agent-studio", "/journal", "/economic-calendar",
+        "/ai/tune", "/ai/tune/00000000-0000-0000-0000-000000000000",
+        "/ai/optimize", "/ai/optimize/00000000-0000-0000-0000-000000000000",
+        "/ai/currency-strength", "/agent-studio", "/journal", "/economic-calendar",
         "/economic-calendar/series/US.CPI", "/cot",
         "/settings/ai", "/settings/openapi", "/settings/features", "/settings/deployment", "/settings/legal",
     }.Select(r => new object[] { r });

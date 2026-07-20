@@ -297,18 +297,24 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
     [Fact]
     public async Task Tune_page_is_ai_enabled()
     {
+        // Tune is now a runs list; the "New tune" button opens the start dialog with a cBot picker.
         var page = await OpenAsync("/ai/tune");
         (await page.Locator("[data-testid=ai-not-configured]").IsVisibleAsync()).Should().BeFalse();
-        await Assertions.Expect(page.Locator("button:has-text('Check for decay')")).ToBeEnabledAsync(new() { Timeout = 20000 });
+        await Assertions.Expect(page.Locator("[data-testid=ai-run-new]")).ToBeEnabledAsync(new() { Timeout = 20000 });
+        await page.Locator("[data-testid=ai-run-new]").ClickAsync();
+        await Assertions.Expect(page.Locator("[data-testid=ai-tune-create]")).ToBeVisibleAsync(Slow);
         (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
     }
 
     [Fact]
     public async Task Optimize_page_is_ai_enabled()
     {
+        // Optimize is now a runs list; the "New optimization" button opens the start dialog.
         var page = await OpenAsync("/ai/optimize");
         (await page.Locator("[data-testid=ai-not-configured]").IsVisibleAsync()).Should().BeFalse();
-        await Assertions.Expect(page.Locator("button:has-text('Propose')")).ToBeEnabledAsync(new() { Timeout = 20000 });
+        await Assertions.Expect(page.Locator("[data-testid=ai-run-new]")).ToBeEnabledAsync(new() { Timeout = 20000 });
+        await page.Locator("[data-testid=ai-run-new]").ClickAsync();
+        await Assertions.Expect(page.Locator("[data-testid=ai-opt-create]")).ToBeVisibleAsync(Slow);
         (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
     }
 

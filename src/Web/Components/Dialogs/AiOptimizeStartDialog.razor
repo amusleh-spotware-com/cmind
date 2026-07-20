@@ -42,7 +42,12 @@
                 <MudTextField @bind-Value="_symbol" Label="Symbol" data-testid="ai-opt-symbol" />
             </MudItem>
             <MudItem xs="6" sm="3">
-                <MudTextField @bind-Value="_timeframe" Label="Timeframe" />
+                <MudSelect T="string" @bind-Value="_timeframe" Label="Timeframe" Dense="true" data-testid="ai-opt-timeframe">
+                    @foreach (var tf in Core.Constants.Timeframes.Supported)
+                    {
+                        <MudSelectItem T="string" Value="@tf">@tf</MudSelectItem>
+                    }
+                </MudSelect>
             </MudItem>
             <MudItem xs="6" sm="3">
                 <MudNumericField @bind-Value="_count" Label="Parameter sets" Min="1" Max="5" Step="1"

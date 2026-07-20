@@ -171,6 +171,9 @@ public sealed class AiFeatureDataE2ETests(AiLocalFixture app)
         await page.Locator($".mud-popover .mud-list-item:has-text('{name}')").First.ClickAsync();
         await page.Locator(".mud-select:has([data-testid=ai-opt-account-select]) .mud-input-control").ClickAsync();
         await page.Locator($".mud-popover .mud-list-item:has-text('{accountNumber}')").First.ClickAsync();
+        // Timeframe is a selector (not a free text box) — pick a non-default value from its list.
+        await page.Locator(".mud-select:has([data-testid=ai-opt-timeframe]) .mud-input-control").ClickAsync();
+        await page.Locator(".mud-popover .mud-list-item:has-text('m1')").First.ClickAsync();
         var create = page.Locator("[data-testid=ai-opt-create]");
         await Assertions.Expect(create).ToBeEnabledAsync(new() { Timeout = 20000 });
         await create.ClickAsync();

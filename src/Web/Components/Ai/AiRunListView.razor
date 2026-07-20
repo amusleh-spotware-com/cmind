@@ -97,28 +97,62 @@ else
 
     private async Task StartNew()
     {
+        // Offer the user's existing cBots (with source) so a run can target one instead of pasted code.
+        CBotDto[] cbots;
+        try { cbots = await Http.GetFromJsonAsync<CBotDto[]>("/api/builder/projects") ?? []; }
+        catch { cbots = []; }
+        var options = cbots.Select(c => new AiRunStartDialog.CBotOption(c.Id, c.Name)).ToList();
+
         var parameters = new DialogParameters<AiRunStartDialog>
         {
             { x => x.DialogTitle, DialogTitle },
             { x => x.Feature, Feature },
             { x => x.ConfirmLabel, ConfirmLabel },
-            { x => x.SourcePlaceholder, SourcePlaceholder }
+            { x => x.SourcePlaceholder, SourcePlaceholder },
+            { x => x.Projects, (IReadOnlyList<AiRunStartDialog.CBotOption>)options }
         };
-        var dialog = await Dialogs.ShowAsync<AiRunStartDialog>(DialogTitle, parameters);
+        var options2 = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await Dialogs.ShowAsync<AiRunStartDialog>(DialogTitle, parameters, options2);
         var result = await dialog.Result;
         if (result is null || result.Canceled || result.Data is not AiRunStartDialog.AiRunStartResult r) return;
+
+        // Resolve the source: either pasted text, or the current source of the picked cBot.
+        var source = r.Source ?? "";
+        var title = r.Name;
+        if (r.CBotId is { } cbotId)
+        {
+            try
+            {
+                var files = await Http.GetFromJsonAsync<FilesResponse>($"/api/builder/projects/{cbotId}/files");
+                source = ConcatSource(files?.Files);
+            }
+            catch { source = ""; }
+            if (string.IsNullOrWhiteSpace(title))
+                title = cbots.FirstOrDefault(c => c.Id == cbotId)?.Name ?? "";
+            if (string.IsNullOrWhiteSpace(source)) { Snack.Add("That cBot has no source yet", Severity.Error); return; }
+        }
 
         var url = r.ModelId is { } model ? $"/api/ai/runs?modelId={model}" : "/api/ai/runs";
         try
         {
             var response = await Http.PostAsJsonAsync(url,
-                new { Feature = (int)Feature, Title = r.Name, Language = "CSharp", Source = r.Source });
+                new { Feature = (int)Feature, Title = title, Language = "CSharp", Source = source });
             if (!response.IsSuccessStatusCode) { Snack.Add("Could not start", Severity.Error); return; }
             var created = await response.Content.ReadFromJsonAsync<dynamic?>(JsonDefaults.DynamicWeb);
             if (created is not null) Nav.NavigateTo($"{RoutePrefix}/{(Guid)created.id}");
             else await Load();
         }
         catch { Snack.Add("Could not start", Severity.Error); }
+    }
+
+    // Concatenate a cBot's source files into one blob (multi-file cBots get reviewed/debated in full).
+    private static string ConcatSource(IReadOnlyDictionary<string, string>? files)
+    {
+        if (files is null || files.Count == 0) return "";
+        if (files.Count == 1) return files.Values.First();
+        return string.Join("\n\n", files
+            .OrderBy(f => f.Key, StringComparer.Ordinal)
+            .Select(f => $"// ==== {f.Key} ====\n{f.Value}"));
     }
 
     private async Task Delete(RunRow row)
@@ -154,4 +188,6 @@ else
     public void Dispose() => _poll?.Dispose();
 
     private sealed record RunRow(Guid Id, string Title, string Status, DateTimeOffset CreatedAt);
+    private sealed record CBotDto(Guid Id, string Name);
+    private sealed record FilesResponse(Dictionary<string, string>? Files);
 }

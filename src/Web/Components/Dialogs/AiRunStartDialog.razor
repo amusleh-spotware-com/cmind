@@ -7,14 +7,40 @@
     <DialogContent>
         <MudTextField @bind-Value="_name" Label="Name" Immediate="true" Class="mb-2"
                       Placeholder="e.g. EURUSD scalper" data-testid="ai-run-name" />
-        <MudTextField @bind-Value="_source" Label="cBot source" Lines="10" Immediate="true"
-                      Placeholder="@SourcePlaceholder" data-testid="ai-run-source" />
+        <MudTabs @bind-ActivePanelIndex="_tab" Rounded="true" Border="true" ApplyEffectsToContainer="true"
+                 PanelClass="pa-4" data-testid="ai-run-source-tabs">
+            <MudTabPanel Text="Paste source" Icon="@Icons.Material.Filled.ContentPaste">
+                <MudTextField @bind-Value="_source" Label="cBot source" Lines="14" Immediate="true"
+                              Placeholder="@SourcePlaceholder" data-testid="ai-run-source" />
+            </MudTabPanel>
+            <MudTabPanel Text="My cBots" Icon="@Icons.Material.Filled.SmartToy" data-testid="ai-run-cbot-tab">
+                @if (Projects.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true" data-testid="ai-run-no-cbots">
+                        You have no cBots with source yet. Paste source instead, or build one first.
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudSelect T="Guid?" @bind-Value="_cbotId" Label="cBot" Dense="true"
+                               data-testid="ai-run-cbot-select">
+                        @foreach (var p in Projects)
+                        {
+                            <MudSelectItem T="Guid?" Value="@((Guid?)p.Id)">@p.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2 d-block">
+                        The cBot's current source is sent to the model.
+                    </MudText>
+                }
+            </MudTabPanel>
+        </MudTabs>
         <AiModelSelect Feature="Feature" @bind-Selected="_modelId" Class="mt-2" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel" data-testid="ai-run-start-cancel">Cancel</MudButton>
         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit"
-                   Disabled="@(string.IsNullOrWhiteSpace(_source))" data-testid="ai-run-start-create">@ConfirmLabel</MudButton>
+                   Disabled="@(!CanSubmit)" data-testid="ai-run-start-create">@ConfirmLabel</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -26,17 +52,30 @@
     [Parameter] public string ConfirmLabel { get; set; } = "Run";
     [Parameter] public string SourcePlaceholder { get; set; } = "Paste cBot source";
 
+    // The user's cBots that have source, so a run can target an existing cBot instead of pasted code.
+    [Parameter] public IReadOnlyList<CBotOption> Projects { get; set; } = [];
+
+    private int _tab;
     private string _name = "";
     private string _source = "";
+    private Guid? _cbotId;
     private Guid? _modelId;
+
+    private bool CanSubmit => _tab == 0
+        ? !string.IsNullOrWhiteSpace(_source)
+        : _cbotId is not null;
 
     private void Submit()
     {
-        if (string.IsNullOrWhiteSpace(_source)) return;
-        Dialog.Close(DialogResult.Ok(new AiRunStartResult(_name.Trim(), _source, _modelId)));
+        if (!CanSubmit) return;
+        var source = _tab == 0 ? _source : null;
+        var cbotId = _tab == 0 ? (Guid?)null : _cbotId;
+        Dialog.Close(DialogResult.Ok(new AiRunStartResult(_name.Trim(), source, cbotId, _modelId)));
     }
 
     private void Cancel() => Dialog.Cancel();
 
-    public sealed record AiRunStartResult(string Name, string Source, Guid? ModelId);
+    public sealed record CBotOption(Guid Id, string Name);
+
+    public sealed record AiRunStartResult(string Name, string? Source, Guid? CBotId, Guid? ModelId);
 }

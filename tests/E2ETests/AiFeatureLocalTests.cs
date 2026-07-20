@@ -62,6 +62,38 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
     public Task Review_run_produces_output_in_the_background() => RunAiRunAsync("/ai/review");
 
     [Fact]
+    public async Task Review_run_can_target_an_existing_cbot()
+    {
+        // Seed a cBot with source by creating one from scratch via AI Build.
+        var build = await OpenAsync("/ai/build");
+        await build.Locator("[data-testid=ai-build-new]").ClickAsync();
+        await Assertions.Expect(build.Locator("[data-testid=ai-build-start-tabs]")).ToBeVisibleAsync(Slow);
+        var botName = "e2ebot" + System.Guid.NewGuid().ToString("N")[..8];
+        await build.GetByTestId("ai-build-new-name").FillAsync(botName);
+        await build.Locator("[data-testid=ai-build-start-create]").ClickAsync();
+        await Assertions.Expect(build.Locator("[data-testid=ai-build-project-name]"))
+            .ToBeVisibleAsync(new() { Timeout = 20000 });
+
+        // Start a Review run against that existing cBot (My cBots tab → pick it → run), no pasted source.
+        var page = await OpenAsync("/ai/review");
+        await page.Locator("[data-testid=ai-run-new]").ClickAsync();
+        await Assertions.Expect(page.Locator("[data-testid=ai-run-source-tabs]")).ToBeVisibleAsync(Slow);
+        await page.Locator(".mud-tab:has-text('My cBots')").ClickAsync();
+        await page.Locator(".mud-select:has([data-testid=ai-run-cbot-select]) .mud-input-control").ClickAsync();
+        await page.Locator($".mud-popover .mud-list-item:has-text('{botName}')").First.ClickAsync();
+
+        var create = page.Locator("[data-testid=ai-run-start-create]");
+        await Assertions.Expect(create).ToBeEnabledAsync(new() { Timeout = 20000 });
+        await create.ClickAsync();
+
+        await Assertions.Expect(page.Locator("[data-testid=ai-run-title]")).ToBeVisibleAsync(new() { Timeout = 20000 });
+        var output = page.Locator("[data-testid=ai-run-output]");
+        await Assertions.Expect(output).ToBeVisibleAsync(new() { Timeout = 30000 });
+        if (app.UsingFakeLlm) (await output.InnerTextAsync()).Should().Contain(AiLocalFixture.CannedReply);
+        (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Model_selector_renders_and_feature_runs_on_chosen_model()
     {
         // A model selector renders and pre-selects a usable model (the seeded fake provider); running the

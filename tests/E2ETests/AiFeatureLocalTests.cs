@@ -213,8 +213,11 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
         await Assertions.Expect(page.Locator("[data-testid=ai-build-msg-user]"))
             .ToBeVisibleAsync(new() { Timeout = 30000 });
         await Assertions.Expect(page.Locator("[data-testid=ai-build-msg-assistant]")).ToBeVisibleAsync(Slow);
+        // The chat is seeded with an intro assistant turn, so wait for the model's actual reply to land
+        // (the background prompt) rather than snapshotting the seed message.
         if (app.UsingFakeLlm)
-            (await page.Locator("[data-testid=ai-build-chat]").InnerTextAsync()).Should().Contain(AiLocalFixture.CannedReply);
+            await Assertions.Expect(page.Locator("[data-testid=ai-build-chat]"))
+                .ToContainTextAsync(AiLocalFixture.CannedReply, new() { Timeout = 30000 });
         (await page.Locator(".blazor-error-ui").IsVisibleAsync()).Should().BeFalse();
 
         // The project now appears in the AI Build list.

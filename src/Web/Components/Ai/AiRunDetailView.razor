@@ -4,6 +4,7 @@
 @using Web.Time
 @implements IDisposable
 @inject HttpClient Http
+@inject IDialogService Dialogs
 @inject ISnackbar Snack
 @inject NavigationManager Nav
 @inject IUserTimeZone UserZone
@@ -101,6 +102,9 @@ else
 
     private async Task Delete()
     {
+        var confirmed = await Dialogs.ShowMessageBox("Delete", "Delete this item? This cannot be undone.",
+            yesText: "Delete", cancelText: "Cancel");
+        if (confirmed != true) return;
         var response = await Http.DeleteAsync($"/api/ai/runs/{RunId}");
         if (response.IsSuccessStatusCode) Nav.NavigateTo(RoutePrefix);
         else Snack.Add("Delete failed", Severity.Error);

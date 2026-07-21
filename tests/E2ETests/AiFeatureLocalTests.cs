@@ -338,13 +338,36 @@ public sealed class AiFeatureLocalTests(AiLocalFixture app)
         await Assertions.Expect(start).ToBeEnabledAsync(new() { Timeout = 8000 });
     }
 
-    // E-09 working path: with AI configured, /agent enables the Create mandate button.
+    // E-09 working path: with AI configured, /agent enables the Create mandate button once its unique-name +
+    // cBot gate is satisfied (a bare load keeps it disabled — that gate is asserted below and in the data test).
     [Fact]
     public async Task Agent_create_mandate_enabled_when_ai_present()
     {
-        var page = await OpenAsync("/agent");
+        var page = await app.NewAuthedPageAsync();
+
+        // Seed a cBot so the required cBot picker has an option, then load the page.
+        var seed = await page.APIRequest.PostAsync("/api/testseed/ai-portfolio", new() { DataObject = new { } });
+        seed.Ok.Should().BeTrue($"seed failed: {seed.Status} {await seed.TextAsync()}");
+        using var seedDoc = System.Text.Json.JsonDocument.Parse(await seed.TextAsync());
+        var cbotId = seedDoc.RootElement.GetProperty("cbotId").GetGuid();
+
+        var list = await page.APIRequest.GetAsync("/api/cbots/");
+        using var cbotsDoc = System.Text.Json.JsonDocument.Parse(await list.TextAsync());
+        var cbotName = cbotsDoc.RootElement.EnumerateArray()
+            .First(e => e.GetProperty("id").GetGuid() == cbotId).GetProperty("name").GetString()!;
+
+        await page.GotoAsync("/agent", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForAppReadyAsync();
         (await page.Locator("[data-testid=ai-not-configured]").IsVisibleAsync()).Should().BeFalse();
-        await Assertions.Expect(page.Locator("[data-testid=agent-create-mandate]")).ToBeEnabledAsync(new() { Timeout = 20000 });
+
+        var create = page.Locator("[data-testid=agent-create-mandate]");
+        await Assertions.Expect(create).ToBeDisabledAsync(new() { Timeout = 20000 });
+
+        await page.GetByTestId("agent-mandate-name").FillAsync("M " + System.Guid.NewGuid().ToString("N")[..6]);
+        await page.Locator(".mud-select:has([data-testid=agent-cbot]) .mud-input-control").ClickAsync();
+        await page.Locator($".mud-popover .mud-list-item:has-text('{cbotName}')").First.ClickAsync();
+
+        await Assertions.Expect(create).ToBeEnabledAsync(new() { Timeout = 20000 });
     }
 
     // E-08: with real rows, the /agent-studio, /agent and /alerts tables must collapse to cards on a
